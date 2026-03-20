@@ -28,6 +28,12 @@ from macrocast.evaluation.pbsv import (
     oshapley_vi,
 )
 from macrocast.evaluation.regime import RegimeResult, regime_conditional_msfe
+from macrocast.evaluation.marginal import (
+    MarginalEffect,
+    marginal_contribution,
+    marginal_contribution_all,
+    oos_r2_panel,
+)
 
 __all__ = [
     # metrics
@@ -65,4 +71,9 @@ __all__ = [
     "mcs_membership_table",
     "dm_vs_benchmark_table",
     "horserace_summary",
+    # marginal contribution (CLSS 2021 Eq. 11-12)
+    "oos_r2_panel",
+    "MarginalEffect",
+    "marginal_contribution",
+    "marginal_contribution_all",
 ]
