@@ -46,3 +46,4 @@ site/
 
 # Notebook outputs (examples/results/ is gitignored)
 examples/results/
+.worktrees/
