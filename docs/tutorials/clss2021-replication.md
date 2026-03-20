@@ -465,3 +465,132 @@ rs_loaded = ResultSet.from_parquet(out / "cpi_horserace.parquet")
 | 5 | Computed RMSFE, best spec, MCS, DM tables | `horserace_summary()` |
 
 The central qualitative findings of CLSS 2021 — that MARX and MAF transformations improve forecast accuracy over raw factors, and that nonlinear tree-based models benefit most from these rotations — are directly testable with this pipeline. Exact numerical reproduction of the paper further requires implementing path-average targeting (v2 scope) and using the 2018-02 FRED-MD vintage.
+
+---
+
+## 8. Marginal Contribution Analysis (Fig. 1/2)
+
+The marginal contribution analysis asks: conditional on the model class and horizon, how much does including a given transformation (MARX, MAF, or raw factors F) reduce the out-of-sample mean squared forecast error relative to the AR benchmark? This follows Equations 11-12 in CLSS 2021, estimated as a pseudo-OOS R² regression across information sets. HAC-robust standard errors (Newey-West) account for the serial correlation induced by overlapping forecast windows.
+
+```python
+from macrocast.evaluation import marginal_contribution_all, marginal_effect_plot
+
+# rs is the ResultSet from the horse race in Section 4
+mc_df = marginal_contribution_all(
+    rs.to_dataframe(),
+    features=["MARX", "MAF", "F"],
+)
+
+# Inspect the MARX rows: columns are feature, model_id, feature_set,
+# horizon, target, alpha, se, ci_low, ci_high, n_obs
+print(mc_df[mc_df["feature"] == "MARX"].head(12))
+#   feature model_id feature_set  horizon    target     alpha        se    ci_low   ci_high  n_obs
+# 0    MARX       AL      F-MARX        1  CPIAUCSL  0.023401  0.009814  0.004166  0.042636    456
+# 1    MARX       AL      F-MARX        3  CPIAUCSL  0.031802  0.011230  0.009791  0.053813    456
+# ...
+```
+
+The dot-and-CI plot replicates the structure of CLSS 2021 Fig. 1 and Fig. 2. Each dot is the point estimate of the marginal R² gain from including the transformation; horizontal bars are 95% HAC confidence intervals. Dots to the right of zero indicate a statistically meaningful improvement over information sets that exclude the transformation.
+
+```python
+fig = marginal_effect_plot(
+    mc_df[mc_df["feature"] == "MARX"],
+    feature="MARX",
+    models=["rf", "elastic_net"],
+    horizons=[1, 3, 6, 12],
+)
+fig.savefig("clss2021_marginal_marx.png", dpi=150, bbox_inches="tight")
+```
+
+To produce a combined panel across all three transformations, call `marginal_effect_plot` separately for each and arrange figures with `matplotlib.gridspec`.
+
+---
+
+## 9. Variable Importance by Group (Fig. 3)
+
+CLSS 2021 Fig. 3 decomposes Random Forest variable importance into four groups: AR lags of the target (AR), estimated PCA factors (Factors), MARX-rotated series (MARX), and raw predictors (X). This decomposition shows which inputs the RF model actually uses, rather than which information sets produce the lowest RMSFE.
+
+```python
+from macrocast.evaluation import (
+    extract_vi_dataframe,
+    vi_by_group,
+    average_vi_by_horizon,
+    variable_importance_plot,
+)
+
+# Step 1: extract raw feature importances from all RF models in the ResultSet
+vi_df = extract_vi_dataframe(rs)
+# Columns: model_id, feature_set, horizon, target, feature_name, importance
+
+# Step 2: aggregate by CLSS VI group (AR / Factors / MARX / X)
+vi_group_df = vi_by_group(vi_df)
+# Columns: model_id, feature_set, horizon, target, group, importance_share
+
+# Step 3: average across information sets, weighted by information-set count
+vi_avg_df = average_vi_by_horizon(vi_group_df, horizons=[1, 3, 6, 12])
+# Columns: model_id, horizon, target, group, mean_share, se_share
+
+# Step 4: stacked-bar plot, one panel per target variable
+fig = variable_importance_plot(
+    vi_avg_df,
+    targets=["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL"],
+)
+fig.savefig("clss2021_vi_by_group.png", dpi=150, bbox_inches="tight")
+```
+
+The plot reproduces the qualitative pattern from the paper: at short horizons the AR group dominates, while at horizons 6 and 12 the MARX group accounts for a substantial and growing share of RF importance, especially for real-activity targets such as INDPRO and PAYEMS.
+
+To compare a direct-forecast specification against the baseline (the `direct_vi_avg_df` argument), compute a second `vi_avg_df` from a `ResultSet` restricted to a single information set:
+
+```python
+rs_direct = result_set   # already restricted to the direct scheme
+vi_avg_direct = average_vi_by_horizon(
+    vi_by_group(extract_vi_dataframe(rs_direct)),
+    horizons=[1, 3, 6, 12],
+)
+
+fig = variable_importance_plot(
+    vi_avg_df,
+    targets=["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL"],
+    direct_vi_avg_df=vi_avg_direct,
+)
+fig.savefig("clss2021_vi_by_group_comparison.png", dpi=150, bbox_inches="tight")
+```
+
+---
+
+## 10. Cumulative Squared Errors (Fig. 6)
+
+The cumulative squared error (CSE) plot tracks the running sum of squared forecast errors over the evaluation window. Comparing the CSE of two specifications reveals whether forecast gains are evenly distributed over time or concentrated in particular episodes (recessions, financial crises, high-inflation periods). CLSS 2021 Fig. 6 uses this device to show that MARX gains are not solely a Great Recession artefact.
+
+```python
+from macrocast.evaluation import cumulative_squared_error_plot
+
+# Compare RF with F-X-MARX against RF with F alone, for INDPRO at h=12
+fig = cumulative_squared_error_plot(
+    result_df=rs.to_dataframe(),
+    model_feature_combos=[("rf", "F-X-MARX"), ("rf", "F")],
+    target="INDPRO",
+    horizon=12,
+)
+fig.savefig("clss2021_cse_indpro_h12.png", dpi=150, bbox_inches="tight")
+```
+
+Each line in the plot is the cumulative sum of squared errors for one model-specification pair. A line that diverges upward from a competing line after a given date indicates deteriorating relative performance from that point. Flat or slowly rising gaps indicate stable, persistent gains rather than crisis-driven episodes.
+
+To examine multiple horizons, call the function once per horizon and collect figures:
+
+```python
+import matplotlib.pyplot as plt
+
+horizon_figs = {}
+for h in [1, 3, 6, 12]:
+    horizon_figs[h] = cumulative_squared_error_plot(
+        result_df=rs.to_dataframe(),
+        model_feature_combos=[("rf", "F-X-MARX"), ("rf", "F"), ("elastic_net", "F-MAF")],
+        target="INDPRO",
+        horizon=h,
+    )
+    horizon_figs[h].savefig(f"clss2021_cse_indpro_h{h}.png", dpi=150, bbox_inches="tight")
+    plt.close(horizon_figs[h])
+```
