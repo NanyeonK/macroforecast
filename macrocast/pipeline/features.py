@@ -142,6 +142,10 @@ class FeatureBuilder:
         self._last_X_rows: NDArray[np.floating] | None = None
         self._fitted: bool = False
 
+        # Feature name tracking — populated by fit()
+        self._feature_names_out_: list[str] = []
+        self._feature_group_map_: dict[str, str] = {}
+
     # ------------------------------------------------------------------
     # Static helpers
     # ------------------------------------------------------------------
@@ -261,11 +265,78 @@ class FeatureBuilder:
             self._scaler_levels = StandardScaler()
             self._scaler_levels.fit(X_levels)
 
+        # Build training Z (needed for both Z-scaler fitting and name tracking).
+        Z_train = self._build_Z(X_panel, y, is_train=True, X_levels=X_levels)
+
         if self.standardize_Z:
-            # Build training Z first, then fit the Z scaler on it.
-            Z_train = self._build_Z(X_panel, y, is_train=True, X_levels=X_levels)
             self._scaler_Z = StandardScaler()
             self._scaler_Z.fit(Z_train)
+
+        # ------------------------------------------------------------------
+        # Populate feature name tracking
+        # ------------------------------------------------------------------
+        names: list[str] = []
+
+        # Determine actual number of PCA factors (may have been clamped).
+        n_factors_actual: int = (
+            self._pca.n_components_ if (self.use_factors and self._pca is not None) else 0
+        )
+
+        # Determine whether the factors come from a MARX panel (MAF) or raw X.
+        is_maf = self.use_factors and self.use_marx and self.marx_for_pca
+
+        if self.use_factors:
+            if is_maf:
+                # MAF mode: factors derived from the MARX-transformed panel.
+                names.extend([f"MAF_factor_{i+1}" for i in range(n_factors_actual)])
+            else:
+                names.extend([f"factor_{i+1}" for i in range(n_factors_actual)])
+
+            if self.use_marx and not self.marx_for_pca:
+                # PCA on raw X with MARX columns appended separately.
+                n_marx_cols = X_panel.shape[1] * self.p_marx
+                names.extend([f"MARX_{i}" for i in range(n_marx_cols)])
+
+        elif self.use_marx:
+            # MARX columns without PCA reduction.
+            n_marx_cols = X_panel.shape[1] * self.p_marx
+            names.extend([f"MARX_{i}" for i in range(n_marx_cols)])
+
+        # AR lags of the target — always present in all modes.
+        names.extend([f"y_lag_{i+1}" for i in range(self.n_lags)])
+
+        # Raw X columns appended when include_raw_x=True.
+        if self.include_raw_x:
+            names.extend([f"X_{i}" for i in range(X_panel.shape[1])])
+
+        # Level columns (X_levels columns + y level scalar) appended last.
+        if self.include_levels and X_levels is not None:
+            n_levels = X_levels.shape[1]
+            names.extend([f"level_{i}" for i in range(n_levels)])
+            names.append("level_y")
+
+        if len(names) != Z_train.shape[1]:
+            raise RuntimeError(
+                f"Feature name count ({len(names)}) does not match Z columns "
+                f"({Z_train.shape[1]}). This is a bug in FeatureBuilder."
+            )
+
+        # Build group map from the assembled names.
+        group_map: dict[str, str] = {}
+        for name in names:
+            if name.startswith("MAF_factor_") or name.startswith("factor_"):
+                group_map[name] = "factors"
+            elif name.startswith("MARX_"):
+                group_map[name] = "marx"
+            elif name.startswith("y_lag_"):
+                group_map[name] = "ar"
+            elif name.startswith("X_"):
+                group_map[name] = "x"
+            elif name.startswith("level_"):
+                group_map[name] = "levels"
+
+        self._feature_names_out_ = names
+        self._feature_group_map_ = group_map
 
         self._fitted = True
         return self
@@ -536,15 +607,51 @@ class FeatureBuilder:
     # ------------------------------------------------------------------
 
     @property
-    def n_features(self) -> int:
-        """Total number of columns in the output Z matrix (factors + lags only).
+    def feature_names_out_(self) -> list[str]:
+        """Column names of the Z matrix, populated after fit().
 
-        Does not account for MARX columns (K * p_marx), raw X columns when
-        ``include_raw_x=True``, or level columns when ``include_levels=True``,
-        as those depend on data dimensionality not known at init time.
+        Names are positional/index-based (not FRED series names) because
+        FeatureBuilder receives a numpy array rather than a named DataFrame.
+
+        Returns
+        -------
+        list[str]
+            Copy of the internal list; mutating the returned value has no
+            effect on the builder's state.
+        """
+        return list(self._feature_names_out_)
+
+    @property
+    def feature_group_map_(self) -> dict[str, str]:
+        """Maps each feature name to its semantic group tag.
+
+        Group tags: ``"ar"``, ``"factors"``, ``"marx"``, ``"x"``,
+        ``"levels"``.  Populated after fit().
+
+        Note: both MAF factors (``MAF_factor_*``) and PCA factors
+        (``factor_*``) map to group ``"factors"``.  Callers who need to
+        distinguish them must inspect the name prefix directly.
+
+        Returns
+        -------
+        dict[str, str]
+            Copy of the internal dict; mutating the returned value has no
+            effect on the builder's state.
+        """
+        return dict(self._feature_group_map_)
+
+    @property
+    def n_features(self) -> int:
+        """Total number of features in Z after fit().
+
+        Before fit(), returns an estimate based on factors and AR lags only.
+        After fit(), returns the exact count matching feature_names_out_.
         """
         if not self._fitted:
             raise RuntimeError("Call fit() first.")
+        if self._feature_names_out_:
+            return len(self._feature_names_out_)
+        # Pre-fit estimate: factors + AR lags
         factor_cols = self._pca.n_components_ if (self.use_factors and self._pca) else 0
         return factor_cols + self.n_lags
 

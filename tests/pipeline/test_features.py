@@ -333,6 +333,222 @@ class TestIncludeRawX:
         assert Z_test.shape == (1, n_lags + N)
 
 
+class TestFeatureNames:
+    """Tests for feature_names_out_ and feature_group_map_ properties."""
+
+    def test_feature_names_empty_before_fit(self):
+        """feature_names_out_ is empty before fit() is called."""
+        builder = FeatureBuilder(n_factors=2, n_lags=2, use_factors=True)
+        assert builder.feature_names_out_ == []
+        assert builder.feature_group_map_ == {}
+
+    def test_feature_names_basic(self):
+        """use_factors=True, n_factors=2, n_lags=2: names match Z columns."""
+        rng = np.random.default_rng(100)
+        T, N = 80, 15
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        n_factors, n_lags = 2, 2
+        builder = FeatureBuilder(n_factors=n_factors, n_lags=n_lags, use_factors=True)
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        # Total count matches Z columns
+        assert len(names) == Z.shape[1]
+
+        # All names appear in the group map
+        assert set(names) == set(group_map.keys())
+
+        # Groups are drawn from the allowed set
+        allowed_groups = {"ar", "factors", "marx", "x", "levels"}
+        assert set(group_map.values()).issubset(allowed_groups)
+
+        # Verify prefix structure: n_factors factor columns, then n_lags ar columns
+        n_factors_actual = builder._pca.n_components_
+        expected_factor_names = [f"factor_{i+1}" for i in range(n_factors_actual)]
+        expected_ar_names = [f"y_lag_{i+1}" for i in range(n_lags)]
+        assert names == expected_factor_names + expected_ar_names
+
+        # Group tags
+        for name in expected_factor_names:
+            assert group_map[name] == "factors"
+        for name in expected_ar_names:
+            assert group_map[name] == "ar"
+
+    def test_feature_names_ar_only(self):
+        """use_factors=False: only AR lags, group='ar'."""
+        rng = np.random.default_rng(101)
+        T, N = 60, 10
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        n_lags = 3
+        builder = FeatureBuilder(n_lags=n_lags, use_factors=False)
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+        assert names == [f"y_lag_{i+1}" for i in range(n_lags)]
+        assert all(group_map[n] == "ar" for n in names)
+
+    def test_feature_names_marx(self):
+        """use_marx=True, use_factors=False: MARX_* names, group='marx'."""
+        rng = np.random.default_rng(102)
+        T, K = 50, 5
+        p_marx, n_lags = 4, 2
+        X = rng.standard_normal((T, K))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(
+            n_lags=n_lags, use_factors=False, use_marx=True,
+            p_marx=p_marx,
+        )
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+
+        # MARX columns come first, then AR lags
+        n_marx_cols = K * p_marx
+        marx_names = [f"MARX_{i}" for i in range(n_marx_cols)]
+        ar_names = [f"y_lag_{i+1}" for i in range(n_lags)]
+        assert names == marx_names + ar_names
+
+        for name in marx_names:
+            assert group_map[name] == "marx"
+        for name in ar_names:
+            assert group_map[name] == "ar"
+
+    def test_feature_names_include_raw_x(self):
+        """include_raw_x=True: X_* names present, group='x'."""
+        rng = np.random.default_rng(103)
+        T, N = 60, 8
+        n_lags = 2
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(use_factors=False, n_lags=n_lags, include_raw_x=True)
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+
+        # AR lags first, then raw X columns
+        ar_names = [f"y_lag_{i+1}" for i in range(n_lags)]
+        x_names = [f"X_{i}" for i in range(N)]
+        assert names == ar_names + x_names
+
+        for name in x_names:
+            assert group_map[name] == "x"
+
+    def test_feature_names_include_levels(self):
+        """include_levels=True: level_y and level_H columns appended."""
+        rng = np.random.default_rng(104)
+        T, N, N_levels = 60, 10, 4
+        n_lags = 2
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+        X_levels = rng.standard_normal((T, N_levels))
+
+        builder = FeatureBuilder(use_factors=False, n_lags=n_lags, include_levels=True)
+        Z = builder.fit_transform(X, y, X_levels=X_levels)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+
+        # Ends with level_y (y level) and level_{i} columns (one per level predictor,
+        # 0-indexed)
+        assert names[-1] == "level_y"
+        level_names = [n for n in names if n.startswith("level_")]
+        assert all(group_map[n] == "levels" for n in level_names)
+
+    def test_feature_names_maf_mode(self):
+        """MAF mode (use_maf=True): factor columns tagged as 'factors'."""
+        rng = np.random.default_rng(105)
+        T, K = 80, 10
+        n_factors, n_lags, p_marx = 3, 2, 4
+        X = rng.standard_normal((T, K))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(
+            use_maf=True, n_factors=n_factors, n_lags=n_lags, p_marx=p_marx
+        )
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+
+        n_factors_actual = builder._pca.n_components_
+        factor_names = [f"MAF_factor_{i+1}" for i in range(n_factors_actual)]
+        ar_names = [f"y_lag_{i+1}" for i in range(n_lags)]
+        assert names == factor_names + ar_names
+
+        for name in factor_names:
+            assert group_map[name] == "factors"
+
+    def test_feature_names_marx_for_pca_false(self):
+        """use_factors=True, use_marx=True, marx_for_pca=False: factors + MARX + AR."""
+        rng = np.random.default_rng(106)
+        T, N = 80, 8
+        n_factors, n_lags, p_marx = 3, 2, 4
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(
+            use_factors=True, n_factors=n_factors, n_lags=n_lags,
+            use_marx=True, p_marx=p_marx, marx_for_pca=False,
+        )
+        Z = builder.fit_transform(X, y)
+
+        names = builder.feature_names_out_
+        group_map = builder.feature_group_map_
+
+        assert len(names) == Z.shape[1]
+
+        n_factors_actual = builder._pca.n_components_
+        n_marx_cols = N * p_marx
+        factor_names = [f"factor_{i+1}" for i in range(n_factors_actual)]
+        marx_names = [f"MARX_{i}" for i in range(n_marx_cols)]
+        ar_names = [f"y_lag_{i+1}" for i in range(n_lags)]
+        assert names == factor_names + marx_names + ar_names
+
+        for name in factor_names:
+            assert group_map[name] == "factors"
+        for name in marx_names:
+            assert group_map[name] == "marx"
+        for name in ar_names:
+            assert group_map[name] == "ar"
+
+    def test_feature_names_returns_copy(self):
+        """Mutating returned lists/dicts does not affect internal state."""
+        rng = np.random.default_rng(107)
+        X = rng.standard_normal((60, 10))
+        y = rng.standard_normal(60)
+        builder = FeatureBuilder(n_factors=2, n_lags=2, use_factors=True)
+        builder.fit(X, y)
+
+        names = builder.feature_names_out_
+        names.append("injected")
+        assert "injected" not in builder.feature_names_out_
+
+        gmap = builder.feature_group_map_
+        gmap["injected"] = "bad"
+        assert "injected" not in builder.feature_group_map_
+
+
 class TestMarxForPca:
     def test_marx_for_pca_false_different_from_maf(self):
         """marx_for_pca=False gives different Z than MAF (marx_for_pca=True)."""
