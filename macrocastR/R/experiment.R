@@ -201,11 +201,14 @@ run_experiment <- function(panel, target, dates,
         use_factors = FALSE
       )
 
-      # Align h-step target with feature rows
-      n_drop <- n_lags  # feature builder drops first n_lags rows
-      if (nrow(Z_train_f) == 0 || length(y_train_aligned) <= n_drop) next
-      y_fit_f  <- y_train_aligned[seq(n_drop + 1, length(y_train_aligned))]
-      y_fit_ar <- y_train_aligned[seq(n_drop + 1, length(y_train_aligned))]
+      # Align h-step target with feature rows.
+      # X_train_aligned has T_tr - h rows; after build_features drops first
+      # n_lags rows, Z has T_tr - h - n_lags rows.  y_fit must match that.
+      n_drop <- n_lags
+      n_rows_z <- T_tr - h - n_drop
+      if (nrow(Z_train_f) == 0 || n_rows_z <= 0L) next
+      y_fit_f  <- y_train_aligned[seq(n_drop + 1, T_tr - h)]
+      y_fit_ar <- y_train_aligned[seq(n_drop + 1, T_tr - h)]
 
       # Test features: single row at train_end
       X_test_row <- panel[train_end_pos, , drop = FALSE]
