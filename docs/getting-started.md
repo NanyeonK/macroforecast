@@ -1,6 +1,6 @@
 # Getting Started
 
-This page covers installation and a short walkthrough of the data layer (v0.1). The pipeline and evaluation layers are not yet available.
+This page covers installation and walkthroughs of the data, pipeline, and evaluation layers.
 
 ---
 
@@ -21,6 +21,8 @@ uv sync --all-extras
 ```
 
 **Python version:** 3.10 or later.
+
+---
 
 ---
 
@@ -154,11 +156,108 @@ print(rt)
 
 ---
 
+---
+
+## Running a Forecast Experiment
+
+After preparing a `MacroFrame`, pass the transformed panel to `ForecastExperiment`.
+
+```python
+from macrocast.pipeline import (
+    ForecastExperiment, ModelSpec, FeatureSpec,
+    Regularization, CVScheme, LossFunction, Window, KRRModel,
+)
+
+# ModelSpec binds a model class to its four component labels
+spec = ModelSpec(
+    model_cls=KRRModel,
+    regularization=Regularization.FACTORS,
+    cv_scheme=CVScheme.KFOLD(5),
+    loss_function=LossFunction.L2,
+)
+
+# ForecastExperiment orchestrates the outer pseudo-OOS loop
+exp = ForecastExperiment(
+    panel=md_t.data,
+    target=md_t.data["INDPRO"],
+    horizons=[1, 3, 12],
+    model_specs=[spec],
+    feature_spec=FeatureSpec(n_factors=8, n_lags=4),
+    window=Window.EXPANDING,
+    n_jobs=-1,
+)
+
+results = exp.run()
+print(results)
+# ResultSet(experiment_id='...', n_records=...)
+```
+
+The experiment uses direct h-step-ahead forecasting: a separate model is trained for each horizon. The outer loop expands the training window by one period at each evaluation date, consistent with CLSS 2022.
+
+Results can be exported:
+
+```python
+# Export to parquet for downstream R analysis
+results.to_parquet("~/.macrocast/results/run1.parquet")
+
+# Or work with the tidy DataFrame directly
+df = results.to_dataframe()
+print(df.columns.tolist())
+# ['experiment_id', 'model_id', 'nonlinearity', 'regularization',
+#  'cv_scheme', 'loss_function', 'window', 'horizon', 'train_end',
+#  'forecast_date', 'y_hat', 'y_true', 'n_train', 'n_factors', 'n_lags']
+```
+
+See [ForecastExperiment](pipeline/experiment.md) for the full parameter reference.
+
+---
+
+## Evaluating Results
+
+```python
+from macrocast.evaluation import (
+    relative_msfe, decompose_treatment_effects, mcs,
+)
+import numpy as np
+
+df = results.to_dataframe()
+
+# Separate AR benchmark from KRR
+ar = df[df["model_id"].str.startswith("linear__none__bic")]
+krr = df[df["model_id"].str.startswith("krr")]
+
+# Relative MSFE (< 1 means improvement over AR)
+rel = relative_msfe(
+    y_true=krr["y_true"].values,
+    y_hat_model=krr["y_hat"].values,
+    y_hat_benchmark=ar["y_hat"].values,
+)
+print(f"Relative MSFE: {rel:.3f}")
+
+# Four-component treatment effect decomposition
+decomp = decompose_treatment_effects(df)
+print(decomp.summary_df)
+#      component      coef  se_hc3  t_stat
+# 0    intercept   -0.02     ...     ...
+# 1  d_nonlinear    0.05     ...     ...
+# 2  d_data_rich    0.08     ...     ...
+# 3      d_kfold    0.02     ...     ...
+# 4        d_l2    0.01     ...     ...
+
+# Model Confidence Set at 10% level
+df["squared_error"] = (df["y_true"] - df["y_hat"]) ** 2
+mcs_result = mcs(df[["model_id", "forecast_date", "squared_error"]])
+print("MCS members:", mcs_result.included)
+```
+
+See [Evaluation Layer](evaluation/index.md) for the full reference.
+
+---
+
 ## Next Steps
 
-- See the [Data Layer overview](data/index.md) for a comparison of FRED-MD, FRED-QD, and FRED-SD.
-- See [MacroFrame](data/macroframe.md) for the full API reference of the core container.
-- See [Transformations](data/transforms.md) for the McCracken-Ng tcode reference.
-
-!!! note "Pipeline and Evaluation layers"
-    The forecasting pipeline (Layer 2) and evaluation layer (Layer 3) are not yet implemented in v0.1. See the [Roadmap](roadmap.md) for the planned timeline.
+- [Data Layer overview](data/index.md) — FRED-MD vs FRED-QD vs FRED-SD comparison
+- [MacroFrame](data/macroframe.md) — core container API
+- [Transformations](data/transforms.md) — McCracken-Ng tcode reference
+- [Pipeline Layer](pipeline/index.md) — components, model zoo, experiment orchestration
+- [Evaluation Layer](evaluation/index.md) — metrics, decomposition, MCS, regime analysis

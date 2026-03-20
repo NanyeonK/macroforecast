@@ -42,6 +42,8 @@ uv sync --all-extras
 
 ## Quick Example
 
+### Data Layer
+
 ```python
 import macrocast as mc
 
@@ -61,6 +63,57 @@ output = md_t.group("output_income")
 report = md_t.missing_report()
 print(report[["n_leading", "n_trailing", "n_intermittent"]].head())
 ```
+
+### Full Pipeline Example
+
+```python
+import macrocast as mc
+from macrocast.pipeline import (
+    ForecastExperiment, ModelSpec, FeatureSpec,
+    Nonlinearity, Regularization, CVScheme, LossFunction, Window,
+    KRRModel,
+)
+from macrocast.evaluation import relative_msfe, decompose_treatment_effects
+
+# 1. Load and prepare data
+md = mc.load_fred_md().trim(start="1970-01", end="2023-12").transform()
+panel = md.data
+target = panel["INDPRO"]
+
+# 2. Define model specs
+specs = [
+    ModelSpec(
+        model_cls=KRRModel,
+        regularization=Regularization.FACTORS,
+        cv_scheme=CVScheme.KFOLD(5),
+        loss_function=LossFunction.L2,
+    ),
+]
+
+# 3. Run the experiment
+exp = ForecastExperiment(
+    panel=panel, target=target,
+    horizons=[1, 3, 12],
+    model_specs=specs,
+    feature_spec=FeatureSpec(n_factors=8, n_lags=4),
+    window=Window.EXPANDING,
+    n_jobs=-1,
+)
+results = exp.run()
+
+# 4. Evaluate
+df = results.to_dataframe()
+ar_hat = df.loc[df["model_id"].str.startswith("linear"), "y_hat"].values
+krr_hat = df.loc[df["model_id"].str.startswith("krr"), "y_hat"].values
+y_true = df["y_true"].values[:len(krr_hat)]
+print("Relative MSFE:", relative_msfe(y_true, krr_hat, ar_hat))
+
+# 5. Decompose gains
+decomp = decompose_treatment_effects(df)
+print(decomp.summary_df)
+```
+
+See the [Pipeline Layer](pipeline/index.md) and [Evaluation Layer](evaluation/index.md) sections for full documentation.
 
 ---
 

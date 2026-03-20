@@ -75,11 +75,30 @@ nav:
     - Missing Values: data/missing.md
     - MacroFrame: data/macroframe.md
     - Vintage Management: data/vintages.md
+  - Pipeline Layer:
+    - Overview: pipeline/index.md
+    - Components: pipeline/components.md
+    - Feature Construction: pipeline/features.md
+    - Model Zoo: pipeline/models.md
+    - ForecastExperiment: pipeline/experiment.md
+    - Results: pipeline/results.md
+  - Evaluation Layer:
+    - Overview: evaluation/index.md
+    - Metrics: evaluation/metrics.md
+    - Decomposition: evaluation/decomposition.md
+    - Model Confidence Set: evaluation/mcs.md
+    - Diebold-Mariano Test: evaluation/dm.md
+    - Regime-Conditional: evaluation/regime.md
+    - Dual Weights: evaluation/dual.md
+    - PBSV: evaluation/pbsv.md
+  - CLI: cli.md
   - Research:
     - Coulombe Methodology: research/coulombe-methodology.md
   - API Reference:
-    - macrocast: api/index.md
+    - Overview: api/index.md
     - macrocast.data: api/data.md
+    - macrocast.pipeline: api/pipeline.md
+    - macrocast.evaluation: api/evaluation.md
     - macrocast.utils: api/utils.md
   - Design: DESIGN.md
   - Roadmap: roadmap.md

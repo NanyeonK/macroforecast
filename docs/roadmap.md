@@ -21,49 +21,52 @@ Released: March 2026
 
 ---
 
-## v0.2.0 — Forecasting Pipeline (Planned)
+## v0.2.0 — Forecasting Pipeline (Complete)
 
-Target: April-May 2026
+Released: March 2026
 
-The forecasting pipeline implements the four-component decomposition framework of Coulombe et al. (2020).
+**Completed:**
 
-**Planned:**
-
-- `ForecastExperiment` — main orchestrator for factorial forecast experiments
-- `MacrocastEstimator` interface — scikit-learn-compatible model adapter
-- Component definitions: `Nonlinearity`, `Regularization`, `CVScheme`, `LossFunction`
-- Built-in model zoo: AR(p), Ridge, Lasso, Elastic Net, Random Forest, feedforward NN
-- Direct and iterated multi-step forecasting
-- Expanding and rolling window evaluation schemes
-- Parallel execution via `joblib`
-- YAML-based experiment configuration
-
----
-
-## v0.3.0 — Evaluation Layer (Planned)
-
-Target: May-June 2026
-
-**Planned:**
-
-- `decompose()` — treatment-effect decomposition engine
-- `RegimeEvaluator` — regime-conditional MSFE with quantile/Markov-switching thresholds
-- `model_confidence_set()` — Hansen, Lunde, and Nason (2011) MCS with block bootstrap
-- MSFE, relative MSFE, MAE, directional accuracy metrics
-- Cumulative squared forecast error (CSFE) over time
-- Visualization: waterfall plots, CSFE paths, regime heatmaps, horizon profiles
+- `ForecastExperiment` — outer pseudo-OOS loop orchestrator with expanding and rolling window strategies
+- `MacrocastEstimator` and `SequenceEstimator` — abstract base classes for cross-sectional and sequence models
+- Component definitions: `Nonlinearity`, `Regularization`, `CVScheme`, `LossFunction`, `Window` — enum-like objects, never plain string flags
+- Python model zoo: `KRRModel`, `SVRRBFModel`, `SVRLinearModel`, `RFModel`, `XGBoostModel`, `NNModel`, `LSTMModel`
+- `macrocastR` linear model suite: Ridge, LASSO, Adaptive LASSO, Group LASSO, Elastic Net, ARDI (R-side via parquet exchange)
+- `FeatureBuilder` — PCA diffusion index factors (ARDI mode) and AR-only mode, strict pseudo-OOS discipline
+- `ModelSpec` and `FeatureSpec` — dataclass configuration bundles
+- `ForecastRecord` and `ResultSet` — result containers with parquet serialisation
+- Direct multi-step forecasting only (one model per horizon h); iterated forecasting out of scope
+- Parallel execution via `joblib` (`n_jobs` parameter)
+- YAML-based experiment configuration via CLI
 
 ---
 
-## v0.4.0 — R Companion and CLI (Planned)
+## v0.3.0 — Evaluation Layer (Complete)
 
-Target: June-July 2026
+Released: March 2026
+
+**Completed:**
+
+- `decompose_treatment_effects()` — four-component OLS decomposition (CLSS 2022, Eq. 11) with HC3 standard errors
+- `regime_conditional_msfe()` — regime-conditional evaluation via quantile or binary indicator splits
+- `mcs()` — Model Confidence Set (Hansen, Lunde, Nason 2011) with stationary block bootstrap
+- `dm_test()` — Diebold-Mariano (1995) test with Harvey-Leybourne-Newbold (1997) finite-sample correction
+- Core metrics: `msfe`, `mae`, `relative_msfe`, `csfe`, `oos_r2`
+- Dual weight representations: `krr_dual_weights`, `tree_dual_weights`, `nn_dual_weights` (CGK 2024)
+- `effective_history_length`, `top_analogies` — dual weight diagnostics
+- `oshapley_vi`, `compute_pbsv`, `model_accordance_score` — PBSV / oShapley-VI (CBRSS 2022)
+
+---
+
+## v0.4.0 — Paper Submission (Planned)
+
+Target: August 2026
 
 **Planned:**
 
-- `macrocastR` R package mirroring the Python API
-- Command-line interface (`macrocast run`, `macrocast data download`, `macrocast report`)
-- Full documentation and empirical illustration replicating Coulombe et al. (2020)
+- Full empirical illustration replicating Coulombe et al. (2022) Table 3–5
+- Supplementary visualisations: waterfall plots, CSFE paths, regime heatmaps, horizon profiles
+- Submission to *International Journal of Forecasting* Special Issue
 
 ---
 
