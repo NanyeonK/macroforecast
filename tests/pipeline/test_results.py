@@ -37,7 +37,16 @@ def _make_record(y_hat: float = 1.0, y_true: float = 1.5, horizon: int = 1) -> F
     )
 
 
+@pytest.fixture
+def sample_record() -> ForecastRecord:
+    return _make_record()
+
+
 class TestForecastRecord:
+    def test_feature_set_default(self, sample_record: ForecastRecord):
+        assert sample_record.feature_set == ""
+        assert "feature_set" in sample_record.to_dict()
+
     def test_error(self):
         r = _make_record(y_hat=1.0, y_true=2.0)
         assert r.error == pytest.approx(1.0)

@@ -11,6 +11,7 @@ import pytest
 
 from macrocast.pipeline.components import Nonlinearity
 from macrocast.pipeline.models import (
+    GBModel,
     KRRModel,
     LSTMModel,
     NNModel,
@@ -141,6 +142,52 @@ class TestXGBoostModel:
         model.fit(X_tr, y_tr)
         y_hat = model.predict(X_te)
         assert y_hat.shape == (len(X_te),)
+
+
+# ---------------------------------------------------------------------------
+# Gradient Boosting (sklearn)
+# ---------------------------------------------------------------------------
+
+
+class TestGBModel:
+    def test_nonlinearity_type(self):
+        assert GBModel.nonlinearity_type == Nonlinearity.GRADIENT_BOOSTING
+
+    def test_fit_returns_self(self, small_data):
+        X_tr, y_tr, _, _ = small_data
+        m = GBModel(
+            n_estimators=50,
+            max_depth_grid=[3],
+            learning_rate_grid=[0.1],
+            min_samples_leaf_grid=[1],
+            subsample_grid=[1.0],
+            cv_folds=2,
+        )
+        assert m.fit(X_tr, y_tr) is m
+
+    def test_predict_shape(self, small_data):
+        X_tr, y_tr, X_te, y_te = small_data
+        model = GBModel(
+            n_estimators=50,
+            max_depth_grid=[3],
+            learning_rate_grid=[0.1],
+            min_samples_leaf_grid=[1],
+            subsample_grid=[1.0],
+            cv_folds=2,
+        )
+        model.fit(X_tr, y_tr)
+        assert model.predict(X_te).shape == (len(y_te),)
+
+    def test_custom_grids(self, small_data):
+        X_tr, y_tr, _, _ = small_data
+        model = GBModel(
+            max_depth_grid=[3],
+            learning_rate_grid=[0.1],
+            min_samples_leaf_grid=[1],
+            subsample_grid=[1.0],
+            cv_folds=2,
+        )
+        model.fit(X_tr, y_tr)
 
 
 # ---------------------------------------------------------------------------

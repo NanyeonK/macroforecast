@@ -120,6 +120,23 @@ class ModelSpec:
 # ---------------------------------------------------------------------------
 
 
+def _auto_label(spec: "FeatureSpec") -> str:
+    """Generate a human-readable FeatureSpec label following CLSS 2021 naming."""
+    parts: list[str] = []
+    if spec.use_factors:
+        parts.append("F")
+    if spec.include_raw_x:
+        parts.append("X")
+    if spec.use_marx:
+        if spec.use_maf or (spec.use_factors and spec.marx_for_pca):
+            parts.append("MAF")
+        else:
+            parts.append("MARX")
+    if spec.include_levels:
+        parts.append("Level")
+    return "-".join(parts) if parts else "AR"
+
+
 @dataclass
 class FeatureSpec:
     """Configuration for FeatureBuilder used in a given experiment cell.
@@ -168,6 +185,13 @@ class FeatureSpec:
     use_maf: bool = False
     include_levels: bool = False
     target_scheme: str = "direct"  # "direct" | "path_average"
+    include_raw_x: bool = False
+    marx_for_pca: bool = True
+    label: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.label:
+            self.label = _auto_label(self)
 
 
 # ---------------------------------------------------------------------------
@@ -424,6 +448,8 @@ class ForecastExperiment:
                     p_marx=feat_spec.p_marx,
                     use_maf=feat_spec.use_maf,
                     include_levels=feat_spec.include_levels,
+                    include_raw_x=feat_spec.include_raw_x,
+                    marx_for_pca=feat_spec.marx_for_pca,
                 )
 
                 # Prepare levels slices if needed
@@ -491,6 +517,7 @@ class ForecastExperiment:
                 n_lags=feat_spec.n_lags,
                 hp_selected=hp_selected,
                 target_scheme=feat_spec.target_scheme,
+                feature_set=self.feature_spec.label,
             )
 
         except Exception as exc:  # noqa: BLE001

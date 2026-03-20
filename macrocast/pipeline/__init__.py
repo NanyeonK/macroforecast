@@ -12,6 +12,7 @@ from macrocast.pipeline.estimator import MacrocastEstimator, SequenceEstimator
 from macrocast.pipeline.experiment import FeatureSpec, ForecastExperiment, ModelSpec
 from macrocast.pipeline.features import FeatureBuilder
 from macrocast.pipeline.models import (
+    GBModel,
     KRRModel,
     LSTMModel,
     NNModel,
@@ -32,6 +33,7 @@ from macrocast.pipeline.r_models import (
     RidgeModel,
     TVPRidgeModel,
 )
+from macrocast.pipeline.horserace import HorseRaceGrid
 from macrocast.pipeline.results import ForecastRecord, ResultSet
 
 __all__ = [
@@ -56,6 +58,7 @@ __all__ = [
     "SVRLinearModel",
     "RFModel",
     "XGBoostModel",
+    "GBModel",
     "NNModel",
     "LSTMModel",
     # R model bridge
@@ -73,4 +76,6 @@ __all__ = [
     "ModelSpec",
     "FeatureSpec",
     "ForecastExperiment",
+    # horse race grid
+    "HorseRaceGrid",
 ]

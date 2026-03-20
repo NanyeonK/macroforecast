@@ -11,6 +11,7 @@ Model list (Python side, nonlinear):
   - SVRLinearModel -- Support Vector Regression, linear kernel (sklearn)
   - RFModel      -- Random Forest (sklearn)
   - XGBoostModel -- Gradient Boosted Trees (xgboost)
+  - GBModel      -- Gradient Boosted Trees (sklearn GradientBoostingRegressor)
   - NNModel      -- Feedforward neural network, ReLU, 1-2 hidden layers (pytorch)
   - LSTMModel    -- LSTM sequence model (pytorch)
 
@@ -44,6 +45,8 @@ try:
     _RF_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _RF_AVAILABLE = False
+
+from sklearn.ensemble import GradientBoostingRegressor
 
 from macrocast.pipeline.components import Nonlinearity
 from macrocast.pipeline.estimator import MacrocastEstimator, SequenceEstimator
@@ -361,6 +364,78 @@ class XGBoostModel(MacrocastEstimator):
             n_jobs=-1,
             random_state=42,
             verbosity=0,
+        )
+        self._estimator = _fit_with_cv(base, param_grid, X, y, cv=self.cv_folds)
+        return self
+
+    def predict(self, X: NDArray[np.floating]) -> NDArray[np.floating]:
+        return self._estimator.predict(X)
+
+
+# ---------------------------------------------------------------------------
+# Gradient Boosting (sklearn)
+# ---------------------------------------------------------------------------
+
+
+class GBModel(MacrocastEstimator):
+    """Gradient boosted trees via scikit-learn GradientBoostingRegressor.
+
+    Uses sklearn's native implementation rather than xgboost.  This matches
+    the "gradient boosting" model in Coulombe et al. (2021) which is a
+    standard sklearn tree ensemble, not XGBoost.
+
+    Parameters
+    ----------
+    n_estimators : int
+        Maximum number of boosting stages.  Default 500.
+    max_depth_grid : list of int
+        Max tree depth candidates.  Default [3, 5, 7].
+    learning_rate_grid : list of float
+        Step-size shrinkage candidates.  Default [0.01, 0.05, 0.1].
+    min_samples_leaf_grid : list of int
+        Min leaf samples candidates.  Default [1, 5, 10].
+    subsample_grid : list of float
+        Row subsampling fraction candidates.  Default [0.7, 0.9, 1.0].
+    cv_folds : int
+        K-fold splits for HP selection.  Default 5.
+    """
+
+    nonlinearity_type = Nonlinearity.GRADIENT_BOOSTING
+
+    _DEFAULT_MAX_DEPTH_GRID: list[int] = [3, 5, 7]
+    _DEFAULT_LR_GRID: list[float] = [0.01, 0.05, 0.1]
+    _DEFAULT_MIN_SAMPLES_LEAF_GRID: list[int] = [1, 5, 10]
+    _DEFAULT_SUBSAMPLE_GRID: list[float] = [0.7, 0.9, 1.0]
+
+    def __init__(
+        self,
+        n_estimators: int = 500,
+        max_depth_grid: list[int] | None = None,
+        learning_rate_grid: list[float] | None = None,
+        min_samples_leaf_grid: list[int] | None = None,
+        subsample_grid: list[float] | None = None,
+        cv_folds: int = 5,
+    ) -> None:
+        self.n_estimators = n_estimators
+        self.max_depth_grid = max_depth_grid or self._DEFAULT_MAX_DEPTH_GRID
+        self.learning_rate_grid = learning_rate_grid or self._DEFAULT_LR_GRID
+        self.min_samples_leaf_grid = (
+            min_samples_leaf_grid or self._DEFAULT_MIN_SAMPLES_LEAF_GRID
+        )
+        self.subsample_grid = subsample_grid or self._DEFAULT_SUBSAMPLE_GRID
+        self.cv_folds = cv_folds
+        self._estimator = None
+
+    def fit(self, X: NDArray[np.floating], y: NDArray[np.floating]) -> GBModel:
+        param_grid = {
+            "max_depth": self.max_depth_grid,
+            "learning_rate": self.learning_rate_grid,
+            "min_samples_leaf": self.min_samples_leaf_grid,
+            "subsample": self.subsample_grid,
+        }
+        base = GradientBoostingRegressor(
+            n_estimators=self.n_estimators,
+            random_state=42,
         )
         self._estimator = _fit_with_cv(base, param_grid, X, y, cv=self.cv_folds)
         return self

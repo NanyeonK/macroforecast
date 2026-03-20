@@ -275,3 +275,122 @@ class TestLevelInclusion:
             X_test, y[-n_lags:], X_levels=X_levels_test
         )
         assert Z_test.shape == (1, n_lags + N_levels + 1)
+
+
+# ---------------------------------------------------------------------------
+# include_raw_x and marx_for_pca additions
+# ---------------------------------------------------------------------------
+
+
+class TestIncludeRawX:
+    def test_training_shape_includes_raw_x(self):
+        """include_raw_x=True adds N raw X columns to Z."""
+        T, N = 50, 10
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        # AR-only baseline
+        builder_base = FeatureBuilder(use_factors=False, n_lags=2, include_raw_x=False)
+        Z_base = builder_base.fit_transform(X, y)
+
+        # With raw X appended
+        builder_raw = FeatureBuilder(use_factors=False, n_lags=2, include_raw_x=True)
+        Z_raw = builder_raw.fit_transform(X, y)
+
+        # raw X adds N columns; row count must be identical
+        assert Z_raw.shape[1] == Z_base.shape[1] + N
+        assert Z_raw.shape[0] == Z_base.shape[0]
+
+    def test_factors_with_raw_x(self):
+        """use_factors=True + include_raw_x=True gives factors + raw_X + ar_lags."""
+        T, N = 50, 10
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        n_factors, n_lags = 3, 2
+        builder = FeatureBuilder(
+            use_factors=True, n_factors=n_factors, n_lags=n_lags,
+            include_raw_x=True,
+        )
+        Z = builder.fit_transform(X, y)
+        # Should have n_factors + N + n_lags columns
+        assert Z.shape[1] == n_factors + N + n_lags
+
+    def test_test_row_raw_x_shape(self):
+        """include_raw_x=True produces correct shape for a single test row."""
+        T, N, n_lags = 50, 8, 3
+        rng = np.random.default_rng(12)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(use_factors=False, n_lags=n_lags, include_raw_x=True)
+        builder.fit(X, y)
+        X_test = X[-1:, :]
+        Z_test = builder.transform(X_test, y[-n_lags:])
+        # 1 row; columns = n_lags + N
+        assert Z_test.shape == (1, n_lags + N)
+
+
+class TestMarxForPca:
+    def test_marx_for_pca_false_different_from_maf(self):
+        """marx_for_pca=False gives different Z than MAF (marx_for_pca=True)."""
+        T, N, p_marx = 80, 8, 4
+        rng = np.random.default_rng(1)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        # MAF: PCA on MARX panel
+        builder_maf = FeatureBuilder(
+            use_factors=True, n_factors=3, n_lags=2,
+            use_marx=True, p_marx=p_marx, marx_for_pca=True,
+        )
+        Z_maf = builder_maf.fit_transform(X, y)
+
+        # PCA on raw X, MARX columns appended separately
+        builder_fx = FeatureBuilder(
+            use_factors=True, n_factors=3, n_lags=2,
+            use_marx=True, p_marx=p_marx, marx_for_pca=False,
+        )
+        Z_fx = builder_fx.fit_transform(X, y)
+
+        # MAF has n_factors + n_lags columns; marx_for_pca=False adds N*p_marx extra
+        assert Z_maf.shape[1] < Z_fx.shape[1]
+        assert Z_fx.shape[1] == 3 + N * p_marx + 2
+
+    def test_marx_for_pca_false_test_row(self):
+        """marx_for_pca=False test-row produces correct column count."""
+        T, N, p_marx, n_factors, n_lags = 80, 8, 4, 3, 2
+        rng = np.random.default_rng(13)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        builder = FeatureBuilder(
+            use_factors=True, n_factors=n_factors, n_lags=n_lags,
+            use_marx=True, p_marx=p_marx, marx_for_pca=False,
+        )
+        builder.fit(X, y)
+        X_test = X[-1:, :]
+        Z_test = builder.transform(X_test, y[-n_lags:])
+        # 1 row; columns = n_factors + N*p_marx + n_lags
+        assert Z_test.shape == (1, n_factors + N * p_marx + n_lags)
+
+    def test_marx_for_pca_true_is_default_maf_behavior(self):
+        """marx_for_pca=True (default) is identical to explicit use_maf=True."""
+        T, N, p_marx, n_factors, n_lags = 80, 8, 4, 3, 2
+        rng = np.random.default_rng(14)
+        X = rng.standard_normal((T, N))
+        y = rng.standard_normal(T)
+
+        builder_maf = FeatureBuilder(
+            use_maf=True, n_factors=n_factors, n_lags=n_lags, p_marx=p_marx,
+        )
+        builder_explicit = FeatureBuilder(
+            use_factors=True, n_factors=n_factors, n_lags=n_lags,
+            use_marx=True, p_marx=p_marx, marx_for_pca=True,
+        )
+        # Both builders operate identically: same shapes
+        Z_maf = builder_maf.fit_transform(X, y)
+        Z_explicit = builder_explicit.fit_transform(X, y)
+        assert Z_maf.shape == Z_explicit.shape

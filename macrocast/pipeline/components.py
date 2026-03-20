@@ -38,6 +38,7 @@ class Nonlinearity(Enum):
     XGBOOST = "xgboost"
     NEURAL_NET = "neural_net"  # Feedforward, ReLU, 1-2 hidden layers
     LSTM = "lstm"  # Sequence model (SequenceEstimator)
+    GRADIENT_BOOSTING = "gradient_boosting"
 
 
 # ---------------------------------------------------------------------------

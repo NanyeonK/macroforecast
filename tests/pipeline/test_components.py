@@ -24,9 +24,10 @@ class TestNonlinearity:
         assert Nonlinearity.XGBOOST.value == "xgboost"
         assert Nonlinearity.NEURAL_NET.value == "neural_net"
         assert Nonlinearity.LSTM.value == "lstm"
+        assert Nonlinearity.GRADIENT_BOOSTING.value == "gradient_boosting"
 
     def test_total_count(self):
-        assert len(Nonlinearity) == 8
+        assert len(Nonlinearity) == 9
 
 
 class TestRegularization:

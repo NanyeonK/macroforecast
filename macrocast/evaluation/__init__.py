@@ -1,5 +1,13 @@
 """macrocast.evaluation — Layer 3: Forecast evaluation suite."""
 
+from macrocast.evaluation.horserace import (
+    HorseRaceResult,
+    best_spec_table,
+    dm_vs_benchmark_table,
+    horserace_summary,
+    mcs_membership_table,
+    relative_msfe_table,
+)
 from macrocast.evaluation.decomposition import (
     DecompositionResult,
     decompose_treatment_effects,
@@ -50,4 +58,11 @@ __all__ = [
     # regime
     "regime_conditional_msfe",
     "RegimeResult",
+    # horse race
+    "HorseRaceResult",
+    "relative_msfe_table",
+    "best_spec_table",
+    "mcs_membership_table",
+    "dm_vs_benchmark_table",
+    "horserace_summary",
 ]

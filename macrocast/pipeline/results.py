@@ -74,6 +74,12 @@ class ForecastRecord:
     hp_selected : dict
         Best hyperparameter values selected by the CV scheme (e.g.
         ``{"alpha": 0.01, "gamma": 0.1}``).
+    target_scheme : str
+        Multi-step targeting strategy.  ``"direct"`` trains on y_{t+h};
+        ``"path_average"`` trains on the mean of y_{t+1}, ..., y_{t+h}.
+    feature_set : str
+        Human-readable label of the FeatureSpec used (e.g. "F", "F-X-MAF").
+        Empty string if not set.
     """
 
     experiment_id: str
@@ -93,6 +99,7 @@ class ForecastRecord:
     n_lags: int
     hp_selected: dict = field(default_factory=dict)
     target_scheme: str = "direct"  # "direct" | "path_average"
+    feature_set: str = ""
 
     # ------------------------------------------------------------------
     # Derived quantities
@@ -132,6 +139,7 @@ class ForecastRecord:
             "n_lags": self.n_lags,
             **{f"hp_{k}": v for k, v in self.hp_selected.items()},
             "target_scheme": self.target_scheme,
+            "feature_set": self.feature_set,
         }
 
 
