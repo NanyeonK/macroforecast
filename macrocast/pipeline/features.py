@@ -51,6 +51,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
 
@@ -134,6 +135,7 @@ class FeatureBuilder:
         self.marx_for_pca = marx_for_pca
 
         # Fitted objects — populated by fit()
+        self._imputer_X: SimpleImputer | None = None
         self._scaler_X: StandardScaler | None = None
         self._pca: PCA | None = None
         self._scaler_Z: StandardScaler | None = None
@@ -220,6 +222,14 @@ class FeatureBuilder:
         -------
         self
         """
+        # Impute NaN in X_panel using column-wise medians.  FRED-MD/QD
+        # transformations (log-differences, growth rates) can produce NaN in
+        # early rows or for series with zero/negative values.  The imputer is
+        # fit on training data only and applied consistently at test time via
+        # _build_Z(), ensuring no look-ahead.
+        self._imputer_X = SimpleImputer(strategy="median")
+        X_panel = self._imputer_X.fit_transform(X_panel)
+
         # Store trailing unscaled X rows for test-time MARX computation.
         # Must be stored before any fitting so the raw values are preserved.
         if self.use_marx:
@@ -409,6 +419,24 @@ class FeatureBuilder:
           [y_{t-1}, y_{t-2}, ..., y_{t-p}] (or the last p values of training
           history).  Returns exactly 1 row.
         """
+        # Apply median imputation to X_panel (fitted on training data in fit()).
+        # This is a no-op when X_panel is already clean; it handles NaN from
+        # FRED-MD transforms without introducing look-ahead on the test path.
+        if self._imputer_X is not None:
+            X_panel = self._imputer_X.transform(X_panel)
+
+        # Forward-fill then zero-fill any NaN in y before building AR lags.
+        # A single NaN in y (e.g., from a differencing transformation at the
+        # series start) would otherwise propagate into every lag column.
+        if np.isnan(y).any():
+            y = y.copy().astype(float)
+            # Forward-fill: propagate last valid value forward.
+            for i in range(1, len(y)):
+                if np.isnan(y[i]):
+                    y[i] = y[i - 1]
+            # Back-fill leading NaN with 0 (no prior observation available).
+            y = np.where(np.isnan(y), 0.0, y)
+
         T = X_panel.shape[0]
         p = self.n_lags
 
