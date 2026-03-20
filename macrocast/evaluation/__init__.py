@@ -40,6 +40,11 @@ from macrocast.evaluation.variable_importance import (
     extract_vi_dataframe,
     vi_by_group,
 )
+from macrocast.evaluation.plots import (
+    cumulative_squared_error_plot,
+    marginal_effect_plot,
+    variable_importance_plot,
+)
 
 __all__ = [
     # metrics
@@ -87,4 +92,8 @@ __all__ = [
     "extract_vi_dataframe",
     "vi_by_group",
     "average_vi_by_horizon",
+    # visualization (CLSS 2021 Fig 1/2/3/6)
+    "marginal_effect_plot",
+    "variable_importance_plot",
+    "cumulative_squared_error_plot",
 ]
