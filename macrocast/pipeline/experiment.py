@@ -216,7 +216,9 @@ class ForecastExperiment:
             self._oos_end = pd.Timestamp(oos_end)
 
         if self.window == Window.ROLLING and rolling_size is None:
-            raise ValueError("rolling_size must be provided when window=Window.ROLLING.")
+            raise ValueError(
+                "rolling_size must be provided when window=Window.ROLLING."
+            )
 
     # ------------------------------------------------------------------
     # Main entry point
@@ -264,8 +266,7 @@ class ForecastExperiment:
 
         # Execute tasks — parallelise over (model, horizon, date) triples
         records: list[ForecastRecord | None] = Parallel(n_jobs=self.n_jobs)(
-            delayed(self._run_single)(spec, h, t_star)
-            for spec, h, t_star in tasks
+            delayed(self._run_single)(spec, h, t_star) for spec, h, t_star in tasks
         )
 
         # Filter out None (failed cells)
@@ -328,7 +329,7 @@ class ForecastExperiment:
             if T_tr <= h:
                 return None
             X_tr_aligned = X_train[: T_tr - h]  # rows 0 .. T-h-1
-            y_tr_aligned = y_train_full[h:]      # rows h .. T-1 → y_{t+h}
+            y_tr_aligned = y_train_full[h:]  # rows h .. T-1 → y_{t+h}
 
             # Test row: single observation at train_end (forecast Z_{train_end})
             X_test_row = self.panel.loc[train_end:train_end].values  # (1, N)
@@ -337,7 +338,8 @@ class ForecastExperiment:
             # Feature construction
             feat_spec = self.feature_spec
             is_sequence = issubclass(
-                spec.model_cls, SequenceEstimator  # type: ignore[arg-type]
+                spec.model_cls,
+                SequenceEstimator,  # type: ignore[arg-type]
             )
 
             if is_sequence:
@@ -356,7 +358,9 @@ class ForecastExperiment:
                 # For the direct-h target, y_tr_aligned is the shifted target;
                 # we pass the *un-shifted* y for AR lag construction
                 Z_train = builder.fit_transform(X_tr_aligned, y_train_full[: T_tr - h])
-                Z_test = builder.transform(X_test_row, y_train_full[-feat_spec.n_lags :])
+                Z_test = builder.transform(
+                    X_test_row, y_train_full[-feat_spec.n_lags :]
+                )
 
                 if Z_train.shape[0] == 0 or Z_test.shape[0] == 0:
                     return None
@@ -432,8 +436,10 @@ class ForecastExperiment:
         T = X_tr.shape[0]
 
         ar_lags = np.column_stack(
-            [y_tr[p - lag - 1 : T - lag - 1] if lag < p else np.zeros(T - p)
-             for lag in range(p)]
+            [
+                y_tr[p - lag - 1 : T - lag - 1] if lag < p else np.zeros(T - p)
+                for lag in range(p)
+            ]
         )  # shape (T-p, p)
         X_with_lags = np.concatenate([X_tr[p:], ar_lags], axis=1)  # (T-p, N+p)
 
@@ -447,15 +453,18 @@ class ForecastExperiment:
 
         # Training sequences: rows L-1 .. T2-1 (each window is rows i-L+1..i)
         n_seq = T2 - L + 1
-        X_seq = np.stack([X_with_lags[i : i + L] for i in range(n_seq)])  # (n_seq, L, N+p)
+        X_seq = np.stack(
+            [X_with_lags[i : i + L] for i in range(n_seq)]
+        )  # (n_seq, L, N+p)
 
         # Test sequence: last L rows of training window as one sequence
         # Append the test row for the final step
         X_test_feat = np.concatenate(
-            [X_test_row, np.zeros((1, p))], axis=1  # AR lags for test row are 0-padded
+            [X_test_row, np.zeros((1, p))],
+            axis=1,  # AR lags for test row are 0-padded
         )  # (1, N+p)
         X_test_window = np.concatenate(
-            [X_with_lags[-L + 1:], X_test_feat], axis=0
+            [X_with_lags[-L + 1 :], X_test_feat], axis=0
         )  # (L, N+p)
         X_test_seq = X_test_window[np.newaxis, ...]  # (1, L, N+p)
 

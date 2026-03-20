@@ -33,12 +33,14 @@ from sklearn.svm import SVR
 
 try:
     from xgboost import XGBRegressor
+
     _XGBOOST_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _XGBOOST_AVAILABLE = False
 
 try:
     from sklearn.ensemble import RandomForestRegressor
+
     _RF_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _RF_AVAILABLE = False
@@ -175,7 +177,11 @@ class SVRRBFModel(MacrocastEstimator):
 
     def fit(self, X: NDArray[np.floating], y: NDArray[np.floating]) -> SVRRBFModel:
         X_scaled = self._scaler.fit_transform(X)
-        param_grid = {"C": self.C_grid, "gamma": self.gamma_grid, "epsilon": self.epsilon_grid}
+        param_grid = {
+            "C": self.C_grid,
+            "gamma": self.gamma_grid,
+            "epsilon": self.epsilon_grid,
+        }
         base = SVR(kernel="rbf")
         self._estimator = _fit_with_cv(base, param_grid, X_scaled, y, cv=self.cv_folds)
         return self
@@ -275,7 +281,9 @@ class RFModel(MacrocastEstimator):
             raise ImportError("scikit-learn RandomForestRegressor not available.")
         self.n_estimators = n_estimators
         self.max_depth_grid = max_depth_grid or self._DEFAULT_MAX_DEPTH_GRID
-        self.min_samples_leaf_grid = min_samples_leaf_grid or self._DEFAULT_MIN_SAMPLES_LEAF_GRID
+        self.min_samples_leaf_grid = (
+            min_samples_leaf_grid or self._DEFAULT_MIN_SAMPLES_LEAF_GRID
+        )
         self.cv_folds = cv_folds
         self._estimator = None
 
@@ -369,12 +377,16 @@ class XGBoostModel(MacrocastEstimator):
 class _FFNN(nn.Module):
     """Feedforward network with 1 or 2 hidden layers and ReLU activations."""
 
-    def __init__(self, input_dim: int, hidden_dim: int, n_layers: int, dropout: float) -> None:
+    def __init__(
+        self, input_dim: int, hidden_dim: int, n_layers: int, dropout: float
+    ) -> None:
         super().__init__()
         layers: list[nn.Module] = []
         in_dim = input_dim
         for _ in range(n_layers):
-            layers.extend([nn.Linear(in_dim, hidden_dim), nn.ReLU(), nn.Dropout(dropout)])
+            layers.extend(
+                [nn.Linear(in_dim, hidden_dim), nn.ReLU(), nn.Dropout(dropout)]
+            )
             in_dim = hidden_dim
         layers.append(nn.Linear(in_dim, 1))
         self.net = nn.Sequential(*layers)
@@ -430,7 +442,9 @@ class NNModel(MacrocastEstimator):
         self.max_epochs = max_epochs
         self.patience = patience
         self.batch_size = batch_size
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(
+            device or ("cuda" if torch.cuda.is_available() else "cpu")
+        )
         self._model: _FFNN | None = None
         self._scaler = StandardScaler()
         self.best_params_: dict[str, Any] = {}
@@ -443,8 +457,12 @@ class NNModel(MacrocastEstimator):
         y_tr, y_val = y[:-val_size], y[-val_size:]
 
         best_val_loss = float("inf")
-        best_cfg: tuple = (self.hidden_dims[0], self.n_layers_options[0],
-                           self.lr_options[0], self.dropout_options[0])
+        best_cfg: tuple = (
+            self.hidden_dims[0],
+            self.n_layers_options[0],
+            self.lr_options[0],
+            self.dropout_options[0],
+        )
 
         # Grid search over HP combinations
         for h_dim in self.hidden_dims:
@@ -452,10 +470,15 @@ class NNModel(MacrocastEstimator):
                 for lr in self.lr_options:
                     for drop in self.dropout_options:
                         val_loss = self._train_and_evaluate(
-                            X_tr, y_tr, X_val, y_val,
+                            X_tr,
+                            y_tr,
+                            X_val,
+                            y_val,
                             input_dim=X_scaled.shape[1],
-                            hidden_dim=h_dim, n_layers=n_lay,
-                            lr=lr, dropout=drop,
+                            hidden_dim=h_dim,
+                            n_layers=n_lay,
+                            lr=lr,
+                            dropout=drop,
                         )
                         if val_loss < best_val_loss:
                             best_val_loss = val_loss
@@ -463,11 +486,22 @@ class NNModel(MacrocastEstimator):
 
         # Refit on full training data with best HP
         h_dim, n_lay, lr, drop = best_cfg
-        self.best_params_ = {"hidden_dim": h_dim, "n_layers": n_lay, "lr": lr, "dropout": drop}
+        self.best_params_ = {
+            "hidden_dim": h_dim,
+            "n_layers": n_lay,
+            "lr": lr,
+            "dropout": drop,
+        }
         self._model = self._train(
-            X_scaled, y, X_scaled, y,
+            X_scaled,
+            y,
+            X_scaled,
+            y,
             input_dim=X_scaled.shape[1],
-            hidden_dim=h_dim, n_layers=n_lay, lr=lr, dropout=drop,
+            hidden_dim=h_dim,
+            n_layers=n_lay,
+            lr=lr,
+            dropout=drop,
             full_train=True,
         )
         return self
@@ -484,9 +518,16 @@ class NNModel(MacrocastEstimator):
         self, X_tr, y_tr, X_val, y_val, input_dim, hidden_dim, n_layers, lr, dropout
     ) -> float:
         model = self._train(
-            X_tr, y_tr, X_val, y_val,
-            input_dim=input_dim, hidden_dim=hidden_dim, n_layers=n_layers,
-            lr=lr, dropout=dropout, full_train=False,
+            X_tr,
+            y_tr,
+            X_val,
+            y_val,
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            lr=lr,
+            dropout=dropout,
+            full_train=False,
         )
         model.eval()
         X_v = torch.tensor(X_val, dtype=torch.float32, device=self.device)
@@ -496,7 +537,16 @@ class NNModel(MacrocastEstimator):
         return loss
 
     def _train(
-        self, X_tr, y_tr, X_val, y_val, input_dim, hidden_dim, n_layers, lr, dropout,
+        self,
+        X_tr,
+        y_tr,
+        X_val,
+        y_val,
+        input_dim,
+        hidden_dim,
+        n_layers,
+        lr,
+        dropout,
         full_train: bool = False,
     ) -> _FFNN:
         model = _FFNN(input_dim, hidden_dim, n_layers, dropout).to(self.device)
@@ -514,7 +564,9 @@ class NNModel(MacrocastEstimator):
         best_state = None
 
         dataset = torch.utils.data.TensorDataset(X_t, y_t)
-        loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        loader = torch.utils.data.DataLoader(
+            dataset, batch_size=self.batch_size, shuffle=True
+        )
 
         for _epoch in range(self.max_epochs):
             model.train()
@@ -550,7 +602,9 @@ class NNModel(MacrocastEstimator):
 class _LSTMNet(nn.Module):
     """Single-layer LSTM followed by a linear readout."""
 
-    def __init__(self, input_dim: int, hidden_dim: int, n_layers: int, dropout: float) -> None:
+    def __init__(
+        self, input_dim: int, hidden_dim: int, n_layers: int, dropout: float
+    ) -> None:
         super().__init__()
         self.lstm = nn.LSTM(
             input_size=input_dim,
@@ -615,7 +669,9 @@ class LSTMModel(SequenceEstimator):
         self.max_epochs = max_epochs
         self.patience = patience
         self.batch_size = batch_size
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(
+            device or ("cuda" if torch.cuda.is_available() else "cpu")
+        )
         self._model: _LSTMNet | None = None
         self._scaler = StandardScaler()  # applied per feature across T
         self.best_params_: dict[str, Any] = {}
@@ -644,27 +700,49 @@ class LSTMModel(SequenceEstimator):
         y_tr, y_val = y[:-val_size], y[-val_size:]
 
         best_val_loss = float("inf")
-        best_cfg: tuple = (self.hidden_dims[0], self.n_layers_options[0],
-                           self.lr_options[0], self.dropout_options[0])
+        best_cfg: tuple = (
+            self.hidden_dims[0],
+            self.n_layers_options[0],
+            self.lr_options[0],
+            self.dropout_options[0],
+        )
 
         for h_dim in self.hidden_dims:
             for n_lay in self.n_layers_options:
                 for lr in self.lr_options:
                     for drop in self.dropout_options:
                         val_loss = self._train_and_evaluate(
-                            X_tr, y_tr, X_val, y_val,
-                            input_dim=N, hidden_dim=h_dim, n_layers=n_lay,
-                            lr=lr, dropout=drop,
+                            X_tr,
+                            y_tr,
+                            X_val,
+                            y_val,
+                            input_dim=N,
+                            hidden_dim=h_dim,
+                            n_layers=n_lay,
+                            lr=lr,
+                            dropout=drop,
                         )
                         if val_loss < best_val_loss:
                             best_val_loss = val_loss
                             best_cfg = (h_dim, n_lay, lr, drop)
 
         h_dim, n_lay, lr, drop = best_cfg
-        self.best_params_ = {"hidden_dim": h_dim, "n_layers": n_lay, "lr": lr, "dropout": drop}
+        self.best_params_ = {
+            "hidden_dim": h_dim,
+            "n_layers": n_lay,
+            "lr": lr,
+            "dropout": drop,
+        }
         self._model = self._train(
-            X_scaled, y, X_scaled, y,
-            input_dim=N, hidden_dim=h_dim, n_layers=n_lay, lr=lr, dropout=drop,
+            X_scaled,
+            y,
+            X_scaled,
+            y,
+            input_dim=N,
+            hidden_dim=h_dim,
+            n_layers=n_lay,
+            lr=lr,
+            dropout=drop,
             full_train=True,
         )
         return self
@@ -685,9 +763,16 @@ class LSTMModel(SequenceEstimator):
         self, X_tr, y_tr, X_val, y_val, input_dim, hidden_dim, n_layers, lr, dropout
     ) -> float:
         model = self._train(
-            X_tr, y_tr, X_val, y_val,
-            input_dim=input_dim, hidden_dim=hidden_dim, n_layers=n_layers,
-            lr=lr, dropout=dropout, full_train=False,
+            X_tr,
+            y_tr,
+            X_val,
+            y_val,
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            lr=lr,
+            dropout=dropout,
+            full_train=False,
         )
         model.eval()
         X_v = torch.tensor(X_val, dtype=torch.float32, device=self.device)
@@ -697,7 +782,16 @@ class LSTMModel(SequenceEstimator):
         return loss
 
     def _train(
-        self, X_tr, y_tr, X_val, y_val, input_dim, hidden_dim, n_layers, lr, dropout,
+        self,
+        X_tr,
+        y_tr,
+        X_val,
+        y_val,
+        input_dim,
+        hidden_dim,
+        n_layers,
+        lr,
+        dropout,
         full_train: bool = False,
     ) -> _LSTMNet:
         model = _LSTMNet(input_dim, hidden_dim, n_layers, dropout).to(self.device)
@@ -715,7 +809,9 @@ class LSTMModel(SequenceEstimator):
         best_state = None
 
         dataset = torch.utils.data.TensorDataset(X_t, y_t)
-        loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        loader = torch.utils.data.DataLoader(
+            dataset, batch_size=self.batch_size, shuffle=True
+        )
 
         for _epoch in range(self.max_epochs):
             model.train()

@@ -34,8 +34,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev \
-            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
-            libarrow-dev
+            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev
 
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2

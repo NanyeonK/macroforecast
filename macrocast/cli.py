@@ -55,8 +55,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
         return 1
 
     logger.info("Experiment: %s", cfg.experiment_id)
-    logger.info("Dataset:    %s  (target=%s, vintage=%s)",
-                cfg.data.dataset, cfg.data.target, cfg.data.vintage or "current")
+    logger.info(
+        "Dataset:    %s  (target=%s, vintage=%s)",
+        cfg.data.dataset,
+        cfg.data.target,
+        cfg.data.vintage or "current",
+    )
     logger.info("Models:     %d configured", len(cfg.model_specs))
     logger.info("Horizons:   %s", cfg.horizons)
     logger.info("Window:     %s", cfg.window.value)
@@ -128,7 +132,7 @@ def _load_data(cfg):
         )
 
     target = df[cfg.data.target]
-    panel  = df.drop(columns=[cfg.data.target])
+    panel = df.drop(columns=[cfg.data.target])
 
     # Drop columns with all NaN
     panel = panel.dropna(axis=1, how="all")
@@ -165,9 +169,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
     out_path = Path(args.output)
     if out_path.exists() and not args.force:
-        logger.error(
-            "File already exists: %s. Use --force to overwrite.", out_path
-        )
+        logger.error("File already exists: %s. Use --force to overwrite.", out_path)
         return 1
 
     out_path.write_text(DEFAULT_CONFIG_YAML)
@@ -205,8 +207,10 @@ def _cmd_info(args: argparse.Namespace) -> int:
         print(f"  - {spec.model_id}")
     print("Features:")
     fs = cfg.feature_spec
-    print(f"  n_factors={fs.n_factors}, n_lags={fs.n_lags}, "
-          f"use_factors={fs.use_factors}, lookback={fs.lookback}")
+    print(
+        f"  n_factors={fs.n_factors}, n_lags={fs.n_lags}, "
+        f"use_factors={fs.use_factors}, lookback={fs.lookback}"
+    )
     return 0
 
 
@@ -222,8 +226,7 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true",
-        help="Enable DEBUG logging."
+        "-v", "--verbose", action="store_true", help="Enable DEBUG logging."
     )
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
@@ -234,12 +237,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "run", help="Run a forecast experiment from a YAML config."
     )
     run_parser.add_argument(
-        "config", metavar="CONFIG.yaml",
-        help="Path to the YAML experiment config file."
+        "config", metavar="CONFIG.yaml", help="Path to the YAML experiment config file."
     )
     run_parser.add_argument(
-        "--summary", action="store_true",
-        help="Print MSFE summary table after the run."
+        "--summary", action="store_true", help="Print MSFE summary table after the run."
     )
 
     # init
@@ -247,21 +248,19 @@ def _build_parser() -> argparse.ArgumentParser:
         "init", help="Write a default YAML config template."
     )
     init_parser.add_argument(
-        "--output", "-o", default="experiment.yaml",
-        help="Output file path (default: experiment.yaml)."
+        "--output",
+        "-o",
+        default="experiment.yaml",
+        help="Output file path (default: experiment.yaml).",
     )
     init_parser.add_argument(
-        "--force", action="store_true",
-        help="Overwrite existing file."
+        "--force", action="store_true", help="Overwrite existing file."
     )
 
     # info
-    info_parser = subparsers.add_parser(
-        "info", help="Print a resolved config summary."
-    )
+    info_parser = subparsers.add_parser("info", help="Print a resolved config summary.")
     info_parser.add_argument(
-        "config", metavar="CONFIG.yaml",
-        help="Path to the YAML config file."
+        "config", metavar="CONFIG.yaml", help="Path to the YAML config file."
     )
 
     return parser
@@ -278,7 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     _setup_logging(verbose=args.verbose)
 
     dispatch = {
-        "run":  _cmd_run,
+        "run": _cmd_run,
         "init": _cmd_init,
         "info": _cmd_info,
     }

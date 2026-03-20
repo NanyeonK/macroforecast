@@ -92,8 +92,8 @@ def dm_test(
     e2 = y_true - y_hat_2
 
     if loss == "mse":
-        L1 = e1 ** 2
-        L2 = e2 ** 2
+        L1 = e1**2
+        L2 = e2**2
     elif loss == "mae":
         L1 = np.abs(e1)
         L2 = np.abs(e2)

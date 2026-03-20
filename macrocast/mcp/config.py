@@ -14,7 +14,10 @@ CHROMA_DIR = CACHE_ROOT / "chromadb"
 # Source paths
 PDF_SOURCE_DIR = Path.home() / "second_brain" / "research_kb" / "pdfs"
 METHODOLOGY_DOC = (
-    Path(__file__).parent.parent.parent / "docs" / "research" / "coulombe-methodology.md"
+    Path(__file__).parent.parent.parent
+    / "docs"
+    / "research"
+    / "coulombe-methodology.md"
 )
 
 CHROMA_COLLECTION = "coulombe_knowledge"
@@ -49,6 +52,7 @@ def make_embedding_function():  # type: ignore[return]  # chromadb not a hard de
             return self._encode(input)
 
     return _NomicEF()
+
 
 # Blog API endpoint (Squarespace JSON feed)
 BLOG_API_URL = "https://philippegouletcoulombe.com/blog?format=json"

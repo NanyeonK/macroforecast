@@ -27,6 +27,7 @@ _QD_BASE = (
     "fred-md/quarterly"
 )
 
+
 # Known vintage filename patterns, tried in order.
 # If FRED changes the URL format again, just add a new entry here.
 # The downloader tries each candidate and uses the first one that returns HTTP 200.
@@ -48,8 +49,8 @@ def _vintage_url_candidates(dataset: str, vintage: str) -> list[str]:
     suffix = "md" if dataset == "fred_md" else "qd"
     base = _MD_BASE if dataset == "fred_md" else _QD_BASE
     return [
-        f"{base}/{vintage}-{suffix}.csv",   # 2025-04+: YYYY-MM-md.csv
-        f"{base}/{vintage}.csv",            # pre-2025-04: YYYY-MM.csv
+        f"{base}/{vintage}-{suffix}.csv",  # 2025-04+: YYYY-MM-md.csv
+        f"{base}/{vintage}.csv",  # pre-2025-04: YYYY-MM.csv
     ]
 
 
@@ -91,15 +92,16 @@ def _build_vintage_url(dataset: str, vintage: str, timeout: int = 30) -> str:
     candidates = _vintage_url_candidates(dataset, vintage)
     for url in candidates:
         try:
-            resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
+            resp = requests.head(
+                url, headers=headers, timeout=timeout, allow_redirects=True
+            )
             if resp.status_code == 200:
                 return url
         except requests.RequestException:
             continue
 
     raise ValueError(
-        f"Could not locate vintage '{vintage}' for {dataset}. "
-        f"Tried: {candidates}"
+        f"Could not locate vintage '{vintage}' for {dataset}. Tried: {candidates}"
     )
 
 

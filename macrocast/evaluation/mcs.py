@@ -93,17 +93,17 @@ def mcs(
     pivot = loss_df.pivot(index=date_col, columns=model_col, values=loss_col)
     pivot = pivot.sort_index().dropna(how="any")
 
-    L = pivot.values             # (T, M)
+    L = pivot.values  # (T, M)
     model_names = list(pivot.columns)
     T, M = L.shape
 
-    surviving   = list(range(M))  # indices of models still in the set
-    p_values    = {name: 1.0 for name in model_names}
-    eliminated  = []
+    surviving = list(range(M))  # indices of models still in the set
+    p_values = {name: 1.0 for name in model_names}
+    eliminated = []
 
     while len(surviving) > 1:
         S = len(surviving)
-        L_s = L[:, surviving]   # (T, S)
+        L_s = L[:, surviving]  # (T, S)
 
         # Pairwise loss differentials d_{ij} and their means
         # t_ij = d_bar_ij / se(d_ij)
@@ -121,11 +121,14 @@ def mcs(
 
         # Eliminate model with highest average loss differential
         # (the model that most consistently loses to the others)
-        avg_d = np.array([
-            np.mean([L_s[:, i].mean() - L_s[:, j].mean()
-                     for j in range(S) if j != i])
-            for i in range(S)
-        ])
+        avg_d = np.array(
+            [
+                np.mean(
+                    [L_s[:, i].mean() - L_s[:, j].mean() for j in range(S) if j != i]
+                )
+                for i in range(S)
+            ]
+        )
         elim_local = int(np.argmax(avg_d))
         elim_global = surviving[elim_local]
         elim_name = model_names[elim_global]

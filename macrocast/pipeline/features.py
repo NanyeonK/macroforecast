@@ -104,7 +104,9 @@ class FeatureBuilder:
                 X_scaled = X_panel
 
             # Clamp n_factors to available dimensions
-            n_factors_actual = min(self.n_factors, X_scaled.shape[1], X_scaled.shape[0] - 1)
+            n_factors_actual = min(
+                self.n_factors, X_scaled.shape[1], X_scaled.shape[0] - 1
+            )
             self._pca = PCA(n_components=n_factors_actual)
             self._pca.fit(X_scaled)
 

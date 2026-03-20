@@ -58,8 +58,7 @@ def list_available_vintages(
     }
     if dataset not in defaults:
         raise ValueError(
-            f"Unknown dataset: '{dataset}'. "
-            f"Use one of {sorted(defaults.keys())}."
+            f"Unknown dataset: '{dataset}'. Use one of {sorted(defaults.keys())}."
         )
 
     start_dt = _parse_vintage(start or defaults[dataset])
@@ -117,8 +116,7 @@ def load_vintage_panel(
         from macrocast.data.fred_sd import load_fred_sd as _loader
     else:
         raise ValueError(
-            f"Unknown dataset: '{dataset}'. "
-            f"Use one of {sorted(_KNOWN_DATASETS)}."
+            f"Unknown dataset: '{dataset}'. Use one of {sorted(_KNOWN_DATASETS)}."
         )
 
     panel: dict[str, MacroFrame] = {}

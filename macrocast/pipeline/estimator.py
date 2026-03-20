@@ -42,7 +42,9 @@ class MacrocastEstimator(ABC):
     nonlinearity_type: Nonlinearity
 
     @abstractmethod
-    def fit(self, X: NDArray[np.floating], y: NDArray[np.floating]) -> MacrocastEstimator:
+    def fit(
+        self, X: NDArray[np.floating], y: NDArray[np.floating]
+    ) -> MacrocastEstimator:
         """Fit the model on the training feature matrix.
 
         Parameters

@@ -56,9 +56,11 @@ def fetch_posts(url: str = BLOG_API_URL) -> list[dict]:
         text = html_to_text(raw_html)
         # publishOn is milliseconds since epoch
         published_ms = item.get("publishOn", 0)
-        published_date = time.strftime(
-            "%Y-%m-%d", time.gmtime(published_ms / 1000)
-        ) if published_ms else "unknown"
+        published_date = (
+            time.strftime("%Y-%m-%d", time.gmtime(published_ms / 1000))
+            if published_ms
+            else "unknown"
+        )
 
         post = {
             "title": item.get("title", ""),

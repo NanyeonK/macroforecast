@@ -319,7 +319,9 @@ class MacroFrame:
                 )
             df = df[keep]
 
-        sub_vars = {k: v for k, v in self._metadata.variables.items() if k in df.columns}
+        sub_vars = {
+            k: v for k, v in self._metadata.variables.items() if k in df.columns
+        }
         # Recompute data_through after trimming — end date may have changed
         new_data_through = df.index[-1].strftime("%Y-%m") if len(df) > 0 else None
         new_meta = MacroFrameMetadata(

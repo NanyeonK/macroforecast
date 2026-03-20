@@ -70,14 +70,14 @@ def krr_dual_weights(
     def _rbf(A: NDArray, B: NDArray) -> NDArray:
         # Pairwise squared Euclidean distances
         # A: (m, N), B: (n, N) → (m, n)
-        sq_norms_A = np.sum(A ** 2, axis=1, keepdims=True)  # (m, 1)
-        sq_norms_B = np.sum(B ** 2, axis=1, keepdims=True)  # (n, 1)
-        sq_dist    = sq_norms_A + sq_norms_B.T - 2 * A @ B.T
-        sq_dist    = np.maximum(sq_dist, 0)  # numerical clip
+        sq_norms_A = np.sum(A**2, axis=1, keepdims=True)  # (m, 1)
+        sq_norms_B = np.sum(B**2, axis=1, keepdims=True)  # (n, 1)
+        sq_dist = sq_norms_A + sq_norms_B.T - 2 * A @ B.T
+        sq_dist = np.maximum(sq_dist, 0)  # numerical clip
         return np.exp(-gamma * sq_dist)
 
-    K_train = _rbf(X_train, X_train)         # (T_train, T_train)
-    K_test  = _rbf(X_test,  X_train)         # (T_test,  T_train)
+    K_train = _rbf(X_train, X_train)  # (T_train, T_train)
+    K_test = _rbf(X_test, X_train)  # (T_test,  T_train)
 
     # Solve (K + alpha * I) @ A = K_test.T for A, then W = A.T
     regularised = K_train + alpha * np.eye(T_train)
@@ -118,22 +118,22 @@ def tree_dual_weights(
     """
     # Get leaf indices: (T, n_trees)
     # RandomForest and XGBoost both support apply()
-    leaves_train = model.apply(X_train)   # (T_train, n_trees)
-    leaves_test  = model.apply(X_test)    # (T_test,  n_trees)
+    leaves_train = model.apply(X_train)  # (T_train, n_trees)
+    leaves_test = model.apply(X_test)  # (T_test,  n_trees)
 
     if leaves_train.ndim == 1:
         leaves_train = leaves_train[:, np.newaxis]
-        leaves_test  = leaves_test[:, np.newaxis]
+        leaves_test = leaves_test[:, np.newaxis]
 
     T_train = X_train.shape[0]
-    T_test  = X_test.shape[0]
+    T_test = X_test.shape[0]
     n_trees = leaves_train.shape[1]
 
     W = np.zeros((T_test, T_train))
 
     for b in range(n_trees):
-        lt = leaves_test[:, b]    # (T_test,)
-        ls = leaves_train[:, b]   # (T_train,)
+        lt = leaves_test[:, b]  # (T_test,)
+        ls = leaves_train[:, b]  # (T_train,)
 
         for ti in range(T_test):
             # Training obs in same leaf as test obs ti
@@ -181,7 +181,7 @@ def nn_dual_weights(
     T_train, H = activations_train.shape
 
     # Phi: (T_train, H); PhiPhi': (H, H)
-    Phi  = activations_train
+    Phi = activations_train
     PhiPhi_reg = Phi.T @ Phi + ridge_alpha * np.eye(H)
 
     # W[t, s] = phi_t @ (PhiPhi' + αI)^{-1} @ phi_s / T_train
@@ -214,8 +214,8 @@ def effective_history_length(W: NDArray[np.floating]) -> NDArray[np.floating]:
     """
     # Normalise rows to sum to 1 (if they don't already)
     row_sums = W.sum(axis=1, keepdims=True)
-    W_norm   = W / np.where(row_sums != 0, row_sums, 1)
-    hhi      = np.sum(W_norm ** 2, axis=1)
+    W_norm = W / np.where(row_sums != 0, row_sums, 1)
+    hhi = np.sum(W_norm**2, axis=1)
     return 1.0 / np.where(hhi > 0, hhi, np.nan)
 
 

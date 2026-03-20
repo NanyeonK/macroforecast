@@ -45,7 +45,7 @@ def relative_msfe(
 
     Values below 1 indicate improvement over the benchmark (AR by convention).
     """
-    msfe_model     = msfe(y_true, y_hat_model)
+    msfe_model = msfe(y_true, y_hat_model)
     msfe_benchmark = msfe(y_true, y_hat_benchmark)
     if msfe_benchmark == 0:
         return float("nan")

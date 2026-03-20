@@ -46,9 +46,11 @@ ForecastFn = Callable[
 # Shapley weight for coalition of size k out of N
 # ---------------------------------------------------------------------------
 
+
 def _shapley_weight(n: int, k: int) -> float:
     """Shapley kernel weight: k!(n-k-1)! / n!"""
     from math import factorial
+
     return factorial(k) * factorial(n - k - 1) / factorial(n)
 
 
@@ -99,6 +101,7 @@ def oshapley_vi(
         Shapley value for each predictor group.
     """
     if loss_fn is None:
+
         def loss_fn(yt, yh):
             return -float(np.mean((yt - yh) ** 2))  # negative MSFE (higher = better)
 
@@ -135,7 +138,7 @@ def oshapley_vi(
             # All coalitions of size `size` not containing i
             for subset in itertools.combinations([j for j in all_idx if j != i], size):
                 w = _shapley_weight(N, len(subset))
-                s_with    = coalition_score(tuple(sorted(subset + (i,))))
+                s_with = coalition_score(tuple(sorted(subset + (i,))))
                 s_without = coalition_score(tuple(sorted(subset)))
                 phi_i += w * (s_with - s_without)
         phi[i] = phi_i
@@ -193,12 +196,13 @@ def compute_pbsv(
         PBSV[t, i] = Shapley value of group i at test date t.
     """
     if loss_fn is None:
+
         def loss_fn(yt, yh):
             return -float(np.mean((yt - yh) ** 2))
 
-    T_test  = len(y_test_seq)
+    T_test = len(y_test_seq)
     N_groups = len(groups)
-    pbsv    = np.zeros((T_test, N_groups))
+    pbsv = np.zeros((T_test, N_groups))
 
     for t in range(T_test):
         X_tr_t = X_train_seq[t]

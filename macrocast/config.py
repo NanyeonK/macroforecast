@@ -109,22 +109,20 @@ from macrocast.pipeline.models import (
 # ---------------------------------------------------------------------------
 
 _MODEL_REGISTRY: dict[str, tuple] = {
-    "krr":        (KRRModel,       Nonlinearity.KRR,           Regularization.FACTORS),
-    "svr_rbf":    (SVRRBFModel,    Nonlinearity.SVR_RBF,       Regularization.FACTORS),
-    "svr_linear": (SVRLinearModel, Nonlinearity.SVR_LINEAR,    Regularization.NONE),
-    "rf":         (RFModel,        Nonlinearity.RANDOM_FOREST, Regularization.NONE),
-    "xgboost":    (XGBoostModel,   Nonlinearity.XGBOOST,       Regularization.NONE),
-    "nn":         (NNModel,        Nonlinearity.NEURAL_NET,    Regularization.NONE),
-    "lstm":       (LSTMModel,      Nonlinearity.LSTM,          Regularization.NONE),
+    "krr": (KRRModel, Nonlinearity.KRR, Regularization.FACTORS),
+    "svr_rbf": (SVRRBFModel, Nonlinearity.SVR_RBF, Regularization.FACTORS),
+    "svr_linear": (SVRLinearModel, Nonlinearity.SVR_LINEAR, Regularization.NONE),
+    "rf": (RFModel, Nonlinearity.RANDOM_FOREST, Regularization.NONE),
+    "xgboost": (XGBoostModel, Nonlinearity.XGBOOST, Regularization.NONE),
+    "nn": (NNModel, Nonlinearity.NEURAL_NET, Regularization.NONE),
+    "lstm": (LSTMModel, Nonlinearity.LSTM, Regularization.NONE),
 }
 
-_REGULARIZATION_MAP: dict[str, Regularization] = {
-    r.value: r for r in Regularization
-}
+_REGULARIZATION_MAP: dict[str, Regularization] = {r.value: r for r in Regularization}
 
 _LOSS_MAP: dict[str, LossFunction] = {
-    "l2":                   LossFunction.L2,
-    "epsilon_insensitive":  LossFunction.EPSILON_INSENSITIVE,
+    "l2": LossFunction.L2,
+    "epsilon_insensitive": LossFunction.EPSILON_INSENSITIVE,
 }
 
 
@@ -206,7 +204,7 @@ def load_config_from_dict(raw: dict) -> ExperimentConfig:
 
 
 def _parse_config(raw: dict) -> ExperimentConfig:
-    exp_sec  = raw.get("experiment", {})
+    exp_sec = raw.get("experiment", {})
     data_sec = raw.get("data", {})
     feat_sec = raw.get("features", {})
     mod_list = raw.get("models", [])
@@ -234,14 +232,14 @@ def _parse_config(raw: dict) -> ExperimentConfig:
     )
 
     # Outer loop config (may be nested under "experiment" or top-level)
-    run_sec     = exp_sec  # horizons etc. can live in [experiment] section
-    horizons    = [int(h) for h in run_sec.get("horizons", [1])]
-    window_str  = run_sec.get("window", "expanding").lower()
-    window      = Window.EXPANDING if window_str == "expanding" else Window.ROLLING
+    run_sec = exp_sec  # horizons etc. can live in [experiment] section
+    horizons = [int(h) for h in run_sec.get("horizons", [1])]
+    window_str = run_sec.get("window", "expanding").lower()
+    window = Window.EXPANDING if window_str == "expanding" else Window.ROLLING
     rolling_size = run_sec.get("rolling_size")
-    oos_start   = run_sec.get("oos_start")
-    oos_end     = run_sec.get("oos_end")
-    n_jobs      = int(run_sec.get("n_jobs", 1))
+    oos_start = run_sec.get("oos_start")
+    oos_end = run_sec.get("oos_end")
+    n_jobs = int(run_sec.get("n_jobs", 1))
 
     # Model specs
     model_specs = [_parse_model_spec(m) for m in mod_list]
@@ -287,7 +285,7 @@ def _parse_model_spec(m: dict) -> ModelSpec:
         raise ValueError(f"Unknown cv_scheme '{cv_str}'. Valid: kfold, bic, poos.")
 
     # Loss function
-    loss_str  = m.get("loss_function", "l2").lower()
+    loss_str = m.get("loss_function", "l2").lower()
     loss_function = _LOSS_MAP.get(loss_str, LossFunction.L2)
 
     # Model kwargs

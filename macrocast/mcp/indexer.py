@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # Chunking parameters
 # ---------------------------------------------------------------------------
 
-TARGET_CHUNK_CHARS = 4000   # ~800-1000 tokens for nomic-embed
+TARGET_CHUNK_CHARS = 4000  # ~800-1000 tokens for nomic-embed
 OVERLAP_CHARS = 400
 
 # ---------------------------------------------------------------------------
@@ -106,13 +106,15 @@ def chunk_paper(text: str, paper_key: str) -> list[dict[str, Any]]:
         for i, chunk in enumerate(sub_chunks):
             if not chunk.strip():
                 continue
-            chunks.append({
-                "text": chunk,
-                "source_type": "paper",
-                "paper_key": paper_key,
-                "section": section_title,
-                "chunk_index": i,
-            })
+            chunks.append(
+                {
+                    "text": chunk,
+                    "source_type": "paper",
+                    "paper_key": paper_key,
+                    "section": section_title,
+                    "chunk_index": i,
+                }
+            )
     return chunks
 
 
@@ -150,13 +152,15 @@ def chunk_methodology(path: Path) -> list[dict[str, Any]]:
                 sub = _split_by_paragraphs(current_text)
                 for i, c in enumerate(sub):
                     if c.strip():
-                        chunks.append({
-                            "text": c,
-                            "source_type": "methodology",
-                            "paper_key": "",
-                            "section": current_heading,
-                            "chunk_index": i,
-                        })
+                        chunks.append(
+                            {
+                                "text": c,
+                                "source_type": "methodology",
+                                "paper_key": "",
+                                "section": current_heading,
+                                "chunk_index": i,
+                            }
+                        )
             current_heading = part.strip("# ").strip()
             current_text = ""
         else:
@@ -166,13 +170,15 @@ def chunk_methodology(path: Path) -> list[dict[str, Any]]:
         sub = _split_by_paragraphs(current_text)
         for i, c in enumerate(sub):
             if c.strip():
-                chunks.append({
-                    "text": c,
-                    "source_type": "methodology",
-                    "paper_key": "",
-                    "section": current_heading,
-                    "chunk_index": i,
-                })
+                chunks.append(
+                    {
+                        "text": c,
+                        "source_type": "methodology",
+                        "paper_key": "",
+                        "section": current_heading,
+                        "chunk_index": i,
+                    }
+                )
     return chunks
 
 
@@ -196,7 +202,9 @@ def _get_collection(
     return collection
 
 
-def _unique_id(source_type: str, key: str, section: str, chunk_index: int, global_idx: int) -> str:
+def _unique_id(
+    source_type: str, key: str, section: str, chunk_index: int, global_idx: int
+) -> str:
     """Generate a stable, unique document ID for ChromaDB."""
     safe = re.sub(
         r"[^a-zA-Z0-9_-]",
@@ -291,12 +299,14 @@ def build_index(force: bool = False) -> None:
             for c in batch
         ]
         collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-        logger.info(
-            "  Upserted batch %d-%d", batch_start, batch_start + len(batch) - 1
-        )
+        logger.info("  Upserted batch %d-%d", batch_start, batch_start + len(batch) - 1)
 
     final_count = collection.count()
-    logger.info("Index complete. Collection '%s' has %d documents.", CHROMA_COLLECTION, final_count)
+    logger.info(
+        "Index complete. Collection '%s' has %d documents.",
+        CHROMA_COLLECTION,
+        final_count,
+    )
 
 
 if __name__ == "__main__":

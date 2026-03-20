@@ -94,14 +94,22 @@ def regime_conditional_msfe(
     unique_vals = df["__regime__"].nunique()
     if unique_vals <= 2:
         # Binary indicator (e.g., USREC)
-        bins_labels = ["expansion", "recession"] if regime_labels is None else regime_labels
-        df["__regime_bin__"] = df["__regime__"].map(
-            {df["__regime__"].unique()[0]: bins_labels[0],
-             df["__regime__"].unique()[-1]: bins_labels[-1]}
-        ).astype(str)
+        bins_labels = (
+            ["expansion", "recession"] if regime_labels is None else regime_labels
+        )
+        df["__regime_bin__"] = (
+            df["__regime__"]
+            .map(
+                {
+                    df["__regime__"].unique()[0]: bins_labels[0],
+                    df["__regime__"].unique()[-1]: bins_labels[-1],
+                }
+            )
+            .astype(str)
+        )
     else:
         if regime_labels is None:
-            regime_labels = [f"Q{i+1}" for i in range(n_quantiles)]
+            regime_labels = [f"Q{i + 1}" for i in range(n_quantiles)]
         quantile_edges = np.linspace(0, 1, n_quantiles + 1)
         quantile_values = df["__regime__"].quantile(quantile_edges).values
         # pd.cut with computed quantile edges
@@ -131,7 +139,7 @@ def regime_conditional_msfe(
     )
 
     model_ids = df[model_col].unique().tolist()
-    msfe_by_regime:    dict[str, dict[str, float]] = {m: {} for m in model_ids}
+    msfe_by_regime: dict[str, dict[str, float]] = {m: {} for m in model_ids}
     rel_msfe_by_regime: dict[str, dict[str, float]] = {m: {} for m in model_ids}
 
     for model_id in model_ids:
@@ -151,13 +159,15 @@ def regime_conditional_msfe(
     rows = []
     for model_id in model_ids:
         for regime in bins_labels:
-            rows.append({
-                "model_id":    model_id,
-                "regime":      regime,
-                "msfe":        msfe_by_regime[model_id][regime],
-                "rel_msfe":    rel_msfe_by_regime[model_id][regime],
-                "n_obs":       n_obs_by_regime[regime],
-            })
+            rows.append(
+                {
+                    "model_id": model_id,
+                    "regime": regime,
+                    "msfe": msfe_by_regime[model_id][regime],
+                    "rel_msfe": rel_msfe_by_regime[model_id][regime],
+                    "n_obs": n_obs_by_regime[regime],
+                }
+            )
     summary = pd.DataFrame(rows)
 
     return RegimeResult(

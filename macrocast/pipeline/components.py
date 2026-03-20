@@ -31,13 +31,13 @@ class Nonlinearity(Enum):
     """
 
     LINEAR = "linear"
-    KRR = "krr"                   # Kernel Ridge Regression (RBF)
-    SVR_RBF = "svr_rbf"           # SVR with RBF kernel (loss fn comparison)
-    SVR_LINEAR = "svr_linear"     # Linear SVR (loss fn comparison, no kernel)
+    KRR = "krr"  # Kernel Ridge Regression (RBF)
+    SVR_RBF = "svr_rbf"  # SVR with RBF kernel (loss fn comparison)
+    SVR_LINEAR = "svr_linear"  # Linear SVR (loss fn comparison, no kernel)
     RANDOM_FOREST = "random_forest"
     XGBOOST = "xgboost"
-    NEURAL_NET = "neural_net"     # Feedforward, ReLU, 1-2 hidden layers
-    LSTM = "lstm"                 # Sequence model (SequenceEstimator)
+    NEURAL_NET = "neural_net"  # Feedforward, ReLU, 1-2 hidden layers
+    LSTM = "lstm"  # Sequence model (SequenceEstimator)
 
 
 # ---------------------------------------------------------------------------
@@ -57,15 +57,15 @@ class Regularization(Enum):
     alternatives in the data-rich environment.
     """
 
-    NONE = "none"                     # OLS, no penalty (data-poor baseline)
-    RIDGE = "ridge"                   # L2 penalty -- R: glmnet(alpha=0)
-    LASSO = "lasso"                   # L1 penalty -- R: glmnet(alpha=1)
-    ADAPTIVE_LASSO = "adaptive_lasso" # Weighted L1 -- R: glmnet(penalty.factor=)
-    GROUP_LASSO = "group_lasso"       # Group L1 by FRED category -- R: grpreg
-    ELASTIC_NET = "elastic_net"       # L1+L2 mix -- R: glmnet(alpha=0.5)
-    FACTORS = "factors"               # PCA diffusion index (ARDI) -- R + Python
-    TVP_RIDGE = "tvp_ridge"           # Time-varying params via Ridge -- R
-    BOOGING = "booging"               # Bootstrap aggregating + pruning -- R
+    NONE = "none"  # OLS, no penalty (data-poor baseline)
+    RIDGE = "ridge"  # L2 penalty -- R: glmnet(alpha=0)
+    LASSO = "lasso"  # L1 penalty -- R: glmnet(alpha=1)
+    ADAPTIVE_LASSO = "adaptive_lasso"  # Weighted L1 -- R: glmnet(penalty.factor=)
+    GROUP_LASSO = "group_lasso"  # Group L1 by FRED category -- R: grpreg
+    ELASTIC_NET = "elastic_net"  # L1+L2 mix -- R: glmnet(alpha=0.5)
+    FACTORS = "factors"  # PCA diffusion index (ARDI) -- R + Python
+    TVP_RIDGE = "tvp_ridge"  # Time-varying params via Ridge -- R
+    BOOGING = "booging"  # Bootstrap aggregating + pruning -- R
 
 
 # ---------------------------------------------------------------------------

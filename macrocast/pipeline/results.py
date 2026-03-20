@@ -105,7 +105,7 @@ class ForecastRecord:
     @property
     def squared_error(self) -> float:
         """Squared forecast error (y_true - y_hat)²."""
-        return self.error ** 2
+        return self.error**2
 
     # ------------------------------------------------------------------
     # Serialisation
