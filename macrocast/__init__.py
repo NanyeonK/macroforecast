@@ -28,6 +28,7 @@ from macrocast.data import (
     load_fred_qd,
     load_fred_sd,
     load_vintage_panel,
+    merge_macro_frames,
 )
 
 __all__ = [
@@ -51,6 +52,8 @@ __all__ = [
     "list_available_vintages",
     "load_vintage_panel",
     "RealTimePanel",
+    # Multi-dataset merge
+    "merge_macro_frames",
     # Pipeline (Layer 2) — top-level convenience re-exports
     "ForecastExperiment",
     "ModelSpec",
