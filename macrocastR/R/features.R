@@ -45,25 +45,31 @@ build_features <- function(X_panel, y, n_factors = 8L, n_lags = 4L,
   N     <- ncol(X_panel)
   p     <- as.integer(n_lags)
 
-  if (T_obs <= p) {
+  # In transform mode (pca_fit provided) a single test row is valid
+  if (is.null(pca_fit) && T_obs <= p) {
     stop("Training window (", T_obs, " rows) is not larger than n_lags (", p, ").")
   }
 
   # --- AR lag matrix --------------------------------------------------
-  # Rows p+1 .. T (1-indexed): lags 1..p of y
-  lag_idx  <- seq_len(T_obs - p)          # indices into shortened row space
-  ar_lags  <- matrix(NA_real_, nrow = T_obs - p, ncol = p)
-  for (lag in seq_len(p)) {
-    ar_lags[, lag] <- y[seq(p - lag + 1, T_obs - lag)]
+  # Training mode: rows p+1..T each get p lags from y.
+  # Transform mode with T_obs == 1: y contains the last p values; build
+  # one lag row directly (lag 1 = y[p], lag 2 = y[p-1], ..., lag p = y[1]).
+  if (T_obs == 1L && !is.null(pca_fit)) {
+    y_p     <- tail(y, p)
+    ar_lags <- matrix(y_p[seq(p, 1L, by = -1L)], nrow = 1L, ncol = p)
+  } else {
+    ar_lags <- matrix(NA_real_, nrow = T_obs - p, ncol = p)
+    for (lag in seq_len(p)) {
+      ar_lags[, lag] <- y[seq(p - lag + 1, T_obs - lag)]
+    }
   }
   colnames(ar_lags) <- paste0("y_lag", seq_len(p))
 
   # --- PCA factors ----------------------------------------------------
   if (use_factors) {
-    n_factors <- min(as.integer(n_factors), N, T_obs - p - 1L)
-
     if (is.null(pca_fit)) {
       # Fit PCA on training panel
+      n_factors <- min(as.integer(n_factors), N, T_obs - p - 1L)
       if (standardize_X) {
         col_center <- colMeans(X_panel, na.rm = TRUE)
         col_scale  <- apply(X_panel, 2, sd, na.rm = TRUE)
@@ -91,8 +97,12 @@ build_features <- function(X_panel, y, n_factors = 8L, n_lags = 4L,
                      scale  = pca_fit$scale)
     }
 
-    factors <- X_std %*% pca_fit$rotation   # (T, n_factors)
-    factors <- factors[seq(p + 1, T_obs), , drop = FALSE]  # align with AR lags
+    factors <- X_std %*% pca_fit$rotation   # (T_obs, n_factors)
+    # In training mode drop the first p rows (no lags available for them);
+    # in single-row transform mode keep the one row as-is.
+    if (T_obs > 1L) {
+      factors <- factors[seq(p + 1, T_obs), , drop = FALSE]
+    }
     colnames(factors) <- paste0("f", seq_len(ncol(factors)))
 
     Z <- cbind(factors, ar_lags)
