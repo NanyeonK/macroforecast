@@ -81,41 +81,55 @@ def oos_r2_panel(
     target_col: str | None = "target",
     y_hat_col: str = "y_hat",
     y_true_col: str = "y_true",
+    benchmark_col: str | None = None,
 ) -> pd.DataFrame:
-    """Add an ``oos_r2`` column to result_df implementing CLSS 2021 Eq. 11.
+    """Add an ``oos_r2`` column to result_df.
 
-    For each (target, horizon) group the OOS variance is
+    Two modes depending on ``benchmark_col``:
 
-        sigma²_{v,h} = (1/T_OOS) * sum_t (y_true_t - ybar_h^v)²
+    **Variance-based** (``benchmark_col=None``, default — CLSS 2021 Eq. 11):
+        For each (target, horizon) group the denominator is the OOS variance of
+        the realised series:
 
-    and the per-row pseudo-R² is
+            sigma²_{v,h} = (1/T_OOS) * sum_t (y_true_t - ybar_h^v)²
 
-        R²_{t,v,h,m} = 1 - (y_true_t - y_hat_t)² / sigma²_{v,h}
+        OOS-R²_{t} = 1 - (y_true_t - y_hat_t)² / sigma²_{v,h}
+
+    **Benchmark model** (``benchmark_col`` provided — Campbell-Thompson style):
+        Denominator is the squared error of a named benchmark forecast column:
+
+            OOS-R²_{t} = 1 - (y_true_t - y_hat_t)² / (y_true_t - y_bench_t)²
+
+        The per-row result is then averaged by group to yield a pseudo-R².
+        This allows comparing against AR, ARDI, or any other model in the table.
 
     Parameters
     ----------
     result_df : pd.DataFrame
         Forecast result table.  Required columns: ``y_hat``, ``y_true``,
-        ``horizon`` (and optionally ``target``).  The ``date_col`` column
-        identifies the OOS evaluation date; it is used only to determine
-        group membership.
+        ``horizon`` (and optionally ``target``).
     date_col : str
         Column identifying the OOS forecast date. Default ``"forecast_date"``.
     horizon_col : str
         Column identifying the forecast horizon. Default ``"horizon"``.
     target_col : str or None
-        Column identifying the target variable.  If None or absent from the
-        DataFrame, all rows are treated as a single target pool.
+        Column identifying the target variable.  If None or absent, all rows
+        are treated as a single target pool.
     y_hat_col : str
         Column with model point forecasts. Default ``"y_hat"``.
     y_true_col : str
         Column with realised values. Default ``"y_true"``.
+    benchmark_col : str or None
+        Column with benchmark model forecasts.  If provided, OOS-R² is computed
+        as ``1 - MSE_model / MSE_benchmark`` using the benchmark's squared
+        errors as denominator (Campbell-Thompson 2008).  If None, the OOS
+        variance of ``y_true`` is used as denominator (CLSS 2021 Eq. 11).
 
     Returns
     -------
     pd.DataFrame
         Copy of ``result_df`` with an additional ``oos_r2`` column (float).
-        Values can be negative; NaN is returned for groups with zero variance.
+        Values can be negative; NaN is returned for groups with zero denominator.
     """
     df = result_df.copy()
 
@@ -124,19 +138,32 @@ def oos_r2_panel(
     if target_col is not None and target_col in df.columns:
         group_keys = [target_col, horizon_col]
 
-    # Squared errors (numerator of Eq. 11)
+    # Squared errors of the model
     sq_err = (df[y_true_col] - df[y_hat_col]) ** 2
 
-    # Compute sigma²_{v,h} per group — variance of y_true over OOS window
-    group_var = df.groupby(group_keys)[y_true_col].transform("var", ddof=0)
-
-    # Set R² to NaN where variance is zero (degenerate group)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        oos_r2_vals = np.where(
-            group_var == 0,
-            np.nan,
-            1.0 - sq_err.values / group_var.values,
-        )
+    if benchmark_col is not None:
+        # Campbell-Thompson: denominator = benchmark squared errors
+        if benchmark_col not in df.columns:
+            raise ValueError(
+                f"benchmark_col '{benchmark_col}' not found in result_df. "
+                f"Available columns: {list(df.columns)}"
+            )
+        sq_err_bench = (df[y_true_col] - df[benchmark_col]) ** 2
+        with np.errstate(invalid="ignore", divide="ignore"):
+            oos_r2_vals = np.where(
+                sq_err_bench == 0,
+                np.nan,
+                1.0 - sq_err.values / sq_err_bench.values,
+            )
+    else:
+        # CLSS 2021 Eq. 11: denominator = group-level variance of y_true
+        group_var = df.groupby(group_keys)[y_true_col].transform("var", ddof=0)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            oos_r2_vals = np.where(
+                group_var == 0,
+                np.nan,
+                1.0 - sq_err.values / group_var.values,
+            )
 
     df["oos_r2"] = oos_r2_vals
     return df

@@ -25,9 +25,11 @@ theme:
     text: Roboto
     code: Roboto Mono
   features:
-    - navigation.tabs
     - navigation.sections
+    - navigation.expand
+    - navigation.indexes
     - navigation.top
+    - toc.follow
     - search.highlight
     - search.share
     - content.code.copy
@@ -86,9 +88,8 @@ nav:
     - Decomposition: evaluation/decomposition.md
     - Model Confidence Set: evaluation/mcs.md
     - Diebold-Mariano Test: evaluation/dm.md
-    - Clark-West Test: evaluation/dm.md
-    - Giacomini-White Test: evaluation/dm.md
-    - Forecast Combination: evaluation/decomposition.md
+    - Clark-West Test: evaluation/cw.md
+    - Giacomini-White Test: evaluation/gw.md
     - Regime-Conditional: evaluation/regime.md
   - Preprocessing:
     - Overview: preprocessing/index.md
@@ -103,7 +104,6 @@ nav:
   - Replication:
     - Overview: replication/index.md
     - CLSS 2021: replication/clss2021.md
-  - CLI: cli.md
   - Tutorials:
     - CLSS 2021 Replication: tutorials/clss2021-replication.md
   - Research:
