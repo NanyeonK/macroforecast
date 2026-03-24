@@ -15,7 +15,7 @@ import pandas as pd
 
 from macrocast.pipeline.components import Window
 from macrocast.pipeline.experiment import FeatureSpec, ForecastExperiment, ModelSpec
-from macrocast.pipeline.results import ForecastRecord, ResultSet
+from macrocast.pipeline.results import ResultSet
 
 
 class HorseRaceGrid:

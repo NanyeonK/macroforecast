@@ -11,6 +11,7 @@ from macrocast.pipeline.components import (
 from macrocast.pipeline.estimator import MacrocastEstimator, SequenceEstimator
 from macrocast.pipeline.experiment import FeatureSpec, ForecastExperiment, ModelSpec
 from macrocast.pipeline.features import FeatureBuilder
+from macrocast.pipeline.horserace import HorseRaceGrid
 from macrocast.pipeline.models import (
     GBModel,
     KRRModel,
@@ -22,18 +23,18 @@ from macrocast.pipeline.models import (
     XGBoostModel,
 )
 from macrocast.pipeline.r_models import (
+    AdaptiveLassoModel,
     ARDIModel,
     ARModel,
-    AdaptiveLassoModel,
     BoogingModel,
+    BVARModel,
     ElasticNetModel,
     GroupLassoModel,
     LassoModel,
-    RModelEstimator,
     RidgeModel,
+    RModelEstimator,
     TVPRidgeModel,
 )
-from macrocast.pipeline.horserace import HorseRaceGrid
 from macrocast.pipeline.results import ForecastRecord, ResultSet
 
 __all__ = [
@@ -72,6 +73,7 @@ __all__ = [
     "ElasticNetModel",
     "TVPRidgeModel",
     "BoogingModel",
+    "BVARModel",
     # experiment
     "ModelSpec",
     "FeatureSpec",

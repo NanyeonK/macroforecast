@@ -41,7 +41,6 @@ from numpy.typing import NDArray
 from macrocast.pipeline.components import Nonlinearity
 from macrocast.pipeline.estimator import MacrocastEstimator
 
-
 # ---------------------------------------------------------------------------
 # Feather I/O helper
 # ---------------------------------------------------------------------------
@@ -339,6 +338,86 @@ class BoogingModel(RModelEstimator):
 
     def __init__(self, n_boot: int = 200, prune_quantile: float = 0.5) -> None:
         super().__init__("booging", n_boot=n_boot, prune_quantile=prune_quantile)
+
+
+class BVARModel(RModelEstimator):
+    """Bayesian VAR with Minnesota prior (Litterman 1986).
+
+    Implements a Bayesian linear regression with a diagonal Normal prior
+    (Minnesota-style) on the regression coefficients.  Applied to the
+    Z_train feature matrix from FeatureBuilder, this serves as a standard
+    Bayesian shrinkage benchmark in macro forecasting horse races.
+
+    The prior precision is diagonal: D_jj = lambda / Var(z_j), which
+    shrinks high-variance predictors less aggressively.  The intercept
+    receives a near-flat prior (D_11 ≈ 0).
+
+    The MAP estimate is analytical: beta = (Z'Z + lambda*D)^{-1} Z'y.
+    When lambda is None, it is tuned by leave-one-out cross-validation
+    via the fast hat-matrix diagonal formula.
+
+    Parameters
+    ----------
+    lambda_ : float or None
+        Global shrinkage hyperparameter.  None (default) tunes by LOO-CV
+        over a log-spaced grid from 1e-3 to 1e3.
+    intercept : bool
+        Include intercept column.  Default True.
+    n_grid : int
+        Number of lambda candidates in the LOO-CV grid.  Default 20.
+    """
+
+    def __init__(
+        self,
+        lambda_: float | None = None,
+        intercept: bool = True,
+        n_grid: int = 20,
+    ) -> None:
+        # Pass lambda as None (JSON null) when unset; R bridge treats NULL as LOO-CV
+        super().__init__(
+            "bvar",
+            lambda_=lambda_,
+            intercept=intercept,
+            n_grid=n_grid,
+        )
+
+    def _call_r(
+        self,
+        Z_train: NDArray[np.floating],
+        y_train: NDArray[np.floating],
+        Z_test: NDArray[np.floating],
+    ) -> tuple[float, dict[str, Any]]:
+        """Override to map Python's ``lambda_`` kwarg to R's ``lambda``."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            _write_feather(Z_train, tmppath / "Z_train.feather")
+            _write_feather(y_train.reshape(-1, 1), tmppath / "y_train.feather")
+            _write_feather(Z_test, tmppath / "Z_test.feather")
+
+            # Remap: Python uses lambda_ to avoid shadowing built-in; R expects lambda
+            config: dict[str, Any] = {
+                "lambda": self.model_kwargs.get("lambda_"),  # None → JSON null → R NULL
+                "intercept": self.model_kwargs.get("intercept", True),
+                "n_grid": self.model_kwargs.get("n_grid", 20),
+            }
+            (tmppath / "config.json").write_text(json.dumps(config))
+
+            result = subprocess.run(
+                ["Rscript", str(self._BRIDGE_SCRIPT), "bvar", tmpdir],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"R bridge failed for model 'bvar':\n"
+                    f"STDOUT: {result.stdout}\n"
+                    f"STDERR: {result.stderr}"
+                )
+
+            output = json.loads((tmppath / "output.json").read_text())
+
+        return float(output["y_hat"]), output.get("hp", {})
 
 
 # ---------------------------------------------------------------------------

@@ -1,49 +1,34 @@
 """Feature construction for macrocast pipeline.
 
-FeatureBuilder assembles the predictor matrix Z_t that is passed to each
-MacrocastEstimator.  Four modes are supported, following Coulombe et al.
-(2021, CLSS):
+FeatureBuilder assembles the predictor matrix Z_t passed to each
+MacrocastEstimator.  The information set is controlled by three orthogonal
+choices following Coulombe et al. (2021, CLSS) Table 1:
 
-* **Factors mode** (FACTORS / ARDI regularization): Z_t contains PCA diffusion
-  index factors f_1..f_{p_f} plus AR lags y_{t-1}..y_{t-p_y}.  Number of
-  factors p_f and number of lags p_y are both tuning parameters exposed to the
-  CV loop.
+1. **factor_type** — what panel PCA is applied to:
+   - ``"none"``  : no dimensionality reduction; use appended columns only
+   - ``"X"``     : standard diffusion factors (PCA on stationary X panel)
+   - ``"MARX"``  : moving average factors / MAF (PCA on MARX-transformed panel)
 
-* **AR-only mode** (all other regularizations): Z_t contains AR lags only
-  y_{t-1}..y_{t-p_y}.  Used for data-poor linear baselines (OLS, Ridge, etc.)
-  that do not use a large predictor set directly.
+2. **Append flags** — orthogonal columns added to Z regardless of factor_type:
+   - ``append_x_factors`` : prepend standard X-PCA factors alongside MAF
+                            factors (active only when factor_type="MARX");
+                            enables F-MAF, F-X-MAF
+   - ``append_marx``      : append raw MARX columns to Z; enables F-MARX,
+                            X-MARX, etc.
+   - ``append_raw_x``     : append standardized stationary X columns; enables
+                            F-X, X, X-MAF, etc.
+   - ``append_levels``    : append level-form X columns and y_t level; enables
+                            F-Level, X-Level, etc.
 
-* **MARX mode** (Moving Average Rotation of X): Each variable k at order p is
-  replaced by the cumulative moving average (1/p) sum_{p'=1}^{p} X_{t-p'+1,k}.
-  The MARX panel (K * p_marx columns) either replaces raw X before PCA, or is
-  used directly as columns without PCA reduction.  Implements Eq. 7 of
-  Coulombe et al. (2021).
+3. **AR lags of y** — always included in Z regardless of the information set.
+   ``n_lags`` controls the lag order P_y (= P_f in the paper; CLSS uses 12).
 
-* **MAF mode** (Moving Average Factors): PCA applied to the MARX-transformed
-  panel instead of raw X.  Activated by ``use_maf=True``, which forces both
-  ``use_marx=True`` and ``use_factors=True`` internally.
+This design maps all 16 CLSS 2021 Table 1 information sets onto unique flag
+combinations (see FeatureSpec docstring for the full mapping table).
 
-* **Raw-X mode** (``include_raw_x=True``): Append the standardized raw X
-  columns to Z alongside factors, MARX columns, and AR lags.  Enables the
-  F-X, X, X-MAF, and related information sets from Coulombe et al. (2021).
-
-* **PCA-on-raw-X with MARX columns** (``use_factors=True``,
-  ``use_marx=True``, ``marx_for_pca=False``): PCA is applied to the raw
-  scaled X panel; MARX columns are then appended as separate Z columns
-  alongside the factors.  Contrast with MAF mode where PCA is applied to
-  the MARX panel itself.
-
-Additionally, level-form predictors and the target can be appended to Z_t via
-``include_levels=True`` (Coulombe et al. 2021, p. 1342).
-
-The builder is stateful: ``fit`` computes PCA loadings on the training window;
-``transform`` applies those loadings to any window (train or test) without
-refitting.  This ensures strict pseudo-OOS discipline with no look-ahead.
-
-Notes
------
-PCA is applied to the *full* predictor panel X (T, N), NOT to the target
-series y.  The target is included only through the AR lag columns.
+The builder is stateful: ``fit`` computes PCA loadings and scalers on the
+training window; ``transform`` applies them without refitting, enforcing
+strict pseudo-OOS discipline.
 """
 
 from __future__ import annotations
@@ -54,145 +39,94 @@ from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
+from macrocast.preprocessing.transforms import apply_marx as _apply_marx
+
 
 class FeatureBuilder:
     """Construct the predictor matrix Z_t for a single training window.
 
     Parameters
     ----------
+    factor_type : str
+        Primary dimensionality-reduction mode: ``"none"``, ``"X"``, or
+        ``"MARX"``.  See module docstring for details.
     n_factors : int
-        Number of PCA factors to extract from the large predictor panel.
-        Ignored when ``use_factors=False``.  Tuned by the CV loop.
+        Number of PCA factors to extract.  Ignored when
+        ``factor_type="none"``.
     n_lags : int
-        Number of AR lags of the target series to append.  Applies in all
-        modes.  Tuned by the CV loop.
-    use_factors : bool
-        If True, prepend PCA factors to the feature matrix (FACTORS / ARDI
-        mode).  If False, use AR lags only (or MARX columns when
-        ``use_marx=True``).
-    standardize_X : bool
-        Standardize the predictor panel before PCA.  Recommended (default True).
-    standardize_Z : bool
-        Standardize the final feature matrix Z before returning.  Useful for
-        kernel-based models (KRR, SVR) and NNs that are sensitive to scale.
-        Default False (sklearn pipelines can handle scaling internally).
-    use_marx : bool
-        If True, apply the MARX transformation to the predictor panel before
-        PCA (or directly as columns when ``use_factors=False``).  Implements
-        the Moving Average Rotation of X from Coulombe et al. (2021).
+        AR lag order for the target (P_y).  Also controls row alignment for
+        factor and X-column blocks (P_f = P_y throughout).  Applied in all
+        modes; AR lags are always included in Z.
     p_marx : int
-        Maximum moving average order for MARX.  Produces p_marx moving averages
-        per variable.  Default 12 (suited to monthly data).
-    use_maf : bool
-        If True, apply PCA to the MARX-transformed panel (Moving Average
-        Factors).  Forces ``use_factors=True`` and ``use_marx=True``
-        internally.  Coulombe et al. (2021), p. 1341.
-    include_levels : bool
-        If True, append level-form predictor columns and the current target
-        value to Z.  Requires ``X_levels`` to be passed to ``fit()`` and
-        ``transform()``.  Coulombe et al. (2021), p. 1342.
-    include_raw_x : bool
-        If True, append the standardized raw X columns to Z alongside factors
-        or MARX columns.  Enables the F-X, X, X-MAF, etc. information sets
-        from Coulombe et al. (2021).  Default False.
-    marx_for_pca : bool
-        Controls what panel PCA is applied to when both ``use_factors=True``
-        and ``use_marx=True``.  When True (default), PCA is applied to the
-        MARX panel (MAF mode).  When False, PCA is applied to the raw scaled
-        X panel and the MARX columns are appended as additional Z columns.
-        Ignored when ``use_factors`` and ``use_marx`` are not both True.
+        MARX lag order (P_MARX in CLSS 2021).  Used when
+        ``factor_type="MARX"`` or ``append_marx=True``.
+    append_x_factors : bool
+        When ``factor_type="MARX"``, also prepend standard X-PCA factors to
+        Z.  Enables the F-MAF and F-X-MAF information sets.
+    append_marx : bool
+        Append raw MARX columns to Z.  Enables F-MARX, X-MARX, etc.
+    append_raw_x : bool
+        Append standardized stationary X columns to Z.  Enables F-X, X, etc.
+    append_levels : bool
+        Append level-form predictor columns and the current target level to Z.
+        Requires ``X_levels`` to be passed to ``fit()`` and ``transform()``.
+    standardize_X : bool
+        Standardize the predictor panel before PCA (recommended).
+    standardize_Z : bool
+        Standardize the assembled Z matrix.  Useful for kernel-based models
+        (KRR, SVR) and neural networks.
     """
 
     def __init__(
         self,
+        factor_type: str = "X",
         n_factors: int = 8,
         n_lags: int = 4,
-        use_factors: bool = True,
+        p_marx: int = 12,
+        append_x_factors: bool = False,
+        append_marx: bool = False,
+        append_raw_x: bool = False,
+        append_levels: bool = False,
         standardize_X: bool = True,
         standardize_Z: bool = False,
-        use_marx: bool = False,
-        p_marx: int = 12,
-        use_maf: bool = False,
-        include_levels: bool = False,
-        include_raw_x: bool = False,
-        marx_for_pca: bool = True,
     ) -> None:
-        # MAF is syntactic sugar: forces both use_factors and use_marx on
-        if use_maf:
-            use_factors = True
-            use_marx = True
-
+        if factor_type not in {"none", "X", "MARX"}:
+            raise ValueError(
+                f"factor_type must be 'none', 'X', or 'MARX'; got {factor_type!r}"
+            )
+        self.factor_type = factor_type
         self.n_factors = n_factors
         self.n_lags = n_lags
-        self.use_factors = use_factors
+        self.p_marx = p_marx
+        self.append_x_factors = append_x_factors
+        self.append_marx = append_marx
+        self.append_raw_x = append_raw_x
+        self.append_levels = append_levels
         self.standardize_X = standardize_X
         self.standardize_Z = standardize_Z
-        self.use_marx = use_marx
-        self.p_marx = p_marx
-        self.use_maf = use_maf
-        self.include_levels = include_levels
-        self.include_raw_x = include_raw_x
-        self.marx_for_pca = marx_for_pca
 
         # Fitted objects — populated by fit()
         self._imputer_X: SimpleImputer | None = None
         self._scaler_X: StandardScaler | None = None
-        self._pca: PCA | None = None
+        self._pca: PCA | None = None           # primary: on X or MARX panel
+        self._pca_x: PCA | None = None         # secondary: on raw X (append_x_factors)
         self._scaler_Z: StandardScaler | None = None
         self._scaler_levels: StandardScaler | None = None
-        # Last p_marx rows of unscaled training X, needed for test-time MARX
+        # Last p_marx rows of scaled X, needed for test-time MARX computation
         self._last_X_rows: NDArray[np.floating] | None = None
         self._fitted: bool = False
 
-        # Feature name tracking — populated by fit()
+        # Feature name / group tracking — populated by fit()
         self._feature_names_out_: list[str] = []
         self._feature_group_map_: dict[str, str] = {}
 
     # ------------------------------------------------------------------
-    # Static helpers
-    # ------------------------------------------------------------------
-
     @staticmethod
     def _marx_transform(
         X: NDArray[np.floating], p_marx: int
     ) -> NDArray[np.floating]:
-        """Moving Average Rotation of X (Coulombe et al. 2021).
-
-        For variable k and order p, the MARX feature at time t is:
-            Z_{t,k,p} = (1/p) sum_{p'=1}^{p} X_{t-p'+1, k}
-
-        Uses the cumsum trick for O(T * K * p_marx) efficiency.
-
-        Parameters
-        ----------
-        X : NDArray of shape (T, K)
-            Predictor panel (already standardized if required).
-        p_marx : int
-            Maximum moving average order.  All orders 1..p_marx are computed.
-
-        Returns
-        -------
-        NDArray of shape (T - p_marx + 1, K * p_marx)
-            Columns ordered as [MA_1_col0, ..., MA_1_colK-1,
-            MA_2_col0, ..., MA_p_colK-1].  The first p_marx - 1 rows of X
-            are dropped because the longest MA requires a full history of
-            length p_marx.
-        """
-        T, K = X.shape
-        # cs[i] = sum of X[0 .. i-1], with cs[0] = 0.  Shape (T+1, K).
-        cs = np.zeros((T + 1, K), dtype=float)
-        cs[1:] = np.cumsum(X, axis=0)
-
-        parts: list[NDArray[np.floating]] = []
-        for p in range(1, p_marx + 1):
-            # MA_p at time t (0-indexed): mean of X[t-p+1 .. t]
-            #   = (cs[t+1] - cs[t+1-p]) / p
-            # Valid for t >= p - 1.  We evaluate for t = p_marx-1 .. T-1,
-            # which corresponds to cs row indices p_marx .. T.
-            ma_p = (cs[p_marx : T + 1] - cs[p_marx - p : T + 1 - p]) / p
-            parts.append(ma_p)
-
-        return np.concatenate(parts, axis=1)  # (T - p_marx + 1, K * p_marx)
+        """Delegate to :func:`macrocast.preprocessing.transforms.apply_marx`."""
+        return _apply_marx(X, p=p_marx, scale=False)
 
     # ------------------------------------------------------------------
     # Fit
@@ -204,137 +138,122 @@ class FeatureBuilder:
         y: NDArray[np.floating],
         X_levels: NDArray[np.floating] | None = None,
     ) -> FeatureBuilder:
-        """Fit PCA (and optional scalers) on the training window.
+        """Fit scalers and PCA on the training window.
 
         Parameters
         ----------
-        X_panel : array of shape (T_train, N)
-            Large predictor panel for the training window.  Columns should
-            already be stationary-transformed (tcode applied).
-        y : array of shape (T_train,)
-            Target series for the training window.  Used to construct AR lags.
-            PCA is NOT fitted on y.
-        X_levels : array of shape (T_train, N_levels) or None
-            Predictor panel in levels (pre-tcode).  Required when
-            ``include_levels=True``.
-
-        Returns
-        -------
-        self
+        X_panel : (T_train, N)
+            Stationary-transformed predictor panel.
+        y : (T_train,)
+            Target series (used for AR lags; PCA is not applied to y).
+        X_levels : (T_train, N) or None
+            Level-form predictor panel.  Required when
+            ``append_levels=True``.
         """
-        # Impute NaN in X_panel using column-wise medians.  FRED-MD/QD
-        # transformations (log-differences, growth rates) can produce NaN in
-        # early rows or for series with zero/negative values.  The imputer is
-        # fit on training data only and applied consistently at test time via
-        # _build_Z(), ensuring no look-ahead.
-        self._imputer_X = SimpleImputer(strategy="median")
+        needs_marx = self.factor_type == "MARX" or self.append_marx
+        needs_x = self.factor_type in {"X", "MARX"} or self.append_raw_x or self.append_x_factors
+
+        # Impute NaN in X_panel (column-wise median, fit on training data only)
+        self._imputer_X = SimpleImputer(strategy="median", keep_empty_features=True)
         X_panel = self._imputer_X.fit_transform(X_panel)
 
-        # Store trailing unscaled X rows for test-time MARX computation.
-        # Must be stored before any fitting so the raw values are preserved.
-        if self.use_marx:
-            self._last_X_rows = X_panel[-self.p_marx :].copy()
+        # Fit X scaler whenever X is touched
+        if needs_x and self.standardize_X:
+            self._scaler_X = StandardScaler()
+            X_scaled = self._scaler_X.fit_transform(X_panel)
+        else:
+            X_scaled = X_panel.astype(float)
 
-        if self.use_factors:
-            if self.standardize_X:
-                self._scaler_X = StandardScaler()
-                X_scaled = self._scaler_X.fit_transform(X_panel)
-            else:
-                X_scaled = X_panel.astype(float)
+        # Store trailing scaled X rows for test-time MARX computation
+        if needs_marx:
+            self._last_X_rows = X_scaled[-self.p_marx :].copy()
 
-            # When MARX is active, fit PCA on the MARX panel (MAF mode) when
-            # marx_for_pca=True (default).  When marx_for_pca=False, PCA is
-            # fitted on the raw scaled panel; MARX columns are appended later.
-            if self.use_marx and self.marx_for_pca:
-                X_for_pca = self._marx_transform(X_scaled, self.p_marx)
-            else:
-                X_for_pca = X_scaled
+        # Fit primary PCA
+        if self.factor_type == "X":
+            n_act = min(self.n_factors, X_scaled.shape[1], X_scaled.shape[0] - 1)
+            self._pca = PCA(n_components=n_act)
+            self._pca.fit(X_scaled)
+        elif self.factor_type == "MARX":
+            X_marx = self._marx_transform(X_scaled, self.p_marx)
+            n_act = min(self.n_factors, X_marx.shape[1], X_marx.shape[0] - 1)
+            self._pca = PCA(n_components=n_act)
+            self._pca.fit(X_marx)
 
-            # Clamp n_factors to available dimensions to avoid PCA errors
-            n_factors_actual = min(
-                self.n_factors, X_for_pca.shape[1], X_for_pca.shape[0] - 1
-            )
-            self._pca = PCA(n_components=n_factors_actual)
-            self._pca.fit(X_for_pca)
+        # Fit secondary X-PCA (for append_x_factors alongside MAF)
+        if self.append_x_factors and self.factor_type == "MARX":
+            n_act2 = min(self.n_factors, X_scaled.shape[1], X_scaled.shape[0] - 1)
+            self._pca_x = PCA(n_components=n_act2)
+            self._pca_x.fit(X_scaled)
 
-        elif self.use_marx:
-            # MARX without PCA: still fit the X scaler if requested so that
-            # test-time scaling is consistent with training.
-            if self.standardize_X:
-                self._scaler_X = StandardScaler()
-                self._scaler_X.fit(X_panel)
-
-        elif self.include_raw_x:
-            # Raw-X mode with no factors or MARX: fit the X scaler so that
-            # test-time transform is consistent with training.
-            if self.standardize_X:
-                self._scaler_X = StandardScaler()
-                self._scaler_X.fit(X_panel)
-
-        if self.include_levels and X_levels is not None:
+        # Fit level scaler
+        if self.append_levels and X_levels is not None:
             self._scaler_levels = StandardScaler()
             self._scaler_levels.fit(X_levels)
 
-        # Build training Z (needed for both Z-scaler fitting and name tracking).
+        # Build training Z for Z-scaler and name tracking
         Z_train = self._build_Z(X_panel, y, is_train=True, X_levels=X_levels)
 
         if self.standardize_Z:
             self._scaler_Z = StandardScaler()
             self._scaler_Z.fit(Z_train)
 
-        # ------------------------------------------------------------------
-        # Populate feature name tracking
-        # ------------------------------------------------------------------
+        # Populate feature names and group map
+        self._build_names(X_panel.shape[1], Z_train.shape[1])
+
+        self._fitted = True
+        return self
+
+    def _build_names(self, n_cols: int, n_z: int) -> None:
+        """Populate _feature_names_out_ and _feature_group_map_."""
         names: list[str] = []
 
-        # Determine actual number of PCA factors (may have been clamped).
-        n_factors_actual: int = (
-            self._pca.n_components_ if (self.use_factors and self._pca is not None) else 0
-        )
+        # Primary factors
+        if self.factor_type == "X" and self._pca is not None:
+            for i in range(self._pca.n_components_):
+                names.append(f"factor_{i + 1}")
+        elif self.factor_type == "MARX" and self._pca is not None:
+            for i in range(self._pca.n_components_):
+                names.append(f"MAF_factor_{i + 1}")
 
-        # Determine whether the factors come from a MARX panel (MAF) or raw X.
-        is_maf = self.use_factors and self.use_marx and self.marx_for_pca
+        # Secondary X factors (append_x_factors alongside MAF)
+        if self.append_x_factors and self._pca_x is not None:
+            for i in range(self._pca_x.n_components_):
+                names.append(f"F_factor_{i + 1}")
 
-        if self.use_factors:
-            if is_maf:
-                # MAF mode: factors derived from the MARX-transformed panel.
-                names.extend([f"MAF_factor_{i+1}" for i in range(n_factors_actual)])
-            else:
-                names.extend([f"factor_{i+1}" for i in range(n_factors_actual)])
+        # AR lags of y (always present)
+        for i in range(self.n_lags):
+            names.append(f"y_lag_{i + 1}")
 
-            if self.use_marx and not self.marx_for_pca:
-                # PCA on raw X with MARX columns appended separately.
-                n_marx_cols = X_panel.shape[1] * self.p_marx
-                names.extend([f"MARX_{i}" for i in range(n_marx_cols)])
+        # MARX columns
+        if self.append_marx:
+            for i in range(n_cols * self.p_marx):
+                names.append(f"MARX_{i}")
 
-        elif self.use_marx:
-            # MARX columns without PCA reduction.
-            n_marx_cols = X_panel.shape[1] * self.p_marx
-            names.extend([f"MARX_{i}" for i in range(n_marx_cols)])
+        # Raw X columns
+        if self.append_raw_x:
+            for i in range(n_cols):
+                names.append(f"X_{i}")
 
-        # AR lags of the target — always present in all modes.
-        names.extend([f"y_lag_{i+1}" for i in range(self.n_lags)])
-
-        # Raw X columns appended when include_raw_x=True.
-        if self.include_raw_x:
-            names.extend([f"X_{i}" for i in range(X_panel.shape[1])])
-
-        # Level columns (X_levels columns + y level scalar) appended last.
-        if self.include_levels and X_levels is not None:
-            n_levels = X_levels.shape[1]
-            names.extend([f"level_{i}" for i in range(n_levels)])
+        # Level columns (N_levels may differ from n_cols when X_levels has fewer series)
+        if self.append_levels:
+            n_level_cols = (
+                self._scaler_levels.n_features_in_
+                if self._scaler_levels is not None
+                else n_cols
+            )
+            for i in range(n_level_cols):
+                names.append(f"level_{i}")
             names.append("level_y")
 
-        if len(names) != Z_train.shape[1]:
+        if len(names) != n_z:
             raise RuntimeError(
-                f"Feature name count ({len(names)}) does not match Z columns "
-                f"({Z_train.shape[1]}). This is a bug in FeatureBuilder."
+                f"Feature name count ({len(names)}) != Z columns ({n_z}). "
+                "Bug in FeatureBuilder._build_names."
             )
 
-        # Build group map from the assembled names.
         group_map: dict[str, str] = {}
         for name in names:
-            if name.startswith("MAF_factor_") or name.startswith("factor_"):
+            if name.startswith(("factor_", "MAF_factor_", "F_factor_")):
                 group_map[name] = "factors"
             elif name.startswith("MARX_"):
                 group_map[name] = "marx"
@@ -347,9 +266,6 @@ class FeatureBuilder:
 
         self._feature_names_out_ = names
         self._feature_group_map_ = group_map
-
-        self._fitted = True
-        return self
 
     # ------------------------------------------------------------------
     # Transform
@@ -366,22 +282,14 @@ class FeatureBuilder:
 
         Parameters
         ----------
-        X_panel : array of shape (T, N)
-            Predictor panel (stationary-transformed).
-        y : array of shape (T,)
-            Target series used to construct AR lag columns.
+        X_panel : (T, N)
+            Stationary-transformed predictor panel.
+        y : (T,) for training; last ``n_lags`` values for test.
+            Used to construct AR lag columns.
         is_train : bool
-            Must be True when called on the training window so that row counts
-            are handled consistently.  False for the test / OOS window.
-        X_levels : array of shape (T, N_levels) or None
-            Predictor panel in levels.  Required when ``include_levels=True``.
-
-        Returns
-        -------
-        Z : NDArray of shape (effective_rows, n_features)
-            Feature matrix.  For the training window the effective row count
-            is T - max(n_lags, p_marx - 1) when MARX is active, or T - n_lags
-            otherwise.  For the test window it is always 1.
+            True when called on the full training window.
+        X_levels : (T, N) or None
+            Level-form panel.  Required when ``append_levels=True``.
         """
         if not self._fitted:
             raise RuntimeError("Call fit() before transform().")
@@ -411,224 +319,146 @@ class FeatureBuilder:
         is_train: bool,
         X_levels: NDArray[np.floating] | None = None,
     ) -> NDArray[np.floating]:
-        """Assemble Z without the final scaler step.
+        """Assemble the feature matrix Z without the final scaler step.
 
-        Two modes:
-        * Training (T > p): sliding-window AR lags, rows 0..T-p-1.
-        * Single test row (T <= p): y is interpreted as the lag history
-          [y_{t-1}, y_{t-2}, ..., y_{t-p}] (or the last p values of training
-          history).  Returns exactly 1 row.
+        Training path (is_train=True):
+            Returns (T - offset, n_features) where offset = max(n_lags, p_marx-1).
+        Test path (is_train=False):
+            X_panel is (1, N); y holds the last n_lags training values.
+            Returns (1, n_features).
         """
-        # Apply median imputation to X_panel (fitted on training data in fit()).
-        # This is a no-op when X_panel is already clean; it handles NaN from
-        # FRED-MD transforms without introducing look-ahead on the test path.
         if self._imputer_X is not None:
             X_panel = self._imputer_X.transform(X_panel)
 
-        # Forward-fill then zero-fill any NaN in y before building AR lags.
-        # A single NaN in y (e.g., from a differencing transformation at the
-        # series start) would otherwise propagate into every lag column.
+        # Forward-fill then zero-fill NaN in y
         if np.isnan(y).any():
             y = y.copy().astype(float)
-            # Forward-fill: propagate last valid value forward.
             for i in range(1, len(y)):
                 if np.isnan(y[i]):
                     y[i] = y[i - 1]
-            # Back-fill leading NaN with 0 (no prior observation available).
             y = np.where(np.isnan(y), 0.0, y)
 
-        T = X_panel.shape[0]
+        # Scale X
+        if self._scaler_X is not None:
+            X_scaled = self._scaler_X.transform(X_panel)
+        else:
+            X_scaled = X_panel.astype(float)
+
         p = self.n_lags
 
-        # ------------------------------------------------------------------
-        # Test-row (single-step) path: T <= p
-        # ------------------------------------------------------------------
-        if p >= T:
-            # y holds the p most-recent training values [y_{T-p}, ..., y_{T-1}].
-            # Reverse to get [y_{T-1}, ..., y_{T-p}] (lag-1 first).
-            y_tail = y[-p:] if len(y) >= p else np.pad(y, (p - len(y), 0))
-            ar_lags = y_tail[::-1].reshape(1, p)
+        if not is_train:
+            return self._build_test_row(X_scaled, y, p, X_levels)
+        return self._build_train_block(X_scaled, y, p, X_levels)
 
-            if self.use_factors and self._pca is not None:
-                if self.use_marx and self.marx_for_pca and self._last_X_rows is not None:
-                    # MAF test path: build the MARX window (last p_marx training
-                    # rows + test row), apply PCA to the MARX representation.
-                    if self.standardize_X and self._scaler_X is not None:
-                        last_scaled = self._scaler_X.transform(self._last_X_rows)
-                        cur_scaled = self._scaler_X.transform(X_panel)
-                    else:
-                        last_scaled = self._last_X_rows.astype(float)
-                        cur_scaled = X_panel.astype(float)
-                    # X_window has p_marx + 1 rows; _marx_transform returns 2 rows.
-                    # Take the last row which corresponds to the test observation.
-                    X_window = np.vstack([last_scaled, cur_scaled])
-                    marx_out = self._marx_transform(X_window, self.p_marx)
-                    factors = self._pca.transform(marx_out[-1:, :])  # (1, n_factors)
-                    Z = np.concatenate([factors, ar_lags], axis=1)
-                elif self.use_marx and not self.marx_for_pca:
-                    # PCA on raw X + MARX columns appended separately (test path).
-                    if self.standardize_X and self._scaler_X is not None:
-                        X_scaled = self._scaler_X.transform(X_panel)
-                    else:
-                        X_scaled = X_panel.astype(float)
-                    factors = self._pca.transform(X_scaled)  # (1, n_factors)
-                    # Build MARX columns using last p_marx training rows + test row.
-                    if self._last_X_rows is not None:
-                        if self.standardize_X and self._scaler_X is not None:
-                            last_scaled = self._scaler_X.transform(self._last_X_rows)
-                        else:
-                            last_scaled = self._last_X_rows.astype(float)
-                        X_window = np.vstack([last_scaled, X_scaled])
-                        marx_out = self._marx_transform(X_window, self.p_marx)
-                        Z = np.concatenate([factors, marx_out[-1:, :], ar_lags], axis=1)
-                    else:
-                        Z = np.concatenate([factors, ar_lags], axis=1)
-                else:
-                    if self.standardize_X and self._scaler_X is not None:
-                        X_scaled = self._scaler_X.transform(X_panel)
-                    else:
-                        X_scaled = X_panel.astype(float)
-                    factors = self._pca.transform(X_scaled)  # (1, n_factors)
-                    Z = np.concatenate([factors, ar_lags], axis=1)
+    def _build_test_row(
+        self,
+        X_scaled: NDArray[np.floating],
+        y: NDArray[np.floating],
+        p: int,
+        X_levels: NDArray[np.floating] | None,
+    ) -> NDArray[np.floating]:
+        """Build a single test-row Z. X_scaled is (1, N)."""
+        # AR lags: y holds last p training values [y_{T-p}, ..., y_{T-1}]
+        y_tail = y[-p:] if len(y) >= p else np.pad(y, (p - len(y), 0))
+        ar_lags = y_tail[::-1].reshape(1, p)  # lag-1 first
 
-            elif self.use_marx:
-                # MARX columns without PCA reduction, test row
-                if self._last_X_rows is not None:
-                    if self.standardize_X and self._scaler_X is not None:
-                        last_scaled = self._scaler_X.transform(self._last_X_rows)
-                        cur_scaled = self._scaler_X.transform(X_panel)
-                    else:
-                        last_scaled = self._last_X_rows.astype(float)
-                        cur_scaled = X_panel.astype(float)
-                    X_window = np.vstack([last_scaled, cur_scaled])
-                    marx_out = self._marx_transform(X_window, self.p_marx)
-                    Z = np.concatenate([marx_out[-1:, :], ar_lags], axis=1)
-                else:
-                    Z = ar_lags
+        parts: list[NDArray[np.floating]] = []
 
-            else:
-                Z = ar_lags
+        # Primary factors
+        if self.factor_type == "X" and self._pca is not None:
+            parts.append(self._pca.transform(X_scaled))
+        elif self.factor_type == "MARX" and self._pca is not None and self._last_X_rows is not None:
+            X_window = np.vstack([self._last_X_rows, X_scaled])
+            marx_out = self._marx_transform(X_window, self.p_marx)
+            parts.append(self._pca.transform(marx_out[-1:]))
 
-            # Append raw standardized X columns if requested (test-row path).
-            if self.include_raw_x:
-                if self.standardize_X and self._scaler_X is not None:
-                    X_raw = self._scaler_X.transform(X_panel)
-                else:
-                    X_raw = X_panel.astype(float)
-                Z = np.concatenate([Z, X_raw], axis=1)
+        # Secondary X factors alongside MAF
+        if self.append_x_factors and self._pca_x is not None:
+            parts.append(self._pca_x.transform(X_scaled))
 
-            # Append level columns + current y level if requested
-            if (
-                self.include_levels
-                and X_levels is not None
-                and self._scaler_levels is not None
-            ):
-                levels_scaled = self._scaler_levels.transform(X_levels)
-                y_level = np.array([[y[-1]]])  # (1, 1) — last training y value
-                Z = np.concatenate([Z, levels_scaled, y_level], axis=1)
+        # AR lags (always)
+        parts.append(ar_lags)
 
-            return Z
+        # MARX columns
+        if self.append_marx and self._last_X_rows is not None:
+            X_window = np.vstack([self._last_X_rows, X_scaled])
+            marx_out = self._marx_transform(X_window, self.p_marx)
+            parts.append(marx_out[-1:])
 
-        # ------------------------------------------------------------------
-        # Training-window path: T > p
-        # ------------------------------------------------------------------
-        # AR lags: row i corresponds to time t = p + i.
-        # Column j (lag j+1): y[p - j - 1 + i] = y_{t - j - 1}
-        ar_lags = np.column_stack(
+        # Raw X
+        if self.append_raw_x:
+            parts.append(X_scaled)
+
+        # Level columns
+        if self.append_levels and X_levels is not None and self._scaler_levels is not None:
+            parts.append(self._scaler_levels.transform(X_levels))
+            parts.append(np.array([[y[-1]]]))
+
+        return np.concatenate(parts, axis=1)
+
+    def _build_train_block(
+        self,
+        X_scaled: NDArray[np.floating],
+        y: NDArray[np.floating],
+        p: int,
+        X_levels: NDArray[np.floating] | None,
+    ) -> NDArray[np.floating]:
+        """Build the full training-window Z. X_scaled is (T, N)."""
+        T = X_scaled.shape[0]
+
+        # Determine common start row (max alignment offset)
+        ar_offset = p          # ar_lags starts at row p
+        marx_offset = self.p_marx - 1  # MARX valid from row p_marx-1
+
+        needs_marx_alignment = (
+            self.factor_type == "MARX" or self.append_marx
+        )
+        common_start = max(ar_offset, marx_offset) if needs_marx_alignment else ar_offset
+
+        # AR lags: row i → time t = p + i; lag j → y[p - j - 1 + i]
+        ar_full = np.column_stack(
             [y[p - lag - 1 : T - lag - 1] for lag in range(p)]
-        )  # shape (T - p, p)
+        )  # (T - p, p)
 
-        if self.use_factors and self._pca is not None:
-            if self.standardize_X and self._scaler_X is not None:
-                X_scaled = self._scaler_X.transform(X_panel)
-            else:
-                X_scaled = X_panel.astype(float)
+        parts: list[NDArray[np.floating]] = []
 
-            if self.use_marx and self.marx_for_pca:
-                # MAF path: apply MARX before PCA.
-                # _marx_transform returns rows for time indices p_marx-1 .. T-1.
-                X_marx = self._marx_transform(X_scaled, self.p_marx)
-                # X_marx.shape = (T - p_marx + 1, K * p_marx)
-                factors_full = self._pca.transform(X_marx)
-                # Align factors_full and ar_lags to the same time index.
-                #   factors_full[i] -> time index p_marx - 1 + i
-                #   ar_lags[i]      -> time index p + i
-                # Common start time: max(p_marx - 1, p)
-                marx_offset = self.p_marx - 1
-                ar_offset = p
-                common_start = max(marx_offset, ar_offset)
-                factors = factors_full[common_start - marx_offset :]
-                ar_lags = ar_lags[common_start - ar_offset :]
-                Z = np.concatenate([factors, ar_lags], axis=1)
-            elif self.use_marx and not self.marx_for_pca:
-                # PCA on raw X; MARX columns appended as separate Z columns.
-                factors_full = self._pca.transform(X_scaled)  # (T, n_factors)
-                # Compute MARX panel for the separate columns.
-                X_marx = self._marx_transform(X_scaled, self.p_marx)
-                # Align all three: factors_full, X_marx, ar_lags.
-                #   factors_full[i]  -> time index i
-                #   X_marx[i]        -> time index p_marx - 1 + i
-                #   ar_lags[i]       -> time index p + i
-                marx_offset = self.p_marx - 1
-                ar_offset = p
-                common_start = max(marx_offset, ar_offset)
-                factors = factors_full[common_start:]
-                X_marx_aligned = X_marx[common_start - marx_offset:]
-                ar_lags_aligned = ar_lags[common_start - ar_offset:]
-                Z = np.concatenate([factors, X_marx_aligned, ar_lags_aligned], axis=1)
-            else:
-                # Standard factors path: PCA on raw scaled X.
-                factors = self._pca.transform(X_scaled)  # (T, n_factors)
-                factors = factors[p:, :]  # align: drop first p rows
-                Z = np.concatenate([factors, ar_lags], axis=1)
+        # Primary factors
+        if self.factor_type == "X" and self._pca is not None:
+            # PCA on raw X → (T, k); align by dropping first common_start rows
+            f_full = self._pca.transform(X_scaled)  # (T, k)
+            parts.append(f_full[common_start:])
+        elif self.factor_type == "MARX" and self._pca is not None:
+            X_marx = self._marx_transform(X_scaled, self.p_marx)  # (T-pm+1, K*pm)
+            f_full = self._pca.transform(X_marx)                   # (T-pm+1, k)
+            # f_full[i] → time index p_marx - 1 + i
+            parts.append(f_full[common_start - marx_offset:])
 
-        elif self.use_marx:
-            # MARX columns without PCA reduction
-            if self.standardize_X and self._scaler_X is not None:
-                X_scaled = self._scaler_X.transform(X_panel)
-            else:
-                X_scaled = X_panel.astype(float)
-            X_marx = self._marx_transform(X_scaled, self.p_marx)
-            # Align X_marx and ar_lags
-            marx_offset = self.p_marx - 1
-            ar_offset = p
-            common_start = max(marx_offset, ar_offset)
-            X_marx_aligned = X_marx[common_start - marx_offset :]
-            ar_lags_aligned = ar_lags[common_start - ar_offset :]
-            Z = np.concatenate([X_marx_aligned, ar_lags_aligned], axis=1)
+        # Secondary X factors (append_x_factors alongside MAF)
+        if self.append_x_factors and self._pca_x is not None:
+            fx_full = self._pca_x.transform(X_scaled)  # (T, k)
+            parts.append(fx_full[common_start:])
 
-        else:
-            Z = ar_lags
+        # AR lags (always): ar_full[i] → time index p + i
+        parts.append(ar_full[common_start - ar_offset:])
 
-        # Append raw standardized X columns if requested.  This enables the
-        # F-X, X, and related information sets from Coulombe et al. (2021).
-        # Works regardless of which branch above ran; X_scaled may or may not
-        # be in scope, so we recompute it lazily here.
-        if self.include_raw_x:
-            n_rows = Z.shape[0]
-            if self.standardize_X and self._scaler_X is not None:
-                X_raw = self._scaler_X.transform(X_panel)
-            else:
-                X_raw = X_panel.astype(float)
-            # Drop the first rows to align with Z's time index.
-            X_raw_aligned = X_raw[X_raw.shape[0] - n_rows:]
-            Z = np.concatenate([Z, X_raw_aligned], axis=1)
+        # MARX columns
+        if self.append_marx:
+            X_marx_cols = self._marx_transform(X_scaled, self.p_marx)
+            parts.append(X_marx_cols[common_start - marx_offset:])
 
-        # Append level columns + current y level if requested.
-        # Z has n_rows rows aligned to the common start time index.
-        if (
-            self.include_levels
-            and X_levels is not None
-            and self._scaler_levels is not None
-        ):
-            n_rows = Z.shape[0]
-            # Take the last n_rows rows of X_levels and y to match Z's time index.
-            levels_slice = X_levels[X_levels.shape[0] - n_rows :]
-            levels_scaled = self._scaler_levels.transform(levels_slice)
-            y_level_col = y[len(y) - n_rows :].reshape(-1, 1)
-            Z = np.concatenate([Z, levels_scaled, y_level_col], axis=1)
+        # Raw X columns
+        if self.append_raw_x:
+            n_rows = parts[0].shape[0] if parts else T - common_start
+            parts.append(X_scaled[X_scaled.shape[0] - n_rows:])
 
-        return Z
+        # Level columns
+        if self.append_levels and X_levels is not None and self._scaler_levels is not None:
+            n_rows = parts[0].shape[0] if parts else T - common_start
+            lev_slice = X_levels[X_levels.shape[0] - n_rows:]
+            parts.append(self._scaler_levels.transform(lev_slice))
+            parts.append(y[len(y) - n_rows:].reshape(-1, 1))
+
+        return np.concatenate(parts, axis=1)
 
     # ------------------------------------------------------------------
     # Properties
@@ -636,52 +466,23 @@ class FeatureBuilder:
 
     @property
     def feature_names_out_(self) -> list[str]:
-        """Column names of the Z matrix, populated after fit().
-
-        Names are positional/index-based (not FRED series names) because
-        FeatureBuilder receives a numpy array rather than a named DataFrame.
-
-        Returns
-        -------
-        list[str]
-            Copy of the internal list; mutating the returned value has no
-            effect on the builder's state.
-        """
+        """Column names of Z, populated after fit()."""
         return list(self._feature_names_out_)
 
     @property
     def feature_group_map_(self) -> dict[str, str]:
-        """Maps each feature name to its semantic group tag.
+        """Maps each feature name to its semantic group.
 
-        Group tags: ``"ar"``, ``"factors"``, ``"marx"``, ``"x"``,
-        ``"levels"``.  Populated after fit().
-
-        Note: both MAF factors (``MAF_factor_*``) and PCA factors
-        (``factor_*``) map to group ``"factors"``.  Callers who need to
-        distinguish them must inspect the name prefix directly.
-
-        Returns
-        -------
-        dict[str, str]
-            Copy of the internal dict; mutating the returned value has no
-            effect on the builder's state.
+        Groups: ``"ar"``, ``"factors"``, ``"marx"``, ``"x"``, ``"levels"``.
         """
         return dict(self._feature_group_map_)
 
     @property
     def n_features(self) -> int:
-        """Total number of features in Z after fit().
-
-        Before fit(), returns an estimate based on factors and AR lags only.
-        After fit(), returns the exact count matching feature_names_out_.
-        """
+        """Total number of features in Z (requires fit())."""
         if not self._fitted:
             raise RuntimeError("Call fit() first.")
-        if self._feature_names_out_:
-            return len(self._feature_names_out_)
-        # Pre-fit estimate: factors + AR lags
-        factor_cols = self._pca.n_components_ if (self.use_factors and self._pca) else 0
-        return factor_cols + self.n_lags
+        return len(self._feature_names_out_)
 
     @property
     def is_fitted(self) -> bool:

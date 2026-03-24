@@ -24,9 +24,26 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-import torch
-import torch.nn as nn
 from numpy.typing import NDArray
+
+try:
+    import torch
+    import torch.nn as nn
+    _TORCH_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _TORCH_AVAILABLE = False
+
+    class _DummyModule:
+        """Placeholder so nn.Module subclasses parse without torch installed."""
+        class Module:
+            pass
+
+    class _DummyTorch:
+        class Tensor:
+            pass
+
+    nn = _DummyModule()  # type: ignore[assignment]
+    torch = _DummyTorch()  # type: ignore[assignment]
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.preprocessing import StandardScaler
@@ -64,8 +81,19 @@ def _fit_with_cv(
     cv: int = 5,
     scoring: str = "neg_mean_squared_error",
 ) -> Any:
-    """Wrap estimator in GridSearchCV if param_grid is non-empty."""
+    """Wrap estimator in GridSearchCV if param_grid is non-empty.
+
+    Shortcut: if every param list is a singleton, skip GridSearchCV entirely
+    and just set the params directly.  This avoids the 5-fold CV overhead
+    when a fixed hyperparameter value is desired (e.g. min_samples_leaf=5
+    as in CLSS 2021).
+    """
     if not param_grid:
+        return estimator.fit(X, y)
+    # Singleton shortcut: all lists have exactly one candidate → no CV needed
+    if all(len(v) == 1 for v in param_grid.values()):
+        single_params = {k: v[0] for k, v in param_grid.items()}
+        estimator.set_params(**single_params)
         return estimator.fit(X, y)
     gs = GridSearchCV(
         estimator,
@@ -73,7 +101,7 @@ def _fit_with_cv(
         cv=KFold(n_splits=cv, shuffle=False),
         scoring=scoring,
         refit=True,
-        n_jobs=-1,
+        n_jobs=1,
     )
     gs.fit(X, y)
     return gs.best_estimator_
@@ -251,53 +279,64 @@ class SVRLinearModel(MacrocastEstimator):
 
 
 class RFModel(MacrocastEstimator):
-    """Random Forest regressor (sklearn).
+    """Random Forest regressor (sklearn), calibrated to CLSS 2021 defaults.
 
     Tree-based model; nonlinear in inputs.  No kernel scaling required.
-    Regularization is controlled by max_depth and min_samples_leaf.
+    Defaults match the ranger-based RF in Coulombe et al. (2021):
+    fully grown trees, mtry=p/3, 75% subsampling without replacement.
+    Only min_samples_leaf is tuned via K-fold CV.
 
     Parameters
     ----------
     n_estimators : int
-        Number of trees.  Not tuned by default (computational cost).
-    max_depth_grid : list of int or None
-        Max tree depth candidates.  None means unlimited.
+        Number of trees.  500 matches CLSS 2021.
     min_samples_leaf_grid : list of int
-        Minimum leaf size candidates.
+        Minimum leaf size candidates for K-fold tuning.
+    max_features : float or str
+        Feature fraction per split.  1/3 matches ranger mtry=floor(p/3).
+    max_samples : float
+        Fraction of training samples per tree (bootstrap with replacement).
+        0.75 approximates ranger's default 75% subsample rate.  sklearn does
+        not support subsampling without replacement, so bootstrap=True is used
+        with max_samples to control the effective subsample size.
     cv_folds : int
         K-fold splits for HP selection.
     """
 
     nonlinearity_type = Nonlinearity.RANDOM_FOREST
 
-    _DEFAULT_MAX_DEPTH_GRID: list[int | None] = [3, 5, 10, None]
-    _DEFAULT_MIN_SAMPLES_LEAF_GRID: list[int] = [1, 5, 10, 20]
+    _DEFAULT_MIN_SAMPLES_LEAF_GRID: list[int] = [5, 10, 20]
 
     def __init__(
         self,
         n_estimators: int = 500,
-        max_depth_grid: list[int | None] | None = None,
         min_samples_leaf_grid: list[int] | None = None,
+        max_features: float | str = 1 / 3,
+        max_samples: float = 0.75,
         cv_folds: int = 5,
+        rf_n_jobs: int = -1,
     ) -> None:
         if not _RF_AVAILABLE:  # pragma: no cover
             raise ImportError("scikit-learn RandomForestRegressor not available.")
         self.n_estimators = n_estimators
-        self.max_depth_grid = max_depth_grid or self._DEFAULT_MAX_DEPTH_GRID
         self.min_samples_leaf_grid = (
             min_samples_leaf_grid or self._DEFAULT_MIN_SAMPLES_LEAF_GRID
         )
+        self.max_features = max_features
+        self.max_samples = max_samples
         self.cv_folds = cv_folds
+        self._rf_n_jobs = rf_n_jobs
         self._estimator = None
 
     def fit(self, X: NDArray[np.floating], y: NDArray[np.floating]) -> RFModel:
-        param_grid = {
-            "max_depth": self.max_depth_grid,
-            "min_samples_leaf": self.min_samples_leaf_grid,
-        }
+        param_grid = {"min_samples_leaf": self.min_samples_leaf_grid}
         base = RandomForestRegressor(
             n_estimators=self.n_estimators,
-            n_jobs=-1,
+            max_depth=None,
+            max_features=self.max_features,
+            bootstrap=True,
+            max_samples=self.max_samples,
+            n_jobs=self._rf_n_jobs,
             random_state=42,
         )
         self._estimator = _fit_with_cv(base, param_grid, X, y, cv=self.cv_folds)
@@ -510,6 +549,8 @@ class NNModel(MacrocastEstimator):
         batch_size: int = 32,
         device: str | None = None,
     ) -> None:
+        if not _TORCH_AVAILABLE:
+            raise ImportError("NNModel requires torch. Install with: pip install torch")
         self.hidden_dims = hidden_dims or [64, 128, 256]
         self.n_layers_options = n_layers_options or [1, 2]
         self.lr_options = lr_options or [1e-3, 5e-4, 1e-4]
@@ -737,6 +778,8 @@ class LSTMModel(SequenceEstimator):
         batch_size: int = 32,
         device: str | None = None,
     ) -> None:
+        if not _TORCH_AVAILABLE:
+            raise ImportError("LSTMModel requires torch. Install with: pip install torch")
         self.hidden_dims = hidden_dims or [32, 64, 128]
         self.n_layers_options = n_layers_options or [1, 2]
         self.lr_options = lr_options or [1e-3, 5e-4]

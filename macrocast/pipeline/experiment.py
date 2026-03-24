@@ -120,20 +120,34 @@ class ModelSpec:
 # ---------------------------------------------------------------------------
 
 
-def _auto_label(spec: "FeatureSpec") -> str:
-    """Generate a human-readable FeatureSpec label following CLSS 2021 naming."""
+def _auto_label(spec: FeatureSpec) -> str:
+    """Generate a human-readable FeatureSpec label following CLSS 2021 Table 1 naming.
+
+    Label order: F (if factor_type="X") → X (if append_raw_x) → MARX (if append_marx)
+    → MAF (if factor_type="MARX") → Level (if append_levels).
+    When factor_type="MARX" and append_x_factors=True, "F" is prepended.
+    """
     parts: list[str] = []
-    if spec.use_factors:
+    has_f = spec.factor_type == "X"
+    has_maf = spec.factor_type == "MARX"
+
+    if has_f:
         parts.append("F")
-    if spec.include_raw_x:
+
+    if spec.append_raw_x:
         parts.append("X")
-    if spec.use_marx:
-        if spec.use_maf or (spec.use_factors and spec.marx_for_pca):
-            parts.append("MAF")
-        else:
-            parts.append("MARX")
-    if spec.include_levels:
+
+    if spec.append_marx:
+        parts.append("MARX")
+
+    if has_maf:
+        if spec.append_x_factors:
+            parts.insert(0, "F")
+        parts.append("MAF")
+
+    if spec.append_levels:
         parts.append("Level")
+
     return "-".join(parts) if parts else "AR"
 
 
@@ -141,57 +155,128 @@ def _auto_label(spec: "FeatureSpec") -> str:
 class FeatureSpec:
     """Configuration for FeatureBuilder used in a given experiment cell.
 
+    Maps directly onto FeatureBuilder parameters.  The 16 CLSS 2021 Table 1
+    information sets are expressed by combinations of ``factor_type`` and the
+    four ``append_*`` flags:
+
+    +------------------+-------------+------------------+-------------+-------------+---------------+
+    | Info set         | factor_type | append_x_factors | append_marx | append_raw_x| append_levels |
+    +==================+=============+==================+=============+=============+===============+
+    | F                | X           | False            | False       | False       | False         |
+    | F-X              | X           | False            | False       | True        | False         |
+    | F-MARX           | X           | False            | True        | False       | False         |
+    | F-Level          | X           | False            | False       | False       | True          |
+    | F-X-MARX         | X           | False            | True        | True        | False         |
+    | F-X-Level        | X           | False            | False       | True        | True          |
+    | F-X-MARX-Level   | X           | False            | True        | True        | True          |
+    | MAF              | MARX        | False            | False       | False       | False         |
+    | F-MAF            | MARX        | True             | False       | False       | False         |
+    | X-MAF            | MARX        | False            | False       | True        | False         |
+    | F-X-MAF          | MARX        | True             | False       | True        | False         |
+    | X                | none        | False            | False       | True        | False         |
+    | MARX             | none        | False            | True        | False       | False         |
+    | X-MARX           | none        | False            | True        | True        | False         |
+    | X-Level          | none        | False            | False       | True        | True          |
+    | X-MARX-Level     | none        | False            | True        | True        | True          |
+    +------------------+-------------+------------------+-------------+-------------+---------------+
+
+    AR lags of y are always included regardless of the information set.
+
     Parameters
     ----------
-    use_factors : bool
-        Whether to include PCA factors.
+    factor_type : str
+        Primary dimensionality-reduction mode passed to FeatureBuilder:
+        ``"X"`` (standard diffusion factors), ``"MARX"`` (MAF), or ``"none"``.
     n_factors : int
         Number of PCA factors.
     n_lags : int
-        Number of AR lags.
+        Number of AR lags for the target (P_y).
+    p_marx : int
+        MARX lag order.  Used when ``factor_type="MARX"`` or
+        ``append_marx=True``.
+    append_x_factors : bool
+        Prepend standard X-PCA factors alongside MAF factors.  Active only
+        when ``factor_type="MARX"``.
+    append_marx : bool
+        Append raw MARX columns to Z.
+    append_raw_x : bool
+        Append standardized stationary X columns to Z.
+    append_levels : bool
+        Append level-form X columns and y_t level.  Requires
+        ``panel_levels`` to be provided to ForecastExperiment.
     standardize_X : bool
         Standardize predictor panel before PCA.
     standardize_Z : bool
-        Standardize the output feature matrix.
+        Standardize the assembled Z matrix (useful for kernel models).
     lookback : int
-        Sequence look-back window length for LSTM.  Ignored for cross-sectional
+        LSTM sequence look-back window length.  Ignored for cross-sectional
         models.
-    use_marx : bool
-        Whether to include MARX (mixed-frequency AR with cross-section) features.
-        Requires FeatureBuilder support.
-    p_marx : int
-        Number of lags for MARX feature construction.
-    use_maf : bool
-        Whether to use MAF (factor-augmented) features.  Requires
-        ``use_factors=True``.
-    include_levels : bool
-        Whether to append the untransformed level panel alongside the
-        stationary-transformed panel.  Requires ``panel_levels`` to be
-        provided to ForecastExperiment.
     target_scheme : str
-        Multi-step targeting strategy.  ``"direct"`` trains on y_{t+h};
-        ``"path_average"`` trains on the mean of y_{t+1}, ..., y_{t+h}.
+        ``"direct"`` trains on y_{t+h}; ``"path_average"`` trains on the
+        mean of y_{t+1}, ..., y_{t+h}.
+    label : str
+        Human-readable info set name.  Auto-generated from flags if empty.
     """
 
-    use_factors: bool = True
+    factor_type: str = "X"
     n_factors: int = 8
     n_lags: int = 4
+    p_marx: int = 12
+    append_x_factors: bool = False
+    append_marx: bool = False
+    append_raw_x: bool = False
+    append_levels: bool = False
     standardize_X: bool = True
     standardize_Z: bool = False
     lookback: int = 12  # for LSTM; months
-    # CLSS 2021 additions
-    use_marx: bool = False
-    p_marx: int = 12
-    use_maf: bool = False
-    include_levels: bool = False
     target_scheme: str = "direct"  # "direct" | "path_average"
-    include_raw_x: bool = False
-    marx_for_pca: bool = True
     label: str = ""
 
     def __post_init__(self) -> None:
+        if self.factor_type not in {"X", "MARX", "none"}:
+            raise ValueError(
+                f"factor_type must be 'X', 'MARX', or 'none'; got {self.factor_type!r}"
+            )
         if not self.label:
             self.label = _auto_label(self)
+
+    @classmethod
+    def from_name(
+        cls,
+        name: str,
+        study: str = "clss2021",
+        **params: object,
+    ) -> FeatureSpec:
+        """Look up a named information set preset.
+
+        Parameters
+        ----------
+        name : str
+            Table 1 label (e.g. ``"F-MARX"``).
+        study : str
+            Which study's preset registry to use.  Only ``"clss2021"``
+            is currently supported.
+        **params
+            Forwarded to the study's ``info_sets()`` factory (e.g.
+            ``P_Y=12, K=8, P_MARX=12``).
+
+        Returns
+        -------
+        FeatureSpec
+
+        Raises
+        ------
+        KeyError
+            If *name* is not found in the registry for *study*.
+
+        Examples
+        --------
+        >>> FeatureSpec.from_name("F-MARX")
+        FeatureSpec(factor_type='X', ..., append_marx=True, ...)
+        """
+        from macrocast.replication.clss2021 import get_preset  # avoid circular import
+
+        return get_preset(name, study=study, **params)
 
 
 # ---------------------------------------------------------------------------
@@ -283,10 +368,8 @@ class ForecastExperiment:
             )
 
         feat_spec = self.feature_spec
-        if feat_spec.use_maf and not feat_spec.use_factors:
-            raise ValueError("use_maf=True requires use_factors=True in FeatureSpec.")
-        if feat_spec.include_levels and panel_levels is None:
-            raise ValueError("include_levels=True requires panel_levels to be provided.")
+        if feat_spec.append_levels and panel_levels is None:
+            raise ValueError("append_levels=True requires panel_levels to be provided.")
         if feat_spec.target_scheme not in {"direct", "path_average"}:
             raise ValueError(
                 f"target_scheme must be 'direct' or 'path_average', got {feat_spec.target_scheme!r}."
@@ -439,23 +522,22 @@ class ForecastExperiment:
                 )
             else:
                 builder = FeatureBuilder(
+                    factor_type=feat_spec.factor_type,
                     n_factors=feat_spec.n_factors,
                     n_lags=feat_spec.n_lags,
-                    use_factors=feat_spec.use_factors,
+                    p_marx=feat_spec.p_marx,
+                    append_x_factors=feat_spec.append_x_factors,
+                    append_marx=feat_spec.append_marx,
+                    append_raw_x=feat_spec.append_raw_x,
+                    append_levels=feat_spec.append_levels,
                     standardize_X=feat_spec.standardize_X,
                     standardize_Z=feat_spec.standardize_Z,
-                    use_marx=feat_spec.use_marx,
-                    p_marx=feat_spec.p_marx,
-                    use_maf=feat_spec.use_maf,
-                    include_levels=feat_spec.include_levels,
-                    include_raw_x=feat_spec.include_raw_x,
-                    marx_for_pca=feat_spec.marx_for_pca,
                 )
 
                 # Prepare levels slices if needed
                 X_levels_tr: NDArray[np.floating] | None = None
                 X_levels_test: NDArray[np.floating] | None = None
-                if feat_spec.include_levels and self.panel_levels is not None:
+                if feat_spec.append_levels and self.panel_levels is not None:
                     X_levels_tr = self.panel_levels.loc[train_start:train_end].values[: T_tr - h]
                     X_levels_test = self.panel_levels.loc[train_end:train_end].values
 
@@ -497,7 +579,7 @@ class ForecastExperiment:
                 model.fit(Z_train, y_tr_for_fit)
                 y_hat = float(model.predict(Z_test)[0])
                 hp_selected = getattr(model, "best_params_", {})
-                n_factors = feat_spec.n_factors if feat_spec.use_factors else None
+                n_factors = feat_spec.n_factors if feat_spec.factor_type != "none" else None
 
             # Extract feature importances from sklearn tree-based estimators.
             # Works for RF and gradient-boosted models wrapped in MacrocastEstimator.

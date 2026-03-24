@@ -192,13 +192,20 @@ class ResultSet:
 
         Each row is one forecast cell.  Component columns use string values
         (Enum.value) for compatibility with downstream R reads via arrow.
+        Combination rows added via :meth:`with_combination` are appended.
         """
-        if not self.records:
-            return pd.DataFrame()
-        rows = [r.to_dict() for r in self.records]
-        df = pd.DataFrame(rows)
-        df["train_end"] = pd.to_datetime(df["train_end"])
-        df["forecast_date"] = pd.to_datetime(df["forecast_date"])
+        if self.records:
+            rows = [r.to_dict() for r in self.records]
+            df = pd.DataFrame(rows)
+            df["train_end"] = pd.to_datetime(df["train_end"])
+            df["forecast_date"] = pd.to_datetime(df["forecast_date"])
+        else:
+            df = pd.DataFrame()
+
+        combo: pd.DataFrame | None = getattr(self, "_combo_df", None)
+        if combo is not None and not combo.empty:
+            df = pd.concat([df, combo], ignore_index=True)
+
         return df
 
     # ------------------------------------------------------------------
@@ -272,6 +279,89 @@ class ResultSet:
             .reset_index()
         )
         return summary
+
+    # ------------------------------------------------------------------
+    # Forecast combination
+    # ------------------------------------------------------------------
+
+    def with_combination(
+        self,
+        methods: str | list[str] = "mean",
+        trim_pct: float = 0.10,
+        window: int | None = None,
+    ) -> ResultSet:
+        """Return a new ResultSet with combination forecasts appended.
+
+        Calls :func:`macrocast.evaluation.combination.combine_forecasts` for
+        each requested method and attaches the resulting rows so that
+        :meth:`to_dataframe` includes them alongside individual model rows.
+        This allows combination forecasts to slot seamlessly into horse race
+        evaluation tables.
+
+        Parameters
+        ----------
+        methods : str or list of str
+            One or more combination methods: ``"mean"``, ``"median"``,
+            ``"trimmed_mean"``, ``"inv_msfe"``.  Each method produces a
+            separate composite with ``model_id = "COMBO_{METHOD.upper()}"``.
+        trim_pct : float
+            Trim fraction passed to ``method="trimmed_mean"``.  Default 0.10.
+        window : int or None
+            Rolling window for ``method="inv_msfe"``.  ``None`` = expanding.
+
+        Returns
+        -------
+        ResultSet
+            New ResultSet containing all original records plus the combination
+            rows.  The original ResultSet is not modified.
+
+        Examples
+        --------
+        >>> rs_ext = rs.with_combination(["mean", "inv_msfe"])
+        >>> rmsfe = relative_msfe_table(rs_ext.to_dataframe())
+        """
+        from macrocast.evaluation.combination import combine_forecasts
+
+        if isinstance(methods, str):
+            methods = [methods]
+
+        base_df = self.to_dataframe_cached()
+        if base_df.empty:
+            raise ValueError("ResultSet is empty; cannot compute combinations.")
+
+        combo_parts = [
+            combine_forecasts(base_df, method=m, trim_pct=trim_pct, window=window)
+            for m in methods
+        ]
+        combo_df = pd.concat(combo_parts, ignore_index=True)
+
+        new_rs = ResultSet(
+            experiment_id=self.experiment_id,
+            records=list(self.records),
+            metadata=dict(self.metadata),
+        )
+        # Preserve any existing combo rows from prior calls
+        existing: pd.DataFrame | None = getattr(self, "_combo_df", None)
+        if existing is not None and not existing.empty:
+            combo_df = pd.concat([existing, combo_df], ignore_index=True)
+
+        new_rs._combo_df = combo_df  # type: ignore[attr-defined]
+
+        if hasattr(self, "_df_cache"):
+            new_rs._df_cache = self._df_cache  # type: ignore[attr-defined]
+
+        return new_rs
+
+    def combination_methods(self) -> list[str]:
+        """Return the list of combination model_ids already attached."""
+        combo: pd.DataFrame | None = getattr(self, "_combo_df", None)
+        if combo is None or combo.empty:
+            return []
+        return sorted(combo["model_id"].unique().tolist())
+
+    # ------------------------------------------------------------------
+    # Dunder
+    # ------------------------------------------------------------------
 
     def __len__(self) -> int:
         return len(self.records)

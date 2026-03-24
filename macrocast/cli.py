@@ -208,8 +208,8 @@ def _cmd_info(args: argparse.Namespace) -> int:
     print("Features:")
     fs = cfg.feature_spec
     print(
-        f"  n_factors={fs.n_factors}, n_lags={fs.n_lags}, "
-        f"use_factors={fs.use_factors}, lookback={fs.lookback}"
+        f"  factor_type={fs.factor_type!r}, n_factors={fs.n_factors}, "
+        f"n_lags={fs.n_lags}, lookback={fs.lookback}"
     )
     return 0
 
