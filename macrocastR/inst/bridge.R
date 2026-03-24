@@ -36,6 +36,18 @@ suppressPackageStartupMessages({
 # Locate and source models.R
 # ---------------------------------------------------------------------------
 
+# Resolve this script's own directory via commandArgs (works with Rscript
+# /abs/path/bridge.R as well as relative invocations).
+.bridge_self <- local({
+  args_all <- commandArgs(trailingOnly = FALSE)
+  file_arg  <- grep("^--file=", args_all, value = TRUE)
+  if (length(file_arg) == 1L) {
+    dirname(normalizePath(sub("^--file=", "", file_arg), mustWork = FALSE))
+  } else {
+    NULL
+  }
+})
+
 # When called from Python via subprocess, the working directory is the
 # project root.  Look for macrocastR as an installed package first, then
 # fall back to sourcing models.R directly from the repo tree.
@@ -43,7 +55,7 @@ if (requireNamespace("macrocastR", quietly = TRUE)) {
   library(macrocastR)
 } else {
   # Resolve path relative to this script's location
-  script_dir  <- tryCatch(
+  script_dir  <- if (!is.null(.bridge_self)) .bridge_self else tryCatch(
     dirname(normalizePath(sys.frame(1)$ofile, mustWork = FALSE)),
     error = function(e) getwd()
   )
@@ -58,6 +70,21 @@ if (requireNamespace("macrocastR", quietly = TRUE)) {
   }
   source(models_path)
 }
+
+# Source any model extension files not yet in the installed package.
+# bvar.R is sourced here so it works whether macrocastR is installed or not.
+.source_r_ext <- function(filename) {
+  candidates <- c(
+    if (!is.null(.bridge_self)) file.path(.bridge_self, "..", "R", filename),
+    file.path("macrocastR", "R", filename)
+  )
+  for (p in candidates) {
+    if (file.exists(p)) { source(normalizePath(p, mustWork = FALSE)); return(invisible(TRUE)) }
+  }
+  invisible(FALSE)
+}
+
+if (!exists("fit_bvar", mode = "function")) .source_r_ext("bvar.R")
 
 # ---------------------------------------------------------------------------
 # Read inputs
@@ -173,6 +200,15 @@ result <- switch(
     Z_test         = Z_test,
     n_boot         = as.integer(config$n_boot %||% 200L),
     prune_quantile = as.numeric(config$prune_quantile %||% 0.5)
+  ),
+
+  bvar = fit_bvar(
+    Z_train   = Z_train,
+    y_train   = y_train,
+    Z_test    = Z_test,
+    lambda    = config$lambda,          # NULL → LOO-CV tuning
+    intercept = isTRUE(config$intercept %||% TRUE),
+    n_grid    = as.integer(config$n_grid %||% 20L)
   ),
 
   stop(paste("Unknown model:", model_name), call. = FALSE)

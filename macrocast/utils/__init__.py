@@ -8,6 +8,8 @@ from macrocast.utils.cache import (
     get_cached_path,
     is_cached,
 )
+from macrocast.utils.latex import regime_to_latex, rmsfe_to_latex
+from macrocast.utils.registry import ExperimentRegistry
 
 __all__ = [
     "get_cache_dir",
@@ -16,4 +18,7 @@ __all__ = [
     "download_file",
     "file_download_date",
     "clear_cache",
+    "ExperimentRegistry",
+    "rmsfe_to_latex",
+    "regime_to_latex",
 ]
