@@ -1,0 +1,63 @@
+datasets:
+  - id: fred_md
+    family: fred
+    frequency: monthly
+    source_type: macro_panel
+    loader: load_fred_md
+    supports_vintages: true
+    default_vintage_mode: current
+    cache_subdir: fred_md
+    target_style: single_or_multiple_series
+    defaults:
+      dataset: fred_md
+      frequency: monthly
+      information_set_policy: revised_data
+      vintage_policy: current
+      merge_alignment_rule: monthly_end_of_period
+      release_lag_policy: ignore_release_lags
+      ragged_edge_policy: complete_case_only
+      variable_universe_version: fred_md_current
+      task_id: fred_md_default
+    notes: FRED-MD monthly macroeconomic panel
+
+  - id: fred_qd
+    family: fred
+    frequency: quarterly
+    source_type: macro_panel
+    loader: load_fred_qd
+    supports_vintages: true
+    default_vintage_mode: current
+    cache_subdir: fred_qd
+    target_style: single_or_multiple_series
+    defaults:
+      dataset: fred_qd
+      frequency: quarterly
+      information_set_policy: revised_data
+      vintage_policy: current
+      merge_alignment_rule: quarter_end_alignment
+      release_lag_policy: ignore_release_lags
+      ragged_edge_policy: complete_case_only
+      variable_universe_version: fred_qd_current
+      task_id: fred_qd_default
+    notes: FRED-QD quarterly macroeconomic panel
+
+  - id: fred_sd
+    family: fred
+    frequency: daily
+    source_type: macro_panel
+    loader: load_fred_sd
+    supports_vintages: false
+    default_vintage_mode: current
+    cache_subdir: fred_sd
+    target_style: single_or_multiple_series
+    defaults:
+      dataset: fred_sd
+      frequency: daily
+      information_set_policy: revised_data
+      vintage_policy: current
+      merge_alignment_rule: mixed_frequency_alignment
+      release_lag_policy: ignore_release_lags
+      ragged_edge_policy: complete_case_only
+      variable_universe_version: fred_sd_current
+      task_id: fred_sd_default
+    notes: FRED-SD daily macro-financial panel

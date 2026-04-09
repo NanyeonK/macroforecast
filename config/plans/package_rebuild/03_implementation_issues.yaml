@@ -1,0 +1,243 @@
+implementation_issues:
+  - id: I-00
+    title: lock-meta-layer-zero-truth
+    stream: SP-0
+    files_to_create_or_modify:
+      - config/plans/package_rebuild/00_meta_layer.yaml
+      - config/meta/axes.yaml
+      - config/meta/execution.yaml
+      - config/meta/presets.yaml
+    registry_files_touched:
+      - config/plans/package_rebuild/00_meta_layer.yaml
+      - config/meta/axes.yaml
+      - config/meta/execution.yaml
+      - config/meta/presets.yaml
+    validator_test_updates:
+      - tests/meta/test_axes_registry.py
+      - tests/meta/test_execution_policy.py
+      - tests/meta/test_presets.py
+    dependencies: []
+    done_criteria:
+      - runtime meta yaml reflects planner meta-zero truth
+      - tests reject illegal axis overlap and bad failure policy
+  - id: I-01
+    title: implement-config-inheritance-chain
+    stream: SP-1
+    files_to_create_or_modify:
+      - config/meta/global_defaults.yaml
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/models.yaml
+      - macrocast/meta/resolution.py
+      - macrocast/meta/validators.py
+    registry_files_touched:
+      - config/meta/global_defaults.yaml
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/models.yaml
+    validator_test_updates:
+      - tests/meta/test_resolution.py
+      - tests/design/test_invalid_design_conflicts.py
+    dependencies: [I-00]
+    done_criteria:
+      - precedence global->dataset->target->model->experiment implemented
+      - conflicts fail closed with precise errors
+  - id: I-02
+    title: expand-data-task-registries
+    stream: SP-2
+    files_to_create_or_modify:
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/data_tasks.yaml
+      - macrocast/data/registry.py
+      - macrocast/data/schema.py
+    registry_files_touched:
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/data_tasks.yaml
+    validator_test_updates:
+      - tests/data/test_dataset_registry.py
+      - tests/data/test_schema.py
+      - tests/data/test_target_registry.py
+    dependencies: [I-01]
+    done_criteria:
+      - dataset source frequency info-set vintage alignment lag ragged-edge and sample fields explicit
+  - id: I-03
+    title: split-target-and-x-preprocessing-recipes
+    stream: SP-3
+    files_to_create_or_modify:
+      - config/preprocessing.yaml
+      - macrocast/preprocessing/registry.py
+      - macrocast/preprocessing/transforms.py
+      - macrocast/preprocessing/missing.py
+    registry_files_touched:
+      - config/preprocessing.yaml
+    validator_test_updates:
+      - tests/preprocessing/test_registry.py
+      - tests/preprocessing/test_target_x_separation.py
+    dependencies: [I-02]
+    done_criteria:
+      - target and x recipes independently resolved
+      - train-only fit scope enforced
+  - id: I-04
+    title: formalize-design-contract-resolution
+    stream: SP-4
+    files_to_create_or_modify:
+      - macrocast/design/resolver.py
+      - macrocast/config.py
+      - config/plans/package_rebuild/06_contracts.yaml
+    registry_files_touched:
+      - config/meta/*.yaml
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/preprocessing.yaml
+      - config/features.yaml
+      - config/models.yaml
+    validator_test_updates:
+      - tests/design/test_design_resolution.py
+      - tests/design/test_invalid_design_conflicts.py
+    dependencies: [I-03]
+    done_criteria:
+      - resolved spec contains explicit contracts and fixed/sweep axes
+  - id: I-05
+    title: lock-feature-model-compatibility
+    stream: SP-5
+    files_to_create_or_modify:
+      - config/features.yaml
+      - config/models.yaml
+      - macrocast/pipeline/registry.py
+      - macrocast/pipeline/features.py
+      - macrocast/pipeline/models.py
+      - macrocast/pipeline/r_models.py
+    registry_files_touched:
+      - config/features.yaml
+      - config/models.yaml
+    validator_test_updates:
+      - tests/pipeline/test_feature_registry.py
+      - tests/pipeline/test_model_registry.py
+      - tests/pipeline/test_compatibility.py
+    dependencies: [I-04]
+    done_criteria:
+      - compatibility and required inputs explicit per feature/model family
+  - id: I-06
+    title: execution-failure-policy-integration
+    stream: SP-6
+    files_to_create_or_modify:
+      - macrocast/pipeline/experiment.py
+      - macrocast/pipeline/results.py
+      - config/meta/execution.yaml
+    registry_files_touched:
+      - config/meta/execution.yaml
+    validator_test_updates:
+      - tests/pipeline/test_experiment.py
+      - tests/e2e/test_baseline_pipeline.py
+    dependencies: [I-05]
+    done_criteria:
+      - failure policy reflected in runtime results and manifests
+  - id: I-07
+    title: separate-evaluation-from-statistical-testing
+    stream: SP-7
+    files_to_create_or_modify:
+      - config/evaluation.yaml
+      - macrocast/evaluation/registry.py
+      - macrocast/evaluation/metrics.py
+      - macrocast/evaluation/horserace.py
+    registry_files_touched:
+      - config/evaluation.yaml
+      - config/meta/benchmarks.yaml
+    validator_test_updates:
+      - tests/evaluation/test_registry.py
+      - tests/evaluation/test_metrics.py
+      - tests/evaluation/test_horserace.py
+    dependencies: [I-06]
+    done_criteria:
+      - metrics registry distinct from test registry
+  - id: I-08
+    title: formalize-statistical-test-suite
+    stream: SP-8
+    files_to_create_or_modify:
+      - config/tests.yaml
+      - macrocast/evaluation/dm.py
+      - macrocast/evaluation/cw.py
+      - macrocast/evaluation/mcs.py
+    registry_files_touched:
+      - config/tests.yaml
+    validator_test_updates:
+      - tests/evaluation/test_dm.py
+      - tests/evaluation/test_cw.py
+      - tests/evaluation/test_mcs.py
+    dependencies: [I-07]
+    done_criteria:
+      - test suite registry captures hac/bootstrap/correction policies
+  - id: I-09
+    title: finalize-interpretation-registry
+    stream: SP-9
+    files_to_create_or_modify:
+      - config/interpretation.yaml
+      - macrocast/interpretation/registry.py
+      - macrocast/interpretation/variable_importance.py
+      - macrocast/interpretation/pbsv.py
+    registry_files_touched:
+      - config/interpretation.yaml
+    validator_test_updates:
+      - tests/interpretation/test_registry.py
+      - tests/interpretation/test_variable_importance.py
+    dependencies: [I-08]
+    done_criteria:
+      - interpretation methods registry-driven and compatibility-checked
+  - id: I-10
+    title: close-output-and-provenance-layer
+    stream: SP-10
+    files_to_create_or_modify:
+      - config/output.yaml
+      - macrocast/output/paths.py
+      - macrocast/output/manifest.py
+      - macrocast/output/writers.py
+    registry_files_touched:
+      - config/output.yaml
+    validator_test_updates:
+      - tests/output/test_manifest.py
+      - tests/output/test_writers.py
+    dependencies: [I-09]
+    done_criteria:
+      - raw forecasts hp metadata preprocessing metadata sample metadata info-set metadata failures and config hash all persisted
+  - id: I-11
+    title: add-verification-audit-registry-and-runs
+    stream: SP-11
+    files_to_create_or_modify:
+      - config/verification.yaml
+      - config/examples/verification_audit.yaml
+      - macrocast/verification/audit.py
+      - tests/verification/test_audit.py
+    registry_files_touched:
+      - config/verification.yaml
+      - config/examples/verification_audit.yaml
+    validator_test_updates:
+      - tests/verification/test_audit.py
+      - tests/replication/test_clss2021.py
+    dependencies: [I-10]
+    done_criteria:
+      - audit-only replication path executable and documented in config
+  - id: I-12
+    title: close-e2e-and-usability-path
+    stream: SP-12
+    files_to_create_or_modify:
+      - config/examples/fred_md_baseline.yaml
+      - config/examples/fred_qd_baseline.yaml
+      - config/examples/minimal_baseline.yaml
+      - config/examples/custom_extension_smoke.yaml
+      - tests/e2e/test_baseline_pipeline.py
+      - tests/e2e/test_minimal_and_examples.py
+      - tests/planning/test_package_rebuild_plan.py
+    registry_files_touched:
+      - config/examples/fred_md_baseline.yaml
+      - config/examples/fred_qd_baseline.yaml
+      - config/examples/minimal_baseline.yaml
+      - config/examples/custom_extension_smoke.yaml
+    validator_test_updates:
+      - tests/e2e/test_baseline_pipeline.py
+      - tests/e2e/test_minimal_and_examples.py
+      - tests/planning/test_package_rebuild_plan.py
+    dependencies: [I-11]
+    done_criteria:
+      - package closes with baseline monthly quarterly minimal and extension smoke configs

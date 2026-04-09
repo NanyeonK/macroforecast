@@ -47,7 +47,7 @@ from macrocast.pipeline.components import (
 )
 from macrocast.pipeline.estimator import MacrocastEstimator, SequenceEstimator
 from macrocast.pipeline.features import FeatureBuilder
-from macrocast.pipeline.results import ForecastRecord, ResultSet
+from macrocast.pipeline.results import FailureRecord, ForecastRecord, ResultSet
 
 # Imported lazily inside _run_single to avoid circular imports; only used for
 # isinstance check when wiring AR-specific data.
@@ -420,13 +420,14 @@ class ForecastExperiment:
         )
 
         # Execute tasks — parallelise over (model, horizon, date) triples
-        records: list[ForecastRecord | None] = Parallel(n_jobs=self.n_jobs)(
+        records: list[ForecastRecord | FailureRecord | None] = Parallel(n_jobs=self.n_jobs)(
             delayed(self._run_single)(spec, h, t_star) for spec, h, t_star in tasks
         )
 
-        # Filter out None (failed cells)
         for r in records:
-            if r is not None:
+            if isinstance(r, FailureRecord):
+                result_set.add_failure(r)
+            elif r is not None:
                 result_set.add(r)
 
         logger.info(
@@ -439,6 +440,10 @@ class ForecastExperiment:
             out_path = self.output_dir / f"{self.experiment_id}.parquet"
             result_set.to_parquet(out_path)
             logger.info("Results written to %s", out_path)
+            if result_set.failures:
+                failure_path = self.output_dir / f"{self.experiment_id}.failures.parquet"
+                result_set.failures_dataframe().to_parquet(failure_path, index=False)
+                logger.info("Failure log written to %s", failure_path)
 
         return result_set
 
@@ -601,6 +606,7 @@ class ForecastExperiment:
                         zip(builder.feature_names_out_, best_est.feature_importances_.tolist())
                     )
 
+            cell_id = f"{spec.model_id}|h={h}|date={t_star.date()}"
             return ForecastRecord(
                 experiment_id=self.experiment_id,
                 model_id=spec.model_id,
@@ -621,6 +627,10 @@ class ForecastExperiment:
                 target_scheme=feat_spec.target_scheme,
                 feature_set=self.feature_spec.label,
                 feature_importances=fi,
+                benchmark_id="ar_bic_expanding",
+                evaluation_scale="explicit_required",
+                cell_id=cell_id,
+                degraded_run=False,
             )
 
         except Exception as exc:  # noqa: BLE001
@@ -632,7 +642,18 @@ class ForecastExperiment:
                 exc,
                 exc_info=True,
             )
-            return None
+            return FailureRecord(
+                experiment_id=self.experiment_id,
+                model_id=spec.model_id or "unknown_model",
+                horizon=h,
+                failure_stage="run_single",
+                exception_class=exc.__class__.__name__,
+                exception_message=str(exc),
+                severity="degraded_run",
+                retry_count=0,
+                cell_id=f"{spec.model_id}|h={h}|date={t_star.date()}",
+                warning_only=False,
+            )
 
     # ------------------------------------------------------------------
     # Sequence feature builder (LSTM)

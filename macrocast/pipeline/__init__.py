@@ -22,6 +22,15 @@ from macrocast.pipeline.models import (
     SVRRBFModel,
     XGBoostModel,
 )
+from macrocast.pipeline.registry import (
+    get_feature_defaults,
+    get_model_defaults,
+    load_feature_registry,
+    load_model_registry,
+    validate_feature_model_compatibility,
+    validate_feature_registry,
+    validate_model_registry,
+)
 from macrocast.pipeline.r_models import (
     AdaptiveLassoModel,
     ARDIModel,
@@ -38,22 +47,17 @@ from macrocast.pipeline.r_models import (
 from macrocast.pipeline.results import ForecastRecord, ResultSet
 
 __all__ = [
-    # components
     "CVScheme",
     "CVSchemeType",
     "LossFunction",
     "Nonlinearity",
     "Regularization",
     "Window",
-    # estimator ABCs
     "MacrocastEstimator",
     "SequenceEstimator",
-    # features
     "FeatureBuilder",
-    # results
     "ForecastRecord",
     "ResultSet",
-    # Python models
     "KRRModel",
     "SVRRBFModel",
     "SVRLinearModel",
@@ -62,7 +66,6 @@ __all__ = [
     "GBModel",
     "NNModel",
     "LSTMModel",
-    # R model bridge
     "RModelEstimator",
     "ARModel",
     "ARDIModel",
@@ -74,10 +77,15 @@ __all__ = [
     "TVPRidgeModel",
     "BoogingModel",
     "BVARModel",
-    # experiment
     "ModelSpec",
     "FeatureSpec",
     "ForecastExperiment",
-    # horse race grid
     "HorseRaceGrid",
+    'get_feature_defaults',
+    'get_model_defaults',
+    'load_feature_registry',
+    'load_model_registry',
+    'validate_feature_model_compatibility',
+    'validate_feature_registry',
+    'validate_model_registry',
 ]

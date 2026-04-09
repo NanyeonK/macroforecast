@@ -1,0 +1,63 @@
+registry_map:
+  core_families:
+    - name: global_defaults
+      file: config/meta/global_defaults.yaml
+      purpose: lowest-precedence package defaults
+    - name: axes
+      file: config/meta/axes.yaml
+      purpose: experiment unit and axis classification
+    - name: execution_policies
+      file: config/meta/execution.yaml
+      purpose: failure, retry, timeout, and partial-save rules
+    - name: benchmarks
+      file: config/meta/benchmarks.yaml
+      purpose: benchmark families and denominator rules
+    - name: presets
+      file: config/meta/presets.yaml
+      purpose: researcher and practitioner startup modes
+    - name: datasets
+      file: config/datasets.yaml
+      purpose: dataset source, frequency, info-set, vintage, alignment, lag policies
+    - name: targets
+      file: config/targets.yaml
+      purpose: target definitions, transforms, evaluation scale, predictor policies
+    - name: data_tasks
+      file: config/data_tasks.yaml
+      purpose: sample design, oos windows, and task-level locks
+    - name: preprocessing
+      file: config/preprocessing.yaml
+      purpose: target and x preprocessing recipes and operation order
+    - name: features
+      file: config/features.yaml
+      purpose: feature recipes and dimensionality reduction settings
+    - name: models
+      file: config/models.yaml
+      purpose: model wrappers, defaults, compatibility, hp spaces
+    - name: evaluation
+      file: config/evaluation.yaml
+      purpose: metric suites and aggregation rules
+    - name: tests
+      file: config/tests.yaml
+      purpose: statistical test suites and correction policies
+    - name: interpretation
+      file: config/interpretation.yaml
+      purpose: interpretation methods and compatibility rules
+    - name: output
+      file: config/output.yaml
+      purpose: artifact layout and manifest fields
+    - name: verification
+      file: config/verification.yaml
+      purpose: audit-only replication checks
+  inheritance_precedence_low_to_high:
+    - global_defaults
+    - dataset_defaults
+    - target_defaults
+    - model_defaults
+    - experiment_override
+  extension_slots:
+    - preprocessing_method
+    - feature_recipe
+    - model_wrapper
+    - metric
+    - statistical_test
+    - interpretation_method

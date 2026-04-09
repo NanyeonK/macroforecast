@@ -1,0 +1,46 @@
+preprocessing:
+  target_recipes:
+    - id: basic_none
+      family: target
+      description: No additional target preprocessing beyond dataset/experiment target definition
+      operation_order: [target_select]
+      fit_scope: none
+      learned_parameters: false
+      allowed_datasets: [fred_md, fred_qd, fred_sd]
+      notes: Baseline target recipe
+
+    - id: target_log_diff
+      family: target
+      description: Apply log-difference style target transform where valid
+      operation_order: [target_select, target_transform]
+      fit_scope: none
+      learned_parameters: false
+      allowed_datasets: [fred_md, fred_qd]
+      notes: For growth-rate style targets
+
+  x_recipes:
+    - id: mcng_em
+      family: x
+      description: McCracken-Ng style transform, trim, outlier removal, and EM fill
+      operation_order: [x_transform, trim_initial_rows, outlier_to_missing, em_fill]
+      fit_scope: train_window_only
+      learned_parameters: true
+      allowed_datasets: [fred_md]
+      notes: Canonical audited preprocessing recipe for FRED-MD replication-sensitive work
+
+    - id: basic_none
+      family: x
+      description: No additional X preprocessing beyond raw data selection
+      operation_order: [x_select]
+      fit_scope: none
+      learned_parameters: false
+      allowed_datasets: [fred_md, fred_qd, fred_sd]
+      notes: Minimal baseline path
+
+  policies:
+    target_x_must_be_separate: true
+    operation_order_is_explicit: true
+    train_only_fit_required_when_fit_scope_present: true
+    fit_scope_must_be_train_only_for_learned_steps: true
+    target_recipe_key: target_preprocess_recipe
+    x_recipe_key: x_preprocess_recipe

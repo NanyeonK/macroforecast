@@ -1,0 +1,33 @@
+benchmarks:
+  - id: ar_bic_expanding
+    family: ar
+    description: Autoregressive benchmark with BIC lag selection on expanding window
+    denominator_rule: self
+    target_construction_rule: direct_or_recipe_defined
+    estimation_window_rule: expanding
+    applicable_datasets: [fred_md, fred_qd, fred_sd]
+    applicable_targets: all
+    applicable_horizons: all
+    notes: Core benchmark for macro forecasting comparisons
+
+  - id: historical_mean_expanding
+    family: historical_mean
+    description: Historical mean benchmark on expanding window
+    denominator_rule: self
+    target_construction_rule: direct_or_recipe_defined
+    estimation_window_rule: expanding
+    applicable_datasets: [fred_md, fred_qd, fred_sd]
+    applicable_targets: all
+    applicable_horizons: all
+    notes: Simple practitioner baseline
+
+  - id: fm_agr_expanding
+    family: factor_model
+    description: Factor model benchmark using AGR denominator convention where relevant
+    denominator_rule: fm_agr
+    target_construction_rule: agr
+    estimation_window_rule: expanding
+    applicable_datasets: [fred_md]
+    applicable_targets: all
+    applicable_horizons: all
+    notes: Verification/audit benchmark for CLSS-style comparisons

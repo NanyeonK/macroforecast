@@ -1,0 +1,55 @@
+reverse_plan_check:
+  objective: verify that implementation order can produce a full package without hidden blockers
+  dependency_audit:
+    - issue: I-00
+      check: meta truth exists before registry mutation
+      status: pass
+    - issue: I-01
+      check: inheritance chain precedes dataset/target specialization
+      status: pass
+    - issue: I-02
+      check: task-definition metadata exists before preprocessing and design resolution
+      status: pass
+    - issue: I-03
+      check: target/x preprocessing split precedes resolved contracts
+      status: pass
+    - issue: I-04
+      check: design resolution precedes compatibility and execution integration
+      status: pass
+    - issue: I-05
+      check: feature/model compatibility precedes execution and interpretation
+      status: pass
+    - issue: I-06
+      check: execution failure policy precedes evaluation and output finalization
+      status: pass
+    - issue: I-07
+      check: evaluation metrics precede statistical tests
+      status: pass
+    - issue: I-08
+      check: statistical tests precede audit and final e2e
+      status: pass
+    - issue: I-09
+      check: interpretation after evaluation/testing discipline
+      status: pass
+    - issue: I-10
+      check: provenance finalized before verification and e2e closure
+      status: pass
+    - issue: I-11
+      check: replication remains audit-only and sits after package core
+      status: pass
+    - issue: I-12
+      check: e2e closure only after all layers exist
+      status: pass
+  gap_check:
+    missing_layers: []
+    missing_registry_families: []
+    missing_contracts: []
+    missing_test_classes: []
+  rollback_and_failure_policy:
+    registry_change_failure:
+      rollback: revert affected yaml and validator together
+    runtime_change_failure:
+      rollback: preserve old execution path behind compatibility flag until tests pass
+    audit_failure:
+      rollback: keep package core valid; audit suite may fail independently but must not alter core architecture
+  decision: approved_for_package_construction

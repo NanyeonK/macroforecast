@@ -1,0 +1,37 @@
+output:
+  canonical_formats:
+    forecast_table: parquet
+    evaluation_table: parquet
+    test_table: parquet
+    interpretation_table: parquet
+    manifest: yaml
+    failure_log: parquet
+  required_manifest_fields:
+    - run_id
+    - experiment_id
+    - config_hash
+    - code_version
+    - dataset_ids
+    - benchmark_ids
+    - artifact_paths
+    - success
+    - degraded
+    - failure_summary
+    - environment_fingerprint
+    - provenance_fields
+    - generated_at
+  required_artifacts:
+    - forecasts
+    - evaluation
+    - tests
+    - interpretation
+    - failures
+    - manifest
+  required_failure_fields:
+    - failure_stage
+    - exception_class
+    - exception_message
+    - retry_count
+    - cell_id
+    - model_id
+    - horizon

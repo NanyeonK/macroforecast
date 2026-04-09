@@ -1,0 +1,131 @@
+separate_plans:
+  - id: SP-0
+    name: package-scope-and-verification-lock
+    objective: lock package mode, replication role, optional-layer exclusions, and Meta Layer 0 rules
+    ownership_boundary: planning/meta
+    inputs: [config/plans/package_rebuild/00_meta_layer.yaml, existing docs/DESIGN.md, existing docs/roadmap.md]
+    outputs: [config/plans/package_rebuild/00_meta_layer.yaml, config/plans/package_rebuild/01_whole_package_plan.yaml]
+    yaml_registries_affected: [config/meta/axes.yaml, config/meta/execution.yaml, config/meta/presets.yaml]
+    code_modules_affected: [macrocast/meta/loaders.py, macrocast/meta/resolution.py, macrocast/meta/validators.py]
+    tests_required: [tests/meta/test_axes_registry.py, tests/meta/test_execution_policy.py, tests/meta/test_resolution.py]
+    done_criteria: [meta-layer-zero locked, replication audit role explicit, package scope frozen]
+  - id: SP-1
+    name: meta-registry-layer
+    objective: align runtime meta registries with planning truth for unit-of-run, axis classes, inheritance, naming, and execution policy
+    ownership_boundary: meta
+    inputs: [config/plans/package_rebuild/00_meta_layer.yaml, config/meta/*.yaml]
+    outputs: [updated meta registries and resolver behavior]
+    yaml_registries_affected: [config/meta/axes.yaml, config/meta/execution.yaml, config/meta/presets.yaml, config/meta/naming.yaml]
+    code_modules_affected: [macrocast/meta/loaders.py, macrocast/meta/validators.py, macrocast/meta/resolution.py, macrocast/meta/identity.py]
+    tests_required: [tests/meta/test_axes_registry.py, tests/meta/test_execution_policy.py, tests/meta/test_presets.py, tests/meta/test_resolution.py, tests/meta/test_identity.py]
+    done_criteria: [inheritance chain implemented, illegal overrides rejected, identities stable]
+  - id: SP-2
+    name: data-task-definition-layer
+    objective: create explicit dataset, target, sample, vintage, alignment, release-lag, ragged-edge, and predictor-pool registries
+    ownership_boundary: data
+    inputs: [config/datasets.yaml, config/plans/package_rebuild/00_meta_layer.yaml]
+    outputs: [dataset and target registries, sample/task contracts]
+    yaml_registries_affected: [config/datasets.yaml, config/targets.yaml, config/data_tasks.yaml]
+    code_modules_affected: [macrocast/data/registry.py, macrocast/data/schema.py, macrocast/data/vintages.py]
+    tests_required: [tests/data/test_dataset_registry.py, tests/data/test_schema.py, new tests for target/task registries]
+    done_criteria: [dataset/task metadata explicit, validation catches incompatible combinations]
+  - id: SP-3
+    name: preprocessing-layer
+    objective: separate target and x preprocessing registries with operation order and train-only fit enforcement
+    ownership_boundary: preprocessing
+    inputs: [config/preprocessing.yaml, planning meta rules]
+    outputs: [target/x preprocessing registries and validators]
+    yaml_registries_affected: [config/preprocessing.yaml]
+    code_modules_affected: [macrocast/preprocessing/registry.py, macrocast/preprocessing/transforms.py, macrocast/preprocessing/missing.py, macrocast/preprocessing/panel.py]
+    tests_required: [tests/preprocessing/test_registry.py, tests/preprocessing/test_target_x_separation.py, tests/preprocessing/test_missing.py, tests/preprocessing/test_transforms.py]
+    done_criteria: [target/x split explicit, operation order explicit, fit scope validated]
+  - id: SP-4
+    name: design-layer
+    objective: resolve layered configs into executable ResolvedExperimentSpec with explicit contracts
+    ownership_boundary: design
+    inputs: [meta registries, dataset/task registries, preprocessing registries, feature/model registries]
+    outputs: [resolved design specs and conflict detection]
+    yaml_registries_affected: [config/meta/*.yaml, config/datasets.yaml, config/targets.yaml, config/preprocessing.yaml, config/features.yaml, config/models.yaml]
+    code_modules_affected: [macrocast/design/resolver.py, macrocast/config.py]
+    tests_required: [tests/design/test_design_resolution.py, tests/design/test_invalid_design_conflicts.py]
+    done_criteria: [resolved spec includes all fixed/sweep axes, conflicts fail closed]
+  - id: SP-5
+    name: feature-model-layer
+    objective: stabilize feature and model registries, compatibility rules, and extension slots
+    ownership_boundary: pipeline
+    inputs: [config/features.yaml, config/models.yaml, meta axis policy]
+    outputs: [validated feature/model registry behavior]
+    yaml_registries_affected: [config/features.yaml, config/models.yaml]
+    code_modules_affected: [macrocast/pipeline/registry.py, macrocast/pipeline/features.py, macrocast/pipeline/models.py, macrocast/pipeline/r_models.py]
+    tests_required: [tests/pipeline/test_feature_registry.py, tests/pipeline/test_model_registry.py, tests/pipeline/test_compatibility.py]
+    done_criteria: [compatibility matrix explicit, extension hooks documented in registry]
+  - id: SP-6
+    name: execution-layer
+    objective: connect resolved design to ForecastExperiment execution with failure policy and provenance fields
+    ownership_boundary: pipeline_execution
+    inputs: [resolved design spec, execution policy registry, feature/model registries]
+    outputs: [degraded-run aware execution path]
+    yaml_registries_affected: [config/meta/execution.yaml, config/examples/*.yaml]
+    code_modules_affected: [macrocast/pipeline/experiment.py, macrocast/pipeline/components.py, macrocast/pipeline/results.py]
+    tests_required: [tests/pipeline/test_experiment.py, tests/e2e/test_baseline_pipeline.py]
+    done_criteria: [cell failures logged, benchmark failure hard-stops, partial save flagging works]
+  - id: SP-7
+    name: evaluation-layer
+    objective: keep metrics and benchmark-relative evaluation separate from statistical tests
+    ownership_boundary: evaluation
+    inputs: [benchmark registry, evaluation registry]
+    outputs: [tidy eval records and benchmark-relative metrics]
+    yaml_registries_affected: [config/meta/benchmarks.yaml, config/evaluation.yaml]
+    code_modules_affected: [macrocast/evaluation/metrics.py, macrocast/evaluation/registry.py, macrocast/evaluation/horserace.py]
+    tests_required: [tests/evaluation/test_metrics.py, tests/evaluation/test_registry.py, tests/evaluation/test_horserace.py]
+    done_criteria: [eval records tidy, benchmark denominator lock enforced]
+  - id: SP-8
+    name: statistical-testing-layer
+    objective: formalize registry-driven DM/CW/MCS workflows and multiple-comparison policy
+    ownership_boundary: evaluation_testing
+    inputs: [evaluation outputs, benchmark policy]
+    outputs: [registered test suite execution]
+    yaml_registries_affected: [config/tests.yaml]
+    code_modules_affected: [macrocast/evaluation/dm.py, macrocast/evaluation/cw.py, macrocast/evaluation/mcs.py]
+    tests_required: [tests/evaluation/test_dm.py, tests/evaluation/test_cw.py, tests/evaluation/test_mcs.py]
+    done_criteria: [test records include correction and hac/bootstrap metadata]
+  - id: SP-9
+    name: interpretation-layer
+    objective: formalize interpretation registry and compatibility with supported models
+    ownership_boundary: interpretation
+    inputs: [feature/model outputs, interpretation registry]
+    outputs: [tidy interpretation records]
+    yaml_registries_affected: [config/interpretation.yaml]
+    code_modules_affected: [macrocast/interpretation/registry.py, macrocast/interpretation/variable_importance.py, macrocast/interpretation/pbsv.py, macrocast/interpretation/marginal.py]
+    tests_required: [tests/interpretation/test_registry.py, tests/interpretation/test_variable_importance.py, tests/interpretation/test_pbsv.py]
+    done_criteria: [unsupported combinations rejected, records tidy and provenance-rich]
+  - id: SP-10
+    name: output-provenance-layer
+    objective: guarantee export structure, manifests, config hashes, and failure logs
+    ownership_boundary: output
+    inputs: [forecast/eval/test/interpretation records, execution metadata]
+    outputs: [artifact directories and run manifest]
+    yaml_registries_affected: [config/output.yaml]
+    code_modules_affected: [macrocast/output/paths.py, macrocast/output/manifest.py, macrocast/output/writers.py]
+    tests_required: [tests/output/test_manifest.py, tests/output/test_writers.py]
+    done_criteria: [all artifact classes written, config hash present, failure log persisted]
+  - id: SP-11
+    name: verification-replication-audit-suite
+    objective: define audit-only replication suite for benchmark and preprocessing verification
+    ownership_boundary: verification
+    inputs: [replication references, package outputs]
+    outputs: [verification config and audit reports]
+    yaml_registries_affected: [config/examples/verification_audit.yaml, config/verification.yaml]
+    code_modules_affected: [macrocast/verification/audit.py, macrocast/replication/clss2021.py]
+    tests_required: [tests/verification/test_audit.py, tests/replication/test_clss2021.py]
+    done_criteria: [audit path executable, tolerances explicit, architecture remains package-first]
+  - id: SP-12
+    name: e2e-and-usability-pass
+    objective: close the package with baseline configs, custom-extension smoke, and researcher/practitioner usability review
+    ownership_boundary: integration
+    inputs: [all prior streams]
+    outputs: [passing baseline/e2e suite and usability report]
+    yaml_registries_affected: [config/examples/fred_md_baseline.yaml, config/examples/fred_qd_baseline.yaml, config/examples/minimal_baseline.yaml, config/examples/custom_extension_smoke.yaml]
+    code_modules_affected: [cross-layer]
+    tests_required: [tests/e2e/test_baseline_pipeline.py, tests/e2e/test_minimal_and_examples.py, new planning artifact validator]
+    done_criteria: [closure criteria met, baseline configs parse and run, extension smoke passes]

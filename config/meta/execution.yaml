@@ -1,0 +1,75 @@
+policies:
+  - id: strict_research_default
+    max_retries_per_cell: 1
+    max_failed_cells: 0
+    timeout_per_cell_seconds: 3600
+    timeout_per_run_seconds: 86400
+    benchmark_failure_policy: hard_error
+    config_failure_policy: hard_error
+    partial_save_policy: save_partial_with_flag
+    canary_mode: false
+    cell_failure:
+      default: fail_and_record
+      allowed_actions:
+        - retry_once
+        - skip_with_failure_record
+    model_failure:
+      default: continue_other_models_and_mark_run_degraded
+      escalate_to_stop_when:
+        - benchmark_model_fails
+        - failure_rate_exceeds_threshold
+    partial_horizon_failure:
+      default: save_partial_with_flag
+      required_metadata:
+        - failed_horizons
+        - skipped_cells
+        - warnings
+    severity_levels:
+      - warning
+      - degraded_run
+      - hard_error
+    provenance_fields:
+      - failure_stage
+      - exception_class
+      - exception_message
+      - retry_count
+      - cell_id
+      - model_id
+      - horizon
+
+  - id: practitioner_default
+    max_retries_per_cell: 0
+    max_failed_cells: 5
+    timeout_per_cell_seconds: 1800
+    timeout_per_run_seconds: 21600
+    benchmark_failure_policy: hard_error
+    config_failure_policy: hard_error
+    partial_save_policy: save_partial_with_flag
+    canary_mode: false
+    cell_failure:
+      default: fail_and_record
+      allowed_actions:
+        - skip_with_failure_record
+    model_failure:
+      default: continue_other_models_and_mark_run_degraded
+      escalate_to_stop_when:
+        - benchmark_model_fails
+        - failure_rate_exceeds_threshold
+    partial_horizon_failure:
+      default: save_partial_with_flag
+      required_metadata:
+        - failed_horizons
+        - skipped_cells
+        - warnings
+    severity_levels:
+      - warning
+      - degraded_run
+      - hard_error
+    provenance_fields:
+      - failure_stage
+      - exception_class
+      - exception_message
+      - retry_count
+      - cell_id
+      - model_id
+      - horizon

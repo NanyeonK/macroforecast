@@ -1,0 +1,66 @@
+presets:
+  - id: researcher_explicit
+    mode: researcher
+    description: Explicit forecasting research preset with provenance-first defaults and no silent failure masking
+    base_defaults:
+      execution_policy_id: strict_research_default
+      benchmark_family: ar
+      benchmark_id: ar_bic_expanding
+      target_preprocess_recipe: basic_none
+      x_preprocess_recipe: basic_none
+      evaluation_scale: explicit_required
+    allowed_overrides:
+      - dataset
+      - target
+      - sample_period
+      - oos_period
+      - target_preprocess_recipe
+      - x_preprocess_recipe
+      - feature_recipe
+      - model_family
+      - horizon
+      - tuning_method
+      - hyperparameter_space
+      - statistical_test_suite
+      - interpretation_method
+    notes: Use for paper-grade explicit configs; failures remain visible in provenance.
+
+  - id: practitioner_minimal
+    mode: practitioner
+    description: Minimal baseline preset for practitioner-researchers without hiding benchmark or provenance semantics
+    base_defaults:
+      execution_policy_id: practitioner_default
+      benchmark_family: historical_mean
+      benchmark_id: historical_mean_expanding
+      target_preprocess_recipe: basic_none
+      x_preprocess_recipe: basic_none
+      evaluation_scale: explicit_required
+    allowed_overrides:
+      - dataset
+      - target
+      - horizon
+      - model_family
+      - benchmark_family
+      - target_preprocess_recipe
+      - x_preprocess_recipe
+    notes: Minimal does not mean silent; benchmark and failure provenance remain explicit.
+
+  - id: verification_audit
+    mode: verification
+    description: Audit preset for benchmark and replication checks without letting replication dominate package structure
+    base_defaults:
+      execution_policy_id: strict_research_default
+      benchmark_family: factor_model
+      benchmark_id: fm_agr_expanding
+      target_preprocess_recipe: basic_none
+      x_preprocess_recipe: mcng_em
+      evaluation_scale: explicit_required
+    allowed_overrides:
+      - dataset
+      - target
+      - horizon
+      - benchmark_family
+      - target_preprocess_recipe
+      - x_preprocess_recipe
+      - statistical_test_suite
+    notes: Verification remains audit-only and follows the same provenance rules as research runs.

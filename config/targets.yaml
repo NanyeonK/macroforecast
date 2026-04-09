@@ -1,0 +1,27 @@
+targets:
+  - id: __default__
+    applicable_datasets: [fred_md, fred_qd, fred_sd]
+    defaults:
+      target: __config_target__
+      predictor_pool_policy: all_predictors
+      own_lag_policy: include
+      contemporaneous_x_policy: disallow
+      other_target_inclusion_policy: disallow
+      forecast_type: direct
+      horizon_target_construction: point_at_t_plus_h
+      overlapping_horizon_treatment: hac_in_evaluation
+      evaluation_scale: explicit_required
+      target_preprocess_recipe: basic_none
+      target_domain_constraint: unconstrained
+    notes: Fallback target policy for package-wide forecasting semantics
+
+  - id: INDPRO
+    applicable_datasets: [fred_md, fred_qd]
+    defaults:
+      target: INDPRO
+      benchmark_family: ar
+      benchmark_id: ar_bic_expanding
+      target_preprocess_recipe: basic_none
+      evaluation_scale: transformed_scale
+      target_domain_constraint: unconstrained
+    notes: Industrial production default target policy

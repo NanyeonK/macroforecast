@@ -1,0 +1,83 @@
+models:
+  - id: ar
+    family: linear_benchmark
+    backend: r_bridge
+    supports_multihorizon: true
+    supports_featureless: true
+    supports_interpretation: false
+    defaults:
+      model_family: linear_benchmark
+      tuning_method: none
+      hyperparameter_space: ar_bic
+    required_inputs:
+      - target
+      - horizon
+    compatibility:
+      allowed_feature_families: [pca_factor, marx, maf]
+      requires_lookback: false
+      supports_sequence_input: false
+    extension_slot: model_wrapper
+    notes: Autoregressive benchmark
+
+  - id: elastic_net
+    family: penalized_linear
+    backend: r_bridge
+    supports_multihorizon: true
+    supports_featureless: false
+    supports_interpretation: false
+    defaults:
+      model_family: penalized_linear
+      tuning_method: grid_search
+      hyperparameter_space: elastic_net_default
+    required_inputs:
+      - feature_matrix
+      - target
+      - horizon
+    compatibility:
+      allowed_feature_families: [pca_factor, marx, maf]
+      requires_lookback: false
+      supports_sequence_input: false
+    extension_slot: model_wrapper
+    notes: Elastic net baseline
+
+  - id: rf
+    family: tree_ensemble
+    backend: python
+    supports_multihorizon: true
+    supports_featureless: false
+    supports_interpretation: true
+    defaults:
+      model_family: tree_ensemble
+      tuning_method: grid_search
+      hyperparameter_space: rf_default
+    required_inputs:
+      - feature_matrix
+      - target
+      - horizon
+    compatibility:
+      allowed_feature_families: [pca_factor, marx, maf]
+      requires_lookback: false
+      supports_sequence_input: false
+    extension_slot: model_wrapper
+    notes: Random forest model with tree-native importance support
+
+  - id: krr
+    family: kernel_method
+    backend: python
+    supports_multihorizon: true
+    supports_featureless: false
+    supports_interpretation: false
+    defaults:
+      model_family: kernel_method
+      tuning_method: grid_search
+      hyperparameter_space: krr_default
+    required_inputs:
+      - feature_matrix
+      - target
+      - horizon
+    compatibility:
+      allowed_feature_families: [pca_factor, marx, maf]
+      requires_lookback: false
+      supports_sequence_input: false
+    extension_slot: model_wrapper
+    notes: Kernel ridge regression

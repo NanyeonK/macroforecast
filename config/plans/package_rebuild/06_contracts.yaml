@@ -1,0 +1,55 @@
+contracts:
+  - name: RawPanelContract
+    runtime_object: pandas.DataFrame
+    purpose: raw aligned predictor panel before learned preprocessing
+    required_fields: [index_datetime, column_names, frequency, dataset_id, vintage_id_optional]
+    validators: [shape_nonempty, monotone_datetime_index, unique_columns]
+    implementation_targets: [macrocast/data/schema.py, macrocast/data/registry.py]
+  - name: TargetSeriesContract
+    runtime_object: pandas.Series
+    purpose: raw target series before horizon construction
+    required_fields: [name, index_datetime, target_id, evaluation_scale]
+    validators: [monotone_datetime_index, nonempty]
+    implementation_targets: [macrocast/data/schema.py, macrocast/config.py]
+  - name: TransformedPanelContract
+    runtime_object: pandas.DataFrame
+    purpose: post-preprocessing x panel with fit-scope provenance
+    required_fields: [preprocessing_recipe_id, fit_scope, operation_order]
+    validators: [no_future_fit_leakage, columns_known]
+    implementation_targets: [macrocast/preprocessing/registry.py, macrocast/preprocessing/panel.py]
+  - name: FeatureMatrixContract
+    runtime_object: pandas.DataFrame
+    purpose: executable feature matrix per horizon/model family
+    required_fields: [feature_recipe_id, horizon, sample_start, sample_end]
+    validators: [row_target_alignment, finite_values_or_explicit_mask]
+    implementation_targets: [macrocast/pipeline/features.py]
+  - name: PredictionRecord
+    runtime_object: tidy_dataframe
+    purpose: one forecast observation record
+    required_fields: [run_id, cell_id, forecast_date, target_id, horizon, model_id, y_true, y_hat, benchmark_id]
+    validators: [unique_prediction_key, explicit_scale]
+    implementation_targets: [macrocast/pipeline/results.py]
+  - name: EvalRecord
+    runtime_object: tidy_dataframe
+    purpose: evaluation metrics record
+    required_fields: [run_id, model_id, metric_id, value, benchmark_id, aggregation_scope]
+    validators: [metric_known, denominator_known]
+    implementation_targets: [macrocast/evaluation/registry.py, macrocast/evaluation/metrics.py]
+  - name: TestRecord
+    runtime_object: tidy_dataframe
+    purpose: statistical test output record
+    required_fields: [run_id, model_id, test_id, statistic, p_value, correction_policy]
+    validators: [test_known, p_value_in_unit_interval]
+    implementation_targets: [macrocast/evaluation/dm.py, macrocast/evaluation/cw.py, macrocast/evaluation/mcs.py]
+  - name: InterpretationRecord
+    runtime_object: tidy_dataframe
+    purpose: interpretation output record
+    required_fields: [run_id, model_id, method_id, feature_name, value]
+    validators: [method_known, compatibility_checked]
+    implementation_targets: [macrocast/interpretation/registry.py]
+  - name: RunManifestContract
+    runtime_object: yaml_document
+    purpose: package provenance manifest
+    required_fields: [run_id, experiment_id, config_hash, code_version, dataset_ids, benchmark_ids, artifact_paths, failure_summary]
+    validators: [artifact_paths_exist, config_hash_present]
+    implementation_targets: [macrocast/output/manifest.py]

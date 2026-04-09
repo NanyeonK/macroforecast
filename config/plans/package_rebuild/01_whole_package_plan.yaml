@@ -1,0 +1,120 @@
+package_plan:
+  package_name: macrocast
+  package_family: macro_forecasting_research_package
+  objective:
+    problem_statement: reusable package for economics/finance forecasting experiments with transparent data-task-definition, train-only preprocessing, benchmark-relative evaluation, statistical testing, interpretation, and provenance
+    successful_v1:
+      - one canonical monthly macro dataset baseline runs end-to-end from yaml
+      - one quarterly dataset baseline runs end-to-end from yaml
+      - target and x preprocessing are explicitly separated and validated
+      - benchmark-relative evaluation and statistical tests run from registries
+      - interpretation path runs for supported models
+      - outputs and manifests capture provenance, failures, and config hashes
+      - replication audit path verifies selected CLSS benchmark implementations without dominating architecture
+  user_modes:
+    researcher_mode:
+      goals:
+        - explicit experiment control
+        - reproducible yaml runs
+        - benchmark/test discipline
+        - easy addition of preprocessing, models, and tests
+    practitioner_mode:
+      goals:
+        - minimal baseline config
+        - sensible presets
+        - inspectable outputs
+        - actionable errors
+    minimal_baseline_mode:
+      goals:
+        - single dataset single target single horizon smoke path
+    extension_developer_mode:
+      goals:
+        - register custom preprocessing
+        - register custom model wrappers
+        - register custom metric test and interpretation methods
+  scope:
+    in_scope:
+      - meta_registry_layer
+      - data_task_definition_layer
+      - preprocessing_layer
+      - design_resolution_layer
+      - feature_model_registry_layer
+      - forecast_execution_layer
+      - evaluation_layer
+      - statistical_testing_layer
+      - interpretation_layer
+      - output_and_provenance_layer
+      - verification_audit_suite
+      - end_to_end_tests
+    out_of_scope:
+      - portfolio_construction
+      - economic_value_layer
+      - deployment_productization
+      - always_on_agent_orchestration
+  architecture_layers:
+    - id: L0
+      name: Meta / Registry
+      responsibility: lock experiment unit axis classes inheritance and execution policy
+    - id: L1
+      name: Data / Task Definition
+      responsibility: define datasets vintages alignment release lags ragged edge target and predictor policies
+    - id: L2
+      name: Preprocessing
+      responsibility: keep target and x preprocessing separate with explicit operation order and train-only fit scope
+    - id: L3
+      name: Design
+      responsibility: resolve experiment spec from layered registries into executable design contracts
+    - id: L4
+      name: Feature / Model
+      responsibility: map feature and model registries into compatible executable specs
+    - id: L5
+      name: Training / Forecast Execution
+      responsibility: run forecast cells with failure discipline and provenance capture
+    - id: L6
+      name: Evaluation
+      responsibility: compute absolute relative and directional metrics against explicit benchmarks
+    - id: L7
+      name: Statistical Testing
+      responsibility: run DM Clark-West MCS and multiple-comparison-aware test workflows
+    - id: L8
+      name: Importance / Interpretation
+      responsibility: compute registered interpretation outputs with compatibility checks
+    - id: L9
+      name: Output / Provenance
+      responsibility: write forecasts evaluations tests interpretation artifacts and manifests
+    - id: L10
+      name: Verification / Replication Audit
+      responsibility: verify benchmark fidelity and selected reference outputs for transparency
+  invariants:
+    - no-lookahead rule
+    - train-window-only fit rule
+    - explicit target alignment rule
+    - benchmark denominator lock
+    - explicit evaluation scale rule
+    - provenance mandatory rule
+  truth_sources:
+    machine_readable:
+      - config/**/*.yaml
+      - package_code
+      - tests
+      - output_manifests
+    human_readable:
+      - docs/planning/macroforecast-package-rebuild.md
+  verification_role_of_replication:
+    available_reference_suite:
+      - CLSS_2021_AR_FM_AL_EN_RF benchmark suite
+    verification_targets:
+      - benchmark implementation fidelity
+      - preprocessing order
+      - target mapping and horizon construction
+      - evaluation denominator correctness
+      - result parity within documented tolerance where reference artifacts exist
+  end_to_end_closure_criteria:
+    - fred_md baseline config runs
+    - fred_qd baseline config runs
+    - benchmark-relative evaluation path runs
+    - statistical testing path runs
+    - interpretation path runs
+    - full output manifest writes
+    - custom extension smoke test runs
+    - verification audit run defined and executable

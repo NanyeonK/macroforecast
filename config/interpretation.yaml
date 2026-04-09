@@ -1,0 +1,24 @@
+interpretation_methods:
+  - id: tree_native_importance
+    family: tree_native
+    entrypoint: macrocast.interpretation.variable_importance:extract_vi_dataframe
+    required_inputs: [result_set]
+    produced_outputs: [feature_importance_table]
+    compatibility_rules:
+      allowed_model_families: [tree_ensemble]
+      requires_feature_importances: true
+    provenance_fields: [interpretation_method_id]
+    extension_slot: interpretation_method
+    notes: Uses feature_importances stored on ForecastRecord objects
+
+  - id: permutation_importance_table
+    family: permutation
+    entrypoint: macrocast.interpretation.variable_importance:extract_vi_dataframe
+    required_inputs: [result_set]
+    produced_outputs: [feature_importance_table]
+    compatibility_rules:
+      allowed_model_families: [tree_ensemble, kernel_method, penalized_linear]
+      requires_feature_importances_or_adapter: true
+    provenance_fields: [interpretation_method_id]
+    extension_slot: interpretation_method
+    notes: Placeholder registry entry for permutation-style importance outputs

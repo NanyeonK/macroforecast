@@ -1,0 +1,196 @@
+plan_id: macroforecast-package-rebuild-meta-layer
+version: 1
+status: locked-for-planning
+package_mode_lock:
+  project_type: research_package
+  domain_mode: macro_forecasting
+  primary_users:
+    - researcher
+    - practitioner
+  language_mode: dual_language
+  python_package: macrocast
+  r_package: macrocastR
+  config_source: yaml
+  runtime_objects:
+    python:
+      - pandas.DataFrame
+      - pandas.Series
+      - numpy.ndarray
+      - sklearn-style estimators
+    r:
+      - data.frame
+      - tibble
+      - recipe/workflow compatible objects
+  validation_style:
+    - lightweight_validators
+    - pytest_tests
+  outputs:
+    - parquet
+    - csv
+    - json
+    - yaml_manifest
+  docs_policy: minimal_markdown_explanatory_only
+  replication_role: verification_benchmark_audit
+unit_of_run:
+  experiment: one_target + one_data_setting + one_sample_design + one_preprocess_recipe
+  run: one_experiment + one_horizon_grid + one_model_grid + one_tuning_policy
+  cell: one_run + one_horizon + one_model + one_resolved_hyperparameter_state
+  notes:
+    - single-target experiment remains default because current ForecastExperiment API is target-centric
+    - multiple targets should be represented as repeated experiments unless explicit multivariate mode is activated later
+axis_classes:
+  invariant:
+    - no_lookahead_rule
+    - train_window_only_fit_rule
+    - target_alignment_rule
+    - benchmark_denominator_lock_rule
+    - evaluation_scale_explicit_rule
+    - provenance_mandatory_rule
+  experiment_fixed:
+    - dataset
+    - frequency
+    - information_set_policy
+    - vintage_policy
+    - merge_alignment_rule
+    - release_lag_policy
+    - ragged_edge_policy
+    - variable_universe_version
+    - sample_period
+    - estimation_start
+    - oos_period
+    - minimum_train_size
+    - target
+    - predictor_pool_policy
+    - own_lag_policy
+    - contemporaneous_x_policy
+    - other_target_inclusion_policy
+    - benchmark_family
+    - forecast_type
+    - horizon_target_construction
+    - overlapping_horizon_treatment
+    - evaluation_scale
+    - outer_window
+    - refit_policy
+    - validation_design
+    - cv_scheme
+    - same_split_across_models
+    - same_split_across_targets
+    - horizon_specific_split
+    - shuffled_split_forbidden
+    - target_x_preprocessing_independence
+    - preprocessing_operation_order
+  research_sweep:
+    - horizon
+    - target_preprocess_recipe
+    - x_preprocess_recipe
+    - feature_recipe
+    - model_family
+    - tuning_method
+    - hyperparameter_space
+    - lookback_length
+    - factor_extraction_recipe
+    - interaction_basis_recipe
+    - predictor_subset_variant
+    - statistical_test_suite
+    - interpretation_method
+  conditional:
+    - rolling_window_size
+    - warm_up_size
+    - max_lag_count
+    - factor_count
+    - release_calendar_id
+    - embargo_gap
+    - benchmark_lag_order
+    - target_horizon_specific_benchmark
+    - early_stopping_policy
+    - convergence_failure_policy
+    - parallelization_policy
+    - target_specific_model_allowlist
+    - target_specific_x_map
+    - other_target_inclusion_matrix
+    - target_specific_availability_mask
+fixed_axes_summary:
+  dataset:
+    includes:
+      - dataset
+      - frequency
+      - info_set
+      - sample_period
+      - target
+      - benchmark_family
+      - evaluation_scale
+  sweep_axes:
+    includes:
+      - horizon
+      - x_preprocess
+      - target_preprocess
+      - feature_recipe
+      - model
+      - tuning_method
+config_inheritance:
+  precedence_low_to_high:
+    - global_default
+    - dataset_default
+    - target_default
+    - model_default
+    - experiment_override
+  rules:
+    - experiment_override may override sweep and experiment-fixed axes only where legality rules permit
+    - invariant axes are never overridable
+    - dataset defaults cannot set target-specific fields
+    - model defaults cannot mutate dataset/sample/benchmark axes
+    - target defaults may specialize preprocessing, benchmarks, and evaluation scale for that target
+  required_registry_support:
+    - config/meta/global_defaults.yaml
+    - config/datasets.yaml
+    - config/targets.yaml
+    - config/models.yaml
+    - experiment config file
+fit_scope_rule:
+  core_rule: all preprocessing scaling factor extraction imputation and learned transforms fit on training window only
+  target_side:
+    - target transform parameters learned from train only
+    - no future target leakage through horizon construction
+  x_side:
+    - imputation fit on train only
+    - scaling fit on train only
+    - factor extraction fit on train only
+    - lag generation uses only available past information
+  enforcement:
+    - registry field fit_scope required when a step learns parameters
+    - validators reject missing fit_scope for learned steps
+    - tests must cover train-only behavior for target and x paths separately
+failure_policy:
+  config_failures: hard_error
+  benchmark_failures: hard_error
+  cell_failure:
+    default: fail_and_record
+    allowed_actions:
+      - retry_once
+      - skip_with_failure_record
+  model_failure:
+    default: continue_other_models_and_mark_run_degraded
+    escalate_to_stop_when:
+      - benchmark_model_fails
+      - failure_rate_exceeds_threshold
+  partial_horizon_failure:
+    default: save_partial_with_flag
+    required_metadata:
+      - failed_horizons
+      - skipped_cells
+      - warnings
+  severity_levels:
+    - warning
+    - degraded_run
+    - hard_error
+  provenance_fields:
+    - failure_stage
+    - exception_class
+    - exception_message
+    - retry_count
+    - cell_id
+    - model_id
+    - horizon
+planning_gate:
+  first_implementation_step: lock_unit_of_run_and_axis_classes_before_expanding_data_task_yaml
+  blocked_until_meta_zero_complete: true

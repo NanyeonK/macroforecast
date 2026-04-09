@@ -1,0 +1,24 @@
+verification_audits:
+  - id: benchmark_registry_audit
+    family: benchmark
+    entrypoint: macrocast.verification.audit:audit_benchmark_registry
+    required_inputs: [benchmark_registry, benchmark_id]
+    produced_outputs: [passed]
+    tolerance_policy: exact_match
+    notes: Audit benchmark id presence and package registry visibility
+
+  - id: preprocessing_registry_audit
+    family: preprocessing
+    entrypoint: macrocast.verification.audit:audit_preprocessing_registry
+    required_inputs: [preprocessing_registry, recipe_id, family]
+    produced_outputs: [passed]
+    tolerance_policy: exact_match
+    notes: Audit target/X preprocessing registry presence
+
+  - id: target_mapping_audit
+    family: target_mapping
+    entrypoint: macrocast.verification.audit:audit_target_mapping
+    required_inputs: [mapping, target_id]
+    produced_outputs: [passed]
+    tolerance_policy: exact_match
+    notes: Audit target id mapping completeness for verification suites

@@ -1,0 +1,112 @@
+unit_of_run: &unit_of_run
+  experiment: one_target + one_data_setting + one_sample_design + one_preprocess_recipe
+  run: one_experiment + one_horizon_grid + one_model_grid + one_tuning_policy
+  cell: one_run + one_horizon + one_model + one_resolved_hyperparameter_state
+
+axis_classes:
+  invariant: &invariant_axes
+    - no_lookahead_rule
+    - train_window_only_fit_rule
+    - target_alignment_rule
+    - benchmark_denominator_lock_rule
+    - evaluation_scale_explicit_rule
+    - provenance_mandatory_rule
+
+  experiment_fixed: &experiment_fixed_axes
+    - dataset
+    - frequency
+    - information_set_policy
+    - vintage_policy
+    - merge_alignment_rule
+    - release_lag_policy
+    - ragged_edge_policy
+    - variable_universe_version
+    - sample_period
+    - estimation_start
+    - oos_period
+    - minimum_train_size
+    - target
+    - predictor_pool_policy
+    - own_lag_policy
+    - contemporaneous_x_policy
+    - other_target_inclusion_policy
+    - benchmark_family
+    - forecast_type
+    - horizon_target_construction
+    - overlapping_horizon_treatment
+    - evaluation_scale
+    - outer_window
+    - refit_policy
+    - validation_design
+    - cv_scheme
+    - same_split_across_models
+    - same_split_across_targets
+    - horizon_specific_split
+    - shuffled_split_forbidden
+    - target_x_preprocessing_independence
+    - preprocessing_operation_order
+
+  research_sweep: &research_sweep_axes
+    - horizon
+    - target_preprocess_recipe
+    - x_preprocess_recipe
+    - feature_recipe
+    - model_family
+    - tuning_method
+    - hyperparameter_space
+    - lookback_length
+    - factor_extraction_recipe
+    - interaction_basis_recipe
+    - predictor_subset_variant
+    - statistical_test_suite
+    - interpretation_method
+
+  conditional: &conditional_axes
+    - rolling_window_size
+    - warm_up_size
+    - max_lag_count
+    - factor_count
+    - release_calendar_id
+    - embargo_gap
+    - benchmark_lag_order
+    - target_horizon_specific_benchmark
+    - early_stopping_policy
+    - convergence_failure_policy
+    - parallelization_policy
+    - target_specific_model_allowlist
+    - target_specific_x_map
+    - other_target_inclusion_matrix
+    - target_specific_availability_mask
+
+fixed_axes_summary:
+  includes:
+    - dataset
+    - frequency
+    - information_set_policy
+    - sample_period
+    - target
+    - benchmark_family
+    - evaluation_scale
+
+sweep_axes_summary:
+  includes:
+    - horizon
+    - target_preprocess_recipe
+    - x_preprocess_recipe
+    - feature_recipe
+    - model_family
+    - tuning_method
+
+comparability_rules:
+  benchmark_family_change_creates_new_experiment: true
+  target_construction_change_creates_new_experiment: true
+  evaluation_scale_change_creates_new_experiment: true
+  preprocessing_operation_order_change_creates_new_experiment: true
+  target_x_preprocessing_change_creates_new_experiment: true
+
+# Legacy compatibility mirrors for current loaders/resolvers.
+experiment_unit: *unit_of_run
+invariant_axes: *invariant_axes
+experiment_fixed_axes: *experiment_fixed_axes
+research_sweep_axes: *research_sweep_axes
+conditional_axes: *conditional_axes

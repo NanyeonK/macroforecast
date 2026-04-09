@@ -1,0 +1,47 @@
+test_suites:
+  - id: forecast_comparison_default
+    family: forecast_comparison
+    members: [dm_default, cw_default]
+    multiple_comparison_correction: none
+    hac_or_bootstrap: newey_west
+    provenance_fields: [test_suite_id, correction_policy, hac_or_bootstrap]
+    notes: Default pairwise forecast-comparison suite
+
+  - id: model_set_default
+    family: model_set
+    members: [mcs_default]
+    multiple_comparison_correction: none
+    hac_or_bootstrap: stationary_bootstrap
+    provenance_fields: [test_suite_id, correction_policy, hac_or_bootstrap]
+    notes: Default model confidence set suite
+
+statistical_tests:
+  - id: dm_default
+    family: diebold_mariano
+    entrypoint: macrocast.evaluation.dm:dm_test
+    required_inputs: [y_true, y_hat_1, y_hat_2]
+    produced_outputs: [dm_stat, p_value, loss_diff_mean]
+    compatibility_rules:
+      requires_comparable_forecast_dates: true
+    provenance_fields: [test_id, loss, h, hln_adjust]
+    notes: Default DM test configuration
+
+  - id: cw_default
+    family: clark_west
+    entrypoint: macrocast.evaluation.cw:cw_test
+    required_inputs: [y_true, y_hat_benchmark, y_hat_model]
+    produced_outputs: [cw_stat, p_value]
+    compatibility_rules:
+      requires_nested_models_or_benchmark_path: true
+    provenance_fields: [test_id]
+    notes: Default Clark-West test configuration
+
+  - id: mcs_default
+    family: model_confidence_set
+    entrypoint: macrocast.evaluation.mcs:mcs
+    required_inputs: [loss_df]
+    produced_outputs: [included, excluded, p_values]
+    compatibility_rules:
+      requires_loss_table: true
+    provenance_fields: [test_id, alpha, block_size, n_bootstrap]
+    notes: Default MCS configuration

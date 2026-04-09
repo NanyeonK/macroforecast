@@ -1,0 +1,57 @@
+features:
+  - id: factors_x
+    family: pca_factor
+    description: Standard diffusion factors from stationary X panel
+    factor_type: X
+    default_n_factors: 8
+    default_n_lags: 4
+    supports_levels: true
+    supports_marx: true
+    defaults:
+      feature_recipe: factors_x
+      factor_extraction_recipe: pca_static
+      max_lag_count: 4
+    compatibility:
+      allowed_model_families: [linear_benchmark, penalized_linear, tree_ensemble, kernel_method, neural_net]
+      requires_target_preprocess_families: [target]
+      requires_x_preprocess_families: [x]
+    extension_slot: feature_recipe
+    notes: Core macro forecasting feature recipe
+
+  - id: marx_panel
+    family: marx
+    description: MARX-based feature expansion
+    factor_type: none
+    default_n_factors: 0
+    default_n_lags: 4
+    supports_levels: false
+    supports_marx: true
+    defaults:
+      feature_recipe: marx_panel
+      factor_extraction_recipe: none
+      max_lag_count: 4
+    compatibility:
+      allowed_model_families: [linear_benchmark, penalized_linear, tree_ensemble, kernel_method]
+      requires_target_preprocess_families: [target]
+      requires_x_preprocess_families: [x]
+    extension_slot: feature_recipe
+    notes: Raw MARX feature path
+
+  - id: maf_factors
+    family: maf
+    description: MAF factors from MARX-transformed panel
+    factor_type: MARX
+    default_n_factors: 8
+    default_n_lags: 4
+    supports_levels: false
+    supports_marx: true
+    defaults:
+      feature_recipe: maf_factors
+      factor_extraction_recipe: maf
+      max_lag_count: 4
+    compatibility:
+      allowed_model_families: [linear_benchmark, penalized_linear, tree_ensemble, kernel_method, neural_net]
+      requires_target_preprocess_families: [target]
+      requires_x_preprocess_families: [x]
+    extension_slot: feature_recipe
+    notes: MAF-style feature recipe

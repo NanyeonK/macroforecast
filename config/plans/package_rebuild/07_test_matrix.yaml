@@ -1,0 +1,48 @@
+test_matrix:
+  unit_tests:
+    meta:
+      - tests/meta/test_axes_registry.py
+      - tests/meta/test_execution_policy.py
+      - tests/meta/test_presets.py
+      - tests/meta/test_resolution.py
+    data:
+      - tests/data/test_dataset_registry.py
+      - tests/data/test_schema.py
+      - tests/data/test_target_registry.py
+    preprocessing:
+      - tests/preprocessing/test_registry.py
+      - tests/preprocessing/test_target_x_separation.py
+    pipeline:
+      - tests/pipeline/test_feature_registry.py
+      - tests/pipeline/test_model_registry.py
+      - tests/pipeline/test_compatibility.py
+      - tests/pipeline/test_experiment.py
+    evaluation:
+      - tests/evaluation/test_registry.py
+      - tests/evaluation/test_metrics.py
+      - tests/evaluation/test_dm.py
+      - tests/evaluation/test_cw.py
+      - tests/evaluation/test_mcs.py
+    interpretation:
+      - tests/interpretation/test_registry.py
+      - tests/interpretation/test_variable_importance.py
+    output:
+      - tests/output/test_manifest.py
+      - tests/output/test_writers.py
+    verification:
+      - tests/verification/test_audit.py
+  integration_tests:
+    - tests/design/test_design_resolution.py
+    - tests/design/test_invalid_design_conflicts.py
+    - tests/e2e/test_minimal_and_examples.py
+  planning_validation_tests:
+    - tests/planning/test_package_rebuild_plan.py
+  e2e_requirements:
+    - fred_md baseline config
+    - fred_qd baseline config
+    - benchmark-relative evaluation path
+    - statistical testing path
+    - interpretation path
+    - custom extension smoke test
+    - full manifest write
+    - verification audit run

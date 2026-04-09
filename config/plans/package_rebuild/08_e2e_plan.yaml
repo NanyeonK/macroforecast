@@ -1,0 +1,23 @@
+e2e_plan:
+  baseline_runs:
+    - config: config/examples/fred_md_baseline.yaml
+      purpose: canonical monthly baseline
+      required_outputs: [forecasts, evaluation, tests, interpretation, manifest]
+    - config: config/examples/fred_qd_baseline.yaml
+      purpose: canonical quarterly baseline
+      required_outputs: [forecasts, evaluation, tests, interpretation, manifest]
+    - config: config/examples/minimal_baseline.yaml
+      purpose: practitioner minimal path
+      required_outputs: [forecasts, evaluation, manifest]
+  extension_smoke:
+    - config: config/examples/custom_extension_smoke.yaml
+      purpose: verify custom extension slots work without core rewrites
+  verification_audit:
+    - config: config/examples/verification_audit.yaml
+      purpose: benchmark and preprocessing audit only
+  closure_assertions:
+    - all example configs parse into resolved design specs
+    - benchmark family explicit in every run manifest
+    - output directories contain failure logs when degraded
+    - interpretation skipped only with explicit compatibility reason
+    - statistical tests report hac/bootstrap/correction metadata

@@ -1,0 +1,68 @@
+data_tasks:
+  - id: __default__
+    applicable_datasets: [fred_md, fred_qd, fred_sd]
+    defaults:
+      sample_period:
+        start: null
+        end: null
+      estimation_start: null
+      oos_period:
+        start: null
+        end: null
+      minimum_train_size: 120
+      validation_design: last_block
+      outer_window: expanding
+      refit_policy: every_oos_step
+      horizon_grid_default: [1]
+    notes: Fallback task defaults for package-level forecasting runs
+
+  - id: fred_md_default
+    applicable_datasets: [fred_md]
+    defaults:
+      sample_period:
+        start: '1960-01-01'
+        end: null
+      estimation_start: '1960-01-01'
+      oos_period:
+        start: '1980-01-01'
+        end: null
+      minimum_train_size: 120
+      validation_design: last_block
+      outer_window: expanding
+      refit_policy: every_oos_step
+      horizon_grid_default: [1, 3, 6, 12]
+    notes: Canonical monthly macro forecasting task defaults
+
+  - id: fred_qd_default
+    applicable_datasets: [fred_qd]
+    defaults:
+      sample_period:
+        start: '1960-01-01'
+        end: null
+      estimation_start: '1960-01-01'
+      oos_period:
+        start: '1990-01-01'
+        end: null
+      minimum_train_size: 80
+      validation_design: last_block
+      outer_window: expanding
+      refit_policy: every_oos_step
+      horizon_grid_default: [1, 4]
+    notes: Canonical quarterly macro forecasting task defaults
+
+  - id: fred_sd_default
+    applicable_datasets: [fred_sd]
+    defaults:
+      sample_period:
+        start: '2005-01-01'
+        end: null
+      estimation_start: '2005-01-01'
+      oos_period:
+        start: '2015-01-01'
+        end: null
+      minimum_train_size: 120
+      validation_design: last_block
+      outer_window: expanding
+      refit_policy: every_oos_step
+      horizon_grid_default: [1, 5, 20]
+    notes: Canonical daily macro-financial forecasting task defaults

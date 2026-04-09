@@ -17,6 +17,12 @@ from macrocast.preprocessing.panel import (
     StandardizeTransform,
     WinsorizeTransform,
 )
+from macrocast.preprocessing.registry import (
+    get_target_recipe,
+    get_x_recipe,
+    load_preprocessing_registry,
+    validate_preprocessing_registry,
+)
 from macrocast.preprocessing.transforms import (
     TransformCode,
     apply_hamilton_filter,
@@ -30,31 +36,30 @@ from macrocast.preprocessing.transforms import (
 )
 
 __all__ = [
-    # stationarity transforms (McCracken & Ng 2016)
-    "TransformCode",
-    "apply_tcode",
-    "apply_tcodes",
-    "inverse_tcode",
-    # panel feature transforms (Coulombe et al. 2021)
-    "apply_marx",
-    "apply_maf",
-    "apply_x_factors",
-    "apply_pca",
-    # cycle / trend decomposition
-    "apply_hamilton_filter",
-    # missing value handling
-    "detect_missing_type",
-    "classify_missing",
-    "handle_missing",
-    "remove_outliers_iqr",
-    "prepare_fredmd",
-    "em_factor",
-    # panel preprocessing
-    "PanelTransformer",
-    "WinsorizeTransform",
-    "DemeanTransform",
-    "HPFilterTransform",
-    "StandardizeTransform",
-    "CustomTransform",
-    "DropTransform",
+    'TransformCode',
+    'apply_tcode',
+    'apply_tcodes',
+    'inverse_tcode',
+    'apply_marx',
+    'apply_maf',
+    'apply_x_factors',
+    'apply_pca',
+    'apply_hamilton_filter',
+    'detect_missing_type',
+    'classify_missing',
+    'handle_missing',
+    'remove_outliers_iqr',
+    'prepare_fredmd',
+    'em_factor',
+    'get_target_recipe',
+    'get_x_recipe',
+    'load_preprocessing_registry',
+    'validate_preprocessing_registry',
+    'PanelTransformer',
+    'WinsorizeTransform',
+    'DemeanTransform',
+    'HPFilterTransform',
+    'StandardizeTransform',
+    'CustomTransform',
+    'DropTransform',
 ]

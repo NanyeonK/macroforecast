@@ -1,0 +1,22 @@
+metric_suites:
+  - id: point_default
+    family: point_forecast
+    metrics: [msfe, rmse, mae, relative_msfe, oos_r2]
+    aggregation:
+      date: full_oos_average
+      horizon: separate_only
+      target: separate_only
+    benchmark_requirement: explicit_benchmark_id
+    provenance_fields: [metric_suite_id, aggregation_date, aggregation_horizon, aggregation_target]
+    notes: Default point-forecast metric suite
+
+  - id: directional_default
+    family: directional
+    metrics: [direction_accuracy]
+    aggregation:
+      date: full_oos_average
+      horizon: separate_only
+      target: separate_only
+    benchmark_requirement: optional
+    provenance_fields: [metric_suite_id]
+    notes: Directional evaluation suite

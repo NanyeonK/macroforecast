@@ -1,0 +1,23 @@
+extension_families:
+  - preprocessing
+  - feature
+  - model
+  - metric
+  - statistical_test
+  - interpretation
+
+required_fields:
+  preprocessing: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+  feature: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+  model: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+  metric: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+  statistical_test: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+  interpretation: [id, family, entrypoint, required_inputs, produced_outputs, compatibility_rules, provenance_fields]
+
+provenance_requirements:
+  mandatory:
+    - extension_id
+    - extension_family
+    - entrypoint
+    - version_or_commit
+    - runtime_parameters

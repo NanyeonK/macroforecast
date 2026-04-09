@@ -1,16 +1,4 @@
-"""Result containers for the macrocast forecast experiment.
-
-Two dataclasses form the result layer:
-
-* ``ForecastRecord`` -- a single model × horizon × vintage evaluation cell.
-  One row in the final result table.
-* ``ResultSet`` -- the full collection of records for one experiment run,
-  with helpers for export to parquet and basic summary statistics.
-
-These containers are intentionally thin.  All evaluation logic lives in
-``macrocast.evaluation``; this module only holds and serialises the raw
-forecast-vs-realisation pairs.
-"""
+"""Result containers for the macrocast forecast experiment."""
 
 from __future__ import annotations
 
@@ -29,60 +17,37 @@ from macrocast.pipeline.components import (
     Window,
 )
 
-# ---------------------------------------------------------------------------
-# ForecastRecord
-# ---------------------------------------------------------------------------
+
+@dataclass
+class FailureRecord:
+    experiment_id: str
+    model_id: str
+    horizon: int
+    failure_stage: str
+    exception_class: str
+    exception_message: str
+    severity: str
+    retry_count: int = 0
+    cell_id: str | None = None
+    warning_only: bool = False
+
+    def to_dict(self) -> dict:
+        return {
+            'experiment_id': self.experiment_id,
+            'model_id': self.model_id,
+            'horizon': self.horizon,
+            'failure_stage': self.failure_stage,
+            'exception_class': self.exception_class,
+            'exception_message': self.exception_message,
+            'severity': self.severity,
+            'retry_count': self.retry_count,
+            'cell_id': self.cell_id,
+            'warning_only': self.warning_only,
+        }
 
 
 @dataclass
 class ForecastRecord:
-    """One evaluation cell: a single model fitted on one training window,
-    predicting one horizon h, producing one out-of-sample forecast.
-
-    Fields
-    ------
-    experiment_id : str
-        UUID of the parent ForecastExperiment run.
-    model_id : str
-        Human-readable model name, e.g. ``"krr_factors_kfold_l2"``.
-    nonlinearity : Nonlinearity
-        Nonlinearity component of the four-part decomposition.
-    regularization : Regularization
-        Regularization component.
-    cv_scheme : CVSchemeType
-        CV scheme used for HP selection in this cell.
-    loss_function : LossFunction
-        Loss function optimised during training.
-    window : Window
-        Outer evaluation window strategy (expanding or rolling).
-    horizon : int
-        Forecast horizon h (months/quarters ahead).
-    train_end : pd.Timestamp
-        Last date in the training window.
-    forecast_date : pd.Timestamp
-        Date being forecast (train_end + h periods).
-    y_hat : float
-        Point forecast (on the original, untransformed scale if the caller
-        applies inverse transforms; otherwise on the transformed scale).
-    y_true : float
-        Realised value at forecast_date.
-    n_train : int
-        Number of training observations used.
-    n_factors : Optional[int]
-        Number of PCA factors used (None if AR-only mode).
-    n_lags : int
-        Number of AR lags used.
-    hp_selected : dict
-        Best hyperparameter values selected by the CV scheme (e.g.
-        ``{"alpha": 0.01, "gamma": 0.1}``).
-    target_scheme : str
-        Multi-step targeting strategy.  ``"direct"`` trains on y_{t+h};
-        ``"path_average"`` trains on the mean of y_{t+1}, ..., y_{t+h}.
-    feature_set : str
-        Human-readable label of the FeatureSpec used (e.g. "F", "F-X-MAF").
-        Empty string if not set.
-    """
-
     experiment_id: str
     model_id: str
     nonlinearity: Nonlinearity
@@ -99,30 +64,23 @@ class ForecastRecord:
     n_factors: int | None
     n_lags: int
     hp_selected: dict = field(default_factory=dict)
-    target_scheme: str = "direct"  # "direct" | "path_average"
+    target_scheme: str = "direct"
     feature_set: str = ""
     feature_importances: dict[str, float] | None = None
-
-    # ------------------------------------------------------------------
-    # Derived quantities
-    # ------------------------------------------------------------------
+    benchmark_id: str | None = None
+    evaluation_scale: str | None = None
+    cell_id: str | None = None
+    degraded_run: bool = False
 
     @property
     def error(self) -> float:
-        """Forecast error e_t = y_true - y_hat."""
         return self.y_true - self.y_hat
 
     @property
     def squared_error(self) -> float:
-        """Squared forecast error (y_true - y_hat)²."""
         return self.error**2
 
-    # ------------------------------------------------------------------
-    # Serialisation
-    # ------------------------------------------------------------------
-
     def to_dict(self) -> dict:
-        """Flatten to a plain dict suitable for pd.DataFrame construction."""
         return {
             "experiment_id": self.experiment_id,
             "model_id": self.model_id,
@@ -143,57 +101,44 @@ class ForecastRecord:
             "target_scheme": self.target_scheme,
             "feature_set": self.feature_set,
             "feature_importances": json.dumps(self.feature_importances) if self.feature_importances else None,
+            'benchmark_id': self.benchmark_id,
+            'evaluation_scale': self.evaluation_scale,
+            'cell_id': self.cell_id,
+            'degraded_run': self.degraded_run,
         }
-
-
-# ---------------------------------------------------------------------------
-# ResultSet
-# ---------------------------------------------------------------------------
 
 
 @dataclass
 class ResultSet:
-    """Collection of ForecastRecords from one experiment run.
-
-    Parameters
-    ----------
-    experiment_id : str
-        Shared UUID across all records in this set.  Auto-generated if not
-        provided.
-    records : list of ForecastRecord
-        Raw forecast cells.  Populated incrementally by the experiment runner.
-    metadata : dict
-        Arbitrary experiment-level metadata (dataset name, target variable,
-        date range, config hash, etc.).
-    """
-
     experiment_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     records: list[ForecastRecord] = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
-
-    # ------------------------------------------------------------------
-    # Mutation
-    # ------------------------------------------------------------------
+    failures: list[FailureRecord] = field(default_factory=list)
+    degraded: bool = False
 
     def add(self, record: ForecastRecord) -> None:
-        """Append a single ForecastRecord."""
         self.records.append(record)
+        if record.degraded_run:
+            self.degraded = True
 
     def extend(self, records: list[ForecastRecord]) -> None:
-        """Append multiple records at once."""
-        self.records.extend(records)
+        for record in records:
+            self.add(record)
 
-    # ------------------------------------------------------------------
-    # Conversion
-    # ------------------------------------------------------------------
+    def add_failure(self, failure: FailureRecord) -> None:
+        self.failures.append(failure)
+        if failure.severity in {'degraded_run', 'hard_error'}:
+            self.degraded = True
+
+    def failure_summary(self) -> list[str]:
+        return [f"{f.model_id}|h={f.horizon}|{f.failure_stage}|{f.exception_class}" for f in self.failures]
+
+    def failures_dataframe(self) -> pd.DataFrame:
+        if not self.failures:
+            return pd.DataFrame(columns=['experiment_id','model_id','horizon','failure_stage','exception_class','exception_message','severity','retry_count','cell_id','warning_only'])
+        return pd.DataFrame([f.to_dict() for f in self.failures])
 
     def to_dataframe(self) -> pd.DataFrame:
-        """Convert all records to a tidy pandas DataFrame.
-
-        Each row is one forecast cell.  Component columns use string values
-        (Enum.value) for compatibility with downstream R reads via arrow.
-        Combination rows added via :meth:`with_combination` are appended.
-        """
         if self.records:
             rows = [r.to_dict() for r in self.records]
             df = pd.DataFrame(rows)
@@ -201,32 +146,12 @@ class ResultSet:
             df["forecast_date"] = pd.to_datetime(df["forecast_date"])
         else:
             df = pd.DataFrame()
-
         combo: pd.DataFrame | None = getattr(self, "_combo_df", None)
         if combo is not None and not combo.empty:
             df = pd.concat([df, combo], ignore_index=True)
-
         return df
 
-    # ------------------------------------------------------------------
-    # I/O
-    # ------------------------------------------------------------------
-
     def to_parquet(self, path: str | Path, **kwargs) -> Path:
-        """Write ResultSet to a parquet file.
-
-        Parameters
-        ----------
-        path : str or Path
-            Destination file path.  Parent directories are created if needed.
-        **kwargs
-            Forwarded to ``pd.DataFrame.to_parquet``.
-
-        Returns
-        -------
-        Path
-            Resolved path of the written file.
-        """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         df = self.to_dataframe()
@@ -234,38 +159,19 @@ class ResultSet:
         return path
 
     @classmethod
-    def from_parquet(cls, path: str | Path) -> ResultSet:
-        """Read a ResultSet previously written by ``to_parquet``.
-
-        Note: ForecastRecord objects are NOT reconstructed — use the returned
-        DataFrame via ``ResultSet.to_dataframe()`` for most downstream work.
-        This classmethod returns a ResultSet with an empty ``records`` list
-        but populates ``metadata`` with the parquet file path for provenance.
-        """
+    def from_parquet(cls, path: str | Path) -> 'ResultSet':
         path = Path(path)
         df = pd.read_parquet(path)
         rs = cls(metadata={"source_parquet": str(path)})
-        # Re-hydrate lightweight: keep as DataFrame attribute for fast access
         rs._df_cache = df  # type: ignore[attr-defined]
         return rs
 
     def to_dataframe_cached(self) -> pd.DataFrame:
-        """Return cached DataFrame if loaded from parquet, else compute."""
         if hasattr(self, "_df_cache"):
             return self._df_cache  # type: ignore[attr-defined]
         return self.to_dataframe()
 
-    # ------------------------------------------------------------------
-    # Summary statistics
-    # ------------------------------------------------------------------
-
     def msfe_by_model(self, horizon: int | None = None) -> pd.DataFrame:
-        """MSFE per model_id, optionally filtered to a single horizon.
-
-        Returns
-        -------
-        pd.DataFrame with columns [model_id, horizon, msfe, n_obs].
-        """
         df = self.to_dataframe_cached()
         if df.empty:
             return pd.DataFrame(columns=["model_id", "horizon", "msfe", "n_obs"])
@@ -280,94 +186,25 @@ class ResultSet:
         )
         return summary
 
-    # ------------------------------------------------------------------
-    # Forecast combination
-    # ------------------------------------------------------------------
-
-    def with_combination(
-        self,
-        methods: str | list[str] = "mean",
-        trim_pct: float = 0.10,
-        window: int | None = None,
-    ) -> ResultSet:
-        """Return a new ResultSet with combination forecasts appended.
-
-        Calls :func:`macrocast.evaluation.combination.combine_forecasts` for
-        each requested method and attaches the resulting rows so that
-        :meth:`to_dataframe` includes them alongside individual model rows.
-        This allows combination forecasts to slot seamlessly into horse race
-        evaluation tables.
-
-        Parameters
-        ----------
-        methods : str or list of str
-            One or more combination methods: ``"mean"``, ``"median"``,
-            ``"trimmed_mean"``, ``"inv_msfe"``.  Each method produces a
-            separate composite with ``model_id = "COMBO_{METHOD.upper()}"``.
-        trim_pct : float
-            Trim fraction passed to ``method="trimmed_mean"``.  Default 0.10.
-        window : int or None
-            Rolling window for ``method="inv_msfe"``.  ``None`` = expanding.
-
-        Returns
-        -------
-        ResultSet
-            New ResultSet containing all original records plus the combination
-            rows.  The original ResultSet is not modified.
-
-        Examples
-        --------
-        >>> rs_ext = rs.with_combination(["mean", "inv_msfe"])
-        >>> rmsfe = relative_msfe_table(rs_ext.to_dataframe())
-        """
+    def with_combination(self, methods: str | list[str] = "mean", trim_pct: float = 0.10, window: int | None = None) -> 'ResultSet':
         from macrocast.evaluation.combination import combine_forecasts
-
         if isinstance(methods, str):
             methods = [methods]
-
-        base_df = self.to_dataframe_cached()
-        if base_df.empty:
-            raise ValueError("ResultSet is empty; cannot compute combinations.")
-
-        combo_parts = [
-            combine_forecasts(base_df, method=m, trim_pct=trim_pct, window=window)
-            for m in methods
-        ]
-        combo_df = pd.concat(combo_parts, ignore_index=True)
-
-        new_rs = ResultSet(
-            experiment_id=self.experiment_id,
-            records=list(self.records),
-            metadata=dict(self.metadata),
-        )
-        # Preserve any existing combo rows from prior calls
-        existing: pd.DataFrame | None = getattr(self, "_combo_df", None)
-        if existing is not None and not existing.empty:
-            combo_df = pd.concat([existing, combo_df], ignore_index=True)
-
-        new_rs._combo_df = combo_df  # type: ignore[attr-defined]
-
-        if hasattr(self, "_df_cache"):
-            new_rs._df_cache = self._df_cache  # type: ignore[attr-defined]
-
-        return new_rs
+        base = self.to_dataframe_cached()
+        if base.empty:
+            raise ValueError('empty result set cannot compute combinations')
+        combo_frames = [combine_forecasts(base, method=m, trim_pct=trim_pct, window=window) for m in methods]
+        existing_combo = getattr(self, '_combo_df', pd.DataFrame())
+        out = ResultSet(experiment_id=self.experiment_id, records=list(self.records), metadata=dict(self.metadata), failures=list(self.failures), degraded=self.degraded)
+        frames = [df for df in [existing_combo, *combo_frames] if df is not None and not df.empty]
+        out._combo_df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()  # type: ignore[attr-defined]
+        return out
 
     def combination_methods(self) -> list[str]:
-        """Return the list of combination model_ids already attached."""
-        combo: pd.DataFrame | None = getattr(self, "_combo_df", None)
-        if combo is None or combo.empty:
+        combo = getattr(self, '_combo_df', pd.DataFrame())
+        if combo is None or combo.empty or 'model_id' not in combo:
             return []
-        return sorted(combo["model_id"].unique().tolist())
-
-    # ------------------------------------------------------------------
-    # Dunder
-    # ------------------------------------------------------------------
+        return sorted(combo['model_id'].dropna().unique().tolist())
 
     def __len__(self) -> int:
         return len(self.records)
-
-    def __repr__(self) -> str:
-        return (
-            f"ResultSet(experiment_id={self.experiment_id!r}, "
-            f"n_records={len(self.records)})"
-        )

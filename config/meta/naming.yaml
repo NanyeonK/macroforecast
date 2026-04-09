@@ -1,0 +1,21 @@
+naming:
+  slug_style: snake_case
+  experiment_id_format: "{target_id}__{dataset_id}__{sample_id}__{preprocess_id}__{split_id}__{benchmark_id}"
+  run_id_format: "{experiment_id}__{feature_set_id}__{model_set_id}__{tuning_policy_id}__{code_version}"
+  cell_id_format: "{run_id}__h{horizon}__{model_id}__{feature_recipe_id}"
+  display_name_policy: human_readable_separate_from_id
+
+hashing:
+  config_hash_fields:
+    - dataset_id
+    - target_id
+    - sample_period
+    - oos_period
+    - benchmark_id
+    - preprocessing_recipe_id
+    - feature_recipe_id
+    - model_id
+    - horizons
+  environment_fingerprint_fields:
+    - python_version
+    - package_version
