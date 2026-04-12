@@ -1,0 +1,26 @@
+clss2021_package_baseline:
+  fixed:
+    dataset: fred_md
+    vintage: '2018-02'
+    frequency: monthly
+    estimation_start: '1960-01-01'
+    oos_start: '1980-01-01'
+    oos_end: '2017-12-01'
+    window: expanding
+    benchmark_family: ar
+    benchmark_selection: bic
+    forecast_type: direct
+    horizons: [1, 3, 6, 9, 12, 24]
+    p_y: 12
+    k: 8
+    p_marx: 12
+  reduced_notebook_scope:
+    targets: [INDPRO, UNRATE, CPIAUCSL]
+    horizons: [1, 3, 6]
+    info_sets: [F, F-MARX, F-X-MARX, MAF]
+    models: [RF]
+  full_sweep_axes:
+    - target
+    - horizon
+    - information_set
+    - model_class

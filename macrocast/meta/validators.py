@@ -10,22 +10,14 @@ from macrocast.meta.exceptions import (
     PresetResolutionError,
 )
 
-_REQUIRED_BENCHMARK_FIELDS = {
-    'id', 'family', 'description', 'denominator_rule', 'target_construction_rule',
-    'estimation_window_rule', 'applicable_datasets', 'applicable_targets',
-    'applicable_horizons', 'notes'
+_REQUIRED_VARIANT_FIELDS = {
+    'id', 'family', 'estimation_window_rule', 'denominator_rule', 'target_construction_rule',
+    'applicable_datasets', 'applicable_targets', 'applicable_horizons', 'notes'
 }
 
 _REQUIRED_PROVENANCE_FIELDS = {
-    'failure_stage',
-    'exception_class',
-    'exception_message',
-    'retry_count',
-    'cell_id',
-    'model_id',
-    'horizon',
+    'failure_stage', 'exception_class', 'exception_message', 'retry_count', 'cell_id', 'model_id', 'horizon',
 }
-
 _REQUIRED_SEVERITY_LEVELS = {'warning', 'degraded_run', 'hard_error'}
 
 
@@ -61,7 +53,6 @@ def validate_axes_registry(reg: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(reg['unit_of_run'], dict):
         raise AxisClassificationError('unit_of_run must be a dict')
     _require_keys(reg['unit_of_run'], ['experiment', 'run', 'cell'], 'unit_of_run')
-
     classes = _axis_classes(reg)
     seen: dict[str, str] = {}
     for cls_name in ['invariant', 'experiment_fixed', 'research_sweep', 'conditional']:
@@ -69,7 +60,6 @@ def validate_axes_registry(reg: dict[str, Any]) -> dict[str, Any]:
             if axis in seen:
                 raise AxisClassificationError(f'axis {axis!r} appears in both {seen[axis]} and {cls_name}')
             seen[axis] = cls_name
-
     legacy_map = {
         'experiment_unit': reg.get('experiment_unit'),
         'invariant_axes': reg.get('invariant_axes'),
@@ -91,20 +81,29 @@ def validate_axes_registry(reg: dict[str, Any]) -> dict[str, Any]:
 
 
 def validate_benchmark_registry(reg: dict[str, Any]) -> dict[str, Any]:
-    benchmarks = reg.get('benchmarks')
-    if not isinstance(benchmarks, list) or not benchmarks:
-        raise BenchmarkRegistryError('benchmarks must be a non-empty list')
+    families = reg.get('benchmark_families')
+    variants = reg.get('benchmark_variants')
+    if not isinstance(families, list) or not families:
+        raise BenchmarkRegistryError('benchmark_families must be a non-empty list')
+    if not isinstance(variants, list) or not variants:
+        raise BenchmarkRegistryError('benchmark_variants must be a non-empty list')
+    family_ids = set()
+    for fam in families:
+        _require_keys(fam, ['id', 'description', 'default_options', 'resolved_variants', 'notes'], 'benchmark family')
+        family_ids.add(fam['id'])
     seen: set[str] = set()
-    for bench in benchmarks:
+    for bench in variants:
         if not isinstance(bench, dict):
-            raise BenchmarkRegistryError('each benchmark entry must be a dict')
-        missing = _REQUIRED_BENCHMARK_FIELDS - set(bench)
+            raise BenchmarkRegistryError('each benchmark variant entry must be a dict')
+        missing = _REQUIRED_VARIANT_FIELDS - set(bench)
         if missing:
-            raise BenchmarkRegistryError(f'benchmark entry missing fields: {sorted(missing)}')
+            raise BenchmarkRegistryError(f'benchmark variant missing fields: {sorted(missing)}')
         bench_id = bench['id']
         if bench_id in seen:
             raise BenchmarkRegistryError(f'duplicate benchmark id: {bench_id}')
         seen.add(bench_id)
+        if bench['family'] not in family_ids:
+            raise BenchmarkRegistryError(f'unknown benchmark family for variant: {bench_id}')
     return reg
 
 
@@ -136,16 +135,7 @@ def validate_execution_policy(reg: dict[str, Any]) -> dict[str, Any]:
         raise ValueError('policies must be a non-empty list')
     seen: set[str] = set()
     for policy in policies:
-        _require_keys(
-            policy,
-            [
-                'id', 'max_retries_per_cell', 'max_failed_cells', 'timeout_per_cell_seconds',
-                'timeout_per_run_seconds', 'benchmark_failure_policy', 'config_failure_policy',
-                'partial_save_policy', 'canary_mode', 'cell_failure', 'model_failure',
-                'partial_horizon_failure', 'severity_levels', 'provenance_fields',
-            ],
-            'execution policy',
-        )
+        _require_keys(policy, ['id','max_retries_per_cell','max_failed_cells','timeout_per_cell_seconds','timeout_per_run_seconds','benchmark_failure_policy','config_failure_policy','partial_save_policy','canary_mode','cell_failure','model_failure','partial_horizon_failure','severity_levels','provenance_fields'], 'execution policy')
         pid = policy['id']
         if pid in seen:
             raise ValueError(f'duplicate execution policy id: {pid}')
@@ -156,10 +146,9 @@ def validate_execution_policy(reg: dict[str, Any]) -> dict[str, Any]:
             raise ValueError('config failure policy must be hard_error')
         if policy['partial_save_policy'] != 'save_partial_with_flag':
             raise ValueError('partial_save_policy must be save_partial_with_flag')
-        for key in ['max_retries_per_cell', 'max_failed_cells', 'timeout_per_cell_seconds', 'timeout_per_run_seconds']:
+        for key in ['max_retries_per_cell','max_failed_cells','timeout_per_cell_seconds','timeout_per_run_seconds']:
             if policy[key] < 0:
                 raise ValueError(f'{key} must be non-negative')
-
         cell_failure = policy['cell_failure']
         model_failure = policy['model_failure']
         partial_horizon_failure = policy['partial_horizon_failure']

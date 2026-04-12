@@ -7,9 +7,19 @@ def test_benchmark_registry_valid() -> None:
     validate_benchmark_registry(reg)
 
 
-def test_benchmark_registry_requires_denominator_rule() -> None:
+def test_benchmark_registry_requires_variant_denominator_rule() -> None:
     reg = load_benchmark_registry()
-    reg['benchmarks'][0].pop('denominator_rule')
+    reg['benchmark_variants'][0].pop('denominator_rule')
+    try:
+        validate_benchmark_registry(reg)
+    except BenchmarkRegistryError:
+        return
+    raise AssertionError('expected BenchmarkRegistryError')
+
+
+def test_benchmark_registry_requires_known_family() -> None:
+    reg = load_benchmark_registry()
+    reg['benchmark_variants'][0]['family'] = 'unknown_family'
     try:
         validate_benchmark_registry(reg)
     except BenchmarkRegistryError:

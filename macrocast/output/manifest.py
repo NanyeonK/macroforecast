@@ -7,11 +7,13 @@ from typing import Any
 import yaml
 
 
-def build_run_manifest(*, run_id: str, experiment_id: str, config_hash: str, code_version: str, dataset_ids: list[str], benchmark_ids: list[str], artifact_paths: dict[str, str], success: bool = True, failure_summary: list[str] | None = None, environment_fingerprint: dict[str, Any] | None = None, degraded: bool = False, provenance_fields: list[str] | None = None) -> dict[str, Any]:
+def build_run_manifest(*, run_id: str, experiment_id: str, config_hash: str, code_version: str, dataset_ids: list[str], benchmark_ids: list[str], artifact_paths: dict[str, str], success: bool = True, failure_summary: list[str] | None = None, environment_fingerprint: dict[str, Any] | None = None, degraded: bool = False, provenance_fields: list[str] | None = None, recipe_id: str | None = None, taxonomy_path: dict[str, Any] | None = None) -> dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
     return {
         'run_id': run_id,
         'experiment_id': experiment_id,
+        'recipe_id': recipe_id,
+        'taxonomy_path': taxonomy_path or {},
         'config_hash': config_hash,
         'code_version': code_version,
         'dataset_ids': dataset_ids,

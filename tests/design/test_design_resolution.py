@@ -1,6 +1,5 @@
 from macrocast.specs import CompiledExperimentSpec, compile_experiment_spec_from_dict
 
-
 MINIMAL_CONFIG = {
     'experiment': {'id': 'design-test', 'output_dir': '/tmp/macrocast_test', 'horizons': [1, 3], 'window': 'expanding', 'n_jobs': 1},
     'data': {'dataset': 'fred_md', 'target': 'INDPRO'},
@@ -14,6 +13,7 @@ def test_design_resolution_returns_compiled_spec() -> None:
     assert isinstance(compiled, CompiledExperimentSpec)
     assert compiled.experiment_config.data.dataset == 'fred_md'
     assert compiled.meta_config['benchmark_id'] == 'ar_bic_expanding'
+    assert compiled.meta_config['benchmark_options']['lag_selection_rule'] == 'bic'
     assert compiled.meta_config['model_family'] == 'tree_ensemble'
     assert compiled.meta_config['minimum_train_size'] == 120
 

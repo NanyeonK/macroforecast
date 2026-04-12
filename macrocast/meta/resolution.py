@@ -28,10 +28,38 @@ def apply_overrides(base: dict[str, Any], overrides: dict[str, Any], axes_regist
     return out
 
 
+def resolve_benchmark_config(meta_config: dict[str, Any], benchmark_registry: dict[str, Any]) -> dict[str, Any]:
+    out = deepcopy(meta_config)
+    families = {item['id']: item for item in benchmark_registry.get('benchmark_families', [])}
+    variants = benchmark_registry.get('benchmark_variants', [])
+    if 'benchmark_family' not in out:
+        return out
+    family = out['benchmark_family']
+    if family not in families:
+        raise KeyError(f'unknown benchmark family: {family}')
+    options = dict(families[family].get('default_options', {}))
+    options.update(out.get('benchmark_options', {}))
+    out['benchmark_options'] = options
+    if 'benchmark_id' not in out or out['benchmark_id'] is None:
+        for variant in variants:
+            if variant['family'] != family:
+                continue
+            if options.get('lag_selection_rule') and variant.get('lag_selection_rule') != options.get('lag_selection_rule'):
+                continue
+            if options.get('estimation_window_rule') and variant.get('estimation_window_rule') != options.get('estimation_window_rule'):
+                continue
+            out['benchmark_id'] = variant['id']
+            break
+    if 'benchmark_id' not in out:
+        raise KeyError(f'no benchmark variant resolved for family {family} with options {options}')
+    return out
+
+
 def resolve_meta_config(
     *,
     preset_registry: dict[str, Any],
     axes_registry: dict[str, Any],
+    benchmark_registry: dict[str, Any] | None = None,
     preset_id: str | None = None,
     global_defaults: dict[str, Any] | None = None,
     dataset_defaults: dict[str, Any] | None = None,
@@ -55,4 +83,6 @@ def resolve_meta_config(
         resolved = apply_overrides(resolved, run_overrides, axes_registry, stage='run')
     if cell_overrides:
         resolved = apply_overrides(resolved, cell_overrides, axes_registry, stage='cell')
+    if benchmark_registry is not None:
+        resolved = resolve_benchmark_config(resolved, benchmark_registry)
     return resolved

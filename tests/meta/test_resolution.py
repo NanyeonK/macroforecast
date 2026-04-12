@@ -1,4 +1,4 @@
-from macrocast.meta import load_axes_registry, load_preset_registry, resolve_meta_config
+from macrocast.meta import load_axes_registry, load_benchmark_registry, load_preset_registry, resolve_meta_config
 from macrocast.meta.exceptions import IllegalOverrideError
 
 
@@ -6,6 +6,7 @@ def test_meta_resolution_applies_preset_and_overrides() -> None:
     resolved = resolve_meta_config(
         preset_registry=load_preset_registry(),
         axes_registry=load_axes_registry(),
+        benchmark_registry=load_benchmark_registry(),
         preset_id='researcher_explicit',
         global_defaults={'benchmark_family': 'historical_mean'},
         dataset_defaults={'dataset': 'fred_md', 'frequency': 'monthly'},
@@ -15,10 +16,22 @@ def test_meta_resolution_applies_preset_and_overrides() -> None:
     )
     assert resolved['benchmark_family'] == 'ar'
     assert resolved['benchmark_id'] == 'ar_bic_expanding'
+    assert resolved['benchmark_options']['lag_selection_rule'] == 'bic'
     assert resolved['dataset'] == 'fred_md'
     assert resolved['target'] == 'INDPRO'
     assert resolved['model_family'] == 'tree_ensemble'
     assert resolved['evaluation_scale'] == 'explicit_required'
+
+
+def test_meta_resolution_accepts_benchmark_options_override() -> None:
+    resolved = resolve_meta_config(
+        preset_registry=load_preset_registry(),
+        axes_registry=load_axes_registry(),
+        benchmark_registry=load_benchmark_registry(),
+        global_defaults={'benchmark_family': 'ar'},
+        experiment_overrides={'benchmark_options': {'lag_selection_rule': 'bic', 'estimation_window_rule': 'expanding'}},
+    )
+    assert resolved['benchmark_id'] == 'ar_bic_expanding'
 
 
 def test_meta_resolution_rejects_invariant_override() -> None:
@@ -26,6 +39,7 @@ def test_meta_resolution_rejects_invariant_override() -> None:
         resolve_meta_config(
             preset_registry=load_preset_registry(),
             axes_registry=load_axes_registry(),
+            benchmark_registry=load_benchmark_registry(),
             preset_id='researcher_explicit',
             experiment_overrides={'no_lookahead_rule': False},
         )
@@ -39,6 +53,7 @@ def test_meta_resolution_rejects_run_override_of_experiment_fixed_axis() -> None
         resolve_meta_config(
             preset_registry=load_preset_registry(),
             axes_registry=load_axes_registry(),
+            benchmark_registry=load_benchmark_registry(),
             preset_id='researcher_explicit',
             experiment_overrides={'dataset': 'fred_md'},
             run_overrides={'dataset': 'fred_qd'},

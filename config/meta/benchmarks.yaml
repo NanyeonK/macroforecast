@@ -1,33 +1,63 @@
-benchmarks:
+benchmark_families:
+  - id: ar
+    description: Autoregressive benchmark family
+    default_options:
+      lag_selection_rule: bic
+      estimation_window_rule: expanding
+      denominator_rule: self
+      target_construction_rule: direct_or_recipe_defined
+    resolved_variants:
+      - ar_bic_expanding
+    notes: Core macro forecasting benchmark family
+
+  - id: historical_mean
+    description: Historical mean benchmark family
+    default_options:
+      estimation_window_rule: expanding
+      denominator_rule: self
+      target_construction_rule: direct_or_recipe_defined
+    resolved_variants:
+      - historical_mean_expanding
+    notes: Simple practitioner baseline family
+
+  - id: factor_model
+    description: Factor model benchmark family
+    default_options:
+      estimation_window_rule: expanding
+      denominator_rule: fm_agr
+      target_construction_rule: agr
+    resolved_variants:
+      - fm_agr_expanding
+    notes: Verification/audit benchmark family
+
+benchmark_variants:
   - id: ar_bic_expanding
     family: ar
-    description: Autoregressive benchmark with BIC lag selection on expanding window
+    lag_selection_rule: bic
+    estimation_window_rule: expanding
     denominator_rule: self
     target_construction_rule: direct_or_recipe_defined
-    estimation_window_rule: expanding
     applicable_datasets: [fred_md, fred_qd, fred_sd]
     applicable_targets: all
     applicable_horizons: all
-    notes: Core benchmark for macro forecasting comparisons
+    notes: Autoregressive benchmark with BIC lag selection on expanding window
 
   - id: historical_mean_expanding
     family: historical_mean
-    description: Historical mean benchmark on expanding window
+    estimation_window_rule: expanding
     denominator_rule: self
     target_construction_rule: direct_or_recipe_defined
-    estimation_window_rule: expanding
     applicable_datasets: [fred_md, fred_qd, fred_sd]
     applicable_targets: all
     applicable_horizons: all
-    notes: Simple practitioner baseline
+    notes: Historical mean benchmark on expanding window
 
   - id: fm_agr_expanding
     family: factor_model
-    description: Factor model benchmark using AGR denominator convention where relevant
+    estimation_window_rule: expanding
     denominator_rule: fm_agr
     target_construction_rule: agr
-    estimation_window_rule: expanding
     applicable_datasets: [fred_md]
     applicable_targets: all
     applicable_horizons: all
-    notes: Verification/audit benchmark for CLSS-style comparisons
+    notes: Factor model benchmark using AGR denominator convention where relevant
