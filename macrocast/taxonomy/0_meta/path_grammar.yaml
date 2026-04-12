@@ -1,0 +1,12 @@
+path_grammar:
+  canonical_layer_order: [0_meta, 1_data, 2_target_x, 3_preprocess, 4_training, 5_evaluation, 6_stat_tests, 7_importance, 8_output_provenance]
+  storage_rules:
+    enum_choice_as_path_segment: true
+    numeric_or_free_parameter_in_leaf_config: true
+    fixed_and_sweep_axes_separate: true
+  path_segment_examples:
+    - data=fred_md
+    - info_set=revised
+    - framework=expanding
+    - model=random_forest
+    - benchmark=ar_bic

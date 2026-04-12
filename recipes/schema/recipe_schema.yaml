@@ -1,0 +1,34 @@
+recipe_schema:
+  required_top_level:
+    - recipe_id
+    - kind
+    - taxonomy_path
+    - numeric_params
+    - outputs
+  required_taxonomy_path_keys:
+    - domain
+    - data
+    - frequency
+    - info_set
+    - sample
+    - oos
+    - task
+    - target
+    - x_map
+    - target_prep
+    - x_prep
+    - features
+    - framework
+    - validation
+    - model
+    - tuning
+    - metric
+    - benchmark
+    - stat
+    - importance
+    - output
+  allowed_kinds:
+    - paper
+    - baseline
+    - benchmark
+    - ablation

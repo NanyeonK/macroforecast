@@ -1,0 +1,18 @@
+dependence_corrections:
+  - iid
+  - Newey_West
+  - HAC_auto_bandwidth
+  - block_bootstrap
+  - stationary_bootstrap
+  - circular_bootstrap
+  - wild_bootstrap
+  - cluster_robust
+
+test_scopes:
+  - per_target
+  - per_horizon
+  - per_model_pair
+  - full_grid_pairwise
+  - benchmark_vs_all
+  - regime_specific_tests
+  - subsample_tests

@@ -1,0 +1,4 @@
+registry:
+  id: metric_suites
+  source: config/evaluation.yaml
+  role: evaluation_metric_contracts

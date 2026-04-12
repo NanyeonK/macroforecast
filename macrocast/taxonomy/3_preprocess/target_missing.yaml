@@ -1,0 +1,11 @@
+target_missing_methods:
+  - drop_missing_target_rows
+  - drop_forecast_dates_if_target_missing
+  - linear_interpolate
+  - ffill
+  - bfill
+  - seasonal_interpolate
+  - kalman_smooth
+  - model_based_impute
+  - multiple_imputation
+  - do_not_impute_target

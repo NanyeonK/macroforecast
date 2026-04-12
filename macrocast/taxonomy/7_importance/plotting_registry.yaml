@@ -1,0 +1,10 @@
+plotting_registry:
+  - bar_plot
+  - heatmap
+  - waterfall
+  - beeswarm
+  - time_series_plot
+  - regime_comparison_plot
+  - category_stack_plot
+  - dashboard
+  - paper_table

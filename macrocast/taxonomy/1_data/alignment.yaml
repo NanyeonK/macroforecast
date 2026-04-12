@@ -1,0 +1,11 @@
+alignment_rules:
+  - end_of_period
+  - average_within_period
+  - last_available
+  - first_available
+  - quarter_to_month_repeat
+  - month_to_quarter_average
+  - month_to_quarter_last
+  - ragged_edge_keep
+  - ragged_edge_fill
+  - calendar_strict

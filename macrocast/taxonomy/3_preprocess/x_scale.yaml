@@ -1,0 +1,21 @@
+x_scaling_methods:
+  - none
+  - zscore
+  - robust_zscore
+  - demean_only
+  - unit_variance_only
+  - minmax
+  - rank_scale
+  - quantile_transform
+  - whitening
+  - groupwise_standardize
+  - expanding_standardize
+  - rolling_standardize
+
+scaling_scopes:
+  - columnwise
+  - datewise_cross_sectional
+  - groupwise
+  - categorywise
+  - global_train_only
+  - train_window_only

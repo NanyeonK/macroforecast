@@ -1,0 +1,7 @@
+target_families:
+  - single_macro_series
+  - multiple_macro_series
+  - panel_target
+  - factor_target
+  - latent_target
+  - classification_target

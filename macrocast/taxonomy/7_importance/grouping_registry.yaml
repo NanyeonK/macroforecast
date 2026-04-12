@@ -1,0 +1,21 @@
+grouping_registry:
+  - by_FRED_category
+  - by_economic_theme
+  - by_variable_family
+  - by_lag_block
+  - by_factor_block
+  - by_time_window
+  - by_regime
+  - by_target
+  - by_horizon
+  - by_state_or_region
+  - custom_group_map
+
+stability_registry:
+  - bootstrap_rank_stability
+  - seed_stability
+  - window_stability
+  - vintage_stability
+  - model_consensus_importance
+  - rank_correlation_across_runs
+  - sign_consistency

@@ -1,0 +1,4 @@
+registry:
+  id: output
+  source: config/output.yaml
+  role: output_and_provenance_contracts

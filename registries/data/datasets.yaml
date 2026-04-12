@@ -1,0 +1,4 @@
+registry:
+  id: datasets
+  source: config/datasets.yaml
+  role: dataset_defaults_and_adapters

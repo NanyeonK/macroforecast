@@ -1,0 +1,16 @@
+regime_definitions:
+  - none
+  - NBER_recession
+  - quantile_uncertainty
+  - financial_stress
+  - volatility_regime
+  - Markov_switching_regime
+  - clustering_regime
+  - user_defined_regime
+
+regime_uses:
+  - eval_only
+  - train_only
+  - train_and_eval
+  - regime_specific_model
+  - regime_interaction_features

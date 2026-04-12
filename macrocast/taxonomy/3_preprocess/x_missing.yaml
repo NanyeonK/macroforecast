@@ -1,0 +1,20 @@
+x_missing_methods:
+  - drop_rows
+  - drop_columns
+  - drop_if_above_missing_threshold
+  - mean_impute
+  - median_impute
+  - group_mean_impute
+  - timewise_mean_impute
+  - ffill
+  - bfill
+  - interpolate_linear
+  - interpolate_spline
+  - em_impute
+  - kalman_impute
+  - factor_impute
+  - knn_impute
+  - iterative_imputer
+  - multiple_imputation
+  - missing_indicator_addition
+  - leave_as_missing_for_model

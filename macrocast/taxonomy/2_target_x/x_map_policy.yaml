@@ -1,0 +1,15 @@
+x_map_policies:
+  - shared_X
+  - target_specific_X
+  - category_specific_X
+  - domain_specific_X
+  - availability_specific_X
+  - handcrafted_target_X
+  - learned_target_X
+
+target_to_target_inclusion:
+  - allow_other_targets_as_X
+  - forbid_other_targets_as_X
+  - allow_selected_targets_as_X
+  - Granger_style_lagged_targets_only
+  - system_wide_joint_model

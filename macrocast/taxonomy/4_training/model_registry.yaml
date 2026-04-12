@@ -1,0 +1,56 @@
+model_families:
+  benchmark_models:
+    - historical_mean
+    - rolling_mean
+    - random_walk
+    - AR
+    - ARDI
+    - factor_model
+    - VAR
+    - BVAR
+    - FAVAR
+    - DFM
+  linear_ml:
+    - OLS
+    - Ridge
+    - Lasso
+    - AdaptiveLasso
+    - GroupLasso
+    - ElasticNet
+    - PCR
+    - PLS
+    - BayesianRidge
+    - TVP_Ridge
+    - booging
+  kernel_margin:
+    - KRR
+    - SVR_linear
+    - SVR_rbf
+    - SVR_poly
+    - GaussianProcess
+  tree_ensemble:
+    - RandomForest
+    - ExtraTrees
+    - GradientBoosting
+    - XGBoost
+    - LightGBM
+    - CatBoost
+    - AdaBoost
+    - bagging_regressor
+  neural:
+    - MLP
+    - DeepMLP
+    - LSTM
+    - GRU
+    - TCN
+    - Transformer_encoder
+    - NBEATS
+    - NHITS
+    - TFT
+  custom_plugins:
+    - sklearn_adapter
+    - statsmodels_adapter
+    - pytorch_adapter
+    - jax_adapter
+    - R_adapter
+    - external_binary_adapter

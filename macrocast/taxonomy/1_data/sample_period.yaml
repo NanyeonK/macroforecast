@@ -1,0 +1,26 @@
+sample_period_rules:
+  training_start_rules:
+    - earliest_possible
+    - fixed_start
+    - post_warmup_start
+    - post_break_start
+    - rolling_train_start
+  oos_period_rules:
+    - single_oos_block
+    - multiple_oos_blocks
+    - rolling_origin
+    - recession_only_oos
+    - expansion_only_oos
+    - event_window_oos
+  minimum_train_size_rules:
+    - fixed_n_obs
+    - fixed_years
+    - model_specific_min_train
+    - target_specific_min_train
+    - horizon_specific_min_train
+  warmup_rules:
+    - lags_only_warmup
+    - lags_and_factors_warmup
+    - sequence_warmup
+    - transform_warmup
+    - indicator_warmup

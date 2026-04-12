@@ -1,0 +1,40 @@
+recipe_id: clss2021
+kind: paper
+taxonomy_path:
+  domain: macro
+  data: fred_md
+  frequency: monthly
+  info_set: revised
+  sample: clss2021_1960_2017
+  oos: clss2021_1980_2017
+  task: point_direct
+  target: INDPRO
+  x_map: all_minus_target
+  target_prep: basic_none
+  x_prep: basic_none
+  features: factors_x
+  framework: expanding
+  validation: last_block
+  model: random_forest
+  tuning: none
+  metric: point_default
+  benchmark: ar
+  stat: forecast_comparison_default
+  importance: tree_native_importance
+  output: parquet_manifest_bundle
+numeric_params:
+  vintage: '2018-02'
+  horizons: [1, 3, 6, 9, 12, 24]
+  p_y: 12
+  k: 8
+  p_marx: 12
+  oos_start: '1980-01-01'
+  oos_end: '2017-12-01'
+benchmark_options:
+  lag_selection_rule: bic
+  estimation_window_rule: expanding
+outputs:
+  output_dir: /tmp/macrocast_results
+migration_status:
+  package_core: false
+  note: CLSS remains a recipe/path target; package-specific helpers are migration scaffolding only.

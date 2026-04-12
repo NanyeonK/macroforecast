@@ -1,0 +1,40 @@
+metric_registry:
+  point_forecast:
+    - MSE
+    - MSFE
+    - RMSE
+    - MAE
+    - MAPE
+    - sMAPE
+    - MASE
+    - RMSSE
+    - MedAE
+    - Huber_loss
+    - QLIKE
+    - TheilU
+  relative:
+    - relative_MSFE
+    - relative_RMSE
+    - relative_MAE
+    - oos_R2
+    - benchmark_win_rate
+    - CSFE_difference
+  directional:
+    - directional_accuracy
+    - sign_accuracy
+    - turning_point_accuracy
+    - precision
+    - recall
+    - F1
+    - balanced_accuracy
+    - AUC
+    - Brier_score
+  interval_density:
+    - pinball_loss
+    - CRPS
+    - interval_score
+    - coverage_rate
+    - winkler_score
+    - log_score
+    - NLL
+    - PIT_based_metric

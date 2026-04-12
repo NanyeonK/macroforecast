@@ -1,0 +1,4 @@
+registry:
+  id: global_defaults
+  source: config/meta/global_defaults.yaml
+  role: package_wide_defaults

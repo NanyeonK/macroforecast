@@ -1,0 +1,16 @@
+evaluation_scales:
+  - transformed_scale
+  - original_scale
+  - both
+
+benchmark_families_task_level:
+  - historical_mean
+  - rolling_mean
+  - random_walk
+  - ar_bic
+  - ar_fixed_p
+  - ardi
+  - factor_model
+  - var
+  - expert_benchmark
+  - paper_specific_benchmark

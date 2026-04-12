@@ -1,0 +1,30 @@
+aggregation_over_time:
+  - full_oos_average
+  - rolling_average
+  - regime_subsample_average
+  - event_window_average
+  - pre_post_break_average
+aggregation_over_horizons:
+  - equal_weight
+  - short_horizon_weighted
+  - long_horizon_weighted
+  - report_separately_only
+aggregation_over_targets:
+  - equal_weight
+  - scale_adjusted_weight
+  - economic_priority_weight
+  - report_separately_only
+ranking_rules:
+  - mean_metric_rank
+  - median_metric_rank
+  - win_count
+  - benchmark_beat_freq
+  - MCS_inclusion_priority
+  - stability_weighted_rank
+  - ensemble_selection_rank
+report_styles:
+  - tidy_dataframe
+  - latex_table
+  - markdown_table
+  - plot_dashboard
+  - paper_ready_bundle

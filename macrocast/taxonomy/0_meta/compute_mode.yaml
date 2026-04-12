@@ -1,0 +1,9 @@
+compute_modes:
+  - serial
+  - parallel_by_model
+  - parallel_by_horizon
+  - parallel_by_oos_date
+  - parallel_by_trial
+  - gpu_single
+  - gpu_multi
+  - distributed_cluster

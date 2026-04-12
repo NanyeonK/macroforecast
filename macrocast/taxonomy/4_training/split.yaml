@@ -1,0 +1,29 @@
+split_families:
+  - simple_holdout
+  - time_split
+  - blocked_kfold
+  - expanding_cv
+  - rolling_cv
+  - nested_cv
+  - poos_cv
+  - BIC_selection
+  - AIC_selection
+  - IC_grid
+  - purged_time_cv
+  - combinatorial_purged_cv
+
+validation_size_rules:
+  - ratio
+  - fixed_n
+  - fixed_years
+  - fixed_dates
+  - horizon_specific_n
+  - model_specific_n
+
+validation_locations:
+  - last_block
+  - rolling_blocks
+  - expanding_validation
+  - blocked_cv
+  - nested_time_cv
+  - walk_forward_validation

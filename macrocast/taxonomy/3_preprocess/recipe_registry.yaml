@@ -1,0 +1,21 @@
+recipe_modes:
+  - fixed_recipe
+  - recipe_grid
+  - recipe_ablation
+  - paper_exact_recipe
+  - model_specific_recipe
+  - target_specific_recipe
+
+separation_rules:
+  - strict_separation
+  - shared_transform_then_split
+  - joint_preprocessor
+  - target_only_transform
+  - X_only_transform
+
+fit_scope_rules:
+  - fit_on_train_only
+  - fit_on_train_expand
+  - fit_on_train_roll
+  - fit_on_full_sample_forbidden
+  - leakage_checked

@@ -47,3 +47,7 @@ site/
 # Notebook outputs (examples/results/ is gitignored)
 examples/results/
 .worktrees/
+
+# Local-only research wiki / downloaded source archive (never push)
+local_only/
+tmp_*.py

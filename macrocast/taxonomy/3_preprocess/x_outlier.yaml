@@ -1,0 +1,11 @@
+x_outlier_methods:
+  - none
+  - winsorize
+  - trim
+  - iqr_clip
+  - mad_clip
+  - zscore_clip
+  - outlier_to_missing
+  - robust_scaler_only
+  - Huberize
+  - quantile_cap

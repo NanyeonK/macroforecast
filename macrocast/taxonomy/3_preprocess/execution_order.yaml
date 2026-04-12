@@ -1,0 +1,12 @@
+execution_orders:
+  canonical_default:
+    - align
+    - target_transform
+    - x_missing
+    - x_outlier
+    - scale
+    - lagging
+    - factor_extraction
+    - final_feature_assembly
+  policy:
+    user_defined_allowed: true

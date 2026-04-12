@@ -1,0 +1,23 @@
+feature_builder_types:
+  - AR_only
+  - factors_plus_AR
+  - raw_X_plus_AR
+  - raw_X_only
+  - sequence_tensor
+  - grouped_features
+  - mixed_frequency_features
+  - interaction_features
+  - calendar_augmented_features
+
+y_lag_count_rules:
+  - fixed
+  - cv_select
+  - IC_select
+  - model_specific
+
+factor_count_rules:
+  - fixed
+  - cv_select
+  - variance_explained_rule
+  - BaiNg_rule
+  - model_specific

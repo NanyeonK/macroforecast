@@ -1,0 +1,19 @@
+saved_objects:
+  - raw_predictions
+  - fold_predictions
+  - residuals
+  - loss_series
+  - selected_hp
+  - fitted_metadata
+  - feature_metadata
+  - importance_outputs
+  - test_outputs
+  - plots
+  - paper_tables
+
+artifact_granularity:
+  - one_file_per_run
+  - one_file_per_target
+  - one_file_per_model
+  - one_file_per_horizon
+  - one_file_per_layer_output

@@ -1,0 +1,22 @@
+data_domains:
+  - macro
+  - macro_finance
+  - housing
+  - panel_macro
+  - mixed_domain
+
+dataset_sources:
+  - fred_md
+  - fred_qd
+  - fred_sd
+  - fred_api_custom
+  - bea
+  - bls
+  - wrds_macro_finance
+  - survey_spf
+  - google_trends
+  - news_text
+  - custom_csv
+  - custom_parquet
+  - custom_duckdb
+  - custom_sql

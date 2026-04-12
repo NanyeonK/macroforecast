@@ -1,0 +1,43 @@
+additional_preprocessing:
+  - none
+  - smoothing_ma
+  - ema
+  - hp_filter
+  - bandpass_filter
+  - wavelet_denoise
+  - seasonal_adjustment
+  - detrending
+  - deseasonalizing
+  - nonlinear_transform_bank
+  - threshold_transform
+  - interaction_generation
+  - polynomial_expansion
+  - spline_basis
+  - kernel_features
+  - text_embedding
+  - autoencoder_embedding
+
+lag_creation:
+  - no_x_lags
+  - fixed_x_lags
+  - cv_selected_x_lags
+  - variable_specific_lags
+  - category_specific_lags
+  - distributed_lags
+  - MIDAS_lags
+  - Almon_lags
+
+dimensionality_reduction:
+  - none
+  - PCA
+  - static_factor
+  - dynamic_factor
+  - targeted_PCA
+  - sparse_PCA
+  - PLS
+  - PCR
+  - ICA
+  - autoencoder
+  - supervised_encoder
+  - random_projection
+  - feature_clustering

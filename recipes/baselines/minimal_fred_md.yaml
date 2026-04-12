@@ -1,0 +1,32 @@
+recipe_id: minimal_fred_md
+kind: baseline
+taxonomy_path:
+  domain: macro
+  data: fred_md
+  frequency: monthly
+  info_set: revised
+  sample: full_sample
+  oos: short_smoke_oos
+  task: point_direct
+  target: INDPRO
+  x_map: all_minus_target
+  target_prep: basic_none
+  x_prep: basic_none
+  features: factors_x
+  framework: expanding
+  validation: last_block
+  model: random_forest
+  tuning: grid_search
+  metric: point_default
+  benchmark: ar
+  stat: forecast_comparison_default
+  importance: tree_native_importance
+  output: parquet_manifest_bundle
+numeric_params:
+  horizons: [1]
+  n_factors: 4
+  n_lags: 2
+  oos_start: '2012-01-01'
+  oos_end: '2012-03-01'
+outputs:
+  output_dir: /tmp/macrocast_results

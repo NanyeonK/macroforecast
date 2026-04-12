@@ -1,0 +1,104 @@
+issue_stack:
+  - id: TP-001
+    title: classify existing package artifacts into taxonomy vs registries vs recipes vs runs
+    files:
+      - docs/planning/treepath-package-overhaul.md
+      - config/plans/treepath_overhaul_issue_stack.yaml
+    depends_on: []
+    done:
+      - migration map exists for current config/, macrocast/taxonomy/, replication helpers, and docs
+
+  - id: TP-002
+    title: canonicalize taxonomy bundle to match master choice universe
+    files:
+      - macrocast/taxonomy/**/*.yaml
+      - macrocast/taxonomy/loaders.py
+      - macrocast/taxonomy/validators.py
+      - tests/taxonomy/*.py
+    depends_on: [TP-001]
+    done:
+      - taxonomy reflects plan_2026_04_09_2358.md choice families
+
+  - id: TP-003
+    title: introduce registries layer separate from taxonomy
+    files:
+      - registries/meta/*.yaml
+      - registries/data/*.yaml
+      - registries/training/*.yaml
+      - registries/evaluation/*.yaml
+      - registries/output/*.yaml
+      - macrocast/registries/loaders.py
+      - macrocast/registries/validators.py
+      - tests/registries/*.py
+    depends_on: [TP-002]
+    done:
+      - taxonomy ids resolve into concrete package registries
+
+  - id: TP-004
+    title: add recipe schema and recipe loaders
+    files:
+      - recipes/schema/recipe_schema.yaml
+      - recipes/baselines/.gitkeep
+      - recipes/benchmarks/.gitkeep
+      - recipes/papers/.gitkeep
+      - recipes/ablations/.gitkeep
+      - macrocast/recipes/loaders.py
+      - macrocast/recipes/validators.py
+      - tests/recipes/test_schema.py
+    depends_on: [TP-003]
+    done:
+      - recipes can encode tree path plus numeric leaf config
+
+  - id: TP-005
+    title: redesign compiled spec around tree-path resolution
+    files:
+      - macrocast/specs/compiler.py
+      - macrocast/design/resolver.py
+      - tests/specs/test_treepath_compile.py
+    depends_on: [TP-004]
+    done:
+      - compiled spec accepts recipe/path inputs as first-class source
+
+  - id: TP-006
+    title: redesign benchmarks as family plus options instead of resolved ids
+    files:
+      - macrocast/taxonomy/5_evaluation/benchmark_registry.yaml
+      - registries/evaluation/benchmarks.yaml
+      - macrocast/evaluation/registry.py
+      - macrocast/meta/resolution.py
+      - tests/evaluation/test_benchmark_registry.py
+      - tests/specs/test_benchmark_resolution.py
+    depends_on: [TP-005]
+    done:
+      - benchmark family/options symmetric with model selection
+
+  - id: TP-007
+    title: add runs layer and path-aware output layout
+    files:
+      - runs/.gitkeep
+      - macrocast/output/paths.py
+      - macrocast/output/manifest.py
+      - tests/output/test_runs_layout.py
+    depends_on: [TP-005, TP-006]
+    done:
+      - resolved runs written under path-aware layout
+
+  - id: TP-008
+    title: migrate CLSS from package helper to recipe/path example
+    files:
+      - recipes/papers/clss2021.yaml
+      - macrocast/replication/*.py
+      - tests/verification/test_recipe_verification.py
+    depends_on: [TP-004, TP-006, TP-007]
+    done:
+      - CLSS is one recipe/path, not package core logic
+
+  - id: TP-009
+    title: rewrite docs and examples for tree-path package architecture
+    files:
+      - README.md
+      - docs/**/*.md
+      - examples/*.ipynb
+    depends_on: [TP-008]
+    done:
+      - docs present generic package first, recipes second

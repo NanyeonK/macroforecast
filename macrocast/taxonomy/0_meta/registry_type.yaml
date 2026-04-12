@@ -1,0 +1,7 @@
+registry_types:
+  - enum_registry
+  - numeric_registry
+  - callable_registry
+  - custom_plugin
+  - user_defined_yaml
+  - external_adapter

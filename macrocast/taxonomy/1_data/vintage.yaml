@@ -1,0 +1,7 @@
+vintage_policies:
+  - latest_only
+  - single_vintage
+  - rolling_vintage
+  - all_vintages_available
+  - event_vintage_subset
+  - vintage_range

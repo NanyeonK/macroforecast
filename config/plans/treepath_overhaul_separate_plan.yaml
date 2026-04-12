@@ -1,0 +1,122 @@
+treepath_overhaul:
+  sp_t0_architecture_lock:
+    objective: lock tree-path package direction and migration rules
+    outputs:
+      - docs/planning/treepath-package-overhaul.md
+      - config/plans/treepath_overhaul_issue_stack.yaml
+    done:
+      - taxonomy/registries/recipes/runs target structure locked
+      - paper-specific code treated as migration scaffolding only
+
+  sp_t1_taxonomy_canonicalization:
+    objective: align taxonomy bundle to plan_2026_04_09_2358.md as the canonical choice universe
+    yaml:
+      - macrocast/taxonomy/0_meta/*.yaml
+      - macrocast/taxonomy/1_data/*.yaml
+      - macrocast/taxonomy/2_target_x/*.yaml
+      - macrocast/taxonomy/3_preprocess/*.yaml
+      - macrocast/taxonomy/4_training/*.yaml
+      - macrocast/taxonomy/5_evaluation/*.yaml
+      - macrocast/taxonomy/6_stat_tests/*.yaml
+      - macrocast/taxonomy/7_importance/*.yaml
+      - macrocast/taxonomy/8_output_provenance/*.yaml
+    code:
+      - macrocast/taxonomy/loaders.py
+      - macrocast/taxonomy/validators.py
+    tests:
+      - tests/taxonomy/test_loaders.py
+      - tests/taxonomy/test_validators.py
+    done:
+      - taxonomy ids reflect master option universe
+      - implemented vs future fields are clearly flagged
+
+  sp_t2_registries_layer:
+    objective: introduce registries layer distinct from taxonomy and current config defaults
+    yaml:
+      - registries/meta/*.yaml
+      - registries/data/*.yaml
+      - registries/training/*.yaml
+      - registries/evaluation/*.yaml
+      - registries/output/*.yaml
+    code:
+      - macrocast/registries/loaders.py
+      - macrocast/registries/validators.py
+    tests:
+      - tests/registries/test_loaders.py
+      - tests/registries/test_validators.py
+    done:
+      - taxonomy ids resolve into backing registries cleanly
+
+  sp_t3_recipe_schema_and_resolver:
+    objective: add recipe schema and canonical tree-path resolver
+    yaml:
+      - recipes/schema/recipe_schema.yaml
+    code:
+      - macrocast/recipes/loaders.py
+      - macrocast/recipes/validators.py
+      - macrocast/specs/compiler.py
+      - macrocast/design/resolver.py
+    tests:
+      - tests/recipes/test_schema.py
+      - tests/specs/test_treepath_compile.py
+    done:
+      - one recipe can encode enum path + numeric leaves
+      - canonical path string resolves to compiled spec
+
+  sp_t4_benchmark_model_symmetry:
+    objective: redesign benchmark selection to match model selection semantics
+    yaml:
+      - macrocast/taxonomy/5_evaluation/benchmark_registry.yaml
+      - registries/evaluation/benchmarks.yaml
+    code:
+      - macrocast/evaluation/registry.py
+      - macrocast/meta/resolution.py
+      - macrocast/specs/compiler.py
+    tests:
+      - tests/evaluation/test_benchmark_registry.py
+      - tests/specs/test_benchmark_resolution.py
+    done:
+      - benchmark family and options selected separately
+      - resolved benchmark id derived later
+
+  sp_t5_execution_and_runs:
+    objective: make execution consume resolved tree path and write to runs layer
+    code:
+      - macrocast/pipeline/experiment.py
+      - macrocast/output/paths.py
+      - macrocast/output/manifest.py
+    yaml:
+      - macrocast/taxonomy/8_output_provenance/*.yaml
+    tests:
+      - tests/pipeline/test_treepath_runtime.py
+      - tests/output/test_runs_layout.py
+    done:
+      - outputs are keyed by resolved recipe/path
+      - manifest contains recipe/path metadata
+
+  sp_t6_verification_migration:
+    objective: migrate paper verification from package-specific helpers to recipe-based verification paths
+    yaml:
+      - recipes/papers/clss2021.yaml
+      - registries/verification/*.yaml
+    code:
+      - macrocast/verification/*.py
+      - macrocast/replication/* (migration/deprecation only)
+    tests:
+      - tests/verification/test_recipe_verification.py
+    done:
+      - CLSS path works as recipe/path
+      - package core no longer depends on CLSS-specific runner
+
+  sp_t7_docs_examples_migration:
+    objective: rewrite public docs/examples around tree-path package architecture
+    files:
+      - README.md
+      - docs/package-architecture/*.md
+      - docs/tutorials/*.md
+      - examples/*.ipynb
+    tests:
+      - docs/example parse checks
+    done:
+      - docs describe generic package first
+      - CLSS appears as one example recipe/path only

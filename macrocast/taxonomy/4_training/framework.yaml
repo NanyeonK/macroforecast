@@ -1,0 +1,23 @@
+forecast_frameworks:
+  outer_window:
+    - expanding
+    - rolling
+    - anchored_rolling
+    - hybrid_expanding_rolling
+    - recursive_reestimation
+    - event_retrain
+  refit_policy:
+    - refit_every_step
+    - refit_every_k_steps
+    - fit_once_predict_many
+    - warm_start_refit
+    - online_update
+    - partial_fit
+  forecast_type:
+    - direct
+    - iterated
+    - dirrec
+    - mimo
+    - multi_horizon_joint
+    - recursive_state_space
+    - seq2seq

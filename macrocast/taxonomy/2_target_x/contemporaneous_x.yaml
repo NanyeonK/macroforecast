@@ -1,0 +1,6 @@
+contemporaneous_x_rules:
+  - allow_contemporaneous
+  - forbid_contemporaneous
+  - allow_if_available_in_real_time
+  - lag_all_predictors_by_one
+  - series_specific_contemporaneous

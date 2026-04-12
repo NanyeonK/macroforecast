@@ -1,0 +1,6 @@
+own_target_lag_rules:
+  - include
+  - exclude
+  - cv_select_lags
+  - fixed_lag_count
+  - target_specific_lag_count

@@ -1,0 +1,16 @@
+decomposition_targets:
+  - nonlinearity_effect
+  - regularization_effect
+  - cv_scheme_effect
+  - loss_function_effect
+  - preprocessing_effect
+  - feature_builder_effect
+  - benchmark_effect
+  - importance_method_effect
+
+decomposition_orders:
+  - marginal_effect_only
+  - two_way_interaction
+  - three_way_interaction
+  - full_factorial
+  - Shapley_style_effect_decomp

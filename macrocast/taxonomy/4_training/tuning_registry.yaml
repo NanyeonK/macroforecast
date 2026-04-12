@@ -1,0 +1,29 @@
+search_algorithms:
+  - grid_search
+  - random_search
+  - bayesian_optimization
+  - genetic_algorithm
+  - evolutionary_search
+  - hyperband
+  - asha
+  - successive_halving
+  - coordinate_search
+  - manual_fixed_hp
+  - paper_exact_hp
+
+tuning_objectives:
+  - validation_mse
+  - validation_rmse
+  - validation_mae
+  - validation_mape
+  - validation_quantile_loss
+  - relative_msfe_to_benchmark
+  - oos_r2_proxy
+  - economic_utility
+  - custom_loss
+
+seed_policies:
+  - fixed_seed
+  - multi_seed_average
+  - seed_sweep
+  - deterministic_only

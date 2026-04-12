@@ -1,0 +1,12 @@
+predictor_families:
+  - target_lags_only
+  - all_macro_vars
+  - all_except_target
+  - category_based
+  - financial_only
+  - macro_plus_finance
+  - survey_plus_macro
+  - text_plus_macro
+  - factor_only
+  - selected_sparse_set
+  - handpicked_set

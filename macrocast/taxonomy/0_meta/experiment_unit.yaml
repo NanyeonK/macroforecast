@@ -1,0 +1,17 @@
+experiment_units:
+  - id: single_target_single_model
+    axis_type: fixed
+  - id: single_target_model_grid
+    axis_type: sweep
+  - id: single_target_full_sweep
+    axis_type: nested_sweep
+  - id: multi_target_separate_runs
+    axis_type: sweep
+  - id: multi_target_shared_design
+    axis_type: fixed
+  - id: replication_recipe
+    axis_type: report_only
+  - id: benchmark_suite
+    axis_type: report_only
+  - id: ablation_study
+    axis_type: eval_only

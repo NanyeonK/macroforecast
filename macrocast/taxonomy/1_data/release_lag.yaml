@@ -1,0 +1,7 @@
+release_lag_rules:
+  - ignore_release_lag
+  - fixed_lag_all_series
+  - series_specific_lag
+  - calendar_exact_lag
+  - lag_conservative
+  - lag_aggressive

@@ -1,0 +1,26 @@
+target_transforms:
+  - level
+  - difference
+  - log
+  - log_difference
+  - growth_rate
+  - annualized_growth
+  - yoy_growth
+  - qoq_saar
+  - standardized_target
+  - BoxCox
+  - YeoJohnson
+  - rank_normal
+  - sign_preserving_log
+  - binary_direction
+  - threshold_event_target
+
+target_construction_rules:
+  - future_level_y_t_plus_h
+  - future_diff
+  - future_logdiff
+  - cumulative_growth_to_h
+  - average_growth_1_to_h
+  - annualized_growth_to_h
+  - future_sum
+  - future_indicator

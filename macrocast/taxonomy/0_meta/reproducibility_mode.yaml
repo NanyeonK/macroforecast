@@ -1,0 +1,5 @@
+reproducibility_modes:
+  - strict_reproducible
+  - seeded_reproducible
+  - best_effort
+  - exploratory

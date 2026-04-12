@@ -1,0 +1,7 @@
+information_set_types:
+  - revised
+  - real_time_vintage
+  - pseudo_oos_revised
+  - pseudo_oos_vintage_aware
+  - release_calendar_aware
+  - publication_lag_aware

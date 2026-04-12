@@ -1,0 +1,10 @@
+target_outlier_methods:
+  - none
+  - winsorize
+  - trim
+  - clip
+  - iqr_flag_to_missing
+  - mad_flag_to_missing
+  - robust_smoother
+  - manual_event_override
+  - tail_transform

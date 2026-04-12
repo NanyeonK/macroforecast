@@ -1,0 +1,41 @@
+importance_scope:
+  - none
+  - global
+  - local
+  - global_and_local
+  - time_varying
+  - regime_specific
+  - horizon_specific
+  - target_specific
+  - cross_model_consensus
+
+importance_methods:
+  model_native:
+    - linear_coefficients
+    - standardized_coefficients
+    - t_stats_if_linear
+    - RF_Gini_importance
+    - RF_permutation_importance
+    - XGB_gain
+    - LGB_split_importance
+  model_agnostic:
+    - PMI_or_PFI_permutation_importance
+    - leave_one_covariate_out
+    - group_permutation_importance
+    - conditional_permutation_importance
+    - Sobol_sensitivity
+    - variance_based_sensitivity
+    - Shapley_value_global
+  shap_family:
+    - TreeSHAP
+    - KernelSHAP
+    - DeepSHAP
+    - LinearSHAP
+    - GroupedSHAP
+    - InteractionSHAP
+  interpretability_curves:
+    - PDP
+    - ICE
+    - ALE
+    - 2D_PDP
+    - 2D_ALE

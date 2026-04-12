@@ -1,0 +1,26 @@
+statistical_tests:
+  equal_predictive_ability:
+    - DM
+    - DM_HLN_small_sample
+    - modified_DM
+    - paired_t_on_loss_diff
+    - Wilcoxon_signed_rank
+  nested_model_tests:
+    - Clark_West
+    - ENC_NEW
+    - MSE_F
+    - MSE_t
+    - forecast_encompassing_nested
+  conditional_predictive_ability:
+    - Giacomini_White_CPA
+    - Rossi_Sekhposyan_stability
+    - rolling_DM
+    - fluctuation_test
+    - Chow_break_forecast
+    - CUSUM_on_loss
+  data_snooping:
+    - White_Reality_Check
+    - Hansen_SPA
+    - MCS
+    - stepwise_MCS
+    - bootstrap_best_model_test

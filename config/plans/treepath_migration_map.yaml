@@ -1,0 +1,49 @@
+migration_map:
+  taxonomy:
+    implemented_now:
+      - macrocast/taxonomy/0_meta
+      - macrocast/taxonomy/1_data
+      - macrocast/taxonomy/2_target_x
+      - macrocast/taxonomy/3_preprocess
+      - macrocast/taxonomy/4_training
+      - macrocast/taxonomy/5_evaluation
+      - macrocast/taxonomy/6_stat_tests
+      - macrocast/taxonomy/7_importance
+      - macrocast/taxonomy/8_output_provenance
+  registries:
+    transitional_now:
+      - config/meta
+      - config/datasets.yaml
+      - config/targets.yaml
+      - config/data_tasks.yaml
+      - config/preprocessing.yaml
+      - config/features.yaml
+      - config/models.yaml
+      - config/evaluation.yaml
+      - config/tests.yaml
+      - config/interpretation.yaml
+      - config/output.yaml
+      - config/verification.yaml
+    target_future:
+      - registries/meta
+      - registries/data
+      - registries/training
+      - registries/evaluation
+      - registries/output
+  recipes:
+    missing_now:
+      - recipes/papers
+      - recipes/baselines
+      - recipes/benchmarks
+      - recipes/ablations
+  runs:
+    missing_now:
+      - runs
+  legacy_migration:
+    - macrocast/replication/clss2021.py
+    - macrocast/replication/clss2021_runner.py
+    - docs/tutorials/clss2021-replication.md
+  critical_redesigns:
+    - benchmark_family_plus_options_not_resolved_id
+    - treepath_resolver_as_first_class_compiler_input
+    - recipe_layer_before_paper_specific_examples

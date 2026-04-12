@@ -1,0 +1,70 @@
+benchmark_families:
+  - historical_mean
+  - rolling_mean
+  - random_walk
+  - ar
+  - factor_model
+  - survey_forecast
+  - paper_benchmark
+  - multi_benchmark_suite
+
+lag_selection_rules:
+  - none
+  - fixed_lag
+  - aic
+  - bic
+  - paper_exact
+
+estimation_window_rules:
+  - expanding
+  - rolling
+  - fixed
+  - paper_exact_window
+
+target_construction_rules:
+  - direct
+  - direct_or_recipe_defined
+  - path_average
+  - cumulative_growth
+  - average_growth
+  - paper_exact
+
+denominator_rules:
+  - self
+  - benchmark_relative
+  - fm_agr
+  - target_scale_specific
+  - paper_exact
+
+benchmark_specificity:
+  - same_for_all
+  - target_specific
+  - horizon_specific
+  - target_horizon_specific
+
+support_status:
+  implemented_now:
+    benchmark_families:
+      - historical_mean
+      - ar
+      - factor_model
+    lag_selection_rules:
+      - bic
+    estimation_window_rules:
+      - expanding
+  planned_later:
+    benchmark_families:
+      - rolling_mean
+      - random_walk
+      - survey_forecast
+      - paper_benchmark
+      - multi_benchmark_suite
+    lag_selection_rules:
+      - none
+      - fixed_lag
+      - aic
+      - paper_exact
+    estimation_window_rules:
+      - rolling
+      - fixed
+      - paper_exact_window

@@ -1,0 +1,4 @@
+registry:
+  id: models
+  source: config/models.yaml
+  role: model_defaults_and_backends

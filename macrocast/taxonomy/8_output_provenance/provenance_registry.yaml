@@ -1,0 +1,11 @@
+provenance_fields:
+  - config_hash
+  - recipe_name
+  - dataset_version
+  - vintage_id
+  - sample_period
+  - seed
+  - git_commit
+  - package_version
+  - runtime_env
+  - failure_log
