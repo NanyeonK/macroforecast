@@ -1,0 +1,21 @@
+optimizer_backend_strategy:
+  installed_backends:
+    bayesian_optimization:
+      - optuna
+      - skopt
+      - bayes_opt
+    genetic_search:
+      - pygad
+      - deap
+      - scipy_helper_only
+  recommended_defaults:
+    bayesian_optimization:
+      backend: optuna
+      rationale: best general-purpose maintained backend
+    genetic_search:
+      backend: pygad
+      rationale: easiest practical GA backend for package integration
+  policy:
+    - backend must be explicit in provenance
+    - paper docs must state MATLAB-vs-Python optimizer differences
+    - backend override allowed in paper overlays

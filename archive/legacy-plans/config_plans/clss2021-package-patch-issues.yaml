@@ -1,0 +1,71 @@
+clss2021_package_patch:
+  objective: full-paper-equivalent implementation through package surfaces
+  issues:
+    - id: I-CLSS-01
+      title: create canonical paper contract yaml
+      files:
+        - config/plans/clss2021-paper-contract.yaml
+      registries_touched:
+        - config/plans/clss2021-paper-contract.yaml
+      tests:
+        - tests for yaml load and required fields
+      depends_on: []
+      done:
+        - fixed settings explicit
+        - paper model/info-set/horizon universe explicit
+        - benchmark semantics explicit
+    - id: I-CLSS-02
+      title: create ambiguity register yaml
+      files:
+        - config/plans/clss2021-ambiguities.yaml
+      registries_touched:
+        - config/plans/clss2021-ambiguities.yaml
+      tests:
+        - tests for yaml load and required fields
+      depends_on:
+        - I-CLSS-01
+      done:
+        - ambiguous settings enumerated with alternatives
+    - id: I-CLSS-03
+      title: patch full-scope CLSS runner
+      files:
+        - macrocast/replication/clss2021_runner.py
+        - macrocast/replication/__init__.py
+      registries_touched:
+        - config/plans/clss2021-paper-contract.yaml
+      tests:
+        - full run contract assembly
+        - artifact writing
+      depends_on:
+        - I-CLSS-01
+      done:
+        - package-native full runner exists
+        - no reliance on legacy scripts for grid assembly
+    - id: I-CLSS-04
+      title: patch benchmark-relative summaries and manifest semantics
+      files:
+        - macrocast/replication/clss2021_runner.py
+        - macrocast/output/manifest.py
+      registries_touched:
+        - config/plans/clss2021-paper-contract.yaml
+      tests:
+        - explicit benchmark id in manifest
+        - AR-relative summary output test
+      depends_on:
+        - I-CLSS-03
+      done:
+        - summaries anchor to explicit AR benchmark
+        - manifest benchmark ids explicit
+    - id: I-CLSS-05
+      title: add ambiguity variant runner
+      files:
+        - macrocast/replication/clss2021_runner.py
+      registries_touched:
+        - config/plans/clss2021-ambiguities.yaml
+      tests:
+        - variant assembly test
+      depends_on:
+        - I-CLSS-02
+        - I-CLSS-03
+      done:
+        - candidate contracts runnable and comparable

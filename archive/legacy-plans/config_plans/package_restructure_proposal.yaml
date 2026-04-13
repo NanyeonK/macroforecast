@@ -1,0 +1,34 @@
+package_restructure_proposal:
+  decision: approved_if_it_improves_implementation_efficiency
+  level: moderate_controlled_restructure
+  new_subpackages:
+    - macrocast/tuning
+    - macrocast/papers
+    - macrocast/output/recipes
+  keep_pipeline_for:
+    - experiment_runtime
+    - feature_building
+    - estimator_interfaces
+    - model_wrappers
+    - result_containers
+  new_config_paths:
+    - config/tuning.yaml
+    - config/search_spaces.yaml
+    - config/output_recipes.yaml
+    - config/papers/clss2021/contract.yaml
+    - config/papers/clss2021/tuning_map.yaml
+    - config/papers/clss2021/search_spaces.yaml
+    - config/papers/clss2021/output_recipes.yaml
+    - config/papers/clss2021/ambiguities.yaml
+  rationale:
+    - avoid paper-specific sprawl in pipeline
+    - separate model wrappers from tuning backends
+    - support generic output recipes
+    - preserve lightweight defaults
+  implementation_order:
+    - create_dirs_and_registry_loaders
+    - implement_tuning_abstraction
+    - wire_pipeline_to_tuning_recipes
+    - add_clss2021_overlay
+    - add_appendix_output_recipes
+    - update_docs

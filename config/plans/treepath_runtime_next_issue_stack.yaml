@@ -1,0 +1,54 @@
+issue_stack:
+  - id: TP-010
+    title: operationalize registries layer as live runtime source
+    files:
+      - registries/**/*.yaml
+      - macrocast/registries/*.py
+      - macrocast/design/resolver.py
+      - tests/registries/*.py
+    depends_on: []
+    done:
+      - compiler/resolver can read live defaults from registries layer
+
+  - id: TP-011
+    title: replace recipe_to_runtime_config bridge with tree-path-native compiler resolution
+    files:
+      - macrocast/recipes/transform.py
+      - macrocast/specs/compiler.py
+      - macrocast/design/resolver.py
+      - tests/specs/test_treepath_compile.py
+    depends_on: [TP-010]
+    done:
+      - recipe compiles without lowering to legacy flat/nested config dict
+
+  - id: TP-012
+    title: demote legacy config parser to compatibility layer
+    files:
+      - macrocast/config.py
+      - docs/getting-started.md
+      - tests/config_compat/*.py
+    depends_on: [TP-011]
+    done:
+      - legacy config still works but is clearly compatibility-only
+
+  - id: TP-013
+    title: make path-aware runs the default runtime output organizer
+    files:
+      - macrocast/output/paths.py
+      - macrocast/pipeline/experiment.py
+      - macrocast/output/manifest.py
+      - tests/output/test_runs_layout.py
+    depends_on: [TP-011]
+    done:
+      - resolved recipe/path metadata automatically drives output layout
+
+  - id: TP-014
+    title: reduce CLSS helper code to recipe/path shim
+    files:
+      - macrocast/replication/clss2021_runner.py
+      - macrocast/replication/__init__.py
+      - docs/tutorials/clss2021-replication.md
+      - tests/recipes/test_paper_recipe.py
+    depends_on: [TP-013]
+    done:
+      - recipe path is canonical; helper is shim or removed

@@ -2,7 +2,7 @@
 
 ## Objective
 
-Restructure `macrocast` to follow `plan_2026_04_09_2358.md` as the primary package architecture.
+Restructure `macrocast` to follow `archive/legacy-plans/source/plan_2026_04_09_2358.md` as the primary package architecture source document.
 
 Target state:
 - one path = one fully specified forecasting study

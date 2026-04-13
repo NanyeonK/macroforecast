@@ -1,0 +1,75 @@
+issue_stack:
+  - id: TREE-001
+    title: add taxonomy loaders/validators bundle
+    files:
+      - macrocast/taxonomy/loaders.py
+      - macrocast/taxonomy/validators.py
+      - macrocast/taxonomy/__init__.py
+      - tests/taxonomy/test_loaders.py
+      - tests/taxonomy/test_validators.py
+    depends_on: []
+    done:
+      - all taxonomy yaml files load
+      - layer bundle validation exists
+
+  - id: TREE-002
+    title: add recipe schema for enum path + numeric leaf config
+    files:
+      - config/recipe_schema.yaml
+      - macrocast/design/resolver.py
+      - tests/design/test_recipe_schema.py
+    depends_on: [TREE-001]
+    done:
+      - one recipe can reference taxonomy ids and numeric params
+
+  - id: TREE-003
+    title: add tuning registry and search-space registry
+    files:
+      - config/tuning.yaml
+      - config/search_spaces.yaml
+      - macrocast/tuning/__init__.py
+      - macrocast/tuning/registry.py
+      - tests/tuning/test_registry.py
+    depends_on: [TREE-001]
+    done:
+      - tuning methods and search spaces validate and load
+
+  - id: TREE-004
+    title: wire pipeline experiment to resolved tuning methods
+    files:
+      - macrocast/pipeline/experiment.py
+      - macrocast/pipeline/registry.py
+      - tests/pipeline/test_tree_resolution.py
+    depends_on: [TREE-002, TREE-003]
+    done:
+      - experiment consumes resolved tree choices
+
+  - id: TREE-005
+    title: add output recipe registry and builders
+    files:
+      - config/output_recipes.yaml
+      - macrocast/output/recipes/__init__.py
+      - macrocast/output/recipes/registry.py
+      - tests/output/test_output_recipes.py
+    depends_on: [TREE-001]
+    done:
+      - output recipes resolve by id
+
+  - id: TREE-006
+    title: add custom extension protocol across major families
+    files:
+      - config/extensions.yaml
+      - macrocast/meta/validators.py
+      - tests/meta/test_extensions.py
+    depends_on: [TREE-001]
+    done:
+      - custom slots declared and validated
+
+  - id: TREE-007
+    title: create CLSS recipe as one tree path
+    files:
+      - config/recipes/clss2021.yaml
+      - tests/replication/test_clss_tree_recipe.py
+    depends_on: [TREE-002, TREE-003, TREE-005]
+    done:
+      - CLSS config resolves without hardcoded paper module

@@ -1,0 +1,42 @@
+clss2021_support_matrix:
+  preprocessing:
+    fred_md_loader: full
+    vintage_loading: full
+    tcode_transform: full
+    marx_feature_path: partial
+    maf_feature_path: partial
+    level_feature_path: full
+    path_average_target: full
+    exact_paper_transform_scale: unknown
+  models:
+    ar_benchmark: full
+    fm_ardi: full
+    adaptive_lasso: full
+    elastic_net: full
+    random_forest: full
+    krr: full
+    svr: full
+    full_paper_model_universe_confirmed: unknown
+  hyperparameter_selection:
+    kfold_cv: full
+    bic: full
+    appendix_grid_match_confirmed: unknown
+    retuning_cadence_confirmed: unknown
+  evaluation:
+    msfe: full
+    relative_msfe: full
+    oos_r2: full
+    dm_test: full
+    clark_west: full
+    mcs: full
+    explicit_ar_relative_rmse_runner_path: partial
+  orchestration:
+    package_native_reduced_runner: full
+    package_native_full_runner: missing
+    explicit_paper_contract_yaml: missing
+    ambiguity_variant_runner: missing
+  critical_issues:
+    - legacy CLSS docs/scripts conflict with current package preset defaults
+    - no full-scope package-native CLSS runner yet
+    - helper summary path must anchor to explicit AR benchmark for paper tables
+    - paper-fixed contract still not locked from body+appendix

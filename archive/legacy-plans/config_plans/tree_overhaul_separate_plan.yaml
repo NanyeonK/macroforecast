@@ -1,0 +1,159 @@
+tree_overhaul_plan:
+  sp_0_scope_lock:
+    objective: lock tree-structured package direction and replication role
+    yaml:
+      - macrocast/taxonomy/0_meta/path_grammar.yaml
+    code: []
+    tests:
+      - taxonomy bundle loads
+    done:
+      - canonical layer order locked
+      - enum vs numeric separation locked
+
+  sp_1_meta_registry:
+    objective: make taxonomy machine-readable and loadable
+    yaml:
+      - macrocast/taxonomy/0_meta/*.yaml
+    code:
+      - macrocast/taxonomy/loaders.py
+      - macrocast/taxonomy/validators.py
+    tests:
+      - tests/taxonomy/test_loaders.py
+      - tests/taxonomy/test_validators.py
+    done:
+      - all taxonomy yaml files load and validate
+
+  sp_2_data:
+    objective: resolve data/task branches from taxonomy to recipe schema
+    yaml:
+      - macrocast/taxonomy/1_data/*.yaml
+    code:
+      - macrocast/data/registry.py
+      - macrocast/design/resolver.py
+    tests:
+      - data/task resolution tests
+    done:
+      - dataset/sample/task branch choices resolvable
+
+  sp_3_preprocessing:
+    objective: map target/X preprocessing branches into explicit recipe resolution
+    yaml:
+      - macrocast/taxonomy/2_target_x/*.yaml
+      - macrocast/taxonomy/3_preprocess/*.yaml
+    code:
+      - macrocast/preprocessing/registry.py
+      - macrocast/design/resolver.py
+    tests:
+      - target/X recipe resolution tests
+    done:
+      - preprocessing branch choices resolvable and validated
+
+  sp_4_design:
+    objective: define recipe schema and custom extension protocol
+    yaml:
+      - config/recipe_schema.yaml
+      - config/extensions.yaml
+    code:
+      - macrocast/design/resolver.py
+      - macrocast/meta/resolution.py
+    tests:
+      - recipe schema tests
+      - extension protocol tests
+    done:
+      - one recipe can encode tree path + numeric leaves
+
+  sp_5_feature_model:
+    objective: support feature/model/backend routing from tree choices
+    yaml:
+      - macrocast/taxonomy/4_training/feature_registry.yaml
+      - macrocast/taxonomy/4_training/model_registry.yaml
+    code:
+      - macrocast/pipeline/registry.py
+      - macrocast/pipeline/models.py
+      - macrocast/pipeline/r_models.py
+    tests:
+      - compatibility and backend routing tests
+    done:
+      - model choice resolves to python or R backend cleanly
+
+  sp_6_execution:
+    objective: add tree-aware tuning/search/execution layer
+    yaml:
+      - macrocast/taxonomy/4_training/framework.yaml
+      - macrocast/taxonomy/4_training/split.yaml
+      - macrocast/taxonomy/4_training/tuning_registry.yaml
+      - config/tuning.yaml
+      - config/search_spaces.yaml
+    code:
+      - macrocast/tuning/*.py
+      - macrocast/pipeline/experiment.py
+    tests:
+      - tuning registry tests
+      - execution resolution tests
+    done:
+      - none/bic/grid/genetic/bayesian methods routable
+
+  sp_7_evaluation:
+    objective: resolve metric/benchmark/aggregation branches and benchmark-relative outputs
+    yaml:
+      - macrocast/taxonomy/5_evaluation/*.yaml
+      - config/output_recipes.yaml
+    code:
+      - macrocast/evaluation/registry.py
+      - macrocast/output/recipes/*.py
+    tests:
+      - metric/benchmark/output recipe tests
+    done:
+      - evaluation branches resolve and output recipes run
+
+  sp_8_stat_tests:
+    objective: tree-aware statistical testing layer
+    yaml:
+      - macrocast/taxonomy/6_stat_tests/*.yaml
+    code:
+      - macrocast/evaluation/*.py
+    tests:
+      - statistical test registry resolution tests
+    done:
+      - test suite recipes resolvable and runnable
+
+  sp_9_importance:
+    objective: tree-aware interpretation/importance layer
+    yaml:
+      - macrocast/taxonomy/7_importance/*.yaml
+    code:
+      - macrocast/interpretation/*.py
+    tests:
+      - importance registry and grouping tests
+    done:
+      - importance methods/groupings/plots resolvable
+
+  sp_10_output:
+    objective: output/provenance branch closure
+    yaml:
+      - macrocast/taxonomy/8_output_provenance/*.yaml
+    code:
+      - macrocast/output/*.py
+    tests:
+      - manifest/failure/export tests
+    done:
+      - output bundle matches chosen recipe and provenance rules
+
+  sp_11_verification:
+    objective: express CLSS 2021 as tree path plus numeric config
+    yaml:
+      - config/recipes/clss2021.yaml
+    code:
+      - existing runtime + output recipe code
+    tests:
+      - verification recipe resolve/run smoke test
+    done:
+      - CLSS path uses generic system, no hardcoded module required
+
+  sp_12_e2e:
+    objective: baseline + custom + verification end-to-end closure
+    tests:
+      - baseline e2e
+      - custom extension smoke
+      - benchmark-relative output e2e
+      - CLSS verification recipe smoke

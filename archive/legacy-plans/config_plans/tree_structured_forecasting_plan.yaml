@@ -1,0 +1,45 @@
+tree_structured_forecasting_plan:
+  remove_proposal:
+    - macrocast/papers
+  package_goal:
+    style: generic_choice_tree_pipeline
+    supports_paper_replication_via_config: true
+    supports_custom_extensions: true
+  top_level_tree:
+    - meta
+    - data
+    - preprocessing
+    - forecasting
+    - evaluation
+    - output
+  new_code_dirs:
+    - macrocast/tuning
+    - macrocast/registry
+    - macrocast/output/recipes
+  new_config_files:
+    - config/choice_tree.yaml
+    - config/tuning.yaml
+    - config/search_spaces.yaml
+    - config/output_recipes.yaml
+  custom_extension_families:
+    - dataset_loader
+    - target_recipe
+    - x_recipe
+    - feature_recipe
+    - model_wrapper
+    - tuning_method
+    - search_space
+    - benchmark_recipe
+    - metric
+    - statistical_test
+    - interpretation_method
+    - output_recipe
+  implementation_order:
+    - define_choice_tree_registry
+    - define_tuning_registry
+    - define_search_space_registry
+    - define_output_recipe_registry
+    - add_custom_extension_protocol
+    - wire_runtime_to_tree_choices
+    - express_clss2021_as_tree_configuration
+    - document_tree_for_users

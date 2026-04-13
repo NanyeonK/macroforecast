@@ -1,6 +1,6 @@
 # Tree-Path Migration Map
 
-This document classifies current macrocast artifacts into the target structure required by `plan_2026_04_09_2358.md`.
+This document classifies current macrocast artifacts into the target structure required by `archive/legacy-plans/source/plan_2026_04_09_2358.md`.
 
 ## Target buckets
 - taxonomy: selectable enum universe

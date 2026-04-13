@@ -1,0 +1,40 @@
+clss_generic_pipeline_plan:
+  confirmed_rf_fact:
+    tuning_method: none
+    n_trees: 200
+    node_size_rule: fixed_5
+    split_feature_fraction: one_third_of_Z
+    bootstrap_sample_size: matlab_default
+  package_direction:
+    style: generic_extensible_pipeline
+    not_goal: hardcoded_clss_only_package
+    goals:
+      - explicit_tuning_registry
+      - explicit_search_space_registry
+      - paper_overlay_configs
+      - benchmark_relative_output_recipes
+      - lightweight_defaults
+  tuning_methods:
+    - none
+    - bic
+    - grid_search
+    - genetic_search
+    - bayesian_optimization
+  clss2021_mapping:
+    AR: bic
+    FM: bic
+    AL:
+      step1: genetic_search
+      step2: grid_search
+    EN: grid_search
+    RF: none
+    BT: bayesian_optimization
+    LB: genetic_search
+  issue_stack:
+    - define_tuning_registry
+    - define_search_space_registry
+    - create_clss2021_overlay_yamls
+    - compare_python_vs_matlab_optimizer_defaults
+    - implement_output_recipes
+    - implement_pipeline_abstractions
+    - document_generic_and_clss_usage
