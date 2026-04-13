@@ -18,7 +18,7 @@
 - config/plans/treepath_runtime_next_issue_stack.yaml
 
 ## Keep as earlier package-rebuild history
-- docs/planning/macroforecast-package-rebuild.md
+- docs/planning/macrocast-package-rebuild.md
 - config/plans/package_rebuild/*
 
 ## Archived historical planning

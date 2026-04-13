@@ -3,10 +3,10 @@
 CLSS 2021 should not remain part of package core architecture.
 
 Current migration state:
-- `recipes/papers/clss2021.yaml` now exists as the canonical future paper-path artifact
-- `macrocast.replication.clss2021` and `macrocast.replication.clss2021_runner` remain available only as migration scaffolding
-- public package direction is generic tree-path package first, paper recipes second
+- `recipes/papers/clss2021.yaml` is the canonical paper-path artifact
+- package-specific CLSS runner helper has been removed
+- `macrocast.replication.clss2021` remains only as a study-specific preset/reference helper, not as runtime execution architecture
 
 Implication:
 - new architecture work should land in taxonomy / registries / recipes / runs
-- CLSS-specific helper code should not expand further unless needed strictly for migration and verification
+- CLSS should be exercised through recipe/path compilation and generic runtime flows

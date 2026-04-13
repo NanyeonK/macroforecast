@@ -6,7 +6,7 @@ Core documentation rules:
 - package architecture first
 - paper studies second
 - recipes/path artifacts are canonical
-- paper-specific helper code is described as migration scaffolding only
+- paper-specific helper execution paths are not part of the target package design
 
 This pass updates:
 - README

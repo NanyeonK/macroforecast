@@ -1,0 +1,51 @@
+treepath_completion:
+  sp_c1_registries_truth_completion:
+    objective: finish moving active live-domain truth into registries files and reduce config/*.yaml to compatibility/mirror role
+    files:
+      - registries/meta/*.yaml
+      - registries/data/*.yaml
+      - registries/training/*.yaml
+      - registries/evaluation/*.yaml
+      - registries/output/*.yaml
+      - macrocast/registries/loaders.py
+      - macrocast/design/resolver.py
+    done:
+      - active live domains read canonical truth directly from registries files
+
+  sp_c2_runtime_provenance_contract:
+    objective: deepen tree semantics in manifests/results beyond shallow recipe/path metadata
+    files:
+      - macrocast/output/manifest.py
+      - macrocast/output/paths.py
+      - macrocast/pipeline/experiment.py
+      - tests/output/test_runs_layout.py
+    done:
+      - fixed/sweep/tree context is more explicitly recorded in run artifacts
+
+  sp_c3_compiler_cleanup:
+    objective: finish reducing residual bridge-era compile assumptions
+    files:
+      - macrocast/specs/compiler.py
+      - macrocast/recipes/transform.py
+      - macrocast/design/resolver.py
+      - tests/specs/test_treepath_compile.py
+    done:
+      - recipe compile path is fully centered on tree-path-native semantics
+
+  sp_c4_docs_consolidation:
+    objective: consolidate active migration docs and remove drift
+    files:
+      - docs/planning/*.md
+      - docs/getting-started.md
+      - docs/replication/index.md
+      - docs/tutorials/clss2021-replication.md
+    done:
+      - docs reflect current implementation state and active priorities
+
+  sp_c5_checkpoint_packaging:
+    objective: prepare clean checkpoint commit grouping after completion slices stabilize
+    files:
+      - git status set
+      - docs/planning/treepath-commit-strategy.md
+    done:
+      - worktree grouped into clean checkpoint commits

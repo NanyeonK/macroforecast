@@ -1,0 +1,42 @@
+issue_stack:
+  - id: C-001
+    title: finish registries inline truth migration for remaining active live domains
+    depends_on: []
+    done:
+      - registries files become canonical for active domains
+
+  - id: C-002
+    title: classify config/*.yaml as compatibility or mirror for migrated domains
+    depends_on: [C-001]
+    done:
+      - active docs and loaders no longer imply config/*.yaml is primary truth
+
+  - id: C-003
+    title: enrich manifest tree_context with fixed/sweep semantics
+    depends_on: [C-001]
+    done:
+      - manifests encode richer tree semantics than recipe/path only
+
+  - id: C-004
+    title: propagate richer tree context through runtime outputs
+    depends_on: [C-003]
+    done:
+      - result/output artifacts preserve more compile-time tree semantics
+
+  - id: C-005
+    title: remove residual bridge assumptions from recipe compile helpers
+    depends_on: [C-001]
+    done:
+      - recipe compile path is cleaner and less compatibility-oriented
+
+  - id: C-006
+    title: consolidate planning/docs around current active migration state
+    depends_on: [C-002, C-004, C-005]
+    done:
+      - active docs reflect current code state without drift
+
+  - id: C-007
+    title: package clean checkpoint commits
+    depends_on: [C-006]
+    done:
+      - worktree grouped into checkpoint commits for local/git handoff

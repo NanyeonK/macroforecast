@@ -1,27 +1,23 @@
 # CLSS 2021 Replication
 
-This tutorial is now a migration note, not the package's organizing center.
+This tutorial now points only to the recipe-native path.
 
-## Current package position
+## Canonical package artifact
 
-CLSS 2021 should be represented as one paper recipe/path:
+Use the paper recipe:
 - `recipes/papers/clss2021.yaml`
 
-Package-specific CLSS helpers remain available only as migration scaffolding:
-- `macrocast.replication.clss2021`
-- `macrocast.replication.clss2021_runner`
+Use recipe-aware compilation/runtime as the architectural reference.
 
-## What to treat as canonical
+## Canonical demonstration path
 
-Canonical for architecture:
-- tree-path package plan
-- recipe schema
-- paper recipe file
+The canonical demonstration path is:
+1. recipe file (`recipes/papers/clss2021.yaml`)
+2. recipe-aware compile path
+3. recipe-native notebook/example
+4. outputs written under recipe/path-aware `runs/` layout
 
-Non-canonical for long-run package design:
-- helper modules whose names are specific to one paper
+## Important rule
 
-## Migration-safe usage
-
-If you need a CLSS-oriented reduced audit run during migration, use the helper path intentionally and label it as scaffolding.
-If you are documenting target package structure, reference the recipe path instead.
+CLSS-specific helper execution paths are not part of the target package architecture.
+The package should express CLSS as one tree path among many forecasting studies.

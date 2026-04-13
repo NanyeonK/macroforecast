@@ -7,15 +7,13 @@ Instead, replication studies should appear as recipes/paths through the generic 
 
 - package architecture first
 - paper recipe second
-- paper-specific helpers only as migration scaffolding
+- no paper-specific execution helper should define package structure
+- any residual paper-specific support should be treated as migration scaffolding only
 
 ## Current CLSS status
 
 Preferred architectural artifact:
 - `recipes/papers/clss2021.yaml`
 
-Temporary scaffolding still present:
-- `macrocast.replication.clss2021`
-- `macrocast.replication.clss2021_runner`
-
-These helpers exist only to bridge from the old package state to the new tree-path package state.
+Study-specific preset/reference code may still exist,
+but runtime execution should be understood through recipes/paths and generic package flows.

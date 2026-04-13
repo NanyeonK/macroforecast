@@ -3,7 +3,7 @@
 ## Objective
 
 Question only:
-Can full CLSS paper be implemented equivalently inside `macroforecast` package?
+Can full CLSS paper be implemented equivalently inside `macrocast` package?
 
 Replication is used here as verification and implementation audit.
 

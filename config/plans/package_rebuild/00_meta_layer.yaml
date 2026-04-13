@@ -1,4 +1,4 @@
-plan_id: macroforecast-package-rebuild-meta-layer
+plan_id: macrocast-package-rebuild-meta-layer
 version: 1
 status: locked-for-planning
 package_mode_lock:

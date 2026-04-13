@@ -40,29 +40,25 @@ Currently mixed under `config/` and package registry modules:
 
 These should migrate toward a dedicated `registries/` tree later.
 
-### Recipes (missing as first-class layer)
-Missing today except for examples/plans.
-Future target:
+### Recipes
+Now present as first-class layer:
 - `recipes/papers/`
 - `recipes/baselines/`
 - `recipes/benchmarks/`
 - `recipes/ablations/`
 
-### Runs (missing as first-class layer)
-Current outputs are written ad hoc by runtime/output helpers.
-Future target:
-- `runs/<resolved_path_or_hash>/...`
+### Runs
+Now present as first-class layer:
+- `runs/`
 
 ### Legacy / migration scaffolding
 These should not define final package architecture:
 - `macrocast/replication/clss2021.py`
-- `macrocast/replication/clss2021_runner.py`
-- `docs/tutorials/clss2021-replication.md` (until rewritten around recipes)
 - legacy `config/examples/*.yaml` files when they do not encode full path semantics
 
 ## Immediate migration implications
 1. Taxonomy remains the canonical choice universe.
 2. Current `config/*.yaml` stays operational for now, but is classified as transitional registry storage.
-3. CLSS helpers remain allowed only as migration scaffolding.
+3. CLSS should be exercised through recipe/path artifacts rather than helper-centric execution code.
 4. New work should avoid adding more paper-specific package code.
 5. Benchmark choice must move from resolved ids toward family + options.

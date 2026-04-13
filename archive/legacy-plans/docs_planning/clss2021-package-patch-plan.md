@@ -14,7 +14,7 @@
 ## Whole package objective
 
 Question:
-Can full CLSS paper be implemented equivalently through `macroforecast` package surfaces rather than legacy scripts?
+Can full CLSS paper be implemented equivalently through `macrocast` package surfaces rather than legacy scripts?
 
 Successful v1 for this patch cycle:
 - canonical paper contract exists in YAML

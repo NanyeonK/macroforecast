@@ -1,4 +1,4 @@
-# Tree-Structured Macroforecast Whole Plan
+# Tree-Structured Macrocast Whole Plan
 
 ## Phase 0. Package mode lock
 - Project type: research package
@@ -11,7 +11,7 @@
 - Replication role: verification and stress test of generic package expressiveness
 
 ## 1. Package objective
-Rebuild macroforecast around a tree-structured forecasting taxonomy where one fully specified forecasting study is one path through explicit choice layers. All enumerated choices from `plan_2026_04_09_2358.md` must be representable by registries, resolvable into a run recipe, and eventually operable through Python/R hybrid backends.
+Rebuild macrocast around a tree-structured forecasting taxonomy where one fully specified forecasting study is one path through explicit choice layers. All enumerated choices from `plan_2026_04_09_2358.md` must be representable by registries, resolvable into a run recipe, and eventually operable through Python/R hybrid backends.
 
 Successful v1:
 - taxonomy exists as package truth

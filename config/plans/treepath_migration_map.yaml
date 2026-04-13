@@ -31,18 +31,16 @@ migration_map:
       - registries/evaluation
       - registries/output
   recipes:
-    missing_now:
+    implemented_now:
       - recipes/papers
       - recipes/baselines
       - recipes/benchmarks
       - recipes/ablations
   runs:
-    missing_now:
+    implemented_now:
       - runs
   legacy_migration:
     - macrocast/replication/clss2021.py
-    - macrocast/replication/clss2021_runner.py
-    - docs/tutorials/clss2021-replication.md
   critical_redesigns:
     - benchmark_family_plus_options_not_resolved_id
     - treepath_resolver_as_first_class_compiler_input

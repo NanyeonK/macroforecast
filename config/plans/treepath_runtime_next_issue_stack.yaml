@@ -19,36 +19,39 @@ issue_stack:
       - tests/specs/test_treepath_compile.py
     depends_on: [TP-010]
     done:
-      - recipe compiles without lowering to legacy flat/nested config dict
+      - recipe compiles without losing tree-path-native metadata
 
   - id: TP-012
     title: demote legacy config parser to compatibility layer
     files:
       - macrocast/config.py
       - docs/getting-started.md
+      - docs/planning/treepath-legacy-config-compat.md
       - tests/config_compat/*.py
     depends_on: [TP-011]
     done:
-      - legacy config still works but is clearly compatibility-only
+      - legacy config clearly documented as compatibility-only grammar
 
   - id: TP-013
-    title: make path-aware runs the default runtime output organizer
+    title: make path-aware runs the default runtime output organizer when recipe/path metadata exists
     files:
       - macrocast/output/paths.py
       - macrocast/pipeline/experiment.py
-      - macrocast/output/manifest.py
       - tests/output/test_runs_layout.py
+      - tests/pipeline/test_treepath_runtime.py
+      - docs/planning/treepath-path-aware-runtime-default.md
     depends_on: [TP-011]
     done:
-      - resolved recipe/path metadata automatically drives output layout
+      - recipe/path metadata automatically drives runtime output layout when present
 
   - id: TP-014
-    title: reduce CLSS helper code to recipe/path shim
+    title: remove helper-centric CLSS execution and keep recipe-native paper example canonical
     files:
-      - macrocast/replication/clss2021_runner.py
-      - macrocast/replication/__init__.py
+      - recipes/papers/clss2021.yaml
+      - examples/clss2021_replication.ipynb
       - docs/tutorials/clss2021-replication.md
       - tests/recipes/test_paper_recipe.py
     depends_on: [TP-013]
     done:
-      - recipe path is canonical; helper is shim or removed
+      - no CLSS-specific runtime helper remains in active package code
+      - recipe-native notebook/example is canonical demonstration path

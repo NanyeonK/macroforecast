@@ -99,7 +99,7 @@ package_plan:
       - tests
       - output_manifests
     human_readable:
-      - docs/planning/macroforecast-package-rebuild.md
+      - docs/planning/macrocast-package-rebuild.md
   verification_role_of_replication:
     available_reference_suite:
       - CLSS_2021_AR_FM_AL_EN_RF benchmark suite
