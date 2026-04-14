@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home - macrocast</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
+    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
+    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
+    nav h1 { font-size: 20px; margin: 0 0 8px; }
+    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li { margin: 0 0 10px; }
+    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
+    nav a.active { font-weight: 700; }
+    main { padding: 32px 40px; max-width: 980px; }
+    h1 { font-size: 32px; margin-top: 0; }
+    h2 { margin-top: 32px; font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p, li { line-height: 1.6; font-size: 16px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    a { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <h1>macrocast</h1>
+      <p>Preview docs</p>
+      <ul><li><a href="/index.html" class="active">Home</a></li><li><a href="/stage0.html">Stage 0</a></li><li><a href="/raw.html">Raw data</a></li><li><a href="/recipes.html">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+    </nav>
+    <main><h1>macrocast</h1>
+<p>&gt; Given a standardized macro dataset adapter and a fixed forecasting recipe, compare forecasting tools under identical information set, sample split, benchmark, and evaluation protocol.</p>
+<p>macrocast is a forecasting package being rebuilt from first principles.</p>
+<p>This documentation site will describe the public package interface and usage once the rebuilt architecture is stable.</p>
+<h2>Current public docs</h2>
+<ul>
+<li><a href="stage0.html">Stage 0 guide</a></li>
+<li><a href="raw.html">Raw data guide</a></li>
+<li><a href="recipes.html">Recipes and execution guide</a></li>
+<li><a href="api/index.html">API reference</a></li>
+</ul>
+<h2>Rebuild status</h2>
+<p>The first documented package surface is <code>macrocast.stage0</code>. It exists to fix study grammar before later registry expansion, raw-data integration, and forecasting execution layers are added.</p></main>
+  </div>
+</body>
+</html>

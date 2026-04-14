@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 0 - macrocast</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
+    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
+    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
+    nav h1 { font-size: 20px; margin: 0 0 8px; }
+    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li { margin: 0 0 10px; }
+    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
+    nav a.active { font-weight: 700; }
+    main { padding: 32px 40px; max-width: 980px; }
+    h1 { font-size: 32px; margin-top: 0; }
+    h2 { margin-top: 32px; font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p, li { line-height: 1.6; font-size: 16px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    a { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <h1>macrocast</h1>
+      <p>Preview docs</p>
+      <ul><li><a href="/index.html">Home</a></li><li><a href="/stage0.html" class="active">Stage 0</a></li><li><a href="/raw.html">Raw data</a></li><li><a href="/recipes.html">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+    </nav>
+    <main><h1>Stage 0</h1>
+<h2>Purpose</h2>
+<p>Stage 0 fixes the execution language of a macrocast study before later registries or recipe content are expanded.</p>
+<p>In practical terms, Stage 0 answers these questions first:</p>
+<ul>
+<li>what kind of study is this?</li>
+<li>what is fixed for fairness?</li>
+<li>what is intentionally allowed to vary?</li>
+<li>what comparison conditions must remain identical?</li>
+<li>what execution posture should downstream code build?</li>
+</ul>
+<p>Stage 0 does not decide registry inventories such as which model ids or dataset ids exist. It fixes the grammar those later content layers must obey.</p>
+<h2>Why Stage 0 exists</h2>
+<p>macrocast is designed to compare forecasting tools under identical information set, sample split, benchmark, and evaluation protocol.</p>
+<p>That comparison becomes unreliable if package structure allows:</p>
+<ul>
+<li>hidden route changes</li>
+<li>accidental drift in fairness conditions</li>
+<li>registry content that changes execution semantics</li>
+<li>model comparisons that no longer share the same study spine</li>
+</ul>
+<p>Stage 0 prevents that by making study structure explicit before forecasting execution begins.</p>
+<h2>Public code surface</h2>
+<p>The v1 Stage 0 code surface is intentionally small:</p>
+<pre><code>
+from macrocast.stage0 import (
+    FixedDesign,
+    VaryingDesign,
+    ComparisonContract,
+    ReplicationInput,
+    Stage0Frame,
+    build_stage0_frame,
+    resolve_route_owner,
+    check_stage0_completeness,
+    stage0_summary,
+    stage0_to_dict,
+    stage0_from_dict,
+)
+</code></pre>
+<p>The package does not expose a giant Stage 0 configuration bureaucracy. Instead, it exposes a small number of dataclasses and one canonical builder.</p>
+<h2>Main dataclasses</h2>
+<h3><code>FixedDesign</code></h3>
+<p><code>FixedDesign</code> holds the fairness-defining common environment of the study.</p>
+<pre><code>
+FixedDesign(
+    dataset_adapter=&quot;fred_md&quot;,
+    information_set=&quot;revised_monthly&quot;,
+    sample_split=&quot;expanding_window_oos&quot;,
+    benchmark=&quot;ar_bic&quot;,
+    evaluation_protocol=&quot;point_forecast_core&quot;,
+    forecast_task=&quot;single_target_point_forecast&quot;,
+)
+</code></pre>
+<p>Use <code>FixedDesign</code> for choices that must remain the same across compared tools.</p>
+<h3><code>VaryingDesign</code></h3>
+<p><code>VaryingDesign</code> holds explicitly allowed study variation.</p>
+<pre><code>
+VaryingDesign(
+    model_families=(&quot;ar&quot;, &quot;ridge&quot;, &quot;lasso&quot;, &quot;rf&quot;),
+    horizons=(&quot;h1&quot;, &quot;h3&quot;, &quot;h6&quot;, &quot;h12&quot;),
+)
+</code></pre>
+<p>Use <code>VaryingDesign</code> for dimensions that are intentionally varied inside the study rather than drifting accidentally.</p>
+<h3><code>ComparisonContract</code></h3>
+<p><code>ComparisonContract</code> makes fairness conditions explicit.</p>
+<pre><code>
+ComparisonContract(
+    information_set_policy=&quot;identical&quot;,
+    sample_split_policy=&quot;identical&quot;,
+    benchmark_policy=&quot;identical&quot;,
+    evaluation_policy=&quot;identical&quot;,
+)
+</code></pre>
+<p>This object states the alignment conditions required for a valid comparison.</p>
+<h3><code>ReplicationInput</code></h3>
+<p><code>ReplicationInput</code> is optional and keeps replication explicit rather than making it the default front door.</p>
+<pre><code>
+ReplicationInput(
+    source_type=&quot;paper_recipe&quot;,
+    source_id=&quot;clss2021&quot;,
+    locked_constraints=(&quot;split&quot;, &quot;benchmark&quot;),
+)
+</code></pre>
+<h3><code>Stage0Frame</code></h3>
+<p><code>Stage0Frame</code> is the canonical Stage 0 output consumed by later layers.</p>
+<p>It stores:</p>
+<ul>
+<li><code>study_mode</code></li>
+<li><code>fixed_design</code></li>
+<li><code>comparison_contract</code></li>
+<li><code>varying_design</code></li>
+<li><code>execution_posture</code></li>
+<li><code>design_shape</code></li>
+<li>optional <code>replication_input</code></li>
+<li>optional compatibility mirror <code>experiment_unit</code></li>
+</ul>
+<p>In ordinary use, users should not assemble <code>Stage0Frame</code> manually. They should call <code>build_stage0_frame()</code>.</p>
+<h2>Main functions</h2>
+<h3><code>build_stage0_frame()</code></h3>
+<p>This is the primary constructor.</p>
+<pre><code>
+stage0 = build_stage0_frame(
+    study_mode=&quot;single_path_benchmark_study&quot;,
+    fixed_design={
+        &quot;dataset_adapter&quot;: &quot;fred_md&quot;,
+        &quot;information_set&quot;: &quot;revised_monthly&quot;,
+        &quot;sample_split&quot;: &quot;expanding_window_oos&quot;,
+        &quot;benchmark&quot;: &quot;ar_bic&quot;,
+        &quot;evaluation_protocol&quot;: &quot;point_forecast_core&quot;,
+        &quot;forecast_task&quot;: &quot;single_target_point_forecast&quot;,
+    },
+    comparison_contract={
+        &quot;information_set_policy&quot;: &quot;identical&quot;,
+        &quot;sample_split_policy&quot;: &quot;identical&quot;,
+        &quot;benchmark_policy&quot;: &quot;identical&quot;,
+        &quot;evaluation_policy&quot;: &quot;identical&quot;,
+    },
+    varying_design={
+        &quot;model_families&quot;: (&quot;ar&quot;, &quot;ridge&quot;),
+        &quot;horizons&quot;: (&quot;h1&quot;, &quot;h3&quot;),
+    },
+)
+</code></pre>
+<p><code>build_stage0_frame()</code> performs three jobs:</p>
+<ul>
+<li>normalize incoming values</li>
+<li>validate the study structure</li>
+<li>derive the downstream design shape and execution posture</li>
+</ul>
+<h3><code>resolve_route_owner()</code></h3>
+<p><code>resolve_route_owner(stage0)</code> tells downstream code who owns execution routing.</p>
+<p>Possible return values in v1:</p>
+<ul>
+<li><code>single_run</code></li>
+<li><code>wrapper</code></li>
+<li><code>replication</code></li>
+</ul>
+<p>Use this when later code must decide whether the study should remain a single-run object or move into wrapper-managed execution.</p>
+<h3><code>check_stage0_completeness()</code></h3>
+<p><code>check_stage0_completeness(stage0)</code> fails closed when Stage 0 is not ready for execution.</p>
+<p>In the current v1 skeleton, it rejects single-run execution if no model family has been declared in <code>varying_design</code>.</p>
+<h3><code>stage0_summary()</code></h3>
+<p><code>stage0_summary(stage0)</code> returns a human-readable one-line summary suitable for logs, manifests, or CLI previews.</p>
+<h3><code>stage0_to_dict()</code> / <code>stage0_from_dict()</code></h3>
+<p>These helpers support recipe serialization and config I/O.</p>
+<h2>Derived semantics</h2>
+<p>Two important fields are derived rather than hand-authored in ordinary use.</p>
+<h3><code>design_shape</code></h3>
+<p><code>design_shape</code> is inferred from <code>study_mode</code> and <code>varying_design</code>.</p>
+<p>Example values:</p>
+<ul>
+<li><code>one_fixed_env_one_tool_surface</code></li>
+<li><code>one_fixed_env_multi_tool_surface</code></li>
+<li><code>one_fixed_env_controlled_axis_variation</code></li>
+<li><code>wrapper_managed_multi_run_bundle</code></li>
+</ul>
+<h3><code>execution_posture</code></h3>
+<p><code>execution_posture</code> is inferred from <code>study_mode</code>, <code>design_shape</code>, and optional replication input.</p>
+<p>Example values:</p>
+<ul>
+<li><code>single_run_recipe</code></li>
+<li><code>single_run_with_internal_sweep</code></li>
+<li><code>wrapper_bundle_plan</code></li>
+<li><code>replication_locked_plan</code></li>
+</ul>
+<p>These derived values keep route semantics out of arbitrary registry payloads.</p>
+<h2>Completeness rule</h2>
+<p>A Stage 0 frame is only usable if it answers all of the following:</p>
+<ul>
+<li>what kind of study is this?</li>
+<li>what is fixed?</li>
+<li>what is allowed to vary?</li>
+<li>what fairness conditions define the comparison?</li>
+<li>what execution posture should downstream code build?</li>
+</ul>
+<p>If those questions are unanswered, later layers should not proceed.</p>
+<h2>Relationship to later layers</h2>
+<p>Stage 0 sits above later content layers.</p>
+<p>It feeds:</p>
+<ul>
+<li>raw/data layer</li>
+<li>design layer</li>
+<li>execution layer</li>
+<li>evaluation/test layer</li>
+<li>output/provenance layer</li>
+</ul>
+<p>Later registries may supply admissible content, but they should not redefine the Stage 0 language.</p>
+<h2>v1 implementation philosophy</h2>
+<p>The Stage 0 runtime API is deliberately smaller than the full architectural doctrine.</p>
+<p>That is intentional.</p>
+<p>The architecture documents describe the full language of the package. The code surface stays compact so that ordinary package use remains readable and pythonic.</p>
+<h2>V1 completion status</h2>
+<p>The current Stage 0 layer should now be treated as complete for the v1 package foundation.</p>
+<p>What that means:</p>
+<ul>
+<li>canonical Stage 0 dataclasses exist</li>
+<li>a main builder exists</li>
+<li>route ownership resolution exists</li>
+<li>completeness checks exist</li>
+<li>dict serialization round-trip exists</li>
+<li>replication override path exists</li>
+<li>explicit Stage 0 error classes exist</li>
+</ul>
+<p>This does not mean Stage 0 will never grow again. It means the current package can safely treat Stage 0 as a stable foundational layer while later package surfaces are built above it.</p></main>
+  </div>
+</body>
+</html>

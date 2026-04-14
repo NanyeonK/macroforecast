@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API: Raw - macrocast</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
+    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
+    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
+    nav h1 { font-size: 20px; margin: 0 0 8px; }
+    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li { margin: 0 0 10px; }
+    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
+    nav a.active { font-weight: 700; }
+    main { padding: 32px 40px; max-width: 980px; }
+    h1 { font-size: 32px; margin-top: 0; }
+    h2 { margin-top: 32px; font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p, li { line-height: 1.6; font-size: 16px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    a { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <h1>macrocast</h1>
+      <p>Preview docs</p>
+      <ul><li><a href="/index.html">Home</a></li><li><a href="/stage0.html">Stage 0</a></li><li><a href="/raw.html">Raw data</a></li><li><a href="/recipes.html">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+    </nav>
+    <main><h1>Raw data API Reference</h1>
+<h2>Import surface</h2>
+<pre><code>
+from macrocast.raw import (
+    RawVersionRequest,
+    RawDatasetMetadata,
+    RawArtifactRecord,
+    RawLoadResult,
+    normalize_version_request,
+    list_vintages,
+    get_raw_cache_root,
+    get_manifest_path,
+    get_raw_file_path,
+    build_raw_artifact_record,
+    append_raw_manifest_entry,
+    read_raw_manifest,
+    parse_fred_csv,
+    load_fred_md,
+    load_fred_qd,
+    load_fred_sd,
+)
+</code></pre>
+<h2>Shared parser</h2>
+<h3><code>parse_fred_csv()</code></h3>
+<p>Reads the common CSV layout used by FRED-MD and FRED-QD.</p>
+<p>Returns:</p>
+<ul>
+<li>parsed pandas <code>DataFrame</code></li>
+<li>transformation-code mapping <code>dict[str, int]</code></li>
+</ul>
+<p>Accepted layouts:</p>
+<ul>
+<li>official FRED ordering: header row then transform row</li>
+<li>legacy / fixture ordering: transform row then header row</li>
+</ul>
+<h2>Dataset loaders</h2>
+<h3><code>load_fred_md()</code></h3>
+<pre><code>
+def load_fred_md(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+    local_zip_source: str | Path | None = None,
+) -&gt; RawLoadResult:
+    ...
+</code></pre>
+<h3><code>load_fred_qd()</code></h3>
+<pre><code>
+def load_fred_qd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+) -&gt; RawLoadResult:
+    ...
+</code></pre>
+<h3><code>load_fred_sd()</code></h3>
+<pre><code>
+def load_fred_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+) -&gt; RawLoadResult:
+    ...
+</code></pre>
+<p>Behavior:</p>
+<ul>
+<li>normalizes current versus vintage request</li>
+<li>chooses deterministic cache path with <code>.xlsx</code> suffix</li>
+<li>fetches from local source or remote workbook URL</li>
+<li>parses workbook sheets with <code>openpyxl</code></li>
+<li>optionally filters sheets and state columns</li>
+<li>emits a wide DataFrame with <code>{variable}_{state}</code> columns</li>
+<li>appends a raw manifest entry</li>
+<li>returns <code>RawLoadResult</code></li>
+</ul>
+<h2>Result and metadata objects</h2>
+<h3><code>RawVersionRequest</code></h3>
+<ul>
+<li>normalized dataset/version identity</li>
+</ul>
+<h3><code>RawDatasetMetadata</code></h3>
+<ul>
+<li>semantic dataset metadata</li>
+</ul>
+<h3><code>RawArtifactRecord</code></h3>
+<ul>
+<li>raw provenance metadata for the concrete cached artifact</li>
+</ul>
+<h3><code>RawLoadResult</code></h3>
+<ul>
+<li>canonical loader return object containing data, dataset metadata, and artifact metadata</li>
+</ul>
+<h2>Error behavior</h2>
+<p>Current meaningful failure classes include:</p>
+<ul>
+<li>invalid vintage format -&gt; <code>RawVersionFormatError</code></li>
+<li>file acquisition failure -&gt; <code>RawDownloadError</code></li>
+<li>FRED-MD parse failure after acquisition -&gt; <code>RawParseError</code></li>
+<li>FRED-SD workbook parse failure -&gt; <code>RawParseError</code></li>
+</ul>
+<h2>Example</h2>
+<pre><code>
+from macrocast.raw import load_fred_sd
+
+result = load_fred_sd(
+    local_source=&quot;tests/fixtures/fred_sd_sample.xlsx&quot;,
+    variables=[&quot;UR&quot;],
+    states=[&quot;CA&quot;, &quot;TX&quot;],
+)
+
+df = result.data
+</code></pre>
+<p>This returns a wide DataFrame with columns like:</p>
+<ul>
+<li><code>UR_CA</code></li>
+<li><code>UR_TX</code></li>
+</ul>
+<h2>Status note</h2>
+<p><code>load_fred_sd()</code> is intentionally provisional in the current package state. It exists as a documented package surface, but its live-source behavior should be treated as pending broader verification.</p></main>
+  </div>
+</body>
+</html>

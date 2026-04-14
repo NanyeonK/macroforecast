@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raw data - macrocast</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
+    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
+    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
+    nav h1 { font-size: 20px; margin: 0 0 8px; }
+    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li { margin: 0 0 10px; }
+    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
+    nav a.active { font-weight: 700; }
+    main { padding: 32px 40px; max-width: 980px; }
+    h1 { font-size: 32px; margin-top: 0; }
+    h2 { margin-top: 32px; font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p, li { line-height: 1.6; font-size: 16px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    a { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <h1>macrocast</h1>
+      <p>Preview docs</p>
+      <ul><li><a href="/index.html">Home</a></li><li><a href="/stage0.html">Stage 0</a></li><li><a href="/raw.html" class="active">Raw data</a></li><li><a href="/recipes.html">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+    </nav>
+    <main><h1>Raw data</h1>
+<h2>Purpose</h2>
+<p>The raw-data layer is the first data-facing package surface of macrocast.</p>
+<p>Its job is narrow:</p>
+<ul>
+<li>normalize current versus explicit vintage requests</li>
+<li>construct deterministic cache paths</li>
+<li>record raw artifact provenance</li>
+<li>provide dataset-specific loaders on top of a shared contract</li>
+</ul>
+<p>It does not do:</p>
+<ul>
+<li>forecasting transforms</li>
+<li>target construction</li>
+<li>model fitting</li>
+<li>evaluation</li>
+</ul>
+<h2>Current implemented adapters</h2>
+<p>The rebuilt raw layer now includes:</p>
+<ul>
+<li>FRED-MD via <code>load_fred_md()</code></li>
+<li>FRED-QD via <code>load_fred_qd()</code></li>
+<li>FRED-SD via <code>load_fred_sd()</code></li>
+</ul>
+<p>It also includes a shared CSV parser:</p>
+<ul>
+<li><code>parse_fred_csv()</code></li>
+</ul>
+<h2>Adapter status</h2>
+<h3>FRED-MD</h3>
+<ul>
+<li>status: stable first-pass</li>
+<li>format: CSV</li>
+<li>supports current and explicit vintage requests</li>
+<li>has local ZIP-oriented fallback hook for historical behavior testing</li>
+</ul>
+<h3>FRED-QD</h3>
+<ul>
+<li>status: stable first-pass</li>
+<li>format: CSV</li>
+<li>supports current and explicit vintage requests</li>
+</ul>
+<h3>FRED-SD</h3>
+<ul>
+<li>status: provisional</li>
+<li>format: Excel workbook</li>
+<li>supports current and explicit vintage requests at the API level</li>
+<li>current implementation should be treated as provisional until broader live-source verification is complete</li>
+</ul>
+<h2>Shared CSV format</h2>
+<p>FRED-MD and FRED-QD use a similar CSV layout, and the parser now accepts both of the relevant row orderings:</p>
+<ul>
+<li>official layout: header row first, transform row second</li>
+<li>legacy/fixture layout: transform row first, header row second</li>
+</ul>
+<p><code>parse_fred_csv()</code> returns:</p>
+<ul>
+<li>a pandas <code>DataFrame</code></li>
+<li>a transformation-code mapping keyed by variable name</li>
+</ul>
+<h2><code>load_fred_md()</code></h2>
+<p><code>load_fred_md()</code> builds a <code>RawLoadResult</code> for the monthly macro dataset.</p>
+<p>It supports:</p>
+<ul>
+<li><code>current</code> access when <code>vintage=None</code></li>
+<li>explicit vintage access when <code>vintage=&quot;YYYY-MM&quot;</code></li>
+<li>deterministic cache paths</li>
+<li>raw artifact hashing and manifest append</li>
+<li><code>local_source=</code> for fixture-driven testing and local ingestion</li>
+<li><code>local_zip_source=</code> for historical ZIP-style fallback testing and local extraction</li>
+</ul>
+<p>Current robustness behavior:</p>
+<ul>
+<li>invalid vintage format fails early through version normalization</li>
+<li>file acquisition errors raise <code>RawDownloadError</code></li>
+<li>parse failures raise <code>RawParseError</code></li>
+</ul>
+<h2><code>load_fred_qd()</code></h2>
+<p><code>load_fred_qd()</code> mirrors the same contract for the quarterly dataset.</p>
+<p>It returns the same type of result object and uses the same raw cache and manifest conventions.</p>
+<p>Current robustness behavior:</p>
+<ul>
+<li>invalid vintage format fails early through version normalization</li>
+<li>acquisition failures raise <code>RawDownloadError</code></li>
+<li>malformed downloaded content is surfaced as <code>RawDownloadError</code></li>
+</ul>
+<h2><code>load_fred_sd()</code></h2>
+<p><code>load_fred_sd()</code> builds a <code>RawLoadResult</code> for the state-level workbook dataset.</p>
+<p>It supports:</p>
+<ul>
+<li><code>current</code> access when <code>vintage=None</code></li>
+<li>explicit vintage access when <code>vintage=&quot;YYYY-MM&quot;</code></li>
+<li>deterministic cache paths</li>
+<li>raw artifact hashing and manifest append</li>
+<li><code>local_source=</code> for fixture-driven testing and local ingestion</li>
+<li>optional <code>variables=</code> filtering by workbook sheet name</li>
+<li>optional <code>states=</code> filtering by state columns</li>
+</ul>
+<p>The returned DataFrame is wide, with columns named:</p>
+<ul>
+<li><code>{variable}_{state}</code></li>
+</ul>
+<p>Current provisional behavior:</p>
+<ul>
+<li>support tier is explicitly marked <code>provisional</code></li>
+<li>workbook parsing uses <code>openpyxl</code></li>
+<li>API availability does not yet imply full live-source robustness</li>
+</ul>
+<h2>Result object</h2>
+<p>All dataset loaders return <code>RawLoadResult</code>.</p>
+<p>That object contains:</p>
+<ul>
+<li><code>data</code>: parsed pandas <code>DataFrame</code></li>
+<li><code>dataset_metadata</code>: semantic metadata such as frequency and support tier</li>
+<li><code>artifact</code>: raw provenance record</li>
+</ul>
+<h2>Cache and manifest behavior</h2>
+<p>Examples of deterministic paths:</p>
+<ul>
+<li><code>~/.macrocast/raw/fred_md/current/raw.csv</code></li>
+<li><code>~/.macrocast/raw/fred_md/vintages/2020-01.csv</code></li>
+<li><code>~/.macrocast/raw/fred_qd/current/raw.csv</code></li>
+<li><code>~/.macrocast/raw/fred_sd/current/raw.xlsx</code></li>
+<li><code>~/.macrocast/raw/fred_sd/vintages/2020-01.xlsx</code></li>
+<li><code>~/.macrocast/raw/manifest/raw_artifacts.jsonl</code></li>
+</ul>
+<p>Every successful raw load appends a manifest record describing the artifact that was used.</p>
+<h2>Current limitation</h2>
+<p>The current adapters are package surfaces, but the ingestion system is still incomplete relative to the archived codebase.</p>
+<p>What is present now:</p>
+<ul>
+<li>stable first-pass MD/QD adapters</li>
+<li>provisional SD adapter</li>
+<li>shared parser and workbook ingestion path</li>
+<li>cache and manifest coupling</li>
+<li>explicit error wrapping for MD/QD</li>
+</ul>
+<p>What still remains for later refinement:</p>
+<ul>
+<li>real remote historical ZIP fallback management for FRED-MD</li>
+<li>richer network retry behavior</li>
+<li>broader metadata enrichment</li>
+<li>broader live verification for FRED-SD vintage behavior</li>
+</ul></main>
+  </div>
+</body>
+</html>

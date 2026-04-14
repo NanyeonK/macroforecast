@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recipes - macrocast</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
+    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
+    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
+    nav h1 { font-size: 20px; margin: 0 0 8px; }
+    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li { margin: 0 0 10px; }
+    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
+    nav a.active { font-weight: 700; }
+    main { padding: 32px 40px; max-width: 980px; }
+    h1 { font-size: 32px; margin-top: 0; }
+    h2 { margin-top: 32px; font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p, li { line-height: 1.6; font-size: 16px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    a { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <h1>macrocast</h1>
+      <p>Preview docs</p>
+      <ul><li><a href="/index.html">Home</a></li><li><a href="/stage0.html">Stage 0</a></li><li><a href="/raw.html">Raw data</a></li><li><a href="/recipes.html" class="active">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+    </nav>
+    <main><h1>Recipes and execution contract</h1>
+<h2>Purpose</h2>
+<p>The recipe/execution layer is the first package layer above Stage 0 and raw data.</p>
+<p>Its job is to turn:</p>
+<ul>
+<li>one Stage 0 study grammar frame</li>
+<li>one raw dataset identity</li>
+<li>one target definition</li>
+<li>one horizon set</li>
+</ul>
+<p>into a minimal, explicit execution contract.</p>
+<p>In v1 this layer does not run forecasting models yet. It defines the objects that a future execution engine will consume.</p>
+<h2>Current public surface</h2>
+<p>The rebuilt package now exposes:</p>
+<ul>
+<li><code>RecipeSpec</code></li>
+<li><code>RunSpec</code></li>
+<li><code>build_recipe_spec()</code></li>
+<li><code>build_run_spec()</code></li>
+<li><code>check_recipe_completeness()</code></li>
+<li><code>recipe_summary()</code></li>
+</ul>
+<h2><code>RecipeSpec</code></h2>
+<p><code>RecipeSpec</code> is the minimal declarative unit of one forecasting study.</p>
+<p>It stores:</p>
+<ul>
+<li><code>recipe_id</code></li>
+<li><code>stage0</code></li>
+<li><code>target</code></li>
+<li><code>horizons</code></li>
+<li><code>raw_dataset</code></li>
+</ul>
+<p>Interpretation:</p>
+<ul>
+<li><code>stage0</code> fixes the study language</li>
+<li><code>raw_dataset</code> identifies the raw adapter family used by the study</li>
+<li><code>target</code> identifies the forecast target</li>
+<li><code>horizons</code> identify the forecast horizon set</li>
+</ul>
+<h2><code>RunSpec</code></h2>
+<p><code>RunSpec</code> is the first execution-facing object.</p>
+<p>It stores:</p>
+<ul>
+<li><code>run_id</code></li>
+<li><code>recipe_id</code></li>
+<li><code>route_owner</code></li>
+<li><code>artifact_subdir</code></li>
+</ul>
+<p>Interpretation:</p>
+<ul>
+<li><code>route_owner</code> is inherited from Stage 0 routing logic</li>
+<li><code>run_id</code> provides a deterministic naming spine for saved artifacts</li>
+<li><code>artifact_subdir</code> identifies the default run artifact location under <code>runs/</code></li>
+</ul>
+<h2><code>build_recipe_spec()</code></h2>
+<p>This function builds the canonical recipe object for v1.</p>
+<pre><code>
+recipe = build_recipe_spec(
+    recipe_id=&quot;fred_md_baseline&quot;,
+    stage0=stage0,
+    target=&quot;INDPRO&quot;,
+    horizons=(1, 3, 6, 12),
+    raw_dataset=&quot;fred_md&quot;,
+)
+</code></pre>
+<h2><code>check_recipe_completeness()</code></h2>
+<p>This function fails closed if the recipe is missing the minimum execution contract.</p>
+<p>The current v1 checks require:</p>
+<ul>
+<li>non-empty <code>recipe_id</code></li>
+<li>non-empty <code>target</code></li>
+<li>non-empty <code>raw_dataset</code></li>
+<li>at least one forecast horizon</li>
+</ul>
+<h2><code>build_run_spec()</code></h2>
+<p>This function derives a run-facing object from a recipe.</p>
+<pre><code>
+run = build_run_spec(recipe)
+</code></pre>
+<p>The current v1 implementation uses:</p>
+<ul>
+<li>Stage 0 route owner</li>
+<li>recipe id</li>
+<li>target</li>
+<li>horizon set</li>
+</ul>
+<p>to construct a deterministic run identifier.</p>
+<h2><code>recipe_summary()</code></h2>
+<p>Returns a human-readable summary suitable for logs, previews, and manifests.</p>
+<h2>Why this layer exists before forecasting execution</h2>
+<p>macrocast should not jump directly from raw data and Stage 0 into model execution without an explicit recipe/run contract.</p>
+<p>This intermediate layer makes the package clearer by separating:</p>
+<ul>
+<li>study language (<code>Stage0Frame</code>)</li>
+<li>data identity (<code>raw_dataset</code>)</li>
+<li>study declaration (<code>RecipeSpec</code>)</li>
+<li>run identity (<code>RunSpec</code>)</li>
+</ul>
+<p>That separation keeps the future execution engine simpler.</p>
+<h2>Current limitation</h2>
+<p>This layer is intentionally minimal.</p>
+<p>What it does now:</p>
+<ul>
+<li>define the recipe object</li>
+<li>define the run object</li>
+<li>validate basic completeness</li>
+<li>derive deterministic run identity</li>
+</ul>
+<p>What it does not yet do:</p>
+<ul>
+<li>store feature or model registries</li>
+<li>define artifact manifests beyond run subdir</li>
+<li>execute forecasting pipelines</li>
+<li>resolve preprocessing objects</li>
+<li>bind benchmark/evaluation artifacts into final run outputs</li>
+</ul>
+<p>Those come in later execution layers.</p></main>
+  </div>
+</body>
+</html>
