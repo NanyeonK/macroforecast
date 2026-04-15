@@ -7,12 +7,16 @@ SupportStatus = Literal[
     "operational",
     "registry_only",
     "planned",
+    "future",
     "external_plugin",
     "not_supported_yet",
 ]
 
 AxisType = Literal[
     "enum",
+    "numeric",
+    "callable",
+    "plugin",
     "leaf_config",
 ]
 
@@ -27,10 +31,10 @@ AxisSelectionMode = Literal[
 class AxisRegistryEntry:
     axis_name: str
     layer: str
-    axis_type: str
+    axis_type: AxisType | str
     allowed_values: tuple[str, ...]
-    current_status: dict[str, str]
-    default_policy: str
+    current_status: dict[str, SupportStatus | str]
+    default_policy: AxisSelectionMode | str
     compatible_with: dict[str, tuple[str, ...]]
     incompatible_with: dict[str, tuple[str, ...]]
 
@@ -39,6 +43,6 @@ class AxisRegistryEntry:
 class AxisSelection:
     axis_name: str
     layer: str
-    selection_mode: str
+    selection_mode: AxisSelectionMode | str
     selected_values: tuple[str, ...]
-    selected_status: dict[str, str]
+    selected_status: dict[str, SupportStatus | str]

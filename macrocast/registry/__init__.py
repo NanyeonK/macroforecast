@@ -1,3 +1,4 @@
+from .base import AxisDefinition, BaseRegistryEntry, EnumRegistryEntry
 from .build import (
     axis_governance_table,
     get_axis_registry,
@@ -11,6 +12,9 @@ __all__ = [
     "get_axis_registry",
     "get_axis_registry_entry",
     "axis_governance_table",
+    "BaseRegistryEntry",
+    "EnumRegistryEntry",
+    "AxisDefinition",
     "AxisRegistryEntry",
     "AxisSelection",
     "AxisSelectionMode",

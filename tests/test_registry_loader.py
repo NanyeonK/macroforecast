@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+from macrocast.registry import axis_governance_table, get_axis_registry, get_axis_registry_entry
+from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegistryEntry
+from macrocast.registry.types import AxisRegistryEntry
+
+
+def test_registry_loader_discovers_existing_axes() -> None:
+    registry = get_axis_registry()
+    assert len(registry) == 25
+    assert {"study_mode", "dataset", "info_set", "task", "model_family", "importance_method"}.issubset(registry)
+
+
+def test_registry_loader_preserves_legacy_entry_contract() -> None:
+    entry = get_axis_registry_entry("model_family")
+    assert isinstance(entry, AxisRegistryEntry)
+    assert entry.layer == "3_training"
+    assert entry.allowed_values == ("ar", "ridge", "lasso", "elasticnet", "randomforest")
+    assert entry.current_status["randomforest"] == "operational"
+    assert entry.default_policy == "sweep"
+
+
+def test_axis_governance_table_matches_discovered_registry() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["importance_method"]["current_status"]["minimal_importance"] == "operational"
+    assert by_name["feature_builder"]["current_status"]["factor_pca"] == "planned"
+
+
+def test_base_registry_types_available() -> None:
+    entry = EnumRegistryEntry(
+        id="demo",
+        description="demo entry",
+        status="planned",
+        priority="A",
+    )
+    definition = AxisDefinition(
+        axis_name="demo_axis",
+        layer="0_meta",
+        axis_type="enum",
+        default_policy="fixed",
+        entries=(entry,),
+        compatible_with={},
+        incompatible_with={},
+    )
+    assert isinstance(entry, BaseRegistryEntry)
+    assert definition.entries[0].id == "demo"

@@ -1,400 +1,45 @@
 from __future__ import annotations
 
+from functools import lru_cache
+import importlib
+import pkgutil
+
+from .base import AxisDefinition, axis_definition_to_legacy_entry
 from .types import AxisRegistryEntry
 
-CANONICAL_LAYER_ORDER: tuple[str, ...] = (
-    "0_meta",
-    "1_data_task",
-    "2_preprocessing",
-    "3_training",
-    "4_evaluation",
-    "5_output_provenance",
-    "6_stat_tests",
-    "7_importance",
-)
+CANONICAL_LAYER_ORDER: tuple[str, ...] = ('0_meta', '1_data_task', '2_preprocessing', '3_training', '4_evaluation', '5_output_provenance', '6_stat_tests', '7_importance')
+_STAGE_PACKAGES: tuple[str, ...] = ('stage0', 'data', 'preprocessing', 'training', 'evaluation', 'output', 'tests', 'importance')
 
-_AXIS_REGISTRY: dict[str, AxisRegistryEntry] = {
-    "study_mode": AxisRegistryEntry(
-        axis_name="study_mode",
-        layer="0_meta",
-        axis_type="enum",
-        allowed_values=(
-            "single_path_benchmark_study",
-            "controlled_variation_study",
-            "orchestrated_bundle_study",
-            "replication_override_study",
-        ),
-        current_status={
-            "single_path_benchmark_study": "operational",
-            "controlled_variation_study": "registry_only",
-            "orchestrated_bundle_study": "planned",
-            "replication_override_study": "planned",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "dataset": AxisRegistryEntry(
-        axis_name="dataset",
-        layer="1_data_task",
-        axis_type="enum",
-        allowed_values=("fred_md", "fred_qd", "fred_sd"),
-        current_status={
-            "fred_md": "operational",
-            "fred_qd": "operational",
-            "fred_sd": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "info_set": AxisRegistryEntry(
-        axis_name="info_set",
-        layer="1_data_task",
-        axis_type="enum",
-        allowed_values=("revised", "real_time"),
-        current_status={
-            "revised": "operational",
-            "real_time": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "task": AxisRegistryEntry(
-        axis_name="task",
-        layer="1_data_task",
-        axis_type="enum",
-        allowed_values=("single_target_point_forecast", "multi_target_point_forecast"),
-        current_status={
-            "single_target_point_forecast": "operational",
-            "multi_target_point_forecast": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "target_transform_policy": AxisRegistryEntry(
-        axis_name="target_transform_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("raw_level", "tcode_transformed", "custom_target_transform"),
-        current_status={
-            "raw_level": "operational",
-            "tcode_transformed": "registry_only",
-            "custom_target_transform": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "x_transform_policy": AxisRegistryEntry(
-        axis_name="x_transform_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("raw_level", "dataset_tcode_transformed", "custom_x_transform"),
-        current_status={
-            "raw_level": "operational",
-            "dataset_tcode_transformed": "registry_only",
-            "custom_x_transform": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "tcode_policy": AxisRegistryEntry(
-        axis_name="tcode_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=(
-            "raw_only",
-            "tcode_only",
-            "tcode_then_extra_preprocess",
-            "extra_preprocess_without_tcode",
-            "extra_then_tcode",
-            "custom_transform_pipeline",
-        ),
-        current_status={
-            "raw_only": "operational",
-            "tcode_only": "registry_only",
-            "tcode_then_extra_preprocess": "registry_only",
-            "extra_preprocess_without_tcode": "operational",
-            "extra_then_tcode": "registry_only",
-            "custom_transform_pipeline": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "target_missing_policy": AxisRegistryEntry(
-        axis_name="target_missing_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "drop", "em_impute", "custom"),
-        current_status={
-            "none": "operational",
-            "drop": "registry_only",
-            "em_impute": "operational",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "x_missing_policy": AxisRegistryEntry(
-        axis_name="x_missing_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "drop", "em_impute", "custom"),
-        current_status={
-            "none": "operational",
-            "drop": "registry_only",
-            "em_impute": "operational",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "target_outlier_policy": AxisRegistryEntry(
-        axis_name="target_outlier_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "clip", "outlier_to_nan", "custom"),
-        current_status={
-            "none": "operational",
-            "clip": "registry_only",
-            "outlier_to_nan": "registry_only",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "x_outlier_policy": AxisRegistryEntry(
-        axis_name="x_outlier_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "clip", "outlier_to_nan", "custom"),
-        current_status={
-            "none": "operational",
-            "clip": "registry_only",
-            "outlier_to_nan": "registry_only",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "scaling_policy": AxisRegistryEntry(
-        axis_name="scaling_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "standard", "robust", "minmax", "custom"),
-        current_status={
-            "none": "operational",
-            "standard": "operational",
-            "robust": "operational",
-            "minmax": "registry_only",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "dimensionality_reduction_policy": AxisRegistryEntry(
-        axis_name="dimensionality_reduction_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "pca", "ipca", "custom"),
-        current_status={
-            "none": "operational",
-            "pca": "planned",
-            "ipca": "planned",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "feature_selection_policy": AxisRegistryEntry(
-        axis_name="feature_selection_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "correlation_filter", "lasso_select", "custom"),
-        current_status={
-            "none": "operational",
-            "correlation_filter": "planned",
-            "lasso_select": "planned",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "preprocess_order": AxisRegistryEntry(
-        axis_name="preprocess_order",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "tcode_only", "extra_only", "tcode_then_extra", "extra_then_tcode", "custom"),
-        current_status={
-            "none": "operational",
-            "tcode_only": "registry_only",
-            "extra_only": "operational",
-            "tcode_then_extra": "registry_only",
-            "extra_then_tcode": "registry_only",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "preprocess_fit_scope": AxisRegistryEntry(
-        axis_name="preprocess_fit_scope",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("not_applicable", "train_only", "expanding_train_only", "rolling_train_only"),
-        current_status={
-            "not_applicable": "operational",
-            "train_only": "operational",
-            "expanding_train_only": "registry_only",
-            "rolling_train_only": "registry_only",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "inverse_transform_policy": AxisRegistryEntry(
-        axis_name="inverse_transform_policy",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("none", "target_only", "forecast_scale_only", "custom"),
-        current_status={
-            "none": "operational",
-            "target_only": "registry_only",
-            "forecast_scale_only": "registry_only",
-            "custom": "external_plugin",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "evaluation_scale": AxisRegistryEntry(
-        axis_name="evaluation_scale",
-        layer="2_preprocessing",
-        axis_type="enum",
-        allowed_values=("raw_level", "transformed_scale"),
-        current_status={
-            "raw_level": "operational",
-            "transformed_scale": "registry_only",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "framework": AxisRegistryEntry(
-        axis_name="framework",
-        layer="3_training",
-        axis_type="enum",
-        allowed_values=("expanding", "rolling"),
-        current_status={
-            "expanding": "operational",
-            "rolling": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "benchmark_family": AxisRegistryEntry(
-        axis_name="benchmark_family",
-        layer="3_training",
-        axis_type="enum",
-        allowed_values=("historical_mean", "ar_bic", "zero_change", "custom_benchmark"),
-        current_status={
-            "historical_mean": "operational",
-            "ar_bic": "operational",
-            "zero_change": "operational",
-            "custom_benchmark": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "model_family": AxisRegistryEntry(
-        axis_name="model_family",
-        layer="3_training",
-        axis_type="enum",
-        allowed_values=("ar", "ridge", "lasso", "elasticnet", "randomforest"),
-        current_status={
-            "ar": "operational",
-            "ridge": "operational",
-            "lasso": "operational",
-            "elasticnet": "operational",
-            "randomforest": "operational",
-        },
-        default_policy="sweep",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "feature_builder": AxisRegistryEntry(
-        axis_name="feature_builder",
-        layer="3_training",
-        axis_type="enum",
-        allowed_values=("autoreg_lagged_target", "raw_feature_panel", "factor_pca"),
-        current_status={
-            "autoreg_lagged_target": "operational",
-            "raw_feature_panel": "operational",
-            "factor_pca": "planned",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "primary_metric": AxisRegistryEntry(
-        axis_name="primary_metric",
-        layer="4_evaluation",
-        axis_type="enum",
-        allowed_values=("msfe", "relative_msfe", "oos_r2", "csfe"),
-        current_status={
-            "msfe": "operational",
-            "relative_msfe": "operational",
-            "oos_r2": "operational",
-            "csfe": "operational",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "stat_test": AxisRegistryEntry(
-        axis_name="stat_test",
-        layer="6_stat_tests",
-        axis_type="enum",
-        allowed_values=("none", "dm", "cw", "mcs"),
-        current_status={
-            "none": "operational",
-            "dm": "operational",
-            "cw": "operational",
-            "mcs": "planned",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-    "importance_method": AxisRegistryEntry(
-        axis_name="importance_method",
-        layer="7_importance",
-        axis_type="enum",
-        allowed_values=("none", "minimal_importance", "shap"),
-        current_status={
-            "none": "operational",
-            "minimal_importance": "operational",
-            "shap": "planned",
-        },
-        default_policy="fixed",
-        compatible_with={},
-        incompatible_with={},
-    ),
-}
+
+@lru_cache(maxsize=1)
+def _discover_axis_definitions() -> dict[str, AxisDefinition]:
+    discovered: dict[str, AxisDefinition] = {}
+    for package_name in _STAGE_PACKAGES:
+        package = importlib.import_module(f'{__package__}.{package_name}')
+        module_infos = sorted(pkgutil.iter_modules(package.__path__), key=lambda item: item.name)
+        for module_info in module_infos:
+            if module_info.name.startswith('_'):
+                continue
+            module = importlib.import_module(f'{package.__name__}.{module_info.name}')
+            definition = getattr(module, 'AXIS_DEFINITION', None)
+            if definition is None:
+                continue
+            if not isinstance(definition, AxisDefinition):
+                raise TypeError(
+                    f'{module.__name__}.AXIS_DEFINITION must be AxisDefinition, got {type(definition).__name__}'
+                )
+            if definition.axis_name in discovered:
+                raise ValueError(f'duplicate axis definition for {definition.axis_name!r}')
+            discovered[definition.axis_name] = definition
+    return discovered
+
+
+@lru_cache(maxsize=1)
+def _axis_registry() -> dict[str, AxisRegistryEntry]:
+    return {
+        axis_name: axis_definition_to_legacy_entry(definition)
+        for axis_name, definition in _discover_axis_definitions().items()
+    }
 
 
 def get_canonical_layer_order() -> tuple[str, ...]:
@@ -402,27 +47,28 @@ def get_canonical_layer_order() -> tuple[str, ...]:
 
 
 def get_axis_registry() -> dict[str, AxisRegistryEntry]:
-    return dict(_AXIS_REGISTRY)
+    return dict(_axis_registry())
 
 
 def get_axis_registry_entry(axis_name: str) -> AxisRegistryEntry:
-    return _AXIS_REGISTRY[axis_name]
+    return _axis_registry()[axis_name]
 
 
 def axis_governance_table() -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    for axis_name in sorted(_AXIS_REGISTRY):
-        entry = _AXIS_REGISTRY[axis_name]
+    registry = _axis_registry()
+    for axis_name in sorted(registry):
+        entry = registry[axis_name]
         rows.append(
             {
-                "axis_name": entry.axis_name,
-                "layer": entry.layer,
-                "axis_type": entry.axis_type,
-                "allowed_values": list(entry.allowed_values),
-                "current_status": dict(entry.current_status),
-                "default_policy": entry.default_policy,
-                "compatible_with": {k: list(v) for k, v in entry.compatible_with.items()},
-                "incompatible_with": {k: list(v) for k, v in entry.incompatible_with.items()},
+                'axis_name': entry.axis_name,
+                'layer': entry.layer,
+                'axis_type': entry.axis_type,
+                'allowed_values': list(entry.allowed_values),
+                'current_status': dict(entry.current_status),
+                'default_policy': entry.default_policy,
+                'compatible_with': {k: list(v) for k, v in entry.compatible_with.items()},
+                'incompatible_with': {k: list(v) for k, v in entry.incompatible_with.items()},
             }
         )
     return rows
