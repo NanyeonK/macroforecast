@@ -319,7 +319,7 @@ hard_error               operational
 
 ---
 
-## Issue 1-6: Register compute_mode axis [BLOCKED on 0-4]
+## Issue 1-6: Register compute_mode axis [PARTIALLY COMPLETE]
 pri:medium | size:M | deps: 0-4
 
 ### File to create
@@ -344,10 +344,10 @@ distributed_cluster      registry_only
 - GPU/distributed remain registry_only stubs
 
 ### Acceptance criteria
-- [ ] Axis registered
-- [ ] `serial` works (current behavior)
-- [ ] `parallel_by_model` operational with joblib backend
-- [ ] `parallel_by_horizon` operational with joblib backend
+- [x] Axis registered
+- [x] `serial` works (current behavior)
+- [ ] `parallel_by_model` operational with joblib backend (provenance-only so far)
+- [ ] `parallel_by_horizon` operational with joblib backend (provenance-only so far)
 
 ---
 

@@ -838,3 +838,70 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable"
     assert compile_result.manifest["failure_policy_spec"]["failure_policy"] == "skip_failed_model"
+
+
+
+def test_axis_governance_table_includes_compute_mode() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["compute_mode"]["current_status"]["serial"] == "operational"
+    assert by_name["compute_mode"]["current_status"]["parallel_by_model"] == "planned"
+
+
+def test_compile_compute_mode_spec_defaults_to_serial() -> None:
+    recipe = {
+        "recipe_id": "default-serial-compute-mode",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "serial"
+    assert compile_result.manifest["tree_context"]["compute_mode"] == "serial"
+
+
+def test_compile_parallel_by_model_is_representable_not_executable() -> None:
+    recipe = {
+        "recipe_id": "parallel-by-model-provenance",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "compute_mode": "parallel_by_model"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "parallel_by_model"
+    assert any("status=planned" in warning for warning in compile_result.manifest["warnings"])

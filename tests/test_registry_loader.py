@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 30
+    assert len(registry) == 31
     assert {"study_mode", "dataset", "info_set", "task", "model_family", "importance_method"}.issubset(registry)
 
 
@@ -50,7 +50,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 30
+    assert len(registry) == 31
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -67,7 +67,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_registry_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 30
+    assert len(registry) == 31
     assert "registry_type" in registry
     entry = get_axis_registry_entry("registry_type")
     assert entry.allowed_values == (
@@ -102,7 +102,7 @@ def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
 
 def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 30
+    assert len(registry) == 31
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
@@ -116,7 +116,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
 
 def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 30
+    assert len(registry) == 31
     assert "failure_policy" in registry
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
@@ -128,4 +128,22 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
         "save_partial_results",
         "warn_only",
         "hard_error",
+    )
+
+
+
+def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
+    registry = get_axis_registry()
+    assert len(registry) == 31
+    assert "compute_mode" in registry
+    entry = get_axis_registry_entry("compute_mode")
+    assert entry.allowed_values == (
+        "serial",
+        "parallel_by_model",
+        "parallel_by_horizon",
+        "parallel_by_oos_date",
+        "parallel_by_trial",
+        "gpu_single",
+        "gpu_multi",
+        "distributed_cluster",
     )

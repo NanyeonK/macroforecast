@@ -200,6 +200,7 @@ def _build_tree_context(
         "experiment_unit": stage0.experiment_unit,
         "reproducibility_mode": reproducibility_mode,
         "failure_policy": failure_policy,
+        "compute_mode": next((selection.selected_values[0] for selection in selections if selection.axis_name == "compute_mode"), "serial"),
         "route_owner": resolve_route_owner(stage0),
         "fixed_design": _json_like(stage0_payload["fixed_design"]),
         "varying_design": _json_like(stage0_payload["varying_design"]),
@@ -372,6 +373,11 @@ def _execution_status(
         warnings.append(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )
+    compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
+    if compute_mode != "serial":
+        warnings.append(
+            f"compute_mode {compute_mode!r} is representable but not executable in the current runtime slice"
+        )
 
     if blocked:
         return "blocked_by_incompatibility", tuple(warnings), tuple(blocked)
@@ -450,6 +456,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
             f"reproducibility_mode={reproducibility_mode!r} requires leaf_config.random_seed"
         )
     failure_policy = _selection_value(selection_map, "failure_policy", default="fail_fast")
+    compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
 
     preprocess_contract = _build_preprocess_contract(selection_map)
     stage0, recipe_spec, run_spec = _build_stage0_and_recipe(recipe_dict, selection_map, leaf_config)
@@ -503,6 +510,9 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         },
         "failure_policy_spec": {
             "failure_policy": _selection_value(selection_map, "failure_policy", default="fail_fast"),
+        },
+        "compute_mode_spec": {
+            "compute_mode": _selection_value(selection_map, "compute_mode", default="serial"),
         },
         "stat_test_spec": {
             "stat_test": _selection_value(selection_map, "stat_test"),
