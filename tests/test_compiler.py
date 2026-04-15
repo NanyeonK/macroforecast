@@ -1038,3 +1038,43 @@ def test_compiled_manifest_records_stage1_data_task_defaults() -> None:
     assert spec["dataset_source"] == "fred_md"
     assert spec["information_set_type"] == "revised"
     assert spec["forecast_type"] == "direct"
+
+
+
+def test_compile_recipe_records_stage2_preprocess_governance_defaults() -> None:
+    compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
+    contract = compile_result.manifest["preprocess_contract"]
+    assert contract["representation_policy"] == "raw_only"
+    assert contract["preprocessing_axis_role"] == "fixed_preprocessing"
+    assert contract["tcode_application_scope"] == "apply_tcode_to_none"
+
+
+def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
+    recipe = {
+        "recipe_id": "stage2-preprocess-governance",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "extra_preprocess_without_tcode",
+                "target_missing_policy": "none", "x_missing_policy": "mean_impute", "target_outlier_policy": "none", "x_outlier_policy": "winsorize",
+                "scaling_policy": "minmax", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "extra_only", "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
+                "representation_policy": "raw_only", "preprocessing_axis_role": "fixed_preprocessing", "tcode_application_scope": "apply_tcode_to_none",
+                "target_transform": "level", "target_normalization": "none", "target_domain": "unconstrained", "scaling_scope": "columnwise",
+                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none", "recipe_mode": "fixed_recipe"
+            }},
+            "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.manifest["preprocess_contract"]["x_missing_policy"] == "mean_impute"
+    assert compile_result.manifest["preprocess_contract"]["representation_policy"] == "raw_only"

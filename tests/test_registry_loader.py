@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert {"study_mode", "dataset", "information_set_type", "task", "model_family", "importance_method", "data_domain", "dataset_source"}.issubset(registry)
 
 
@@ -50,7 +50,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -67,7 +67,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_registry_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert "registry_type" in registry
     entry = get_axis_registry_entry("registry_type")
     assert entry.allowed_values == (
@@ -102,7 +102,7 @@ def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
 
 def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
@@ -116,7 +116,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
 
 def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert "failure_policy" in registry
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
@@ -134,7 +134,7 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
 
 def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 55
+    assert len(registry) == 66
     assert "compute_mode" in registry
     entry = get_axis_registry_entry("compute_mode")
     assert entry.allowed_values == (
@@ -206,3 +206,39 @@ def test_registry_loader_preserves_stage1_operational_values() -> None:
     assert data_domain.current_status["macro"] == "operational"
     assert predictor_family.current_status["target_lags_only"] == "operational"
     assert predictor_family.current_status["all_macro_vars"] == "operational"
+
+
+
+def test_registry_loader_discovers_stage2_governance_axes() -> None:
+    registry = get_axis_registry()
+    expected = {
+        "representation_policy",
+        "preprocessing_axis_role",
+        "tcode_application_scope",
+        "target_transform",
+        "target_normalization",
+        "target_domain",
+        "scaling_scope",
+        "additional_preprocessing",
+        "x_lag_creation",
+        "feature_grouping",
+        "recipe_mode",
+    }
+    assert expected.issubset(registry)
+
+
+def test_registry_loader_expands_stage2_operational_values() -> None:
+    x_missing = get_axis_registry_entry("x_missing_policy")
+    x_outlier = get_axis_registry_entry("x_outlier_policy")
+    scaling = get_axis_registry_entry("scaling_policy")
+    dimred = get_axis_registry_entry("dimensionality_reduction_policy")
+    feature_selection = get_axis_registry_entry("feature_selection_policy")
+    assert x_missing.current_status["mean_impute"] == "operational"
+    assert x_missing.current_status["median_impute"] == "operational"
+    assert x_outlier.current_status["winsorize"] == "operational"
+    assert x_outlier.current_status["iqr_clip"] == "operational"
+    assert scaling.current_status["minmax"] == "operational"
+    assert dimred.current_status["pca"] == "operational"
+    assert dimred.current_status["static_factor"] == "operational"
+    assert feature_selection.current_status["correlation_filter"] == "operational"
+    assert feature_selection.current_status["lasso_select"] == "operational"

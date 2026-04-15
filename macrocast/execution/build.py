@@ -13,7 +13,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import ElasticNet, Lasso, Ridge
-from sklearn.preprocessing import RobustScaler, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from statsmodels.tsa.ar_model import AutoReg
 
 from .errors import ExecutionError
@@ -244,24 +245,157 @@ def _raw_panel_columns(frame: pd.DataFrame, target: str) -> list[str]:
     return cols
 
 
-def _apply_raw_panel_preprocessing(
-    X_train: np.ndarray,
-    X_pred: np.ndarray,
+def _fill_missing_with_direction(frame: pd.DataFrame, method: str) -> pd.DataFrame:
+    if method == "ffill":
+        return frame.ffill().bfill()
+    if method == "interpolate_linear":
+        return frame.interpolate(method="linear", axis=0, limit_direction="both")
+    return frame
+
+
+def _apply_missing_policy(
+    X_train: pd.DataFrame,
+    X_pred: pd.DataFrame,
+    contract: PreprocessContract,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    policy = contract.x_missing_policy
+    if policy in {"none", "drop", "drop_rows", "drop_columns", "drop_if_above_threshold", "missing_indicator"}:
+        return X_train, X_pred
+    if policy in {"em_impute", "mean_impute"}:
+        imputer = SimpleImputer(strategy="mean")
+        return (
+            pd.DataFrame(imputer.fit_transform(X_train), index=X_train.index, columns=X_train.columns),
+            pd.DataFrame(imputer.transform(X_pred), index=X_pred.index, columns=X_pred.columns),
+        )
+    if policy == "median_impute":
+        imputer = SimpleImputer(strategy="median")
+        return (
+            pd.DataFrame(imputer.fit_transform(X_train), index=X_train.index, columns=X_train.columns),
+            pd.DataFrame(imputer.transform(X_pred), index=X_pred.index, columns=X_pred.columns),
+        )
+    if policy in {"ffill", "interpolate_linear"}:
+        combined = pd.concat([X_train, X_pred], axis=0)
+        filled = _fill_missing_with_direction(combined, policy)
+        return filled.iloc[: len(X_train)].copy(), filled.iloc[len(X_train) :].copy()
+    raise ExecutionError(f"x_missing_policy {policy!r} is not executable in current runtime slice")
+
+
+def _clip_frame(frame: pd.DataFrame, lower: pd.Series, upper: pd.Series) -> pd.DataFrame:
+    return frame.clip(lower=lower, upper=upper, axis=1)
+
+
+def _apply_outlier_policy(
+    X_train: pd.DataFrame,
+    X_pred: pd.DataFrame,
+    contract: PreprocessContract,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    policy = contract.x_outlier_policy
+    if policy == "none":
+        return X_train, X_pred
+    if policy == "winsorize":
+        lower = X_train.quantile(0.01)
+        upper = X_train.quantile(0.99)
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "iqr_clip":
+        q1 = X_train.quantile(0.25)
+        q3 = X_train.quantile(0.75)
+        iqr = q3 - q1
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "zscore_clip":
+        mean = X_train.mean()
+        std = X_train.std(ddof=0).replace(0, 1.0)
+        lower = mean - 3.0 * std
+        upper = mean + 3.0 * std
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    raise ExecutionError(f"x_outlier_policy {policy!r} is not executable in current runtime slice")
+
+
+def _apply_scaling_policy(
+    X_train: pd.DataFrame,
+    X_pred: pd.DataFrame,
+    contract: PreprocessContract,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    policy = contract.scaling_policy
+    if policy == "none":
+        return X_train, X_pred
+    scaler = None
+    if policy == "standard":
+        scaler = StandardScaler()
+    elif policy == "robust":
+        scaler = RobustScaler()
+    elif policy == "minmax":
+        scaler = MinMaxScaler()
+    else:
+        raise ExecutionError(f"scaling_policy {policy!r} is not executable in current runtime slice")
+    return (
+        pd.DataFrame(scaler.fit_transform(X_train), index=X_train.index, columns=X_train.columns),
+        pd.DataFrame(scaler.transform(X_pred), index=X_pred.index, columns=X_pred.columns),
+    )
+
+
+def _apply_feature_selection(
+    X_train: pd.DataFrame,
+    y_train: np.ndarray,
+    X_pred: pd.DataFrame,
+    contract: PreprocessContract,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    policy = contract.feature_selection_policy
+    if policy == "none":
+        return X_train, X_pred
+    if policy == "correlation_filter":
+        corrs = X_train.apply(lambda col: abs(pd.Series(col).corr(pd.Series(y_train))), axis=0).fillna(0.0)
+        keep = corrs.sort_values(ascending=False).head(max(1, min(10, len(corrs)))).index.tolist()
+        return X_train[keep].copy(), X_pred[keep].copy()
+    if policy == "lasso_select":
+        model = Lasso(alpha=1e-3, max_iter=10000)
+        model.fit(X_train.to_numpy(dtype=float), y_train)
+        coef = np.abs(model.coef_)
+        keep_idx = np.where(coef > 1e-8)[0]
+        if len(keep_idx) == 0:
+            keep_idx = np.array([int(np.argmax(coef))]) if len(coef) else np.array([], dtype=int)
+        keep = [X_train.columns[i] for i in keep_idx]
+        return X_train[keep].copy(), X_pred[keep].copy()
+    raise ExecutionError(f"feature_selection_policy {policy!r} is not executable in current runtime slice")
+
+
+def _apply_dimensionality_reduction(
+    X_train: pd.DataFrame,
+    X_pred: pd.DataFrame,
     contract: PreprocessContract,
 ) -> tuple[np.ndarray, np.ndarray]:
-    if contract.x_missing_policy == "em_impute":
-        imputer = SimpleImputer(strategy="mean")
-        X_train = imputer.fit_transform(X_train)
-        X_pred = imputer.transform(X_pred)
-    if contract.scaling_policy == "standard":
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_pred = scaler.transform(X_pred)
-    if contract.scaling_policy == "robust":
-        scaler = RobustScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_pred = scaler.transform(X_pred)
-    return X_train, X_pred
+    policy = contract.dimensionality_reduction_policy
+    if policy == "none":
+        return X_train.to_numpy(dtype=float), X_pred.to_numpy(dtype=float)
+    n_components = max(1, min(3, X_train.shape[0], X_train.shape[1]))
+    if policy == "pca":
+        reducer = PCA(n_components=n_components)
+        return reducer.fit_transform(X_train), reducer.transform(X_pred)
+    if policy == "static_factor":
+        centered_train = X_train.to_numpy(dtype=float) - X_train.to_numpy(dtype=float).mean(axis=0, keepdims=True)
+        u, s, vt = np.linalg.svd(centered_train, full_matrices=False)
+        components = vt[:n_components]
+        train_scores = centered_train @ components.T
+        centered_pred = X_pred.to_numpy(dtype=float) - X_train.to_numpy(dtype=float).mean(axis=0, keepdims=True)
+        pred_scores = centered_pred @ components.T
+        return train_scores, pred_scores
+    raise ExecutionError(f"dimensionality_reduction_policy {policy!r} is not executable in current runtime slice")
+
+
+def _apply_raw_panel_preprocessing(
+    X_train: pd.DataFrame,
+    y_train: np.ndarray,
+    X_pred: pd.DataFrame,
+    contract: PreprocessContract,
+) -> tuple[np.ndarray, np.ndarray]:
+    if contract.dimensionality_reduction_policy != "none" and contract.feature_selection_policy != "none":
+        raise ExecutionError("current runtime slice does not support combining dimensionality reduction with feature selection")
+    X_train, X_pred = _apply_missing_policy(X_train, X_pred, contract)
+    X_train, X_pred = _apply_outlier_policy(X_train, X_pred, contract)
+    X_train, X_pred = _apply_scaling_policy(X_train, X_pred, contract)
+    X_train, X_pred = _apply_feature_selection(X_train, y_train, X_pred, contract)
+    return _apply_dimensionality_reduction(X_train, X_pred, contract)
 
 
 def _build_raw_panel_training_data(
@@ -275,13 +409,13 @@ def _build_raw_panel_training_data(
     predictors = _raw_panel_columns(frame, target)
     if origin_idx - horizon < start_idx:
         raise ExecutionError("insufficient history for raw_feature_panel training data")
-    X_train = frame[predictors].iloc[start_idx : origin_idx - horizon + 1].to_numpy(dtype=float)
+    X_train = frame[predictors].iloc[start_idx : origin_idx - horizon + 1].astype(float).copy()
     y_train = frame[target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
-    X_pred = frame[predictors].iloc[origin_idx].to_numpy(dtype=float).reshape(1, -1)
+    X_pred = frame[predictors].iloc[[origin_idx]].astype(float).copy()
     if len(X_train) == 0 or len(y_train) == 0:
         raise ExecutionError("raw_feature_panel produced empty training data")
-    X_train, X_pred = _apply_raw_panel_preprocessing(X_train, X_pred, contract)
-    return X_train, y_train, X_pred
+    X_train_arr, X_pred_arr = _apply_raw_panel_preprocessing(X_train, y_train, X_pred, contract)
+    return X_train_arr, y_train, X_pred_arr
 
 
 def _run_ar_model_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:

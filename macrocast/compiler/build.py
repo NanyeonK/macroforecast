@@ -139,13 +139,26 @@ def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
         "inverse_transform_policy",
         "evaluation_scale",
     }
+    defaults = {
+        "representation_policy": "raw_only",
+        "preprocessing_axis_role": "fixed_preprocessing",
+        "tcode_application_scope": "apply_tcode_to_none",
+        "target_transform": "level",
+        "target_normalization": "none",
+        "target_domain": "unconstrained",
+        "scaling_scope": "columnwise",
+        "additional_preprocessing": "none",
+        "x_lag_creation": "no_x_lags",
+        "feature_grouping": "none",
+        "recipe_mode": "fixed_recipe",
+    }
     missing = sorted(axis for axis in required if axis not in selection_map)
     if missing:
         raise CompileValidationError(f"preprocessing layer missing required axes: {missing}")
+    payload = {axis: selection_map[axis].selected_values[0] for axis in required}
+    payload.update({axis: _selection_value(selection_map, axis, default=value) for axis, value in defaults.items()})
     try:
-        contract = build_preprocess_contract(
-            **{axis: selection_map[axis].selected_values[0] for axis in required}
-        )
+        contract = build_preprocess_contract(**payload)
         check_preprocess_governance(
             contract,
             preprocessing_sweep=any(

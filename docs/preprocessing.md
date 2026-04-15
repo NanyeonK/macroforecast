@@ -78,3 +78,37 @@ Operational contracts are:
 
 Other preprocessing choices are already representable in package grammar, but not yet executable.
 That distinction is explicit through registry/compiler status rather than hidden behavior.
+
+
+## Stage 2 governance additions
+
+The preprocessing contract now also records explicit governance fields:
+- `representation_policy`
+- `preprocessing_axis_role`
+- `tcode_application_scope`
+- `target_transform`
+- `target_normalization`
+- `target_domain`
+- `scaling_scope`
+- `additional_preprocessing`
+- `x_lag_creation`
+- `feature_grouping`
+- `recipe_mode`
+
+These default conservatively so legacy recipes still compile unchanged.
+
+## Expanded operational Stage 2 runtime slice
+
+Current train-only raw-panel runtime additionally supports:
+- X missing: `mean_impute`, `median_impute`, `ffill`, `interpolate_linear`, `em_impute`
+- X outlier: `winsorize`, `iqr_clip`, `zscore_clip`
+- scaling: `standard`, `robust`, `minmax`
+- dimensionality reduction: `pca`, `static_factor`
+- feature selection: `correlation_filter`, `lasso_select`
+
+Still not executable in current slice:
+- simultaneous dimensionality reduction + feature selection
+- non-columnwise scaling scopes
+- extra filters under `additional_preprocessing`
+- nontrivial `x_lag_creation`
+- nontrivial `feature_grouping`

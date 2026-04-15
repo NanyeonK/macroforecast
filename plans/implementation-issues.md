@@ -613,11 +613,10 @@ pri:high | size:M | deps: 0-4
 
 # Epic 3: Stage 2 — Preprocessing Governance Completion
 
-> Current: 14 axes, 52 values, 17 operational.
-> Target: 22 axes, ~180 values, ~50 operational.
-> Critical: 4 mandatory governance fields must be added.
+> Current: Stage 2 governance axes registered, preprocessing contract widened, and additional train-only raw-panel preprocessing paths operationalized honestly.
+> Status: Epic 3 completed with provenance-first governance plus runtime support for selected imputation/outlier/scaling/PCA/feature-selection paths.
 
-## Issue 3-1: Add representation_policy governance axis [READY — no dep on registry refactor]
+## Issue 3-1: Add representation_policy governance axis [DONE]
 pri:critical | size:M | deps: none
 
 ### What
@@ -641,14 +640,14 @@ custom_transform_only    registry_only
 - Validate: if representation_policy=raw_only, tcode_policy must be raw_only or extra_preprocess_without_tcode
 
 ### Acceptance criteria
-- [ ] Field in PreprocessContract
-- [ ] Compiler validates representation_policy
-- [ ] Manifest records it
-- [ ] Existing tests pass (raw_only is backward-compatible default)
+- [x] Field in PreprocessContract
+- [x] Compiler validates representation_policy
+- [x] Manifest records it
+- [x] Existing tests pass (raw_only is backward-compatible default)
 
 ---
 
-## Issue 3-2: Add preprocessing_axis_role governance axis [READY]
+## Issue 3-2: Add preprocessing_axis_role governance axis [DONE]
 pri:critical | size:M | deps: none
 
 ### What
@@ -671,7 +670,7 @@ ablation_preprocessing   planned
 
 ---
 
-## Issue 3-3: Expand tcode_policy to full governance set [READY]
+## Issue 3-3: Expand tcode_policy to full governance set [DONE]
 pri:critical | size:M | deps: none
 
 ### What

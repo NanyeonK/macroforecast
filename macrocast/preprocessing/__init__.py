@@ -7,8 +7,10 @@ from .build import (
 )
 from .errors import PreprocessContractError, PreprocessValidationError
 from .types import (
+    AdditionalPreprocessing,
     DimensionalityReductionPolicy,
     EvaluationScale,
+    FeatureGrouping,
     FeatureSelectionPolicy,
     InverseTransformPolicy,
     MissingPolicy,
@@ -16,9 +18,18 @@ from .types import (
     PreprocessContract,
     PreprocessFitScope,
     PreprocessOrder,
+    PreprocessingAxisRole,
+    RepresentationPolicy,
+    RecipeMode,
     ScalingPolicy,
+    ScalingScope,
+    TargetDomain,
+    TargetNormalization,
+    TargetTransform,
     TargetTransformPolicy,
+    TcodeApplicationScope,
     TcodePolicy,
+    XLagCreation,
     XTransformPolicy,
 )
 
@@ -34,6 +45,9 @@ __all__ = [
     "TargetTransformPolicy",
     "XTransformPolicy",
     "TcodePolicy",
+    "RepresentationPolicy",
+    "PreprocessingAxisRole",
+    "TcodeApplicationScope",
     "MissingPolicy",
     "OutlierPolicy",
     "ScalingPolicy",
@@ -43,4 +57,12 @@ __all__ = [
     "PreprocessFitScope",
     "InverseTransformPolicy",
     "EvaluationScale",
+    "TargetTransform",
+    "TargetNormalization",
+    "TargetDomain",
+    "ScalingScope",
+    "AdditionalPreprocessing",
+    "XLagCreation",
+    "FeatureGrouping",
+    "RecipeMode",
 ]

@@ -591,3 +591,104 @@ def test_execute_recipe_parallel_by_model_runs_multi_target_slice(tmp_path: Path
     predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
     assert manifest["compute_mode_spec"]["compute_mode"] == "parallel_by_model"
     assert set(predictions["target"].unique()) == {"INDPRO", "RPI"}
+
+
+
+def _preprocess_mean_impute_minmax_winsor() -> PreprocessContract:
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="winsorize",
+        scaling_policy="minmax",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def _preprocess_pca_contract() -> PreprocessContract:
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="median_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="iqr_clip",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def _preprocess_lasso_select_contract() -> PreprocessContract:
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="zscore_clip",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="lasso_select",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def test_execute_recipe_supports_mean_impute_minmax_winsor_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_mean_impute_minmax_winsor(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["preprocess_contract"]["x_missing_policy"] == "mean_impute"
+    assert manifest["preprocess_contract"]["scaling_policy"] == "minmax"
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_pca_preprocessing_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_pca_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_lasso_feature_selection_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_lasso_select_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["prediction_rows"] > 0

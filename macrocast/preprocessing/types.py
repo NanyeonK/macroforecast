@@ -24,10 +24,37 @@ TcodePolicy = Literal[
     "custom_transform_pipeline",
 ]
 
+RepresentationPolicy = Literal[
+    "raw_only",
+    "tcode_only",
+    "custom_transform_only",
+]
+
+PreprocessingAxisRole = Literal[
+    "fixed_preprocessing",
+    "swept_preprocessing",
+    "ablation_preprocessing",
+]
+
+TcodeApplicationScope = Literal[
+    "apply_tcode_to_target",
+    "apply_tcode_to_X",
+    "apply_tcode_to_both",
+    "apply_tcode_to_none",
+]
+
 MissingPolicy = Literal[
     "none",
     "drop",
     "em_impute",
+    "mean_impute",
+    "median_impute",
+    "ffill",
+    "interpolate_linear",
+    "drop_rows",
+    "drop_columns",
+    "drop_if_above_threshold",
+    "missing_indicator",
     "custom",
 ]
 
@@ -35,6 +62,12 @@ OutlierPolicy = Literal[
     "none",
     "clip",
     "outlier_to_nan",
+    "winsorize",
+    "trim",
+    "iqr_clip",
+    "mad_clip",
+    "zscore_clip",
+    "outlier_to_missing",
     "custom",
 ]
 
@@ -43,12 +76,16 @@ ScalingPolicy = Literal[
     "standard",
     "robust",
     "minmax",
+    "demean_only",
+    "unit_variance_only",
+    "rank_scale",
     "custom",
 ]
 
 DimensionalityReductionPolicy = Literal[
     "none",
     "pca",
+    "static_factor",
     "ipca",
     "custom",
 ]
@@ -57,6 +94,7 @@ FeatureSelectionPolicy = Literal[
     "none",
     "correlation_filter",
     "lasso_select",
+    "mutual_information_screen",
     "custom",
 ]
 
@@ -88,6 +126,70 @@ EvaluationScale = Literal[
     "transformed_scale",
 ]
 
+TargetTransform = Literal[
+    "level",
+    "difference",
+    "log",
+    "log_difference",
+    "growth_rate",
+]
+
+TargetNormalization = Literal[
+    "none",
+    "zscore_train_only",
+    "robust_zscore",
+    "minmax",
+    "unit_variance",
+]
+
+TargetDomain = Literal[
+    "unconstrained",
+    "nonnegative",
+    "bounded_0_1",
+    "integer_count",
+    "probability_target",
+]
+
+ScalingScope = Literal[
+    "columnwise",
+    "datewise_cross_sectional",
+    "groupwise",
+    "categorywise",
+    "global_train_only",
+]
+
+AdditionalPreprocessing = Literal[
+    "none",
+    "smoothing_ma",
+    "ema",
+    "hp_filter",
+    "bandpass_filter",
+]
+
+XLagCreation = Literal[
+    "no_x_lags",
+    "fixed_x_lags",
+    "cv_selected_x_lags",
+    "variable_specific_lags",
+    "category_specific_lags",
+]
+
+FeatureGrouping = Literal[
+    "none",
+    "fred_category_group",
+    "economic_theme_group",
+    "lag_group",
+    "factor_group",
+]
+
+RecipeMode = Literal[
+    "fixed_recipe",
+    "recipe_grid",
+    "recipe_ablation",
+    "paper_exact_recipe",
+    "model_specific_recipe",
+]
+
 
 @dataclass(frozen=True)
 class PreprocessContract:
@@ -105,3 +207,14 @@ class PreprocessContract:
     preprocess_fit_scope: str
     inverse_transform_policy: str
     evaluation_scale: str
+    representation_policy: str = "raw_only"
+    preprocessing_axis_role: str = "fixed_preprocessing"
+    tcode_application_scope: str = "apply_tcode_to_none"
+    target_transform: str = "level"
+    target_normalization: str = "none"
+    target_domain: str = "unconstrained"
+    scaling_scope: str = "columnwise"
+    additional_preprocessing: str = "none"
+    x_lag_creation: str = "no_x_lags"
+    feature_grouping: str = "none"
+    recipe_mode: str = "fixed_recipe"

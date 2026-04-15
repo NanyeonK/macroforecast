@@ -115,6 +115,9 @@ def test_build_preprocess_contract_tcode_then_extra_is_representable() -> None:
         preprocess_fit_scope="train_only",
         inverse_transform_policy="target_only",
         evaluation_scale="raw_level",
+        representation_policy="tcode_only",
+        preprocessing_axis_role="swept_preprocessing",
+        tcode_application_scope="apply_tcode_to_both",
     )
 
     assert contract.preprocess_order == "tcode_then_extra"
@@ -180,3 +183,97 @@ def test_preprocess_summary_and_dict_expose_execution_semantics() -> None:
     assert "scaling_policy=standard" in summary
     assert payload["preprocess_fit_scope"] == "train_only"
     assert payload["evaluation_scale"] == "raw_level"
+
+
+
+def test_build_preprocess_contract_supports_stage2_governance_defaults() -> None:
+    contract = _raw_only_contract()
+    payload = preprocess_to_dict(contract)
+    assert payload["representation_policy"] == "raw_only"
+    assert payload["preprocessing_axis_role"] == "fixed_preprocessing"
+    assert payload["tcode_application_scope"] == "apply_tcode_to_none"
+    assert payload["recipe_mode"] == "fixed_recipe"
+
+
+def test_build_preprocess_contract_mean_impute_minmax_is_operational() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="winsorize",
+        scaling_policy="minmax",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract)
+
+
+def test_build_preprocess_contract_pca_path_is_operational() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="median_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract)
+
+
+def test_build_preprocess_contract_rejects_fixed_preprocessing_sweep_role() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        preprocessing_axis_role="fixed_preprocessing",
+    )
+    with pytest.raises(PreprocessValidationError):
+        check_preprocess_governance(contract, preprocessing_sweep=True, model_sweep=False)
+
+
+def test_build_preprocess_contract_rejects_combined_dimred_and_feature_selection() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="correlation_filter",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+    assert is_operational_preprocess_contract(contract) is False
