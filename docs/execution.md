@@ -7,11 +7,11 @@ It sits behind an explicit compiler boundary, preserves preprocessing semantics 
 
 ## Current role
 
-The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, CW testing, and a plugin-ready custom benchmark bridge.
+The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, CW testing, a plugin-ready custom benchmark bridge, and a baseline comparison summary artifact.
 It executes a benchmark-respecting slice with:
 - revised-data single-target point forecast
 - explicit benchmark family from recipe grammar
-- deterministic prediction and metric artifacts
+- deterministic prediction, metric, and comparison artifacts
 - two operational feature-builder families
 - one nontrivial train-only raw-panel preprocessing path
 - operational statistical tests: DM and CW
@@ -27,10 +27,11 @@ It executes a benchmark-respecting slice with:
 
 - `stat_test = dm`
 - `stat_test = cw`
+- baseline comparison artifact is always written as `comparison_summary.json`
 - DM writes `stat_test_dm.json`
 - CW writes `stat_test_cw.json`
 - CW first slice uses the benchmark-vs-model forecast-gap adjustment on the existing prediction table and reports a simple normal-approximation statistic
-- manifest records `stat_test_spec` and `stat_test_file`
+- manifest records `comparison_file`, `stat_test_spec`, and `stat_test_file`
 
 ## Current operational importance layer
 
@@ -95,6 +96,7 @@ The manifest preserves:
 - `execution_architecture`
 - full `model_spec`
 - full `benchmark_spec`
+- `comparison_file`
 - `stat_test_spec`
 - `importance_spec`
 - optional compiler provenance payload

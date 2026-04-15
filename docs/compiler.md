@@ -41,6 +41,7 @@ The current compiler-to-runtime path supports:
 - model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
 - feature builders: `autoreg_lagged_target`, `raw_feature_panel`
 - preprocessing: `raw_only` plus the first train-only impute+standardize raw-panel path
+- always-written comparison artifact: `comparison_summary.json`
 - statistical tests: `dm`, `cw`
 - importance: `minimal_importance`
 

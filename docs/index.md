@@ -32,4 +32,4 @@ Current operational subset
   - `minimal_importance`
 
 Current roadmap focus
-- next major widening target is broader importance coverage and richer evaluation/statistical-testing coverage beyond the first DM/minimal-importance slice.
+- next major widening target is broader comparison artifacts on top of the current benchmark/evaluation layer, before any SHAP or broader importance expansion.

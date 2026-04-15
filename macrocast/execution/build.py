@@ -622,6 +622,32 @@ def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str,
     }
 
 
+def _build_comparison_summary(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str, object]:
+    comparison_by_horizon: dict[str, dict[str, object]] = {}
+    for horizon, group in predictions.groupby("horizon", sort=True):
+        model_msfe = float(group["squared_error"].mean())
+        benchmark_msfe = float(group["benchmark_squared_error"].mean())
+        loss_diff = group["benchmark_squared_error"] - group["squared_error"]
+        comparison_by_horizon[f"h{int(horizon)}"] = {
+            "n_predictions": int(len(group)),
+            "model_msfe": model_msfe,
+            "benchmark_msfe": benchmark_msfe,
+            "mean_loss_diff": float(loss_diff.mean()),
+            "win_rate": float((group["squared_error"] < group["benchmark_squared_error"]).mean()),
+            "tie_rate": float((group["squared_error"] == group["benchmark_squared_error"]).mean()),
+            "relative_msfe": model_msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0,
+            "oos_r2": 1.0 - (model_msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0),
+        }
+
+    return {
+        "model_name": _model_spec(recipe)["executor_name"],
+        "benchmark_name": _benchmark_family(recipe),
+        "target": recipe.target,
+        "raw_dataset": recipe.raw_dataset,
+        "comparison_by_horizon": comparison_by_horizon,
+    }
+
+
 def execute_recipe(
     *,
     recipe: RecipeSpec,
@@ -652,6 +678,7 @@ def execute_recipe(
     target_series = _get_target_series(raw_result.data, recipe.target, _minimum_train_size(recipe))
     predictions = _build_predictions(raw_result.data, target_series, recipe, preprocess)
     metrics = _compute_metrics(predictions, recipe)
+    comparison_summary = _build_comparison_summary(predictions, recipe)
     stat_test_spec = _stat_test_spec(provenance_payload)
     importance_spec = _importance_spec(provenance_payload)
 
@@ -677,6 +704,7 @@ def execute_recipe(
         "minimum_train_size": _minimum_train_size(recipe),
         "prediction_rows": int(len(predictions)),
         "metrics_file": "metrics.json",
+        "comparison_file": "comparison_summary.json",
     }
     if provenance_payload:
         manifest.update(provenance_payload)
@@ -692,6 +720,7 @@ def execute_recipe(
     raw_result.data.head(20).to_csv(run_dir / "data_preview.csv")
     predictions.to_csv(run_dir / "predictions.csv", index=False)
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    (run_dir / "comparison_summary.json").write_text(json.dumps(comparison_summary, indent=2), encoding="utf-8")
     if stat_test_spec.get("stat_test") == "dm":
         dm_payload = _compute_dm_test(predictions)
         (run_dir / "stat_test_dm.json").write_text(json.dumps(dm_payload, indent=2), encoding="utf-8")
