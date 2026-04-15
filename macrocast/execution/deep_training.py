@@ -10,7 +10,7 @@ from lightgbm import LGBMRegressor
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import BayesianRidge, ElasticNet, HuberRegressor, Lasso, LinearRegression, Ridge
+from sklearn.linear_model import BayesianRidge, ElasticNet, HuberRegressor, Lasso, LinearRegression, QuantileRegressor, Ridge
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import LinearSVR, SVR
 from xgboost import XGBRegressor
@@ -110,6 +110,12 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
         return BayesianRidge()
     if model_family == "huber":
         return HuberRegressor(epsilon=float(hp.get("epsilon", 1.35)), alpha=float(hp.get("alpha", 0.0001)))
+    if model_family == "quantile_linear":
+        return QuantileRegressor(
+            quantile=float(hp.get("quantile", 0.5)),
+            alpha=float(hp.get("alpha", 1.0)),
+            solver="highs",
+        )
     if model_family == "svr_linear":
         return LinearSVR(C=float(hp.get("C", 1.0)), epsilon=float(hp.get("epsilon", 0.01)), max_iter=50000, random_state=42)
     if model_family == "svr_rbf":
@@ -229,9 +235,14 @@ def _tuning_budget_spec(training_spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _fit_without_tuning(model_family: str, X_train: np.ndarray, y_train: np.ndarray):
+def _fit_without_tuning(model_family: str, X_train: np.ndarray, y_train: np.ndarray, training_spec: dict[str, Any]):
     if model_family == "adaptivelasso":
         return fit_adaptive_lasso(X_train, y_train), {}
+    if model_family == "quantile_linear":
+        quantile = float(training_spec.get("quantile_level", 0.5))
+        model = make_model_instance(model_family, {"quantile": quantile, "alpha": 1.0})
+        model.fit(X_train, y_train)
+        return model, {"quantile": quantile}
     model = make_model_instance(model_family)
     model.fit(X_train, y_train)
     return model, {}
@@ -241,9 +252,9 @@ def fit_with_optional_tuning(model_family: str, X_train: np.ndarray, y_train: np
     algo = training_spec.get("search_algorithm", "grid_search")
     convergence_handling = training_spec.get("convergence_handling", "mark_fail")
     supported_algorithms = {"grid_search", "random_search", "bayesian_optimization", "genetic_algorithm"}
-    if not bool(training_spec.get("enable_tuning", False)) or algo not in supported_algorithms:
+    if not bool(training_spec.get("enable_tuning", False)) or algo not in supported_algorithms or model_family == "quantile_linear":
         try:
-            return _fit_without_tuning(model_family, X_train, y_train)
+            return _fit_without_tuning(model_family, X_train, y_train, training_spec)
         except Exception:
             if convergence_handling == "fallback_to_safe_hp":
                 if model_family == "adaptivelasso":

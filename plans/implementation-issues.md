@@ -494,7 +494,7 @@ pri:high | size:M | deps: 0-4
 ### Values (A-tier)
 ```
 point_mean               operational
-point_median             planned
+point_median             operational
 quantile                 planned
 direction                planned
 ```
@@ -1324,6 +1324,6 @@ Phase 7: Tests + Output + Importance (Epics 6, 7, 8)
 
 
 ## Stage 3 deep-expansion follow-up
-- Completed additional model-family widening from `plans/stage3-deep-expansion.md`: `adaptivelasso`, `svr_linear`, `svr_rbf`, `huber`, `catboost` now operational in current runtime slice.
+- Completed additional model-family widening from `plans/stage3-deep-expansion.md`: `adaptivelasso`, `svr_linear`, `svr_rbf`, `huber`, `catboost`, and `quantile_linear` now operational in current runtime slice. `quantile_linear` is wired for the honest median slice only, so it currently requires `forecast_object='point_median'`.
 - Completed deep Stage 3 runtime bundle after follow-up tranches: factor builders (`factors_plus_AR`, `factor_pca`), factor models (`pcr`, `pls`, `factor_augmented_linear`), tuning engine (grid/random/bayesian/genetic), split/validation runtime, refit-policy runtime, outer-window runtime, and compute-mode slices `parallel_by_model` + `parallel_by_horizon`.
-- Remaining Stage 3 cleanup is narrow: keep early-stopping semantics honest (`validation_patience`, `loss_plateau` via explicit budget knobs), maintain tuning coverage for adaptive-lasso/boosting executors, and update plan/docs/tests whenever operational status changes.
+- Remaining non-Stage-3 dependency is explicit: full `forecast_object='quantile'` support is still deferred to the forecast-object/evaluation layer because it needs quantile-specific loss/evaluation contracts beyond the current median point-forecast slice.

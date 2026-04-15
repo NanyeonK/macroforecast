@@ -52,7 +52,14 @@ def _recipe(
     benchmark_config: dict | None = None,
     info_set: str = "revised_monthly",
     data_vintage: str | None = None,
+    forecast_object: str = "point_mean",
+    quantile_level: float | None = None,
 ):
+    data_task_spec = {"forecast_object": forecast_object}
+    training_spec = {}
+    if quantile_level is not None:
+        data_task_spec["quantile_level"] = quantile_level
+        training_spec["quantile_level"] = quantile_level
     return build_recipe_spec(
         recipe_id=f"fred_md_{framework}_{model_family}_{feature_builder}",
         stage0=_stage0(model_family=model_family, feature_builder=feature_builder, benchmark=benchmark, framework=framework, info_set=info_set),
@@ -60,6 +67,8 @@ def _recipe(
         horizons=(1, 3),
         raw_dataset="fred_md",
         benchmark_config=benchmark_config or {},
+        data_task_spec=data_task_spec,
+        training_spec=training_spec,
         data_vintage=data_vintage,
     )
 
@@ -731,6 +740,32 @@ def test_execute_recipe_supports_xgboost_autoreg_model(tmp_path: Path) -> None:
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
     assert manifest["model_spec"]["model_family"] == "xgboost"
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_quantile_linear_autoreg_point_median(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="quantile_linear", feature_builder="autoreg_lagged_target", forecast_object="point_median", benchmark_config={"minimum_train_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    assert manifest["model_spec"]["model_family"] == "quantile_linear"
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_quantile_linear_raw_panel_point_median(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="quantile_linear", feature_builder="raw_feature_panel", forecast_object="point_median", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    assert manifest["model_spec"]["model_family"] == "quantile_linear"
     assert manifest["prediction_rows"] > 0
 
 

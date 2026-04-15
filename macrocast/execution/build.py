@@ -133,6 +133,7 @@ def _model_executor_name(model_family: str, feature_builder: str) -> str:
             "pcr": "pcr_autoreg_v0",
             "pls": "pls_autoreg_v0",
             "factor_augmented_linear": "factor_augmented_linear_autoreg_v0",
+            "quantile_linear": "quantile_linear_autoreg_v0",
         }[model_family]
     if feature_builder in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
         return {
@@ -158,6 +159,7 @@ def _model_executor_name(model_family: str, feature_builder: str) -> str:
             "pcr": "pcr_raw_feature_panel_v0",
             "pls": "pls_raw_feature_panel_v0",
             "factor_augmented_linear": "factor_augmented_linear_raw_feature_panel_v0",
+            "quantile_linear": "quantile_linear_raw_feature_panel_v0",
         }[model_family]
     raise ExecutionError(f"feature_builder {feature_builder!r} is not executable in current runtime slice")
 
@@ -203,6 +205,7 @@ def _get_model_executor(recipe: RecipeSpec):
             "pcr": _run_pcr_autoreg_executor,
             "pls": _run_pls_autoreg_executor,
             "factor_augmented_linear": _run_factor_augmented_linear_autoreg_executor,
+            "quantile_linear": _run_quantile_linear_autoreg_executor,
         }
         if model_family in dispatch:
             return dispatch[model_family]
@@ -230,6 +233,7 @@ def _get_model_executor(recipe: RecipeSpec):
             "pcr": _run_pcr_raw_panel_executor,
             "pls": _run_pls_raw_panel_executor,
             "factor_augmented_linear": _run_factor_augmented_linear_raw_panel_executor,
+            "quantile_linear": _run_quantile_linear_raw_panel_executor,
         }
         if model_family in dispatch:
             return dispatch[model_family]
@@ -775,6 +779,11 @@ def _run_factor_augmented_linear_autoreg_executor(train: pd.Series, horizon: int
     return {"y_pred": pred, "selected_lag": lag_order, "selected_bic": math.nan}
 
 
+def _run_quantile_linear_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    lag_order, _, _, model, _ = _fit_autoreg_sklearn(train, recipe, "quantile_linear", None)
+    return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan}
+
+
 def _run_componentwise_boosting_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
     _, _, X_pred, model, _ = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "componentwise_boosting", None)
@@ -821,6 +830,12 @@ def _run_factor_augmented_linear_raw_panel_executor(train: pd.Series, horizon: i
     X_pred = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
     pred, _ = fit_factor_model("factor_augmented_linear", X_train, y_train, X_pred, recipe.training_spec, include_ar_lags=True)
     return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan}
+
+
+def _run_quantile_linear_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    assert raw_frame is not None and origin_idx is not None
+    _, _, X_pred, model, _ = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "quantile_linear", None)
+    return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan}
 
 
 def _historical_mean_prediction(train: pd.Series) -> float:

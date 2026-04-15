@@ -436,7 +436,7 @@ Registry file: `macrocast/registry/data/forecast_object.py`
 | id | status | priority |
 |----|--------|----------|
 | `point_mean` | operational | A |
-| `point_median` | planned | A |
+| `point_median` | operational | A |
 | `quantile` | planned | A |
 | `interval` | registry_only | B |
 | `density` | registry_only | B |

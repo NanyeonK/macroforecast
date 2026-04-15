@@ -353,6 +353,8 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "checkpointing": _selection_value(selection_map, "checkpointing", default="none"),
         "cache_policy": _selection_value(selection_map, "cache_policy", default="no_cache"),
         "execution_backend": _selection_value(selection_map, "execution_backend", default="local_cpu"),
+        "forecast_object": _selection_value(selection_map, "forecast_object", default="point_mean"),
+        "quantile_level": leaf_config.get("quantile_level", 0.5),
         "validation_ratio": training_cfg.get("validation_ratio", 0.2),
         "validation_n": training_cfg.get("validation_n", 5),
         "validation_years": training_cfg.get("validation_years", 1),
@@ -519,6 +521,9 @@ def _execution_status(
     feature_builder = _selection_value(selection_map, "feature_builder") if "feature_builder" in selection_map and len(selection_map["feature_builder"].selected_values) == 1 else None
     if model_family == "ar" and feature_builder == "raw_feature_panel":
         blocked.append("raw_feature_panel is not compatible with model_family='ar' in the current runtime slice")
+    forecast_object = _selection_value(selection_map, "forecast_object", default="point_mean")
+    if model_family == "quantile_linear" and forecast_object != "point_median":
+        blocked.append("model_family='quantile_linear' currently requires forecast_object='point_median'")
 
     if feature_builder is not None:
         predictor_family = _selection_value(selection_map, "predictor_family", default=("target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"))

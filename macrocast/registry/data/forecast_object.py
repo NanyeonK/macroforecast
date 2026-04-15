@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='point_median',
             description='point median',
-            status='planned',
+            status='operational',
             priority='A',
         ),
         EnumRegistryEntry(
