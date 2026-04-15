@@ -742,7 +742,7 @@ def test_axis_governance_table_includes_failure_policy() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["failure_policy"]["current_status"]["fail_fast"] == "operational"
-    assert by_name["failure_policy"]["current_status"]["skip_failed_model"] == "planned"
+    assert by_name["failure_policy"]["current_status"]["skip_failed_model"] == "operational"
 
 
 def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
@@ -774,9 +774,46 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
     assert compile_result.manifest["tree_context"]["failure_policy"] == "fail_fast"
 
 
-def test_compile_skip_failed_model_is_representable_not_executable() -> None:
+def test_compile_warn_only_is_representable_not_executable() -> None:
     recipe = {
-        "recipe_id": "skip-failed-model-provenance",
+        "recipe_id": "warn-only-provenance",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "failure_policy": "warn_only"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert any("status=registry_only" in warning or "representable but not executable" in warning for warning in compile_result.manifest["warnings"])
+
+
+
+def test_axis_governance_table_marks_skip_failed_model_operational() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["failure_policy"]["current_status"]["skip_failed_model"] == "operational"
+    assert by_name["failure_policy"]["current_status"]["save_partial_results"] == "operational"
+
+
+def test_compile_skip_failed_model_recipe_is_executable() -> None:
+    recipe = {
+        "recipe_id": "skip-failed-model-executable",
         "path": {
             "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "failure_policy": "skip_failed_model"}},
             "1_data_task": {
@@ -799,5 +836,5 @@ def test_compile_skip_failed_model_is_representable_not_executable() -> None:
         },
     }
     compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
-    assert any("status=planned" in warning for warning in compile_result.manifest["warnings"])
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.manifest["failure_policy_spec"]["failure_policy"] == "skip_failed_model"

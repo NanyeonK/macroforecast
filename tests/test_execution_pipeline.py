@@ -1,0 +1,533 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from macrocast import (
+    build_execution_spec,
+    build_preprocess_contract,
+    build_recipe_spec,
+    build_run_spec,
+    build_stage0_frame,
+    execute_recipe,
+)
+
+
+def _stage0(
+    model_family: str = "ridge",
+    feature_builder: str = "raw_feature_panel",
+    benchmark: str = "zero_change",
+    framework: str = "rolling",
+    info_set: str = "revised_monthly",
+):
+    sample_split = {
+        "expanding": "expanding_window_oos",
+        "rolling": "rolling_window_oos",
+    }[framework]
+    return build_stage0_frame(
+        study_mode="single_path_benchmark_study",
+        fixed_design={
+            "dataset_adapter": "fred_md",
+            "information_set": info_set,
+            "sample_split": sample_split,
+            "benchmark": benchmark,
+            "evaluation_protocol": "point_forecast_core",
+            "forecast_task": "single_target_point_forecast",
+        },
+        comparison_contract={
+            "information_set_policy": "identical",
+            "sample_split_policy": "identical",
+            "benchmark_policy": "identical",
+            "evaluation_policy": "identical",
+        },
+        varying_design={"model_families": (model_family,), "feature_recipes": (feature_builder,), "horizons": ("h1",)},
+    )
+
+
+def _recipe(
+    model_family: str = "ridge",
+    feature_builder: str = "raw_feature_panel",
+    benchmark: str = "zero_change",
+    framework: str = "rolling",
+    benchmark_config: dict | None = None,
+    info_set: str = "revised_monthly",
+    data_vintage: str | None = None,
+):
+    return build_recipe_spec(
+        recipe_id=f"fred_md_{framework}_{model_family}_{feature_builder}",
+        stage0=_stage0(model_family=model_family, feature_builder=feature_builder, benchmark=benchmark, framework=framework, info_set=info_set),
+        target="INDPRO",
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config=benchmark_config or {},
+        data_vintage=data_vintage,
+    )
+
+
+def _preprocess_raw_only():
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="raw_only",
+        target_missing_policy="none",
+        x_missing_policy="none",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="none",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="none",
+        preprocess_fit_scope="not_applicable",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def _preprocess_train_only_robust():
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="em_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="robust",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def test_build_execution_spec_with_importance_context() -> None:
+    recipe = _recipe()
+    run = build_run_spec(recipe)
+    preprocess = _preprocess_raw_only()
+
+    execution = build_execution_spec(recipe=recipe, run=run, preprocess=preprocess)
+
+    assert execution.recipe.recipe_id == "fred_md_rolling_ridge_raw_feature_panel"
+    assert execution.run.run_id == run.run_id
+    assert execution.recipe.stage0.fixed_design.sample_split == "rolling_window_oos"
+
+
+def test_execute_recipe_writes_minimal_importance_artifact_for_ridge(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    preprocess = _preprocess_raw_only()
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=preprocess,
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"importance_spec": {"importance_method": "minimal_importance"}}},
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    importance = json.loads((run_dir / "importance_minimal.json").read_text())
+
+    assert manifest["importance_spec"]["importance_method"] == "minimal_importance"
+    assert manifest["importance_file"] == "importance_minimal.json"
+    assert importance["importance_method"] == "minimal_importance"
+    assert importance["model_family"] == "ridge"
+    assert len(importance["feature_importance"]) > 0
+
+
+def test_execute_recipe_writes_minimal_importance_artifact_for_randomforest(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="randomforest", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"importance_spec": {"importance_method": "minimal_importance"}}},
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    importance = json.loads((run_dir / "importance_minimal.json").read_text())
+    assert importance["model_family"] == "randomforest"
+    assert len(importance["feature_importance"]) > 0
+
+
+def test_execute_recipe_expanding_still_supported_without_importance(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(framework="expanding", benchmark_config={"minimum_train_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    assert result.raw_result.dataset_metadata.dataset == "fred_md"
+    assert result.run.route_owner == "single_run"
+    assert result.run.artifact_subdir.startswith("runs/")
+
+
+def test_execute_recipe_writes_cw_artifact(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    preprocess = _preprocess_raw_only()
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=preprocess,
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"stat_test_spec": {"stat_test": "cw"}}},
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    cw_payload = json.loads((run_dir / "stat_test_cw.json").read_text())
+
+    assert manifest["stat_test_spec"]["stat_test"] == "cw"
+    assert manifest["stat_test_file"] == "stat_test_cw.json"
+    assert cw_payload["stat_test"] == "cw"
+    assert "forecast_adjustment_mean" in cw_payload
+    assert cw_payload["n"] >= 2
+
+
+def test_execute_recipe_runs_custom_benchmark_plugin(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    plugin_path = tmp_path / "custom_benchmark_plugin.py"
+    plugin_path.write_text(
+        "def custom_benchmark(train, horizon, benchmark_config):\n"
+        "    offset = float(benchmark_config.get('offset', 0.0))\n"
+        "    return float(train.iloc[-1]) + offset + float(horizon)\n",
+        encoding="utf-8",
+    )
+    recipe = _recipe(
+        model_family="ar",
+        feature_builder="autoreg_lagged_target",
+        benchmark="custom_benchmark",
+        framework="expanding",
+        benchmark_config={
+            "minimum_train_size": 5,
+            "plugin_path": str(plugin_path),
+            "callable_name": "custom_benchmark",
+            "offset": 2.5,
+        },
+    )
+    preprocess = _preprocess_raw_only()
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=preprocess,
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    predictions = json.loads((run_dir / "metrics.json").read_text())
+
+    assert manifest["benchmark_name"] == "custom_benchmark"
+    assert manifest["benchmark_spec"]["plugin_path"] == str(plugin_path)
+    assert manifest["benchmark_spec"]["callable_name"] == "custom_benchmark"
+    assert predictions["benchmark_name"] == "custom_benchmark"
+
+
+def test_execute_recipe_rejects_custom_benchmark_without_plugin_contract(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ar",
+        feature_builder="autoreg_lagged_target",
+        benchmark="custom_benchmark",
+        framework="expanding",
+        benchmark_config={"minimum_train_size": 5},
+    )
+
+    with __import__("pytest").raises(Exception):
+        execute_recipe(
+            recipe=recipe,
+            preprocess=_preprocess_raw_only(),
+            output_root=tmp_path,
+            local_raw_source=fixture,
+        )
+
+
+def test_execute_recipe_writes_comparison_summary_artifact(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    comparison = json.loads((run_dir / "comparison_summary.json").read_text())
+
+    assert manifest["comparison_file"] == "comparison_summary.json"
+    assert comparison["benchmark_name"] == manifest["benchmark_name"]
+    assert comparison["model_name"] == manifest["forecast_engine"]
+    assert "h1" in comparison["comparison_by_horizon"]
+    assert comparison["comparison_by_horizon"]["h1"]["n_predictions"] >= 1
+    assert "mean_loss_diff" in comparison["comparison_by_horizon"]["h1"]
+    assert "win_rate" in comparison["comparison_by_horizon"]["h1"]
+    assert "model_msfe" in comparison["comparison_by_horizon"]["h1"]
+    assert "benchmark_msfe" in comparison["comparison_by_horizon"]["h1"]
+
+
+def test_execute_recipe_runs_robust_scaling_preprocess_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_raw_panel_missing.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="ridge", feature_builder="raw_feature_panel", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_train_only_robust(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["preprocess_contract"]["scaling_policy"] == "robust"
+    assert manifest["preprocess_contract"]["x_missing_policy"] == "em_impute"
+    assert (run_dir / "predictions.csv").exists()
+    assert (run_dir / "comparison_summary.json").exists()
+
+
+def test_execute_recipe_writes_minimal_importance_artifact_for_lasso(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="lasso", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"importance_spec": {"importance_method": "minimal_importance"}}},
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    importance = json.loads((run_dir / "importance_minimal.json").read_text())
+    assert manifest["importance_spec"]["importance_method"] == "minimal_importance"
+    assert manifest["importance_file"] == "importance_minimal.json"
+    assert importance["model_family"] == "lasso"
+    assert len(importance["feature_importance"]) > 0
+
+
+def test_execute_recipe_runs_real_time_vintage_slice(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(
+            model_family="ar",
+            feature_builder="autoreg_lagged_target",
+            framework="expanding",
+            benchmark_config={"minimum_train_size": 5},
+            info_set="real_time_vintage",
+            data_vintage="2020-01",
+        ),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["raw_dataset"] == "fred_md"
+    assert manifest["raw_artifact"].endswith("2020-01.csv")
+    assert manifest["route_owner"] == "single_run"
+
+
+def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    stage0 = build_stage0_frame(
+        study_mode="single_path_benchmark_study",
+        fixed_design={
+            "dataset_adapter": "fred_md",
+            "information_set": "revised_monthly",
+            "sample_split": "expanding_window_oos",
+            "benchmark": "zero_change",
+            "evaluation_protocol": "point_forecast_core",
+            "forecast_task": "multi_target_point_forecast",
+        },
+        comparison_contract={
+            "information_set_policy": "identical",
+            "sample_split_policy": "identical",
+            "benchmark_policy": "identical",
+            "evaluation_policy": "identical",
+        },
+        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+    )
+    recipe = build_recipe_spec(
+        recipe_id="fred_md_multi_ar",
+        stage0=stage0,
+        target="",
+        targets=("INDPRO", "RPI"),
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config={"minimum_train_size": 5},
+    )
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    comparison = json.loads((run_dir / "comparison_summary.json").read_text())
+    assert manifest["targets"] == ["INDPRO", "RPI"]
+    assert set(predictions["target"].unique()) == {"INDPRO", "RPI"}
+    assert set(metrics["metrics_by_target"].keys()) == {"INDPRO", "RPI"}
+    assert set(comparison["comparison_by_target"].keys()) == {"INDPRO", "RPI"}
+
+def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    stage0 = build_stage0_frame(
+        study_mode="single_path_benchmark_study",
+        fixed_design={
+            "dataset_adapter": "fred_md",
+            "information_set": "revised_monthly",
+            "sample_split": "expanding_window_oos",
+            "benchmark": "zero_change",
+            "evaluation_protocol": "point_forecast_core",
+            "forecast_task": "single_target_point_forecast",
+        },
+        comparison_contract={
+            "information_set_policy": "identical",
+            "sample_split_policy": "identical",
+            "benchmark_policy": "identical",
+            "evaluation_policy": "identical",
+        },
+        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+    )
+    recipe = build_recipe_spec(
+        recipe_id="fred_md_tree_context",
+        stage0=stage0,
+        target="INDPRO",
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config={"minimum_train_size": 5},
+    )
+    provenance_payload = {
+        "tree_context": {
+            "study_mode": "single_path_benchmark_study",
+            "design_shape": "one_fixed_env_one_tool_surface",
+            "execution_posture": "single_run_recipe",
+            "experiment_unit": "single_model_path",
+            "route_owner": "single_run",
+            "fixed_design": {
+                "dataset_adapter": "fred_md",
+                "information_set": "revised_monthly",
+                "sample_split": "expanding_window_oos",
+                "benchmark": "zero_change",
+                "evaluation_protocol": "point_forecast_core",
+                "forecast_task": "single_target_point_forecast",
+            },
+            "varying_design": {
+                "model_families": ["ar"],
+                "feature_recipes": ["autoreg_lagged_target"],
+                "preprocess_variants": [],
+                "tuning_variants": [],
+                "horizons": ["h1", "h3"],
+            },
+            "comparison_contract": {
+                "information_set_policy": "identical",
+                "sample_split_policy": "identical",
+                "benchmark_policy": "identical",
+                "evaluation_policy": "identical",
+            },
+            "fixed_axes": {"dataset": "fred_md", "framework": "expanding", "model_family": "ar"},
+            "sweep_axes": {},
+            "conditional_axes": {},
+            "axis_layers": {"dataset": "1_data_task", "framework": "3_training", "model_family": "3_training"},
+            "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+        },
+    }
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload=provenance_payload,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    summary = (run_dir / "summary.txt").read_text()
+    assert manifest["tree_context"]["route_owner"] == "single_run"
+    assert manifest["tree_context"]["fixed_design"]["dataset_adapter"] == "fred_md"
+    assert manifest["tree_context"]["leaf_config"]["target"] == "INDPRO"
+    assert "tree_context=route_owner=single_run" in summary
+
+
+
+
+def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    stage0 = build_stage0_frame(
+        study_mode="single_path_benchmark_study",
+        fixed_design={
+            "dataset_adapter": "fred_md",
+            "information_set": "revised_monthly",
+            "sample_split": "expanding_window_oos",
+            "benchmark": "zero_change",
+            "evaluation_protocol": "point_forecast_core",
+            "forecast_task": "multi_target_point_forecast",
+        },
+        comparison_contract={
+            "information_set_policy": "identical",
+            "sample_split_policy": "identical",
+            "benchmark_policy": "identical",
+            "evaluation_policy": "identical",
+        },
+        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+    )
+    recipe = build_recipe_spec(
+        recipe_id="fred_md_multi_skip_failure",
+        stage0=stage0,
+        target="",
+        targets=("INDPRO", "MISSING_TARGET"),
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config={"minimum_train_size": 5},
+    )
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"failure_policy_spec": {"failure_policy": "skip_failed_model"}}},
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    failures = json.loads((run_dir / "failures.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+    assert manifest["partial_run"] is True
+    assert manifest["successful_targets"] == ["INDPRO"]
+    assert manifest["failure_log_file"] == "failures.json"
+    assert any(item["target"] == "MISSING_TARGET" for item in failures)
+    assert set(predictions["target"].unique()) == {"INDPRO"}
+
+
+def test_execute_recipe_save_partial_results_keeps_metrics_when_optional_artifact_fails(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="ar", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={
+            "compiler": {
+                "failure_policy_spec": {"failure_policy": "save_partial_results"},
+                "importance_spec": {"importance_method": "minimal_importance"},
+            }
+        },
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    failures = json.loads((run_dir / "failures.json").read_text())
+    assert (run_dir / "metrics.json").exists()
+    assert manifest["partial_run"] is True
+    assert manifest["failure_log_file"] == "failures.json"
+    assert manifest.get("importance_file") is None
+    assert any(item["stage"] == "importance_artifact" for item in failures)

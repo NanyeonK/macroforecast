@@ -288,7 +288,7 @@ exploratory              registry_only
 
 ---
 
-## Issue 1-5: Register failure_policy axis [PARTIALLY COMPLETE]
+## Issue 1-5: Register failure_policy axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File to create
@@ -314,8 +314,8 @@ hard_error               operational
 ### Acceptance criteria
 - [x] Axis registered
 - [x] `fail_fast` and `hard_error` work (current behavior preserved)
-- [ ] `skip_failed_model` operational with partial manifest (compiler provenance added; runtime loop control still pending)
-- [ ] `save_partial_results` operational (registry/provenance only so far)
+- [x] `skip_failed_model` operational with partial manifest
+- [x] `save_partial_results` operational
 
 ---
 

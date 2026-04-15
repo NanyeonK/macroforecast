@@ -368,7 +368,7 @@ def _execution_status(
     if model_family == "ar" and feature_builder == "raw_feature_panel":
         blocked.append("raw_feature_panel is not compatible with model_family='ar' in the current runtime slice")
 
-    if failure_policy not in {"fail_fast", "hard_error"}:
+    if failure_policy not in {"fail_fast", "hard_error", "skip_failed_model", "save_partial_results"}:
         warnings.append(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )

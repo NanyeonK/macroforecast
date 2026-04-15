@@ -447,6 +447,15 @@ def _importance_spec(provenance_payload: dict | None) -> dict[str, object]:
     return dict(compiler.get("importance_spec", {"importance_method": "none"}))
 
 
+def _failure_policy_spec(provenance_payload: dict | None) -> dict[str, object]:
+    compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
+    return dict(compiler.get("failure_policy_spec", {"failure_policy": "fail_fast"}))
+
+
+def _write_json(path: Path, payload) -> None:
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def _compute_dm_test(predictions: pd.DataFrame) -> dict[str, object]:
     rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
     loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
@@ -731,11 +740,27 @@ def execute_recipe(
 
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, output_root / ".raw_cache")
     targets = _recipe_targets(recipe)
+    stat_test_spec = _stat_test_spec(provenance_payload)
+    importance_spec = _importance_spec(provenance_payload)
+    failure_policy_spec = _failure_policy_spec(provenance_payload)
+    failure_policy = str(failure_policy_spec.get("failure_policy", "fail_fast"))
     prediction_frames = []
+    failed_components: list[dict[str, object]] = []
+    successful_targets: list[str] = []
+    target_series = None
     for target in targets:
         target_recipe = _recipe_for_target(recipe, target)
-        target_series = _get_target_series(raw_result.data, target, _minimum_train_size(target_recipe))
-        prediction_frames.append(_build_predictions(raw_result.data, target_series, target_recipe, preprocess))
+        try:
+            target_series = _get_target_series(raw_result.data, target, _minimum_train_size(target_recipe))
+            prediction_frames.append(_build_predictions(raw_result.data, target_series, target_recipe, preprocess))
+            successful_targets.append(target)
+        except Exception as exc:
+            if failure_policy in {"skip_failed_model", "save_partial_results"}:
+                failed_components.append({"stage": "prediction_build", "target": target, "error": str(exc)})
+                continue
+            raise
+    if not prediction_frames:
+        raise ExecutionError("all target/model executions failed; no predictions available to save")
     predictions = pd.concat(prediction_frames, ignore_index=True)
     if recipe.targets:
         metrics = _compute_multi_target_metrics(predictions, recipe)
@@ -743,8 +768,6 @@ def execute_recipe(
     else:
         metrics = _compute_metrics(predictions, recipe)
         comparison_summary = _build_comparison_summary(predictions, recipe)
-    stat_test_spec = _stat_test_spec(provenance_payload)
-    importance_spec = _importance_spec(provenance_payload)
     if recipe.targets and stat_test_spec.get("stat_test") != "none":
         raise ExecutionError("multi-target point-forecast slice does not yet support statistical-test artifacts")
     if recipe.targets and importance_spec.get("importance_method") != "none":
@@ -768,16 +791,23 @@ def execute_recipe(
         "benchmark_spec": _benchmark_spec(recipe),
         "stat_test_spec": stat_test_spec,
         "importance_spec": importance_spec,
+        "failure_policy_spec": failure_policy_spec,
         "lag_selection": _LAG_SELECTION,
         "max_lag": _max_ar_lag(recipe),
         "minimum_train_size": _minimum_train_size(recipe),
         "prediction_rows": int(len(predictions)),
         "metrics_file": "metrics.json",
         "comparison_file": "comparison_summary.json",
+        "successful_targets": successful_targets,
+        "partial_run": bool(failed_components),
     }
     if provenance_payload:
         manifest.update(provenance_payload)
-    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if failed_components:
+        manifest["failure_log_file"] = "failures.json"
+    _write_json(run_dir / "manifest.json", manifest)
+    if failed_components:
+        _write_json(run_dir / "failures.json", failed_components)
     tree_context = manifest.get("tree_context", {})
     summary_lines = [
         recipe_summary(recipe),
@@ -789,23 +819,43 @@ def execute_recipe(
     (run_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
     raw_result.data.head(20).to_csv(run_dir / "data_preview.csv")
     predictions.to_csv(run_dir / "predictions.csv", index=False)
-    (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
-    (run_dir / "comparison_summary.json").write_text(json.dumps(comparison_summary, indent=2), encoding="utf-8")
+    _write_json(run_dir / "metrics.json", metrics)
+    _write_json(run_dir / "comparison_summary.json", comparison_summary)
     if stat_test_spec.get("stat_test") == "dm":
-        dm_payload = _compute_dm_test(predictions)
-        (run_dir / "stat_test_dm.json").write_text(json.dumps(dm_payload, indent=2), encoding="utf-8")
-        manifest["stat_test_file"] = "stat_test_dm.json"
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        try:
+            dm_payload = _compute_dm_test(predictions)
+            _write_json(run_dir / "stat_test_dm.json", dm_payload)
+            manifest["stat_test_file"] = "stat_test_dm.json"
+        except Exception as exc:
+            if failure_policy == "save_partial_results":
+                failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
+            else:
+                raise
     if stat_test_spec.get("stat_test") == "cw":
-        cw_payload = _compute_cw_test(predictions)
-        (run_dir / "stat_test_cw.json").write_text(json.dumps(cw_payload, indent=2), encoding="utf-8")
-        manifest["stat_test_file"] = "stat_test_cw.json"
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        try:
+            cw_payload = _compute_cw_test(predictions)
+            _write_json(run_dir / "stat_test_cw.json", cw_payload)
+            manifest["stat_test_file"] = "stat_test_cw.json"
+        except Exception as exc:
+            if failure_policy == "save_partial_results":
+                failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
+            else:
+                raise
     if importance_spec.get("importance_method") == "minimal_importance":
-        importance_payload = _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess)
-        (run_dir / "importance_minimal.json").write_text(json.dumps(importance_payload, indent=2), encoding="utf-8")
-        manifest["importance_file"] = "importance_minimal.json"
-        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        try:
+            importance_payload = _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess)
+            _write_json(run_dir / "importance_minimal.json", importance_payload)
+            manifest["importance_file"] = "importance_minimal.json"
+        except Exception as exc:
+            if failure_policy == "save_partial_results":
+                failed_components.append({"stage": "importance_artifact", "target": None, "error": str(exc)})
+            else:
+                raise
+    manifest["partial_run"] = bool(failed_components)
+    if failed_components:
+        manifest["failure_log_file"] = "failures.json"
+        _write_json(run_dir / "failures.json", failed_components)
+    _write_json(run_dir / "manifest.json", manifest)
 
     return ExecutionResult(
         spec=spec,
