@@ -16,7 +16,7 @@ The rebuilt macrocast package currently exposes seven documented code surfaces:
 
 Training
 - frameworks: `expanding`, `rolling`
-- benchmarks: `historical_mean`, `zero_change`, `ar_bic`
+- benchmarks: `historical_mean`, `zero_change`, `ar_bic`, `custom_benchmark`
 - model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
 - feature builders: `autoreg_lagged_target`, `raw_feature_panel`
 

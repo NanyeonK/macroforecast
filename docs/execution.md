@@ -7,7 +7,7 @@ It sits behind an explicit compiler boundary, preserves preprocessing semantics 
 
 ## Current role
 
-The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, and CW testing.
+The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, CW testing, and a plugin-ready custom benchmark bridge.
 It executes a benchmark-respecting slice with:
 - revised-data single-target point forecast
 - explicit benchmark family from recipe grammar
@@ -15,6 +15,7 @@ It executes a benchmark-respecting slice with:
 - two operational feature-builder families
 - one nontrivial train-only raw-panel preprocessing path
 - operational statistical tests: DM and CW
+- first operational custom benchmark bridge via local Python callable loading
 - first operational importance layer: minimal importance
 
 ## Current operational frameworks
@@ -77,6 +78,14 @@ Current implementation semantics:
 - `historical_mean`
 - `zero_change`
 - `ar_bic`
+- `custom_benchmark`
+
+Current custom benchmark bridge contract:
+- benchmark family stays `custom_benchmark` in grammar/provenance
+- runtime loads a local Python file from `benchmark_config.plugin_path`
+- runtime resolves `benchmark_config.callable_name`
+- callable signature is `custom_benchmark(train, horizon, benchmark_config) -> float`
+- callable must return one numeric forecast
 
 ## Provenance behavior
 
@@ -92,7 +101,8 @@ The manifest preserves:
 
 ## Current limitation
 
-Even though minimal importance is now operational, the importance layer is still narrow:
-- only `minimal_importance` is operational
-- current support is intentionally limited to one linear family and one tree family on the raw-panel path
+Even though minimal importance is now operational, the current runtime still has explicit boundaries:
+- only `minimal_importance` is operational in the importance layer
+- current importance support is intentionally limited to one linear family and one tree family on the raw-panel path
+- `custom_benchmark` currently uses only the first plugin-ready local Python bridge, not a broader package/plugin registry
 - SHAP remains future work

@@ -126,6 +126,14 @@ def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
 def _benchmark_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     benchmark_family = _selection_value(selection_map, "benchmark_family")
     benchmark_config = dict(leaf_config.get("benchmark_config", {}))
+    if benchmark_family == "custom_benchmark":
+        plugin_path = benchmark_config.get("plugin_path")
+        callable_name = benchmark_config.get("callable_name")
+        missing = [key for key, value in {"plugin_path": plugin_path, "callable_name": callable_name}.items() if not value]
+        if missing:
+            raise CompileValidationError(
+                f"custom_benchmark requires benchmark_config fields: {missing}"
+            )
     return {
         "benchmark_family": benchmark_family,
         **benchmark_config,

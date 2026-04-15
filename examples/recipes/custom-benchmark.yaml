@@ -2,7 +2,7 @@ recipe_id: custom-benchmark-design
 path:
   0_meta:
     fixed_axes:
-      study_mode: controlled_variation_study
+      study_mode: single_path_benchmark_study
   1_data_task:
     fixed_axes:
       dataset: fred_md
@@ -40,9 +40,10 @@ path:
     leaf_config:
       manifest_mode: full
       benchmark_config:
-        name: paper_anchor_v1
-        baseline_formula: "custom(y[t-1], rolling_mean_12)"
-        notes: "Representable grammar example only"
+        minimum_train_size: 5
+        plugin_path: path/to/custom_benchmark_plugin.py
+        callable_name: custom_benchmark
+        notes: "Plugin-ready custom benchmark contract example"
   6_stat_tests:
     fixed_axes:
       stat_test: none

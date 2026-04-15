@@ -19,7 +19,7 @@ The rebuilt package currently has seven public layers/surfaces wired in order:
 
 Current operational subset
 - operational frameworks: `expanding`, `rolling`
-- operational benchmark families: `historical_mean`, `zero_change`, `ar_bic`
+- operational benchmark families: `historical_mean`, `zero_change`, `ar_bic`, `custom_benchmark`
 - operational model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
 - operational feature builders: `autoreg_lagged_target`, `raw_feature_panel`
 - operational preprocessing paths:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import math
 import warnings
@@ -149,7 +150,7 @@ def _get_model_executor(recipe: RecipeSpec):
 
 def _get_benchmark_executor(recipe: RecipeSpec):
     benchmark_family = _benchmark_family(recipe)
-    if benchmark_family in {"historical_mean", "zero_change", "ar_bic"}:
+    if benchmark_family in {"historical_mean", "zero_change", "ar_bic", "custom_benchmark"}:
         return _run_benchmark_executor
     raise ExecutionError(f"benchmark_family {benchmark_family!r} is representable but not executable in current runtime slice")
 
@@ -362,6 +363,28 @@ def _historical_mean_prediction(train: pd.Series) -> float:
     return float(train.mean())
 
 
+def _load_custom_benchmark_callable(recipe: RecipeSpec):
+    benchmark_spec = _benchmark_spec(recipe)
+    plugin_path_raw = benchmark_spec.get("plugin_path")
+    callable_name = benchmark_spec.get("callable_name")
+    if not plugin_path_raw or not callable_name:
+        raise ExecutionError("custom_benchmark requires benchmark_config fields 'plugin_path' and 'callable_name'")
+    plugin_path = Path(str(plugin_path_raw)).expanduser()
+    if not plugin_path.is_absolute():
+        plugin_path = Path.cwd() / plugin_path
+    if not plugin_path.exists():
+        raise ExecutionError(f"custom benchmark plugin file not found: {plugin_path}")
+    spec = importlib.util.spec_from_file_location("macrocast_custom_benchmark_plugin", plugin_path)
+    if spec is None or spec.loader is None:
+        raise ExecutionError(f"could not load custom benchmark plugin module from {plugin_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    func = getattr(module, str(callable_name), None)
+    if func is None or not callable(func):
+        raise ExecutionError(f"custom benchmark callable {callable_name!r} not found in {plugin_path}")
+    return func
+
+
 def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) -> float:
     benchmark_family = _benchmark_family(recipe)
     if benchmark_family == "historical_mean":
@@ -371,6 +394,13 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
     if benchmark_family == "ar_bic":
         fitted = _run_ar_model_executor(train, horizon, recipe, contract=_build_noop_contract())
         return float(fitted["y_pred"])
+    if benchmark_family == "custom_benchmark":
+        func = _load_custom_benchmark_callable(recipe)
+        value = func(train.copy(), int(horizon), dict(_benchmark_spec(recipe)))
+        try:
+            return float(value)
+        except (TypeError, ValueError) as exc:
+            raise ExecutionError("custom benchmark callable must return a numeric forecast") from exc
     raise ExecutionError(f"benchmark_family {benchmark_family!r} is not executable in current runtime slice")
 
 
@@ -605,7 +635,7 @@ def execute_recipe(
             "current execution slice only supports explicit operational preprocessing contracts"
         )
 
-    if _benchmark_family(recipe) not in {"historical_mean", "zero_change", "ar_bic"}:
+    if _benchmark_family(recipe) not in {"historical_mean", "zero_change", "ar_bic", "custom_benchmark"}:
         raise ExecutionError(
             f"benchmark_family {_benchmark_family(recipe)!r} is representable but not executable in current runtime slice"
         )

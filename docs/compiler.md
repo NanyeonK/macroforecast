@@ -37,7 +37,7 @@ Current minimal-importance rule:
 
 The current compiler-to-runtime path supports:
 - frameworks: `expanding`, `rolling`
-- benchmarks: `historical_mean`, `zero_change`, `ar_bic`
+- benchmarks: `historical_mean`, `zero_change`, `ar_bic`, `custom_benchmark`
 - model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
 - feature builders: `autoreg_lagged_target`, `raw_feature_panel`
 - preprocessing: `raw_only` plus the first train-only impute+standardize raw-panel path
@@ -48,3 +48,4 @@ Important caveat
 - fixed single feature-builder runs are executable
 - internal multi-value feature-builder sweeps are still representable but not executable in one compiled run
 - incompatible requests such as `model_family='ar'` with `feature_builder='raw_feature_panel'` are explicitly blocked
+- `custom_benchmark` is executable only through the first plugin-ready bridge and currently requires `benchmark_config.plugin_path` plus `benchmark_config.callable_name`

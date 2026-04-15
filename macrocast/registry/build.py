@@ -314,7 +314,7 @@ _AXIS_REGISTRY: dict[str, AxisRegistryEntry] = {
             "historical_mean": "operational",
             "ar_bic": "operational",
             "zero_change": "operational",
-            "custom_benchmark": "external_plugin",
+            "custom_benchmark": "operational",
         },
         default_policy="fixed",
         compatible_with={},
