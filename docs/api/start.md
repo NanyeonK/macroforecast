@@ -118,3 +118,8 @@ Behavior:
 - uses `max_steps` for partial test slices
 
 This is still not the old full archived wizard restore. It is only a live-compatible staged selector for the current supported single-run subset, with compile/tree preview refreshed after every completed step.
+
+
+## Planned branch surfacing
+
+Finite-option prompts now carry option-status metadata from the live registry. Planned options such as `factor_pca`, `mcs`, and `shap` remain selectable in the staged flow, but they are labeled as planned and trigger explicit non-executable route messaging instead of silent fallback.

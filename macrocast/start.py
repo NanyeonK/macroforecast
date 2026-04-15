@@ -6,6 +6,7 @@ from typing import Any, Iterable
 import yaml
 
 from .compiler import CompileValidationError, compile_recipe_dict, compile_recipe_yaml, load_recipe_yaml
+from .registry import get_axis_registry_entry
 
 _AVAILABLE_STAGES = (
     "route_preview",
@@ -74,6 +75,24 @@ def _recipe_fixed(recipe: dict[str, Any], layer: str) -> dict[str, Any]:
 
 def _benchmark_config(recipe: dict[str, Any]) -> dict[str, Any]:
     return _recipe_leaf(recipe, "5_output_provenance").setdefault("benchmark_config", {})
+
+
+def _choice_option_details(axis_name: str, options: list[str]) -> dict[str, dict[str, str]]:
+    try:
+        entry = get_axis_registry_entry(axis_name)
+    except Exception:
+        return {}
+    details: dict[str, dict[str, str]] = {}
+    for option in options:
+        details[option] = {"status": entry.current_status.get(option, "unknown")}
+    return details
+
+
+def _planned_branch_message(warnings: list[str]) -> str | None:
+    planned_hits = [warning for warning in warnings if "status=planned" in warning]
+    if not planned_hits:
+        return None
+    return "Planned branch selected. Current YAML is valid as representation, but this branch is not yet executable in the current single-run runtime."
 
 
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
@@ -250,7 +269,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "feature_builder",
             "prompt": "Feature builder",
-            "options": ["autoreg_lagged_target", "raw_feature_panel"],
+            "options": ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"],
         },
         {
             "key": "primary_metric",
@@ -265,14 +284,20 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "stat_test",
             "prompt": "Stat test",
-            "options": ["none", "dm", "cw"],
+            "options": ["none", "dm", "cw", "mcs"],
         },
         {
             "key": "importance_method",
             "prompt": "Importance method",
-            "options": ["none", "minimal_importance"],
+            "options": ["none", "minimal_importance", "shap"],
         },
     ])
+    for choice in stack:
+        if choice["options"]:
+            axis_name = choice["key"]
+            if axis_name in {"benchmark_plugin_path", "benchmark_callable_name", "manifest_mode"}:
+                continue
+            choice["option_details"] = _choice_option_details(axis_name, list(choice["options"]))
     return stack
 
 
@@ -294,11 +319,11 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
     elif tree_context.get("execution_posture") == "single_run_with_internal_sweep":
         wizard_status = "planned_single_run_extension"
         continue_in_single_run = False
-        message = "Route still belongs to the single-run family, but downstream internal sweep branching is not implemented yet."
+        message = _planned_branch_message(warnings) or "Route still belongs to the single-run family, but downstream internal sweep branching is not implemented yet."
     else:
         wizard_status = "blocked_or_nonexecutable"
         continue_in_single_run = False
-        message = "; ".join(blocked_reasons or warnings) or "Route is not executable in the current single-run surface."
+        message = _planned_branch_message(warnings) or "; ".join(blocked_reasons or warnings) or "Route is not executable in the current single-run surface."
 
     return {
         "route_owner": route_owner,
@@ -435,8 +460,11 @@ def _interactive_wizard(*, recipe_path: str, yaml_path: str | None, max_steps: i
         current = _read_wizard_value(recipe, current_choice["key"])
         options = list(current_choice["options"])
         if options:
+            option_details = current_choice.get("option_details", {})
             for idx, option in enumerate(options, 1):
-                print(f"{idx}. {option}")
+                status = option_details.get(option, {}).get("status")
+                suffix = f" [{status}]" if status and status != "operational" else ""
+                print(f"{idx}. {option}{suffix}")
         prompt = f"{current_choice['prompt']}"
         if current is not None:
             prompt += f" [current={current}]"

@@ -52,3 +52,5 @@ Single-run route inspection
 - the staged selector now covers framework / benchmark / narrow operational preprocessing choices before model-path choices.
 
 - the staged selector now also covers evaluation / output / stat-test / importance choices in the current executable single-run subset.
+
+- the staged selector now labels planned options from the live registry and surfaces explicit planned-branch messages when those options are chosen.

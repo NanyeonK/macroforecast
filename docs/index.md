@@ -40,3 +40,5 @@ Current roadmap focus
 - staged selector now reaches into framework / benchmark / narrow operational preprocessing choices while continuing to refresh compile/tree preview after every step.
 - staged selector now also reaches evaluation / output / stat-test / importance choices in the current executable single-run subset.
 - next major widening target after that is broader staged YAML-building beyond this current executable block.
+
+- staged selector now exposes planned options like `factor_pca`, `mcs`, and `shap` as explicit non-executable branches rather than hiding them behind generic compile failures.
