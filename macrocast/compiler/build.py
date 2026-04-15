@@ -189,11 +189,15 @@ def _build_tree_context(
             sweep_axes[selection.axis_name] = value
         elif selection.selection_mode == "conditional":
             conditional_axes[selection.axis_name] = value
+    reproducibility_mode = leaf_config.get("reproducibility_mode_override")
+    if reproducibility_mode is None:
+        reproducibility_mode = next((selection.selected_values[0] for selection in selections if selection.axis_name == "reproducibility_mode"), "best_effort")
     return {
         "study_mode": stage0.study_mode,
         "design_shape": stage0.design_shape,
         "execution_posture": stage0.execution_posture,
         "experiment_unit": stage0.experiment_unit,
+        "reproducibility_mode": reproducibility_mode,
         "route_owner": resolve_route_owner(stage0),
         "fixed_design": _json_like(stage0_payload["fixed_design"]),
         "varying_design": _json_like(stage0_payload["varying_design"]),
@@ -430,6 +434,13 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         if "target" not in leaf_config:
             raise CompileValidationError("recipe leaf_config missing 'target'")
 
+    reproducibility_mode = _selection_value(selection_map, "reproducibility_mode", default="best_effort")
+    random_seed = leaf_config.get("random_seed")
+    if reproducibility_mode in {"strict_reproducible", "seeded_reproducible"} and random_seed is None:
+        raise CompileValidationError(
+            f"reproducibility_mode={reproducibility_mode!r} requires leaf_config.random_seed"
+        )
+
     preprocess_contract = _build_preprocess_contract(selection_map)
     stage0, recipe_spec, run_spec = _build_stage0_and_recipe(recipe_dict, selection_map, leaf_config)
     execution_status, warnings, blocked = _execution_status(selections, preprocess_contract)
@@ -476,6 +487,10 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "leaf_config": dict(compiled.leaf_config),
         "benchmark_spec": dict(compiled.recipe_spec.benchmark_config),
         "model_spec": _model_spec(selection_map),
+        "reproducibility_spec": {
+            "reproducibility_mode": _selection_value(selection_map, "reproducibility_mode", default="best_effort"),
+            "random_seed": compiled.leaf_config.get("random_seed"),
+        },
         "stat_test_spec": {
             "stat_test": _selection_value(selection_map, "stat_test"),
         },

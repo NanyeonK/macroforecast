@@ -262,7 +262,7 @@ external_adapter     registry_only
 
 ---
 
-## Issue 1-4: Register reproducibility_mode axis [BLOCKED on 0-4]
+## Issue 1-4: Register reproducibility_mode axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File to create
@@ -282,9 +282,9 @@ exploratory              registry_only
 - Execution layer respects seed policy
 
 ### Acceptance criteria
-- [ ] Axis registered
-- [ ] Compiler validates seed consistency
-- [ ] Manifest records reproducibility_mode
+- [x] Axis registered
+- [x] Compiler validates seed consistency
+- [x] Manifest records reproducibility_mode
 
 ---
 

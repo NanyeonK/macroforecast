@@ -669,3 +669,69 @@ def test_axis_governance_table_includes_registry_type() -> None:
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["registry_type"]["current_status"]["enum_registry"] == "operational"
     assert by_name["registry_type"]["current_status"]["custom_plugin"] == "planned"
+
+
+
+def test_axis_governance_table_includes_reproducibility_mode() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["reproducibility_mode"]["current_status"]["seeded_reproducible"] == "operational"
+    assert by_name["reproducibility_mode"]["current_status"]["strict_reproducible"] == "planned"
+
+
+def test_compile_seeded_reproducible_requires_random_seed() -> None:
+    recipe = {
+        "recipe_id": "seed-required",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "reproducibility_mode": "seeded_reproducible"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    with __import__("pytest").raises(CompileValidationError):
+        compile_recipe_dict(recipe)
+
+
+def test_compile_reproducibility_spec_preserved_in_manifest() -> None:
+    recipe = {
+        "recipe_id": "seeded-provenance",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "reproducibility_mode": "seeded_reproducible"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3], "random_seed": 42},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.manifest["reproducibility_spec"]["reproducibility_mode"] == "seeded_reproducible"
+    assert compile_result.manifest["reproducibility_spec"]["random_seed"] == 42
+    assert compile_result.manifest["tree_context"]["reproducibility_mode"] == "seeded_reproducible"

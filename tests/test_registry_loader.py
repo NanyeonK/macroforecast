@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 28
+    assert len(registry) == 29
     assert {"study_mode", "dataset", "info_set", "task", "model_family", "importance_method"}.issubset(registry)
 
 
@@ -50,7 +50,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 28
+    assert len(registry) == 29
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -67,7 +67,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_registry_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 28
+    assert len(registry) == 29
     assert "registry_type" in registry
     entry = get_axis_registry_entry("registry_type")
     assert entry.allowed_values == (
@@ -97,3 +97,17 @@ def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
         incompatible_with={},
     )
     assert definition.registry_type == "enum_registry"
+
+
+
+def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
+    registry = get_axis_registry()
+    assert len(registry) == 29
+    assert "reproducibility_mode" in registry
+    entry = get_axis_registry_entry("reproducibility_mode")
+    assert entry.allowed_values == (
+        "strict_reproducible",
+        "seeded_reproducible",
+        "best_effort",
+        "exploratory",
+    )
