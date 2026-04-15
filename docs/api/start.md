@@ -123,3 +123,13 @@ This is still not the old full archived wizard restore. It is only a live-compat
 ## Planned branch surfacing
 
 Finite-option prompts now carry option-status metadata from the live registry. Planned options such as `factor_pca`, `mcs`, and `shap` remain selectable in the staged flow, but they are labeled as planned and trigger explicit non-executable route messaging instead of silent fallback.
+
+
+## Model-grid and full-sweep routing
+
+The staged selector now exposes `model_path_mode` with:
+- `single_model`
+- `model_grid`
+- `full_sweep`
+
+Selecting `model_grid` or `full_sweep` rewrites the YAML into `sweep_axes` form and stops with explicit planned single-run extension messaging.

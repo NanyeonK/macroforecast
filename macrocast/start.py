@@ -30,6 +30,7 @@ _WIZARD_KEYS = (
     "scaling_policy",
     "preprocess_order",
     "preprocess_fit_scope",
+    "model_path_mode",
     "model_family",
     "feature_builder",
     "primary_metric",
@@ -73,6 +74,10 @@ def _recipe_fixed(recipe: dict[str, Any], layer: str) -> dict[str, Any]:
     return recipe.setdefault("path", {}).setdefault(layer, {}).setdefault("fixed_axes", {})
 
 
+def _recipe_sweep(recipe: dict[str, Any], layer: str) -> dict[str, Any]:
+    return recipe.setdefault("path", {}).setdefault(layer, {}).setdefault("sweep_axes", {})
+
+
 def _benchmark_config(recipe: dict[str, Any]) -> dict[str, Any]:
     return _recipe_leaf(recipe, "5_output_provenance").setdefault("benchmark_config", {})
 
@@ -95,6 +100,15 @@ def _planned_branch_message(warnings: list[str]) -> str | None:
     return "Planned branch selected. Current YAML is valid as representation, but this branch is not yet executable in the current single-run runtime."
 
 
+def _single_run_extension_message(tree_context: dict[str, Any], warnings: list[str]) -> str:
+    sweep_axes = tree_context.get("sweep_axes", {})
+    if "model_family" in sweep_axes and "feature_builder" in sweep_axes:
+        return "Planned single-run extension selected: full sweep. Current YAML is representable, but full sweep branching is not executable yet."
+    if "model_family" in sweep_axes:
+        return "Planned single-run extension selected: model grid. Current YAML is representable, but model-grid branching is not executable yet."
+    return _planned_branch_message(warnings) or "Route still belongs to the single-run family, but downstream internal sweep branching is not implemented yet."
+
+
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
     if key == "study_mode":
         return _recipe_fixed(recipe, "0_meta").get("study_mode")
@@ -102,6 +116,14 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         return _recipe_fixed(recipe, "1_data_task").get("task")
     if key in {"target", "targets"}:
         return _recipe_leaf(recipe, "1_data_task").get(key)
+    if key == "model_path_mode":
+        fixed = _recipe_fixed(recipe, "3_training")
+        sweep = _recipe_sweep(recipe, "3_training")
+        if "model_family" in sweep and "feature_builder" in sweep:
+            return "full_sweep"
+        if "model_family" in sweep:
+            return "model_grid"
+        return "single_model"
     if key in {"framework", "benchmark_family", "model_family", "feature_builder"}:
         return _recipe_fixed(recipe, "3_training").get(key)
     if key in {"tcode_policy", "x_missing_policy", "scaling_policy", "preprocess_order", "preprocess_fit_scope"}:
@@ -128,6 +150,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
     leaf = _recipe_leaf(recipe, "1_data_task")
     preprocess = _recipe_fixed(recipe, "2_preprocessing")
     training = _recipe_fixed(recipe, "3_training")
+    training_sweep = _recipe_sweep(recipe, "3_training")
     if key == "task":
         _recipe_fixed(recipe, "1_data_task")["task"] = value
         if value == "multi_target_point_forecast":
@@ -150,8 +173,29 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         leaf["targets"] = targets
         leaf.pop("target", None)
         return
+    if key == "model_path_mode":
+        current_model = training.get("model_family", "ar")
+        current_feature = training.get("feature_builder", "autoreg_lagged_target")
+        if value == "single_model":
+            training["model_family"] = current_model
+            training["feature_builder"] = current_feature
+            training_sweep.pop("model_family", None)
+            training_sweep.pop("feature_builder", None)
+        elif value == "model_grid":
+            training["feature_builder"] = current_feature
+            training.pop("model_family", None)
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep.pop("feature_builder", None)
+        elif value == "full_sweep":
+            training.pop("model_family", None)
+            training.pop("feature_builder", None)
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep["feature_builder"] = ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"]
+        return
     if key in {"framework", "benchmark_family", "model_family", "feature_builder"}:
         training[key] = value
+        if key in {"model_family", "feature_builder"}:
+            training_sweep.pop(key, None)
         if key == "benchmark_family" and value != "custom_benchmark":
             cfg = _benchmark_config(recipe)
             cfg.pop("plugin_path", None)
@@ -262,6 +306,11 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "options": ["not_applicable", "train_only"],
         },
         {
+            "key": "model_path_mode",
+            "prompt": "Model path mode",
+            "options": ["single_model", "model_grid", "full_sweep"],
+        },
+        {
             "key": "model_family",
             "prompt": "Model family",
             "options": ["ar", "ridge", "lasso", "randomforest"],
@@ -292,13 +341,17 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "options": ["none", "minimal_importance", "shap"],
         },
     ])
+    filtered_stack = []
+    model_path_mode = _read_wizard_value(recipe, "model_path_mode")
     for choice in stack:
+        if model_path_mode != "single_model" and choice["key"] in {"model_family", "feature_builder"}:
+            continue
         if choice["options"]:
             axis_name = choice["key"]
-            if axis_name in {"benchmark_plugin_path", "benchmark_callable_name", "manifest_mode"}:
-                continue
-            choice["option_details"] = _choice_option_details(axis_name, list(choice["options"]))
-    return stack
+            if axis_name not in {"benchmark_plugin_path", "benchmark_callable_name", "manifest_mode", "model_path_mode"}:
+                choice["option_details"] = _choice_option_details(axis_name, list(choice["options"]))
+        filtered_stack.append(choice)
+    return filtered_stack
 
 
 def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
@@ -319,7 +372,7 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
     elif tree_context.get("execution_posture") == "single_run_with_internal_sweep":
         wizard_status = "planned_single_run_extension"
         continue_in_single_run = False
-        message = _planned_branch_message(warnings) or "Route still belongs to the single-run family, but downstream internal sweep branching is not implemented yet."
+        message = _single_run_extension_message(tree_context, warnings)
     else:
         wizard_status = "blocked_or_nonexecutable"
         continue_in_single_run = False

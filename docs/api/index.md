@@ -54,3 +54,5 @@ Single-run route inspection
 - the staged selector now also covers evaluation / output / stat-test / importance choices in the current executable single-run subset.
 
 - the staged selector now labels planned options from the live registry and surfaces explicit planned-branch messages when those options are chosen.
+
+- the staged selector now exposes `model_path_mode` and explicitly distinguishes model-grid vs full-sweep planned single-run extensions.

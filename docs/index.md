@@ -42,3 +42,5 @@ Current roadmap focus
 - next major widening target after that is broader staged YAML-building beyond this current executable block.
 
 - staged selector now exposes planned options like `factor_pca`, `mcs`, and `shap` as explicit non-executable branches rather than hiding them behind generic compile failures.
+
+- model-grid and full-sweep are now surfaced explicitly in the staged selector as planned single-run extensions, not generic blocked states.
