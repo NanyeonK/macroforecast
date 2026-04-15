@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import time
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -9,6 +9,7 @@ class TuningBudget:
     max_trials: int | None = None
     max_time_seconds: float | None = None
     early_stop_trials: int | None = None
+    min_improvement: float = 0.0
     _start_time: float = field(default_factory=time.time)
     _no_improvement_count: int = 0
     _best_score: float = float("inf")
@@ -25,7 +26,7 @@ class TuningBudget:
 
     def update(self, score: float):
         self._trial_count += 1
-        if score < self._best_score:
+        if score < (self._best_score - self.min_improvement):
             self._best_score = score
             self._no_improvement_count = 0
         else:

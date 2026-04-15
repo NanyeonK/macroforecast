@@ -919,7 +919,10 @@ pri:high | size:L | deps: 0-4
 ### Implementation for A-tier
 - `grid_search` — exhaustive sklearn-style
 - `random_search` — sklearn RandomizedSearchCV style
+- `bayesian_optimization` — Optuna/TPE backend
+- `genetic_algorithm` — pure numpy evolutionary search
 - Budget enforcement: max_trials, max_time, early_stop
+- Early-stopping semantics: `validation_patience` and `loss_plateau`
 
 ---
 
@@ -1322,4 +1325,5 @@ Phase 7: Tests + Output + Importance (Epics 6, 7, 8)
 
 ## Stage 3 deep-expansion follow-up
 - Completed additional model-family widening from `plans/stage3-deep-expansion.md`: `adaptivelasso`, `svr_linear`, `svr_rbf`, `huber`, `catboost` now operational in current runtime slice.
-- Remaining deep Stage 3 work still open: factor builders (`factors_plus_AR`, `factor_pca`), full tuning engine, split/validation runtime, refit-policy runtime, and outer-window deep variants.
+- Completed deep Stage 3 runtime bundle after follow-up tranches: factor builders (`factors_plus_AR`, `factor_pca`), factor models (`pcr`, `pls`, `factor_augmented_linear`), tuning engine (grid/random/bayesian/genetic), split/validation runtime, refit-policy runtime, outer-window runtime, and compute-mode slices `parallel_by_model` + `parallel_by_horizon`.
+- Remaining Stage 3 cleanup is narrow: keep early-stopping semantics honest (`validation_patience`, `loss_plateau` via explicit budget knobs), maintain tuning coverage for adaptive-lasso/boosting executors, and update plan/docs/tests whenever operational status changes.

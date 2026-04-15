@@ -77,6 +77,7 @@ def run_tuning(model_family: str, model_factory, X_train: np.ndarray, y_train: n
         max_trials=tuning_spec.tuning_budget.get("max_trials"),
         max_time_seconds=tuning_spec.tuning_budget.get("max_time_seconds"),
         early_stop_trials=tuning_spec.tuning_budget.get("early_stop_trials"),
+        min_improvement=float(tuning_spec.tuning_budget.get("min_improvement", 0.0)),
     )
     eval_fn = lambda hp: _evaluate_hp(model_factory, hp, X_train, y_train, splitter, scorer)
     algo=tuning_spec.search_algorithm

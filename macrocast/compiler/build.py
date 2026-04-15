@@ -360,6 +360,7 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "max_trials": training_cfg.get("max_trials", 6),
         "max_time_seconds": training_cfg.get("max_time_seconds", 15.0),
         "early_stop_trials": training_cfg.get("early_stop_trials", 3),
+        "early_stop_min_delta": training_cfg.get("early_stop_min_delta", 1e-4),
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
         "fixed_factor_count": training_cfg.get("fixed_factor_count", 3),
         "max_factors": training_cfg.get("max_factors", 5),

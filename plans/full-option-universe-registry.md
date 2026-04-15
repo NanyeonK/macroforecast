@@ -140,10 +140,10 @@ Schema fields per entry:
 |----|----------------|---------------|--------|----------|
 | `fail_fast` | yes | no | operational | A |
 | `skip_failed_cell` | no | yes | planned | A |
-| `skip_failed_model` | no | yes | planned | A |
+| `skip_failed_model` | no | yes | operational | A |
 | `retry_then_skip` | no | yes | registry_only | B |
 | `fallback_to_default_hp` | no | yes | registry_only | B |
-| `save_partial_results` | no | yes | planned | A |
+| `save_partial_results` | no | yes | operational | A |
 | `warn_only` | no | yes | registry_only | B |
 | `hard_error` | yes | no | operational | A |
 
@@ -162,8 +162,8 @@ Schema fields per entry:
 | id | backend | requires_gpu | requires_cluster | status | priority |
 |----|---------|-------------|-----------------|--------|----------|
 | `serial` | local | no | no | operational | A |
-| `parallel_by_model` | joblib/ray | no | no | planned | A |
-| `parallel_by_horizon` | joblib/ray | no | no | planned | A |
+| `parallel_by_model` | joblib/ray | no | no | operational | A |
+| `parallel_by_horizon` | joblib/ray | no | no | operational | A |
 | `parallel_by_oos_date` | joblib/ray | no | no | registry_only | B |
 | `parallel_by_trial` | joblib/ray | no | no | registry_only | B |
 | `gpu_single` | pytorch/jax | yes | no | future | B |
