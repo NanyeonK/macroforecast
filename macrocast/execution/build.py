@@ -453,6 +453,11 @@ def _failure_policy_spec(provenance_payload: dict | None) -> dict[str, object]:
     return dict(compiler.get("failure_policy_spec", {"failure_policy": "fail_fast"}))
 
 
+def _reproducibility_spec(provenance_payload: dict | None) -> dict[str, object]:
+    compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
+    return dict(compiler.get("reproducibility_spec", {"reproducibility_mode": "best_effort"}))
+
+
 def _compute_mode_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
     return dict(compiler.get("compute_mode_spec", {"compute_mode": "serial"}))
@@ -766,6 +771,7 @@ def execute_recipe(
     targets = _recipe_targets(recipe)
     stat_test_spec = _stat_test_spec(provenance_payload)
     importance_spec = _importance_spec(provenance_payload)
+    reproducibility_spec = _reproducibility_spec(provenance_payload)
     failure_policy_spec = _failure_policy_spec(provenance_payload)
     compute_mode_spec = _compute_mode_spec(provenance_payload)
     failure_policy = str(failure_policy_spec.get("failure_policy", "fail_fast"))
@@ -842,6 +848,7 @@ def execute_recipe(
         "benchmark_spec": _benchmark_spec(recipe),
         "stat_test_spec": stat_test_spec,
         "importance_spec": importance_spec,
+        "reproducibility_spec": reproducibility_spec,
         "failure_policy_spec": failure_policy_spec,
         "compute_mode_spec": compute_mode_spec,
         "lag_selection": _LAG_SELECTION,
