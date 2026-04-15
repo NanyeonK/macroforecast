@@ -846,6 +846,7 @@ def execute_recipe(
         "model_spec": _model_spec(recipe),
         "benchmark_name": _benchmark_family(recipe),
         "benchmark_spec": _benchmark_spec(recipe),
+        "data_task_spec": dict(recipe.data_task_spec),
         "stat_test_spec": stat_test_spec,
         "importance_spec": importance_spec,
         "reproducibility_spec": reproducibility_spec,

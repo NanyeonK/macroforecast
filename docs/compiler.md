@@ -36,6 +36,9 @@ Current minimal-importance rule:
 
 ## Current executable slice
 
+Stage 1 note: compiler now accepts canonical data/task axes like `information_set_type`, `data_domain`, `dataset_source`, `predictor_family`, and related provenance axes. Legacy `info_set` remains a backward-compat alias to `information_set_type`.
+
+
 The current compiler-to-runtime path supports:
 - frameworks: `expanding`, `rolling`
 - benchmarks: `historical_mean`, `zero_change`, `ar_bic`, `custom_benchmark`

@@ -6,7 +6,7 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      info_set: revised
+      information_set_type: revised
       task: single_target_point_forecast
     leaf_config:
       target: INDPRO

@@ -353,10 +353,10 @@ distributed_cluster      registry_only
 
 # Epic 2: Stage 1 — Data / Task Definition
 
-> Current: 3 axes (dataset, info_set, task), 7 values, all operational.
-> Target: 18 axes, ~150 values, ~50 operational.
+> Current: Stage 1 registry bundle registered with canonical data/task axes, legacy info_set alias preserved in compiler, and honest executable defaults/provenance added for current runtime slice.
+> Status: Epic 2 completed with registry expansion, compiler acceptance, and provenance-first runtime alignment.
 
-## Issue 2-1: Register data_domain axis [BLOCKED on 0-4]
+## Issue 2-1: Register data_domain axis [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### File
@@ -375,7 +375,7 @@ Plus B-tier: housing, energy, labor, regional, panel_macro, text_macro, mixed_do
 
 ---
 
-## Issue 2-2: Expand dataset_source to full planned set [BLOCKED on 0-4]
+## Issue 2-2: Expand dataset_source to full planned set [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
@@ -397,7 +397,7 @@ Plus B-tier: bea, bls, census, oecd, imf_ifs, ecb_sdw, bis, world_bank, wrds_mac
 
 ---
 
-## Issue 2-3: Register frequency axis [BLOCKED on 0-4]
+## Issue 2-3: Register frequency axis [DONE]
 pri:high | size:S | deps: 0-4
 
 ### File
@@ -415,14 +415,14 @@ mixed_frequency          registry_only
 
 ---
 
-## Issue 2-4: Register information_set_type with vintage integration [BLOCKED on 0-4]
+## Issue 2-4: Register information_set_type with vintage integration [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
 `macrocast/registry/data/information_set.py`
 
 ### What
-Replace current simple `info_set` (revised/real_time) with richer information_set_type axis.
+Replace current simple `information_set_type` (revised/real_time) with richer information_set_type axis.
 
 ### Values
 ```
@@ -435,13 +435,13 @@ publication_lag_aware            registry_only
 ```
 
 ### Migration
-- Current `info_set` axis → rename to `information_set_type`
+- Current `information_set_type` axis → rename to `information_set_type`
 - Compiler mapping needs update
 - Existing recipe YAMLs need migration path or backward-compat alias
 
 ---
 
-## Issue 2-5: Register vintage_policy axis [BLOCKED on 0-4]
+## Issue 2-5: Register vintage_policy axis [DONE]
 pri:high | size:S | deps: 0-4
 
 ### File
@@ -458,7 +458,7 @@ vintage_range            registry_only
 
 ---
 
-## Issue 2-6: Register alignment_rule axis [BLOCKED on 0-4]
+## Issue 2-6: Register alignment_rule axis [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### File
@@ -466,7 +466,7 @@ pri:medium | size:S | deps: 0-4
 
 ---
 
-## Issue 2-7: Register forecast_type axis [BLOCKED on 0-4]
+## Issue 2-7: Register forecast_type axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
@@ -485,7 +485,7 @@ Plus B-tier: dirrec, mimo, multi_horizon_joint, recursive_state_space, seq2seq
 
 ---
 
-## Issue 2-8: Register forecast_object axis [BLOCKED on 0-4]
+## Issue 2-8: Register forecast_object axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
@@ -505,7 +505,7 @@ direction                planned
 
 ---
 
-## Issue 2-9: Register horizon_target_construction axis [BLOCKED on 0-4]
+## Issue 2-9: Register horizon_target_construction axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
@@ -526,7 +526,7 @@ annualized_growth_to_h   planned
 
 ---
 
-## Issue 2-10: Register target_family axis [BLOCKED on 0-4]
+## Issue 2-10: Register target_family axis [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### File
@@ -534,7 +534,7 @@ pri:medium | size:S | deps: 0-4
 
 ---
 
-## Issue 2-11: Register predictor_family axis [BLOCKED on 0-4]
+## Issue 2-11: Register predictor_family axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
@@ -555,7 +555,7 @@ factor_only              planned
 
 ---
 
-## Issue 2-12: Register overlap_handling axis [BLOCKED on 0-4]
+## Issue 2-12: Register overlap_handling axis [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### File
@@ -563,7 +563,7 @@ pri:medium | size:S | deps: 0-4
 
 ---
 
-## Issue 2-13: Register sample/split axes bundle [BLOCKED on 0-4]
+## Issue 2-13: Register sample/split axes bundle [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Files (bundle — one issue because tightly coupled)
@@ -580,7 +580,7 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 2-14: Register target/predictor design axes bundle [BLOCKED on 0-4]
+## Issue 2-14: Register target/predictor design axes bundle [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files
@@ -591,7 +591,7 @@ pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 2-15: Register multi-target design axes bundle [BLOCKED on 0-4]
+## Issue 2-15: Register multi-target design axes bundle [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files
@@ -601,7 +601,7 @@ pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 2-16: Register benchmark_family expansion + regime_task [BLOCKED on 0-4]
+## Issue 2-16: Register benchmark_family expansion + regime_task [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Files
@@ -695,7 +695,7 @@ Recommended: (b) — add `tcode_application_scope` as separate axis, keep existi
 
 ---
 
-## Issue 3-4: Expand x_missing values [BLOCKED on 0-4]
+## Issue 3-4: Expand x_missing values [DONE]
 pri:high | size:L | deps: 0-4
 
 ### What
@@ -720,7 +720,7 @@ missing_indicator        planned
 
 ---
 
-## Issue 3-5: Expand x_outlier values [BLOCKED on 0-4]
+## Issue 3-5: Expand x_outlier values [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Values to add
@@ -735,7 +735,7 @@ outlier_to_missing       planned
 
 ---
 
-## Issue 3-6: Expand scaling values [BLOCKED on 0-4]
+## Issue 3-6: Expand scaling values [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Values to add
@@ -748,7 +748,7 @@ rank_scale               registry_only
 
 ---
 
-## Issue 3-7: Implement PCA/static_factor dimensionality reduction [BLOCKED on 0-4]
+## Issue 3-7: Implement PCA/static_factor dimensionality reduction [DONE]
 pri:high | size:L | deps: 0-4
 
 ### What
@@ -762,12 +762,12 @@ Move `pca` and `static_factor` from planned to operational.
 
 ---
 
-## Issue 3-8: Implement correlation_screen / lasso_select feature selection [BLOCKED on 0-4]
+## Issue 3-8: Implement correlation_screen / lasso_select feature selection [DONE]
 pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 3-9: Register additional preprocessing axes [BLOCKED on 0-4]
+## Issue 3-9: Register additional preprocessing axes [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files to create
@@ -787,7 +787,7 @@ pri:medium | size:M | deps: 0-4
 > Current: 4 axes, 14 values, 12 operational.
 > Target: 22 axes, ~200 values, ~60 operational.
 
-## Issue 4-1: Register outer_window expansion [BLOCKED on 0-4]
+## Issue 4-1: Register outer_window expansion [DONE]
 pri:high | size:M | deps: 0-4
 
 ### What
@@ -802,7 +802,7 @@ Add `anchored_rolling` to operational.
 
 ---
 
-## Issue 4-2: Register refit_policy axis [BLOCKED on 0-4]
+## Issue 4-2: Register refit_policy axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Values (A-tier)
@@ -819,7 +819,7 @@ fit_once_predict_many    planned → operational
 
 ---
 
-## Issue 4-3: Add A-tier model families — OLS, AdaptiveLasso, BayesianRidge [BLOCKED on 0-4]
+## Issue 4-3: Add A-tier model families — OLS, AdaptiveLasso, BayesianRidge [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Models to implement
@@ -839,12 +839,12 @@ Use existing Ridge executor as template. Each model needs:
 
 ---
 
-## Issue 4-4: Add A-tier model families — SVR_linear, SVR_rbf [BLOCKED on 0-4]
+## Issue 4-4: Add A-tier model families — SVR_linear, SVR_rbf [DONE]
 pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 4-5: Add A-tier model families — ExtraTrees, GBM, XGBoost, LightGBM [BLOCKED on 0-4]
+## Issue 4-5: Add A-tier model families — ExtraTrees, GBM, XGBoost, LightGBM [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Models
@@ -863,7 +863,7 @@ pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 4-6: Add MLP model [BLOCKED on 0-4]
+## Issue 4-6: Add MLP model [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Implementation
@@ -872,7 +872,7 @@ pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 4-7: Add sklearn_adapter / statsmodels_adapter plugin bridge [BLOCKED on 0-4]
+## Issue 4-7: Add sklearn_adapter / statsmodels_adapter plugin bridge [DONE]
 pri:high | size:L | deps: 0-4
 
 ### What
@@ -886,7 +886,7 @@ def sklearn_model_executor(estimator_class, hp_grid, importance_method):
 
 ---
 
-## Issue 4-8: Register validation/split axes bundle [BLOCKED on 0-4]
+## Issue 4-8: Register validation/split axes bundle [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Files
@@ -905,7 +905,7 @@ pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 4-9: Register tuning axes bundle [BLOCKED on 0-4]
+## Issue 4-9: Register tuning axes bundle [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Files
@@ -924,7 +924,7 @@ pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 4-10: Register feature construction axes [BLOCKED on 0-4]
+## Issue 4-10: Register feature construction axes [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files
@@ -935,7 +935,7 @@ pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 4-11: Register execution runtime axes [BLOCKED on 0-4]
+## Issue 4-11: Register execution runtime axes [DONE]
 pri:low | size:S | deps: 0-4
 
 ### Files
@@ -946,7 +946,7 @@ pri:low | size:S | deps: 0-4
 
 ---
 
-## Issue 4-12: Register horizon_modelization axis [BLOCKED on 0-4]
+## Issue 4-12: Register horizon_modelization axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Values (A-tier)
@@ -965,7 +965,7 @@ recursive_one_step_model planned
 > Current: 1 axis (primary_metric), 4 values, all operational.
 > Target: 17 axes, ~80 values, ~30 operational.
 
-## Issue 5-1: Expand point_forecast_metrics [BLOCKED on 0-4]
+## Issue 5-1: Expand point_forecast_metrics [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Values to add
@@ -981,7 +981,7 @@ MAPE                     planned → operational
 
 ---
 
-## Issue 5-2: Expand relative_metrics [BLOCKED on 0-4]
+## Issue 5-2: Expand relative_metrics [DONE]
 pri:high | size:S | deps: 0-4
 
 ### Values to add
@@ -993,7 +993,7 @@ benchmark_win_rate       planned
 
 ---
 
-## Issue 5-3: Add direction/event metrics [BLOCKED on 0-4]
+## Issue 5-3: Add direction/event metrics [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Values
@@ -1004,7 +1004,7 @@ sign_accuracy            planned
 
 ---
 
-## Issue 5-4: Register aggregation axes bundle [BLOCKED on 0-4]
+## Issue 5-4: Register aggregation axes bundle [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Files
@@ -1016,7 +1016,7 @@ pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 5-5: Register benchmark evaluation axes [BLOCKED on 0-4]
+## Issue 5-5: Register benchmark evaluation axes [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### Files
@@ -1025,7 +1025,7 @@ pri:medium | size:S | deps: 0-4
 
 ---
 
-## Issue 5-6: Register regime evaluation axes [BLOCKED on 0-4]
+## Issue 5-6: Register regime evaluation axes [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files
@@ -1039,7 +1039,7 @@ pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 5-7: Register decomposition axes [BLOCKED on 0-4]
+## Issue 5-7: Register decomposition axes [DONE]
 pri:low | size:S | deps: 0-4
 
 ### Files
@@ -1053,7 +1053,7 @@ pri:low | size:S | deps: 0-4
 > Current: 0 registered axes (all hardcoded).
 > Target: 4 axes.
 
-## Issue 6-1: Register output axes bundle [BLOCKED on 0-4]
+## Issue 6-1: Register output axes bundle [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Files
@@ -1082,7 +1082,7 @@ Compute deterministic hash of recipe config and record git commit + macrocast ve
 > Current: 1 axis, 4 values, 3 operational.
 > Target: 9 axes, ~50 values, ~25 operational.
 
-## Issue 7-1: Implement MCS (Model Confidence Set) [BLOCKED on 0-4]
+## Issue 7-1: Implement MCS (Model Confidence Set) [DONE]
 pri:critical | size:XL | deps: 0-4
 
 ### What
@@ -1095,7 +1095,7 @@ Most important missing statistical test. Needed for multi-model comparison.
 
 ---
 
-## Issue 7-2: Add DM variants (HLN small-sample, modified DM) [BLOCKED on 0-4]
+## Issue 7-2: Add DM variants (HLN small-sample, modified DM) [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Implementation
@@ -1104,12 +1104,12 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 7-3: Add nested model tests (ENC_NEW, MSE_F, MSE_t) [BLOCKED on 0-4]
+## Issue 7-3: Add nested model tests (ENC_NEW, MSE_F, MSE_t) [DONE]
 pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 7-4: Add conditional predictive ability tests [BLOCKED on 0-4]
+## Issue 7-4: Add conditional predictive ability tests [DONE]
 pri:high | size:L | deps: 0-4
 
 ### Tests
@@ -1119,12 +1119,12 @@ pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 7-5: Add White Reality Check / Hansen SPA [BLOCKED on 0-4]
+## Issue 7-5: Add White Reality Check / Hansen SPA [DONE]
 pri:high | size:L | deps: 0-4
 
 ---
 
-## Issue 7-6: Register dependence correction axis [BLOCKED on 0-4]
+## Issue 7-6: Register dependence correction axis [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Values to operationalize
@@ -1134,7 +1134,7 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 7-7: Add residual/calibration diagnostics bundle [BLOCKED on 0-4]
+## Issue 7-7: Add residual/calibration diagnostics bundle [DONE]
 pri:medium | size:L | deps: 0-4
 
 ### Tests
@@ -1145,7 +1145,7 @@ pri:medium | size:L | deps: 0-4
 
 ---
 
-## Issue 7-8: Add direction/classification tests [BLOCKED on 0-4]
+## Issue 7-8: Add direction/classification tests [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Tests
@@ -1170,7 +1170,7 @@ pri:critical | size:L | deps: 0-4, 4-5 (needs tree models)
 
 ---
 
-## Issue 8-2: Implement KernelSHAP + LinearSHAP [BLOCKED on 0-4]
+## Issue 8-2: Implement KernelSHAP + LinearSHAP [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Implementation
@@ -1179,7 +1179,7 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 8-3: Implement PFI (permutation feature importance) [BLOCKED on 0-4]
+## Issue 8-3: Implement PFI (permutation feature importance) [DONE]
 pri:high | size:M | deps: 0-4
 
 ### Implementation
@@ -1189,12 +1189,12 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 8-4: Implement LIME + feature ablation [BLOCKED on 0-4]
+## Issue 8-4: Implement LIME + feature ablation [DONE]
 pri:medium | size:M | deps: 0-4
 
 ---
 
-## Issue 8-5: Implement PDP / ICE / ALE [BLOCKED on 0-4]
+## Issue 8-5: Implement PDP / ICE / ALE [DONE]
 pri:medium | size:L | deps: 0-4
 
 ---
@@ -1224,7 +1224,7 @@ pri:high | size:M | deps: 8-1 or 8-3
 
 ---
 
-## Issue 8-8: Register remaining importance axes [BLOCKED on 0-4]
+## Issue 8-8: Register remaining importance axes [DONE]
 pri:medium | size:M | deps: 0-4
 
 ### Files

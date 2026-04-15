@@ -14,6 +14,7 @@ class RecipeSpec:
     horizons: tuple[int, ...]
     raw_dataset: str
     benchmark_config: dict[str, Any] = field(default_factory=dict)
+    data_task_spec: dict[str, Any] = field(default_factory=dict)
     data_vintage: str | None = None
     targets: tuple[str, ...] = ()
 

@@ -21,6 +21,20 @@ from ..stage0 import build_stage0_frame, resolve_route_owner, stage0_to_dict
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
 
+_AXIS_NAME_ALIASES = {
+    "info_set": "information_set_type",
+}
+
+_AXIS_VALUE_ALIASES = {
+    ("information_set_type", "real_time"): "real_time_vintage",
+}
+
+_DATASET_DEFAULT_FREQUENCY = {
+    "fred_md": "monthly",
+    "fred_qd": "quarterly",
+    "fred_sd": "monthly",
+}
+
 
 def load_recipe_yaml(path: str | Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as fh:
@@ -32,6 +46,14 @@ def _normalize_layer_spec(layer_spec: dict[str, Any] | None) -> dict[str, Any]:
     return {key: dict(layer_spec.get(key, {})) for key in _ALLOWED_SELECTION_MODES}
 
 
+def _canonical_axis_name(axis_name: str) -> str:
+    return _AXIS_NAME_ALIASES.get(axis_name, axis_name)
+
+
+def _canonical_axis_value(axis_name: str, value: str) -> str:
+    return _AXIS_VALUE_ALIASES.get((axis_name, value), value)
+
+
 def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, ...]:
     registry = get_axis_registry()
     path = recipe_dict.get("path", {})
@@ -40,15 +62,17 @@ def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, 
         layer_spec = _normalize_layer_spec(path.get(layer))
         for selection_mode in ("fixed_axes", "sweep_axes", "conditional_axes"):
             mode_name = selection_mode.replace("_axes", "")
-            for axis_name, raw_value in layer_spec[selection_mode].items():
+            for raw_axis_name, raw_value in layer_spec[selection_mode].items():
+                axis_name = _canonical_axis_name(raw_axis_name)
                 if axis_name not in registry:
-                    raise CompileValidationError(f"unknown registry axis {axis_name!r}")
+                    raise CompileValidationError(f"unknown registry axis {raw_axis_name!r}")
                 entry = registry[axis_name]
-                values = tuple(raw_value) if isinstance(raw_value, list) else (raw_value,)
+                raw_values = tuple(raw_value) if isinstance(raw_value, list) else (raw_value,)
+                values = tuple(_canonical_axis_value(axis_name, str(value)) for value in raw_values)
                 for value in values:
                     if value not in entry.allowed_values:
                         raise CompileValidationError(
-                            f"axis {axis_name!r} received unknown value {value!r}"
+                            f"axis {raw_axis_name!r} received unknown value {value!r}"
                         )
                 selections.append(
                     AxisSelection(
@@ -68,6 +92,19 @@ def _leaf_config(recipe_dict: dict[str, Any]) -> dict[str, Any]:
     for layer in get_canonical_layer_order():
         leaf.update(_normalize_layer_spec(path.get(layer))["leaf_config"])
     return leaf
+
+
+def _ensure_unique_axis_selections(selections: tuple[AxisSelection, ...]) -> None:
+    seen: dict[str, AxisSelection] = {}
+    for selection in selections:
+        if selection.axis_name in seen:
+            previous = seen[selection.axis_name]
+            if previous.selected_values != selection.selected_values or previous.selection_mode != selection.selection_mode or previous.layer != selection.layer:
+                raise CompileValidationError(
+                    f"axis {selection.axis_name!r} was specified more than once through canonical/legacy aliases"
+                )
+        else:
+            seen[selection.axis_name] = selection
 
 
 def _selection_map(selections: tuple[AxisSelection, ...]) -> dict[str, AxisSelection]:
@@ -226,6 +263,52 @@ def _tree_context_summary(tree_context: dict[str, Any]) -> str:
     )
 
 
+def _first_selected_value(selection_map: dict[str, AxisSelection], axis_name: str, default: str) -> str:
+    selection = selection_map.get(axis_name)
+    if selection is None or not selection.selected_values:
+        return default
+    return selection.selected_values[0]
+
+
+def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
+    dataset = _first_selected_value(selection_map, "dataset", "fred_md")
+    task = _first_selected_value(selection_map, "task", "single_target_point_forecast")
+    framework = _first_selected_value(selection_map, "framework", "expanding")
+    feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
+    information_set_type = _first_selected_value(selection_map, "information_set_type", "revised")
+    predictor_family_default = "target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"
+    return {
+        "data_domain": _selection_value(selection_map, "data_domain", default="macro"),
+        "dataset_source": _selection_value(selection_map, "dataset_source", default=dataset),
+        "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
+        "information_set_type": information_set_type,
+        "vintage_policy": _selection_value(selection_map, "vintage_policy", default=("single_vintage" if information_set_type == "real_time_vintage" else "latest_only")),
+        "alignment_rule": _selection_value(selection_map, "alignment_rule", default="end_of_period"),
+        "forecast_type": _selection_value(selection_map, "forecast_type", default="direct"),
+        "forecast_object": _selection_value(selection_map, "forecast_object", default="point_mean"),
+        "horizon_target_construction": _selection_value(selection_map, "horizon_target_construction", default="future_level_y_t_plus_h"),
+        "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),
+        "target_family": _selection_value(selection_map, "target_family", default=("multiple_macro_series" if task == "multi_target_point_forecast" else "single_macro_series")),
+        "predictor_family": _selection_value(selection_map, "predictor_family", default=predictor_family_default),
+        "contemporaneous_x_rule": _selection_value(selection_map, "contemporaneous_x_rule", default="forbid_contemporaneous"),
+        "own_target_lags": _selection_value(selection_map, "own_target_lags", default="include"),
+        "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
+        "exogenous_block": _selection_value(selection_map, "exogenous_block", default=("endogenous_allowed" if feature_builder == "raw_feature_panel" else "none")),
+        "training_start_rule": _selection_value(selection_map, "training_start_rule", default=("rolling_train_start" if framework == "rolling" else "earliest_possible")),
+        "oos_period": _selection_value(selection_map, "oos_period", default=("rolling_origin" if framework == "rolling" else "single_oos_block")),
+        "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
+        "warmup_rule": _selection_value(selection_map, "warmup_rule", default="lags_only_warmup"),
+        "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
+        "x_map_policy": _selection_value(selection_map, "x_map_policy", default="shared_X"),
+        "target_to_target_inclusion": _selection_value(selection_map, "target_to_target_inclusion", default="forbid_other_targets_as_X"),
+        "multi_target_architecture": _selection_value(selection_map, "multi_target_architecture", default="separate_univariate_runs"),
+        "evaluation_scale": _selection_value(selection_map, "evaluation_scale", default="raw_level"),
+        "benchmark_family": _selection_value(selection_map, "benchmark_family"),
+        "regime_task": _selection_value(selection_map, "regime_task", default="unconditional"),
+        "data_vintage": leaf_config.get("data_vintage"),
+    }
+
+
 def _build_stage0_and_recipe(
     recipe_dict: dict[str, Any],
     selection_map: dict[str, AxisSelection],
@@ -233,7 +316,7 @@ def _build_stage0_and_recipe(
 ):
     study_mode = _selection_value(selection_map, "study_mode")
     dataset = _selection_value(selection_map, "dataset")
-    info_set = _selection_value(selection_map, "info_set")
+    information_set_type = _selection_value(selection_map, "information_set_type")
     task = _selection_value(selection_map, "task")
     benchmark = _selection_value(selection_map, "benchmark_family")
     framework = _selection_value(selection_map, "framework")
@@ -246,8 +329,8 @@ def _build_stage0_and_recipe(
     feature_builders = feature_axis.selected_values
     wrapper_family = leaf_config.get("wrapper_family")
 
-    if info_set == "real_time" and not data_vintage:
-        raise CompileValidationError("info_set='real_time' requires leaf_config.data_vintage")
+    if information_set_type == "real_time_vintage" and not data_vintage:
+        raise CompileValidationError("information_set_type='real_time_vintage' requires leaf_config.data_vintage")
     if task == "multi_target_point_forecast":
         if len(targets) < 2:
             raise CompileValidationError("task='multi_target_point_forecast' requires leaf_config.targets with at least two entries")
@@ -285,8 +368,8 @@ def _build_stage0_and_recipe(
     }[framework]
     info_set_token = {
         "revised": "revised_monthly",
-        "real_time": "real_time_vintage",
-    }[info_set]
+        "real_time_vintage": "real_time_vintage",
+    }[information_set_type]
 
     stage0 = build_stage0_frame(
         study_mode=study_mode,
@@ -324,6 +407,7 @@ def _build_stage0_and_recipe(
         horizons=horizons,
         raw_dataset=dataset,
         benchmark_config=benchmark_spec,
+        data_task_spec=_data_task_spec(selection_map, leaf_config),
         data_vintage=data_vintage,
         targets=targets,
     )
@@ -368,6 +452,13 @@ def _execution_status(
     feature_builder = _selection_value(selection_map, "feature_builder") if "feature_builder" in selection_map and len(selection_map["feature_builder"].selected_values) == 1 else None
     if model_family == "ar" and feature_builder == "raw_feature_panel":
         blocked.append("raw_feature_panel is not compatible with model_family='ar' in the current runtime slice")
+
+    if feature_builder is not None:
+        predictor_family = _selection_value(selection_map, "predictor_family", default=("target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"))
+        if predictor_family == "target_lags_only" and feature_builder != "autoreg_lagged_target":
+            blocked.append("predictor_family='target_lags_only' requires feature_builder='autoreg_lagged_target' in the current runtime slice")
+        if predictor_family == "all_macro_vars" and feature_builder != "raw_feature_panel":
+            blocked.append("predictor_family='all_macro_vars' requires feature_builder='raw_feature_panel' in the current runtime slice")
 
     if failure_policy not in {"fail_fast", "hard_error", "skip_failed_model", "save_partial_results"}:
         warnings.append(
@@ -432,8 +523,9 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
     if not recipe_dict.get("recipe_id"):
         raise CompileValidationError("recipe_id is required")
     selections = _build_axis_selections(recipe_dict)
+    _ensure_unique_axis_selections(selections)
     selection_map = _selection_map(selections)
-    required_axes = {"study_mode", "dataset", "info_set", "task", "framework", "benchmark_family", "model_family", "feature_builder"}
+    required_axes = {"study_mode", "dataset", "information_set_type", "task", "framework", "benchmark_family", "model_family", "feature_builder"}
     missing_axes = sorted(axis for axis in required_axes if axis not in selection_map)
     if missing_axes:
         raise CompileValidationError(f"recipe missing required axes: {missing_axes}")
@@ -514,6 +606,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "compute_mode_spec": {
             "compute_mode": _selection_value(selection_map, "compute_mode", default="serial"),
         },
+        "data_task_spec": _data_task_spec(selection_map, compiled.leaf_config),
         "stat_test_spec": {
             "stat_test": _selection_value(selection_map, "stat_test"),
         },

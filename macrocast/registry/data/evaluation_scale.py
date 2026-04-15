@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='evaluation_scale',
-    layer='2_preprocessing',
+    layer='1_data_task',
     axis_type='enum',
     default_policy='fixed',
     entries=(
@@ -13,13 +13,13 @@ AXIS_DEFINITION = AxisDefinition(
             id='raw_level',
             description='raw level',
             status='operational',
-            priority="A",
+            priority='A',
         ),
         EnumRegistryEntry(
             id='transformed_scale',
             description='transformed scale',
             status='registry_only',
-            priority="A",
+            priority='A',
         ),
     ),
     compatible_with={},
