@@ -240,7 +240,7 @@ report_only          registry_only
 
 ---
 
-## Issue 1-3: Register registry_type axis [BLOCKED on 0-4]
+## Issue 1-3: Register registry_type axis [DONE]
 pri:medium | size:S | deps: 0-4
 
 ### File to create
@@ -257,8 +257,8 @@ external_adapter     registry_only
 ```
 
 ### Acceptance criteria
-- [ ] Axis registered
-- [ ] AxisDefinition carries registry_type field
+- [x] Axis registered
+- [x] AxisDefinition carries registry_type field
 
 ---
 

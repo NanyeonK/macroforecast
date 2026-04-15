@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 27
+    assert len(registry) == 28
     assert {"study_mode", "dataset", "info_set", "task", "model_family", "importance_method"}.issubset(registry)
 
 
@@ -50,7 +50,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 27
+    assert len(registry) == 28
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -62,3 +62,38 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
         "eval_only",
         "report_only",
     )
+
+
+
+def test_registry_loader_discovers_registry_type_meta_axis() -> None:
+    registry = get_axis_registry()
+    assert len(registry) == 28
+    assert "registry_type" in registry
+    entry = get_axis_registry_entry("registry_type")
+    assert entry.allowed_values == (
+        "enum_registry",
+        "numeric_registry",
+        "callable_registry",
+        "custom_plugin",
+        "user_defined_yaml",
+        "external_adapter",
+    )
+
+
+
+def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
+    entry = EnumRegistryEntry(
+        id="demo_two",
+        description="demo two",
+        status="operational",
+        priority="A",
+    )
+    definition = AxisDefinition(
+        axis_name="demo_axis_two",
+        layer="0_meta",
+        axis_type="enum",
+        entries=(entry,),
+        compatible_with={},
+        incompatible_with={},
+    )
+    assert definition.registry_type == "enum_registry"

@@ -661,3 +661,11 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
     compile_result = compile_recipe_dict(recipe)
     assert any("fixed-policy axis 'feature_builder' placed in sweep_axes" in warning for warning in compile_result.manifest["warnings"])
     assert compile_result.compiled.execution_status == "representable_but_not_executable"
+
+
+
+def test_axis_governance_table_includes_registry_type() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["registry_type"]["current_status"]["enum_registry"] == "operational"
+    assert by_name["registry_type"]["current_status"]["custom_plugin"] == "planned"
