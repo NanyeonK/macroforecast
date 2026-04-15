@@ -431,6 +431,31 @@ def _compute_dm_test(predictions: pd.DataFrame) -> dict[str, object]:
     }
 
 
+def _compute_cw_test(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    benchmark_sq = rows["benchmark_squared_error"].to_numpy(dtype=float)
+    model_sq = rows["squared_error"].to_numpy(dtype=float)
+    forecast_adjustment = (rows["benchmark_pred"].to_numpy(dtype=float) - rows["y_pred"].to_numpy(dtype=float)) ** 2
+    adjusted_loss_diff = benchmark_sq - (model_sq - forecast_adjustment)
+    n = int(len(adjusted_loss_diff))
+    if n < 2:
+        raise ExecutionError("cw test requires at least two forecast errors")
+    variance = float(np.var(adjusted_loss_diff, ddof=1))
+    if variance <= 0:
+        raise ExecutionError("cw test variance must be positive")
+    statistic = float(adjusted_loss_diff.mean() / math.sqrt(variance / n))
+    p_value = float(_normal_two_sided_pvalue(statistic))
+    return {
+        "stat_test": "cw",
+        "n": n,
+        "mean_adjusted_loss_diff": float(adjusted_loss_diff.mean()),
+        "forecast_adjustment_mean": float(forecast_adjustment.mean()),
+        "variance": variance,
+        "statistic": statistic,
+        "p_value": p_value,
+    }
+
+
 def _compute_minimal_importance(
     raw_frame: pd.DataFrame,
     target_series: pd.Series,
@@ -641,6 +666,11 @@ def execute_recipe(
         dm_payload = _compute_dm_test(predictions)
         (run_dir / "stat_test_dm.json").write_text(json.dumps(dm_payload, indent=2), encoding="utf-8")
         manifest["stat_test_file"] = "stat_test_dm.json"
+        (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if stat_test_spec.get("stat_test") == "cw":
+        cw_payload = _compute_cw_test(predictions)
+        (run_dir / "stat_test_cw.json").write_text(json.dumps(cw_payload, indent=2), encoding="utf-8")
+        manifest["stat_test_file"] = "stat_test_cw.json"
         (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     if importance_spec.get("importance_method") == "minimal_importance":
         importance_payload = _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess)

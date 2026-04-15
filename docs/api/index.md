@@ -26,7 +26,7 @@ Preprocessing
 
 Evaluation / testing / importance
 - metrics: `msfe`, `relative_msfe`, `oos_r2`, `csfe`
-- operational stat test: `dm`
+- operational stat tests: `dm`, `cw`
 - operational importance: `minimal_importance`
 
 Execution architecture

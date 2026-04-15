@@ -7,14 +7,14 @@ It sits behind an explicit compiler boundary, preserves preprocessing semantics 
 
 ## Current role
 
-The current runtime now supports a first importance layer in addition to frameworks, preprocessing, and DM testing.
+The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, and CW testing.
 It executes a benchmark-respecting slice with:
 - revised-data single-target point forecast
 - explicit benchmark family from recipe grammar
 - deterministic prediction and metric artifacts
 - two operational feature-builder families
 - one nontrivial train-only raw-panel preprocessing path
-- first operational statistical test: DM
+- operational statistical tests: DM and CW
 - first operational importance layer: minimal importance
 
 ## Current operational frameworks
@@ -22,9 +22,14 @@ It executes a benchmark-respecting slice with:
 - `expanding`
 - `rolling`
 
-## Current operational statistical test
+## Current operational statistical tests
 
 - `stat_test = dm`
+- `stat_test = cw`
+- DM writes `stat_test_dm.json`
+- CW writes `stat_test_cw.json`
+- CW first slice uses the benchmark-vs-model forecast-gap adjustment on the existing prediction table and reports a simple normal-approximation statistic
+- manifest records `stat_test_spec` and `stat_test_file`
 
 ## Current operational importance layer
 

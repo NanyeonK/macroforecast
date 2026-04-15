@@ -20,6 +20,7 @@ Executable frameworks:
 Executable stat tests:
 - `none`
 - `dm`
+- `cw`
 
 ## Current importance executability rule
 
@@ -40,7 +41,7 @@ The current compiler-to-runtime path supports:
 - model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
 - feature builders: `autoreg_lagged_target`, `raw_feature_panel`
 - preprocessing: `raw_only` plus the first train-only impute+standardize raw-panel path
-- statistical tests: `dm`
+- statistical tests: `dm`, `cw`
 - importance: `minimal_importance`
 
 Important caveat

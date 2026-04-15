@@ -27,6 +27,7 @@ Current operational subset
   - first train-only raw-panel path with `x_missing_policy=em_impute` and `scaling_policy=standard`
 - operational statistical tests:
   - `dm`
+  - `cw`
 - operational importance methods:
   - `minimal_importance`
 

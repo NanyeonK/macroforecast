@@ -373,7 +373,7 @@ _AXIS_REGISTRY: dict[str, AxisRegistryEntry] = {
         current_status={
             "none": "operational",
             "dm": "operational",
-            "cw": "planned",
+            "cw": "operational",
             "mcs": "planned",
         },
         default_policy="fixed",
