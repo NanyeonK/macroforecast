@@ -278,7 +278,7 @@ def check_preprocess_governance(
         raise PreprocessValidationError("scaling requires explicit train-only fit scope")
     if contract.x_missing_policy == "em_impute" and contract.preprocess_fit_scope not in {"train_only", "expanding_train_only", "rolling_train_only"}:
         raise PreprocessValidationError("em_impute requires explicit train-only fit scope")
-    if not preprocessing_sweep and model_sweep and extra_present:
+    if preprocessing_sweep and model_sweep:
         raise PreprocessValidationError(
             "do not co-sweep model and preprocessing in ordinary baseline comparison"
         )
