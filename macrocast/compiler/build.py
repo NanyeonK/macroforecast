@@ -716,6 +716,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "evaluation_spec": _evaluation_spec(selection_map, compiled.leaf_config),
         "stat_test_spec": {
             "stat_test": _selection_value(selection_map, "stat_test"),
+            "dependence_correction": _selection_value(selection_map, "dependence_correction", default="none"),
         },
         "importance_spec": {
             "importance_method": _selection_value(selection_map, "importance_method"),

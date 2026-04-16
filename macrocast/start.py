@@ -147,7 +147,7 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         return _recipe_fixed(recipe, "4_evaluation").get(key)
     if key == "manifest_mode":
         return _recipe_leaf(recipe, "5_output_provenance").get(key)
-    if key == "stat_test":
+    if key in {"stat_test", "dependence_correction"}:
         return _recipe_fixed(recipe, "6_stat_tests").get(key)
     if key == "importance_method":
         return _recipe_fixed(recipe, "7_importance").get(key)
@@ -284,7 +284,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
     if key == "manifest_mode":
         _recipe_leaf(recipe, "5_output_provenance")[key] = value
         return
-    if key == "stat_test":
+    if key in {"stat_test", "dependence_correction"}:
         _recipe_fixed(recipe, "6_stat_tests")[key] = value
         return
     if key == "importance_method":
@@ -418,7 +418,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "stat_test",
             "prompt": "Stat test",
-            "options": ["none", "dm", "cw", "mcs"],
+            "options": ["none", "dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t", "cpa", "rossi", "rolling_dm", "reality_check", "spa", "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "pesaran_timmermann", "binomial_hit", "diagnostics_full"],
         },
         {
             "key": "importance_method",
@@ -548,10 +548,26 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
         "metrics.json",
         "comparison_summary.json",
     ]
-    if stat_test == "dm":
-        expected_artifacts.append("stat_test_dm.json")
+    if stat_test in ("dm", "dm_hln"):
+        expected_artifacts.append("stat_test_" + stat_test.replace("_", "") + ".json")
     if stat_test == "cw":
         expected_artifacts.append("stat_test_cw.json")
+    if stat_test == "enc_new":
+        expected_artifacts.append("stat_test_enc_new.json")
+    if stat_test == "mincer_zarnowitz":
+        expected_artifacts.append("stat_test_mincer_zarnowitz.json")
+    if stat_test == "ljung_box":
+        expected_artifacts.append("stat_test_ljung_box.json")
+    if stat_test == "arch_lm":
+        expected_artifacts.append("stat_test_arch_lm.json")
+    if stat_test == "bias_test":
+        expected_artifacts.append("stat_test_bias_test.json")
+    if stat_test == "pesaran_timmermann":
+        expected_artifacts.append("stat_test_pesaran_timmermann.json")
+    if stat_test == "binomial_hit":
+        expected_artifacts.append("stat_test_binomial_hit.json")
+    if stat_test == "diagnostics_full":
+        expected_artifacts.append("stat_test_diagnostics_bundle.json")
     if importance_method == "minimal_importance":
         expected_artifacts.append("importance_minimal.json")
     return {

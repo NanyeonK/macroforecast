@@ -1096,3 +1096,51 @@ def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) 
     assert (run_dir / "metrics.parquet").exists()
     assert (run_dir / "comparison_summary.parquet").exists()
     assert (run_dir / "predictions.parquet").exists()
+
+
+
+def test_execute_recipe_stage6_extended_stat_tests(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    cases = [
+        ("dm_hln", "stat_test_dm_hln.json", {"dependence_correction": "nw_hac"}),
+        ("dm_modified", "stat_test_dm_modified.json", {"dependence_correction": "nw_hac_auto"}),
+        ("mcs", "stat_test_mcs.json", {"dependence_correction": "block_bootstrap"}),
+        ("enc_new", "stat_test_enc_new.json", {"dependence_correction": "nw_hac"}),
+        ("mse_f", "stat_test_mse_f.json", {}),
+        ("mse_t", "stat_test_mse_t.json", {"dependence_correction": "nw_hac"}),
+        ("cpa", "stat_test_cpa.json", {"dependence_correction": "nw_hac_auto"}),
+        ("rossi", "stat_test_rossi.json", {}),
+        ("rolling_dm", "stat_test_rolling_dm.json", {}),
+        ("reality_check", "stat_test_reality_check.json", {"dependence_correction": "block_bootstrap"}),
+        ("spa", "stat_test_spa.json", {"dependence_correction": "block_bootstrap"}),
+        ("diagnostics_full", "stat_test_diagnostics_full.json", {}),
+        ("pesaran_timmermann", "stat_test_pesaran_timmermann.json", {}),
+        ("binomial_hit", "stat_test_binomial_hit.json", {}),
+    ]
+    for idx, (stat_name, filename, extra) in enumerate(cases):
+        out_root = tmp_path / f"case_{idx}_{stat_name}"
+        result = execute_recipe(
+            recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+            preprocess=_preprocess_raw_only(),
+            output_root=out_root,
+            local_raw_source=fixture,
+            provenance_payload={"compiler": {"stat_test_spec": {"stat_test": stat_name, **extra}}},
+        )
+        run_dir = out_root / result.run.artifact_subdir
+        manifest = json.loads((run_dir / "manifest.json").read_text())
+        payload = json.loads((run_dir / filename).read_text())
+        assert manifest["stat_test_file"] == filename
+        assert payload["stat_test"] == stat_name
+
+
+def test_execute_recipe_stage6_stat_test_manifest_preserves_dependence_correction(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={"compiler": {"stat_test_spec": {"stat_test": "dm_modified", "dependence_correction": "nw_hac_auto"}}},
+    )
+    manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    assert manifest["stat_test_spec"]["dependence_correction"] == "nw_hac_auto"

@@ -904,7 +904,7 @@ def _build_noop_contract() -> PreprocessContract:
 
 def _stat_test_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
-    return dict(compiler.get("stat_test_spec", {"stat_test": "none"}))
+    return dict(compiler.get("stat_test_spec", {"stat_test": "none", "dependence_correction": "none"}))
 
 
 def _evaluation_spec(provenance_payload: dict | None) -> dict[str, object]:
@@ -1039,6 +1039,336 @@ def _compute_cw_test(predictions: pd.DataFrame) -> dict[str, object]:
         "p_value": p_value,
     }
 
+
+
+
+
+def _compute_nw_hac_variance(errors: np.ndarray, max_lag: int | None = None) -> float:
+    centered = errors - errors.mean()
+    n = len(centered)
+    if max_lag is None:
+        max_lag = min(int(4 * (n / 100) ** (1/4)), n - 1)
+    gamma0 = float(np.dot(centered, centered) / n)
+    variance = gamma0
+    for lag in range(1, max_lag + 1):
+        weight = 1.0 - lag / (max_lag + 1)
+        cov = float(np.dot(centered[lag:], centered[:-lag]) / n)
+        variance += 2.0 * weight * cov
+    return variance
+
+
+def _dependence_correction(stat_test_spec: dict[str, object]) -> str:
+    return str(stat_test_spec.get("dependence_correction", "none"))
+
+
+def _bootstrap_mean_distribution(values: np.ndarray, *, block_length: int = 4, n_boot: int = 199, seed: int = 42) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    values = np.asarray(values, dtype=float)
+    n = len(values)
+    if n < 2:
+        raise ExecutionError("bootstrap requires at least two observations")
+    block_length = max(1, min(block_length, n))
+    out = []
+    for _ in range(n_boot):
+        draws = []
+        while len(draws) < n:
+            start_idx = int(rng.integers(0, n))
+            for j in range(block_length):
+                draws.append(values[(start_idx + j) % n])
+                if len(draws) >= n:
+                    break
+        out.append(float(np.mean(draws[:n])))
+    return np.asarray(out, dtype=float)
+
+
+def _variance_from_dependence(loss_diff: np.ndarray, *, dependence_correction: str, horizon: int) -> tuple[float, dict[str, object]]:
+    n = int(len(loss_diff))
+    if n < 2:
+        raise ExecutionError("statistical test requires at least two observations")
+    if dependence_correction == "none":
+        variance = float(np.var(loss_diff, ddof=1))
+        return variance, {"dependence_correction": "none"}
+    if dependence_correction == "nw_hac":
+        lag = max(int(horizon) - 1, 1)
+        variance = float(_compute_nw_hac_variance(loss_diff, max_lag=lag))
+        return variance, {"dependence_correction": "nw_hac", "bandwidth": lag}
+    if dependence_correction == "nw_hac_auto":
+        variance = float(_compute_nw_hac_variance(loss_diff, max_lag=None))
+        return variance, {"dependence_correction": "nw_hac_auto"}
+    if dependence_correction == "block_bootstrap":
+        block_length = max(int(horizon), 2)
+        null_draws = _bootstrap_mean_distribution(loss_diff - float(np.mean(loss_diff)), block_length=block_length)
+        se = float(np.std(null_draws, ddof=1))
+        variance = float((se ** 2) * n)
+        return variance, {"dependence_correction": "block_bootstrap", "block_length": block_length, "n_boot": int(len(null_draws))}
+    raise ExecutionError(f"unsupported dependence_correction={dependence_correction!r}")
+
+
+def _basic_loss_diff_test(loss_diff: np.ndarray, *, stat_test: str, dependence_correction: str, horizon: int) -> dict[str, object]:
+    n = int(len(loss_diff))
+    variance, meta = _variance_from_dependence(loss_diff, dependence_correction=dependence_correction, horizon=horizon)
+    if variance <= 0:
+        raise ExecutionError(f"{stat_test} variance must be positive")
+    statistic = float(np.mean(loss_diff) / math.sqrt(variance / n))
+    p_value = float(_normal_two_sided_pvalue(statistic))
+    return {"stat_test": stat_test, "n": n, "mean_loss_diff": float(np.mean(loss_diff)), "variance": variance, "statistic": statistic, "p_value": p_value, **meta}
+
+
+def _compute_dm_hln_test(predictions: pd.DataFrame, *, dependence_correction: str = "nw_hac") -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    horizon = max(int(rows["horizon"].max()), 1)
+    base = _basic_loss_diff_test(loss_diff, stat_test="dm_hln", dependence_correction=dependence_correction, horizon=horizon)
+    correction_term = max((n + 1 - 2 * horizon + horizon * (horizon - 1) / n) / n, 1e-10)
+    base["hln_correction"] = float(math.sqrt(correction_term))
+    base["statistic"] = float(base["statistic"] * base["hln_correction"])
+    base["p_value"] = float(_normal_two_sided_pvalue(base["statistic"]))
+    return base
+
+
+def _compute_dm_modified_test(predictions: pd.DataFrame, *, dependence_correction: str = "nw_hac") -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    horizon = max(int(rows["horizon"].max()), 1)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    payload = _basic_loss_diff_test(loss_diff, stat_test="dm_modified", dependence_correction=dependence_correction, horizon=horizon)
+    payload["modified_for_horizon"] = horizon
+    return payload
+
+
+def _compute_enc_new_test(predictions: pd.DataFrame, *, dependence_correction: str = "none") -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    benchmark_sq = rows["benchmark_squared_error"].to_numpy(dtype=float)
+    model_sq = rows["squared_error"].to_numpy(dtype=float)
+    benchmark_pred = rows["benchmark_pred"].to_numpy(dtype=float)
+    model_pred = rows["y_pred"].to_numpy(dtype=float)
+    enc_diff = benchmark_sq - model_sq + (benchmark_pred - model_pred) ** 2
+    payload = _basic_loss_diff_test(enc_diff, stat_test="enc_new", dependence_correction=dependence_correction, horizon=max(int(rows["horizon"].max()), 1))
+    payload["mean_enc_diff"] = payload.pop("mean_loss_diff")
+    return payload
+
+
+def _compute_mse_f_test(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    mse_model = float(rows["squared_error"].mean())
+    mse_bench = float(rows["benchmark_squared_error"].mean())
+    n = int(len(rows))
+    if mse_model <= 0:
+        raise ExecutionError("mse_f requires positive model mse")
+    f_stat = float(n * (mse_bench - mse_model) / mse_model)
+    p_value = float(_normal_two_sided_pvalue(math.copysign(math.sqrt(abs(f_stat)), f_stat)))
+    return {"stat_test": "mse_f", "n": n, "mse_model": mse_model, "mse_benchmark": mse_bench, "f_statistic": f_stat, "p_value": p_value}
+
+
+def _compute_mse_t_test(predictions: pd.DataFrame, *, dependence_correction: str = "none") -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    payload = _basic_loss_diff_test(loss_diff, stat_test="mse_t", dependence_correction=dependence_correction, horizon=max(int(rows["horizon"].max()), 1))
+    payload["t_statistic"] = payload.pop("statistic")
+    return payload
+
+
+def _compute_cpa_test(predictions: pd.DataFrame, *, dependence_correction: str = "nw_hac") -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    payload = _basic_loss_diff_test(loss_diff, stat_test="cpa", dependence_correction=dependence_correction, horizon=max(int(rows["horizon"].max()), 1))
+    payload["instrument_set"] = "constant_only"
+    return payload
+
+
+def _compute_rossi_test(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    if n < 5:
+        raise ExecutionError("rossi test requires at least five forecasts")
+    centered = loss_diff - float(np.mean(loss_diff))
+    denom = float(np.std(centered, ddof=1))
+    if denom <= 0:
+        raise ExecutionError("rossi test requires positive standard deviation")
+    path = np.cumsum(centered) / (denom * math.sqrt(n))
+    sup_stat = float(np.max(np.abs(path)))
+    p_value = float(min(1.0, 2.0 * math.exp(-2.0 * sup_stat ** 2)))
+    return {"stat_test": "rossi", "n": n, "sup_statistic": sup_stat, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_rolling_dm_test(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    window = max(4, min(max(n // 2, 4), n - 1))
+    if n <= window:
+        raise ExecutionError("rolling_dm requires more observations than window length")
+    stats = []
+    for start_idx in range(0, n - window + 1):
+        chunk = loss_diff[start_idx:start_idx + window]
+        var = float(np.var(chunk, ddof=1))
+        if var <= 0:
+            continue
+        stats.append(float(np.mean(chunk) / math.sqrt(var / window)))
+    if not stats:
+        raise ExecutionError("rolling_dm produced no valid windows")
+    return {"stat_test": "rolling_dm", "n": n, "window": window, "n_windows": len(stats), "mean_window_statistic": float(np.mean(stats)), "max_abs_window_statistic": float(np.max(np.abs(stats)))}
+
+
+def _compute_reality_check(predictions: pd.DataFrame, *, block_bootstrap: bool) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    obs = float(np.mean(loss_diff))
+    block = max(int(rows["horizon"].max()), 2)
+    null_draws = _bootstrap_mean_distribution(loss_diff - obs, block_length=(block if block_bootstrap else 1))
+    p_value = float(np.mean(null_draws >= obs))
+    return {"stat_test": "reality_check", "n": int(len(loss_diff)), "mean_loss_diff": obs, "bootstrap_p_value": p_value, "bootstrap_scheme": "block" if block_bootstrap else "iid", "n_boot": int(len(null_draws))}
+
+
+def _compute_spa(predictions: pd.DataFrame, *, block_bootstrap: bool) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    obs = float(max(np.mean(loss_diff), 0.0))
+    block = max(int(rows["horizon"].max()), 2)
+    recentered = np.maximum(loss_diff - np.mean(loss_diff), 0.0)
+    null_draws = _bootstrap_mean_distribution(recentered, block_length=(block if block_bootstrap else 1))
+    p_value = float(np.mean(null_draws >= obs))
+    return {"stat_test": "spa", "n": int(len(loss_diff)), "spa_statistic": obs, "bootstrap_p_value": p_value, "bootstrap_scheme": "block" if block_bootstrap else "iid", "n_boot": int(len(null_draws))}
+
+
+def _compute_mcs_test(predictions: pd.DataFrame, *, block_bootstrap: bool, alpha: float = 0.10) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    mean_diff = float(np.mean(loss_diff))
+    block = max(int(rows["horizon"].max()), 2)
+    null_draws = _bootstrap_mean_distribution(loss_diff - mean_diff, block_length=(block if block_bootstrap else 1))
+    p_value = float(np.mean(np.abs(null_draws) >= abs(mean_diff)))
+    confidence_set = ["benchmark", "model"] if p_value >= alpha else (["model"] if mean_diff > 0 else ["benchmark"])
+    return {"stat_test": "mcs", "n": int(len(loss_diff)), "alpha": float(alpha), "mean_loss_diff": mean_diff, "bootstrap_p_value": p_value, "confidence_set": confidence_set, "bootstrap_scheme": "block" if block_bootstrap else "iid", "n_boot": int(len(null_draws))}
+
+
+def _compute_mincer_zarnowitz(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    y_true = rows["y_true"].to_numpy(dtype=float)
+    fcast = rows["y_pred"].to_numpy(dtype=float)
+    n = int(len(y_true))
+    if n < 3:
+        raise ExecutionError("mincer_zarnowitz requires at least 3 forecasts")
+    X_mat = np.column_stack([np.ones(n), fcast])
+    beta_hat = np.linalg.lstsq(X_mat, y_true, rcond=None)[0]
+    alpha, beta = float(beta_hat[0]), float(beta_hat[1])
+    residuals = y_true - X_mat @ beta_hat
+    ssr = float(np.dot(residuals, residuals))
+    mse = ssr / (n - 2)
+    XtX_inv = np.linalg.inv(X_mat.T @ X_mat)
+    t_alpha = alpha / math.sqrt(float(XtX_inv[0, 0]) * mse)
+    t_beta = (beta - 1.0) / math.sqrt(float(XtX_inv[1, 1]) * mse)
+    p_alpha = float(_normal_two_sided_pvalue(t_alpha))
+    p_beta = float(_normal_two_sided_pvalue(t_beta))
+    ss_tot = float(np.sum((y_true - y_true.mean()) ** 2))
+    r_squared = 1.0 - ssr / ss_tot if abs(ss_tot) > 1e-10 else float("nan")
+    return {"stat_test": "mincer_zarnowitz", "n": n, "alpha": alpha, "beta": beta, "t_alpha": t_alpha, "t_beta": t_beta, "p_alpha": p_alpha, "p_beta": p_beta, "r_squared": r_squared, "unbiased": bool(abs(t_alpha) < 1.96 and abs(t_beta) < 1.96)}
+
+
+def _compute_ljung_box_test(predictions: pd.DataFrame, max_lag: int = 10) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    errors = rows["y_true"].to_numpy(dtype=float) - rows["y_pred"].to_numpy(dtype=float)
+    n = int(len(errors))
+    effective_lags = min(max_lag, max(1, n // 5))
+    if effective_lags < 1:
+        raise ExecutionError("ljung_box requires sufficient observations")
+    acf_vals = []
+    for lag in range(1, effective_lags + 1):
+        num = float(np.dot(errors[lag:], errors[:-lag])) / n
+        denom = float(np.dot(errors, errors)) / n
+        acf_vals.append(num / denom if abs(denom) > 1e-10 else 0.0)
+    q_stat = float(n * (n + 2) * sum(acf_vals[l] ** 2 / (n - l - 1) for l in range(effective_lags)))
+    from scipy.stats import chi2 as chi2_scipy
+    p_value = float(1.0 - chi2_scipy.cdf(q_stat, df=effective_lags)) if effective_lags > 0 else float("nan")
+    return {"stat_test": "ljung_box", "n": n, "max_lag": effective_lags, "q_statistic": q_stat, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_arch_lm_test(predictions: pd.DataFrame, max_lag: int = 5) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    errors = rows["y_true"].to_numpy(dtype=float) - rows["y_pred"].to_numpy(dtype=float)
+    sq_errors = errors ** 2
+    n = int(len(sq_errors))
+    T = min(max_lag, max(1, n // 5))
+    if T < 1 or T >= n:
+        raise ExecutionError("arch_lm requires sufficient observations")
+    X_mat = np.column_stack([sq_errors[T - lag - 1: n - lag - 1] for lag in range(T)])
+    y_vec = sq_errors[T:]
+    n_reg = len(y_vec)
+    if n_reg < T + 2:
+        raise ExecutionError("arch_lm regression has insufficient observations")
+    coeffs = np.linalg.lstsq(X_mat, y_vec, rcond=None)[0]
+    residuals = y_vec - X_mat @ coeffs
+    ssr = float(np.dot(residuals, residuals))
+    ss_tot = float(np.sum((y_vec - y_vec.mean()) ** 2))
+    r2 = 1.0 - ssr / ss_tot if abs(ss_tot) > 1e-10 else 0.0
+    lm_stat = float(n_reg * r2)
+    from scipy.stats import chi2 as chi2_scipy
+    p_value = float(1.0 - chi2_scipy.cdf(lm_stat, df=T)) if T > 0 else float("nan")
+    return {"stat_test": "arch_lm", "n": n, "regression_lags": T, "lm_statistic": lm_stat, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_bias_test(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    errors = rows["y_true"].to_numpy(dtype=float) - rows["y_pred"].to_numpy(dtype=float)
+    n = int(len(errors))
+    if n < 2:
+        raise ExecutionError("bias_test requires at least 2 forecasts")
+    mean_error = float(errors.mean())
+    variance = float(np.var(errors, ddof=1))
+    if variance <= 0:
+        raise ExecutionError("bias_test variance must be positive")
+    t_stat = float(mean_error / math.sqrt(variance / n))
+    p_value = float(_normal_two_sided_pvalue(t_stat))
+    return {"stat_test": "bias_test", "n": n, "mean_error": mean_error, "variance": variance, "t_statistic": t_stat, "p_value": p_value, "significant_bias": bool(p_value < 0.05)}
+
+
+def _compute_pesaran_timmermann(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    y_series = rows["y_true"].astype(float).reset_index(drop=True)
+    f_series = rows["y_pred"].astype(float).reset_index(drop=True)
+    actual_dir = (y_series.diff().dropna() > 0).astype(int).to_numpy(dtype=int)
+    pred_dir = (f_series.iloc[1:].to_numpy(dtype=float) - y_series.shift(1).dropna().to_numpy(dtype=float) > 0).astype(int)
+    n = int(len(actual_dir))
+    if n < 2:
+        raise ExecutionError("pesaran_timmermann requires consecutive forecasts")
+    p_a = float(actual_dir.mean())
+    p_f = float(np.mean(pred_dir))
+    hit_rate = float(np.mean(actual_dir == pred_dir))
+    variance = max(p_a * (1 - p_a) * p_f * (1 - p_f), 1e-10)
+    statistic = float((hit_rate - (p_a * p_f + (1 - p_a) * (1 - p_f))) / math.sqrt(variance / n))
+    p_value = float(_normal_two_sided_pvalue(statistic))
+    return {"stat_test": "pesaran_timmermann", "n": n, "actual_up_prob": p_a, "forecast_up_prob": p_f, "hit_rate": hit_rate, "statistic": statistic, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_binomial_hit_test(predictions: pd.DataFrame, threshold: float = 0.0) -> dict[str, object]:
+    rows = predictions.sort_values(["target_date", "origin_date"]).reset_index(drop=True)
+    y_series = rows["y_true"].astype(float).reset_index(drop=True)
+    f_series = rows["y_pred"].astype(float).reset_index(drop=True)
+    actual_dir = (y_series.diff().dropna() > threshold).astype(int).to_numpy(dtype=int)
+    pred_dir = (f_series.iloc[1:].to_numpy(dtype=float) - y_series.shift(1).dropna().to_numpy(dtype=float) > threshold).astype(int)
+    n = int(len(actual_dir))
+    if n < 2:
+        raise ExecutionError("binomial_hit requires consecutive forecasts")
+    hits = int(np.sum(actual_dir == pred_dir))
+    hit_rate = hits / n
+    try:
+        from scipy.stats import binomtest
+        p_value = float(binomtest(hits, n, 0.5, alternative="greater").pvalue)
+    except Exception:
+        z = (hit_rate - 0.5) / math.sqrt(0.25 / n)
+        p_value = float(_normal_two_sided_pvalue(z))
+    return {"stat_test": "binomial_hit", "n": n, "hits": hits, "hit_rate": float(hit_rate), "threshold": threshold, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_diagnostics_bundle(predictions: pd.DataFrame) -> dict[str, object]:
+    return {
+        "stat_test": "diagnostics_full",
+        "mincer_zarnowitz": _compute_mincer_zarnowitz(predictions),
+        "ljung_box": _compute_ljung_box_test(predictions),
+        "arch_lm": _compute_arch_lm_test(predictions),
+        "bias_test": _compute_bias_test(predictions),
+    }
 
 def _compute_minimal_importance(
     raw_frame: pd.DataFrame,
@@ -1528,7 +1858,8 @@ def execute_recipe(
         "comparison_file": "comparison_summary.json",
         "regime_file": "regime_summary.json" if evaluation_spec.get("regime_definition", "none") != "none" else None,
         "successful_targets": successful_targets,
-        "partial_run": bool(failed_components),  "output_spec": output_spec,
+        "partial_run": bool(failed_components),
+        "output_spec": output_spec,
     }
     if provenance_payload:
         manifest.update(provenance_payload)
@@ -1607,21 +1938,36 @@ def execute_recipe(
             regime_files['parquet'] = 'regime_summary.parquet'
         manifest['regime_files'] = regime_files
         manifest['regime_file'] = regime_files.get('json') or regime_files.get('csv') or regime_files.get('parquet')
-    if stat_test_spec.get("stat_test") == "dm":
+    stat_test_name = str(stat_test_spec.get("stat_test", "none"))
+    dependence_correction = _dependence_correction(stat_test_spec)
+    stat_dispatch = {
+        "dm": lambda: _compute_dm_test(predictions),
+        "dm_hln": lambda: _compute_dm_hln_test(predictions, dependence_correction=dependence_correction),
+        "dm_modified": lambda: _compute_dm_modified_test(predictions, dependence_correction=dependence_correction),
+        "cw": lambda: _compute_cw_test(predictions),
+        "mcs": lambda: _compute_mcs_test(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
+        "enc_new": lambda: _compute_enc_new_test(predictions, dependence_correction=dependence_correction),
+        "mse_f": lambda: _compute_mse_f_test(predictions),
+        "mse_t": lambda: _compute_mse_t_test(predictions, dependence_correction=dependence_correction),
+        "cpa": lambda: _compute_cpa_test(predictions, dependence_correction=dependence_correction),
+        "rossi": lambda: _compute_rossi_test(predictions),
+        "rolling_dm": lambda: _compute_rolling_dm_test(predictions),
+        "reality_check": lambda: _compute_reality_check(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
+        "spa": lambda: _compute_spa(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
+        "mincer_zarnowitz": lambda: _compute_mincer_zarnowitz(predictions),
+        "ljung_box": lambda: _compute_ljung_box_test(predictions),
+        "arch_lm": lambda: _compute_arch_lm_test(predictions),
+        "bias_test": lambda: _compute_bias_test(predictions),
+        "pesaran_timmermann": lambda: _compute_pesaran_timmermann(predictions),
+        "binomial_hit": lambda: _compute_binomial_hit_test(predictions),
+        "diagnostics_full": lambda: _compute_diagnostics_bundle(predictions),
+    }
+    if stat_test_name != "none":
         try:
-            dm_payload = _compute_dm_test(predictions)
-            _write_json(run_dir / "stat_test_dm.json", dm_payload)
-            manifest["stat_test_file"] = "stat_test_dm.json"
-        except Exception as exc:
-            if failure_policy == "save_partial_results":
-                failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
-            else:
-                raise
-    if stat_test_spec.get("stat_test") == "cw":
-        try:
-            cw_payload = _compute_cw_test(predictions)
-            _write_json(run_dir / "stat_test_cw.json", cw_payload)
-            manifest["stat_test_file"] = "stat_test_cw.json"
+            payload = stat_dispatch[stat_test_name]()
+            stat_file = f"stat_test_{stat_test_name}.json"
+            _write_json(run_dir / stat_file, payload)
+            manifest["stat_test_file"] = stat_file
         except Exception as exc:
             if failure_policy == "save_partial_results":
                 failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
