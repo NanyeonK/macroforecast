@@ -2,116 +2,75 @@
 
 ## Purpose
 
-The execution layer consumes current package contracts and emits deterministic run artifacts.
-It sits behind an explicit compiler boundary, preserves preprocessing semantics in output provenance, and treats model execution and benchmark execution as separate runtime components.
+The execution layer consumes compiled recipe contracts and emits deterministic run artifacts.
 
-## Current role
+## Current operational models (24)
 
-The current runtime now supports a first importance layer in addition to frameworks, preprocessing, DM testing, CW testing, a plugin-ready custom benchmark bridge, a baseline comparison summary artifact, a first explicit-vintage real-time slice, and a first narrow multi-target slice.
-It executes a benchmark-respecting slice with:
-- revised-data or explicit-vintage real-time single-target point forecast
-- first narrow multi-target point-forecast route with one shared study environment across explicit targets
-- explicit benchmark family from recipe grammar
-- deterministic prediction, metric, and comparison artifacts
-- two operational feature-builder families
-- one narrow family of train-only raw-panel preprocessing paths
-- operational statistical tests: DM and CW
-- first operational custom benchmark bridge via local Python callable loading
-- first operational importance layer: minimal importance
+### Benchmark / naive
+`ar` (AR with BIC lag selection)
+
+### Linear ML / regularized
+`ols`, `ridge`, `lasso`, `elasticnet`, `bayesianridge`, `huber`, `adaptivelasso`, `quantile_linear`
+
+### Kernel / margin
+`svr_linear`, `svr_rbf`
+
+### Linear boosting
+`componentwise_boosting` (L2Boost), `boosting_ridge`, `boosting_lasso`
+
+### Factor-based linear
+`pcr` (Principal Component Regression), `pls` (Partial Least Squares), `factor_augmented_linear` (Diffusion Index)
+
+### Tree / ensemble
+`randomforest`, `extratrees`, `gbm`, `xgboost`, `lightgbm`, `catboost`
+
+### Neural
+`mlp` (sklearn MLPRegressor)
 
 ## Current operational frameworks
-
 - `expanding`
 - `rolling`
+- `anchored_rolling`
 
-## Current operational statistical tests
+## Current operational statistical tests (20)
 
-- `stat_test = dm`
-- `stat_test = cw`
-- baseline comparison artifact is always written as `comparison_summary.json`
-- DM writes `stat_test_dm.json`
-- CW writes `stat_test_cw.json`
-- CW first slice uses the benchmark-vs-model forecast-gap adjustment on the existing prediction table and reports a simple normal-approximation statistic
-- manifest records `comparison_file`, `stat_test_spec`, and `stat_test_file`
+| Category | Tests |
+|----------|-------|
+| Equal predictive ability | `dm`, `dm_hln`, `dm_modified` |
+| Nested model tests | `cw`, `enc_new`, `mse_f`, `mse_t` |
+| Conditional / instability | `cpa`, `rossi`, `rolling_dm` |
+| Multiple model comparison | `mcs`, `reality_check`, `spa` |
+| Residual / calibration | `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `diagnostics_full` |
+| Direction / classification | `pesaran_timmermann`, `binomial_hit` |
 
-## Current operational importance layer
+### Dependence corrections
+`none`, `nw_hac`, `nw_hac_auto`, `block_bootstrap`
 
-The current runtime can execute:
-- `importance_method = minimal_importance`
+## Current operational importance methods (12)
 
-Current behavior:
-- writes `importance_minimal.json`
-- manifest records `importance_spec` and `importance_file`
-- currently implemented for:
-  - non-AR linear routes: `ridge`, `lasso`
-  - tree route: `randomforest`
-- current minimal importance requires `feature_builder='raw_feature_panel'`
-- unsupported importance requests fail explicitly at runtime
+| Category | Methods |
+|----------|---------|
+| SHAP family | `tree_shap`, `kernel_shap`, `linear_shap` |
+| Model-agnostic | `permutation_importance`, `feature_ablation` |
+| Local surrogate | `lime` |
+| Partial dependence | `pdp`, `ice`, `ale` |
+| Grouped | `grouped_permutation` |
+| Stability | `importance_stability` |
+| Legacy | `minimal_importance` |
 
-Current implementation semantics:
-- ridge/lasso importance = absolute coefficient magnitude from the final fitted training window
-- randomforest importance = `feature_importances_` from the final fitted training window
+## Run artifacts
 
-## Current operational feature builders
+Every execution produces:
+- `predictions.csv` — full OOS prediction table
+- `metrics.json` — per-horizon metrics (MSFE, RMSE, MAE, MAPE, relative metrics, OOS R2, etc.)
+- `comparison_summary.json` — model vs benchmark summary
+- `manifest.json` — full provenance including tree_context, preprocessing_contract, all specs
+- `tuning_result.json` — HP tuning result (best_hp, trials, score)
+- `summary.txt` — human-readable run summary
+- `data_preview.csv` — raw data sample
+- `stat_test_{name}.json` — statistical test artifact (when stat_test != none)
+- `importance_{name}.json` — importance artifact (when importance_method != none)
 
-- `autoreg_lagged_target`
-- `raw_feature_panel`
+## Provenance
 
-## Current operational preprocessing paths
-
-- explicit `raw_only`
-- train-only raw-panel extra-preprocess path:
-  - `tcode_policy = extra_preprocess_without_tcode`
-  - `x_missing_policy = em_impute`
-  - `scaling_policy = standard` or `robust`
-  - `preprocess_order = extra_only`
-  - `preprocess_fit_scope = train_only`
-
-## Current model executors
-
-- `ar`
-- `ridge`
-- `lasso`
-- `elasticnet`
-- `randomforest`
-
-## Current benchmark executors
-
-- `historical_mean`
-- `zero_change`
-- `ar_bic`
-- `custom_benchmark`
-
-Current custom benchmark bridge contract:
-- benchmark family stays `custom_benchmark` in grammar/provenance
-- runtime loads a local Python file from `benchmark_config.plugin_path`
-- runtime resolves `benchmark_config.callable_name`
-- callable signature is `custom_benchmark(train, horizon, benchmark_config) -> float`
-- callable must return one numeric forecast
-
-## Provenance behavior
-
-The manifest preserves:
-- `preprocess_summary`
-- full `preprocess_contract`
-- `execution_architecture`
-- full `model_spec`
-- full `benchmark_spec`
-- `target` for single-target runs
-- `targets` for multi-target runs
-- `comparison_file`
-- `stat_test_spec`
-- `importance_spec`
-- optional compiler provenance payload
-- top-level `tree_context` payload when compiler provenance is passed through execution
-- summary text can include a compact `tree_context=` line for fixed-vs-sweep route inspection
-
-## Current limitation
-
-Even though the execution surface is broader than before, the current runtime still has explicit boundaries:
-- only `minimal_importance` is operational in the importance layer
-- current importance support is intentionally limited to `ridge`, `lasso`, and `randomforest` on the raw-panel path
-- `custom_benchmark` currently uses only the first plugin-ready local Python bridge, not a broader package/plugin registry
-- `real_time` currently means one explicit vintage per run, not a rolling historical real-time evaluation engine
-- multi-target execution currently means one shared model/benchmark/preprocess environment across explicit targets, not a target-specific orchestration framework
-- SHAP remains future work
+The manifest preserves: preprocessing_contract, tree_context (fixed/sweep/conditional axes), model_spec, benchmark_spec, stat_test_spec, importance_spec, reproducibility_spec, failure_policy_spec, compute_mode_spec, tuning_result.

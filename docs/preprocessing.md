@@ -2,113 +2,54 @@
 
 ## Purpose
 
-macrocast no longer treats preprocessing as one hidden default pipeline.
-The package now separates:
-- representation / transform choices
-- extra preprocessing choices
-- execution semantics
+macrocast separates preprocessing into explicit, governed axes rather than hiding it behind one undocumented pipeline.
 
-## Current public surface
+## Governance fields (mandatory)
 
-The preprocessing layer now exposes:
-- `PreprocessContract`
-- `build_preprocess_contract()`
-- `check_preprocess_governance()`
-- `is_operational_preprocess_contract()`
-- `preprocess_summary()`
-- `preprocess_to_dict()`
+### `representation_policy`
+Controls the data representation entering the study.
+- `raw_only` — no representation transform (operational)
+- `tcode_only` — t-code transform only (planned)
+- `custom_transform_only` — user-defined (registry_only)
 
-## Representation / transform axes
+### `tcode_application_scope`
+Controls which series receive t-code transforms.
+- `apply_tcode_to_none` — no t-code applied (operational)
+- `apply_tcode_to_target` — t-code on target only (planned)
+- `apply_tcode_to_X` — t-code on predictors only (planned)
+- `apply_tcode_to_both` — t-code on both (planned)
 
-The contract records:
-- `target_transform_policy`
-- `x_transform_policy`
-- `tcode_policy`
+### `preprocessing_axis_role`
+Controls whether preprocessing is fixed or intentionally varied.
+- `fixed_preprocessing` — preprocessing is fixed for fair comparison (operational)
+- `swept_preprocessing` — preprocessing is intentionally varied (planned)
+- `ablation_preprocessing` — preprocessing is part of ablation study (planned)
 
-Current t-code policy vocabulary:
-- `raw_only`
-- `tcode_only`
-- `tcode_then_extra_preprocess`
-- `extra_preprocess_without_tcode`
-- `extra_then_tcode`
-- `custom_transform_pipeline`
+### Cross-validation rules
+- `raw_only` representation requires `tcode_application_scope=apply_tcode_to_none`
+- `tcode_only` representation requires consistent tcode_application_scope
+- Model sweep + preprocessing sweep simultaneously is rejected
 
-These are intentionally distinct design choices.
-macrocast does not treat them as the same path.
+## Preprocessing axes (24 total)
 
-## Extra preprocessing axes
+### Target-side
+- `target_transform_policy`, `target_missing_policy`, `target_outlier_policy`
+- `target_transform`, `target_normalization`, `target_domain`
 
-The contract also records:
-- `target_missing_policy`
-- `x_missing_policy`
-- `target_outlier_policy`
-- `x_outlier_policy`
-- `scaling_policy`
-- `dimensionality_reduction_policy`
-- `feature_selection_policy`
+### X-side
+- `x_transform_policy`, `x_missing_policy`, `x_outlier_policy`
+- `scaling_policy`, `scaling_scope`
+- `dimensionality_reduction_policy`, `feature_selection_policy`
+- `additional_preprocessing`, `x_lag_creation`, `feature_grouping`
 
-## Execution semantics
+### Execution semantics
+- `tcode_policy`, `preprocess_order`, `preprocess_fit_scope`
+- `inverse_transform_policy`, `recipe_mode`
 
-The contract records:
-- `preprocess_order`
-- `preprocess_fit_scope`
-- `inverse_transform_policy`
-- `evaluation_scale`
+## Current operational preprocessing paths
 
-This is the minimum needed to keep model effects separate from preprocessing effects in later benchmarking interpretation.
-
-## Current executable subset
-
-The current runtime is intentionally honest and still narrow.
-Operational contracts are:
-- explicit raw-only contract:
-  - raw target representation
-  - raw x representation
-  - no t-code transform
-  - no extra preprocessing
-  - no inverse transform
-  - raw-level evaluation scale
-- train-only raw-panel extra-preprocess path:
-  - `tcode_policy = extra_preprocess_without_tcode`
-  - `x_missing_policy = em_impute`
-  - `scaling_policy = standard` or `robust`
-  - `preprocess_order = extra_only`
-  - `preprocess_fit_scope = train_only`
-  - `evaluation_scale = raw_level`
-
-Other preprocessing choices are already representable in package grammar, but not yet executable.
-That distinction is explicit through registry/compiler status rather than hidden behavior.
-
-
-## Stage 2 governance additions
-
-The preprocessing contract now also records explicit governance fields:
-- `representation_policy`
-- `preprocessing_axis_role`
-- `tcode_application_scope`
-- `target_transform`
-- `target_normalization`
-- `target_domain`
-- `scaling_scope`
-- `additional_preprocessing`
-- `x_lag_creation`
-- `feature_grouping`
-- `recipe_mode`
-
-These default conservatively so legacy recipes still compile unchanged.
-
-## Expanded operational Stage 2 runtime slice
-
-Current train-only raw-panel runtime additionally supports:
-- X missing: `mean_impute`, `median_impute`, `ffill`, `interpolate_linear`, `em_impute`
-- X outlier: `winsorize`, `iqr_clip`, `zscore_clip`
-- scaling: `standard`, `robust`, `minmax`
-- dimensionality reduction: `pca`, `static_factor`
-- feature selection: `correlation_filter`, `lasso_select`
-
-Still not executable in current slice:
-- simultaneous dimensionality reduction + feature selection
-- non-columnwise scaling scopes
-- extra filters under `additional_preprocessing`
-- nontrivial `x_lag_creation`
-- nontrivial `feature_grouping`
+1. **raw_only**: no transforms, no extra preprocessing
+2. **Train-only EM impute + standard scaling**: `tcode_policy=extra_preprocess_without_tcode`, `x_missing_policy=em_impute`, `scaling_policy=standard`
+3. **Train-only EM impute + robust scaling**: same with `scaling_policy=robust`
+4. **Train-only EM impute + minmax scaling**: same with `scaling_policy=minmax`
+5. **PCA dimensionality reduction**: `dimensionality_reduction_policy=pca`

@@ -2,57 +2,27 @@
 
 ## Available package surfaces
 
-The rebuilt macrocast package currently exposes eight documented code surfaces:
-
-- [`macrocast.stage0`](stage0.md)
-- [`macrocast.raw`](raw.md)
-- [`macrocast.recipes`](recipes.md)
-- [`macrocast.preprocessing`](preprocessing.md)
-- [`macrocast.registry`](registry.md)
-- [`macrocast.compiler`](compiler.md)
-- [`macrocast.execution`](execution.md)
-- [`macrocast.start`](start.md)
+- [`macrocast.stage0`](../stage0.md)
+- [`macrocast.raw`](../raw.md)
+- [`macrocast.recipes`](../recipes.md)
+- [`macrocast.preprocessing`](../preprocessing.md)
+- [`macrocast.registry`](../registry.md)
+- [`macrocast.compiler`](../compiler.md)
+- [`macrocast.execution`](../execution.md)
+- [`macrocast.tuning`](tuning.md)
 
 ## Current operational subset summary
 
-Training
-- frameworks: `expanding`, `rolling`
-- benchmarks: `historical_mean`, `zero_change`, `ar_bic`, `custom_benchmark`
-- model families: `ar`, `ridge`, `lasso`, `elasticnet`, `randomforest`
-- feature builders: `autoreg_lagged_target`, `raw_feature_panel`
+Models (24): ar, ols, ridge, lasso, elasticnet, bayesianridge, huber, adaptivelasso, svr_linear, svr_rbf, componentwise_boosting, boosting_ridge, boosting_lasso, pcr, pls, factor_augmented_linear, quantile_linear, randomforest, extratrees, gbm, xgboost, lightgbm, catboost, mlp
 
-Data / task
-- info sets: `revised`, `real_time` (current real-time slice requires explicit `data_vintage`)
-- tasks currently operational:
-  - `single_target_point_forecast`
-  - first narrow `multi_target_point_forecast` slice with explicit `targets`
+Feature builders (5): autoreg_lagged_target, raw_feature_panel, raw_X_only, factors_plus_AR, factor_pca
 
-Preprocessing
-- explicit `raw_only`
-- train-only raw-panel path: `extra_preprocess_without_tcode + x_missing_policy=em_impute + scaling_policy=standard`
-- train-only raw-panel path: `extra_preprocess_without_tcode + x_missing_policy=em_impute + scaling_policy=robust`
+Benchmarks (4): historical_mean, zero_change, ar_bic, custom_benchmark
 
-Evaluation / testing / importance
-- metrics: `msfe`, `relative_msfe`, `oos_r2`, `csfe`
-- always-written comparison artifact: `comparison_summary.json`
-- operational stat tests: `dm`, `cw`
-- operational importance: `minimal_importance` for `ridge`, `lasso`, and `randomforest` on `raw_feature_panel`
+Statistical tests (20): dm, dm_hln, dm_modified, cw, mcs, enc_new, mse_f, mse_t, cpa, rossi, rolling_dm, reality_check, spa, mincer_zarnowitz, ljung_box, arch_lm, bias_test, pesaran_timmermann, binomial_hit, diagnostics_full
 
-Execution architecture
-- separate model executor and benchmark executor contracts
-- fixed single feature-builder runs operational
-- internal feature-builder sweeps not yet operational
+Importance methods (12): minimal_importance, tree_shap, kernel_shap, linear_shap, permutation_importance, lime, feature_ablation, pdp, ice, ale, grouped_permutation, importance_stability
 
+Tuning algorithms (4): grid_search, random_search, bayesian_optimization, genetic_algorithm
 
-Single-run route inspection
-- `macrocast_single_run(yaml_path=...)` now exposes route preview, compile preview, tree-context preview, and honest blocking of run/manifest previews for non-executable or wrapper-owned routes.
-
-- omitting `yaml_path` now starts a minimal staged selector that rewrites YAML step-by-step and refreshes route preview after each completed choice.
-
-- the staged selector now covers framework / benchmark / narrow operational preprocessing choices before model-path choices.
-
-- the staged selector now also covers evaluation / output / stat-test / importance choices in the current executable single-run subset.
-
-- the staged selector now labels planned options from the live registry and surfaces explicit planned-branch messages when those options are chosen.
-
-- the staged selector now exposes `model_path_mode` and explicitly distinguishes model-grid vs full-sweep planned single-run extensions.
+Export formats (5): json, csv, parquet, json+csv, all

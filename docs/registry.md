@@ -3,87 +3,54 @@
 ## Purpose
 
 macrocast separates two ideas explicitly:
-- full choice-space representation
-- current executable runtime support
+- full choice-space representation (what *could* exist)
+- current executable runtime support (what *does* work)
 
 The registry layer is the canonical home for that distinction.
-It also now treats benchmark design as a first-class grammar concern rather than a hardcoded runtime detail.
+
+## Architecture
+
+The registry uses per-axis files organized by stage:
+
+```
+macrocast/registry/
+  base.py           # BaseRegistryEntry, EnumRegistryEntry, AxisDefinition
+  build.py          # auto-discovery loader, get_axis_registry()
+  types.py          # AxisRegistryEntry, AxisSelection, SupportStatus
+  stage0/           # 7 axes (study_mode, experiment_unit, axis_type, ...)
+  data/             # 29 axes (dataset, frequency, forecast_type, ...)
+  preprocessing/    # 24 axes (tcode_policy, scaling_policy, ...)
+  training/         # 28 axes (model_family, search_algorithm, ...)
+  evaluation/       # 18 axes (point_metrics, regime_definition, ...)
+  output/           # 4 axes (export_format, provenance_fields, ...)
+  tests/            # 2 axes (stat_test, dependence_correction)
+  importance/       # 13 axes (importance_method, shap, stability, ...)
+```
+
+## Current scale
+
+- **125 axes** across 8 layers
+- **717 total values**
+- **310 operational** (43.2%)
+
+## Support status
+
+Each enumerated value has one explicit support state:
+- `operational` — executable in current runtime
+- `planned` — will be added in near-term
+- `registry_only` — representable in grammar, not yet executable
+- `future` — long-run, not scheduled
 
 ## Canonical layer order
 
-Every study path must follow this order:
-- `0_meta`
-- `1_data_task`
-- `2_preprocessing`
-- `3_training`
-- `4_evaluation`
-- `5_output_provenance`
-- `6_stat_tests`
-- `7_importance`
-
-This order is fixed by `get_canonical_layer_order()`.
-
-## Registry objects
-
-The public registry surface exposes:
-- `AxisRegistryEntry`
-- `AxisSelection`
-- `get_canonical_layer_order()`
-- `get_axis_registry()`
-- `get_axis_registry_entry()`
-- `axis_governance_table()`
-
-## Support-status split
-
-Each enumerated option has one explicit support state:
-- `operational`
-- `registry_only`
-- `planned`
-- `external_plugin`
-- `not_supported_yet`
-
-This means macrocast can represent more choices than it can execute today.
-That is intentional.
+```python
+("0_meta", "1_data_task", "2_preprocessing", "3_training",
+ "4_evaluation", "5_output_provenance", "6_stat_tests", "7_importance")
+```
 
 ## Fixed / sweep / conditional semantics
 
-The registry does not only list admissible values.
-It also fixes the intended default policy per axis:
-- `fixed`
-- `sweep`
-- `conditional`
-
-This is how macrocast keeps hidden defaults out of benchmarking studies.
-
-## Benchmark grammar
-
-Benchmark design now has two layers:
-- enum choice in path: `benchmark_family`
-- numeric/free benchmark details in `leaf_config.benchmark_config`
-
-Current benchmark-family vocabulary:
-- `historical_mean`
-- `ar_bic`
-- `zero_change`
-- `custom_benchmark`
-
-Interpretation:
-- path records the benchmark family as a discrete study-design choice
-- `benchmark_config` records free parameters such as lag grid, minimum train size, or custom benchmark notes
-
-This keeps benchmark design aligned with the package rule:
-- enum choice in registry/path
-- numeric or free design in leaf config
-
-## Current v1 intent
-
-The current runtime is intentionally narrower than the long-run registry:
-- datasets are operational for `fred_md`, `fred_qd`, `fred_sd`
-- revised information set is operational
-- single-target point forecast is operational
-- raw-only preprocessing contract is operational
-- expanding-window AR engine is operational
-- benchmark execution is operational for `historical_mean` and `ar_bic`
-- custom benchmark families are already representable in grammar, but not executable in the current runtime slice
-
-That distinction is part of the package grammar, not an informal note.
+Each axis carries a default policy: `fixed`, `sweep`, or `conditional`.
+- `fixed` axes define the common comparison environment
+- `sweep` axes are intentionally varied within the study
+- `conditional` axes activate based on other choices
