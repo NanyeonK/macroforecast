@@ -1168,3 +1168,20 @@ def test_compile_quantile_linear_point_median_recipe_is_executable(tmp_path: Pat
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
     assert manifest["model_spec"]["model_family"] == "quantile_linear"
+
+
+def test_axis_governance_table_marks_stage4_eval_axes_operational() -> None:
+    table = axis_governance_table()
+    by_name = {row["axis_name"]: row for row in table}
+    assert by_name["relative_metrics"]["current_status"]["relative_RMSE"] == "operational"
+    assert by_name["direction_metrics"]["current_status"]["directional_accuracy"] == "operational"
+    assert by_name["regime_definition"]["current_status"]["NBER_recession"] == "operational"
+
+
+def test_compiled_manifest_records_stage4_evaluation_defaults() -> None:
+    compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
+    spec = compile_result.manifest["evaluation_spec"]
+    assert spec["primary_metric"] == "msfe"
+    assert spec["relative_metrics"] == "relative_MSFE"
+    assert spec["direction_metrics"] == "directional_accuracy"
+    assert spec["regime_definition"] == "none"

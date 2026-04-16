@@ -1544,10 +1544,10 @@ Registry file: `macrocast/registry/evaluation/relative_metrics.py`
 | id | status | priority |
 |----|--------|----------|
 | `relative_MSFE` | operational | A |
-| `relative_RMSE` | planned | A |
-| `relative_MAE` | planned | A |
+| `relative_RMSE` | operational | A |
+| `relative_MAE` | operational | A |
 | `oos_R2` | operational | A |
-| `benchmark_win_rate` | planned | A |
+| `benchmark_win_rate` | operational | A |
 | `CSFE_difference` | operational | A |
 
 ### 4.1.3 direction_event_metrics
@@ -1556,8 +1556,8 @@ Registry file: `macrocast/registry/evaluation/direction_metrics.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `directional_accuracy` | planned | A |
-| `sign_accuracy` | planned | A |
+| `directional_accuracy` | operational | A |
+| `sign_accuracy` | operational | A |
 | `turning_point_accuracy` | registry_only | B |
 | `precision` | registry_only | B |
 | `recall` | registry_only | B |
@@ -1689,7 +1689,7 @@ Registry file: `macrocast/registry/evaluation/regime_definition.py`
 | id | status | priority |
 |----|--------|----------|
 | `none` | operational | A |
-| `NBER_recession` | planned | A |
+| `NBER_recession` | operational | A |
 | `quantile_uncertainty` | registry_only | B |
 | `financial_stress` | registry_only | B |
 | `volatility_regime` | registry_only | B |
@@ -1703,7 +1703,7 @@ Registry file: `macrocast/registry/evaluation/regime_use.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `eval_only` | planned | A |
+| `eval_only` | operational | A |
 | `train_only` | registry_only | B |
 | `train_and_eval` | registry_only | B |
 | `regime_specific_model` | future | B |
@@ -1715,10 +1715,10 @@ Registry file: `macrocast/registry/evaluation/regime_metrics.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `all_main_metrics_by_regime` | planned | A |
+| `all_main_metrics_by_regime` | operational | A |
 | `regime_transition_performance` | registry_only | B |
-| `crisis_period_gain` | planned | A |
-| `state_dependent_oos_r2` | planned | A |
+| `crisis_period_gain` | operational | A |
+| `state_dependent_oos_r2` | operational | A |
 
 ## 4.5 Decomposition
 

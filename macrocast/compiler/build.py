@@ -373,6 +373,31 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
     }
 
 
+def _evaluation_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "primary_metric": _selection_value(selection_map, "primary_metric", default="msfe"),
+        "point_metrics": _selection_value(selection_map, "point_metrics", default="MSFE"),
+        "relative_metrics": _selection_value(selection_map, "relative_metrics", default="relative_MSFE"),
+        "direction_metrics": _selection_value(selection_map, "direction_metrics", default="directional_accuracy"),
+        "density_metrics": _selection_value(selection_map, "density_metrics", default="pinball_loss"),
+        "economic_metrics": _selection_value(selection_map, "economic_metrics", default="utility_gain"),
+        "benchmark_window": _selection_value(selection_map, "benchmark_window", default="expanding"),
+        "benchmark_scope": _selection_value(selection_map, "benchmark_scope", default="same_for_all"),
+        "agg_time": _selection_value(selection_map, "agg_time", default="full_oos_average"),
+        "agg_horizon": _selection_value(selection_map, "agg_horizon", default="equal_weight"),
+        "agg_target": _selection_value(selection_map, "agg_target", default="report_separately_only"),
+        "ranking": _selection_value(selection_map, "ranking", default="mean_metric_rank"),
+        "report_style": _selection_value(selection_map, "report_style", default="tidy_dataframe"),
+        "regime_definition": _selection_value(selection_map, "regime_definition", default="none"),
+        "regime_use": _selection_value(selection_map, "regime_use", default="eval_only"),
+        "regime_metrics": _selection_value(selection_map, "regime_metrics", default="all_main_metrics_by_regime"),
+        "decomposition_target": _selection_value(selection_map, "decomposition_target", default="preprocessing_effect"),
+        "decomposition_order": _selection_value(selection_map, "decomposition_order", default="marginal_effect_only"),
+        "regime_start": leaf_config.get("regime_start"),
+        "regime_end": leaf_config.get("regime_end"),
+    }
+
+
 def _build_stage0_and_recipe(
     recipe_dict: dict[str, Any],
     selection_map: dict[str, AxisSelection],
@@ -680,6 +705,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         },
         "data_task_spec": _data_task_spec(selection_map, compiled.leaf_config),
         "training_spec": _training_spec(selection_map, compiled.leaf_config),
+        "evaluation_spec": _evaluation_spec(selection_map, compiled.leaf_config),
         "stat_test_spec": {
             "stat_test": _selection_value(selection_map, "stat_test"),
         },

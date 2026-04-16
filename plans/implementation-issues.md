@@ -988,9 +988,9 @@ pri:high | size:S | deps: 0-4
 
 ### Values to add
 ```
-relative_RMSE            planned
-relative_MAE             planned
-benchmark_win_rate       planned
+relative_RMSE            planned -> operational
+relative_MAE             planned -> operational
+benchmark_win_rate       planned -> operational
 ```
 
 ---
@@ -1000,8 +1000,8 @@ pri:medium | size:M | deps: 0-4
 
 ### Values
 ```
-directional_accuracy     planned
-sign_accuracy            planned
+directional_accuracy     planned -> operational
+sign_accuracy            planned -> operational
 ```
 
 ---
@@ -1038,6 +1038,7 @@ pri:medium | size:M | deps: 0-4
 ### Implementation for A-tier
 - NBER recession dates lookup table
 - Metric computation conditional on regime indicator
+- Current operational slice: `regime_definition='NBER_recession'`, `regime_use='eval_only'`, regime summary artifact with state-dependent OOS R² and crisis-period gain by horizon
 
 ---
 

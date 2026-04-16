@@ -907,6 +907,11 @@ def _stat_test_spec(provenance_payload: dict | None) -> dict[str, object]:
     return dict(compiler.get("stat_test_spec", {"stat_test": "none"}))
 
 
+def _evaluation_spec(provenance_payload: dict | None) -> dict[str, object]:
+    compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
+    return dict(compiler.get("evaluation_spec", {"primary_metric": "msfe", "regime_definition": "none", "regime_use": "eval_only", "regime_metrics": "all_main_metrics_by_regime"}))
+
+
 def _importance_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
     return dict(compiler.get("importance_spec", {"importance_method": "none"}))
@@ -1140,9 +1145,29 @@ def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str,
         }
         msfe = float(group["squared_error"].mean())
         benchmark_msfe = float(group["benchmark_squared_error"].mean())
+        mae = float(group["abs_error"].mean())
+        benchmark_mae = float(group["benchmark_abs_error"].mean())
+        rmse = float(msfe**0.5)
+        benchmark_rmse = float(benchmark_msfe**0.5)
+        nonzero_true = group["y_true"].replace(0, np.nan)
+        model_ape = (group["error"].abs() / nonzero_true.abs()).replace([np.inf, -np.inf], np.nan)
+        benchmark_ape = (group["benchmark_error"].abs() / nonzero_true.abs()).replace([np.inf, -np.inf], np.nan)
+        mape = float(model_ape.mean()) if not model_ape.dropna().empty else float("nan")
+        benchmark_mape = float(benchmark_ape.mean()) if not benchmark_ape.dropna().empty else float("nan")
         csfe = float(group["squared_error"].sum())
         relative_msfe = msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0
+        relative_rmse = rmse / benchmark_rmse if benchmark_rmse > 0 else 1.0
+        relative_mae = mae / benchmark_mae if benchmark_mae > 0 else 1.0
         oos_r2 = 1.0 - relative_msfe
+        benchmark_win_rate = float((group["squared_error"] < group["benchmark_squared_error"]).mean())
+        y_true_diff = group["y_true"].diff()
+        y_pred_diff = group["y_pred"].diff()
+        valid_direction = y_true_diff.notna() & y_pred_diff.notna()
+        if valid_direction.any():
+            directional_accuracy = float((np.sign(y_true_diff[valid_direction]) == np.sign(y_pred_diff[valid_direction])).mean())
+        else:
+            directional_accuracy = float("nan")
+        sign_accuracy = float((np.sign(group["y_true"]) == np.sign(group["y_pred"]).astype(float)).mean())
         metrics_by_horizon[f"h{int(horizon)}"] = {
             "n_predictions": int(len(group)),
             "msfe": msfe,
@@ -1150,8 +1175,17 @@ def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str,
             "relative_msfe": relative_msfe,
             "oos_r2": oos_r2,
             "csfe": csfe,
-            "mae": float(group["abs_error"].mean()),
-            "rmse": float(msfe**0.5),
+            "mae": mae,
+            "benchmark_mae": benchmark_mae,
+            "relative_mae": relative_mae,
+            "rmse": rmse,
+            "benchmark_rmse": benchmark_rmse,
+            "relative_rmse": relative_rmse,
+            "mape": mape,
+            "benchmark_mape": benchmark_mape,
+            "benchmark_win_rate": benchmark_win_rate,
+            "directional_accuracy": directional_accuracy,
+            "sign_accuracy": sign_accuracy,
             "selected_lag_counts": selected_lag_counts,
         }
 
@@ -1174,16 +1208,33 @@ def _build_comparison_summary(predictions: pd.DataFrame, recipe: RecipeSpec) -> 
     for horizon, group in predictions.groupby("horizon", sort=True):
         model_msfe = float(group["squared_error"].mean())
         benchmark_msfe = float(group["benchmark_squared_error"].mean())
+        model_mae = float(group["abs_error"].mean())
+        benchmark_mae = float(group["benchmark_abs_error"].mean())
+        model_rmse = float(model_msfe**0.5)
+        benchmark_rmse = float(benchmark_msfe**0.5)
         loss_diff = group["benchmark_squared_error"] - group["squared_error"]
+        y_true_diff = group["y_true"].diff()
+        y_pred_diff = group["y_pred"].diff()
+        valid_direction = y_true_diff.notna() & y_pred_diff.notna()
+        directional_accuracy = float((np.sign(y_true_diff[valid_direction]) == np.sign(y_pred_diff[valid_direction])).mean()) if valid_direction.any() else float("nan")
         comparison_by_horizon[f"h{int(horizon)}"] = {
             "n_predictions": int(len(group)),
             "model_msfe": model_msfe,
             "benchmark_msfe": benchmark_msfe,
+            "model_mae": model_mae,
+            "benchmark_mae": benchmark_mae,
+            "model_rmse": model_rmse,
+            "benchmark_rmse": benchmark_rmse,
             "mean_loss_diff": float(loss_diff.mean()),
             "win_rate": float((group["squared_error"] < group["benchmark_squared_error"]).mean()),
             "tie_rate": float((group["squared_error"] == group["benchmark_squared_error"]).mean()),
             "relative_msfe": model_msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0,
+            "relative_rmse": model_rmse / benchmark_rmse if benchmark_rmse > 0 else 1.0,
+            "relative_mae": model_mae / benchmark_mae if benchmark_mae > 0 else 1.0,
             "oos_r2": 1.0 - (model_msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0),
+            "benchmark_win_rate": float((group["squared_error"] < group["benchmark_squared_error"]).mean()),
+            "directional_accuracy": directional_accuracy,
+            "sign_accuracy": float((np.sign(group["y_true"]) == np.sign(group["y_pred"])).mean()),
         }
 
     return {
@@ -1232,6 +1283,77 @@ def _build_multi_target_comparison_summary(predictions: pd.DataFrame, recipe: Re
     }
 
 
+def _recession_indicator(index: pd.DatetimeIndex) -> pd.Series:
+    recession_windows = [
+        ("2001-03-01", "2001-11-30"),
+        ("2007-12-01", "2009-06-30"),
+        ("2020-02-01", "2020-04-30"),
+    ]
+    indicator = pd.Series(False, index=index)
+    for start, end in recession_windows:
+        indicator |= (index >= pd.Timestamp(start)) & (index <= pd.Timestamp(end))
+    return indicator
+
+
+def _regime_indicator(predictions: pd.DataFrame, evaluation_spec: dict[str, object]) -> pd.Series:
+    regime_definition = str(evaluation_spec.get("regime_definition", "none"))
+    dates = pd.to_datetime(predictions["target_date"])
+    if regime_definition == "none":
+        return pd.Series(False, index=predictions.index)
+    if regime_definition == "NBER_recession":
+        indicator = _recession_indicator(pd.DatetimeIndex(dates))
+        indicator.index = predictions.index
+        return indicator.astype(bool)
+    if regime_definition == "user_defined_regime":
+        start = evaluation_spec.get("regime_start")
+        end = evaluation_spec.get("regime_end")
+        if not start or not end:
+            raise ExecutionError("user_defined_regime requires evaluation_spec.regime_start and evaluation_spec.regime_end")
+        return ((dates >= pd.Timestamp(str(start))) & (dates <= pd.Timestamp(str(end)))).astype(bool)
+    raise ExecutionError(f"regime_definition {regime_definition!r} is not executable in current runtime slice")
+
+
+def _compute_regime_summary(predictions: pd.DataFrame, recipe: RecipeSpec, evaluation_spec: dict[str, object]) -> dict[str, object]:
+    if str(evaluation_spec.get("regime_use", "eval_only")) != "eval_only":
+        raise ExecutionError("only regime_use='eval_only' is executable in current runtime slice")
+    indicator = _regime_indicator(predictions, evaluation_spec)
+    if str(evaluation_spec.get("regime_definition", "none")) == "none":
+        return {
+            "regime_definition": "none",
+            "regime_use": evaluation_spec.get("regime_use", "eval_only"),
+            "regime_metrics": evaluation_spec.get("regime_metrics", "all_main_metrics_by_regime"),
+        }
+    payload = {
+        "regime_definition": evaluation_spec.get("regime_definition"),
+        "regime_use": evaluation_spec.get("regime_use", "eval_only"),
+        "regime_metrics": evaluation_spec.get("regime_metrics", "all_main_metrics_by_regime"),
+        "target": recipe.target,
+        "raw_dataset": recipe.raw_dataset,
+        "by_horizon": {},
+    }
+    for horizon, group in predictions.groupby("horizon", sort=True):
+        idx = group.index
+        regime_group = group[indicator.loc[idx].to_numpy()]
+        non_regime_group = group[~indicator.loc[idx].to_numpy()]
+        horizon_payload = {
+            "n_regime": int(len(regime_group)),
+            "n_non_regime": int(len(non_regime_group)),
+        }
+        if len(regime_group) > 0:
+            regime_msfe = float(regime_group["squared_error"].mean())
+            regime_bench_msfe = float(regime_group["benchmark_squared_error"].mean())
+            horizon_payload["regime_msfe"] = regime_msfe
+            horizon_payload["regime_oos_r2"] = 1.0 - (regime_msfe / regime_bench_msfe if regime_bench_msfe > 0 else 1.0)
+            horizon_payload["crisis_period_gain"] = float(regime_group["benchmark_squared_error"].mean() - regime_group["squared_error"].mean())
+        if len(non_regime_group) > 0:
+            non_msfe = float(non_regime_group["squared_error"].mean())
+            non_bench_msfe = float(non_regime_group["benchmark_squared_error"].mean())
+            horizon_payload["non_regime_msfe"] = non_msfe
+            horizon_payload["non_regime_oos_r2"] = 1.0 - (non_msfe / non_bench_msfe if non_bench_msfe > 0 else 1.0)
+        payload["by_horizon"][f"h{int(horizon)}"] = horizon_payload
+    return payload
+
+
 def execute_recipe(
     *,
     recipe: RecipeSpec,
@@ -1261,6 +1383,7 @@ def execute_recipe(
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, output_root / ".raw_cache")
     targets = _recipe_targets(recipe)
     stat_test_spec = _stat_test_spec(provenance_payload)
+    evaluation_spec = _evaluation_spec(provenance_payload)
     importance_spec = _importance_spec(provenance_payload)
     reproducibility_spec = _reproducibility_spec(provenance_payload)
     failure_policy_spec = _failure_policy_spec(provenance_payload)
@@ -1339,6 +1462,7 @@ def execute_recipe(
         "benchmark_spec": _benchmark_spec(recipe),
         "data_task_spec": dict(recipe.data_task_spec),
         "training_spec": dict(recipe.training_spec),
+        "evaluation_spec": evaluation_spec,
         "stat_test_spec": stat_test_spec,
         "importance_spec": importance_spec,
         "reproducibility_spec": reproducibility_spec,
@@ -1350,6 +1474,7 @@ def execute_recipe(
         "prediction_rows": int(len(predictions)),
         "metrics_file": "metrics.json",
         "comparison_file": "comparison_summary.json",
+        "regime_file": "regime_summary.json" if evaluation_spec.get("regime_definition", "none") != "none" else None,
         "successful_targets": successful_targets,
         "partial_run": bool(failed_components),
     }
@@ -1373,6 +1498,9 @@ def execute_recipe(
     predictions.to_csv(run_dir / "predictions.csv", index=False)
     _write_json(run_dir / "metrics.json", metrics)
     _write_json(run_dir / "comparison_summary.json", comparison_summary)
+    if evaluation_spec.get("regime_definition", "none") != "none":
+        regime_summary = _compute_regime_summary(predictions, recipe, evaluation_spec)
+        _write_json(run_dir / "regime_summary.json", regime_summary)
     if stat_test_spec.get("stat_test") == "dm":
         try:
             dm_payload = _compute_dm_test(predictions)
