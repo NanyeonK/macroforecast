@@ -682,6 +682,14 @@ def compile_recipe_yaml(path: str | Path) -> CompileResult:
     return compile_recipe_dict(load_recipe_yaml(path))
 
 
+
+def _output_spec(selection_map):
+    return {
+        "export_format": _selection_value(selection_map, "export_format", default="json"),
+        "saved_objects": _selection_value(selection_map, "saved_objects", default="full_bundle"),
+        "provenance_fields": _selection_value(selection_map, "provenance_fields", default="full"),
+        "artifact_granularity": _selection_value(selection_map, "artifact_granularity", default="aggregated"),
+    }
 def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
     selection_map = {selection.axis_name: selection for selection in compiled.axis_selections}
     return {
@@ -712,6 +720,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "importance_spec": {
             "importance_method": _selection_value(selection_map, "importance_method"),
         },
+        "output_spec": _output_spec(selection_map),
         "preprocess_contract": preprocess_to_dict(compiled.preprocess_contract),
         "axis_selections": [
             {

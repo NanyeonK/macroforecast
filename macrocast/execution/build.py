@@ -936,6 +936,57 @@ def _write_json(path: Path, payload) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+
+
+def _output_spec(provenance_payload: dict | None) -> dict[str, object]:
+    compiler = (provenance_payload or {}).get('compiler', {}) if provenance_payload else {}
+    return dict(compiler.get('output_spec', {'export_format': 'json', 'saved_objects': 'full_bundle', 'provenance_fields': 'full', 'artifact_granularity': 'aggregated'}))
+
+
+def _get_git_commit() -> str:
+    import subprocess
+    try:
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.DEVNULL, text=True).strip()
+    except Exception:
+        return 'unknown'
+
+
+def _get_package_version() -> str:
+    try:
+        from macrocast import __version__
+        return __version__
+    except Exception:
+        return 'unknown'
+
+
+def _compute_config_hash(recipe: RecipeSpec) -> str:
+    import hashlib
+    import json
+    payload = {
+        'recipe_id': recipe.recipe_id,
+        'target': recipe.target,
+        'horizons': list(recipe.horizons),
+    }
+    serialized = json.dumps(payload, sort_keys=True, default=str)
+    return hashlib.sha256(serialized.encode()).hexdigest()
+
+
+def _write_csv(path: Path, payload) -> None:
+    if isinstance(payload, pd.DataFrame):
+        payload.to_csv(path, index=False)
+    else:
+        pd.DataFrame(payload).to_csv(path, index=False)
+
+
+def _write_parquet(path: Path, payload) -> None:
+    if isinstance(payload, pd.DataFrame):
+        payload.to_parquet(path, index=False)
+    elif isinstance(payload, dict):
+        pd.DataFrame([payload]).to_parquet(path, index=False)
+    else:
+        pd.DataFrame(payload).to_parquet(path, index=False)
+
+
 def _compute_dm_test(predictions: pd.DataFrame) -> dict[str, object]:
     rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
     loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
@@ -1388,6 +1439,7 @@ def execute_recipe(
     reproducibility_spec = _reproducibility_spec(provenance_payload)
     failure_policy_spec = _failure_policy_spec(provenance_payload)
     compute_mode_spec = _compute_mode_spec(provenance_payload)
+    output_spec = _output_spec(provenance_payload)
     failure_policy = str(failure_policy_spec.get("failure_policy", "fail_fast"))
     compute_mode = str(compute_mode_spec.get("compute_mode", "serial"))
     prediction_frames = []
@@ -1476,7 +1528,7 @@ def execute_recipe(
         "comparison_file": "comparison_summary.json",
         "regime_file": "regime_summary.json" if evaluation_spec.get("regime_definition", "none") != "none" else None,
         "successful_targets": successful_targets,
-        "partial_run": bool(failed_components),
+        "partial_run": bool(failed_components),  "output_spec": output_spec,
     }
     if provenance_payload:
         manifest.update(provenance_payload)
@@ -1494,13 +1546,67 @@ def execute_recipe(
     if tree_context:
         summary_lines.append(_tree_context_summary(tree_context))
     (run_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
-    raw_result.data.head(20).to_csv(run_dir / "data_preview.csv")
-    predictions.to_csv(run_dir / "predictions.csv", index=False)
-    _write_json(run_dir / "metrics.json", metrics)
-    _write_json(run_dir / "comparison_summary.json", comparison_summary)
-    if evaluation_spec.get("regime_definition", "none") != "none":
+    export_format = str(output_spec.get('export_format', 'json'))
+    saved_objects = str(output_spec.get('saved_objects', 'full_bundle'))
+    provenance_fields = str(output_spec.get('provenance_fields', 'full'))
+
+    # Provenance injection based on provenance_fields level
+    if provenance_fields in ('minimal', 'standard', 'full'):
+        manifest['git_commit'] = _get_git_commit()
+        manifest['package_version'] = _get_package_version()
+    if provenance_fields == 'full':
+        manifest['config_hash'] = _compute_config_hash(recipe)
+        tc = manifest.get('tree_context', {})
+        manifest['tree_context'] = tc
+
+    # Write data_preview (always CSV, optionally parquet)
+    raw_result.data.head(20).to_csv(run_dir / 'data_preview.csv')
+    if export_format in ('parquet', 'all'):
+        raw_result.data.head(20).to_parquet(run_dir / 'data_preview.parquet')
+
+    # Write predictions (always CSV, optionally parquet)
+    predictions.to_csv(run_dir / 'predictions.csv', index=False)
+    if export_format in ('parquet', 'all'):
+        predictions.to_parquet(run_dir / 'predictions.parquet')
+
+    # Write structured metrics/comparison/regime based on export_format
+    metrics_files = {}
+    comparison_files = {}
+    if export_format in ('json', 'json+csv', 'all'):
+        _write_json(run_dir / 'metrics.json', metrics)
+        _write_json(run_dir / 'comparison_summary.json', comparison_summary)
+        metrics_files['json'] = 'metrics.json'
+        comparison_files['json'] = 'comparison_summary.json'
+    if export_format in ('csv', 'json+csv', 'all'):
+        _write_csv(run_dir / 'metrics.csv', [metrics])
+        _write_csv(run_dir / 'comparison_summary.csv', [comparison_summary])
+        metrics_files['csv'] = 'metrics.csv'
+        comparison_files['csv'] = 'comparison_summary.csv'
+    if export_format in ('parquet', 'all'):
+        _write_parquet(run_dir / 'metrics.parquet', metrics)
+        _write_parquet(run_dir / 'comparison_summary.parquet', comparison_summary)
+        metrics_files['parquet'] = 'metrics.parquet'
+        comparison_files['parquet'] = 'comparison_summary.parquet'
+    if metrics_files:
+        manifest['metrics_files'] = metrics_files
+        manifest['metrics_file'] = metrics_files.get('json') or metrics_files.get('csv') or metrics_files.get('parquet')
+    if comparison_files:
+        manifest['comparison_files'] = comparison_files
+        manifest['comparison_file'] = comparison_files.get('json') or comparison_files.get('csv') or comparison_files.get('parquet')
+    if evaluation_spec.get('regime_definition', 'none') != 'none':
         regime_summary = _compute_regime_summary(predictions, recipe, evaluation_spec)
-        _write_json(run_dir / "regime_summary.json", regime_summary)
+        regime_files = {}
+        if export_format in ('json', 'json+csv', 'all'):
+            _write_json(run_dir / 'regime_summary.json', regime_summary)
+            regime_files['json'] = 'regime_summary.json'
+        if export_format in ('csv', 'json+csv', 'all'):
+            _write_csv(run_dir / 'regime_summary.csv', [regime_summary])
+            regime_files['csv'] = 'regime_summary.csv'
+        if export_format in ('parquet', 'all'):
+            _write_parquet(run_dir / 'regime_summary.parquet', regime_summary)
+            regime_files['parquet'] = 'regime_summary.parquet'
+        manifest['regime_files'] = regime_files
+        manifest['regime_file'] = regime_files.get('json') or regime_files.get('csv') or regime_files.get('parquet')
     if stat_test_spec.get("stat_test") == "dm":
         try:
             dm_payload = _compute_dm_test(predictions)

@@ -5,6 +5,8 @@ compare forecasting tools under identical information set, sample split,
 benchmark, and evaluation protocol.
 """
 
+__version__ = "0.0.0+local"
+
 from .compiler import (
     CompileError,
     CompileResult,

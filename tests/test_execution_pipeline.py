@@ -1034,3 +1034,65 @@ def test_execute_recipe_supports_factor_augmented_linear_raw_panel_model(tmp_pat
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
     assert manifest["model_spec"]["model_family"] == "factor_augmented_linear"
     assert manifest["prediction_rows"] > 0
+
+
+
+def test_execute_recipe_json_csv_export_writes_sidecar_files(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={
+            "compiler": {
+                "output_spec": {
+                    "export_format": "json+csv",
+                    "saved_objects": "full_bundle",
+                    "provenance_fields": "full",
+                    "artifact_granularity": "aggregated",
+                },
+                "importance_spec": {"importance_method": "none"},
+                "stat_test_spec": {"stat_test": "none"},
+            }
+        },
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["output_spec"]["export_format"] == "json+csv"
+    assert manifest["metrics_file"] == "metrics.json"
+    assert manifest["metrics_files"]["csv"] == "metrics.csv"
+    assert (run_dir / "metrics.csv").exists()
+    assert (run_dir / "comparison_summary.csv").exists()
+
+
+def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={
+            "compiler": {
+                "output_spec": {
+                    "export_format": "parquet",
+                    "saved_objects": "predictions_and_metrics",
+                    "provenance_fields": "full",
+                    "artifact_granularity": "aggregated",
+                },
+                "importance_spec": {"importance_method": "none"},
+                "stat_test_spec": {"stat_test": "none"},
+            }
+        },
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert manifest["metrics_file"] == "metrics.parquet"
+    assert (run_dir / "metrics.parquet").exists()
+    assert (run_dir / "comparison_summary.parquet").exists()
+    assert (run_dir / "predictions.parquet").exists()

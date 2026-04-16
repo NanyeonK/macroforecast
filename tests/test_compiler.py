@@ -1216,3 +1216,15 @@ def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable"
     assert compile_result.manifest["evaluation_spec"]["primary_metric"] == "rmse"
+
+
+
+def test_compile_manifest_includes_output_spec_defaults() -> None:
+    compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
+    output_spec = compile_result.manifest["output_spec"]
+    assert output_spec == {
+        "export_format": "json",
+        "saved_objects": "full_bundle",
+        "provenance_fields": "full",
+        "artifact_granularity": "aggregated",
+    }
