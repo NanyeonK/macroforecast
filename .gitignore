@@ -51,7 +51,12 @@ examples/results/
 # Local-only research wiki / downloaded source archive (never push)
 local_only/
 tmp_*.py
+CLAUDE.md
+
 # Reboot/archive artifacts and local test surfaces
 archive/
 REBOOT_IDEA_AND_PLAN_*.md
 tests/
+plans/
+.hermes/plans/
+catboost_info/
