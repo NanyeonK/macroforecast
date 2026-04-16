@@ -423,7 +423,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "importance_method",
             "prompt": "Importance method",
-            "options": ["none", "minimal_importance", "shap"],
+            "options": ["none", "minimal_importance", "tree_shap", "kernel_shap", "linear_shap", "permutation_importance", "lime", "feature_ablation", "pdp", "ice", "ale", "grouped_permutation", "importance_stability"],
         },
     ])
     filtered_stack = []
@@ -568,8 +568,22 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
         expected_artifacts.append("stat_test_binomial_hit.json")
     if stat_test == "diagnostics_full":
         expected_artifacts.append("stat_test_diagnostics_bundle.json")
-    if importance_method == "minimal_importance":
-        expected_artifacts.append("importance_minimal.json")
+    if importance_method != "none":
+        importance_files = {
+            "minimal_importance": "importance_minimal.json",
+            "tree_shap": "importance_tree_shap.json",
+            "kernel_shap": "importance_kernel_shap.json",
+            "linear_shap": "importance_linear_shap.json",
+            "permutation_importance": "importance_permutation_importance.json",
+            "lime": "importance_lime.json",
+            "feature_ablation": "importance_feature_ablation.json",
+            "pdp": "importance_pdp.json",
+            "ice": "importance_ice.json",
+            "ale": "importance_ale.json",
+            "grouped_permutation": "importance_grouped_permutation.json",
+            "importance_stability": "importance_stability.json",
+        }
+        expected_artifacts.append(importance_files.get(importance_method, f"importance_{importance_method}.json"))
     return {
         "recipe_id": compile_manifest["recipe_id"],
         "run_id": compile_manifest["run_spec"]["run_id"],

@@ -202,7 +202,7 @@ def test_macrocast_single_run_planned_importance_option_is_labeled(monkeypatch, 
     out = macrocast_single_run(max_steps=17)
     choice = out["current_choice"]
     assert choice["key"] == "importance_method"
-    assert choice["option_details"]["shap"]["status"] == "planned"
+    assert choice["option_details"]["tree_shap"]["status"] == "operational"
 
 
 

@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert {"study_mode", "dataset", "information_set_type", "task", "model_family", "importance_method", "data_domain", "dataset_source", "relative_metrics", "direction_metrics", "regime_definition"}.issubset(registry)
 
 
@@ -52,7 +52,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -69,7 +69,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_registry_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert "registry_type" in registry
     entry = get_axis_registry_entry("registry_type")
     assert entry.allowed_values == (
@@ -104,7 +104,7 @@ def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
 
 def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
@@ -118,7 +118,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
 
 def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert "failure_policy" in registry
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
@@ -136,7 +136,7 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
 
 def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 113
+    assert len(registry) == 125
     assert "compute_mode" in registry
     entry = get_axis_registry_entry("compute_mode")
     assert entry.allowed_values == (
@@ -327,3 +327,27 @@ def test_registry_loader_discovers_stage6_test_axes() -> None:
     assert registry["stat_test"].current_status["spa"] == "operational"
     assert registry["stat_test"].current_status["diagnostics_full"] == "operational"
     assert registry["dependence_correction"].current_status["block_bootstrap"] == "operational"
+
+
+
+def test_registry_loader_discovers_stage7_importance_axes() -> None:
+    registry = get_axis_registry()
+    expected = {
+        "importance_method",
+        "importance_scope",
+        "importance_model_native",
+        "importance_model_agnostic",
+        "importance_shap",
+        "importance_local_surrogate",
+        "importance_partial_dependence",
+        "importance_grouped",
+        "importance_stability",
+        "importance_aggregation",
+        "importance_output_style",
+        "importance_temporal",
+        "importance_gradient_path",
+    }
+    assert expected.issubset(registry)
+    assert registry["importance_method"].current_status["tree_shap"] == "operational"
+    assert registry["importance_grouped"].current_status["grouped_permutation"] == "operational"
+    assert registry["importance_stability"].current_status["importance_stability"] == "operational"

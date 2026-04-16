@@ -1236,3 +1236,9 @@ def test_compile_extended_stage6_stat_test_manifest() -> None:
     stat_test_spec = compile_result.manifest["stat_test_spec"]
     assert stat_test_spec["stat_test"] == "none"
     assert stat_test_spec["dependence_correction"] == "none"
+
+
+
+def test_compile_stage7_importance_defaults() -> None:
+    compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
+    assert compile_result.manifest["importance_spec"]["importance_method"] == "none"

@@ -1144,3 +1144,37 @@ def test_execute_recipe_stage6_stat_test_manifest_preserves_dependence_correctio
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
     assert manifest["stat_test_spec"]["dependence_correction"] == "nw_hac_auto"
+
+
+
+def test_execute_recipe_stage7_importance_methods(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    cases = [
+        ("tree_shap", {"model_family": "randomforest"}, "importance_tree_shap.json"),
+        ("kernel_shap", {"model_family": "ridge"}, "importance_kernel_shap.json"),
+        ("linear_shap", {"model_family": "ridge"}, "importance_linear_shap.json"),
+        ("permutation_importance", {"model_family": "randomforest"}, "importance_permutation_importance.json"),
+        ("lime", {"model_family": "ridge"}, "importance_lime.json"),
+        ("feature_ablation", {"model_family": "ridge"}, "importance_feature_ablation.json"),
+        ("pdp", {"model_family": "ridge"}, "importance_pdp.json"),
+        ("ice", {"model_family": "ridge"}, "importance_ice.json"),
+        ("ale", {"model_family": "ridge"}, "importance_ale.json"),
+        ("grouped_permutation", {"model_family": "randomforest"}, "importance_grouped_permutation.json"),
+        ("importance_stability", {"model_family": "randomforest"}, "importance_stability.json"),
+    ]
+    for idx, (method, overrides, filename) in enumerate(cases):
+        out_root = tmp_path / f"importance_{idx}_{method}"
+        recipe = _recipe(model_family=overrides.get("model_family", "ridge"), feature_builder=overrides.get("feature_builder", "raw_feature_panel"), benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+        result = execute_recipe(
+            recipe=recipe,
+            preprocess=_preprocess_raw_only(),
+            output_root=out_root,
+            local_raw_source=fixture,
+            provenance_payload={"compiler": {"importance_spec": {"importance_method": method}}},
+        )
+        run_dir = out_root / result.run.artifact_subdir
+        manifest = json.loads((run_dir / "manifest.json").read_text())
+        payload = json.loads((run_dir / filename).read_text())
+        assert manifest["importance_file"] == filename
+        assert payload["importance_method"] == method
+

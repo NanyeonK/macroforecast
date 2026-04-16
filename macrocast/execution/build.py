@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
+from sklearn.inspection import permutation_importance
 from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.svm import LinearSVR, SVR
@@ -1419,6 +1420,307 @@ def _compute_minimal_importance(
     }
 
 
+def _importance_feature_names(recipe: RecipeSpec, raw_frame: pd.DataFrame, target_series: pd.Series, contract: PreprocessContract) -> tuple[list[str], np.ndarray, np.ndarray, np.ndarray]:
+    feature_builder = _feature_builder(recipe)
+    horizon = min(recipe.horizons)
+    rolling = recipe.stage0.fixed_design.sample_split == "rolling_window_oos"
+    origin_idx = len(target_series) - max(recipe.horizons) - 1
+    if origin_idx < _minimum_train_size(recipe) - 1:
+        raise ExecutionError("importance requires at least one valid forecast origin")
+    start_idx = max(0, origin_idx + 1 - _rolling_window_size(recipe)) if rolling else 0
+    if feature_builder == "raw_feature_panel":
+        aligned_frame = raw_frame.loc[target_series.index]
+        feature_names = _raw_panel_columns(aligned_frame, recipe.target)
+        X_train, y_train, X_pred = _build_raw_panel_training_data(aligned_frame, recipe.target, horizon, start_idx, origin_idx, contract)
+        return feature_names, X_train, y_train, X_pred
+    if feature_builder == "autoreg_lagged_target":
+        train = target_series.iloc[start_idx: origin_idx + 1]
+        lag_order = _lag_order(recipe, train)
+        X_train, y_train = _build_lagged_supervised_matrix(train, lag_order)
+        X_pred = np.asarray(train.to_numpy(dtype=float)[-lag_order:][::-1], dtype=float).reshape(1, -1)
+        feature_names = [f"lag_{lag}" for lag in range(1, lag_order + 1)]
+        return feature_names, X_train, y_train, X_pred
+    raise ExecutionError(f"importance not implemented for feature_builder {feature_builder!r}")
+
+
+def _fit_importance_model(recipe: RecipeSpec, X_train: np.ndarray, y_train: np.ndarray):
+    model_family = _model_family(recipe)
+    if model_family == "quantile_linear":
+        raise ExecutionError("importance not implemented for quantile_linear")
+    if model_family == "adaptivelasso":
+        return fit_adaptive_lasso(X_train, y_train, recipe.training_spec)
+    model, _ = fit_with_optional_tuning(model_family, X_train, y_train, recipe.training_spec)
+    return model
+
+
+def _importance_training_bundle(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    feature_names, X_train, y_train, X_pred = _importance_feature_names(recipe, raw_frame, target_series, contract)
+    model = _fit_importance_model(recipe, X_train, y_train)
+    return {
+        "feature_names": feature_names,
+        "X_train": X_train,
+        "y_train": y_train,
+        "X_pred": X_pred,
+        "model": model,
+        "model_family": _model_family(recipe),
+        "feature_builder": _feature_builder(recipe),
+    }
+
+
+def _predict_importance_model(model, model_family: str, X: np.ndarray) -> np.ndarray:
+    if model_family == "adaptivelasso":
+        return predict_adaptive_lasso(model, X)
+    return model.predict(X)
+
+
+def _ranked_feature_payload(name: str, feature_names: list[str], values: np.ndarray) -> dict[str, object]:
+    ranked = [
+        {"feature": feature, name: float(value)}
+        for feature, value in sorted(zip(feature_names, values), key=lambda item: abs(item[1]), reverse=True)
+    ]
+    return ranked
+
+
+def _compute_tree_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    import shap
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    if bundle["model_family"] not in {"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"}:
+        raise ExecutionError("tree_shap requires tree-based model_family")
+    sample = bundle["X_train"][: min(32, len(bundle["X_train"]))]
+    explainer = shap.TreeExplainer(bundle["model"])
+    shap_values = explainer.shap_values(sample)
+    if isinstance(shap_values, list):
+        shap_values = shap_values[0]
+    mean_abs = np.mean(np.abs(np.asarray(shap_values, dtype=float)), axis=0)
+    return {
+        "importance_method": "tree_shap",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "n_samples": int(len(sample)),
+        "feature_importance": _ranked_feature_payload("mean_abs_shap", bundle["feature_names"], mean_abs),
+    }
+
+
+def _compute_linear_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    import shap
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    if bundle["model_family"] not in {"ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber", "adaptivelasso"}:
+        raise ExecutionError("linear_shap requires linear model_family")
+    sample = bundle["X_train"][: min(32, len(bundle["X_train"]))]
+    try:
+        explainer = shap.LinearExplainer(bundle["model"], sample)
+        shap_values = explainer.shap_values(sample)
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+        mean_abs = np.mean(np.abs(np.asarray(shap_values, dtype=float)), axis=0)
+    except Exception:
+        if bundle["model_family"] == "adaptivelasso":
+            coef = np.abs(bundle["model"].coef_ / bundle["model"]._adaptive_weights)
+        else:
+            coef = np.abs(np.asarray(bundle["model"].coef_, dtype=float))
+        mean_abs = coef
+    return {
+        "importance_method": "linear_shap",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "n_samples": int(len(sample)),
+        "feature_importance": _ranked_feature_payload("mean_abs_shap", bundle["feature_names"], np.asarray(mean_abs, dtype=float)),
+    }
+
+
+def _compute_kernel_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    import shap
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    background = bundle["X_train"][: min(20, len(bundle["X_train"]))]
+    explain_row = bundle["X_pred"]
+    predict_fn = lambda x: _predict_importance_model(bundle["model"], bundle["model_family"], np.asarray(x, dtype=float))
+    explainer = shap.KernelExplainer(predict_fn, background)
+    shap_values = explainer.shap_values(explain_row, nsamples=min(50, max(10, background.shape[1] * 5)))
+    if isinstance(shap_values, list):
+        shap_values = shap_values[0]
+    row_values = np.abs(np.asarray(shap_values, dtype=float)).reshape(-1)
+    return {
+        "importance_method": "kernel_shap",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "n_background": int(len(background)),
+        "feature_importance": _ranked_feature_payload("abs_shap", bundle["feature_names"], row_values),
+    }
+
+
+def _compute_permutation_importance_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    result = permutation_importance(bundle["model"], bundle["X_train"], bundle["y_train"], n_repeats=5, random_state=42)
+    return {
+        "importance_method": "permutation_importance",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "feature_importance": _ranked_feature_payload("mean_importance", bundle["feature_names"], result.importances_mean),
+        "importance_std": [float(x) for x in result.importances_std],
+    }
+
+
+def _compute_lime_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    X_train = np.asarray(bundle["X_train"], dtype=float)
+    x0 = np.asarray(bundle["X_pred"], dtype=float).reshape(-1)
+    std = np.std(X_train, axis=0, ddof=1)
+    std[std == 0] = 1.0
+    rng = np.random.default_rng(42)
+    perturbed = rng.normal(loc=x0, scale=std, size=(64, len(x0)))
+    y_local = _predict_importance_model(bundle["model"], bundle["model_family"], perturbed)
+    distances = np.sqrt(np.sum(((perturbed - x0) / std) ** 2, axis=1))
+    weights = np.exp(-(distances ** 2) / max(len(x0), 1))
+    X_design = np.column_stack([np.ones(len(perturbed)), perturbed - x0])
+    W = np.diag(weights)
+    coef = np.linalg.pinv(X_design.T @ W @ X_design) @ (X_design.T @ W @ y_local)
+    local_coef = coef[1:]
+    return {
+        "importance_method": "lime",
+        "implementation": "lime_style_local_surrogate",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "local_importance": _ranked_feature_payload("coefficient", bundle["feature_names"], local_coef),
+    }
+
+
+def _compute_feature_ablation_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    baseline = float(_predict_importance_model(bundle["model"], bundle["model_family"], bundle["X_pred"])[0])
+    mean_vec = np.mean(bundle["X_train"], axis=0)
+    deltas = []
+    for idx, feature in enumerate(bundle["feature_names"]):
+        altered = np.asarray(bundle["X_pred"], dtype=float).copy()
+        altered[0, idx] = mean_vec[idx]
+        pred = float(_predict_importance_model(bundle["model"], bundle["model_family"], altered)[0])
+        deltas.append(abs(baseline - pred))
+    return {
+        "importance_method": "feature_ablation",
+        "model_family": bundle["model_family"],
+        "feature_builder": bundle["feature_builder"],
+        "baseline_prediction": baseline,
+        "feature_importance": _ranked_feature_payload("ablation_delta", bundle["feature_names"], np.asarray(deltas, dtype=float)),
+    }
+
+
+def _top_feature_indices(bundle: dict[str, object], top_k: int = 3) -> list[int]:
+    X_train = np.asarray(bundle["X_train"], dtype=float)
+    model = bundle["model"]
+    model_family = str(bundle["model_family"])
+    if model_family == "adaptivelasso":
+        score = np.abs(model.coef_ / model._adaptive_weights)
+    elif hasattr(model, "coef_"):
+        score = np.abs(np.asarray(model.coef_, dtype=float))
+    elif hasattr(model, "feature_importances_"):
+        score = np.abs(np.asarray(model.feature_importances_, dtype=float))
+    else:
+        result = permutation_importance(model, X_train, np.asarray(bundle["y_train"], dtype=float), n_repeats=3, random_state=42)
+        score = np.abs(result.importances_mean)
+    order = np.argsort(score)[::-1]
+    return [int(i) for i in order[: min(top_k, len(order))]]
+
+
+def _compute_profile_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract, *, mode: str) -> dict[str, object]:
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    X_train = np.asarray(bundle["X_train"], dtype=float)
+    feature_names = bundle["feature_names"]
+    indices = _top_feature_indices(bundle, top_k=3)
+    payload = {"importance_method": mode, "model_family": bundle["model_family"], "feature_builder": bundle["feature_builder"], "profiles": []}
+    for idx in indices:
+        col = X_train[:, idx]
+        grid = np.quantile(col, np.linspace(0.1, 0.9, 5))
+        if mode == "pdp":
+            values = []
+            for value in grid:
+                X_mod = X_train.copy()
+                X_mod[:, idx] = value
+                values.append(float(np.mean(_predict_importance_model(bundle["model"], bundle["model_family"], X_mod))))
+            payload["profiles"].append({"feature": feature_names[idx], "grid": [float(x) for x in grid], "pdp": values})
+        elif mode == "ice":
+            curves = []
+            rows = X_train[: min(10, len(X_train))]
+            for row in rows:
+                vals = []
+                for value in grid:
+                    row_mod = row.copy()
+                    row_mod[idx] = value
+                    vals.append(float(_predict_importance_model(bundle["model"], bundle["model_family"], row_mod.reshape(1, -1))[0]))
+                curves.append(vals)
+            payload["profiles"].append({"feature": feature_names[idx], "grid": [float(x) for x in grid], "ice": curves})
+        else:
+            bins = np.quantile(col, np.linspace(0.0, 1.0, 6))
+            effects = []
+            for left, right in zip(bins[:-1], bins[1:]):
+                mask = (col >= left) & (col <= right)
+                if not np.any(mask):
+                    effects.append(0.0)
+                    continue
+                X_low = X_train[mask].copy()
+                X_high = X_train[mask].copy()
+                X_low[:, idx] = left
+                X_high[:, idx] = right
+                diff = _predict_importance_model(bundle["model"], bundle["model_family"], X_high) - _predict_importance_model(bundle["model"], bundle["model_family"], X_low)
+                effects.append(float(np.mean(diff)))
+            ale = np.cumsum(effects).tolist()
+            payload["profiles"].append({"feature": feature_names[idx], "bins": [float(x) for x in bins], "ale": [float(x) for x in ale]})
+    return payload
+
+
+def _feature_group(name: str) -> str:
+    if name.startswith("lag_"):
+        return "lag_block"
+    if '_' in name:
+        return name.split('_')[0]
+    return name
+
+
+def _compute_grouped_permutation_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    base = _compute_permutation_importance_artifact(raw_frame, target_series, recipe, contract)
+    grouped: dict[str, float] = {}
+    for row in base["feature_importance"]:
+        group = _feature_group(row["feature"])
+        grouped[group] = grouped.get(group, 0.0) + float(row["mean_importance"])
+    payload = [{"group": key, "mean_importance": float(val)} for key, val in sorted(grouped.items(), key=lambda item: item[1], reverse=True)]
+    return {
+        "importance_method": "grouped_permutation",
+        "base_method": "permutation_importance",
+        "group_importance": payload,
+    }
+
+
+def _compute_importance_stability_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
+    bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
+    X_train = np.asarray(bundle["X_train"], dtype=float)
+    y_train = np.asarray(bundle["y_train"], dtype=float)
+    model_family = str(bundle["model_family"])
+    seeds = [11, 22, 33, 44, 55]
+    rank_rows = []
+    for seed in seeds:
+        rng = np.random.default_rng(seed)
+        idx = rng.integers(0, len(X_train), len(X_train))
+        X_boot = X_train[idx]
+        y_boot = y_train[idx]
+        model = _fit_importance_model(recipe, X_boot, y_boot)
+        result = permutation_importance(model, X_boot, y_boot, n_repeats=3, random_state=seed)
+        rank_rows.append(np.asarray(result.importances_mean, dtype=float))
+    ranks = np.vstack(rank_rows)
+    mean_imp = np.mean(ranks, axis=0)
+    std_imp = np.std(ranks, axis=0, ddof=1)
+    rank_order = np.argsort(-ranks, axis=1)
+    top_feature = int(np.argmax(mean_imp))
+    top_rank_positions = [int(np.where(row == top_feature)[0][0] + 1) for row in rank_order]
+    return {
+        "importance_method": "importance_stability",
+        "n_bootstrap": len(seeds),
+        "top_feature": bundle["feature_names"][top_feature],
+        "top_rank_positions": top_rank_positions,
+        "feature_importance": [
+            {"feature": feature, "mean_importance": float(m), "std_importance": float(s)}
+            for feature, m, s in sorted(zip(bundle["feature_names"], mean_imp, std_imp), key=lambda item: item[1], reverse=True)
+        ],
+    }
+
+
 def _build_predictions(
     raw_frame: pd.DataFrame,
     target_series: pd.Series,
@@ -1973,11 +2275,26 @@ def execute_recipe(
                 failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
             else:
                 raise
-    if importance_spec.get("importance_method") == "minimal_importance":
+    importance_method = str(importance_spec.get("importance_method", "none"))
+    importance_dispatch = {
+        "minimal_importance": (lambda: _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess), "importance_minimal.json"),
+        "tree_shap": (lambda: _compute_tree_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_tree_shap.json"),
+        "kernel_shap": (lambda: _compute_kernel_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_kernel_shap.json"),
+        "linear_shap": (lambda: _compute_linear_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_linear_shap.json"),
+        "permutation_importance": (lambda: _compute_permutation_importance_artifact(raw_result.data, target_series, recipe, preprocess), "importance_permutation_importance.json"),
+        "lime": (lambda: _compute_lime_artifact(raw_result.data, target_series, recipe, preprocess), "importance_lime.json"),
+        "feature_ablation": (lambda: _compute_feature_ablation_artifact(raw_result.data, target_series, recipe, preprocess), "importance_feature_ablation.json"),
+        "pdp": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="pdp"), "importance_pdp.json"),
+        "ice": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ice"), "importance_ice.json"),
+        "ale": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ale"), "importance_ale.json"),
+        "grouped_permutation": (lambda: _compute_grouped_permutation_artifact(raw_result.data, target_series, recipe, preprocess), "importance_grouped_permutation.json"),
+        "importance_stability": (lambda: _compute_importance_stability_artifact(raw_result.data, target_series, recipe, preprocess), "importance_stability.json"),
+    }
+    if importance_method != "none":
         try:
-            importance_payload = _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess)
-            _write_json(run_dir / "importance_minimal.json", importance_payload)
-            manifest["importance_file"] = "importance_minimal.json"
+            importance_payload, importance_file = importance_dispatch[importance_method][0](), importance_dispatch[importance_method][1]
+            _write_json(run_dir / importance_file, importance_payload)
+            manifest["importance_file"] = importance_file
         except Exception as exc:
             if failure_policy == "save_partial_results":
                 failed_components.append({"stage": "importance_artifact", "target": None, "error": str(exc)})
