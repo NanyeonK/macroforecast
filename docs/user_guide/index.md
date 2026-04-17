@@ -36,5 +36,6 @@ compiler
 execution
 tuning
 stat_tests
+stat_test_selection
 importance
 ```

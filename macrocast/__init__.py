@@ -32,6 +32,12 @@ from .execution import (
     execute_recipe,
     execute_sweep,
 )
+from .execution.stat_tests import (
+    AXIS_NAMES as STAT_TEST_AXIS_NAMES,
+    LEGACY_TO_NEW as STAT_TEST_LEGACY_TO_NEW,
+    dispatch_stat_tests,
+)
+from .compiler.migrations import migrate_legacy_stat_test
 from .studies import (
     STUDY_MANIFEST_SCHEMA_VERSION,
     VariantManifestEntry,

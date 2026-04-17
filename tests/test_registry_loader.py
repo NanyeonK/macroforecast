@@ -7,7 +7,7 @@ from macrocast.registry.types import AxisRegistryEntry
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert {"study_mode", "dataset", "information_set_type", "task", "model_family", "importance_method", "data_domain", "dataset_source", "relative_metrics", "direction_metrics", "regime_definition"}.issubset(registry)
 
 
@@ -52,7 +52,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -69,7 +69,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_registry_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert "registry_type" in registry
     entry = get_axis_registry_entry("registry_type")
     assert entry.allowed_values == (
@@ -104,7 +104,7 @@ def test_axis_definition_defaults_registry_type_to_enum_registry() -> None:
 
 def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
@@ -118,7 +118,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
 
 def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert "failure_policy" in registry
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
@@ -136,7 +136,7 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
 
 def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 125
+    assert len(registry) == 133
     assert "compute_mode" in registry
     entry = get_axis_registry_entry("compute_mode")
     assert entry.allowed_values == (

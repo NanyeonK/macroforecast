@@ -617,6 +617,8 @@ def _build_wrapper_handoff(
 
 
 def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
+    from macrocast.compiler.migrations import migrate_legacy_stat_test
+    recipe_dict = migrate_legacy_stat_test(recipe_dict)
     if not recipe_dict.get("recipe_id"):
         raise CompileValidationError("recipe_id is required")
     selections = _build_axis_selections(recipe_dict)
@@ -715,7 +717,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "training_spec": _training_spec(selection_map, compiled.leaf_config),
         "evaluation_spec": _evaluation_spec(selection_map, compiled.leaf_config),
         "stat_test_spec": {
-            "stat_test": _selection_value(selection_map, "stat_test"),
+            "stat_test": _selection_value(selection_map, "stat_test", default="none"),
             "dependence_correction": _selection_value(selection_map, "dependence_correction", default="none"),
         },
         "importance_spec": {

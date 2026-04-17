@@ -2286,39 +2286,36 @@ def execute_recipe(
         manifest['regime_file'] = regime_files.get('json') or regime_files.get('csv') or regime_files.get('parquet')
     stat_test_name = str(stat_test_spec.get("stat_test", "none"))
     dependence_correction = _dependence_correction(stat_test_spec)
-    stat_dispatch = {
-        "dm": lambda: _compute_dm_test(predictions),
-        "dm_hln": lambda: _compute_dm_hln_test(predictions, dependence_correction=dependence_correction),
-        "dm_modified": lambda: _compute_dm_modified_test(predictions, dependence_correction=dependence_correction),
-        "cw": lambda: _compute_cw_test(predictions),
-        "mcs": lambda: _compute_mcs_test(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
-        "enc_new": lambda: _compute_enc_new_test(predictions, dependence_correction=dependence_correction),
-        "mse_f": lambda: _compute_mse_f_test(predictions),
-        "mse_t": lambda: _compute_mse_t_test(predictions, dependence_correction=dependence_correction),
-        "cpa": lambda: _compute_cpa_test(predictions, dependence_correction=dependence_correction),
-        "rossi": lambda: _compute_rossi_test(predictions),
-        "rolling_dm": lambda: _compute_rolling_dm_test(predictions),
-        "reality_check": lambda: _compute_reality_check(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
-        "spa": lambda: _compute_spa(predictions, block_bootstrap=(dependence_correction == "block_bootstrap")),
-        "mincer_zarnowitz": lambda: _compute_mincer_zarnowitz(predictions),
-        "ljung_box": lambda: _compute_ljung_box_test(predictions),
-        "arch_lm": lambda: _compute_arch_lm_test(predictions),
-        "bias_test": lambda: _compute_bias_test(predictions),
-        "pesaran_timmermann": lambda: _compute_pesaran_timmermann(predictions),
-        "binomial_hit": lambda: _compute_binomial_hit_test(predictions),
-        "diagnostics_full": lambda: _compute_diagnostics_bundle(predictions),
-    }
-    if stat_test_name != "none":
-        try:
-            payload = stat_dispatch[stat_test_name]()
-            stat_file = f"stat_test_{stat_test_name}.json"
-            _write_json(run_dir / stat_file, payload)
-            manifest["stat_test_file"] = stat_file
-        except Exception as exc:
-            if failure_policy == "save_partial_results":
-                failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
-            else:
-                raise
+    from macrocast.execution.stat_tests import dispatch_stat_tests
+    try:
+        stat_results = dispatch_stat_tests(
+            predictions=predictions,
+            stat_test_spec=stat_test_spec,
+            dependence_correction=dependence_correction,
+        )
+    except Exception as exc:
+        if failure_policy == "save_partial_results":
+            failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
+            stat_results = {}
+        else:
+            raise
+    if stat_results:
+        _write_json(run_dir / "stat_tests.json", stat_results)
+        manifest["stat_tests"] = stat_results
+        per_test_files = {}
+        for axis_key, axis_payload in stat_results.items():
+            test_value = axis_payload.get("stat_test")
+            if not test_value or "error" in axis_payload or axis_key == "test_scope":
+                continue
+            per_file = f"stat_test_{test_value}.json"
+            _write_json(run_dir / per_file, axis_payload)
+            per_test_files[axis_key] = per_file
+        if len(per_test_files) == 1:
+            manifest["stat_test_file"] = next(iter(per_test_files.values()))
+        else:
+            manifest["stat_test_file"] = "stat_tests.json"
+        if per_test_files:
+            manifest["stat_test_files"] = per_test_files
     importance_method = str(importance_spec.get("importance_method", "none"))
     importance_dispatch = {
         "minimal_importance": (lambda: _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess), "importance_minimal.json"),

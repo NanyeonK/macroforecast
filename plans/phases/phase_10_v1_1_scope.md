@@ -15,7 +15,7 @@ v1.0 출시 후 user demand 기반으로 우선순위가 붙는 v1.1 scope catal
 
 ## 2. Scope
 
-**In scope (7 deliverables):**
+**In scope (8 deliverables):**
 - 10.1 Benchmark Suite Runner
 - 10.2 Multi-target joint runner
 - 10.3 Extended data sources (BEA/BLS/OECD/ECB/IMF/SPF)
@@ -23,6 +23,7 @@ v1.0 출시 후 user demand 기반으로 우선순위가 붙는 v1.1 scope catal
 - 10.5 Shapley attribution (Phase 7 enhancement)
 - 10.6 Conditional / nested / derived sweep axes (Phase 1 extension)
 - 10.7 Docs update
+- 10.8 Statistical test catalog expansion (Phase 2 후속 — 19 new tests + test_scope 확장)
 
 **Out of scope:**
 - Distributed compute → Phase 11.1
@@ -44,7 +45,8 @@ v1.0 출시 후 user demand 기반으로 우선순위가 붙는 v1.1 scope catal
 | 10.4 | Importance uplift | P2 | SHAP family unification (tree/kernel/linear/deep) + DL sequence/temporal importance + cross-model consensus | `macrocast/explain/shap_unified.py` (신규), `macrocast/explain/temporal_importance.py` (신규) |
 | 10.5 | Shapley attribution | P2 | Phase 7 ANOVA baseline에 Shapley 추가 | `macrocast/decompose/shapley_attribution.py` (신규) |
 | 10.6 | Conditional / nested / derived sweep axes | P2 | `axis_type` 3종 operational | `macrocast/sweep/axes.py` (확장) |
-| 10.7 | Docs | P2 | user guide + API ref for 10.1-10.6 | `docs/user/**`, `docs/api/**` |
+| 10.7 | Docs | P2 | user guide + API ref for 10.1-10.6, 10.8 | `docs/user/**`, `docs/api/**` |
+| 10.8 | Statistical test catalog expansion | P2 | Phase 2 §4.1 표의 미구현 19개 검정 + test_scope 확장 구현 — equal_predictive(+2: paired_t_on_loss_diff, wilcoxon_signed_rank), nested(+1: forecast_encompassing_nested), cpa_instability(+3: fluctuation_test, chow_break_forecast, cusum_on_loss), multiple_model(+2: stepwise_mcs, bootstrap_best_model), density_interval(+7: PIT_uniformity, berkowitz, kupiec, christoffersen_{unconditional,independence,conditional}, interval_coverage), direction(+2: mcnemar, roc_comparison), residual_diagnostics(+2: autocorrelation_of_errors, serial_dependence_loss_diff), test_scope(+4: full_grid_pairwise, benchmark_vs_all, regime_specific_tests, subsample_tests) | `macrocast/execution/stat_tests/{density,direction,residual,cpa_ext,multiple_ext,equal_ext,scope_ext}.py` (신규) |
 
 각 deliverable의 세부 sub-tasks는 post-v1.0 kickoff에서 별도 phase 문서로 split out.
 
@@ -101,7 +103,7 @@ Catalog 수준이라 file list는 deliverable별 요약 (§3 참조). 상세 lay
 
 ## 7. Acceptance Gate
 
-- [ ] 10.1-10.6 각 deliverable에 독립 phase 문서 존재 + 각자 acceptance gate 통과
+- [ ] 10.1-10.6, 10.8 각 deliverable에 독립 phase 문서 존재 + 각자 acceptance gate 통과
 - [ ] v1.0 기존 test suite 회귀 zero
 - [ ] 10.3 6개 데이터 소스가 `registry_only` → `operational` 상태 전환
 - [ ] 10.7 docs가 위 기능 전체를 cover
@@ -137,6 +139,7 @@ Catalog 수준이라 file list는 deliverable별 요약 (§3 참조). 상세 lay
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2에서 v1.1 scope 추출)
+- 2026-04-17: 10.8 추가 — Phase 2 §4.1에서 의도됐지만 Phase 2 scope(재분류 only) 밖이던 19개 신규 검정 + test_scope 확장 항목을 v1.1 카탈로그에 명시적으로 편입
 
 ## 13. References
 

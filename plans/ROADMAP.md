@@ -80,7 +80,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 |:-----:|------|:--------:|:-------:|------|:------:|
 | 0 | Single-path stability & sweep-safety | **P0** | v0.2 | [phase_00_stability.md](phases/phase_00_stability.md) | **completed** |
 | 1 | Horse-race sweep executor — **IDENTITY** | **P0** | v0.3 | [phase_01_sweep_executor.md](phases/phase_01_sweep_executor.md) | **completed (pending v0.3 tag)** |
-| 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | pending |
+| 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | **completed (pending v0.4 tag)** |
 | 3 | Data/task axes + preprocessing separation | P1 | v0.5 | [phase_03_data_task_axes.md](phases/phase_03_data_task_axes.md) | pending |
 | 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | pending |
 | 5a | Deep & time-series models (core + [deep]) | P1 | v0.7 | [phase_05a_deep_tsm.md](phases/phase_05a_deep_tsm.md) | pending |
@@ -135,9 +135,10 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 |:-----:|:------:|:-------:|:----------:|:-------:|
 | 0 | completed | v0.2 | PR #8 | 2026-04-17 |
 | 1 | completed (pending v0.3 tag) | v0.3 | feat/phase-01-sweep-executor | 2026-04-17 |
-| 2-11 | pending | - | - | - |
+| 2 | completed (pending v0.4 tag) | v0.4 | feat/phase-02-stat-test-split | 2026-04-17 |
+| 3-11 | pending | - | - | - |
 
-현재 live phase: **Phase 2 kickoff 대기** (Phase 1 구현 완료, v0.3 tag은 merge 이후)
+현재 live phase: **Phase 3 kickoff 대기** (Phase 2 구현 완료, v0.3/v0.4 tag은 각 브랜치 merge 이후)
 
 ## 10. Pointer Table (separate plans)
 
@@ -193,6 +194,7 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 
 ## 12. Revision History
 
+- **v3.3 (2026-04-17):** Phase 2 구현 완료 반영 (stat_test 8축 분해, 402/402 tests green, pending v0.4 tag), Phase 10 §10.8 amendment로 미구현 19개 검정 편입
 - **v3.2 (2026-04-17):** Phase 1 구현 완료 반영 (horse race executor identity unlock, pending v0.3 tag)
 - **v3.1 (2026-04-17):** Phase 0 완료 반영 (status completed, v0.2 tag 준비)
 - **v3.0 (2026-04-17):** 단일 파일 → master + per-phase + infra/ADR + coverage_ledger + issue templates 재구조화

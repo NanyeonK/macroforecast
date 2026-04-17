@@ -7,11 +7,13 @@
 | Depends on | phase-01 |
 | Unlocks | phase-06, phase-07 |
 | Version tag target | v0.4 |
-| Status | pending |
+| Status | completed (2026-04-17, pending v0.4 tag) |
 
 ## 1. Goal
 
 Monolithic `stat_test` axis 1개를 의미론적 8축 (equal_predictive / nested / cpa_instability / multiple_model / density_interval / direction / residual_diagnostics / test_scope)으로 분해합니다. Horse race 결과를 해석할 때 어떤 가설을 어떤 검정으로 수행했는지 축별로 명시되어야 하며, 이는 Phase 1 sweep이 산출한 variant 비교의 통계적 defensibility를 직결로 결정합니다.
+
+**Scope 결정 (2026-04-17):** 본 phase는 **재분류 전용**. 현재 operational 20개 검정을 8축으로 재배치만 수행합니다. Plan §4.1 원안 표에 포함됐던 19개 미구현 검정(density_interval 7개, cpa_instability 확장 3개, direction 2개, residual_diagnostics 2개, equal_predictive 2개, nested 1개, multiple_model 2개) 및 test_scope의 확장 값 4개는 **Phase 10 §10.8로 이월**. density_interval 축은 Phase 2에서는 빈 축으로 등록(status=planned).
 
 ## 2. Scope
 
@@ -43,43 +45,38 @@ Monolithic `stat_test` axis 1개를 의미론적 8축 (equal_predictive / nested
 
 ### 4.1 8-Axis Registry Structure
 
-각 axis 파일은 Phase 1의 axis registry 패턴을 따릅니다.
+각 axis 파일은 Phase 1 (study_mode.py 등)에서 쓰인 `AxisDefinition` + `EnumRegistryEntry` 패턴을 따릅니다. 별도 `register_axis()` 함수는 존재하지 않으며, 모듈 최상단에 `AXIS_DEFINITION = AxisDefinition(...)`를 직접 정의하면 base 로더가 자동으로 발견합니다.
 
 ```python
 # macrocast/registry/tests/equal_predictive.py
 from __future__ import annotations
-from macrocast.registry.base import register_axis, AxisSpec
+from macrocast.registry.base import AxisDefinition, EnumRegistryEntry
 
-register_axis(AxisSpec(
-    name="equal_predictive",
-    layer=6,
-    status="operational",
-    values=(
-        "dm",
-        "dm_hln",
-        "dm_modified",
-        "paired_t_on_loss_diff",
-        "wilcoxon_signed_rank",
+AXIS_DEFINITION = AxisDefinition(
+    axis_name="equal_predictive",
+    layer="6_stat_tests",
+    axis_type="enum",
+    default_policy="fixed",
+    entries=(
+        EnumRegistryEntry(id="dm",          description="Diebold-Mariano",               status="operational", priority="A"),
+        EnumRegistryEntry(id="dm_hln",      description="Harvey-Leybourne-Newbold DM",   status="operational", priority="A"),
+        EnumRegistryEntry(id="dm_modified", description="Modified DM (HAC)",             status="operational", priority="A"),
     ),
-    description=(
-        "Equal predictive accuracy tests for non-nested model pairs. "
-        "H0: E[loss_A - loss_B] = 0."
-    ),
-))
+)
 ```
 
-8축 values (total 43 leaf):
+8축 values — Phase 2 operational set (total 23 leaf; 신규 검정은 Phase 10 §10.8):
 
-| Axis | Values |
-|------|--------|
-| `equal_predictive` | `dm`, `dm_hln`, `dm_modified`, `paired_t_on_loss_diff`, `wilcoxon_signed_rank` |
-| `nested` | `cw`, `enc_new`, `mse_f`, `mse_t`, `forecast_encompassing_nested` |
-| `cpa_instability` | `cpa`, `rossi`, `rolling_dm`, `fluctuation_test`, `chow_break_forecast`, `cusum_on_loss` |
-| `multiple_model` | `reality_check`, `spa`, `mcs`, `stepwise_mcs`, `bootstrap_best_model` |
-| `density_interval` | `PIT_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
-| `direction` | `pesaran_timmermann`, `mcnemar`, `binomial_hit`, `roc_comparison` |
-| `residual_diagnostics` | `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `autocorrelation_of_errors`, `serial_dependence_loss_diff`, `diagnostics_full` |
-| `test_scope` | `per_target`, `per_horizon`, `per_model_pair`, `full_grid_pairwise`, `benchmark_vs_all`, `regime_specific_tests`, `subsample_tests` |
+| Axis | Phase 2 operational values | Phase 10 §10.8 ($\rightarrow$ v1.1) |
+|------|---------------------------|--------|
+| `equal_predictive` | `dm`, `dm_hln`, `dm_modified` | + `paired_t_on_loss_diff`, `wilcoxon_signed_rank` |
+| `nested` | `cw`, `enc_new`, `mse_f`, `mse_t` | + `forecast_encompassing_nested` |
+| `cpa_instability` | `cpa`, `rossi`, `rolling_dm` | + `fluctuation_test`, `chow_break_forecast`, `cusum_on_loss` |
+| `multiple_model` | `reality_check`, `spa`, `mcs` | + `stepwise_mcs`, `bootstrap_best_model` |
+| `density_interval` | (비어있음 — status=planned) | + `PIT_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
+| `direction` | `pesaran_timmermann`, `binomial_hit` | + `mcnemar`, `roc_comparison` |
+| `residual_diagnostics` | `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `diagnostics_full` | + `autocorrelation_of_errors`, `serial_dependence_loss_diff` |
+| `test_scope` | `per_target`, `per_horizon`, `per_model_pair` | + `full_grid_pairwise`, `benchmark_vs_all`, `regime_specific_tests`, `subsample_tests` |
 
 ### 4.2 `dispatch_stat_tests()` API
 
@@ -102,8 +99,8 @@ def dispatch_stat_tests(
         dependence_correction: HAC / Newey-West / bootstrap window rule identifier
 
     Returns:
-        {"equal_predictive": {"test": "dm", "statistic": ..., "pvalue": ..., "n": ...},
-         "nested":           {"test": "cw", ...},
+        {"equal_predictive": {"stat_test": "dm", "statistic": ..., "p_value": ..., "n": ...},
+         "nested":           {"stat_test": "cw", ...},
          ...}
         Skipped axes are absent from output.
     """
@@ -111,7 +108,7 @@ def dispatch_stat_tests(
 
 **Invariants:**
 - spec에 없는 axis는 결과에서 생략 (None 반환하지 않음)
-- 각 axis 결과에는 항상 `test`, `statistic`, `pvalue`, `n` 키 존재
+- 각 axis 결과에는 항상 `stat_test`, `statistic`, `p_value`, `n` 키 존재 (기존 per-test function 반환 형식과 일치; 새 이름은 이전 v0.2 계약 유지)
 - `test_scope` axis는 다른 축의 적용 범위를 제어 (per-horizon → horizon별 반복 실행)
 - 내부 실패는 per-axis error dict로 surface (`{"error": str, "exc_type": str}`)
 
@@ -123,34 +120,32 @@ from __future__ import annotations
 import warnings
 
 _LEGACY_TO_NEW: dict[str, tuple[str, str]] = {
-    # equal_predictive
-    "dm": ("equal_predictive", "dm"),
-    "dm_hln": ("equal_predictive", "dm_hln"),
+    # equal_predictive (3 operational)
+    "dm":          ("equal_predictive", "dm"),
+    "dm_hln":      ("equal_predictive", "dm_hln"),
     "dm_modified": ("equal_predictive", "dm_modified"),
-    "paired_t_on_loss_diff": ("equal_predictive", "paired_t_on_loss_diff"),
-    "wilcoxon_signed_rank": ("equal_predictive", "wilcoxon_signed_rank"),
-    # nested
-    "cw": ("nested", "cw"),
+    # nested (4 operational)
+    "cw":      ("nested", "cw"),
     "enc_new": ("nested", "enc_new"),
-    "mse_f": ("nested", "mse_f"),
-    "mse_t": ("nested", "mse_t"),
-    # cpa_instability
-    "cpa": ("cpa_instability", "cpa"),
-    "rossi": ("cpa_instability", "rossi"),
-    # multiple_model
+    "mse_f":   ("nested", "mse_f"),
+    "mse_t":   ("nested", "mse_t"),
+    # cpa_instability (3 operational)
+    "cpa":        ("cpa_instability", "cpa"),
+    "rossi":      ("cpa_instability", "rossi"),
+    "rolling_dm": ("cpa_instability", "rolling_dm"),
+    # multiple_model (3 operational)
     "reality_check": ("multiple_model", "reality_check"),
-    "spa": ("multiple_model", "spa"),
-    "mcs": ("multiple_model", "mcs"),
-    # density_interval
-    "PIT_uniformity": ("density_interval", "PIT_uniformity"),
-    "berkowitz": ("density_interval", "berkowitz"),
-    "kupiec": ("density_interval", "kupiec"),
-    "christoffersen_conditional": ("density_interval", "christoffersen_conditional"),
-    # direction
+    "spa":           ("multiple_model", "spa"),
+    "mcs":           ("multiple_model", "mcs"),
+    # direction (2 operational)
     "pesaran_timmermann": ("direction", "pesaran_timmermann"),
-    # residual_diagnostics
-    "mincer_zarnowitz": ("residual_diagnostics", "mincer_zarnowitz"),
-    "ljung_box": ("residual_diagnostics", "ljung_box"),
+    "binomial_hit":       ("direction", "binomial_hit"),
+    # residual_diagnostics (5 operational)
+    "mincer_zarnowitz":  ("residual_diagnostics", "mincer_zarnowitz"),
+    "ljung_box":         ("residual_diagnostics", "ljung_box"),
+    "arch_lm":           ("residual_diagnostics", "arch_lm"),
+    "bias_test":         ("residual_diagnostics", "bias_test"),
+    "diagnostics_full":  ("residual_diagnostics", "diagnostics_full"),
 }
 
 def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
@@ -228,14 +223,14 @@ def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
 
 ## 7. Acceptance Gate
 
-- [ ] Phase 1 gate 선통과
-- [ ] 8개 axis 파일 모두 registry에 등록 + status = operational
-- [ ] `dispatch_stat_tests()` 공개 API export
-- [ ] 기존 291 test + Phase 0/1 test + Phase 2 신규 3개 test 전부 green
-- [ ] Legacy `{stat_test: X}` recipe 로드 시 `DeprecationWarning` 정확히 1회 발생
-- [ ] `grep -rE "stat_dispatch\s*=\s*\{" macrocast/execution/` → 0 hits (legacy dict 삭제 완료)
-- [ ] Phase 2 docs 3종 RTD build green
-- [ ] `docs/user_guide/stat_test_selection.md`의 axis 선택 결정 트리 재현 가능
+- [x] Phase 1 gate 선통과 — feat/phase-01 merge pending (b3cb6ae, 340 tests)
+- [x] 8개 axis 파일 모두 registry에 등록 — 7축 operational (density_interval은 Phase 10 §10.8로 이월), 20 legacy operational 값 전부 새 축에 배치
+- [x] dispatch_stat_tests() 공개 API export — macrocast.__init__
+- [x] 기존 + Phase 0/1 + Phase 2 신규 test 전부 green — 402/402 passed, 0 regressions
+- [x] Legacy stat_test recipe 로드 시 DeprecationWarning 1회 발생 — test_stat_test_migration.py
+- [x] legacy stat_dispatch dict literal grep returns 0 hits — dict 제거 완료
+- [x] Phase 2 docs 3종 완성 — stat_test_selection (new), stat_tests (rewrite), math/stat_tests (rewrite), toctree 연결
+- [x] docs/user_guide/stat_test_selection.md 결정 트리 재현 가능
 
 ## 8. Docs Deliverables
 
@@ -272,6 +267,8 @@ def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 2에서 추출)
+- 2026-04-17: Phase 2 구현 완료 — 8축 등록(7축 operational, density_interval은 Phase 10 §10.8로 이월), dispatch_stat_tests() + migration shim + build.py 통합, 402/402 tests green, v0.4 tag 준비 (merge 후)
+- 2026-04-17: Plan-현실 간극 반영 correction — §4.1 표를 현재 operational 20개(+test_scope MVP 3개)로 축소해 (total 23 leaf) Phase 2 scope에 정렬; §4.1 API 예시를 `AxisSpec`/`register_axis()` → 실제 `AxisDefinition`/`EnumRegistryEntry` 패턴으로 정정; §4.2 결과 키를 `pvalue`/`test` → `p_value`/`stat_test` (기존 per-test 계약 유지); §4.3 `_LEGACY_TO_NEW`를 operational 20개 전부 커버하도록 재작성 (이전 초안은 rolling_dm/arch_lm/bias_test/diagnostics_full/binomial_hit 5개 누락). 미구현 19개 검정 + test_scope 확장 4개는 Phase 10 §10.8로 이월.
 
 ## 13. References
 

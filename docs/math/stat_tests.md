@@ -1,83 +1,147 @@
-# Statistical Tests — Mathematical Background
+# Mathematical Definitions: Statistical Tests
 
-## Diebold-Mariano (DM) test
+This reference groups the tests implemented in `macrocast.execution.build` by the Phase 2 axis they belong to. For each test we give the null, the statistic, and the distribution used for the p-value.
 
-Let $d_t = L(e_t^m) - L(e_t^b)$ be the loss differential, where $L(\cdot)$ is typically the squared loss.
+All tests take a long-form `predictions` table whose columns include `y_true`, `y_pred`, `benchmark_pred`, `squared_error`, `benchmark_squared_error`, `origin_date`, `horizon`, `target`, `model_name`.
 
-**Test statistic:**
+---
 
-$$DM = \frac{\bar{d}}{\hat{\sigma}_{\bar{d}}} \xrightarrow{d} N(0,1)$$
+## Axis: `equal_predictive`
 
-where $\bar{d} = T^{-1}\sum d_t$ and $\hat{\sigma}_{\bar{d}}$ is the HAC standard error (Newey-West with bandwidth $h-1$ for $h$-step forecasts).
+Loss-differential tests for two non-nested model forecasts $\hat{y}^A$ and $\hat{y}^B$. Let $d_t = L(y_t, \hat{y}^A_t) - L(y_t, \hat{y}^B_t)$ be the loss differential.
 
-**H0:** $E[d_t] = 0$ (equal predictive ability)
+### `dm` — Diebold-Mariano (1995)
+- $H_0$: $E[d_t] = 0$.
+- Statistic: $\mathrm{DM} = \bar d / \sqrt{\hat V(\bar d)/n}$ with $\hat V$ a simple sample variance.
+- Distribution: standard normal.
 
-Reference: Diebold & Mariano (1995)
+### `dm_hln` — DM with Harvey-Leybourne-Newbold (1997) small-sample correction
+- Same $H_0$ and statistic as `dm`, multiplied by $\sqrt{(n + 1 - 2h + h(h-1)/n)/n}$.
+- Distribution: $t$-distribution with $n-1$ degrees of freedom.
 
-## Harvey-Leybourne-Newbold (DM-HLN) correction
+### `dm_modified`
+- `dm_hln` variant with a HAC variance estimate (Newey-West) for $\hat V(\bar d)$. Suited for long-horizon forecasts where $d_t$ has persistent autocorrelation.
 
-$$DM_{HLN} = DM \cdot \left[\frac{T + 1 - 2h + h(h-1)/T}{T}\right]^{1/2}$$
+---
 
-with a $t(T-1)$ critical value instead of normal.
+## Axis: `nested`
 
-Reference: Harvey, Leybourne & Newbold (1997)
+Nested-model tests. Let model B nest model A ($A \subset B$). Clark-West and ENC-NEW correct for the downward bias in MSE differentials when comparing nested models.
 
-## Clark-West (CW) test
+### `cw` — Clark-West (2007)
+- $H_0$: parent model A has the same out-of-sample MSFE as the nested B.
+- Statistic: adjusted loss differential $\tilde d_t = (\hat{y}^A_t - \hat{y}^B_t)^2 - 2(\hat{y}^A_t - \hat{y}^B_t)(y_t - \hat{y}^B_t)$; test is one-sided $t$ on $\bar{\tilde d}$.
+- Distribution: standard normal.
 
-For nested models, let $\hat{f}_t = (e_t^b)^2 - [(e_t^m)^2 - (\hat{y}_t^m - \hat{y}_t^b)^2]$.
+### `enc_new` — Clark-McCracken (2001) forecast encompassing
+- $H_0$: B encompasses A.
+- Statistic: $\mathrm{ENC\text{-}NEW} = n \cdot \sum_t (\hat{y}^A_t - \hat{y}^B_t)(y_t - \hat{y}^A_t) / \sum_t (y_t - \hat{y}^B_t)^2$.
+- Distribution: non-standard; macrocast uses the Clark-McCracken asymptotic critical values.
 
-**Test statistic:**
+### `mse_f` / `mse_t`
+- F and t statistics on $\mathrm{MSFE}_A - \mathrm{MSFE}_B$. See Clark & McCracken (2001) for critical values.
 
-$$CW = \frac{\bar{f}}{\hat{\sigma}_{\bar{f}}} \xrightarrow{d} N(0,1)$$
+---
 
-**H0:** The larger model does not improve forecast accuracy.
+## Axis: `cpa_instability`
 
-One-sided test: reject H0 if CW > z_alpha (model improves).
+Conditional predictive ability and forecast stability.
 
-Reference: Clark & West (2007)
+### `cpa` — Giacomini-White (2006)
+- $H_0$: constant-only conditional predictive ability — $E[d_t | \mathcal{F}_{t-1}] = 0$.
+- Statistic: Wald on regression of $d_t$ on an intercept.
+- Distribution: $\chi^2_1$ (k instruments = 1).
 
-## Model Confidence Set (MCS)
+### `rossi` — Rossi-Sekhposyan forecast stability
+- $H_0$: no change in predictive ability over the out-of-sample period.
+- Statistic: maximum of a rolling DM-type statistic over the sample.
+- Distribution: simulated critical values.
 
-Given $M_0$ models, MCS iteratively eliminates the worst model until the surviving set is not significantly different from the best:
+### `rolling_dm`
+- Summary: rolling-window DM applied with a fixed window width; returns min/max/mean statistic across windows.
 
-1. Test $H_0$: all models in current set have equal predictive ability (using max-$t$ or range statistic)
-2. If rejected, remove the model with the worst relative performance
-3. Repeat until $H_0$ is not rejected
+---
 
-The surviving models at significance level $\alpha$ form the $(1-\alpha)$ Model Confidence Set.
+## Axis: `multiple_model`
 
-Reference: Hansen, Lunde & Nason (2011)
+Tests comparing a set of candidate models against a benchmark (or each other).
 
-## Giacomini-White Conditional Predictive Ability (CPA)
+### `reality_check` — White (2000)
+- $H_0$: no model strictly beats the benchmark.
+- Statistic: $\max_k \sqrt{n}(\overline{L_{bench}} - \overline{L_k})$ across $k$ candidate models.
+- Distribution: stationary-bootstrap p-value.
 
-Tests whether the loss differential $d_t$ is predictable by observable variables $h_t$:
+### `spa` — Hansen (2005) Superior Predictive Ability
+- Variant of Reality Check that is not conservative when some candidate models are dominated. Same bootstrap, different statistic.
 
-$$d_t = h_t' \delta + u_t$$
+### `mcs` — Model Confidence Set, Hansen-Lunde-Nason (2011)
+- Produces a set $\widehat{\mathcal{M}}$ of models not significantly beaten by any other model at a given confidence level.
+- Iterative elimination using $T_R$ or $T_{\max}$ statistic; bootstrap p-value.
 
-**H0:** $\delta = 0$ (loss differential is unpredictable)
+---
 
-**Test:** Wald test on $\hat{\delta}$.
+## Axis: `direction`
 
-Reference: Giacomini & White (2006)
+### `pesaran_timmermann` — Pesaran-Timmermann (1992)
+- $H_0$: forecast sign and realized sign are independent.
+- Statistic: $(\hat P - \hat P^*) / \sqrt{\widehat{\mathrm{Var}}(\hat P - \hat P^*)}$ where $\hat P$ is the hit rate and $\hat P^*$ the hit rate expected under independence.
+- Distribution: standard normal.
 
-## Mincer-Zarnowitz regression
+### `binomial_hit`
+- $H_0$: hit rate = 0.5 (naive).
+- Statistic: binomial test on the count of correctly-signed forecasts.
 
-$$y_t = \alpha + \beta \hat{y}_t + \varepsilon_t$$
+---
 
-**H0:** $\alpha = 0, \beta = 1$ (forecast is optimal: unbiased and efficient)
+## Axis: `residual_diagnostics`
 
-Joint F-test.
+Diagnostics run on forecast errors $e_t = y_t - \hat{y}_t$.
 
-Reference: Mincer & Zarnowitz (1969)
+### `mincer_zarnowitz`
+- Regression $y_t = \alpha + \beta \hat{y}_t + u_t$; joint test of $\alpha = 0, \beta = 1$ ($F$-distributed).
 
-## Pesaran-Timmermann directional accuracy test
+### `ljung_box`
+- Portmanteau test of serial correlation in $\{e_t\}$ at lag $m$; asymptotically $\chi^2_m$.
 
-Tests whether the forecast correctly predicts the sign of changes more often than chance:
+### `arch_lm`
+- Engle (1982) ARCH-LM: regress $e_t^2$ on $m$ lags; test joint significance. Asymptotically $\chi^2_m$.
 
-$$PT = \frac{\hat{P} - \hat{P}^*}{\sqrt{\text{Var}(\hat{P} - \hat{P}^*)}} \xrightarrow{d} N(0,1)$$
+### `bias_test`
+- One-sample $t$-test on $\bar e = 0$.
 
-where $\hat{P}$ is the observed proportion of correct sign predictions and $\hat{P}^*$ is the expected proportion under independence.
+### `diagnostics_full`
+- Bundle: runs `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test` and packs all statistics under one JSON payload.
 
-Reference: Pesaran & Timmermann (1992)
+---
 
-**See also:** [User Guide: Statistical Tests](../user_guide/stat_tests.md) — when to use each test
+## Axis: `density_interval` (Phase 10 §10.8)
+
+No operational entries in v0.4. Planned entries: `PIT_uniformity`, `berkowitz`, `kupiec`, `christoffersen_{unconditional,independence,conditional}`, `interval_coverage`. Mathematical definitions will land with Phase 10 §10.8 (v1.1).
+
+---
+
+## Axis: `test_scope`
+
+Meta-control, not a test. Values choose the slicing at which other axes' tests are applied:
+
+- `per_target` — run once per target
+- `per_horizon` — run once per (target, horizon)
+- `per_model_pair` — pairwise across all model pairs
+
+Other values (`full_grid_pairwise`, `benchmark_vs_all`, `regime_specific_tests`, `subsample_tests`) are `planned` — see Phase 10 §10.8.
+
+---
+
+## References
+
+- Diebold, F. X., & Mariano, R. S. (1995). Comparing predictive accuracy.
+- Harvey, D. I., Leybourne, S. J., & Newbold, P. (1997). Testing the equality of prediction mean squared errors.
+- Clark, T. E., & West, K. D. (2007). Approximately normal tests for equal predictive accuracy in nested models.
+- Clark, T. E., & McCracken, M. W. (2001). Tests of equal forecast accuracy and encompassing for nested models.
+- Giacomini, R., & White, H. (2006). Tests of conditional predictive ability.
+- Rossi, B., & Sekhposyan, T. (2016). Forecast rationality tests in the presence of instabilities.
+- White, H. (2000). A reality check for data snooping.
+- Hansen, P. R. (2005). A test for superior predictive ability.
+- Hansen, P. R., Lunde, A., & Nason, J. M. (2011). The model confidence set.
+- Pesaran, M. H., & Timmermann, A. (1992). A simple nonparametric test of predictive performance.
+- Engle, R. F. (1982). Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation.

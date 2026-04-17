@@ -1,150 +1,84 @@
 # Statistical Tests
 
-macrocast supports 20 statistical tests for forecast comparison. This guide helps you choose the right test.
+Layer 6 of a macrocast recipe selects which hypothesis tests run against the forecast artifact. Since v0.4 (Phase 2), this layer is organised as **8 semantic axes** instead of the single flat `stat_test` axis.
 
-## Decision flowchart
+## The 8 axes
 
-1. **Comparing 2 models?** Go to "Pairwise tests"
-2. **Comparing 3+ models?** Go to "Multiple comparison"
-3. **Checking model health?** Go to "Diagnostics"
-4. **Testing direction accuracy?** Go to "Directional tests"
+Each axis lives in `macrocast/registry/tests/<axis>.py` and follows the standard `AxisDefinition` pattern. All axes default to `none`.
 
-## Pairwise tests: Equal predictive ability
+| Axis | Purpose |
+|------|---------|
+| `equal_predictive` | Non-nested loss-differential tests |
+| `nested` | Nested-model forecast accuracy tests |
+| `cpa_instability` | Conditional predictive ability + stability / break tests |
+| `multiple_model` | Multi-model superiority / confidence sets |
+| `density_interval` | Density-forecast + interval-coverage tests |
+| `direction` | Directional-accuracy tests |
+| `residual_diagnostics` | Residual regression / serial / heteroskedasticity diagnostics |
+| `test_scope` | Meta-axis controlling where tests are applied (per-target, per-horizon, per-model-pair) |
 
-Use these when comparing two non-nested models (e.g., Ridge vs RandomForest).
+See [stat_test_selection.md](stat_test_selection.md) for the decision tree.
 
-### `dm` — Diebold-Mariano test
-- **When to use:** Standard choice for comparing two forecasting models
-- **H0:** Equal predictive ability (same expected loss)
-- **Statistic:** Mean loss differential / HAC std error -> N(0,1)
-- **Key reference:** Diebold & Mariano (1995)
+## Operational values (v0.4)
 
-### `dm_hln` — Harvey-Leybourne-Newbold correction
-- **When to use:** Small samples (< 100 OOS observations)
-- **Improvement over dm:** Finite-sample bias correction
-- **Key reference:** Harvey, Leybourne & Newbold (1997)
+### equal_predictive
+- `dm` — Diebold-Mariano
+- `dm_hln` — DM with Harvey-Leybourne-Newbold small-sample correction
+- `dm_modified` — Modified DM for long-horizon forecasts
 
-### `dm_modified` — Modified DM for multi-step horizons
-- **When to use:** Horizons h > 1 where forecast errors are serially correlated
-- **Improvement over dm:** Accounts for MA(h-1) structure in multi-step errors
+### nested
+- `cw` — Clark-West
+- `enc_new` — ENC-NEW forecast encompassing
+- `mse_f` — MSE-F statistic
+- `mse_t` — MSE-t statistic
 
-## Pairwise tests: Nested models
+### cpa_instability
+- `cpa` — Giacomini-White conditional predictive ability
+- `rossi` — Rossi-Sekhposyan stability statistic
+- `rolling_dm` — Rolling-window DM summary
 
-Use these when one model nests the other (e.g., AR(1) nested in AR + macro predictors).
+### multiple_model
+- `reality_check` — White Reality Check bootstrap
+- `spa` — Hansen SPA bootstrap
+- `mcs` — Model Confidence Set
 
-### `cw` — Clark-West test
-- **When to use:** When the benchmark is nested within the model (e.g., AR benchmark vs Ridge with many predictors)
-- **Why not DM:** DM is undersized for nested models; CW corrects for the noise in estimated parameters
-- **Key reference:** Clark & West (2007)
+### direction
+- `pesaran_timmermann` — Directional-accuracy test
+- `binomial_hit` — Binomial hit-rate test
 
-### `enc_new` — Encompassing test (ENC-NEW)
-- **When to use:** Testing if one model's forecasts encompass (contain all information from) another's
-- **Key reference:** Clark & McCracken (2001)
+### residual_diagnostics
+- `mincer_zarnowitz` — Mincer-Zarnowitz regression
+- `ljung_box` — Serial correlation
+- `arch_lm` — ARCH-LM heteroskedasticity
+- `bias_test` — Forecast-bias t-test
+- `diagnostics_full` — Residual diagnostic bundle
 
-### `mse_f` — MSE-F test
-- **When to use:** Equal MSPE testing for nested models with fixed estimation scheme
-- **Key reference:** McCracken (2007)
+### test_scope
+- `per_target` — tests run per target
+- `per_horizon` — tests run per (target, horizon)
+- `per_model_pair` — pairwise tests across all model pairs
 
-### `mse_t` — MSE-T test
-- **When to use:** Same as MSE-F but with different critical value derivation
+### density_interval
 
-## Conditional predictive ability
+No operational values in v0.4. The axis is registered with 7 `planned` values (PIT uniformity, Berkowitz, Kupiec, Christoffersen family, interval coverage) that will land via Phase 10 §10.8 (v1.1).
 
-Use these when you suspect forecast ability varies over time.
+## Output layout
 
-### `cpa` — Giacomini-White Conditional Predictive Ability
-- **When to use:** Testing if relative forecast ability is state-dependent (e.g., better in recessions)
-- **Allows:** Conditioning on observable state variables
-- **Key reference:** Giacomini & White (2006)
+`execute_recipe` writes one `stat_tests.json` bundle at the study root, keyed by axis, with each axis payload carrying the usual `stat_test`, `statistic`, `p_value`, `n` keys. For backwards compatibility during the v1.x window, successful single-test axes also receive the pre-v0.4 per-test file (`stat_test_<test_value>.json`).
 
-### `rossi` — Rossi-Sekhposyan Forecast Stability
-- **When to use:** Testing if forecast ability has changed over the evaluation sample
-- **Detects:** Structural breaks in relative performance
-- **Key reference:** Rossi & Sekhposyan (2016)
+## Recipe example
 
-### `rolling_dm` — Rolling Diebold-Mariano
-- **When to use:** Tracking how DM statistic evolves over rolling windows
-- **Output:** Time series of DM statistics (not just one number)
+```yaml
+6_stat_tests:
+  fixed_axes:
+    equal_predictive: dm_hln
+    nested: cw
+    residual_diagnostics: ljung_box
+    test_scope: per_horizon
+```
 
-## Multiple comparison
+This runs 3 tests (+ meta-axis recording) and writes `stat_tests.json` plus `stat_test_dm_hln.json`, `stat_test_cw.json`, `stat_test_ljung_box.json`.
 
-Use these when comparing 3 or more models simultaneously.
+## Legacy `stat_test` field
 
-### `mcs` — Model Confidence Set
-- **When to use:** Finding the set of "best" models at a given confidence level
-- **Output:** Confidence set (models not significantly worse than the best) + eliminated models
-- **Key advantage:** Controls for data snooping when testing many models
-- **Key reference:** Hansen, Lunde & Nason (2011)
-
-### `reality_check` — White's Reality Check
-- **When to use:** Testing if the best model beats a benchmark, accounting for multiple testing
-- **Key reference:** White (2000)
-
-### `spa` — Hansen's Superior Predictive Ability
-- **When to use:** More powerful version of Reality Check
-- **Key reference:** Hansen (2005)
-
-## Residual diagnostics
-
-Use these to check model health.
-
-### `mincer_zarnowitz` — Mincer-Zarnowitz regression
-- **Tests:** Forecast optimality (unbiasedness and efficiency)
-- **Regress:** y_true on constant + y_pred. H0: intercept=0, slope=1.
-
-### `ljung_box` — Ljung-Box test on forecast errors
-- **Tests:** Serial correlation in errors. If significant, model misses temporal patterns.
-
-### `arch_lm` — ARCH-LM test on forecast errors
-- **Tests:** Heteroskedasticity (time-varying error variance). If significant, consider regime-dependent models.
-
-### `bias_test` — Simple bias test
-- **Tests:** Whether mean forecast error is significantly different from zero.
-
-### `diagnostics_full` — Full diagnostic bundle
-- **Runs all four above** (MZ, Ljung-Box, ARCH-LM, bias) in one call
-- **Artifact:** Single JSON with all diagnostic results
-
-## Directional tests
-
-### `pesaran_timmermann` — Pesaran-Timmermann test
-- **Tests:** Directional accuracy: does the model predict the sign of changes correctly?
-- **Key reference:** Pesaran & Timmermann (1992)
-
-### `binomial_hit` — Binomial hit test
-- **Tests:** Whether directional accuracy exceeds 50% (coin flip)
-
-## Dependence corrections
-
-Forecast errors at horizons h > 1 are serially correlated. Choose an appropriate correction:
-
-| Correction | When to use |
-|-----------|-------------|
-| `none` | h = 1 (no serial correlation) |
-| `nw_hac` | h > 1, fixed bandwidth Newey-West HAC |
-| `nw_hac_auto` | h > 1, automatic bandwidth selection |
-| `block_bootstrap` | Nonstandard error distributions, small samples |
-
-## Quick reference table
-
-| Test | Type | Use case | Models |
-|------|------|----------|--------|
-| `dm` | Pairwise | Standard 2-model comparison | Non-nested |
-| `dm_hln` | Pairwise | Small sample | Non-nested |
-| `dm_modified` | Pairwise | Multi-step horizon | Non-nested |
-| `cw` | Pairwise | Nested model test | Nested (AR vs AR+X) |
-| `enc_new` | Pairwise | Encompassing | Nested |
-| `mse_f` | Pairwise | Equal MSPE | Nested |
-| `mse_t` | Pairwise | Equal MSPE | Nested |
-| `cpa` | Conditional | State-dependent ability | Any |
-| `rossi` | Conditional | Forecast stability | Any |
-| `rolling_dm` | Conditional | Time-varying DM | Any |
-| `mcs` | Multiple | Best model set | 3+ models |
-| `reality_check` | Multiple | Beat benchmark? | 3+ models |
-| `spa` | Multiple | Superior ability | 3+ models |
-| `diagnostics_full` | Diagnostic | Model health | Single model |
-
-**See also:**
-- [Mathematical Background: Statistical Tests](../math/stat_tests.md) — formal definitions and formulas
-- [Example gallery](../examples/index.md) — runnable examples (planned)
-- [User Guide: Models](models.md) — model families to compare
+Still honored through v1.1; emits `DeprecationWarning` when used. The migration shim lives in `macrocast/compiler/migrations/stat_test_split.py`. Removal is scheduled for v1.2 (ADR-006).
