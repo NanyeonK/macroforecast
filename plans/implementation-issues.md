@@ -1164,7 +1164,7 @@ pri:medium | size:M | deps: 0-4
 > Current: 1 axis, 3 values, 2 operational.
 > Target: 12 axes, ~100 values, ~40 operational.
 
-## Issue 8-1: Implement TreeSHAP [BLOCKED on 0-4, 4-5]
+## Issue 8-1: Implement TreeSHAP [DONE]
 pri:critical | size:L | deps: 0-4, 4-5 (needs tree models)
 
 ### Implementation
@@ -1204,7 +1204,7 @@ pri:medium | size:L | deps: 0-4
 
 ---
 
-## Issue 8-6: Implement grouped importance [BLOCKED on 0-4, 8-1 or 8-3]
+## Issue 8-6: Implement grouped importance [DONE]
 pri:high | size:M | deps: 0-4, (8-1 or 8-3)
 
 ### What
@@ -1216,7 +1216,7 @@ Aggregate importance by FRED category, economic theme, lag block, factor block.
 
 ---
 
-## Issue 8-7: Implement importance stability analysis [BLOCKED on 8-1 or 8-3]
+## Issue 8-7: Implement importance stability analysis [DONE]
 pri:high | size:M | deps: 8-1 or 8-3
 
 ### What
