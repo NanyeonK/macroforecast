@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='quantile',
             description='quantile',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
@@ -42,7 +42,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='direction',
             description='direction',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

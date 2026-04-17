@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='pseudo_oos_revised',
             description='pseudo oos revised',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

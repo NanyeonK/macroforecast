@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='continuous_box',
             description='continuous box',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='log_uniform',
             description='log uniform',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

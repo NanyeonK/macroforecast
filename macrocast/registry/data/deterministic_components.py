@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='linear_trend',
             description='linear trend',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

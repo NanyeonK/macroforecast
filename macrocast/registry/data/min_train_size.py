@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='fixed_years',
             description='fixed years',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

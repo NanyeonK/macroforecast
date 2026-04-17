@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='forbid_other_targets_as_X',
             description='forbid other targets as X',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

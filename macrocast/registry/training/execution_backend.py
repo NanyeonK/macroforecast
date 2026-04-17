@@ -36,7 +36,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='joblib',
             description='joblib',
-            status='planned',
+            status="operational",
             priority='A',
         ),
     ),

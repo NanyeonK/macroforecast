@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='swept_preprocessing',
             description='preprocessing intentionally varied',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='ablation_preprocessing',
             description='preprocessing part of ablation study',
-            status='planned',
+            status="operational",
             priority='A',
         ),
     ),

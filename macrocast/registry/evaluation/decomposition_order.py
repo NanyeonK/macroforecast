@@ -8,7 +8,7 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type='enum',
     default_policy='fixed',
     entries=(
-        EnumRegistryEntry(id='marginal_effect_only', description='marginal effect only', status='planned', priority='A'),
+        EnumRegistryEntry(id='marginal_effect_only', description='marginal effect only', status='operational', priority='A'),
         EnumRegistryEntry(id='two_way_interaction', description='two way interaction', status='registry_only', priority='B'),
         EnumRegistryEntry(id='three_way_interaction', description='three way interaction', status='future', priority='B'),
         EnumRegistryEntry(id='full_factorial', description='full factorial', status='future', priority='B'),

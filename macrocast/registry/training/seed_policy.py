@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='multi_seed_average',
             description='multi seed average',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

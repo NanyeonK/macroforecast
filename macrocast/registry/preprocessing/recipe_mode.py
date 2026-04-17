@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='recipe_grid',
             description='recipe grid',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='recipe_ablation',
             description='recipe ablation',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

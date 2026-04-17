@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 FAILURE_POLICY_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="fail_fast", description="Abort immediately on execution failure.", status="operational", priority="A"),
-    EnumRegistryEntry(id="skip_failed_cell", description="Skip failed cell and continue.", status="planned", priority="A"),
+    EnumRegistryEntry(id="skip_failed_cell", description="Skip failed cell and continue.", status="operational", priority="A"),
     EnumRegistryEntry(id="skip_failed_model", description="Skip failed model and continue.", status="operational", priority="A"),
     EnumRegistryEntry(id="retry_then_skip", description="Retry then skip on persistent failure.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="fallback_to_default_hp", description="Fallback to default hyperparameters after failure.", status="registry_only", priority="B"),

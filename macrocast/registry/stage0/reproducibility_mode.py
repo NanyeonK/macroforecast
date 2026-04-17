@@ -4,7 +4,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 
 REPRODUCIBILITY_MODE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
-    EnumRegistryEntry(id="strict_reproducible", description="Strict deterministic reproducibility contract.", status="planned", priority="A"),
+    EnumRegistryEntry(id="strict_reproducible", description="Strict deterministic reproducibility contract.", status="operational", priority="A"),
     EnumRegistryEntry(id="seeded_reproducible", description="Seeded best-effort reproducibility contract.", status="operational", priority="A"),
     EnumRegistryEntry(id="best_effort", description="Best-effort reproducibility without required seed.", status="operational", priority="A"),
     EnumRegistryEntry(id="exploratory", description="Exploratory execution without reproducibility guarantees.", status="registry_only", priority="B"),

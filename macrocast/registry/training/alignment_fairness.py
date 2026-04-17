@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='same_split_across_targets',
             description='same split across targets',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='same_split_across_horizons',
             description='same split across horizons',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

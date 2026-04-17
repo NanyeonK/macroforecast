@@ -11,7 +11,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(id='equal_weight', description='equal weight', status='operational', priority='A'),
         EnumRegistryEntry(id='short_horizon_weighted', description='short horizon weighted', status='registry_only', priority='B'),
         EnumRegistryEntry(id='long_horizon_weighted', description='long horizon weighted', status='registry_only', priority='B'),
-        EnumRegistryEntry(id='report_separately_only', description='report separately only', status='planned', priority='A'),
+        EnumRegistryEntry(id='report_separately_only', description='report separately only', status='operational', priority='A'),
     ),
     compatible_with={},
     incompatible_with={},

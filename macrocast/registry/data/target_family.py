@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='multiple_macro_series',
             description='multiple macro series',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

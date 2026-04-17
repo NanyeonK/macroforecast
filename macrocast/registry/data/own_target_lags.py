@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='exclude',
             description='exclude',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

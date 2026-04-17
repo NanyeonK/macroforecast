@@ -30,7 +30,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='recursive_one_step_model',
             description='recursive one step model',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

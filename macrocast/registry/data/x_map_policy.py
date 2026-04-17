@@ -12,7 +12,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='shared_X',
             description='shared X',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

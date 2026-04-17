@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='macro_finance',
             description='macro finance',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

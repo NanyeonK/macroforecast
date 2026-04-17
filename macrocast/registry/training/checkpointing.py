@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='per_model',
             description='per model',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='per_horizon',
             description='per horizon',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

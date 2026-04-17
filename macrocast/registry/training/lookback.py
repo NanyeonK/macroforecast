@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='horizon_specific_lookback',
             description='horizon specific lookback',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

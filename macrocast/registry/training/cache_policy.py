@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='feature_cache',
             description='feature cache',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

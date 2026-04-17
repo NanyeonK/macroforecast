@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='evaluate_with_hac',
             description='evaluate with hac',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
