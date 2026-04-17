@@ -7,7 +7,7 @@
 | Depends on | phase-01 |
 | Unlocks | phase-07 |
 | Version tag target | v0.8 |
-| Status | pending |
+| Status | in_progress |
 
 ## 1. Goal
 
@@ -159,44 +159,82 @@ def execute_replication(
 
 `byte_identical_predictions=true` 조건: overrides={} 이고 source/replayed package_version 동일하고 seed policy가 strict_reproducible.
 
-### 4.5 `override_diff.py` API
+### 4.5 `override_diff.py` API (revised 2026-04-17)
+
+Operates on the **YAML recipe-dict** form, not `RecipeSpec` — overrides address layer/field paths that map to the dict structure (`2_preprocessing.scaling_policy`), not to RecipeSpec dataclass fields. Callers who need a compiled spec run `compile_recipe_dict(new_dict)` afterwards.
 
 ```python
 # macrocast/compiler/override_diff.py
-from macrocast.execution.types import RecipeSpec
 
 def apply_overrides(
-    base_recipe: RecipeSpec,
+    base_recipe_dict: dict,
     overrides: dict,
-) -> tuple[RecipeSpec, list[dict]]:
-    """Apply dotted-path overrides, returning (new_recipe, diff_entries).
+) -> tuple[dict, list[dict]]:
+    """Apply dotted-path overrides, returning (new_dict, diff_entries).
 
     overrides 예: {"2_preprocessing.scaling_policy": "robust",
-                   "3_training.model_family": "lasso"}
+                   "3_training.model_family": "lasso",
+                   "3_training.hyperparams.alpha": 0.1}
 
     Returns:
-      new_recipe: 깊은 복사 + 경로별 치환
+      new_dict: `copy.deepcopy(base_recipe_dict)` + 경로별 치환
       diff_entries: [
         {"path": "2_preprocessing.scaling_policy",
          "old": "standard", "new": "robust"},
         ...
       ]
 
+    Nested paths (`a.b.c.d`) are supported via recursive descent.
+    base_recipe_dict is NOT mutated.
+
     Raises:
-      ValueError — 존재하지 않는 경로 / 허용되지 않는 축 (compiler pipeline validate 후)
+      KeyError — dotted path does not resolve to an existing key
+      ValueError — attempt to override into a leaf (non-dict) intermediate
     """
 ```
 
-### 4.6 `experiment_unit` 승격
+### 4.6 `experiment_unit` 승격 (revised 2026-04-17)
+
+Current registry is a tuple of `ExperimentUnitEntry` (an `EnumRegistryEntry` subclass with `route_owner`, `requires_multi_target`, `requires_wrapper` fields). Phase 6 adds an optional `runner: str | None = None` field and flips two entries to `operational`:
 
 ```python
-# macrocast/registry/stage0/experiment_unit.py
-EXPERIMENT_UNIT_ENTRIES = {
-    # ... existing ...
-    "ablation_study":     {"status": "operational", "runner": "studies.ablation:execute_ablation"},
-    "replication_recipe": {"status": "operational", "runner": "studies.replication:execute_replication"},
-}
+# macrocast/registry/stage0/experiment_unit.py (edit)
+
+@dataclass(frozen=True)
+class ExperimentUnitEntry(EnumRegistryEntry):
+    route_owner: RouteOwner
+    requires_multi_target: bool
+    requires_wrapper: bool
+    runner: str | None = None   # NEW in Phase 6
+
+# Two existing rows flipped:
+ExperimentUnitEntry(
+    id="ablation_study",
+    ...
+    status="operational",            # was "planned"
+    runner="macrocast.studies.ablation:execute_ablation",
+    ...
+),
+ExperimentUnitEntry(
+    id="replication_recipe",
+    ...
+    status="operational",            # was "registry_only"
+    runner="macrocast.studies.replication:execute_replication",
+    ...
+),
 ```
+
+Studies/__init__.py exports the two callables so the `runner` string lookup can be resolved via `importlib` if and when a future phase needs dynamic dispatch.
+
+### 4.7 Autonomous-execution decisions (pinned 2026-04-17)
+
+- `ablation_report.json` is written to `<output_root>/ablation_report.json` alongside the sweep"s `study_manifest.json`.
+- `replication_diff.json` is written to `<output_root>/replication_diff.json`.
+- `ablation_study_id` = `"abl-" + sha256(json.dumps({"baseline": <recipe_dict>, "components": [<sorted components>]}, sort_keys=True))[:12]` when the caller doesn"t supply one.
+- Byte-identical round-trip test forces `reproducibility_mode=strict_reproducible` on the source recipe so seeded-reproducible defaults don"t mask non-determinism.
+- `execute_ablation` and `execute_replication` take the same `preprocess: PreprocessContract` parameter as `execute_recipe` — consistency with the Phase 1 runner surface.
+- Nested override paths (`a.b.c`) descend through dicts; any intermediate resolving to a non-dict raises `ValueError`.
+- Metric delta percentage formula: `delta_pct = 100 * (replayed - source) / source` when `abs(source) > 1e-12`, else `None`.
 
 ## 5. File Layout
 
@@ -284,21 +322,20 @@ def test_synthetic_replication_roundtrip(tmp_path):
 ## 9. Migration Notes
 
 - Phase 6 이전에 `experiment_unit = ablation_study / replication_recipe` 는 **stub** 이었으므로 실제 사용자가 없음 → Breaking 없음
-- `macrocast/studies/` 하위 모듈 확장 (Phase 1의 `controlled_variation.py`, `manifest.py` 기존, Phase 6에서 `ablation.py`, `replication.py` 추가)
+- `macrocast/studies/` 하위 모듈 확장 (Phase 1의 `manifest.py` 기존, Phase 6에서 `ablation.py`, `replication.py` 추가)
 - 공개 API 추가만 (기존 symbol 유지)
 
 ## 10. Cross-references
 
 - Infra files used:
   - `plans/infra/study_manifest_schema.md` (Phase 1 에서 freeze)
-  - `plans/infra/override_syntax.md` (dotted-path 규약)
+  - dotted-path override 규약은 `macrocast/compiler/override_diff.py` 모듈 docstring을 SoT로 둠 (별도 infra 문서 없음; Phase 7 이후 필요 시 승격)
 - Phase dependencies:
   - Phase 1 sweep runner — AblationRunner / ReplicationRunner 가 내부적으로 `execute_sweep` / `execute_recipe` 호출
   - Phase 2 stat tests — ablation 결과 해석시 (component 삭제가 유의미한가?) stat test 활용
   - Phase 0 결정성 정책 — synthetic round-trip byte-identical의 전제
 - ADRs referenced:
-  - ADR-008 (override syntax: dotted path 경로 표기)
-  - ADR-009 (ablation = sweep with drop-one plan, 별도 runner 가 아닌 패턴)
+  - Phase 6 doesn"t ship new ADRs. The override syntax and the "ablation = drop-one sweep" pattern are documented in-module (`compiler/override_diff.py`, `studies/ablation.py`). If either becomes load-bearing for v1.1+, promote to ADR-008/009 at that time.
 - Coverage Ledger rows resolved:
   - Layer 0 `experiment_unit = ablation_study` → operational
   - Layer 0 `experiment_unit = replication_recipe` → operational
@@ -311,3 +348,4 @@ def test_synthetic_replication_roundtrip(tmp_path):
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 6에서 추출)
+- 2026-04-17 (kickoff revision): §4.5 `apply_overrides` signature changed RecipeSpec→dict (dotted paths target YAML recipe-dict layer/field structure). §4.6 registry schema reconciled with actual `ExperimentUnitEntry` dataclass (add optional `runner` field, flip two statuses). §9 factual correction (no prior `controlled_variation.py`). §10 ADR-008/009 + `override_syntax.md` references removed — in-module docstrings carry the contract until v1.1+. §4.7 added with autonomous-execution decisions pinned (report-file locations, id hashing, byte-identical mode, nested paths, delta_pct formula).
