@@ -83,7 +83,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 | 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | **completed** |
 | 3 | Data/task axes + preprocessing separation | P1 | v0.5 | [phase_03_data_task_axes.md](phases/phase_03_data_task_axes.md) | **completed** |
 | 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | **completed** |
-| 5 | Deep models (LSTM/GRU/TCN + sequence adapter) | P1 | v0.7 | [phase_05_deep_models.md](phases/phase_05_deep_models.md) | in_progress |
+| 5 | Deep models (LSTM/GRU/TCN + sequence adapter) | P1 | v0.7 | [phase_05_deep_models.md](phases/phase_05_deep_models.md) | **completed** |
 | 6 | Ablation + replication runners | P1 | v0.8 | [phase_06_ablation_replication.md](phases/phase_06_ablation_replication.md) | pending |
 | 7 | §4.5 Decomposition engine | **P0** | v0.9 | [phase_07_decomposition.md](phases/phase_07_decomposition.md) | pending |
 | 8 | paper_ready_bundle + aggregation | **P0** | v0.9 | [phase_08_paper_bundle.md](phases/phase_08_paper_bundle.md) | pending |
@@ -136,9 +136,10 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 | 2 | completed | v0.4 | PR #10 | 2026-04-17 |
 | 3 | completed | v0.5 | PR #11 | 2026-04-17 |
 | 4 | completed | v0.6 | PR #12 | 2026-04-17 |
-| 5-11 | pending (5 in_progress) | - | feat/phase-05-deep-models | 2026-04-17 |
+| 5 | completed | v0.7 | PR #13 | 2026-04-17 |
+| 6-11 | pending | - | - | - |
 
-현재 live phase: **Phase 5 in_progress** (branch feat/phase-05-deep-models, foundation commit 26b7fdf landed; next: 05.4–05.13 autonomous run per plan)
+현재 live phase: **Phase 6 kickoff 대기** (Phase 0-5 merged, v0.2~v0.7 tagged on origin/main)
 
 ## 10. Pointer Table (separate plans)
 
