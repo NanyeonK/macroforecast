@@ -17,6 +17,7 @@ from xgboost import XGBRegressor
 
 from ..tuning import HPDistribution, TuningSpec, run_tuning
 from ..tuning.hp_spaces import MODEL_HP_SPACES
+from .seed_policy import current_seed
 
 
 class ComponentwiseBoostingRegressor:
@@ -117,7 +118,7 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             solver="highs",
         )
     if model_family == "svr_linear":
-        return LinearSVR(C=float(hp.get("C", 1.0)), epsilon=float(hp.get("epsilon", 0.01)), max_iter=50000, random_state=42)
+        return LinearSVR(C=float(hp.get("C", 1.0)), epsilon=float(hp.get("epsilon", 0.01)), max_iter=50000, random_state=current_seed(model_family="svr_linear"))
     if model_family == "svr_rbf":
         return SVR(kernel="rbf", C=float(hp.get("C", 1.0)), epsilon=float(hp.get("epsilon", 0.01)), gamma=hp.get("gamma", "scale"))
     if model_family == "componentwise_boosting":
@@ -141,27 +142,27 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
         return RandomForestRegressor(
             n_estimators=int(hp.get("n_estimators", 200)),
             max_depth=None if hp.get("max_depth") is None else int(hp.get("max_depth")),
-            random_state=42,
+            random_state=current_seed(model_family="randomforest"),
         )
     if model_family == "extratrees":
         return ExtraTreesRegressor(
             n_estimators=int(hp.get("n_estimators", 200)),
             max_depth=None if hp.get("max_depth") is None else int(hp.get("max_depth")),
-            random_state=42,
+            random_state=current_seed(model_family="extratrees"),
         )
     if model_family == "gbm":
         return GradientBoostingRegressor(
             n_estimators=int(hp.get("n_estimators", 100)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
             max_depth=int(hp.get("max_depth", 3)),
-            random_state=42,
+            random_state=current_seed(model_family="gbm"),
         )
     if model_family == "xgboost":
         return XGBRegressor(
             n_estimators=int(hp.get("n_estimators", 100)),
             max_depth=int(hp.get("max_depth", 3)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
-            random_state=42,
+            random_state=current_seed(model_family="xgboost"),
             verbosity=0,
         )
     if model_family == "lightgbm":
@@ -169,7 +170,7 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             n_estimators=int(hp.get("n_estimators", 100)),
             num_leaves=int(hp.get("num_leaves", 31)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
-            random_state=42,
+            random_state=current_seed(model_family="lightgbm"),
             verbosity=-1,
         )
     if model_family == "catboost":
@@ -178,7 +179,7 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             learning_rate=float(hp.get("learning_rate", 0.05)),
             depth=int(hp.get("depth", 4)),
             verbose=False,
-            random_seed=42,
+            random_seed=current_seed(model_family="catboost"),
         )
     if model_family == "mlp":
         return MLPRegressor(
@@ -186,7 +187,7 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             alpha=float(hp.get("alpha", 1e-4)),
             learning_rate_init=float(hp.get("learning_rate_init", 1e-3)),
             max_iter=500,
-            random_state=42,
+            random_state=current_seed(model_family="mlp"),
         )
     raise ValueError(f"unsupported model_family {model_family!r}")
 
