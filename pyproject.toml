@@ -26,13 +26,14 @@ xgboost = ["xgboost>=2.0"]
 lightgbm = ["lightgbm>=4.0"]
 catboost = ["catboost>=1.2"]
 excel = ["openpyxl>=3.1"]
+parquet = ["pyarrow>=14.0"]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
 ]
-all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel]"]
+all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet]"]
 dev = ["pytest>=8.0", "macrocast[all]"]
 
 [tool.setuptools.packages.find]
