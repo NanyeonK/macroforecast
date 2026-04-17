@@ -56,7 +56,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
    │
    ├─▶ Phase 4 (3 benchmark eval 축)
    │
-   ├─▶ Phase 5a (LSTM/GRU/TCN/VAR/BVAR)
+   ├─▶ Phase 5 (LSTM/GRU/TCN + sequence adapter)
    │
    └─▶ Phase 6 (ablation + replication runner)
           │
@@ -83,9 +83,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 | 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | **completed** |
 | 3 | Data/task axes + preprocessing separation | P1 | v0.5 | [phase_03_data_task_axes.md](phases/phase_03_data_task_axes.md) | **completed** |
 | 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | **completed** |
-| 5a | Deep & time-series models (core + [deep]) | P1 | v0.7 | [phase_05a_deep_tsm.md](phases/phase_05a_deep_tsm.md) | pending |
-| 5b | More models (Transformer/NBEATS/TFT/DFM/FAVAR) | P2 | v1.1 | [phase_05b_more_models.md](phases/phase_05b_more_models.md) | pending |
-| 5c | State-space, TVP_AR, MIDAS | P2 | v2 | [phase_05c_state_space.md](phases/phase_05c_state_space.md) | pending |
+| 5 | Deep models (LSTM/GRU/TCN + sequence adapter) | P1 | v0.7 | [phase_05_deep_models.md](phases/phase_05_deep_models.md) | in_progress |
 | 6 | Ablation + replication runners | P1 | v0.8 | [phase_06_ablation_replication.md](phases/phase_06_ablation_replication.md) | pending |
 | 7 | §4.5 Decomposition engine | **P0** | v0.9 | [phase_07_decomposition.md](phases/phase_07_decomposition.md) | pending |
 | 8 | paper_ready_bundle + aggregation | **P0** | v0.9 | [phase_08_paper_bundle.md](phases/phase_08_paper_bundle.md) | pending |
@@ -96,8 +94,8 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 ## 6. Phase Priority Matrix (inter-phase)
 
 - **P0 critical path:** 0 → 1 → 7 → 8 → 9
-- **P1 (v1.0 gate):** 2, 3, 4, 5a, 6
-- **P2 (post-v1.0):** 5b, 5c, 10, 11
+- **P1 (v1.0 gate):** 2, 3, 4, 5, 6
+- **P2 (post-v1.0):** 10, 11 (Phase 5b/5c content absorbed as catalog items — see §10)
 
 Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참조.
 
@@ -110,12 +108,12 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 | v0.4 | + Phase 2 | stat test 8축 분해 |
 | v0.5 | + Phase 3 | 7 data_task 축 + separation_rule |
 | v0.6 | + Phase 4 | benchmark eval 축 |
-| v0.7 | + Phase 5a | LSTM/GRU/TCN/VAR/BVAR (optional [deep] extra) |
+| v0.7 | + Phase 5 | LSTM/GRU/TCN via [deep] extra + sequence adapter |
 | v0.8 | + Phase 6 | ablation + replication runner |
 | v0.9 | + Phase 7 + 8 | decomposition + paper_ready_bundle |
 | **v1.0.0** | + Phase 9 | docs consolidation + PyPI release |
-| v1.1 | + Phase 5b + 10 | v1.1 카탈로그 |
-| v2.0 | + Phase 5c + 11 | v2 카탈로그 |
+| v1.1 | + Phase 10 | v1.1 카탈로그 (Transformer/NBEATS/TFT/DFM/FAVAR 흡수) |
+| v2.0 | + Phase 11 | v2 카탈로그 (state_space/TVP_AR/MIDAS 흡수) |
 
 **Release 원칙 (Resolved Decision #1):** 시간 기한 없음, gate 통과 기반. 각 phase의 Acceptance Gate 전부 통과 시점에 해당 minor 버전 tag.
 
@@ -138,9 +136,9 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 | 2 | completed | v0.4 | PR #10 | 2026-04-17 |
 | 3 | completed | v0.5 | PR #11 | 2026-04-17 |
 | 4 | completed | v0.6 | PR #12 | 2026-04-17 |
-| 5a-11 | pending | - | - | - |
+| 5-11 | pending (5 in_progress) | - | feat/phase-05-deep-models | 2026-04-17 |
 
-현재 live phase: **Phase 5a kickoff 대기** (Phase 0-4 merged, v0.2~v0.6 tagged on origin/main)
+현재 live phase: **Phase 5 in_progress** (branch feat/phase-05-deep-models, foundation commit 26b7fdf landed; next: 05.4–05.13 autonomous run per plan)
 
 ## 10. Pointer Table (separate plans)
 
@@ -150,7 +148,7 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 - [`phases/phase_02_stat_test_split.md`](phases/phase_02_stat_test_split.md)
 - [`phases/phase_03_data_task_axes.md`](phases/phase_03_data_task_axes.md)
 - [`phases/phase_04_benchmark_eval.md`](phases/phase_04_benchmark_eval.md)
-- [`phases/phase_05a_deep_tsm.md`](phases/phase_05a_deep_tsm.md)
+- [`phases/phase_05_deep_models.md`](phases/phase_05_deep_models.md)
 - [`phases/phase_05b_more_models.md`](phases/phase_05b_more_models.md)
 - [`phases/phase_05c_state_space.md`](phases/phase_05c_state_space.md)
 - [`phases/phase_06_ablation_replication.md`](phases/phase_06_ablation_replication.md)

@@ -4,7 +4,7 @@
 |-------|-------|
 | Phase ID | phase-05b |
 | Priority (inter-phase) | **P2** |
-| Depends on | phase-05a (deep learning integration baseline) |
+| Depends on | phase-05 (deep learning integration baseline) |
 | Unlocks | phase-10 (v1.1 scope), partial overlap with phase-11 parity items |
 | Version tag target | v1.1 |
 | Status | deferred (post-v1.0) |
