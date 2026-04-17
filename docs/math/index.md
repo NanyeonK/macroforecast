@@ -19,4 +19,5 @@ stat_tests
 importance_methods
 tuning_algorithms
 vintage_and_release_lag
+decomposition_attribution
 ```

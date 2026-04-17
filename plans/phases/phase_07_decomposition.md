@@ -7,7 +7,7 @@
 | Depends on | phase-01, phase-06 |
 | Unlocks | phase-08 |
 | Version tag target | v0.9 (with phase-08) |
-| Status | pending |
+| Status | in_progress |
 
 ## 1. Goal
 
@@ -42,30 +42,43 @@ macrocast를 cite-worthy로 만드는 레이어입니다. §4.5에서 user가 "m
 
 ## 4. API / Schema Specifications
 
-### 4.1 `AxisDefinition.component` 필드 확장
+### 4.1 `AxisDefinition.component` 필드 확장 (revised 2026-04-17)
+
+The real dataclass is wider than the original sketch; this phase adds **one optional field**, defaulted to `None`, so every pre-existing axis stays valid without touching its file:
 
 ```python
-# macrocast/registry/base.py
+# macrocast/registry/base.py (edit)
 @dataclass(frozen=True)
 class AxisDefinition:
-    axis_id: str
-    layer: str
-    values: tuple[str, ...]
-    status: str
-    component: str | None = None   # 신규
-    # 기존 필드...
+    axis_name: str                                                    # existing
+    layer: str                                                        # existing
+    axis_type: Literal["enum", "numeric", "callable", "plugin"]       # existing
+    entries: tuple[BaseRegistryEntry, ...]                            # existing
+    compatible_with: dict[str, tuple[str, ...]]                       # existing
+    incompatible_with: dict[str, tuple[str, ...]]                     # existing
+    registry_type: Literal[...] = "enum_registry"                     # existing
+    default_policy: Literal["fixed", "sweep", "conditional"] = "fixed"# existing
+    component: str | None = None                                      # NEW
 ```
 
-기존 axis 파일 업데이트 예시 (상세는 ADR-005):
-- `scaling_policy` → `component="preprocessing"`
-- `model_family` → `component="nonlinearity"`
-- `regularization_penalty` → `component="regularization"`
-- `cv_strategy` → `component="cv_scheme"`
-- `loss_function` → `component="loss"`
-- `feature_builder` → `component="feature_builder"`
-- `benchmark_family` → `component="benchmark"`
-- `importance_method` → `component="importance"`
+Concrete axis-to-component mappings landed in Phase 7 (v0.9):
 
+| axis (existing in registry) | component |
+|---|---|
+| `scaling_policy` | `preprocessing` |
+| `dimensionality_reduction_policy` | `preprocessing` |
+| `feature_selection_policy` | `preprocessing` |
+| `target_transform_policy` | `preprocessing` |
+| `x_transform_policy` | `preprocessing` |
+| `tcode_policy` | `preprocessing` |
+| `model_family` | `nonlinearity` |
+| `feature_builder` | `feature_builder` |
+| `benchmark_family` | `benchmark` |
+| `importance_method` | `importance` |
+
+The remaining three components (`regularization`, `cv_scheme`, `loss`) are defined in the enum but do **not** yet map to an existing axis — the original plan named `regularization_penalty` / `cv_strategy` / `loss_function`, none of which exist in the current registry. Future axes that surface those dimensions can be tagged as-they-land; Phase 7 ships the slot.
+
+All other 120+ axis files stay unchanged because the new field defaults to `None`.
 ### 4.2 `DecompositionPlan` / Engine API
 
 ```python
@@ -87,16 +100,22 @@ class DecompositionResult:
     per_component_shares: dict[str, float]  # {"preprocessing": 0.72, ...}
 
 def run_decomposition(plan: DecompositionPlan) -> DecompositionResult:
-    """Given completed sweep study, attribute forecast-error variance to axes.
+    """Given a completed sweep study, attribute primary-metric variance to axes.
 
-    Algorithm (ANOVA baseline):
+    Algorithm (ANOVA baseline, aggregate level — revised 2026-04-17):
     1. Load study_manifest.json → variants[].axis_values, variants[].metrics_summary
-    2. Build long-format DataFrame: one row per (variant, horizon, oos_date)
-    3. For each component c:
+    2. Build long-format DataFrame: one row per (variant, horizon) carrying the
+       variant's *primary metric* (default: msfe) lifted from
+       metrics_summary['metrics_by_horizon'][<h>][<primary_metric>].
+    3. For each component c in plan.components_to_decompose:
        - Identify which axes belong to component c (AxisDefinition.component == c)
-       - Fit one-way ANOVA: loss ~ axis_value, partition SS
-       - Emit component_share_c = SS_between_c / SS_total
+       - Pool each axis's one-way ANOVA: ss_between_axis / ss_total
+       - Emit component_share_c = Σ ss_between over axes in c / ss_total
     4. Emit decomposition_result.parquet + decomposition_report.json
+
+    Per-(oos_date) decomposition (reading each variant's predictions.csv for
+    per-date squared error) is a v1.1 enhancement — aggregate-level is enough
+    for the Phase 7 acceptance gate and for §4.5 identity.
     """
 ```
 
@@ -126,6 +145,18 @@ Significance p-value는 scipy.stats.f_oneway로 부가 계산. H0: 모든 axis-g
 | significance_p | float64 | F-test p-value (NaN 허용 if n_groups < 2) |
 
 `decomposition_report.json`은 plan + per_component_shares + 실행 metadata 요약.
+
+### 4.5 Autonomous-execution decisions (pinned 2026-04-17)
+
+- **Observation granularity**: aggregate — one row per (variant, horizon). Per-date loss attribution deferred to v1.1.
+- **Primary metric default**: `msfe`. `DecompositionPlan.primary_metric: str = "msfe"` is the new knob.
+- **Component enum**: `{"nonlinearity", "regularization", "cv_scheme", "loss", "preprocessing", "feature_builder", "benchmark", "importance"}` plus implicit `None`. Frozen as `COMPONENT_NAMES` in `macrocast/decomposition/components/__init__.py`.
+- **Missing axes** (`regularization_penalty`, `cv_strategy`, `loss_function` from the plan's original sample list): not mapped in v0.9 — no existing axis has those semantics. The enum slots are reserved for v1.1 axes.
+- **Parquet engine**: `pyarrow` (already in `[parquet]` optional extra). If missing, `ExecutionError` with install hint surfaces before any decomposition work runs.
+- **Determinism**: axis iteration order is sorted lexicographically; variant rows within each ANOVA group are sorted by `variant_id`; all float arithmetic uses `numpy.float64`.
+- **Empty `components_to_decompose`**: returns a valid `DecompositionResult` with `per_component_shares={}` and a parquet with zero rows — clean no-op.
+- **Zero-variance cases**: if `ss_total == 0` (all variants identical metric) → all component shares set to 0.0, `significance_p = NaN`.
+- **Single-group cases**: if a component has ≤1 distinct axis value across the sweep → that component's share is 0.0, `significance_p = NaN`.
 
 ## 5. File Layout
 
@@ -199,7 +230,7 @@ Significance p-value는 scipy.stats.f_oneway로 부가 계산. H0: 모든 axis-g
 
 ## 10. Cross-references
 
-- Infra files used: `plans/infra/decomposition_result_schema.md`, `plans/adr/ADR-005-component-metadata-field.md`, `plans/adr/ADR-002-anova-before-shapley.md`
+- Infra files used: `plans/infra/decomposition_result_schema.md`, `plans/infra/adr/ADR-005-component-metadata-field.md`, `plans/infra/adr/ADR-002-anova-before-shapley.md`
 - ADRs referenced: ADR-005 (component metadata field), ADR-002 (ANOVA baseline before Shapley)
 - Coverage Ledger rows resolved:
   - §4.5 "decomposition as identity" → operational
@@ -214,3 +245,4 @@ Significance p-value는 scipy.stats.f_oneway로 부가 계산. H0: 모든 axis-g
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 7에서 추출)
+- 2026-04-17 (kickoff revision): §4.1 AxisDefinition sketch rewritten to match the actual dataclass (adds `component: str | None = None` as a single optional field; 120+ existing axes stay intact); concrete axis-to-component mapping table added in place of the sample list so the missing `regularization_penalty` / `cv_strategy` / `loss_function` axes don't block implementation. §4.2 algorithm simplified to aggregate-level ANOVA (per-(variant, horizon)) — per-date loss attribution deferred to v1.1. §10 ADR paths corrected from `plans/adr/` to `plans/infra/adr/`. §4.5 added with the autonomous-execution decisions pinned (observation granularity, primary-metric default, component enum, parquet engine, determinism policy, zero-variance handling).

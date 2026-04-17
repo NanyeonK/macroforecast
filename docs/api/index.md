@@ -41,4 +41,5 @@ execution
 start
 sweep_runner
 models/deep
+decomposition
 ```

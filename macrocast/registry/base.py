@@ -29,6 +29,7 @@ class AxisDefinition:
     incompatible_with: dict[str, tuple[str, ...]]
     registry_type: Literal["enum_registry", "numeric_registry", "callable_registry", "custom_plugin", "user_defined_yaml", "external_adapter"] = "enum_registry"
     default_policy: Literal["fixed", "sweep", "conditional"] = "fixed"
+    component: str | None = None
 
 
 def axis_definition_to_legacy_entry(definition: AxisDefinition) -> AxisRegistryEntry:

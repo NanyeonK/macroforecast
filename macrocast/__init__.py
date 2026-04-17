@@ -39,6 +39,12 @@ from .execution.stat_tests import (
 )
 from .compiler.migrations import migrate_legacy_stat_test
 from .compiler.override_diff import apply_overrides
+from .decomposition import (
+    DECOMPOSITION_RESULT_SCHEMA_VERSION,
+    DecompositionPlan,
+    DecompositionResult,
+    run_decomposition,
+)
 from .studies import (
     ABLATION_REPORT_SCHEMA_VERSION,
     AblationSpec,
@@ -222,7 +228,11 @@ __all__ = [
     "REPLICATION_DIFF_SCHEMA_VERSION",
     "ReplicationResult",
     "STUDY_MANIFEST_SCHEMA_VERSION",
+    "DECOMPOSITION_RESULT_SCHEMA_VERSION",
+    "DecompositionPlan",
+    "DecompositionResult",
     "apply_overrides",
+    "run_decomposition",
     "execute_ablation",
     "execute_replication",
 ]

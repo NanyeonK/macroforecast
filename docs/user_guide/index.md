@@ -46,4 +46,5 @@ preprocessing_separation
 benchmarks
 ablation_cookbook
 replication_cookbook
+decomposition_tutorial
 ```
