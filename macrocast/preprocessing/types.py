@@ -123,7 +123,9 @@ InverseTransformPolicy = Literal[
 
 EvaluationScale = Literal[
     "raw_level",
+    "original_scale",
     "transformed_scale",
+    "both",
 ]
 
 TargetTransform = Literal[

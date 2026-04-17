@@ -17,6 +17,8 @@ In-depth documentation for every macrocast layer. Read in order for the full pic
 | 9 | [Tuning](tuning.md) | HP optimization: grid, random, Bayesian, genetic |
 | 10 | [Statistical Tests](stat_tests.md) | 20 forecast comparison tests — when to use each |
 | 11 | [Importance](importance.md) | 12 feature importance methods — when to use each |
+| 12 | [Data/Task Axes](data_task_axes.md) | 7 data/task axes (Phase 3) — release lag, missing, variable universe, horizons, breaks, scale |
+| 13 | [Preprocessing Separation](preprocessing_separation.md) | 5 leak-discipline modes (Phase 3) |
 
 **See also:** [Getting Started](../getting_started/index.md) | [Examples](../examples/index.md) | [API Reference](../api/index.md)
 
@@ -38,4 +40,6 @@ tuning
 stat_tests
 stat_test_selection
 importance
+data_task_axes
+preprocessing_separation
 ```

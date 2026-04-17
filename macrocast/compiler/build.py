@@ -27,6 +27,7 @@ _AXIS_NAME_ALIASES = {
 
 _AXIS_VALUE_ALIASES = {
     ("information_set_type", "real_time"): "real_time_vintage",
+    ("evaluation_scale", "raw_level"): "original_scale",
 }
 
 _DATASET_DEFAULT_FREQUENCY = {
@@ -315,7 +316,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "x_map_policy": _selection_value(selection_map, "x_map_policy", default="shared_X"),
         "target_to_target_inclusion": _selection_value(selection_map, "target_to_target_inclusion", default="forbid_other_targets_as_X"),
         "multi_target_architecture": _selection_value(selection_map, "multi_target_architecture", default="separate_univariate_runs"),
-        "evaluation_scale": _selection_value(selection_map, "evaluation_scale", default="raw_level"),
+        "evaluation_scale": _selection_value(selection_map, "evaluation_scale", default="original_scale"),
         "benchmark_family": _selection_value(selection_map, "benchmark_family"),
         "regime_task": _selection_value(selection_map, "regime_task", default="unconditional"),
         "data_vintage": leaf_config.get("data_vintage"),
