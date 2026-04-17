@@ -478,8 +478,22 @@ def _apply_missing_policy(
     contract: PreprocessContract,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     policy = contract.x_missing_policy
-    if policy in {"none", "drop", "drop_rows", "drop_columns", "drop_if_above_threshold", "missing_indicator"}:
+    if policy in {"none", "drop", "drop_rows"}:
+        # drop_rows is a no-op at this layer (X<>y coordination is upstream); kept as a pass-through alias of none/drop.
         return X_train, X_pred
+    if policy == "drop_columns":
+        keep = [c for c in X_train.columns if X_train[c].notna().all()]
+        return X_train[keep].copy(), X_pred[keep].copy()
+    if policy == "drop_if_above_threshold":
+        threshold = 0.30  # default drop columns with more than 30% missing in training
+        keep = [c for c in X_train.columns if X_train[c].isna().mean() <= threshold]
+        return X_train[keep].copy(), X_pred[keep].copy()
+    if policy == "missing_indicator":
+        ind_train = X_train.isna().astype(float).add_suffix("__missing")
+        ind_pred = X_pred.isna().astype(float).add_suffix("__missing")
+        Xt = pd.concat([X_train.fillna(0.0), ind_train], axis=1)
+        Xp = pd.concat([X_pred.fillna(0.0), ind_pred], axis=1)
+        return Xt, Xp
     if policy in {"em_impute", "mean_impute"}:
         imputer = SimpleImputer(strategy="mean")
         return (
@@ -528,6 +542,22 @@ def _apply_outlier_policy(
         lower = mean - 3.0 * std
         upper = mean + 3.0 * std
         return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "trim":
+        lower = X_train.quantile(0.005)
+        upper = X_train.quantile(0.995)
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "mad_clip":
+        median = X_train.median()
+        mad = (X_train - median).abs().median().replace(0, 1.0)
+        lower = median - 3.0 * mad
+        upper = median + 3.0 * mad
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "outlier_to_missing":
+        lower = X_train.quantile(0.01)
+        upper = X_train.quantile(0.99)
+        Xt = X_train.mask((X_train < lower) | (X_train > upper))
+        Xp = X_pred.mask((X_pred < lower) | (X_pred > upper))
+        return Xt, Xp
     raise ExecutionError(f"x_outlier_policy {policy!r} is not executable in current runtime slice")
 
 
@@ -546,6 +576,10 @@ def _apply_scaling_policy(
         scaler = RobustScaler()
     elif policy == "minmax":
         scaler = MinMaxScaler()
+    elif policy == "demean_only":
+        scaler = StandardScaler(with_mean=True, with_std=False)
+    elif policy == "unit_variance_only":
+        scaler = StandardScaler(with_mean=False, with_std=True)
     else:
         raise ExecutionError(f"scaling_policy {policy!r} is not executable in current runtime slice")
     return (
@@ -1554,6 +1588,81 @@ def _compute_arch_lm_test(predictions: pd.DataFrame, max_lag: int = 5) -> dict[s
     from scipy.stats import chi2 as chi2_scipy
     p_value = float(1.0 - chi2_scipy.cdf(lm_stat, df=T)) if T > 0 else float("nan")
     return {"stat_test": "arch_lm", "n": n, "regression_lags": T, "lm_statistic": lm_stat, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
+
+
+def _compute_paired_t_on_loss_diff(predictions: pd.DataFrame) -> dict[str, object]:
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    if n < 2:
+        raise ExecutionError("paired_t_on_loss_diff requires at least 2 forecast errors")
+    mean = float(loss_diff.mean())
+    variance = float(np.var(loss_diff, ddof=1))
+    if variance <= 0:
+        raise ExecutionError("paired_t_on_loss_diff variance must be positive")
+    t_stat = float(mean / math.sqrt(variance / n))
+    p_value = float(_normal_two_sided_pvalue(t_stat))
+    return {
+        "stat_test": "paired_t_on_loss_diff",
+        "n": n,
+        "mean_loss_diff": mean,
+        "variance": variance,
+        "t_statistic": t_stat,
+        "p_value": p_value,
+        "significant_5pct": bool(p_value < 0.05),
+    }
+
+
+def _compute_wilcoxon_signed_rank(predictions: pd.DataFrame) -> dict[str, object]:
+    from scipy.stats import wilcoxon
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    if n < 2:
+        raise ExecutionError("wilcoxon_signed_rank requires at least 2 forecast errors")
+    if float(np.std(loss_diff)) == 0.0:
+        raise ExecutionError("wilcoxon_signed_rank requires non-zero loss differences")
+    res = wilcoxon(loss_diff, zero_method="wilcox", alternative="two-sided")
+    return {
+        "stat_test": "wilcoxon_signed_rank",
+        "n": n,
+        "mean_loss_diff": float(loss_diff.mean()),
+        "statistic": float(res.statistic),
+        "p_value": float(res.pvalue),
+        "significant_5pct": bool(res.pvalue < 0.05),
+    }
+
+
+def _compute_autocorrelation_of_errors(predictions: pd.DataFrame, max_lag: int = 10) -> dict[str, object]:
+    from scipy.stats import chi2
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    errors = rows["y_true"].to_numpy(dtype=float) - rows["y_pred"].to_numpy(dtype=float)
+    n = int(len(errors))
+    if n < 3:
+        raise ExecutionError("autocorrelation_of_errors requires at least 3 errors")
+    centered = errors - errors.mean()
+    denom = float(np.dot(centered, centered))
+    if denom <= 0:
+        raise ExecutionError("autocorrelation_of_errors requires non-zero error variance")
+    effective_lag = min(int(max_lag), n - 1)
+    q_stat = 0.0
+    rhos: list[float] = []
+    for h in range(1, effective_lag + 1):
+        cov_h = float(np.dot(centered[h:], centered[:-h]))
+        rho_h = cov_h / denom
+        rhos.append(rho_h)
+        q_stat += (rho_h * rho_h) / max(n - h, 1)
+    q_stat *= n * (n + 2)
+    p_value = float(1.0 - chi2.cdf(q_stat, df=effective_lag))
+    return {
+        "stat_test": "autocorrelation_of_errors",
+        "n": n,
+        "max_lag": int(effective_lag),
+        "rho": rhos,
+        "q_statistic": float(q_stat),
+        "p_value": p_value,
+        "significant_5pct": bool(p_value < 0.05),
+    }
 
 
 def _compute_bias_test(predictions: pd.DataFrame) -> dict[str, object]:

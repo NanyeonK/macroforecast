@@ -77,19 +77,24 @@ def _build_handlers(
         _compute_mse_f_test,
         _compute_mse_t_test,
         _compute_pesaran_timmermann,
+        _compute_autocorrelation_of_errors,
+        _compute_paired_t_on_loss_diff,
         _compute_reality_check,
         _compute_rolling_dm_test,
         _compute_rossi_test,
         _compute_spa,
+        _compute_wilcoxon_signed_rank,
     )
 
     block_bootstrap = dependence_correction == "block_bootstrap"
 
     return {
         "equal_predictive": {
-            "dm":          lambda: _compute_dm_test(predictions),
-            "dm_hln":      lambda: _compute_dm_hln_test(predictions, dependence_correction=dependence_correction),
-            "dm_modified": lambda: _compute_dm_modified_test(predictions, dependence_correction=dependence_correction),
+            "dm":                    lambda: _compute_dm_test(predictions),
+            "dm_hln":                lambda: _compute_dm_hln_test(predictions, dependence_correction=dependence_correction),
+            "dm_modified":           lambda: _compute_dm_modified_test(predictions, dependence_correction=dependence_correction),
+            "paired_t_on_loss_diff": lambda: _compute_paired_t_on_loss_diff(predictions),
+            "wilcoxon_signed_rank":  lambda: _compute_wilcoxon_signed_rank(predictions),
         },
         "nested": {
             "cw":      lambda: _compute_cw_test(predictions),
@@ -112,11 +117,12 @@ def _build_handlers(
             "binomial_hit":       lambda: _compute_binomial_hit_test(predictions),
         },
         "residual_diagnostics": {
-            "mincer_zarnowitz": lambda: _compute_mincer_zarnowitz(predictions),
-            "ljung_box":        lambda: _compute_ljung_box_test(predictions),
-            "arch_lm":          lambda: _compute_arch_lm_test(predictions),
-            "bias_test":        lambda: _compute_bias_test(predictions),
-            "diagnostics_full": lambda: _compute_diagnostics_bundle(predictions),
+            "mincer_zarnowitz":           lambda: _compute_mincer_zarnowitz(predictions),
+            "ljung_box":                  lambda: _compute_ljung_box_test(predictions),
+            "arch_lm":                    lambda: _compute_arch_lm_test(predictions),
+            "bias_test":                  lambda: _compute_bias_test(predictions),
+            "diagnostics_full":           lambda: _compute_diagnostics_bundle(predictions),
+            "autocorrelation_of_errors":  lambda: _compute_autocorrelation_of_errors(predictions),
         },
         # density_interval: all values status=planned in Phase 2; see Phase 10 section 10.8
         "density_interval": {},
