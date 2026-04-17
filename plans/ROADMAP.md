@@ -139,9 +139,10 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 | 5 | completed | v0.7 | PR #13 | 2026-04-17 |
 | 6 | completed | v0.8 | PR #14 | 2026-04-17 |
 | 7 | completed | v0.9 | PR #15 | 2026-04-18 |
+| — (v0.9.1 interim) | completed | v0.9.1 | PR #16 | 2026-04-18 |
 | 8-11 | pending | - | - | - |
 
-현재 live phase: **Phase 8 kickoff 대기** (Phase 0-7 merged, v0.2~v0.9 tagged on origin/main) — v0.91 interim: planned status promotion sweep
+현재 live phase: **Phase 8 kickoff 대기** (Phase 0-7 + v0.9.1 interim merged, v0.2~v0.9.1 tagged on origin/main). v0.9.1 promoted 12 planned values (9 preprocessing + 3 stat tests); 130 planned values remain for Phase 10/11 catalogs or owned-phase interims. 396/809 total registry values operational (49%).
 
 ## 10. Pointer Table (separate plans)
 
