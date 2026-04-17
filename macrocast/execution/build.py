@@ -963,12 +963,34 @@ def _get_package_version() -> str:
 def _compute_config_hash(recipe: RecipeSpec) -> str:
     import hashlib
     import json
-    payload = {
-        'recipe_id': recipe.recipe_id,
-        'target': recipe.target,
-        'horizons': list(recipe.horizons),
-    }
-    serialized = json.dumps(payload, sort_keys=True, default=str)
+    from dataclasses import asdict, is_dataclass
+
+    def _normalize(value):
+        if is_dataclass(value):
+            value = asdict(value)
+        if isinstance(value, dict):
+            return {key: _normalize(value[key]) for key in sorted(value)}
+        if isinstance(value, tuple):
+            return [_normalize(item) for item in value]
+        if isinstance(value, list):
+            return [_normalize(item) for item in value]
+        return value
+
+    payload = _normalize(
+        {
+            'recipe_id': recipe.recipe_id,
+            'stage0': recipe.stage0,
+            'target': recipe.target,
+            'targets': recipe.targets,
+            'horizons': recipe.horizons,
+            'raw_dataset': recipe.raw_dataset,
+            'benchmark_config': recipe.benchmark_config,
+            'data_task_spec': recipe.data_task_spec,
+            'training_spec': recipe.training_spec,
+            'data_vintage': recipe.data_vintage,
+        }
+    )
+    serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(serialized.encode()).hexdigest()
 
 

@@ -1099,6 +1099,64 @@ def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) 
 
 
 
+def test_execute_recipe_full_provenance_hash_changes_with_recipe_config(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    provenance_payload = {
+        "compiler": {
+            "output_spec": {
+                "export_format": "json",
+                "saved_objects": "full_bundle",
+                "provenance_fields": "full",
+                "artifact_granularity": "aggregated",
+            },
+            "importance_spec": {"importance_method": "none"},
+            "stat_test_spec": {"stat_test": "none"},
+        }
+    }
+    base_recipe = build_recipe_spec(
+        recipe_id="hash_probe",
+        stage0=_stage0(),
+        target="INDPRO",
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+        data_task_spec={"forecast_object": "point_mean"},
+        training_spec={},
+    )
+    alt_recipe = build_recipe_spec(
+        recipe_id="hash_probe",
+        stage0=_stage0(),
+        target="INDPRO",
+        horizons=(1, 3),
+        raw_dataset="fred_md",
+        benchmark_config={"minimum_train_size": 7, "rolling_window_size": 5},
+        data_task_spec={"forecast_object": "point_mean"},
+        training_spec={},
+    )
+
+    base_result = execute_recipe(
+        recipe=base_recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "base",
+        local_raw_source=fixture,
+        provenance_payload=provenance_payload,
+    )
+    alt_result = execute_recipe(
+        recipe=alt_recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "alt",
+        local_raw_source=fixture,
+        provenance_payload=provenance_payload,
+    )
+
+    base_manifest = json.loads((tmp_path / "base" / base_result.run.artifact_subdir / "manifest.json").read_text())
+    alt_manifest = json.loads((tmp_path / "alt" / alt_result.run.artifact_subdir / "manifest.json").read_text())
+
+    assert len(base_manifest["git_commit"]) == 40
+    assert base_manifest["package_version"] == "0.0.0+local"
+    assert base_manifest["config_hash"] != alt_manifest["config_hash"]
+
+
 def test_execute_recipe_stage6_extended_stat_tests(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     cases = [

@@ -1074,7 +1074,7 @@ pri:high | size:M | deps: 0-4
 
 ---
 
-## Issue 6-2: Add config_hash + git_commit + package_version to manifest [BLOCKED on 6-1]
+## Issue 6-2: Add config_hash + git_commit + package_version to manifest [DONE]
 pri:high | size:M | deps: 6-1
 
 ### What
