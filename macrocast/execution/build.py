@@ -478,8 +478,22 @@ def _apply_missing_policy(
     contract: PreprocessContract,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     policy = contract.x_missing_policy
-    if policy in {"none", "drop", "drop_rows", "drop_columns", "drop_if_above_threshold", "missing_indicator"}:
+    if policy in {"none", "drop", "drop_rows"}:
+        # drop_rows is a no-op at this layer (X<>y coordination is upstream); kept as a pass-through alias of none/drop.
         return X_train, X_pred
+    if policy == "drop_columns":
+        keep = [c for c in X_train.columns if X_train[c].notna().all()]
+        return X_train[keep].copy(), X_pred[keep].copy()
+    if policy == "drop_if_above_threshold":
+        threshold = 0.30  # default drop columns with more than 30% missing in training
+        keep = [c for c in X_train.columns if X_train[c].isna().mean() <= threshold]
+        return X_train[keep].copy(), X_pred[keep].copy()
+    if policy == "missing_indicator":
+        ind_train = X_train.isna().astype(float).add_suffix("__missing")
+        ind_pred = X_pred.isna().astype(float).add_suffix("__missing")
+        Xt = pd.concat([X_train.fillna(0.0), ind_train], axis=1)
+        Xp = pd.concat([X_pred.fillna(0.0), ind_pred], axis=1)
+        return Xt, Xp
     if policy in {"em_impute", "mean_impute"}:
         imputer = SimpleImputer(strategy="mean")
         return (
@@ -528,6 +542,22 @@ def _apply_outlier_policy(
         lower = mean - 3.0 * std
         upper = mean + 3.0 * std
         return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "trim":
+        lower = X_train.quantile(0.005)
+        upper = X_train.quantile(0.995)
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "mad_clip":
+        median = X_train.median()
+        mad = (X_train - median).abs().median().replace(0, 1.0)
+        lower = median - 3.0 * mad
+        upper = median + 3.0 * mad
+        return _clip_frame(X_train, lower, upper), _clip_frame(X_pred, lower, upper)
+    if policy == "outlier_to_missing":
+        lower = X_train.quantile(0.01)
+        upper = X_train.quantile(0.99)
+        Xt = X_train.mask((X_train < lower) | (X_train > upper))
+        Xp = X_pred.mask((X_pred < lower) | (X_pred > upper))
+        return Xt, Xp
     raise ExecutionError(f"x_outlier_policy {policy!r} is not executable in current runtime slice")
 
 
@@ -546,6 +576,10 @@ def _apply_scaling_policy(
         scaler = RobustScaler()
     elif policy == "minmax":
         scaler = MinMaxScaler()
+    elif policy == "demean_only":
+        scaler = StandardScaler(with_mean=True, with_std=False)
+    elif policy == "unit_variance_only":
+        scaler = StandardScaler(with_mean=False, with_std=True)
     else:
         raise ExecutionError(f"scaling_policy {policy!r} is not executable in current runtime slice")
     return (
