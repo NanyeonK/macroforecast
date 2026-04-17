@@ -7,7 +7,7 @@
 | Depends on | (none — first phase) |
 | Unlocks | phase-01 (horse race executor) |
 | Version tag target | v0.2 |
-| Status | pending |
+| Status | completed (2026-04-17) |
 
 ## 1. Goal
 
@@ -168,12 +168,12 @@ def test_distinct_variant_id_yields_distinct_artifacts(tmp_path):
 
 ## 7. Acceptance Gate
 
-- [ ] 기존 291 test green
-- [ ] Phase 0 신규 test 3개 (seed_policy / deterministic_replay / execution_cache) green
-- [ ] `grep -E 'random_state=42|random_seed=42' macrocast/execution/` → 0 hits (seed_policy로 전환)
-- [ ] `execute_recipe()`의 `manifest.json` write가 함수당 정확히 1회
-- [ ] `execute_recipe()` 시그니처에 `cache_root` 존재
-- [ ] `docs/dev/reproducibility_policy.md` 존재 + RTD build green
+- [x] 기존 291 test green — 2026-04-17 full suite 312 passed (0 regressions)
+- [x] Phase 0 신규 test 3개 (seed_policy / deterministic_replay / execution_cache) green — 2026-04-17 20 passed in 4.43s
+- [x] `grep -E 'random_state=42|random_seed=42' macrocast/execution/` → 0 hits (seed_policy로 전환) — verified
+- [x] `execute_recipe()`의 `manifest.json` write가 함수당 정확히 1회 — verified build.py:2364
+- [x] `execute_recipe()` 시그니처에 `cache_root` 존재 — verified build.py:2075 (`cache_root: str | Path | None = None`)
+- [x] `docs/dev/reproducibility_policy.md` 존재 + RTD build green — file present, wired in docs/dev/index.md toctree
 
 ## 8. Docs Deliverables
 
@@ -203,6 +203,7 @@ def test_distinct_variant_id_yields_distinct_artifacts(tmp_path):
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 0에서 추출)
+- 2026-04-17: Phase 0 완료 — PR #8 (commit 08c0e70) 머지, Acceptance Gate 전부 통과, v0.2 tag 준비
 
 ## 13. References
 
