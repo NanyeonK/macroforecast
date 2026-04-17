@@ -13,6 +13,7 @@ class ExperimentUnitEntry(EnumRegistryEntry):
     route_owner: RouteOwner
     requires_multi_target: bool
     requires_wrapper: bool
+    runner: str | None = None
 
 
 EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
@@ -100,11 +101,12 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ExperimentUnitEntry(
         id="replication_recipe",
         description="Replication-locked recipe/unit.",
-        status="registry_only",
+        status="operational",
         priority="A",
         route_owner="replication",
         requires_multi_target=False,
         requires_wrapper=False,
+        runner="macrocast.studies.replication:execute_replication",
     ),
     ExperimentUnitEntry(
         id="benchmark_suite",
@@ -118,11 +120,12 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ExperimentUnitEntry(
         id="ablation_study",
         description="Wrapper-managed ablation study.",
-        status="planned",
+        status="operational",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=False,
         requires_wrapper=True,
+        runner="macrocast.studies.ablation:execute_ablation",
     ),
 )
 

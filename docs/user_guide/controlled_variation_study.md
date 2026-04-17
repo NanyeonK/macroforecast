@@ -62,3 +62,22 @@ produced from the same recipe (even on different machines) always share
 the same `study_id`, and their variants share the same `variant_id`s in
 the same order. This is the foundation for the Phase 6 replication
 runner.
+
+## Phase 6 specialisations
+
+Two wrapper patterns on top of `controlled_variation_study` landed in
+v0.8:
+
+- `execute_ablation` — baseline + N drop-one variants (one per
+  component) in a single sweep, with a per-component delta report at
+  `<output_root>/ablation_report.json`. See
+  [ablation cookbook](ablation_cookbook.md).
+- `execute_replication` — frozen recipe + overrides + diff report,
+  including a byte-identical round-trip under `seeded_reproducible`.
+  See [replication cookbook](replication_cookbook.md) and the
+  [synthetic round-trip example](../examples/synthetic_replication_roundtrip.md).
+
+Both are thin layers over the Phase 1 sweep runner and respect the same
+`study_id` / `variant_id` stability guarantees; ablation uses explicit
+`v-baseline` for the reference variant and hash-based IDs for the
+drop-one variants.

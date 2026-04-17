@@ -29,3 +29,15 @@ All examples will use test fixtures from `tests/fixtures/` for reproducibility.
 ## Phase 4 patterns
 
 - [CLSS replication pattern](clss_replication_pattern.md) - relative-RMSE horse race using FRED-MD INDPRO
+
+## Phase 6 patterns
+
+- [Synthetic replication round-trip](synthetic_replication_roundtrip.md) - byte-identical replay under seeded_reproducible
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+clss_replication_pattern
+synthetic_replication_roundtrip
+```

@@ -38,10 +38,17 @@ from .execution.stat_tests import (
     dispatch_stat_tests,
 )
 from .compiler.migrations import migrate_legacy_stat_test
+from .compiler.override_diff import apply_overrides
 from .studies import (
+    ABLATION_REPORT_SCHEMA_VERSION,
+    AblationSpec,
+    REPLICATION_DIFF_SCHEMA_VERSION,
+    ReplicationResult,
     STUDY_MANIFEST_SCHEMA_VERSION,
     VariantManifestEntry,
     build_study_manifest,
+    execute_ablation,
+    execute_replication,
     validate_study_manifest,
 )
 from .preprocessing import (
@@ -210,5 +217,12 @@ __all__ = [
     "execute_sweep",
     "build_study_manifest",
     "validate_study_manifest",
+    "ABLATION_REPORT_SCHEMA_VERSION",
+    "AblationSpec",
+    "REPLICATION_DIFF_SCHEMA_VERSION",
+    "ReplicationResult",
     "STUDY_MANIFEST_SCHEMA_VERSION",
+    "apply_overrides",
+    "execute_ablation",
+    "execute_replication",
 ]
