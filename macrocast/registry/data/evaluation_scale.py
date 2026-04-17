@@ -10,15 +10,21 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy='fixed',
     entries=(
         EnumRegistryEntry(
-            id='raw_level',
-            description='raw level',
+            id='original_scale',
+            description='evaluate metrics on original (untransformed) scale',
             status='operational',
             priority='A',
         ),
         EnumRegistryEntry(
             id='transformed_scale',
-            description='transformed scale',
-            status='registry_only',
+            description='evaluate metrics on transformed scale',
+            status='operational',
+            priority='A',
+        ),
+        EnumRegistryEntry(
+            id='both',
+            description='compute metrics on both original and transformed scales',
+            status='operational',
             priority='A',
         ),
     ),

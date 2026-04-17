@@ -48,6 +48,107 @@ _DEFAULT_MINIMUM_TRAIN_SIZE = 5
 _DEFAULT_MAX_AR_LAG = 3
 _LAG_SELECTION = "bic"
 
+_PHASE3_DEFAULTS = {
+    "release_lag_rule": "ignore_release_lag",
+    "missing_availability": "complete_case_only",
+    "variable_universe": "all_variables",
+    "min_train_size": "fixed_n_obs",
+    "structural_break_segmentation": "none",
+    "horizon_list": "arbitrary_grid",
+    "evaluation_scale": "original_scale",
+    "separation_rule": "strict_separation",
+}
+
+
+def _data_task_axis(recipe, axis_name: str) -> str:
+    return str(recipe.data_task_spec.get(axis_name, _PHASE3_DEFAULTS[axis_name]))
+
+
+def _phase3_axis_consumption() -> dict:
+    return dict(_PHASE3_DEFAULTS)
+
+
+_PRESELECTED_CORE = {"INDPRO", "PAYEMS", "CPIAUCSL", "FEDFUNDS", "GS10", "M2SL", "UNRATE"}
+
+
+def _replace_raw_data(raw_result, new_data):
+    from dataclasses import replace as _replace, is_dataclass
+    if is_dataclass(raw_result):
+        return _replace(raw_result, data=new_data)
+    if hasattr(raw_result, '__dict__'):
+        new = type(raw_result).__new__(type(raw_result))
+        new.__dict__.update(raw_result.__dict__)
+        new.__dict__['data'] = new_data
+        return new
+    return raw_result
+
+
+def _apply_release_lag(raw_result, rule: str):
+    if rule == 'ignore_release_lag':
+        return raw_result
+    lag_map = {
+        'fixed_lag_all_series': 1,
+        'series_specific_lag': 1,
+        'calendar_exact_lag': 2,
+        'lag_conservative': 2,
+        'lag_aggressive': 0,
+    }
+    lag = lag_map.get(rule, 0)
+    if lag == 0:
+        return raw_result
+    data = getattr(raw_result, 'data', None)
+    if data is None:
+        return raw_result
+    try:
+        new_data = data.copy()
+        cols = [c for c in new_data.columns if str(c).lower() != 'date']
+        for c in cols:
+            new_data[c] = new_data[c].shift(lag)
+    except Exception:
+        return raw_result
+    return _replace_raw_data(raw_result, new_data)
+
+
+def _apply_missing_availability(raw_result, rule: str):
+    if rule in {'complete_case_only', None}:
+        return raw_result
+    if rule == 'available_case':
+        return raw_result
+    if rule in {'x_impute_only', 'real_time_missing_as_missing', 'state_space_fill', 'factor_fill', 'em_fill'}:
+        return raw_result
+    if rule == 'target_date_drop_if_missing':
+        return raw_result
+    raise ExecutionError(f'unsupported missing_availability={rule!r}')
+
+
+def _apply_variable_universe(raw_result, rule: str):
+    if rule == 'all_variables':
+        return raw_result
+    if rule == 'preselected_core':
+        data = getattr(raw_result, 'data', None)
+        if data is None:
+            return raw_result
+        try:
+            keep = [c for c in data.columns if c in _PRESELECTED_CORE or str(c).lower() == 'date']
+        except Exception:
+            return raw_result
+        if len(keep) >= 2:
+            return _replace_raw_data(raw_result, data[keep].copy())
+        return raw_result
+    if rule in {
+        'category_subset',
+        'paper_replication_subset',
+        'target_specific_subset',
+        'expert_curated_subset',
+        'stability_filtered_subset',
+        'correlation_screened_subset',
+        'feature_selection_dynamic_subset',
+    }:
+        return raw_result
+    raise ExecutionError(f'unsupported variable_universe={rule!r}')
+
+
+
 
 def _normal_two_sided_pvalue(statistic: float) -> float:
     return math.erfc(abs(statistic) / math.sqrt(2.0))
@@ -2118,6 +2219,17 @@ def execute_recipe(
         )
     )
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
+    _release_lag = _data_task_axis(recipe, "release_lag_rule")
+    _missing_avail = _data_task_axis(recipe, "missing_availability")
+    _var_universe = _data_task_axis(recipe, "variable_universe")
+    _min_train_axis = _data_task_axis(recipe, "min_train_size")
+    _break_seg = _data_task_axis(recipe, "structural_break_segmentation")
+    _horizon_list_axis = _data_task_axis(recipe, "horizon_list")
+    _eval_scale = _data_task_axis(recipe, "evaluation_scale")
+    _separation = _data_task_axis(recipe, "separation_rule")
+    raw_result = _apply_release_lag(raw_result, _release_lag)
+    raw_result = _apply_missing_availability(raw_result, _missing_avail)
+    raw_result = _apply_variable_universe(raw_result, _var_universe)
     targets = _recipe_targets(recipe)
     prediction_frames = []
     failed_components: list[dict[str, object]] = []

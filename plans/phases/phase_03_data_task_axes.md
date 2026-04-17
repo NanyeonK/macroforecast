@@ -13,6 +13,21 @@
 
 7개 data/task 축 (`release_lag_rule`, `missing_availability`, `variable_universe`, `minimum_train_size`, `break_segmentation`, `horizon_list`, `scale_at_evaluation`)과 preprocessing의 `separation_rule` 축 1개를 추가하여 recipe의 methodological defensibility를 완성합니다. 현재 이 축들은 registry에 부재하거나 leaf로만 박혀 있어 sweep/비교가 불가능하며, 이는 vintage-aware evaluation 및 regime 분석의 전제조건입니다.
 
+## 1a. Plan Revision — 2026-04-17 (코드 일치)
+
+Phase 0/1/2 구현 후 registry 실측 결과, plan §4의 8개 축 중 5개는 신규 추가, 3개는 기존 axis 재사용/확장으로 정리. §3~§9의 plan 이름은 아래 매핑으로 읽음.
+
+| Plan §4 name | Final action | Registry name |
+|---|---|---|
+| `release_lag_rule` | 신규 | `release_lag_rule` (layer=1_data_task) |
+| `missing_availability` | 신규 | `missing_availability` (layer=1_data_task) |
+| `variable_universe` | 신규 | `variable_universe` (layer=1_data_task) |
+| `horizon_list` | 신규 | `horizon_list` (layer=1_data_task) |
+| `separation_rule` | 신규 | `separation_rule` (layer=2_preprocessing) |
+| `minimum_train_size` | 기존 재사용 | `min_train_size` (값 5개 일치) |
+| `break_segmentation` | 기존 재사용 | `structural_break_segmentation` (값 6개 일치) |
+| `scale_at_evaluation` | 기존 확장 | `evaluation_scale` (raw_level→original_scale, +both) |
+
 ## 2. Scope
 
 **In scope:**
@@ -294,6 +309,7 @@ def compute_train_test_blocks(
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 3에서 추출)
+- 2026-04-17 (Phase 3 kickoff): §1a 추가 — registry 실측 일치 axis 매핑 (5신규 + 3재사용/확장)
 
 ## 13. References
 

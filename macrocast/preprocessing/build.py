@@ -109,7 +109,9 @@ _INVERSE = {
 }
 _EVAL_SCALE = {
     "raw_level",
+    "original_scale",
     "transformed_scale",
+    "both",
 }
 _TARGET_TRANSFORM = {
     "level",
@@ -297,7 +299,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.inverse_transform_policy != "none":
         return False
-    if contract.evaluation_scale != "raw_level":
+    if contract.evaluation_scale not in {"raw_level", "original_scale"}:
         return False
     if contract.scaling_scope not in {"columnwise", "global_train_only"}:
         return False
@@ -331,6 +333,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
 
 
 def is_operational_preprocess_contract(contract: PreprocessContract) -> bool:
+    from dataclasses import replace as _replace
     raw_only = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -347,7 +350,10 @@ def is_operational_preprocess_contract(contract: PreprocessContract) -> bool:
         inverse_transform_policy="none",
         evaluation_scale="raw_level",
     )
-    return contract == raw_only or _supported_train_only_extra(contract)
+    # Normalize evaluation_scale: original_scale and raw_level are aliases for back-compat (Phase 3 rename).
+    eval_norm = "raw_level" if contract.evaluation_scale in {"raw_level", "original_scale"} else contract.evaluation_scale
+    contract_norm = _replace(contract, evaluation_scale=eval_norm)
+    return contract_norm == raw_only or _supported_train_only_extra(contract)
 
 
 def check_preprocess_governance(
