@@ -79,10 +79,10 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 | Phase | Name | Priority | Version | Plan | Status |
 |:-----:|------|:--------:|:-------:|------|:------:|
 | 0 | Single-path stability & sweep-safety | **P0** | v0.2 | [phase_00_stability.md](phases/phase_00_stability.md) | **completed** |
-| 1 | Horse-race sweep executor — **IDENTITY** | **P0** | v0.3 | [phase_01_sweep_executor.md](phases/phase_01_sweep_executor.md) | **completed (pending v0.3 tag)** |
-| 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | **completed (pending v0.4 tag)** |
-| 3 | Data/task axes + preprocessing separation | P1 | v0.5 | [phase_03_data_task_axes.md](phases/phase_03_data_task_axes.md) | pending |
-| 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | pending |
+| 1 | Horse-race sweep executor — **IDENTITY** | **P0** | v0.3 | [phase_01_sweep_executor.md](phases/phase_01_sweep_executor.md) | **completed** |
+| 2 | Statistical test axis 8-way split | P1 | v0.4 | [phase_02_stat_test_split.md](phases/phase_02_stat_test_split.md) | **completed** |
+| 3 | Data/task axes + preprocessing separation | P1 | v0.5 | [phase_03_data_task_axes.md](phases/phase_03_data_task_axes.md) | **completed** |
+| 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | **completed** |
 | 5a | Deep & time-series models (core + [deep]) | P1 | v0.7 | [phase_05a_deep_tsm.md](phases/phase_05a_deep_tsm.md) | pending |
 | 5b | More models (Transformer/NBEATS/TFT/DFM/FAVAR) | P2 | v1.1 | [phase_05b_more_models.md](phases/phase_05b_more_models.md) | pending |
 | 5c | State-space, TVP_AR, MIDAS | P2 | v2 | [phase_05c_state_space.md](phases/phase_05c_state_space.md) | pending |
@@ -134,11 +134,13 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 | Phase | Status | Version | Epic issue | Updated |
 |:-----:|:------:|:-------:|:----------:|:-------:|
 | 0 | completed | v0.2 | PR #8 | 2026-04-17 |
-| 1 | completed (pending v0.3 tag) | v0.3 | feat/phase-01-sweep-executor | 2026-04-17 |
-| 2 | completed (pending v0.4 tag) | v0.4 | feat/phase-02-stat-test-split | 2026-04-17 |
-| 3-11 | pending | - | - | - |
+| 1 | completed | v0.3 | PR #9 | 2026-04-17 |
+| 2 | completed | v0.4 | PR #10 | 2026-04-17 |
+| 3 | completed | v0.5 | PR #11 | 2026-04-17 |
+| 4 | completed | v0.6 | PR #12 | 2026-04-17 |
+| 5a-11 | pending | - | - | - |
 
-현재 live phase: **Phase 3 kickoff 대기** (Phase 2 구현 완료, v0.3/v0.4 tag은 각 브랜치 merge 이후)
+현재 live phase: **Phase 5a kickoff 대기** (Phase 0-4 merged, v0.2~v0.6 tagged on origin/main)
 
 ## 10. Pointer Table (separate plans)
 
