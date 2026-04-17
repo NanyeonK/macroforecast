@@ -13,6 +13,21 @@
 
 relative-RMSE horse race의 "relative to what?" 질문을 declarative 하게 표현합니다. CLSS-style relative RMSE가 sweep 기본 출력으로 자동 계산되어, 모든 variant가 baseline benchmark 대비 상대 성능을 명시적으로 공표합니다. 이 phase가 완료되면 Phase 1 sweep runner의 per-variant metrics에 relative_msfe, relative_rmse, relative_mae, oos_r2가 표준 필드로 등장합니다.
 
+
+## 1a. Plan Revision — 2026-04-17 (코드 일치)
+
+Phase 0~3 구현 후 registry 실측 결과, plan §4의 3축 모두 기존 axis 확장으로 정리. §3~§9의 plan 이름은 아래 매핑으로 읽음.
+
+| Plan §4 name | Final action | Registry name |
+|---|---|---|
+| `benchmark_model` | 기존 확장 | `benchmark_family` (layer=1_data_task) — 9개 신규 값 status 승격 (operational/stub) |
+| `benchmark_estimation_window` | 기존 확장 | `benchmark_window` (layer=4_evaluation) — fixed→operational, paper_exact_window→stub |
+| `benchmark_by_target_horizon` | 기존 확장 | `benchmark_scope` (layer=4_evaluation) — target_specific/horizon_specific→operational |
+
+Layer 차이: plan은 3축 모두 `4_evaluation` 가정이지만, `benchmark_family`는 기존 `1_data_task`라 유지 (다른 phase 코드 영향). benchmark_resolver는 4-layer 모듈에 생성.
+
+기존 metrics 인프라: `_compute_metrics`가 이미 relative_msfe/rmse/mae/oos_r2 출력 중. Phase 4는 이를 `execution/evaluation/metrics.py`로 추출 + benchmark_resolver dispatch 추가.
+
 ## 2. Scope
 
 **In scope:**
@@ -236,3 +251,4 @@ Benchmark 축이 single (multi_benchmark_suite 아님)인 경우 relative_* 는 
 ## 12. Revision Log
 
 - 2026-04-17: 초안 (ultraplan v2.2 §Phase 4에서 추출)
+- 2026-04-17 (Phase 4 kickoff): §1a 추가 — registry 실측 일치 axis 매핑 (3축 모두 기존 확장)

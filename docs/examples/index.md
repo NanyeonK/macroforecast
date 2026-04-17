@@ -25,3 +25,7 @@ see [Getting Started](../getting_started/index.md) for a runnable tutorial and
 All examples will use test fixtures from `tests/fixtures/` for reproducibility.
 
 **See also:** [Getting Started](../getting_started/index.md) | [User Guide](../user_guide/index.md)
+
+## Phase 4 patterns
+
+- [CLSS replication pattern](clss_replication_pattern.md) - relative-RMSE horse race using FRED-MD INDPRO

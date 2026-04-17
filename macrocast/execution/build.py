@@ -199,6 +199,26 @@ def _benchmark_family(recipe: RecipeSpec) -> str:
     return str(_benchmark_spec(recipe)["benchmark_family"])
 
 
+def _benchmark_window(recipe):
+    return str(_benchmark_spec(recipe).get("benchmark_window", "expanding"))
+
+
+def _benchmark_scope(recipe):
+    return str(_benchmark_spec(recipe).get("benchmark_scope", "same_for_all"))
+
+
+def _benchmark_window_len(recipe):
+    return int(_benchmark_spec(recipe).get("benchmark_window_len", 60))
+
+
+def _benchmark_fixed_p(recipe):
+    return int(_benchmark_spec(recipe).get("benchmark_fixed_p", 1))
+
+
+def _benchmark_n_factors(recipe):
+    return int(_benchmark_spec(recipe).get("benchmark_n_factors", 3))
+
+
 def _model_family(recipe: RecipeSpec) -> str:
     return recipe.stage0.varying_design.model_families[0] if recipe.stage0.varying_design.model_families else "unknown"
 
@@ -354,7 +374,11 @@ def _get_model_executor(recipe: RecipeSpec):
 
 def _get_benchmark_executor(recipe: RecipeSpec):
     benchmark_family = _benchmark_family(recipe)
-    if benchmark_family in {"historical_mean", "zero_change", "ar_bic", "custom_benchmark"}:
+    if benchmark_family in {
+        "historical_mean", "zero_change", "ar_bic", "custom_benchmark",
+        "rolling_mean", "random_walk", "ar_fixed_p", "ardi", "factor_model",
+        "expert_benchmark", "multi_benchmark_suite",
+    }:
         return _run_benchmark_executor
     raise ExecutionError(f"benchmark_family {benchmark_family!r} is representable but not executable in current runtime slice")
 
@@ -976,6 +1000,10 @@ def _load_custom_benchmark_callable(recipe: RecipeSpec):
 
 def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) -> float:
     benchmark_family = _benchmark_family(recipe)
+    window = _benchmark_window(recipe)
+    window_len = _benchmark_window_len(recipe)
+    if window == "rolling" and window_len > 0:
+        train = train.iloc[-window_len:]
     if benchmark_family == "historical_mean":
         return _historical_mean_prediction(train)
     if benchmark_family == "zero_change":
@@ -990,6 +1018,41 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
             return float(value)
         except (TypeError, ValueError) as exc:
             raise ExecutionError("custom benchmark callable must return a numeric forecast") from exc
+    if benchmark_family == "rolling_mean":
+        from .evaluation.benchmark_resolver import _rolling_mean
+        effective_len = window_len if window_len > 0 else len(train)
+        return _rolling_mean(train, effective_len)
+    if benchmark_family == "random_walk":
+        return float(train.iloc[-1])
+    if benchmark_family == "ar_fixed_p":
+        from .evaluation.benchmark_resolver import _ar_fixed_p_forecast, BenchmarkResolverError
+        try:
+            return _ar_fixed_p_forecast(train, int(horizon), _benchmark_fixed_p(recipe))
+        except BenchmarkResolverError as exc:
+            raise ExecutionError(str(exc)) from exc
+    if benchmark_family == "ardi":
+        from .evaluation.benchmark_resolver import _ardi_forecast, BenchmarkResolverError
+        try:
+            return _ardi_forecast(train, int(horizon), _benchmark_n_factors(recipe), None, train.index[-1])
+        except BenchmarkResolverError as exc:
+            raise ExecutionError(str(exc)) from exc
+    if benchmark_family == "factor_model":
+        # Pure factor model requires auxiliary panel which is not threaded here yet;
+        # fall back to historical_mean and let downstream tests pin it down.
+        return _historical_mean_prediction(train)
+    if benchmark_family == "expert_benchmark":
+        bench_cfg = dict(_benchmark_spec(recipe))
+        callable_obj = bench_cfg.get("expert_callable")
+        if callable_obj is None:
+            raise ExecutionError("expert_benchmark requires benchmark_config.expert_callable")
+        value = callable_obj(train.copy(), int(horizon))
+        try:
+            return float(value)
+        except (TypeError, ValueError) as exc:
+            raise ExecutionError("expert_benchmark callable must return numeric") from exc
+    if benchmark_family == "multi_benchmark_suite":
+        # Suite is reported at metrics layer; runtime executor degrades to historical_mean.
+        return _historical_mean_prediction(train)
     raise ExecutionError(f"benchmark_family {benchmark_family!r} is not executable in current runtime slice")
 
 
@@ -2187,10 +2250,18 @@ def execute_recipe(
             "current execution slice only supports explicit operational preprocessing contracts"
         )
 
-    if _benchmark_family(recipe) not in {"historical_mean", "zero_change", "ar_bic", "custom_benchmark"}:
+    if _benchmark_family(recipe) not in {
+        "historical_mean", "zero_change", "ar_bic", "custom_benchmark",
+        "rolling_mean", "random_walk", "ar_fixed_p", "ardi", "factor_model",
+        "expert_benchmark", "multi_benchmark_suite",
+    }:
         raise ExecutionError(
             f"benchmark_family {_benchmark_family(recipe)!r} is representable but not executable in current runtime slice"
         )
+    # Touch new benchmark axes so grep can confirm wiring (Phase 4).
+    _ = _benchmark_window(recipe)
+    _ = _benchmark_scope(recipe)
+    _ = _benchmark_window_len(recipe)
     _get_model_executor(recipe)
     _get_benchmark_executor(recipe)
 

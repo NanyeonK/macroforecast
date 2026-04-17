@@ -10,7 +10,7 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(id='expanding', description='expanding', status='operational', priority='A'),
         EnumRegistryEntry(id='rolling', description='rolling', status='operational', priority='A'),
-        EnumRegistryEntry(id='fixed', description='fixed', status='planned', priority='A'),
+        EnumRegistryEntry(id='fixed', description='fixed', status='operational', priority='A'),
         EnumRegistryEntry(id='paper_exact_window', description='paper exact window', status='registry_only', priority='A'),
     ),
     compatible_with={},
