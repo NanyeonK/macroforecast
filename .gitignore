@@ -52,8 +52,8 @@ examples/results/
 local_only/
 tmp_*.py
 
-# Reboot/archive artifacts and local test surfaces
-archive/
+# Reboot/archive artifacts (top-level only — plans/archive/ is tracked)
+/archive/
 REBOOT_IDEA_AND_PLAN_*.md
 
 # Runtime artifacts

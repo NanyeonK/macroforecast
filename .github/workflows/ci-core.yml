@@ -1,0 +1,38 @@
+name: ci-core
+
+# Core test matrix — no [deep] extra. Phase 0 deliverable; fills in with real steps.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests (core, no deep)
+        run: |
+          pytest tests/ -x -q -m 'not deep'
+
+      - name: Check seed hardcoding absent (Phase 0)
+        run: |
+          ! grep -rE 'random_state=42|random_seed=42' macrocast/execution/ || (echo "Found hardcoded seed — use resolve_seed()" && exit 1)

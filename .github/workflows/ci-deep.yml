@@ -1,0 +1,38 @@
+name: ci-deep
+
+# Deep learning test matrix — requires [deep] extra. Activated from Phase 5a onward.
+# Runs on nightly schedule + PRs labeled 'needs-deep-test'.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  pull_request:
+    types: [labeled, synchronize]
+
+jobs:
+  test-deep:
+    if: >
+      github.event_name == 'schedule' ||
+      contains(github.event.pull_request.labels.*.name, 'needs-deep-test')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies including [deep]
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,deep]"
+
+      - name: Run deep tests
+        run: |
+          pytest tests/ -m deep -x -q
+
+      - name: Run cross-cutting sweep-safety (deep included)
+        run: |
+          pytest tests/test_deep_models_sweep_safety.py -x -q
