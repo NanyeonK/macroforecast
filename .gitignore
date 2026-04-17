@@ -55,3 +55,8 @@ tmp_*.py
 # Reboot/archive artifacts and local test surfaces
 archive/
 REBOOT_IDEA_AND_PLAN_*.md
+
+# Runtime artifacts
+catboost_info/
+*.parquet
+runs/

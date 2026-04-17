@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "macrocast"
+version = "0.1.0"
+description = "Fair, reproducible macro forecasting benchmarking package"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scikit-learn>=1.3",
+    "statsmodels>=0.14",
+    "PyYAML>=6.0",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+tuning = ["optuna>=3.0"]
+shap = ["shap>=0.42"]
+lime = ["lime>=0.2"]
+xgboost = ["xgboost>=2.0"]
+lightgbm = ["lightgbm>=4.0"]
+catboost = ["catboost>=1.2"]
+excel = ["openpyxl>=3.1"]
+all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel]"]
+dev = ["pytest>=8.0", "macrocast[all]"]
+
+[tool.setuptools.packages.find]
+include = ["macrocast*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
