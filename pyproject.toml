@@ -10,9 +10,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
-    "pandas>=2.0",
-    "numpy>=1.24",
-    "scikit-learn>=1.3",
+    "pandas>=2.2",
+    "numpy>=2.0",
+    "scikit-learn>=1.5",
     "statsmodels>=0.14",
     "PyYAML>=6.0",
     "scipy>=1.11",
@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 tuning = ["optuna>=3.0"]
-shap = ["shap>=0.42"]
+shap = ["shap>=0.47"]
 lime = ["lime>=0.2"]
 xgboost = ["xgboost>=2.0"]
 lightgbm = ["lightgbm>=4.0"]
