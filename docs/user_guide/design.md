@@ -72,32 +72,68 @@ An axis can appear in at most one section; putting the same axis in multiple sec
 
 ## 0.2 `compute_mode`
 
-**Declares the parallelism unit** for sweep execution. Default is `serial`.
+**Declares the parallelism unit** for sweep / multi-target / multi-horizon execution. Default is `serial`. All parallel modes use `concurrent.futures.ThreadPoolExecutor` with `max_workers` capped at 4; speedup on CPU-heavy work depends on whether the underlying numpy/pandas/model code releases the GIL.
 
 ### Value catalog
 
-| Value | Status | Semantics |
-|---|---|---|
-| `serial` | operational | Single-threaded. Default. |
-| `parallel_by_model` | operational | Parallel across model-family variants when the recipe has multi-target and len(targets) > 1. |
-| `parallel_by_horizon` | operational | Parallel across forecast horizons when len(horizons) > 1. |
-| `parallel_by_oos_date` | registry_only (v1.1) | Not wired. |
-| `parallel_by_trial` | registry_only (v1.1) | Not wired; awaits `execution_backend.joblib`. |
-| `distributed_cluster` | registry_only (v2) | Distributed runtime; phase-11. |
+| Value | Status | Trigger condition | Effect |
+|---|---|---|---|
+| `serial` | operational | — | Single-threaded execution throughout. Default. |
+| `parallel_by_model` | operational | sweep plan contains a `model_family` sweep axis AND `len(plan.variants) > 1` | Variant-level threading in `execute_sweep`: different model_family variants run concurrently. Silent no-op (serial fallback) if the trigger condition fails. |
+| `parallel_by_horizon` | operational | `len(recipe.horizons) > 1` | Horizon-level threading inside `execute_recipe`: each horizon computed in its own worker. Silent no-op for single-horizon recipes. |
+| `parallel_by_target` | operational | `len(recipe.targets) > 1` | Target-level threading inside `execute_recipe`: each target's slice computed concurrently. Silent no-op for single-target recipes. |
+| `parallel_by_oos_date` | registry_only (v1.1) | — | Compiler rejects as "representable but not executable". Needs phase-10 executor to chunk by OOS date. |
+| `parallel_by_trial` | registry_only (v1.1) | — | Compiler rejects. Awaits tuning backend integration (`execution_backend.joblib`). |
+| `distributed_cluster` | registry_only (v2) | — | Compiler rejects. Needs a distributed runtime (phase-11). |
+
+The three operational parallel modes are mutually independent — they operate at different pipeline layers (sweep, horizon, target) — but a single study picks one. Stacked parallelism across layers is not supported in v1.
 
 ### Functions & features
 
-- Compiler spec: `compute_mode_spec` emitted in `CompiledRecipeSpec` (see `compiler/build.py`).
-- Runtime dispatch: `macrocast.execution.build` inspects the compute_mode string and fans out by model or horizon.
-- Compiler guard: rejects non-operational values at compile time (`compiler/build.py`); only `serial`, `parallel_by_model`, `parallel_by_horizon` pass.
+- Compiler spec: `compute_mode_spec` dict embedded in `CompiledRecipeSpec` (`macrocast/compiler/build.py`).
+- Compiler guard: `compute_mode` restricted to the 4 operational values at compile time; registry_only and future values raise "representable but not executable".
+- Sweep runner (`macrocast.execution.sweep_runner`):
+  - `_extract_parent_compute_mode(plan)` reads the compute_mode from the parent recipe's `0_meta` block; defaults to `serial`.
+  - `execute_sweep()` dispatches variants via `ThreadPoolExecutor` when `compute_mode == "parallel_by_model"` and a `model_family` sweep axis is present.
+- Execution build (`macrocast.execution.build`):
+  - Horizon loop wraps its row-builder in `ThreadPoolExecutor` when `compute_mode == "parallel_by_horizon"` and `len(horizons) > 1`.
+  - Target loop wraps its per-target job in `ThreadPoolExecutor` when `compute_mode == "parallel_by_target"` and `len(targets) > 1`.
 
 ### Recipe usage
 
 ```yaml
+# Variant-level parallelism — run a model horse-race with different families in parallel.
 path:
   0_meta:
     fixed_axes:
       compute_mode: parallel_by_model
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
+```
+
+```yaml
+# Target-level parallelism — multi-target recipe with concurrent per-target execution.
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_target
+  1_data_task:
+    fixed_axes:
+      task: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI, CPIAUCSL]
+```
+
+```yaml
+# Horizon-level parallelism — single recipe computing multiple horizons concurrently.
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_horizon
+  1_data_task:
+    leaf_config:
+      horizons: [1, 3, 6, 12]
 ```
 
 ---

@@ -3035,7 +3035,7 @@ def execute_recipe(
         frame, tp = _build_predictions(raw_result.data, target_series_local, target_recipe, preprocess, compute_mode=compute_mode)
         return target, target_series_local, frame, tp
 
-    if compute_mode == "parallel_by_model" and len(targets) > 1:
+    if compute_mode == "parallel_by_target" and len(targets) > 1:
         with ThreadPoolExecutor(max_workers=min(len(targets), 4)) as ex:
             futures = [ex.submit(contextvars.copy_context().run, _target_job, target) for target in targets]
             for future in futures:

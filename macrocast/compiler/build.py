@@ -665,7 +665,7 @@ def _execution_status(
             f"experiment_unit={experiment_unit!r} is a wrapper-managed unit; execute via the wrapper runtime"
         )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
-    if compute_mode not in {"serial", "parallel_by_model", "parallel_by_horizon"}:
+    if compute_mode not in {"serial", "parallel_by_model", "parallel_by_horizon", "parallel_by_target"}:
         warnings.append(
             f"compute_mode {compute_mode!r} is representable but not executable in the current runtime slice"
         )

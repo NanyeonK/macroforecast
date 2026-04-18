@@ -5,8 +5,9 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 COMPUTE_MODE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="serial", description="Serial local execution.", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_model", description="Parallel execution across models.", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_horizon", description="Parallel execution across horizons.", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_model", description="Parallel across sweep variants when model_family is swept (variant-level threading, max 4 workers).", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_horizon", description="Parallel across horizons (threading, max 4 workers).", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_target", description="Parallel across targets in multi-target recipes (threading, max 4 workers).", status="operational", priority="A"),
     EnumRegistryEntry(id="parallel_by_oos_date", description="Parallel execution across out-of-sample dates.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="parallel_by_trial", description="Parallel execution across trials.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="gpu_single", description="Single-GPU execution.", status="registry_only", priority="B"),

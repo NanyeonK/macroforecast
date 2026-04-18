@@ -147,3 +147,88 @@ def test_sweep_reproducibility_study_id_stable(tmp_path: Path) -> None:
     variants_a = {v.variant_id for v in plan_a.variants}
     variants_b = {v.variant_id for v in plan_b.variants}
     assert variants_a == variants_b
+
+
+# --- compute_mode=parallel_by_model variant-level parallelism ---
+
+
+def test_parallel_by_model_sweep_runs_variants_concurrently(tmp_path: Path) -> None:
+    """When compute_mode=parallel_by_model AND model_family is swept, execute_sweep
+    dispatches variants onto ThreadPoolExecutor instead of running sequentially."""
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["compute_mode"] = "parallel_by_model"
+    plan = compile_sweep_plan(recipe)
+    assert plan.size == 2
+
+    # Patch ThreadPoolExecutor in sweep_runner to count instantiations.
+    from macrocast.execution import sweep_runner as sr
+    original = sr.ThreadPoolExecutor
+    calls: list[int] = []
+
+    class _CountingExecutor(original):
+        def __init__(self, *args, max_workers=None, **kwargs):
+            calls.append(max_workers or 0)
+            super().__init__(*args, max_workers=max_workers, **kwargs)
+
+    sr.ThreadPoolExecutor = _CountingExecutor
+    try:
+        result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+    finally:
+        sr.ThreadPoolExecutor = original
+
+    assert result.successful_count == 2
+    # exactly one ThreadPoolExecutor was built by the variant-level parallel branch,
+    # with max_workers capped at min(len(variants), 4) = 2
+    assert calls == [2]
+
+
+def test_parallel_by_model_without_model_family_sweep_stays_serial(tmp_path: Path) -> None:
+    """compute_mode=parallel_by_model with only non-model-family sweep axes falls
+    back to serial execution (no ThreadPoolExecutor created)."""
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["compute_mode"] = "parallel_by_model"
+    # swap model_family sweep out for framework so model_family is not swept
+    recipe["path"]["3_training"]["sweep_axes"] = {"framework": ["expanding", "rolling"]}
+    recipe["path"]["3_training"]["fixed_axes"]["model_family"] = "ridge"
+    recipe["path"]["3_training"]["fixed_axes"].pop("framework", None)
+    plan = compile_sweep_plan(recipe)
+    assert plan.size == 2
+    assert any(axis.endswith(".framework") for axis in plan.axes_swept)
+    assert not any(axis.endswith(".model_family") for axis in plan.axes_swept)
+
+    from macrocast.execution import sweep_runner as sr
+    original = sr.ThreadPoolExecutor
+    calls: list[int] = []
+
+    class _CountingExecutor(original):
+        def __init__(self, *args, max_workers=None, **kwargs):
+            calls.append(max_workers or 0)
+            super().__init__(*args, max_workers=max_workers, **kwargs)
+
+    sr.ThreadPoolExecutor = _CountingExecutor
+    try:
+        result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+    finally:
+        sr.ThreadPoolExecutor = original
+
+    assert result.successful_count == 2
+    # No variant-level ThreadPoolExecutor should be created for this sweep.
+    assert calls == []
+
+
+def test_extract_parent_compute_mode_reads_fixed_axes() -> None:
+    from macrocast.compiler.sweep_plan import compile_sweep_plan
+    from macrocast.execution.sweep_runner import _extract_parent_compute_mode
+
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["compute_mode"] = "parallel_by_model"
+    plan = compile_sweep_plan(recipe)
+    assert _extract_parent_compute_mode(plan) == "parallel_by_model"
+
+
+def test_extract_parent_compute_mode_defaults_to_serial() -> None:
+    from macrocast.compiler.sweep_plan import compile_sweep_plan
+    from macrocast.execution.sweep_runner import _extract_parent_compute_mode
+
+    plan = compile_sweep_plan(_horse_race_recipe())  # no compute_mode set
+    assert _extract_parent_compute_mode(plan) == "serial"

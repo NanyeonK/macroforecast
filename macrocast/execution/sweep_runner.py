@@ -10,8 +10,10 @@ See plans/phases/phase_01_sweep_executor.md section 4.2.
 
 from __future__ import annotations
 
+import contextvars
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -93,6 +95,24 @@ def _relative_to(child: Path, parent: Path) -> str:
         return str(child)
 
 
+def _extract_parent_compute_mode(plan: SweepPlan) -> str:
+    """Read compute_mode from the plan's parent recipe (defaults to "serial")."""
+    parent = plan.parent_recipe_dict.get("path", {}) if isinstance(plan.parent_recipe_dict, dict) else {}
+    meta = parent.get("0_meta", {}) if isinstance(parent, dict) else {}
+    if not isinstance(meta, dict):
+        return "serial"
+    for section in ("fixed_axes", "sweep_axes"):
+        block = meta.get(section, {}) or {}
+        if not isinstance(block, dict):
+            continue
+        if "compute_mode" in block:
+            val = block["compute_mode"]
+            if isinstance(val, list) and val:
+                return str(val[0])
+            return str(val)
+    return "serial"
+
+
 def execute_sweep(
     *,
     plan: SweepPlan,
@@ -136,7 +156,7 @@ def execute_sweep(
 
     from ..compiler.build import compile_recipe_dict, compiled_spec_to_dict
 
-    for variant in plan.variants:
+    def _run_variant(variant) -> tuple[VariantManifestEntry, VariantResult]:
         variant_output = variants_dir / variant.variant_id
         t0 = time.monotonic()
         try:
@@ -172,7 +192,7 @@ def execute_sweep(
             runtime = time.monotonic() - t0
             metrics = _load_metrics_summary(execution.artifact_dir)
             rel_artifact = _relative_to(Path(execution.artifact_dir), output_root_path)
-            entries.append(
+            return (
                 VariantManifestEntry(
                     variant_id=variant.variant_id,
                     axis_values=dict(variant.axis_values),
@@ -180,9 +200,7 @@ def execute_sweep(
                     artifact_dir=rel_artifact,
                     metrics_summary=metrics,
                     runtime_seconds=runtime,
-                )
-            )
-            results.append(
+                ),
                 VariantResult(
                     variant_id=variant.variant_id,
                     axis_values=dict(variant.axis_values),
@@ -190,14 +208,14 @@ def execute_sweep(
                     artifact_dir=execution.artifact_dir,
                     runtime_seconds=runtime,
                     metrics_summary=metrics,
-                )
+                ),
             )
         except Exception as exc:
             runtime = time.monotonic() - t0
             if fail_fast:
                 raise
             rel_artifact = _relative_to(variant_output, output_root_path)
-            entries.append(
+            return (
                 VariantManifestEntry(
                     variant_id=variant.variant_id,
                     axis_values=dict(variant.axis_values),
@@ -205,9 +223,7 @@ def execute_sweep(
                     artifact_dir=rel_artifact,
                     runtime_seconds=runtime,
                     error=f"{type(exc).__name__}: {exc}",
-                )
-            )
-            results.append(
+                ),
                 VariantResult(
                     variant_id=variant.variant_id,
                     axis_values=dict(variant.axis_values),
@@ -215,8 +231,37 @@ def execute_sweep(
                     artifact_dir=None,
                     runtime_seconds=runtime,
                     error=f"{type(exc).__name__}: {exc}",
-                )
+                ),
             )
+
+    parent_compute_mode = _extract_parent_compute_mode(plan)
+    has_model_family_sweep = any(
+        axis.endswith(".model_family") for axis in plan.axes_swept
+    )
+    should_parallelize = (
+        parent_compute_mode == "parallel_by_model"
+        and has_model_family_sweep
+        and len(plan.variants) > 1
+    )
+
+    if should_parallelize:
+        # variant-level threading: each variant runs its own execute_recipe;
+        # workers capped at 4 (matching target/horizon parallel ceilings).
+        with ThreadPoolExecutor(max_workers=min(len(plan.variants), 4)) as ex:
+            ordered = list(plan.variants)
+            futures = [
+                ex.submit(contextvars.copy_context().run, _run_variant, variant)
+                for variant in ordered
+            ]
+            for future in futures:
+                entry, result = future.result()
+                entries.append(entry)
+                results.append(result)
+    else:
+        for variant in plan.variants:
+            entry, result = _run_variant(variant)
+            entries.append(entry)
+            results.append(result)
 
     manifest = build_study_manifest(
         study_id=plan.study_id,

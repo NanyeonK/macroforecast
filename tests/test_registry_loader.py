@@ -141,6 +141,7 @@ def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
         "serial",
         "parallel_by_model",
         "parallel_by_horizon",
+        "parallel_by_target",
         "parallel_by_oos_date",
         "parallel_by_trial",
         "gpu_single",
