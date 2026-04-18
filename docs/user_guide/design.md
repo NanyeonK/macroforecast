@@ -153,45 +153,93 @@ path:
 
 ## 0.3 `experiment_unit`
 
-**Declares the per-recipe execution shape** — how many targets and models the recipe produces. Complements `study_mode`. This is the richest Layer 0 axis, with a dedicated entry dataclass and helper functions.
+**Declares the per-recipe execution shape** — how many targets / models / variants the recipe produces, and which runner handles it. This is the richest Layer 0 axis, with a dedicated entry dataclass and helper functions. Auto-derived from the rest of the recipe when not set explicitly.
 
 ### Value catalog
 
-| Value | Status | When to use |
-|---|---|---|
-| `single_target_single_model` | operational | Default. One target, one model — the smallest executable unit. |
-| `single_target_model_grid` | operational | One target, multiple candidate models compared via the model-family axis. |
-| `single_target_full_sweep` | operational (wrapper-route) | One target, full Cartesian sweep. Wrapper-managed. |
-| `multi_target_shared_design` | operational (wrapper-route) | Multiple targets share identical design; wrapper fan-out. |
-| `replication_recipe` | operational | Replication unit paired with `replication_override_study`. |
-| `benchmark_suite` | operational (wrapper-route) | Collection of benchmarks against the user's proposed method. |
-| `ablation_study` | operational | Ablation unit; runs via `execute_ablation()`. |
-| `multi_target_separate_runs` | registry_only (v1.1) | Multi-target as independent runs. |
-| `multi_output_joint_model` | registry_only (v1.1) | Joint multi-output model; needs joint predictor adapters. |
-| `hierarchical_forecasting_run` | future (v2) | Hierarchical reconciliation. |
-| `panel_forecasting_run` | future (v2) | Panel-data forecasting. |
-| `state_space_run` | future (v2) | Single-run state-space forecasting. |
+`operational` is subdivided by **how the unit is executed**:
+
+- **direct** — handled by `execute_recipe()` itself (single-path or aggregated multi-target)
+- **dedicated runner** — has its own top-level runner function (`runner` field on the entry)
+- **wrapper handoff** — compile produces a `wrapper_handoff` payload; the actual runner is either an external wrapper or a Phase 8 consumer (`PaperReadyBundle`)
+
+| Value | Status | Execution form | Route owner | Runner / dispatcher |
+|---|---|---|---|---|
+| `single_target_single_model` | operational · direct | `execute_recipe()` | single_run | — |
+| `single_target_model_grid` | operational · direct | `execute_recipe()` with `model_family` sweep via `compile_sweep_plan` | single_run | — |
+| `single_target_full_sweep` | operational · wrapper handoff | `wrapper_handoff` payload; executed by the wrapper runtime | wrapper | — (wrapper pending) |
+| `multi_target_shared_design` | operational · direct | `execute_recipe()` multi-target path — single aggregated predictions table | single_run | — |
+| `ablation_study` | operational · dedicated runner | `execute_ablation()` | wrapper | `macrocast.studies.ablation:execute_ablation` |
+| `replication_recipe` | operational · dedicated runner | `execute_replication()` | replication | `macrocast.studies.replication:execute_replication` |
+| `benchmark_suite` | operational · wrapper handoff | `wrapper_handoff` payload; Phase 8 `PaperReadyBundle` consumer | wrapper | — (Phase 8 pending) |
+| `multi_target_separate_runs` | registry_only (v1.1) | would emit per-target artifact directories via a fan-out wrapper | wrapper | pending — Phase 10 |
+| `multi_output_joint_model` | registry_only (v1.1) | would call a joint multi-output predictor adapter | single_run | pending — Phase 10 (needs joint adapters) |
+| `hierarchical_forecasting_run` | future (v2) | hierarchical reconciliation orchestrator | orchestrator | Phase 11 |
+| `panel_forecasting_run` | future (v2) | panel-data forecasting orchestrator | orchestrator | Phase 11 |
+| `state_space_run` | future (v2) | single-run state-space predictor | single_run | Phase 11 |
+
+### Why three operational forms?
+
+`execute_recipe()` in v1 handles a finite set of shapes directly: one target with one model, one target with a model grid, or many targets with one shared design. Anything beyond that — a full sweep, an ablation, a replication, a benchmark suite — delegates to a purpose-built runner or to a wrapper handoff payload. The `route_owner` field on each `ExperimentUnitEntry` makes the expected dispatcher explicit.
 
 ### Functions & features
 
-- `ExperimentUnitEntry` dataclass in `macrocast.registry.stage0.experiment_unit` — extends `EnumRegistryEntry` with `route_owner`, `requires_multi_target`, `requires_wrapper`, optional `runner` callable path.
-- `get_experiment_unit_entry(id)` — lookup a single unit entry by id.
-- `experiment_unit_options_for_wizard(study_mode, task)` — filter allowed unit options for a given study_mode + task pair. Useful for CLI wizards / UIs.
-- `derive_experiment_unit_default(study_mode, task, model_axis_mode, feature_axis_mode, wrapper_family)` — infers the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (see §0.1).
-- Compiler integration: `compile_recipe_dict()` auto-derives `experiment_unit` when it is not explicitly declared; conflict-checks explicit declarations against the derived default.
+- **`ExperimentUnitEntry`** dataclass in `macrocast.registry.stage0.experiment_unit` — extends `EnumRegistryEntry` with:
+  - `route_owner: "single_run" | "wrapper" | "orchestrator" | "replication"`
+  - `requires_multi_target: bool`
+  - `requires_wrapper: bool`
+  - optional `runner: str | None` — dotted path to the dedicated runner function.
+- **`get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry`** — lookup by id.
+- **`experiment_unit_options_for_wizard(study_mode, task)`** — returns operational options only (registry_only / future values are filtered). Use from CLI wizards / UI to offer users the currently usable shapes.
+- **`derive_experiment_unit_default(study_mode, task, model_axis_mode, feature_axis_mode, wrapper_family)`** — chooses the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (§0.1 `derived_axes`).
+- **`derive_experiment_unit(study_mode, execution_posture, forecast_task)`** in `macrocast.design.derive` — the framework-level hook used by `build_design_frame`. Honours `execution_posture` (wrapper / replication) first, then falls back to multi_target_shared_design for multi-target, model_grid for controlled_variation_study, and single_target_single_model otherwise.
+- **Compiler integration**: `compile_recipe_dict()` auto-derives `experiment_unit` when not explicit; conflict-checks explicit declarations against the derived default; emits a `wrapper_handoff` payload when `route_owner == "wrapper"`. Values `benchmark_suite` convert the compile status to `representable_but_not_executable` (wrapper runner pending).
 
 ### Recipe usage
 
-Explicit declaration:
+Implicit (recommended for most recipes):
+
+```yaml
+# single-target, single model — default derivation → single_target_single_model
+path:
+  1_data_task:
+    fixed_axes:
+      task: single_target_point_forecast
+  3_training:
+    fixed_axes:
+      model_family: ridge
+
+# single-target, model sweep → derivation auto-picks single_target_model_grid
+path:
+  1_data_task:
+    fixed_axes:
+      task: single_target_point_forecast
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
+
+# multi-target → derivation picks multi_target_shared_design (operational, direct)
+path:
+  1_data_task:
+    fixed_axes:
+      task: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI, CPIAUCSL]
+```
+
+Explicit (ablation / replication paths):
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
+      study_mode: controlled_variation_study
       experiment_unit: ablation_study
+  # …
+# Run via execute_ablation(), not execute_recipe().
 ```
 
-Implicit (recommended for most recipes) — the compiler derives the right unit from the rest of the recipe. Equivalent to declaring:
+Explicit (declarative derivation via `derived_axes` from §0.1):
 
 ```yaml
 path:
@@ -199,6 +247,20 @@ path:
     derived_axes:
       experiment_unit: experiment_unit_default
 ```
+
+### Not implemented in v1.0
+
+| Value | Status | Gap | Target |
+|---|---|---|---|
+| `multi_target_separate_runs` | registry_only | No wrapper runner that fans out per-target artifact directories. Current multi-target path aggregates into one output. | v1.1 / Phase 10 |
+| `multi_output_joint_model` | registry_only | No joint multi-output predictor adapter. | v1.1 / Phase 10 |
+| `hierarchical_forecasting_run` | future | No hierarchical reconciliation orchestrator. | v2 / Phase 11 |
+| `panel_forecasting_run` | future | No panel-data executor. | v2 / Phase 11 |
+| `state_space_run` | future | No state-space predictor family. | v2 / Phase 11 |
+| `single_target_full_sweep` wrapper runner | operational · handoff | Compile produces wrapper_handoff payload; external wrapper consumes. No built-in wrapper runtime ships with v1.0. | Phase 8+ |
+| `benchmark_suite` wrapper runner | operational · handoff | Same as above; Phase 8 `PaperReadyBundle` will be the first consumer. | Phase 8 |
+
+In short: 5 of 12 values execute end-to-end inside the package (3 direct + 2 dedicated runners). 2 more compile successfully with a wrapper_handoff payload but wait for an external or Phase 8 consumer. The remaining 5 are registry or future entries with no runtime in v1.0.
 
 ---
 
