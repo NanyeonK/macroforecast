@@ -586,7 +586,7 @@ def test_axis_governance_table_includes_experiment_unit_axis() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["experiment_unit"]["current_status"]["single_target_model_grid"] == "operational"
-    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "planned"
+    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "operational"
 
 
 def test_compile_recipe_preserves_explicit_experiment_unit() -> None:

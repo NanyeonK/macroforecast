@@ -1688,6 +1688,254 @@ def _compute_arch_lm_test(predictions: pd.DataFrame, max_lag: int = 5) -> dict[s
     return {"stat_test": "arch_lm", "n": n, "regression_lags": T, "lm_statistic": lm_stat, "p_value": p_value, "significant_5pct": bool(p_value < 0.05)}
 
 
+def _compute_density_interval_helpers(predictions: pd.DataFrame, alpha: float = 0.10):
+    """Shared helper for density_interval tests.
+
+    Builds a simple Gaussian predictive-density assumption from point forecasts
+    + training-window residual variance. Returns the PIT series, the hit
+    series (|y_true - y_pred| <= z_{1-alpha/2} * sigma), and the estimated
+    sigma. Without a full conformal / quantile-forecast pipeline (v1.0+
+    deliverable), this is the v0.9.2 baseline.
+    """
+    from scipy.stats import norm
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    y = rows["y_true"].astype(float).to_numpy()
+    yhat = rows["y_pred"].astype(float).to_numpy()
+    n = int(len(y))
+    if n < 5:
+        raise ExecutionError("density_interval tests require at least 5 observations")
+    resid = y - yhat
+    sigma = float(np.std(resid, ddof=1)) if n > 1 else 0.0
+    if sigma <= 0:
+        sigma = 1e-8
+    pit = norm.cdf((y - yhat) / sigma)
+    z = float(norm.ppf(1 - alpha / 2))
+    hits = (np.abs(y - yhat) <= z * sigma).astype(int)
+    return pit, hits, sigma, alpha
+
+
+def _compute_pit_uniformity(predictions: pd.DataFrame) -> dict[str, object]:
+    from scipy.stats import kstest
+    pit, _hits, sigma, _alpha = _compute_density_interval_helpers(predictions)
+    res = kstest(pit, "uniform")
+    return {
+        "stat_test": "PIT_uniformity",
+        "n": int(len(pit)),
+        "ks_statistic": float(res.statistic),
+        "p_value": float(res.pvalue),
+        "significant_5pct": bool(res.pvalue < 0.05),
+        "sigma_estimate": sigma,
+    }
+
+
+def _compute_berkowitz(predictions: pd.DataFrame) -> dict[str, object]:
+    from scipy.stats import norm, chi2
+    pit, _hits, sigma, _alpha = _compute_density_interval_helpers(predictions)
+    # Clip PIT to avoid infinities
+    pit_clipped = np.clip(pit, 1e-6, 1 - 1e-6)
+    z = norm.ppf(pit_clipped)
+    n = int(len(z))
+    mu = float(z.mean())
+    var = float(np.var(z, ddof=1))
+    # Likelihood ratio for N(0,1)
+    ll_unrestricted = -0.5 * n * (math.log(2 * math.pi * var) + 1.0)
+    centered = z - mu
+    ll_n01 = -0.5 * n * math.log(2 * math.pi) - 0.5 * float(np.dot(z, z))
+    lr_stat = float(-2.0 * (ll_n01 - ll_unrestricted))
+    p_value = float(1.0 - chi2.cdf(lr_stat, df=2))
+    return {
+        "stat_test": "berkowitz",
+        "n": n,
+        "z_mean": mu,
+        "z_variance": var,
+        "lr_statistic": lr_stat,
+        "p_value": p_value,
+        "significant_5pct": bool(p_value < 0.05),
+    }
+
+
+def _compute_kupiec(predictions: pd.DataFrame, alpha: float = 0.10) -> dict[str, object]:
+    from scipy.stats import chi2
+    _pit, hits, _sigma, _alpha = _compute_density_interval_helpers(predictions, alpha=alpha)
+    n = int(len(hits))
+    n_hit = int(hits.sum())
+    nominal = 1.0 - alpha
+    empirical = n_hit / n if n > 0 else 0.0
+    if n_hit in (0, n):
+        lr_stat = float("nan"); p_value = float("nan")
+    else:
+        ll_h0 = n_hit * math.log(nominal) + (n - n_hit) * math.log(1.0 - nominal)
+        ll_h1 = n_hit * math.log(empirical) + (n - n_hit) * math.log(1.0 - empirical)
+        lr_stat = float(-2.0 * (ll_h0 - ll_h1))
+        p_value = float(1.0 - chi2.cdf(lr_stat, df=1))
+    return {
+        "stat_test": "kupiec",
+        "n": n, "n_hits": n_hit,
+        "nominal_coverage": nominal, "empirical_coverage": float(empirical),
+        "lr_statistic": lr_stat, "p_value": p_value,
+        "significant_5pct": bool(not math.isnan(p_value) and p_value < 0.05),
+    }
+
+
+def _compute_christoffersen_unconditional(predictions: pd.DataFrame) -> dict[str, object]:
+    out = _compute_kupiec(predictions)
+    out["stat_test"] = "christoffersen_unconditional"
+    return out
+
+
+def _compute_christoffersen_independence(predictions: pd.DataFrame, alpha: float = 0.10) -> dict[str, object]:
+    from scipy.stats import chi2
+    _pit, hits, _sigma, _alpha = _compute_density_interval_helpers(predictions, alpha=alpha)
+    n = int(len(hits))
+    # Transition counts
+    n00 = n01 = n10 = n11 = 0
+    for i in range(1, n):
+        prev, curr = int(hits[i - 1]), int(hits[i])
+        if prev == 0 and curr == 0: n00 += 1
+        elif prev == 0 and curr == 1: n01 += 1
+        elif prev == 1 and curr == 0: n10 += 1
+        else: n11 += 1
+    if (n00 + n01) == 0 or (n10 + n11) == 0 or (n01 + n11) == 0:
+        return {
+            "stat_test": "christoffersen_independence",
+            "n": n, "transitions": [n00, n01, n10, n11],
+            "lr_statistic": float("nan"), "p_value": float("nan"),
+            "significant_5pct": False,
+        }
+    p01 = n01 / (n00 + n01)
+    p11 = n11 / (n10 + n11)
+    p = (n01 + n11) / (n00 + n01 + n10 + n11)
+    if p <= 0 or p >= 1 or p01 in (0, 1) or p11 in (0, 1):
+        return {
+            "stat_test": "christoffersen_independence",
+            "n": n, "transitions": [n00, n01, n10, n11],
+            "lr_statistic": float("nan"), "p_value": float("nan"),
+            "significant_5pct": False,
+        }
+    ll_ind = (n00 + n10) * math.log(1 - p) + (n01 + n11) * math.log(p)
+    ll_full = (n00 * math.log(1 - p01) + n01 * math.log(p01) + n10 * math.log(1 - p11) + n11 * math.log(p11))
+    lr_stat = float(-2.0 * (ll_ind - ll_full))
+    p_value = float(1.0 - chi2.cdf(lr_stat, df=1))
+    return {
+        "stat_test": "christoffersen_independence",
+        "n": n, "transitions": [n00, n01, n10, n11],
+        "lr_statistic": lr_stat, "p_value": p_value,
+        "significant_5pct": bool(p_value < 0.05),
+    }
+
+
+def _compute_christoffersen_conditional(predictions: pd.DataFrame) -> dict[str, object]:
+    uc = _compute_kupiec(predictions)
+    ind = _compute_christoffersen_independence(predictions)
+    lr_uc = uc.get("lr_statistic")
+    lr_ind = ind.get("lr_statistic")
+    if isinstance(lr_uc, float) and isinstance(lr_ind, float) and not (math.isnan(lr_uc) or math.isnan(lr_ind)):
+        from scipy.stats import chi2
+        lr_cc = lr_uc + lr_ind
+        p_value = float(1.0 - chi2.cdf(lr_cc, df=2))
+    else:
+        lr_cc = float("nan"); p_value = float("nan")
+    return {
+        "stat_test": "christoffersen_conditional",
+        "lr_statistic": lr_cc, "p_value": p_value,
+        "unconditional_lr": uc.get("lr_statistic"),
+        "independence_lr": ind.get("lr_statistic"),
+        "significant_5pct": bool(not math.isnan(p_value) and p_value < 0.05),
+    }
+
+
+def _compute_interval_coverage(predictions: pd.DataFrame, alpha: float = 0.10) -> dict[str, object]:
+    _pit, hits, _sigma, _alpha = _compute_density_interval_helpers(predictions, alpha=alpha)
+    n = int(len(hits))
+    n_hit = int(hits.sum())
+    empirical = n_hit / n if n > 0 else 0.0
+    return {
+        "stat_test": "interval_coverage",
+        "n": n, "n_hits": n_hit,
+        "nominal_coverage": 1.0 - alpha,
+        "empirical_coverage": float(empirical),
+        "coverage_gap": float(empirical - (1.0 - alpha)),
+    }
+
+
+def _compute_fluctuation_test(predictions: pd.DataFrame, window_fraction: float = 0.30) -> dict[str, object]:
+    """Giacomini-Rossi (2009) fluctuation test.
+
+    Rolling DM statistic over a centred window; the test statistic is the max
+    of |DM_rolling(t)| across the sample. Rejection = at least one window
+    shows statistically significant predictive-accuracy differential.
+    Approximate 5%% critical value from GR Table I at m=0.30 is ~3.012.
+    """
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    if n < 10:
+        raise ExecutionError("fluctuation_test requires at least 10 observations")
+    m = max(5, int(window_fraction * n))
+    if m * 2 > n:
+        m = max(5, n // 3)
+    dm_series = []
+    for i in range(m, n - m + 1):
+        window = loss_diff[i - m : i + m]
+        mean = float(window.mean())
+        var = float(np.var(window, ddof=1))
+        if var <= 0:
+            dm_series.append(0.0)
+            continue
+        dm_series.append(float(mean / math.sqrt(var / len(window))))
+    if not dm_series:
+        raise ExecutionError("fluctuation_test produced no rolling windows")
+    dm_array = np.asarray(dm_series)
+    max_abs = float(np.max(np.abs(dm_array)))
+    critical_5pct = 3.012
+    return {
+        "stat_test": "fluctuation_test",
+        "n": n,
+        "window_size": int(m),
+        "n_rolling_windows": int(len(dm_series)),
+        "max_abs_dm": max_abs,
+        "critical_5pct": critical_5pct,
+        "significant_5pct": bool(max_abs > critical_5pct),
+    }
+
+
+def _compute_chow_break_forecast(predictions: pd.DataFrame) -> dict[str, object]:
+    """Chow breakpoint test on forecast-loss-differential.
+
+    Splits the sample at the midpoint (structural break candidate), tests
+    whether loss_diff's mean differs across the two halves via Welch's t-test.
+    """
+    rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
+    loss_diff = rows["benchmark_squared_error"].to_numpy(dtype=float) - rows["squared_error"].to_numpy(dtype=float)
+    n = int(len(loss_diff))
+    if n < 6:
+        raise ExecutionError("chow_break_forecast requires at least 6 observations")
+    mid = n // 2
+    part1 = loss_diff[:mid]
+    part2 = loss_diff[mid:]
+    m1, m2 = float(part1.mean()), float(part2.mean())
+    v1 = float(np.var(part1, ddof=1)) if len(part1) > 1 else 0.0
+    v2 = float(np.var(part2, ddof=1)) if len(part2) > 1 else 0.0
+    denom = math.sqrt(v1 / max(len(part1), 1) + v2 / max(len(part2), 1))
+    if denom <= 0:
+        return {
+            "stat_test": "chow_break_forecast",
+            "n": n, "break_index": int(mid),
+            "mean_part1": m1, "mean_part2": m2,
+            "t_statistic": 0.0, "p_value": 1.0,
+            "significant_5pct": False,
+        }
+    t_stat = float((m1 - m2) / denom)
+    p_value = float(_normal_two_sided_pvalue(t_stat))
+    return {
+        "stat_test": "chow_break_forecast",
+        "n": n, "break_index": int(mid),
+        "mean_part1": m1, "mean_part2": m2,
+        "t_statistic": t_stat, "p_value": p_value,
+        "significant_5pct": bool(p_value < 0.05),
+    }
+
+
 def _compute_stepwise_mcs(predictions: pd.DataFrame, alpha: float = 0.10) -> dict[str, object]:
     rows = predictions.sort_values(["horizon", "target_date", "origin_date"]).reset_index(drop=True)
     if "model_name" not in rows.columns:

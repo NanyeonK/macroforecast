@@ -562,6 +562,16 @@ def _execution_status(
         warnings.append(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )
+    study_mode = _selection_value(selection_map, "study_mode", default="single_path_benchmark_study")
+    if study_mode in {"orchestrated_bundle_study", "replication_override_study"}:
+        warnings.append(
+            f"study_mode={study_mode!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
+        )
+    experiment_unit = _selection_value(selection_map, "experiment_unit", default="single_target_single_model") if "experiment_unit" in selection_map else "single_target_single_model"
+    if experiment_unit in {"multi_target_shared_design", "benchmark_suite"}:
+        warnings.append(
+            f"experiment_unit={experiment_unit!r} is a wrapper-managed unit; execute via the wrapper runtime"
+        )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
     if compute_mode not in {"serial", "parallel_by_model", "parallel_by_horizon"}:
         warnings.append(

@@ -24,13 +24,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='orchestrated_bundle_study',
             description='orchestrated bundle study',
-            status="planned",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
             id='replication_override_study',
             description='replication override study',
-            status="planned",
+            status="operational",
             priority="A",
         ),
     ),

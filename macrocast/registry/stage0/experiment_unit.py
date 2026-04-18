@@ -56,7 +56,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ExperimentUnitEntry(
         id="multi_target_shared_design",
         description="Multi-target shared-design wrapper family.",
-        status="planned",
+        status="operational",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=True,
@@ -111,7 +111,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ExperimentUnitEntry(
         id="benchmark_suite",
         description="Wrapper-managed benchmark suite.",
-        status="planned",
+        status="operational",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=False,
