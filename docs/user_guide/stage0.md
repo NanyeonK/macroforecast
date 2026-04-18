@@ -1,5 +1,11 @@
 # Stage 0
 
+!!! note "Two `stage0` namespaces — they are related but distinct"
+    - **Stage 0 framework** — this page. Lives at ``macrocast.stage0``. Small set of pre-execution dataclasses (`FixedDesign`, `VaryingDesign`, `ComparisonContract`, `Stage0Frame`) plus one builder.
+    - **Layer 0 meta axes registry** — the 7 enum catalogs (`axis_type`, `compute_mode`, `experiment_unit`, `failure_policy`, `registry_type`, `reproducibility_mode`, `study_mode`). Lives at ``macrocast.registry.stage0``. Framework dataclasses above consume values from these catalogs.
+
+    Both are documented on this page. The framework section covers dataclasses and completeness rules; the "Value catalogs for Stage 0 axes" section below is the reference for the 7 meta axes.
+
 ## Purpose
 
 Stage 0 fixes the execution language of a macrocast study before later registries or recipe content are expanded.
@@ -260,15 +266,33 @@ Parallelism unit.
 
 ### `axis_type`
 
-How an axis participates in the study expansion.
+How an axis participates in the study expansion. Each axis in the registry carries a default_policy (e.g. `scaling_policy` defaults to `fixed`); a recipe overrides the policy by placing the axis in one of the recipe sections below.
 
-| Value | Status | Role |
-|---|---|---|
-| `fixed` | operational | Held constant across the study. |
-| `sweep` | operational | Expanded into multiple variants. |
-| `nested_sweep` | operational | Participates in nested-sweep plans. |
-| `conditional` | operational | Activated conditionally on other axes. |
-| `derived` | operational | Computed from other recipe state. |
+| Value | Status | Recipe section | Role |
+|---|---|---|---|
+| `fixed` | operational | `fixed_axes` | Held constant across the study. One value per axis. |
+| `sweep` | operational | `sweep_axes` | Expanded into the Cartesian product of the listed values across axes. |
+| `conditional` | operational | `conditional_axes` | Value depends on another axis's choice; the compiler activates the axis only when the trigger axis takes a matching value. |
+| `nested_sweep` | operational | `nested_sweep_axes` | Hierarchical sweep: each parent value carries its own (possibly different) child axis and child values. Child sets need not be uniform across parent values. |
+| `derived` | operational | `derived_axes` | Value is computed by a registered derivation rule at compile time. The user declares `{axis: rule_name}`; the registered rule (e.g. `experiment_unit_default`) runs after the rest of the selections are resolved. |
+
+```yaml
+path:
+  3_training:
+    fixed_axes:
+      framework: rolling
+    sweep_axes:
+      model_family: [ridge, lasso]
+    nested_sweep_axes:
+      model_family:
+        ridge: {hp_space_style: [paper_fixed_hp, grid_linear]}
+        lasso: {hp_space_style: [paper_fixed_hp, grid_linear, grid_log]}
+  0_meta:
+    derived_axes:
+      experiment_unit: experiment_unit_default
+```
+
+In practice a given axis belongs to exactly one of the five sections; putting the same axis in multiple sections raises a compile error.
 
 ### `registry_type`
 
