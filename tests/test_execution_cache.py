@@ -3,14 +3,14 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
-from macrocast import build_preprocess_contract, build_recipe_spec, build_stage0_frame, execute_recipe
+from macrocast import build_preprocess_contract, build_recipe_spec, build_design_frame, execute_recipe
 
 
 FIXTURE = Path("tests/fixtures/fred_md_ar_sample.csv")
 
 
 def _stage0():
-    return build_stage0_frame(
+    return build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",

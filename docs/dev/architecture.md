@@ -1,5 +1,8 @@
 # Architecture
 
+> **Naming note:** The code module historically called `macrocast.stage0` was renamed to `macrocast.design` in 2026-04-18 to disambiguate from `macrocast.registry.stage0` (the Layer 0 meta axes registry path, kept unchanged). "Stage 0" remains the architectural term; `macrocast.design` is the code surface.
+
+
 ## 8-Layer Canonical Order
 
 macrocast enforces a fixed layer order for every forecasting study:

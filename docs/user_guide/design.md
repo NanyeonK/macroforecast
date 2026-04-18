@@ -1,12 +1,14 @@
-# Stage 0
+# Design (Stage 0)
 
-!!! note "Two `stage0` namespaces — they are related but distinct"
-    - **Stage 0 framework** — pre-execution grammar dataclasses. Lives at ``macrocast.stage0``. Small set of pre-execution dataclasses (`FixedDesign`, `VaryingDesign`, `ComparisonContract`, `Stage0Frame`) plus one builder.
+> **Naming:** The code module was `macrocast.stage0` before 2026-04-18; it is now `macrocast.design`. "Stage 0" remains the architectural term for this pre-execution grammar layer; `macrocast.design` is the code surface. The registry layer at ``macrocast.registry.stage0`` kept its path to distinguish framework (design) from registry (Layer 0 meta).
+
+!!! note "Design framework vs. Layer 0 meta axes registry"
+    - **Design framework** — pre-execution grammar dataclasses. Lives at ``macrocast.design``. Small set of pre-execution dataclasses (`FixedDesign`, `VaryingDesign`, `ComparisonContract`, `DesignFrame`) plus one builder (`build_design_frame`).
     - **Layer 0 meta axes registry** — 7 enum catalogs consumed by the framework. Lives at ``macrocast.registry.stage0``. This page walks through all 7 in order (§0.1 through §0.7).
 
 ## Purpose
 
-Stage 0 fixes the execution language of a macrocast study before later registries or recipe content are expanded. It answers these questions first:
+The design frame fixes the execution language of a macrocast study before later registries or recipe content are expanded. It answers these questions first:
 
 - what kind of study is this? (`study_mode`)
 - what recipe shape is this? (`experiment_unit`)
@@ -16,11 +18,11 @@ Stage 0 fixes the execution language of a macrocast study before later registrie
 - how is parallelism applied? (`compute_mode`)
 - what kind of catalog is each axis? (`registry_type`)
 
-Stage 0 does not decide registry inventories such as which model ids or dataset ids exist. It fixes the grammar those later content layers must obey.
+Design does not decide registry inventories such as which model ids or dataset ids exist. It fixes the grammar those later content layers must obey.
 
-## Why Stage 0 exists
+## Why design exists
 
-macrocast compares forecasting tools under identical information set, sample split, benchmark, and evaluation protocol. Comparison becomes unreliable if the package allows hidden route changes, accidental drift in fairness conditions, or model comparisons that no longer share the same study spine. Stage 0 prevents that by making study structure explicit before forecasting execution begins.
+macrocast compares forecasting tools under identical information set, sample split, benchmark, and evaluation protocol. Comparison becomes unreliable if the package allows hidden route changes, accidental drift in fairness conditions, or model comparisons that no longer share the same study spine. The design frame prevents that by making study structure explicit before forecasting execution begins.
 
 ---
 
@@ -278,21 +280,21 @@ path:
 
 ## Framework surface
 
-The 7 axes above are consumed by a compact framework that the user typically touches only via `build_stage0_frame()`:
+The 7 axes above are consumed by a compact framework that the user typically touches only via `build_design_frame()`:
 
 ```python
-from macrocast.stage0 import (
+from macrocast.design import (
     FixedDesign,
     VaryingDesign,
     ComparisonContract,
     ReplicationInput,
-    Stage0Frame,
-    build_stage0_frame,
+    DesignFrame,
+    build_design_frame,
     resolve_route_owner,
-    check_stage0_completeness,
-    stage0_summary,
-    stage0_to_dict,
-    stage0_from_dict,
+    check_design_completeness,
+    design_summary,
+    design_to_dict,
+    design_from_dict,
 )
 ```
 
@@ -302,19 +304,19 @@ from macrocast.stage0 import (
 - **`VaryingDesign`** — explicitly allowed variation: `model_families`, `horizons`, etc.
 - **`ComparisonContract`** — fairness conditions: four `*_policy` flags (information_set / sample_split / benchmark / evaluation).
 - **`ReplicationInput`** — optional; locks replication constraints (`source_type`, `source_id`, `locked_constraints`).
-- **`Stage0Frame`** — canonical output: `study_mode`, `fixed_design`, `comparison_contract`, `varying_design`, `execution_posture`, `design_shape`, optional `replication_input`, optional compat mirror `experiment_unit`.
+- **`DesignFrame`** — canonical output: `study_mode`, `fixed_design`, `comparison_contract`, `varying_design`, `execution_posture`, `design_shape`, optional `replication_input`, optional compat mirror `experiment_unit`.
 
 ### Main functions
 
-- `build_stage0_frame(...)` — normalize, validate, derive `design_shape` and `execution_posture`.
-- `resolve_route_owner(stage0)` — returns `single_run` / `wrapper` / `replication`.
-- `check_stage0_completeness(stage0)` — fails closed if the frame cannot execute.
-- `stage0_summary(stage0)` — one-line human summary for logs/manifests.
-- `stage0_to_dict` / `stage0_from_dict` — round-trip serialization for config I/O.
+- `build_design_frame(...)` — normalize, validate, derive `design_shape` and `execution_posture`.
+- `resolve_route_owner(design)` — returns `single_run` / `wrapper` / `replication`.
+- `check_design_completeness(design)` — fails closed if the frame cannot execute.
+- `design_summary(design)` — one-line human summary for logs/manifests.
+- `design_to_dict` / `design_from_dict` — round-trip serialization for config I/O.
 
-### Stage0Frame derived fields
+### DesignFrame derived fields
 
-Two fields are derived rather than hand-authored (distinct from `axis_type.derived` in §0.1 — these live on `Stage0Frame`):
+Two fields are derived rather than hand-authored (distinct from `axis_type.derived` in §0.1 — these live on `DesignFrame`):
 
 - **`design_shape`** — inferred from `study_mode` + `varying_design`. Examples: `one_fixed_env_one_tool_surface`, `one_fixed_env_controlled_axis_variation`, `wrapper_managed_multi_run_bundle`.
 - **`execution_posture`** — inferred from `study_mode` + `design_shape` + optional replication input. Examples: `single_run_recipe`, `single_run_with_internal_sweep`, `wrapper_bundle_plan`, `replication_locked_plan`.
@@ -325,7 +327,7 @@ These keep route semantics out of arbitrary registry payloads.
 
 ## Completeness rule
 
-A Stage 0 frame is only usable if it answers all of:
+A design frame is only usable if it answers all of:
 
 - what kind of study is this?
 - what is fixed?
@@ -333,11 +335,11 @@ A Stage 0 frame is only usable if it answers all of:
 - what fairness conditions define the comparison?
 - what execution posture should downstream code build?
 
-`check_stage0_completeness()` fails closed when any answer is missing.
+`check_design_completeness()` fails closed when any answer is missing.
 
 ## Relationship to later layers
 
-Stage 0 sits above later content layers. It feeds:
+The design frame sits above later content layers. It feeds:
 
 - [raw/data layer](raw.md)
 - [data/task axes](data_task_axes.md)
@@ -347,11 +349,11 @@ Stage 0 sits above later content layers. It feeds:
 - [execution](execution.md)
 - [evaluation/test layer](stat_tests.md)
 
-Later registries may supply admissible content, but they do not redefine the Stage 0 language defined on this page.
+Later registries may supply admissible content, but they do not redefine the design language defined on this page.
 
 ## V1 completion status
 
-Stage 0 is treated as complete for the v1 package foundation.
+The design layer (Stage 0) is treated as complete for the v1 package foundation.
 
 Framework:
 
@@ -367,4 +369,4 @@ Layer 0 meta axes registry (7 axes, curated 2026-04-18):
 - `reproducibility_mode`: 3 operational, 1 registry_only (v1.1).
 - `study_mode`: 4 operational (2 executable + 2 wrapper-route).
 
-Stage 0 is stable foundation. Later package surfaces are built above it.
+The design layer is a stable foundation. Later package surfaces are built above it.

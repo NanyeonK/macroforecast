@@ -14,42 +14,42 @@ defined here consume values from those meta axes.
 """
 
 from .build import (
-    build_stage0_frame,
-    check_stage0_completeness,
+    build_design_frame,
+    check_design_completeness,
     resolve_route_owner,
-    stage0_summary,
+    design_summary,
 )
 from .errors import (
-    Stage0CompletenessError,
-    Stage0Error,
-    Stage0NormalizationError,
-    Stage0RoutingError,
-    Stage0ValidationError,
+    DesignCompletenessError,
+    DesignError,
+    DesignNormalizationError,
+    DesignRoutingError,
+    DesignValidationError,
 )
-from .serialize import stage0_from_dict, stage0_to_dict
+from .serialize import design_from_dict, design_to_dict
 from .types import (
     ComparisonContract,
     FixedDesign,
     ReplicationInput,
-    Stage0Frame,
+    DesignFrame,
     VaryingDesign,
 )
 
 __all__ = [
-    "build_stage0_frame",
-    "check_stage0_completeness",
+    "build_design_frame",
+    "check_design_completeness",
     "resolve_route_owner",
-    "stage0_summary",
-    "stage0_to_dict",
-    "stage0_from_dict",
-    "Stage0Error",
-    "Stage0NormalizationError",
-    "Stage0ValidationError",
-    "Stage0CompletenessError",
-    "Stage0RoutingError",
+    "design_summary",
+    "design_to_dict",
+    "design_from_dict",
+    "DesignError",
+    "DesignNormalizationError",
+    "DesignValidationError",
+    "DesignCompletenessError",
+    "DesignRoutingError",
     "FixedDesign",
     "VaryingDesign",
     "ComparisonContract",
     "ReplicationInput",
-    "Stage0Frame",
+    "DesignFrame",
 ]

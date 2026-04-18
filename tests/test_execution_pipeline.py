@@ -8,7 +8,7 @@ from macrocast import (
     build_preprocess_contract,
     build_recipe_spec,
     build_run_spec,
-    build_stage0_frame,
+    build_design_frame,
     execute_recipe,
 )
 
@@ -24,7 +24,7 @@ def _stage0(
         "expanding": "expanding_window_oos",
         "rolling": "rolling_window_oos",
     }[framework]
-    return build_stage0_frame(
+    return build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",
@@ -436,7 +436,7 @@ def test_execute_recipe_runs_real_time_vintage_slice(tmp_path: Path) -> None:
 
 def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",
@@ -482,7 +482,7 @@ def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
 
 def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",
@@ -564,7 +564,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
 
 def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",
@@ -652,7 +652,7 @@ def test_execute_recipe_parallel_by_horizon_writes_manifest(tmp_path: Path) -> N
 
 def test_execute_recipe_parallel_by_model_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",

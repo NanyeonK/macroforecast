@@ -19,7 +19,7 @@ Welcome to macrocast. This guide will take you from zero to running your first f
 ## Key concepts (30-second version)
 
 - **Recipe**: A YAML file that fully specifies one forecasting study — data, preprocessing, model, benchmark, metrics
-- **Stage 0**: The study grammar that defines what is fixed (for fair comparison) and what varies (the research question)
+- **Design (Stage 0)**: The study grammar that defines what is fixed (for fair comparison) and what varies (the research question). See ``macrocast.design``.
 - **Compiler**: Validates your recipe and determines if it can execute with the current runtime
 - **Execution**: Runs the forecast, writes predictions, metrics, and provenance artifacts
 

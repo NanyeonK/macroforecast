@@ -6,7 +6,7 @@ In-depth documentation for every macrocast layer. Each page is self-contained; f
 :maxdepth: 1
 :caption: Stages
 
-stage0
+design
 ```
 
 ```{toctree}

@@ -17,7 +17,7 @@ from ..preprocessing import (
 from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
-from ..stage0 import build_stage0_frame, resolve_route_owner, stage0_to_dict
+from ..design import build_design_frame, resolve_route_owner, design_to_dict
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
 
@@ -318,7 +318,7 @@ def _build_tree_context(
     selections: tuple[AxisSelection, ...],
     leaf_config: dict[str, Any],
 ) -> dict[str, Any]:
-    stage0_payload = stage0_to_dict(stage0)
+    stage0_payload = design_to_dict(stage0)
     fixed_axes: dict[str, Any] = {}
     sweep_axes: dict[str, Any] = {}
     conditional_axes: dict[str, Any] = {}
@@ -557,7 +557,7 @@ def _build_stage0_and_recipe(
         "publication_lag_aware": "publication_lag_aware",
     }.get(information_set_type, information_set_type)
 
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode=study_mode,
         experiment_unit=experiment_unit if experiment_unit_explicit else None,
         fixed_design={

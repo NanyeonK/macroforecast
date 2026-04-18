@@ -1,21 +1,21 @@
 from __future__ import annotations
 
 
-class Stage0Error(Exception):
+class DesignError(Exception):
     """Base exception for stage0 operations."""
 
 
-class Stage0NormalizationError(Stage0Error):
+class DesignNormalizationError(DesignError):
     """Raised when stage0 inputs cannot be normalized."""
 
 
-class Stage0ValidationError(Stage0Error):
+class DesignValidationError(DesignError):
     """Raised when stage0 inputs violate required structure."""
 
 
-class Stage0CompletenessError(Stage0Error):
+class DesignCompletenessError(DesignError):
     """Raised when a stage0 frame is structurally incomplete for execution."""
 
 
-class Stage0RoutingError(Stage0Error):
+class DesignRoutingError(DesignError):
     """Raised when no valid route owner can be derived from a stage0 frame."""
