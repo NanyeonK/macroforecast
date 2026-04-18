@@ -374,7 +374,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | panel_target | future | v2 | phase-11 | panel_forecasting_run 필요 |
 | state_target | registry_only | v2 | phase-11 | SS framework 필요 |
 | factor_target | future | v2 | phase-11 | factor 추출 결합 |
-| latent_target | future | deferred-indef | - | SS 없이 불가 |
+| latent_target | future | v2 | phase-11 | SS framework가 Phase 11에 들어오면 동반 구현 |
 | constructed_target | registry_only | v1.1 | phase-10 | 합성 타겟 |
 | classification_target | registry_only | v1.0 | phase-04 | direction/event 와 정합 |
 
@@ -1123,7 +1123,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | continuous_box | planned | v1.0 | phase-03 | BO/random 활성 |
 | log_uniform | planned | v1.0 | phase-03 | regularization 경로 |
 | categorical | operational | - | - | 이미 완료 |
-| conditional_space | registry_only | post-v2 | - | 조건부 공간 후순위 |
+| conditional_space | registry_only | v2 | phase-11 | HP infra 완성 시점에 함께 구현 |
 | hierarchical_space | absent | post-v2 | - | 계층 공간 후순위 |
 
 #### 3.5.5 seed_policy
