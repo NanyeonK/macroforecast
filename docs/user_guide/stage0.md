@@ -269,8 +269,6 @@ How an axis participates in the study expansion.
 | `nested_sweep` | operational | Participates in nested-sweep plans. |
 | `conditional` | operational | Activated conditionally on other axes. |
 | `derived` | operational | Computed from other recipe state. |
-| `eval_only` | registry_only (v1.1) | Affects evaluation/reporting only; not yet routed. |
-| `report_only` | registry_only (v1.1) | Reporting side; not yet routed. |
 
 ### `registry_type`
 
