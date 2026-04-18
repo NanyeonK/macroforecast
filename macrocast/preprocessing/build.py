@@ -320,9 +320,9 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.recipe_mode != "fixed_recipe":
         return False
-    if contract.target_transform != "level":
+    if contract.target_transform not in {"level", "difference", "log", "log_difference", "growth_rate"}:
         return False
-    if contract.target_normalization != "none":
+    if contract.target_normalization not in {"none", "zscore_train_only", "robust_zscore"}:
         return False
     if contract.target_domain != "unconstrained":
         return False

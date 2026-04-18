@@ -18,13 +18,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='zscore_train_only',
             description='zscore train only',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(
             id='robust_zscore',
             description='robust zscore',
-            status='planned',
+            status="operational",
             priority='A',
         ),
         EnumRegistryEntry(

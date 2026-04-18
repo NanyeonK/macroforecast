@@ -386,6 +386,54 @@ def _get_benchmark_executor(recipe: RecipeSpec):
     raise ExecutionError(f"benchmark_family {benchmark_family!r} is representable but not executable in current runtime slice")
 
 
+def _apply_target_transform_and_normalization(series: pd.Series, contract: PreprocessContract | None) -> pd.Series:
+    """Forward-only y-side transform + normalization.
+
+    Applied immediately after _get_target_series returns. Metrics are computed
+    on the transformed scale — inverse-transform back to raw units is a v1.0+
+    deliverable (tracked in plans/v0_9_2_planned_completion_plan.md). Users who
+    need raw-scale metrics should stay on target_transform=level +
+    target_normalization=none.
+    """
+    if contract is None:
+        return series
+    s = series.astype(float).copy()
+
+    transform = getattr(contract, "target_transform", "level")
+    if transform == "difference":
+        s = s.diff().dropna()
+    elif transform == "log":
+        if (s <= 0).any():
+            raise ExecutionError("target_transform=log requires strictly positive target series")
+        s = np.log(s)
+    elif transform == "log_difference":
+        if (s <= 0).any():
+            raise ExecutionError("target_transform=log_difference requires strictly positive target series")
+        s = np.log(s).diff().dropna()
+    elif transform == "growth_rate":
+        s = (s / s.shift(1) - 1.0).dropna()
+    elif transform not in ("level", None):
+        raise ExecutionError(f"target_transform {transform!r} not executable in current runtime slice")
+
+    normalization = getattr(contract, "target_normalization", "none")
+    if normalization == "zscore_train_only":
+        mu = float(s.mean())
+        sigma = float(s.std(ddof=0))
+        if sigma <= 0:
+            return s - mu
+        s = (s - mu) / sigma
+    elif normalization == "robust_zscore":
+        med = float(s.median())
+        mad = float((s - med).abs().median())
+        if mad <= 0:
+            return s - med
+        s = (s - med) / (1.4826 * mad)
+    elif normalization not in ("none", None):
+        raise ExecutionError(f"target_normalization {normalization!r} not executable in current runtime slice")
+
+    return s
+
+
 def _get_target_series(frame: pd.DataFrame, target: str, minimum_train_size: int) -> pd.Series:
     if target not in frame.columns:
         raise ExecutionError(f"target {target!r} not found in raw dataset columns")
@@ -2735,6 +2783,7 @@ def execute_recipe(
     def _target_job(target: str):
         target_recipe = _recipe_for_target(recipe, target)
         target_series_local = _get_target_series(raw_result.data, target, _minimum_train_size(target_recipe))
+        target_series_local = _apply_target_transform_and_normalization(target_series_local, preprocess)
         frame, tp = _build_predictions(raw_result.data, target_series_local, target_recipe, preprocess, compute_mode=compute_mode)
         return target, target_series_local, frame, tp
 
