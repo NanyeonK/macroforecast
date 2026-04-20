@@ -9,7 +9,7 @@ Stage 1 holds **26 meta axes** under the `1_data_task` layer, organised into fiv
 | §1.1 | [Source & Frame (1.1)](source.md) | 4 | Which dataset, at what frequency, within what information-set regime |
 | §1.2 | [Task & Target (1.2)](task.md) | 4 | What is being forecast (task shape), how multi-step is produced, what forecast object, and how y_{t+h} is constructed |
 | §1.3 | [Horizon & Evaluation Window (1.3)](horizon.md) | 4 | Training window size rule, training start, OOS regime filter, overlap handling |
-| §1.4 | Benchmark & predictor universe (coming) | 4 | Benchmark families, predictor family, variable universe |
+| §1.4 | [Benchmark & Predictor Universe (1.4)](benchmark.md) | 4 | Benchmark families, predictor family, variable universe, deterministic components |
 | §1.5 | Data handling policies (coming) | 10 | Alignment, missing, release lag, vintage, break segmentation, etc. |
 
 Stage 1 does not fix which model, which preprocessor, or which evaluation metric — those belong to Stage 2+ layers.
@@ -25,7 +25,7 @@ Layer 1 covers 26 axes. After the v0.9.3 Tier 1-3 drop and the §1.1 / §1.2 / �
 - **§1.1 Source & Frame** — fully honest. 4 axes, all values either operational or dropped.
 - **§1.2 Task & Target** — fully operational (task / forecast_type / forecast_object / horizon_target_construction); horizon_target_construction applies as a metric-scale transform at the central row site.
 - **§1.3 Horizon & Evaluation Window** — fully operational (min_train_size / training_start_rule / oos_period / overlap_handling); see horizon.md for per-axis semantics.
-- **§1.4 Benchmark & Predictor Universe** — cleanup complete (4 values dropped, 9 demoted to registry_only). 14 op values truly wired; 19 registry_only values scheduled for v1.0 implementation via leaf_config input channels + simple deterministic feature additions. Impl PR pending.
+- **§1.4 Benchmark & Predictor Universe** — fully operational (benchmark_family / predictor_family / variable_universe / deterministic_components). 19 formerly-demoted values wired via leaf_config input channels + deterministic feature augmentation; 4 dropped values stay out of v1.0 scope.
 - **§1.5** (pending) — still contains the older mix of truly-wired, metadata-only flow-through, and hollow-dispatch values. Per-group walk in a follow-up PR.
 
 Each §1.x group document flags the honest status of every value it covers. Treat the current `design.md` / `data/*.md` state as the source of truth rather than the raw registry dump.
@@ -45,6 +45,7 @@ Each of the three built-in datasets (FRED-MD, FRED-QD, FRED-SD) has its own docu
 source
 task
 horizon
+benchmark
 datasets/fred_md
 datasets/fred_qd
 datasets/fred_sd

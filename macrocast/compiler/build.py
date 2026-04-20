@@ -400,6 +400,24 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "exogenous_block": _selection_value(selection_map, "exogenous_block", default=("endogenous_allowed" if feature_builder == "raw_feature_panel" else "none")),
         "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
         "training_start_date": leaf_config.get("training_start_date"),
+        # §1.4 variable_universe input channels
+        "variable_universe_category": leaf_config.get("variable_universe_category"),
+        "variable_universe_category_columns": leaf_config.get("variable_universe_category_columns"),
+        "target_specific_columns": leaf_config.get("target_specific_columns"),
+        "paper_replication_columns": leaf_config.get("paper_replication_columns"),
+        "expert_columns": leaf_config.get("expert_columns"),
+        "stability_filtered_columns": leaf_config.get("stability_filtered_columns"),
+        "correlation_screened_columns": leaf_config.get("correlation_screened_columns"),
+        # §1.4 predictor_family input channels
+        "handpicked_columns": leaf_config.get("handpicked_columns"),
+        "predictor_category": leaf_config.get("predictor_category"),
+        "predictor_category_columns": leaf_config.get("predictor_category_columns"),
+        # §1.4 benchmark_family input channels
+        "benchmark_suite": leaf_config.get("benchmark_suite"),
+        "paper_forecast_series": leaf_config.get("paper_forecast_series"),
+        "survey_forecast_series": leaf_config.get("survey_forecast_series"),
+        # §1.4 deterministic_components input channels
+        "break_dates": leaf_config.get("break_dates"),
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),

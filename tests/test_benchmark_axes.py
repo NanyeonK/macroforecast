@@ -37,17 +37,13 @@ def test_benchmark_family_operational_set():
         "ar_fixed_p",
         "ardi",
         "expert_benchmark",
+        "factor_model",
+        "multi_benchmark_suite",
+        "paper_specific_benchmark",
+        "survey_forecast",
     )
     for name in expected_operational:
         assert statuses.get(name) == "operational", f"{name} expected operational, got {statuses.get(name)}"
-
-
-def test_benchmark_family_stub_entries_present():
-    statuses = _by_id(BF)
-    assert "survey_forecast" in statuses
-    allowed = ("registry_only", "future")
-    assert statuses["survey_forecast"] in allowed
-    assert statuses.get("paper_specific_benchmark") in allowed
 
 
 def test_benchmark_window_operational_set():

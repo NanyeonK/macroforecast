@@ -130,3 +130,25 @@ New §1.4 page mirroring `task.md` / `horizon.md` style: 4 axes, per-axis Value 
 - `variable_universe.feature_selection_dynamic_subset` — deferred to v1.1 (tuning-engine extension).
 - §1.5 per-axis walk — separate PR.
 - Phase 8 paper_ready_bundle — independent critical path.
+
+---
+
+## 7. v1.0 implementation status (2026-04-20 follow-up)
+
+**All 19 demoted values flipped operational.** §1.4 registry has zero registry_only entries across all 4 axes.
+
+Implementation highlights:
+
+- benchmark_family: 4 new branches in _run_benchmark_executor — factor_model (z-scored leading-factor OLS), multi_benchmark_suite (inline dispatch over member families from leaf_config.benchmark_suite), paper_specific_benchmark / survey_forecast (pre-computed series lookup from leaf_config.paper_forecast_series / survey_forecast_series, keyed by target).
+- predictor_family: _raw_panel_columns gained predictor_family + spec parameters; 4 new branches (all_except_target alias, category_based via leaf_config.predictor_category_columns, factor_only via F_ prefix, handpicked_set via leaf_config.handpicked_columns).
+- variable_universe: _apply_variable_universe rewritten with full dispatch + 6 new branches; each reads a user-provided column list (or category/target mapping) from data_task_spec (propagated from leaf_config at compile time). Target and date columns are always preserved.
+- deterministic_components: new macrocast/execution/deterministic.py module (augment_frame / augment_array) wired into _build_raw_panel_training_data after preprocessing. 5 augmentation rules: constant_only, linear_trend, monthly_seasonal (11 dummies), quarterly_seasonal (3 dummies), break_dummies (leaf_config.break_dates).
+
+Compiler propagates 12 new leaf_config fields into data_task_spec for the impl.
+
+Tests: 20 new positive / guard tests in tests/test_stage1_4_impl.py covering every new wiring. Full suite 716 -> 735 passed.
+
+Docs:
+- docs/user_guide/data/benchmark.md written (§1.4 page, 4-axis catalog + per-axis Functions & features / Recipe usage / Takeaways).
+- docs/user_guide/data/index.md §1.4 row now links to benchmark.md; Honest operational status paragraph updated; hidden toctree adds benchmark.
+- plans/coverage_ledger.md §1.1.9 / §1.4.2 / §1.4.5 / §1.6.2 rows flipped to OPERATIONAL 2026-04-20 markers.

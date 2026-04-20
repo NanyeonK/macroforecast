@@ -260,8 +260,8 @@ above. Historical rows preserved for archaeology:
 |-------|---------|:---:|:---:|-----------|
 | all_variables | absent | v1.0 | phase-03 | 축 분해 대상 |
 | preselected_core | absent | v1.0 | phase-03 | 축 분해 대상 |
-| category_subset | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — user-provided subset via leaf_config pending impl PR |
-| paper_replication_subset | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — user-provided subset via leaf_config pending impl PR |
+| category_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.variable_universe_category_columns mapping (§1.4 impl) |
+| paper_replication_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.paper_replication_columns list (§1.4 impl) |
 | target_specific_subset | absent | v1.0 | phase-03 | 축 분해 대상 |
 | expert_curated_subset | absent | v1.1 | phase-10 | 큐레이션 필요 |
 | stability_filtered_subset | absent | v1.1 | phase-10 | 안정성 필터 필요 |
@@ -400,13 +400,13 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 |-------|---------|:---:|:---:|-----------|
 | target_lags_only | operational | - | - | 이미 완료 |
 | all_macro_vars | operational | - | - | 이미 완료 |
-| all_except_target | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — column filter (exclude target) pending impl PR |
-| category_based | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — tcode/category mapping pending impl PR |
+| all_except_target | operational | - | - | **OPERATIONAL 2026-04-20** — raw_panel column filter excluding target (§1.4 impl) |
+| category_based | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.predictor_category_columns mapping (§1.4 impl) |
 | financial_only | absent | v1.1 | phase-10 | finance 축 합류 |
 | macro_plus_finance | absent | v1.1 | phase-10 | finance 축 합류 |
 | survey_plus_macro | absent | v1.1 | phase-10 | SPF 합류 |
 | text_plus_macro | absent | v2 | phase-11 | text 합류 |
-| factor_only | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — factor_pca feature_builder subset pending impl PR |
+| factor_only | operational | - | - | **OPERATIONAL 2026-04-20** — F_-prefixed factor column filter (§1.4 impl) |
 | latent_state_plus_lags | absent | v2 | phase-11 | SS 필요 |
 | selected_sparse_set | absent | v1.0 | phase-03 | feature selection 결합 |
 | handpicked_set | registry_only | v1.0 | phase-03 | replication 지원 |
@@ -433,8 +433,8 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | none | operational | - | - | 이미 완료 |
-| constant_only | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — explicit fit_intercept record pending impl PR |
-| linear_trend | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — t column addition pending impl PR |
+| constant_only | operational | - | - | **OPERATIONAL 2026-04-20** — explicit 1s column in X (§1.4 impl) |
+| linear_trend | operational | - | - | **OPERATIONAL 2026-04-20** — _dc_trend column (0..n-1) (§1.4 impl) |
 | seasonal_dummies | absent | v1.0 | phase-03 | 계절 더미 |
 | month_dummies | registry_only | v1.0 | phase-03 | monthly_seasonal 매핑 |
 | quarter_dummies | registry_only | v1.0 | phase-03 | quarterly_seasonal 매핑 |
@@ -508,7 +508,7 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | ar_bic | operational | - | - | 이미 완료 |
 | ar_fixed_p | planned | v1.0 | phase-04 | benchmark 정리 |
 | ardi | registry_only | v1.0 | phase-04 | benchmark 정리 |
-| factor_model | registry_only | v1.0 (§1.4 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.4 cleanup)** — implementation via auxiliary panel pending impl PR |
+| factor_model | operational | - | - | **OPERATIONAL 2026-04-20** — auxiliary panel leading-factor OLS regression (§1.4 impl) |
 | var | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | expert_benchmark | future | v1.1 | phase-10 | 전문가 벤치 |
 | paper_specific_benchmark | registry_only | v1.0 | phase-04 | replication 지원 |

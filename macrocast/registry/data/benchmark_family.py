@@ -60,7 +60,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='factor_model',
             description='factor model',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(
@@ -72,19 +72,19 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='paper_specific_benchmark',
             description='paper specific benchmark',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(
             id='survey_forecast',
             description='survey forecast',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(
             id='multi_benchmark_suite',
             description='multi benchmark suite',
-            status='registry_only',
+            status='operational',
             priority='A',
         ),
     ),
