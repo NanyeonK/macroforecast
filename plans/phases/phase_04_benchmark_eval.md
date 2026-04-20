@@ -67,7 +67,6 @@ BENCHMARK_MODEL_VALUES = {
     "ar_fixed_p":               "AR(p) with fixed p (p required)",
     "ardi":                     "ARDI — AR with diffusion index factors (CLSS baseline)",
     "factor_model":             "static factor regression (n_factors required)",
-    "var":                      "VAR(p) on target + auxiliary series",
     "expert_benchmark":         "user-provided callable (existing API)",
     "paper_specific_benchmark": "named paper baseline (registry lookup)",
     "survey_forecast":          "SPF / Greenbook survey consensus (data required)",
@@ -75,7 +74,7 @@ BENCHMARK_MODEL_VALUES = {
 }
 ```
 
-Status: `operational` for {historical_mean, rolling_mean, random_walk, ar_bic, ar_fixed_p, ardi, factor_model, var, expert_benchmark, multi_benchmark_suite}. `stub` for {paper_specific_benchmark, survey_forecast} (data ingestion이 v0.6 범위 밖).
+Status: `operational` for {historical_mean, rolling_mean, random_walk, ar_bic, ar_fixed_p, ardi, factor_model, expert_benchmark, multi_benchmark_suite}. `stub` for {paper_specific_benchmark, survey_forecast} (data ingestion이 v0.6 범위 밖).
 
 ### 4.2 `benchmark_estimation_window` axis values
 

@@ -58,18 +58,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='B',
         ),
         EnumRegistryEntry(
-            id='future_volatility',
-            description='future volatility',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='future_drawdown',
-            description='future drawdown',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='future_indicator',
             description='future indicator',
             status='registry_only',

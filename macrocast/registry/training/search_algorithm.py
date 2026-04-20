@@ -33,12 +33,6 @@ AXIS_DEFINITION = AxisDefinition(
             status='operational',
             priority='B',
         ),
-        EnumRegistryEntry(
-            id='evolutionary_search',
-            description='evolutionary search',
-            status='future',
-            priority='B',
-        ),
     ),
     compatible_with={},
     incompatible_with={},

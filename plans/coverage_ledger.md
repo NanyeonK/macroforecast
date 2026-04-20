@@ -1,3 +1,32 @@
+## Drops 2026-04-18 (Tier 1-3)
+
+21 values removed from registry entirely. See commit log + PR for rationale. Summary:
+
+**Tier 1 — ADR conflict:**
+- benchmark_family.var (VAR dropped from Phase 5 per memo)
+
+**Tier 2 — scope drift (macro-forecasting package boundary):**
+- dataset_source: blue_chip, google_trends, climate_series, satellite_proxy, high_frequency_surprises
+- horizon_target_construction: future_volatility, future_drawdown
+- economic_metrics: portfolio_SR_if_finance
+
+**Tier 3 — redundant with operational values:**
+- registry_type.external_adapter (same as external_plugin hook)
+- compute_mode.gpu_single/gpu_multi (redundant with execution_backend.local_gpu + distributed_cluster)
+- alignment_rule.first_available (희귀 케이스 자인, last_available 역방향)
+- exogenous_block.strict_exogenous_only (contemporaneous_x_rule.forbid_contemporaneous 중복)
+- forecast_type.recursive_state_space (iterated + state_space model 조합)
+- forecast_type.multi_horizon_joint (mimo / shared_model_multi_h 중복)
+- refit_policy.online_update (warm_start_refit 중복)
+- sequence_framework.multi_resolution_sequence (mixed_frequency_features + sequence 중복)
+- sequence_framework.encoder_decoder_sequence (seq2seq + seq2seq_rnn 중복)
+- search_algorithm.evolutionary_search (genetic_algorithm 중복)
+- convergence_handling.retry_same_hp (동일 HP 재시도는 의미상 무동작)
+
+Registry: 138 axes / 809 values → 138 axes / 788 values.
+
+---
+
 # Coverage Ledger — Part 1 (Layer 0-2)
 
 macrocast v1.0 → v1.1 → v2 coverage map for Meta / Data·Task / Preprocessing axes.
@@ -51,7 +80,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | callable_registry | planned | v1.0 | phase-01 | callable 검증 활성 |
 | custom_plugin | planned | v1.0 | phase-01 | plugin 경로 |
 | user_defined_yaml | registry_only | v1.1 | phase-10 | YAML adapter 승격 |
-| external_adapter | registry_only | v2 | phase-11 | 외부 어댑터는 후순위 |
+| external_adapter | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 
 ### 0.4 reproducibility_mode
 
@@ -84,8 +113,8 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | parallel_by_horizon | operational | - | - | 이미 완료 |
 | parallel_by_oos_date | registry_only | v1.1 | phase-10 | OOS 병렬화 승격 |
 | parallel_by_trial | registry_only | v1.1 | phase-10 | HPO 연계 승격 |
-| gpu_single | registry_only | v2 | phase-11 | NN 축 합류시 |
-| gpu_multi | registry_only | v2 | phase-11 | NN 축 합류시 |
+| gpu_single | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| gpu_multi | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | distributed_cluster | registry_only | v2 | phase-11 | 분산 런타임 필요 |
 
 ---
@@ -124,13 +153,13 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | world_bank | registry_only | v1.1 | phase-10 | World Bank adapter |
 | wrds_macro_finance | registry_only | v1.0 | phase-03 | WRDS 연결은 선확보 |
 | survey_spf | registry_only | v1.1 | phase-10 | SPF adapter |
-| blue_chip | future | v2 | phase-11 | 수작업 수집 필요 |
+| blue_chip | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | market_prices | future | v1.1 | phase-10 | finance 축 확장 |
-| high_frequency_surprises | future | v2 | phase-11 | event study 필요 |
-| google_trends | future | post-v2 | phase-11 | exotic source |
+| high_frequency_surprises | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| google_trends | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | news_text | future | post-v2 | phase-11 | text pipeline 필요 |
-| climate_series | future | post-v2 | phase-11 | exotic source |
-| satellite_proxy | future | post-v2 | phase-11 | exotic source |
+| climate_series | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| satellite_proxy | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | custom_csv | planned | v1.0 | phase-03 | user loader |
 | custom_parquet | planned | v1.0 | phase-03 | user loader |
 | custom_duckdb | absent | v1.1 | phase-10 | registry 등록 필요 |
@@ -176,7 +205,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | end_of_period | operational | - | - | 이미 완료 |
 | average_within_period | registry_only | v1.0 | phase-03 | 주기 변환 필요 |
 | last_available | planned | v1.0 | phase-03 | real-time 관련 |
-| first_available | registry_only | v1.1 | phase-10 | 희귀 케이스 |
+| first_available | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | quarter_to_month_repeat | registry_only | v1.1 | phase-10 | mixed-freq 전단계 |
 | month_to_quarter_average | planned | v1.0 | phase-03 | 월→분기 집계 |
 | month_to_quarter_last | planned | v1.0 | phase-03 | 월→분기 집계 |
@@ -292,8 +321,8 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | iterated | planned | v1.1 | phase-10 | 다단 예측 합류 |
 | dirrec | registry_only | v1.1 | phase-10 | 다단 예측 합류 |
 | mimo | future | v2 | phase-11 | multi-output 결합 |
-| multi_horizon_joint | future | v2 | phase-11 | joint horizon |
-| recursive_state_space | future | v2 | phase-11 | SS framework 필요 |
+| multi_horizon_joint | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| recursive_state_space | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | seq2seq | future | v2 | phase-11 | NN 축 필요 |
 
 ### 1.3.3 forecast_object
@@ -322,8 +351,8 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | annualized_growth_to_h | planned | v1.0 | phase-03 | 연율화 |
 | realized_future_average | registry_only | v1.1 | phase-10 | 실현 평균 |
 | future_sum | registry_only | v1.1 | phase-10 | 누적 합 |
-| future_volatility | future | v2 | phase-11 | 변동성 타겟 |
-| future_drawdown | future | v2 | phase-11 | drawdown 타겟 |
+| future_volatility | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| future_drawdown | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | future_indicator | registry_only | v1.0 | phase-04 | direction 과 정합 |
 
 ### 1.3.5 overlap_handling
@@ -345,7 +374,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | panel_target | future | v2 | phase-11 | panel_forecasting_run 필요 |
 | state_target | registry_only | v2 | phase-11 | SS framework 필요 |
 | factor_target | future | v2 | phase-11 | factor 추출 결합 |
-| latent_target | future | deferred-indef | - | SS 없이 불가 |
+| latent_target | future | v2 | phase-11 | SS framework가 Phase 11에 들어오면 동반 구현 |
 | constructed_target | registry_only | v1.1 | phase-10 | 합성 타겟 |
 | classification_target | registry_only | v1.0 | phase-04 | direction/event 와 정합 |
 
@@ -405,7 +434,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | none | operational | - | - | 이미 완료 |
-| strict_exogenous_only | registry_only | v1.0 | phase-03 | 정책 플래그 |
+| strict_exogenous_only | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | endogenous_allowed | operational | - | - | 이미 완료 |
 | instrumented_exogenous | absent | v2 | phase-11 | IV 필요 |
 | policy_shock_block | absent | v2 | phase-11 | 정책 충격 라벨 |
@@ -463,7 +492,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | ar_fixed_p | planned | v1.0 | phase-04 | benchmark 정리 |
 | ardi | registry_only | v1.0 | phase-04 | benchmark 정리 |
 | factor_model | registry_only | v1.0 | phase-04 | benchmark 정리 |
-| var | future | v1.1 | phase-10 | VAR 합류 |
+| var | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | expert_benchmark | future | v1.1 | phase-10 | 전문가 벤치 |
 | paper_specific_benchmark | registry_only | v1.0 | phase-04 | replication 지원 |
 
@@ -810,7 +839,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | refit_every_k_steps | operational | - | - | 이미 완료 |
 | fit_once_predict_many | operational | - | - | 이미 완료 |
 | warm_start_refit | registry_only | v1.0 | phase-03 | warm-start path 활성화 |
-| online_update | future | v2 | phase-11 | online learning 전용 API 필요 |
+| online_update | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | partial_fit | absent | v2 | phase-11 | sklearn partial_fit 어댑터 필요 |
 
 #### 3.1.3 data_rich_mode
@@ -830,8 +859,8 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | not_sequence | operational | - | - | 이미 완료 |
 | fixed_lookback_sequence | future | v1.1 | phase-10 | deep 모델 활성화 시 |
 | variable_lookback_sequence | future | v1.1 | phase-10 | 변동 lookback 래퍼 필요 |
-| multi_resolution_sequence | future | v2 | phase-11 | MIDAS/다주기 합류 |
-| encoder_decoder_sequence | future | v2 | phase-11 | seq2seq 계열 전용 |
+| multi_resolution_sequence | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| encoder_decoder_sequence | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 
 #### 3.1.5 horizon_modelization
 
@@ -1054,7 +1083,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | random_search | operational | - | - | 이미 완료 |
 | bayesian_optimization | operational | - | - | 이미 완료 |
 | genetic_algorithm | operational | - | - | 이미 완료 |
-| evolutionary_search | future | v2 | phase-11 | 진화탐색 승격 |
+| evolutionary_search | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | hyperband | absent | v1.1 | phase-10 | hyperband 도입 |
 | asha | absent | v1.1 | phase-10 | ASHA 스케줄러 |
 | successive_halving | absent | v1.1 | phase-10 | SH 도입 |
@@ -1094,7 +1123,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | continuous_box | planned | v1.0 | phase-03 | BO/random 활성 |
 | log_uniform | planned | v1.0 | phase-03 | regularization 경로 |
 | categorical | operational | - | - | 이미 완료 |
-| conditional_space | registry_only | post-v2 | - | 조건부 공간 후순위 |
+| conditional_space | registry_only | v2 | phase-11 | HP infra 완성 시점에 함께 구현 |
 | hierarchical_space | absent | post-v2 | - | 계층 공간 후순위 |
 
 #### 3.5.5 seed_policy
@@ -1120,7 +1149,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| retry_same_hp | registry_only | v1.1 | phase-10 | 재시도 정책 |
+| retry_same_hp | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | retry_new_seed | registry_only | v1.1 | phase-10 | seed 재시도 |
 | clip_grad_and_retry | future | v1.1 | phase-10 | deep 전용 gradient clip |
 | fallback_to_safe_hp | operational | - | - | 이미 완료 |
@@ -1279,7 +1308,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 |-------|---------|:---:|:---:|-----------|
 | utility_gain | future | v1.1 | phase-10 | 경제 지표 승격 |
 | certainty_equivalent | future | v1.1 | phase-10 | CE 계산 |
-| portfolio_SR_if_finance | future | v2 | phase-11 | 금융 전용 |
+| portfolio_SR_if_finance | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | cost_sensitive_loss | future | v1.1 | phase-10 | cost-sensitive |
 | policy_loss | future | v2 | phase-11 | policy eval |
 | turning_point_value | future | v2 | phase-11 | turning-point 경제지 |

@@ -28,12 +28,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='A',
         ),
         EnumRegistryEntry(
-            id='first_available',
-            description='first available',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='quarter_to_month_repeat',
             description='quarter to month repeat',
             status='registry_only',

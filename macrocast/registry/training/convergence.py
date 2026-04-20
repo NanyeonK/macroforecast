@@ -10,12 +10,6 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy='fixed',
     entries=(
         EnumRegistryEntry(
-            id='retry_same_hp',
-            description='retry same hp',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='retry_new_seed',
             description='retry new seed',
             status='registry_only',

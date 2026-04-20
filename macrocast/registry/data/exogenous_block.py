@@ -16,12 +16,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='A',
         ),
         EnumRegistryEntry(
-            id='strict_exogenous_only',
-            description='strict exogenous only',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='endogenous_allowed',
             description='endogenous allowed',
             status='operational',

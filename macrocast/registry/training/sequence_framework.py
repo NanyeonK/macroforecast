@@ -27,18 +27,6 @@ AXIS_DEFINITION = AxisDefinition(
             status='future',
             priority='B',
         ),
-        EnumRegistryEntry(
-            id='multi_resolution_sequence',
-            description='multi resolution sequence',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='encoder_decoder_sequence',
-            description='encoder decoder sequence',
-            status='future',
-            priority='B',
-        ),
     ),
     compatible_with={},
     incompatible_with={},

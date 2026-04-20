@@ -231,10 +231,6 @@ def _dispatch_single(
         raise NotImplementedError(
             f"benchmark_family {family!r} is registered as a stub"
         )
-    if family == "var":
-        raise NotImplementedError(
-            "var benchmark is registered as future status and not implemented in v0.6"
-        )
     if family == "multi_benchmark_suite":
         raise BenchmarkResolverError(
             "multi_benchmark_suite must be dispatched via resolve_benchmark_suite"

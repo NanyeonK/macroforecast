@@ -33,12 +33,6 @@ AXIS_DEFINITION = AxisDefinition(
             status='registry_only',
             priority='B',
         ),
-        EnumRegistryEntry(
-            id='online_update',
-            description='online update',
-            status='future',
-            priority='B',
-        ),
     ),
     compatible_with={},
     incompatible_with={},

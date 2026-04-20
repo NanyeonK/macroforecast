@@ -78,7 +78,6 @@ def test_registry_loader_discovers_registry_type_meta_axis() -> None:
         "callable_registry",
         "custom_plugin",
         "user_defined_yaml",
-        "external_adapter",
     )
 
 
@@ -145,8 +144,6 @@ def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
         "parallel_by_horizon",
         "parallel_by_oos_date",
         "parallel_by_trial",
-        "gpu_single",
-        "gpu_multi",
         "distributed_cluster",
     )
 

@@ -34,18 +34,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='B',
         ),
         EnumRegistryEntry(
-            id='multi_horizon_joint',
-            description='multi horizon joint',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='recursive_state_space',
-            description='recursive state space',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='seq2seq',
             description='seq2seq',
             status='future',

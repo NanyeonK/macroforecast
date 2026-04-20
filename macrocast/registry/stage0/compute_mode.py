@@ -9,8 +9,6 @@ COMPUTE_MODE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="parallel_by_horizon", description="Parallel execution across horizons.", status="operational", priority="A"),
     EnumRegistryEntry(id="parallel_by_oos_date", description="Parallel execution across out-of-sample dates.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="parallel_by_trial", description="Parallel execution across trials.", status="registry_only", priority="B"),
-    EnumRegistryEntry(id="gpu_single", description="Single-GPU execution.", status="registry_only", priority="B"),
-    EnumRegistryEntry(id="gpu_multi", description="Multi-GPU execution.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="distributed_cluster", description="Distributed cluster execution.", status="registry_only", priority="B"),
 )
 

@@ -64,12 +64,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='B',
         ),
         EnumRegistryEntry(
-            id='var',
-            description='var',
-            status='future',
-            priority='A',
-        ),
-        EnumRegistryEntry(
             id='expert_benchmark',
             description='expert benchmark',
             status='operational',

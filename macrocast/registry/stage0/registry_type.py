@@ -9,7 +9,6 @@ REGISTRY_TYPE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="callable_registry", description="Callable-signature validated registry.", status="operational", priority="A"),
     EnumRegistryEntry(id="custom_plugin", description="Plugin-backed registry.", status="operational", priority="A"),
     EnumRegistryEntry(id="user_defined_yaml", description="User-supplied YAML schema registry.", status="registry_only", priority="B"),
-    EnumRegistryEntry(id="external_adapter", description="Externally bridged adapter registry.", status="registry_only", priority="B"),
 )
 
 AXIS_DEFINITION = AxisDefinition(
