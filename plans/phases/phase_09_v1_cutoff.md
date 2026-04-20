@@ -88,7 +88,7 @@ __all__ = [
 `docs/migration/v0_to_v1.md`에 명문화할 3개 breaking change:
 
 1. **`stat_test` 1축 → 8축** (Phase 2): 기존 `stat_test: dm_test` 단일 값 → layer별 8 axis 분리
-2. **Recipe YAML `sweep_axes` 의미 변경** (Phase 1): 이전에는 parsing만 되고 무시되었음. 이제는 자동으로 `controlled_variation_study`로 해석되어 sweep 실행
+2. **Recipe YAML `sweep_axes` 의미 변경** (Phase 1): 이전에는 parsing만 되고 무시되었음. 이제는 자동으로 `controlled_variation`로 해석되어 sweep 실행
 3. **`execute_recipe()` 시그니처 확장** (Phase 0): `cache_root` optional 파라미터 추가 (backward-compat이지만 시그니처 변화)
 
 ## 5. File Layout

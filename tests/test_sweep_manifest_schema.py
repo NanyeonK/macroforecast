@@ -24,7 +24,7 @@ def _minimal_manifest() -> dict:
     )
     return build_study_manifest(
         study_id="sha256-abcd1234abcd1234",
-        study_mode="controlled_variation_study",
+        research_design="controlled_variation",
         parent_recipe_id="rt",
         parent_recipe_dict={"recipe_id": "rt", "path": {}},
         axes_swept=("3_training.model_family",),
@@ -100,7 +100,7 @@ def test_summary_counts_match_variants() -> None:
     ]
     manifest = build_study_manifest(
         study_id="sha256-test",
-        study_mode="controlled_variation_study",
+        research_design="controlled_variation",
         parent_recipe_id="rt",
         parent_recipe_dict={"recipe_id": "rt", "path": {}},
         axes_swept=("a",),

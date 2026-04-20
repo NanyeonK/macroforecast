@@ -7,7 +7,7 @@ from .normalize import (
     normalize_comparison_contract,
     normalize_fixed_design,
     normalize_replication_input,
-    normalize_study_mode,
+    normalize_research_design,
     normalize_varying_design,
 )
 from .types import ComparisonContract, FixedDesign, ReplicationInput, DesignFrame, VaryingDesign
@@ -16,14 +16,14 @@ from .validate import validate_stage0_frame
 
 def build_design_frame(
     *,
-    study_mode: str,
+    research_design: str,
     fixed_design: FixedDesign | dict,
     comparison_contract: ComparisonContract | dict,
     varying_design: VaryingDesign | dict | None = None,
     replication_input: ReplicationInput | dict | None = None,
     experiment_unit: str | None = None,
 ) -> DesignFrame:
-    normalized_study_mode = normalize_study_mode(study_mode)
+    normalized_research_design = normalize_research_design(research_design)
     normalized_fixed_design = normalize_fixed_design(fixed_design)
     normalized_comparison_contract = normalize_comparison_contract(comparison_contract)
     normalized_varying_design = normalize_varying_design(varying_design)
@@ -32,16 +32,16 @@ def build_design_frame(
     resolved_experiment_unit = experiment_unit
     if resolved_experiment_unit is None:
         provisional_design_shape = derive_design_shape(
-            normalized_study_mode,
+            normalized_research_design,
             normalized_varying_design,
         )
         provisional_execution_posture = derive_execution_posture(
-            normalized_study_mode,
+            normalized_research_design,
             provisional_design_shape,
             normalized_replication_input,
         )
         resolved_experiment_unit = derive_experiment_unit(
-            normalized_study_mode,
+            normalized_research_design,
             provisional_execution_posture,
             normalized_fixed_design.forecast_task,
         )
@@ -60,19 +60,19 @@ def build_design_frame(
         pass
 
     design_shape = derive_design_shape(
-        normalized_study_mode,
+        normalized_research_design,
         normalized_varying_design,
         resolved_experiment_unit,
     )
     execution_posture = derive_execution_posture(
-        normalized_study_mode,
+        normalized_research_design,
         design_shape,
         normalized_replication_input,
         resolved_experiment_unit,
     )
 
     stage0 = DesignFrame(
-        study_mode=normalized_study_mode,
+        research_design=normalized_research_design,
         fixed_design=normalized_fixed_design,
         comparison_contract=normalized_comparison_contract,
         varying_design=normalized_varying_design,
@@ -109,7 +109,7 @@ def design_summary(stage0: DesignFrame) -> str:
     models = ", ".join(stage0.varying_design.model_families) or "none"
     horizons = ", ".join(stage0.varying_design.horizons) or "none"
     return (
-        f"study_mode={stage0.study_mode}; "
+        f"research_design={stage0.research_design}; "
         f"experiment_unit={stage0.experiment_unit}; "
         f"dataset={stage0.fixed_design.dataset_adapter}; "
         f"route={resolve_route_owner(stage0)}; "

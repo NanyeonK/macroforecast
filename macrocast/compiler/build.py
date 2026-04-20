@@ -104,12 +104,12 @@ def _rule_experiment_unit_default(
             return selection_map[name].selected_values[0]
         return default
 
-    study_mode = _sv("study_mode", "single_path_benchmark_study")
+    research_design = _sv("research_design", "single_path_benchmark")
     task = leaf_config.get("task", "single_target_point_forecast")
     model_sel = selection_map.get("model_family")
     feature_sel = selection_map.get("feature_builder")
     return derive_experiment_unit_default(
-        study_mode=study_mode or "single_path_benchmark_study",
+        research_design=research_design or "single_path_benchmark",
         task=task,
         model_axis_mode=model_sel.selection_mode if model_sel else "fixed",
         feature_axis_mode=feature_sel.selection_mode if feature_sel else "fixed",
@@ -337,7 +337,7 @@ def _build_tree_context(
         reproducibility_mode = next((selection.selected_values[0] for selection in selections if selection.axis_name == "reproducibility_mode"), "best_effort")
     failure_policy = next((selection.selected_values[0] for selection in selections if selection.axis_name == "failure_policy"), "fail_fast")
     return {
-        "study_mode": stage0.study_mode,
+        "research_design": stage0.research_design,
         "design_shape": stage0.design_shape,
         "execution_posture": stage0.execution_posture,
         "experiment_unit": stage0.experiment_unit,
@@ -496,7 +496,7 @@ def _build_stage0_and_recipe(
     selection_map: dict[str, AxisSelection],
     leaf_config: dict[str, Any],
 ):
-    study_mode = _selection_value(selection_map, "study_mode")
+    research_design = _selection_value(selection_map, "research_design")
     dataset = _selection_value(selection_map, "dataset")
     information_set_type = _selection_value(selection_map, "information_set_type")
     task = _selection_value(selection_map, "task")
@@ -521,7 +521,7 @@ def _build_stage0_and_recipe(
             raise CompileValidationError("single-target recipes require leaf_config.target")
 
     derived_experiment_unit = derive_experiment_unit_default(
-        study_mode=study_mode,
+        research_design=research_design,
         task=task,
         model_axis_mode=model_axis.selection_mode,
         feature_axis_mode=feature_axis.selection_mode,
@@ -558,7 +558,7 @@ def _build_stage0_and_recipe(
     }.get(information_set_type, information_set_type)
 
     stage0 = build_design_frame(
-        study_mode=study_mode,
+        research_design=research_design,
         experiment_unit=experiment_unit if experiment_unit_explicit else None,
         fixed_design={
             "dataset_adapter": dataset,
@@ -654,10 +654,10 @@ def _execution_status(
         warnings.append(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )
-    study_mode = _selection_value(selection_map, "study_mode", default="single_path_benchmark_study")
-    if study_mode in {"orchestrated_bundle_study"}:
+    research_design = _selection_value(selection_map, "research_design", default="single_path_benchmark")
+    if research_design in {"orchestrated_bundle"}:
         warnings.append(
-            f"study_mode={study_mode!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
+            f"research_design={research_design!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
         )
     experiment_unit = _selection_value(selection_map, "experiment_unit", default="single_target_single_model") if "experiment_unit" in selection_map else "single_target_single_model"
     if experiment_unit in {"benchmark_suite"}:
@@ -727,7 +727,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
     selections = _build_axis_selections(recipe_dict)
     _ensure_unique_axis_selections(selections)
     selection_map = _selection_map(selections)
-    required_axes = {"study_mode", "dataset", "information_set_type", "task", "framework", "benchmark_family", "model_family", "feature_builder"}
+    required_axes = {"research_design", "dataset", "information_set_type", "task", "framework", "benchmark_family", "model_family", "feature_builder"}
     missing_axes = sorted(axis for axis in required_axes if axis not in selection_map)
     if missing_axes:
         raise CompileValidationError(f"recipe missing required axes: {missing_axes}")

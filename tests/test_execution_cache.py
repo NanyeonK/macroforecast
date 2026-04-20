@@ -11,7 +11,7 @@ FIXTURE = Path("tests/fixtures/fred_md_ar_sample.csv")
 
 def _stage0():
     return build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

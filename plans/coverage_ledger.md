@@ -69,9 +69,9 @@ consumed it).
 | hierarchical_forecasting_run | future | v2 | phase-11 | hierarchy reconciliation 필요 |
 | panel_forecasting_run | future | v2 | phase-11 | panel data executor 필요 |
 | state_space_run | future | v2 | phase-11 | SS framework 필요 |
-| replication_recipe | registry_only | v1.0 | phase-01 | replication_override_study 와 정합 |
+| replication_recipe | registry_only | v1.0 | phase-01 | replication_override 와 정합 |
 | benchmark_suite | planned | v1.0 | phase-04 | benchmark 축 정리와 동반 |
-| ablation_study | planned | v1.0 | phase-01 | controlled_variation_study 와 병행 |
+| ablation_study | planned | v1.0 | phase-01 | controlled_variation 와 병행 |
 
 ### 0.2 axis_type
 

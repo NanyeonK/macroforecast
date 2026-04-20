@@ -9,7 +9,7 @@ from macrocast import build_preprocess_contract, build_recipe_spec, build_design
 
 def _stage0():
     return build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

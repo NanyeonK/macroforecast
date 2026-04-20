@@ -14,9 +14,9 @@ from macrocast.design import (
 )
 
 
-def test_build_stage0_frame_single_path_benchmark_study() -> None:
+def test_build_stage0_frame_single_path_benchmark() -> None:
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design=FixedDesign(
             dataset_adapter="fred_md",
             information_set="revised_monthly",
@@ -43,7 +43,7 @@ def test_build_stage0_frame_single_path_benchmark_study() -> None:
 
 def test_build_stage0_frame_bundle_route() -> None:
     stage0 = build_design_frame(
-        study_mode="orchestrated_bundle_study",
+        research_design="orchestrated_bundle",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -68,7 +68,7 @@ def test_build_stage0_frame_bundle_route() -> None:
 
 def test_check_stage0_completeness_rejects_empty_model_surface() -> None:
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -91,7 +91,7 @@ def test_check_stage0_completeness_rejects_empty_model_surface() -> None:
 
 def test_stage0_summary_contains_core_fields() -> None:
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -111,7 +111,7 @@ def test_stage0_summary_contains_core_fields() -> None:
 
     summary = design_summary(stage0)
 
-    assert "single_path_benchmark_study" in summary
+    assert "single_path_benchmark" in summary
     assert "fred_md" in summary
     assert "single_run_recipe" in summary
 
@@ -119,7 +119,7 @@ def test_stage0_summary_contains_core_fields() -> None:
 
 def test_build_stage0_frame_explicit_experiment_unit_controls_wrapper_route() -> None:
     stage0 = build_design_frame(
-        study_mode="orchestrated_bundle_study",
+        research_design="orchestrated_bundle",
         experiment_unit="benchmark_suite",
         fixed_design={
             "dataset_adapter": "fred_md",

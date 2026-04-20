@@ -60,7 +60,7 @@ def _synthetic_manifest(
     manifest = {
         "schema_version": "1.0",
         "study_id": "synth-study-xyz",
-        "study_mode": "controlled_variation_study",
+        "research_design": "controlled_variation",
         "parent_recipe_id": "synth-parent",
         "parent_recipe_dict": {},
         "axes_swept": ["2_preprocessing.scaling_policy", "3_training.model_family"],
@@ -126,7 +126,7 @@ def test_manual_anova_matches_engine(tmp_path: Path):
             {
                 "schema_version": "1.0",
                 "study_id": "manual",
-                "study_mode": "x",
+                "research_design": "x",
                 "parent_recipe_id": "p",
                 "parent_recipe_dict": {},
                 "axes_swept": ["2_preprocessing.scaling_policy"],

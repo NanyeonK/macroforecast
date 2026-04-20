@@ -37,7 +37,7 @@
 | 08.3 | Ranking rule executor | P1 | ~250 | `macrocast/output/ranking.py` (신규) | `test_ranking_stability.py` green |
 | 08.4 | LaTeX table generator | P1 | ~300 | `macrocast/output/latex_tables.py` (신규) | `test_latex_compiles.py` green (pdflatex 있으면) |
 | 08.5 | Regime evaluation aggregation | P1 | ~250 | `macrocast/execution/evaluation/regime.py` (신규) | `test_regime_aggregation.py` green |
-| 08.6 | `wrapper_handoff` consumer wire | P2 | ~100 | `macrocast/output/bundle.py` (consumer), `macrocast/execution/sweep_runner.py` (produce) | orchestrated_bundle_study E2E |
+| 08.6 | `wrapper_handoff` consumer wire | P2 | ~100 | `macrocast/output/bundle.py` (consumer), `macrocast/execution/sweep_runner.py` (produce) | orchestrated_bundle E2E |
 | 08.7 | Phase 8 tests | **P0** | ~500 | `tests/test_bundle_deterministic.py`, `tests/test_ranking_stability.py`, `tests/test_latex_compiles.py`, `tests/test_regime_aggregation.py` | 4개 test 전부 green |
 | 08.8 | Phase 8 docs | P1 | ~350 | `docs/user_guide/paper_ready_bundle.md`, `docs/examples/v1_flagship_transformer_horse_race.md`, `docs/api/bundle.md` | RTD build green |
 
@@ -205,7 +205,7 @@ def aggregate_regime_metrics(
 - [ ] 7 ranking_rule 전부 deterministic
 - [ ] 3 main figure (forest / waterfall / heatmap) + 3 main table 생성
 - [ ] `study_regime_summary.json`이 schema 준수 (NBER / volatility / user-break 3 source)
-- [ ] `wrapper_handoff` payload가 orchestrated_bundle_study에서 `emit_paper_ready_bundle`로 흐름
+- [ ] `wrapper_handoff` payload가 orchestrated_bundle에서 `emit_paper_ready_bundle`로 흐름
 - [ ] 공개 API export: `emit_paper_ready_bundle`, `BundleSpec`, `PaperReadyBundle`, `rank_variants`, `aggregate_regime_metrics`
 - [ ] Phase 8 docs 3종 RTD latest build green
 - [ ] 기존 test + Phase 0-7 test + Phase 8 신규 test 전부 green

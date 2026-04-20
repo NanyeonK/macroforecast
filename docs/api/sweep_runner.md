@@ -34,7 +34,7 @@ execute_sweep(
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
     fail_fast: bool = False,
-    study_mode: str = "controlled_variation_study",
+    research_design: str = "controlled_variation",
     extra_provenance: dict | None = None,
 ) -> SweepResult
 ```

@@ -13,7 +13,7 @@ macrocast은 FRED-MD/QD/SD 기반 공정·재현가능·확장가능한 macro fo
 
 - 소스 ~12,000 LOC, 테스트 291 green
 - Registry 125 axes / 836 values / 224 operational
-- End-to-end 실행 가능: `study_mode = single_path_benchmark_study` **하나뿐**
+- End-to-end 실행 가능: `research_design = single_path_benchmark` **하나뿐**
 - Sphinx + Read the Docs 배포 파이프라인 가동 중
 
 Package의 stated identity — **horse race research benchmark** — 가 아직 실행 불가능합니다. 이 roadmap은 그 gap을 11 phase로 해소합니다.

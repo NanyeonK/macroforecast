@@ -27,7 +27,7 @@ Schema v1 (JSON):
 {
   "schema_version": "1.0",
   "study_id": "sha256-of-plan-canonical",
-  "study_mode": "controlled_variation_study",
+  "research_design": "controlled_variation",
   "created_at_utc": "2026-04-17T10:30:00Z",
   "parent_recipe": { "...": "RecipeSpec (canonical form)" },
   "sweep_plan": {

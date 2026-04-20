@@ -1,6 +1,6 @@
-# controlled_variation_study
+# controlled_variation
 
-`controlled_variation_study` is the study mode that macrocast's horse
+`controlled_variation` is the study mode that macrocast's horse
 race sweep runner was designed for. It holds every design decision
 constant except the axes you explicitly sweep, so any difference in
 per-variant forecast performance is attributable to those axes.
@@ -24,7 +24,7 @@ search engine.
 ```yaml
 0_meta:
   fixed_axes:
-    study_mode: controlled_variation_study
+    research_design: controlled_variation
 ```
 
 This is now operational in v0.3 (promoted from `registry_only` in
@@ -65,7 +65,7 @@ runner.
 
 ## Phase 6 specialisations
 
-Two wrapper patterns on top of `controlled_variation_study` landed in
+Two wrapper patterns on top of `controlled_variation` landed in
 v0.8:
 
 - `execute_ablation` — baseline + N drop-one variants (one per

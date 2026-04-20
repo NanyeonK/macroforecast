@@ -10,7 +10,7 @@
 
 The design frame fixes the execution language of a macrocast study before later registries or recipe content are expanded. It answers these questions first:
 
-- what kind of study is this? (`study_mode`)
+- what kind of study is this? (`research_design`)
 - what recipe shape is this? (`experiment_unit`)
 - how does each axis participate? (`axis_type`)
 - what happens on failure? (`failure_policy`)
@@ -189,9 +189,9 @@ path:
   - `requires_wrapper: bool`
   - optional `runner: str | None` — dotted path to the dedicated runner function.
 - **`get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry`** — lookup by id.
-- **`experiment_unit_options_for_wizard(study_mode, task)`** — returns operational options only (registry_only / future values are filtered). Use from CLI wizards / UI to offer users the currently usable shapes.
-- **`derive_experiment_unit_default(study_mode, task, model_axis_mode, feature_axis_mode, wrapper_family)`** — chooses the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (§0.1 `derived_axes`).
-- **`derive_experiment_unit(study_mode, execution_posture, forecast_task)`** in `macrocast.design.derive` — the framework-level hook used by `build_design_frame`. Honours `execution_posture` (wrapper / replication) first, then falls back to multi_target_shared_design for multi-target, model_grid for controlled_variation_study, and single_target_single_model otherwise.
+- **`experiment_unit_options_for_wizard(research_design, task)`** — returns operational options only (registry_only / future values are filtered). Use from CLI wizards / UI to offer users the currently usable shapes.
+- **`derive_experiment_unit_default(research_design, task, model_axis_mode, feature_axis_mode, wrapper_family)`** — chooses the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (§0.1 `derived_axes`).
+- **`derive_experiment_unit(research_design, execution_posture, forecast_task)`** in `macrocast.design.derive` — the framework-level hook used by `build_design_frame`. Honours `execution_posture` (wrapper / replication) first, then falls back to multi_target_shared_design for multi-target, model_grid for controlled_variation, and single_target_single_model otherwise.
 - **Compiler integration**: `compile_recipe_dict()` auto-derives `experiment_unit` when not explicit; conflict-checks explicit declarations against the derived default; emits a `wrapper_handoff` payload when `route_owner == "wrapper"`. Values `benchmark_suite` convert the compile status to `representable_but_not_executable` (wrapper runner pending).
 
 ### Recipe usage
@@ -232,7 +232,7 @@ Explicit (ablation / replication paths):
 path:
   0_meta:
     fixed_axes:
-      study_mode: controlled_variation_study
+      research_design: controlled_variation
       experiment_unit: ablation_study
   # …
 # Run via execute_ablation(), not execute_recipe().
@@ -470,11 +470,11 @@ See also: `docs/dev/reproducibility_policy.md`, `macrocast.execution.seed_policy
 
 ---
 
-## 0.6 `study_mode`
+## 0.6 `research_design`
 
-**Top-level research identity** of the study. Determines which execution route the compiler produces and which runner the user invokes. Default is `single_path_benchmark_study`.
+**Top-level research identity** of the study. Determines which execution route the compiler produces and which runner the user invokes. Default is `single_path_benchmark`.
 
-Default recorded on study manifests (when swept via `execute_sweep`) is `controlled_variation_study`.
+Default recorded on study manifests (when swept via `execute_sweep`) is `controlled_variation`.
 
 ### Value catalog
 
@@ -487,41 +487,41 @@ Operational values are subdivided by **how they are executed**:
 
 | Value | Status | Execution form | Compile status | Runner |
 |---|---|---|---|---|
-| `single_path_benchmark_study` | operational | direct | executable | `execute_recipe` |
-| `controlled_variation_study` | operational | sweep runner | executable | `execute_sweep` (internally compiles each variant to single-path) |
-| `replication_override_study` | operational | dedicated runner | executable (since 2026-04-20) | `execute_replication` (applies overrides, compiles, runs via `execute_recipe`) |
-| `orchestrated_bundle_study` | operational | wrapper handoff (pending) | representable_but_not_executable | Phase 8 `PaperReadyBundle` consumer — not shipped yet |
+| `single_path_benchmark` | operational | direct | executable | `execute_recipe` |
+| `controlled_variation` | operational | sweep runner | executable | `execute_sweep` (internally compiles each variant to single-path) |
+| `replication_override` | operational | dedicated runner | executable (since 2026-04-20) | `execute_replication` (applies overrides, compiles, runs via `execute_recipe`) |
+| `orchestrated_bundle` | operational | wrapper handoff (pending) | representable_but_not_executable | Phase 8 `PaperReadyBundle` consumer — not shipped yet |
 
 ### Which one to pick
 
-- **You are running one recipe against a baseline** → `single_path_benchmark_study`. Default, no need to set explicitly.
-- **You are sweeping an axis (horse race)** → `controlled_variation_study`. Required by `execute_sweep`.
-- **You are reproducing a prior study with locked overrides** → `replication_override_study`. Then call `execute_replication(source_recipe_dict=..., overrides=...)`.
-- **You are bundling multiple recipes for paper artifact (Phase 8)** → `orchestrated_bundle_study`. Compile-only today; the consumer ships in Phase 8 (`PaperReadyBundle`).
+- **You are running one recipe against a baseline** → `single_path_benchmark`. Default, no need to set explicitly.
+- **You are sweeping an axis (horse race)** → `controlled_variation`. Required by `execute_sweep`.
+- **You are reproducing a prior study with locked overrides** → `replication_override`. Then call `execute_replication(source_recipe_dict=..., overrides=...)`.
+- **You are bundling multiple recipes for paper artifact (Phase 8)** → `orchestrated_bundle`. Compile-only today; the consumer ships in Phase 8 (`PaperReadyBundle`).
 
 ### Functions & features
 
-- `DEFAULT_STUDY_MODE = "controlled_variation_study"` in `macrocast.execution.sweep_runner` — the value recorded on study manifests by default when `execute_sweep` is invoked without an override.
-- `macrocast.design.normalize.normalize_study_mode(value)` — rejects unknown values with `DesignValidationError`. The 4 accepted values live in `_ALLOWED_STUDY_MODES`.
-- `macrocast.design.derive.derive_execution_posture(study_mode, design_shape, replication_input, experiment_unit)`:
-  - `replication_override_study` → `replication_locked_plan`
-  - `orchestrated_bundle_study` → `wrapper_bundle_plan`
+- `DEFAULT_RESEARCH_DESIGN = "controlled_variation"` in `macrocast.execution.sweep_runner` — the value recorded on study manifests by default when `execute_sweep` is invoked without an override.
+- `macrocast.design.normalize.normalize_research_design(value)` — rejects unknown values with `DesignValidationError`. The 4 accepted values live in `_ALLOWED_RESEARCH_DESIGNS`.
+- `macrocast.design.derive.derive_execution_posture(research_design, design_shape, replication_input, experiment_unit)`:
+  - `replication_override` → `replication_locked_plan`
+  - `orchestrated_bundle` → `wrapper_bundle_plan`
   - otherwise driven by design_shape
 - `macrocast.compiler.build.compile_recipe_dict()`:
-  - Rejects `study_mode` that is not one of the 4 registered values.
-  - Emits `representable_but_not_executable` + wrapper-route warning for `orchestrated_bundle_study` (until Phase 8 consumer lands).
-  - `replication_override_study` now passes as `executable` (was rejected until 2026-04-20 cleanup).
-- `macrocast.execution.sweep_runner.execute_sweep(..., study_mode=...)` — parameter; study manifest records the choice.
-- `macrocast.studies.replication.execute_replication(...)` — dedicated runner for `replication_override_study`. Accepts source recipe with any study_mode; applies overrides; compiles and runs.
+  - Rejects `research_design` that is not one of the 4 registered values.
+  - Emits `representable_but_not_executable` + wrapper-route warning for `orchestrated_bundle` (until Phase 8 consumer lands).
+  - `replication_override` now passes as `executable` (was rejected until 2026-04-20 cleanup).
+- `macrocast.execution.sweep_runner.execute_sweep(..., research_design=...)` — parameter; study manifest records the choice.
+- `macrocast.studies.replication.execute_replication(...)` — dedicated runner for `replication_override`. Accepts source recipe with any research_design; applies overrides; compiles and runs.
 
 ### Recipe usage
 
 ```yaml
-# Single-path benchmark study (default; omitting study_mode gets this).
+# Single-path benchmark study (default; omitting research_design gets this).
 path:
   0_meta:
     fixed_axes:
-      study_mode: single_path_benchmark_study
+      research_design: single_path_benchmark
 ```
 
 ```yaml
@@ -529,7 +529,7 @@ path:
 path:
   0_meta:
     fixed_axes:
-      study_mode: controlled_variation_study
+      research_design: controlled_variation
   3_training:
     sweep_axes:
       model_family: [ridge, lasso, random_forest]
@@ -540,7 +540,7 @@ path:
 path:
   0_meta:
     fixed_axes:
-      study_mode: replication_override_study
+      research_design: replication_override
 ```
 
 ```yaml
@@ -548,7 +548,7 @@ path:
 path:
   0_meta:
     fixed_axes:
-      study_mode: orchestrated_bundle_study
+      research_design: orchestrated_bundle
   5_output_provenance:
     leaf_config:
       wrapper_family: benchmark_suite     # required by wrapper_handoff contract
@@ -557,17 +557,17 @@ path:
 
 ### Relation to other Layer 0 axes
 
-- `experiment_unit` (§0.3) interacts with `study_mode`. E.g., `orchestrated_bundle_study` combined with `experiment_unit=benchmark_suite` produces a wrapper_handoff payload; `replication_override_study` defaults `experiment_unit` to `replication_recipe`.
-- `reproducibility_mode` (§0.5) applies independently; a `replication_override_study` with `strict_reproducible` produces a byte-identical replay.
-- `failure_policy` (§0.4) drives per-variant and per-recipe failure handling regardless of study_mode.
+- `experiment_unit` (§0.3) interacts with `research_design`. E.g., `orchestrated_bundle` combined with `experiment_unit=benchmark_suite` produces a wrapper_handoff payload; `replication_override` defaults `experiment_unit` to `replication_recipe`.
+- `reproducibility_mode` (§0.5) applies independently; a `replication_override` with `strict_reproducible` produces a byte-identical replay.
+- `failure_policy` (§0.4) drives per-variant and per-recipe failure handling regardless of research_design.
 
 ### Not implemented in v1.0
 
 | Value | Gap | Target |
 |---|---|---|
-| `orchestrated_bundle_study` consumer | Phase 8 `PaperReadyBundle` is the intended runner — not shipped. Compile handoff exists; runtime consumer pending. | Phase 8 |
+| `orchestrated_bundle` consumer | Phase 8 `PaperReadyBundle` is the intended runner — not shipped. Compile handoff exists; runtime consumer pending. | Phase 8 |
 
-All other study_mode values execute end-to-end in v1.0.
+All other research_design values execute end-to-end in v1.0.
 
 ---
 
@@ -597,7 +597,7 @@ from macrocast.design import (
 - **`VaryingDesign`** — explicitly allowed variation: `model_families`, `horizons`, etc.
 - **`ComparisonContract`** — fairness conditions: four `*_policy` flags (information_set / sample_split / benchmark / evaluation).
 - **`ReplicationInput`** — optional; locks replication constraints (`source_type`, `source_id`, `locked_constraints`).
-- **`DesignFrame`** — canonical output: `study_mode`, `fixed_design`, `comparison_contract`, `varying_design`, `execution_posture`, `design_shape`, optional `replication_input`, optional compat mirror `experiment_unit`.
+- **`DesignFrame`** — canonical output: `research_design`, `fixed_design`, `comparison_contract`, `varying_design`, `execution_posture`, `design_shape`, optional `replication_input`, optional compat mirror `experiment_unit`.
 
 ### Main functions
 
@@ -611,8 +611,8 @@ from macrocast.design import (
 
 Two fields are derived rather than hand-authored (distinct from `axis_type.derived` in §0.1 — these live on `DesignFrame`):
 
-- **`design_shape`** — inferred from `study_mode` + `varying_design`. Examples: `one_fixed_env_one_tool_surface`, `one_fixed_env_controlled_axis_variation`, `wrapper_managed_multi_run_bundle`.
-- **`execution_posture`** — inferred from `study_mode` + `design_shape` + optional replication input. Examples: `single_run_recipe`, `single_run_with_internal_sweep`, `wrapper_bundle_plan`, `replication_locked_plan`.
+- **`design_shape`** — inferred from `research_design` + `varying_design`. Examples: `one_fixed_env_one_tool_surface`, `one_fixed_env_controlled_axis_variation`, `wrapper_managed_multi_run_bundle`.
+- **`execution_posture`** — inferred from `research_design` + `design_shape` + optional replication input. Examples: `single_run_recipe`, `single_run_with_internal_sweep`, `wrapper_bundle_plan`, `replication_locked_plan`.
 
 These keep route semantics out of arbitrary registry payloads.
 
@@ -659,7 +659,7 @@ Layer 0 meta axes registry (6 axes, curated 2026-04-20):
 - `experiment_unit`: 7/12 operational — 3 direct executable via `execute_recipe` (single_target_single_model, single_target_model_grid, multi_target_shared_design), 2 dedicated-runner (ablation_study via `execute_ablation`, replication_recipe via `execute_replication`), 2 wrapper-handoff pending Phase 8 (single_target_full_sweep, benchmark_suite). 2 registry_only (v1.1): multi_target_separate_runs, multi_output_joint_model. 3 future (v2 Phase 11): hierarchical_forecasting_run, panel_forecasting_run, state_space_run.
 - `failure_policy`: 5/7 operational (fail_fast, skip_failed_cell, skip_failed_model, save_partial_results, warn_only). 2 registry_only (v1.1): retry_then_skip, fallback_to_default_hp. `hard_error` dropped (fail_fast synonym, no distinct runtime branch).
 - `reproducibility_mode`: 4/4 operational (strict_reproducible, seeded_reproducible, best_effort, exploratory). strict now controls numpy + torch + cudnn + CUBLAS globals via `apply_reproducibility_mode()`; emits RuntimeWarning when PYTHONHASHSEED is not set in the shell.
-- `study_mode`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark_study via `execute_recipe`, controlled_variation_study via `execute_sweep`, replication_override_study via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle_study → `PaperReadyBundle`).
+- `research_design`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark via `execute_recipe`, controlled_variation via `execute_sweep`, replication_override via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle → `PaperReadyBundle`).
 
 `registry_type` axis was dropped 2026-04-20 (PR #23) — it had zero runtime effect and every axis defaulted to `enum_registry`. If v1.1 adds numeric/callable/plugin dispatch, the AxisDefinition field can regrow at that point without migration.
 

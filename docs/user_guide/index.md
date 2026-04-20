@@ -15,7 +15,7 @@ design
 
 recipes
 sweep_recipes
-controlled_variation_study
+controlled_variation
 compiler
 execution
 ```

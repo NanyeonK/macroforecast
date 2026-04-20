@@ -19,7 +19,7 @@ def _baseline_recipe() -> dict:
     return {
         "recipe_id": "replication-src",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -126,34 +126,34 @@ def test_replication_no_overrides_no_source_artifact(tmp_path: Path) -> None:
     assert diff["override_diff_entries"] == []
 
 
-def test_replication_override_study_mode_compiles_executable(tmp_path: Path) -> None:
+def test_replication_override_mode_compiles_executable(tmp_path: Path) -> None:
     """After 0.6 cleanup, a source recipe marked with
-    study_mode=replication_override_study compiles as executable (no
+    research_design=replication_override compiles as executable (no
     representable_but_not_executable warning). execute_replication can
     process it directly, and the replay runs end-to-end."""
     from macrocast.compiler.build import compile_recipe_dict
 
     src_recipe = _baseline_recipe()
-    src_recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+    src_recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
 
     compile_result = compile_recipe_dict(src_recipe)
     assert compile_result.compiled.execution_status == "executable"
-    # No study_mode wrapper-route warning in the manifest.
+    # No research_design wrapper-route warning in the manifest.
     manifest_warnings = compile_result.manifest.get("warnings", [])
     assert not any(
-        "replication_override_study" in w and "wrapper/orchestrator route" in w
+        "replication_override" in w and "wrapper/orchestrator route" in w
         for w in manifest_warnings
     ), f"unexpected wrapper-route warning: {manifest_warnings}"
 
 
 def test_replication_with_study_mode_replication_override_runs_end_to_end(tmp_path: Path) -> None:
-    """End-to-end: source recipe has study_mode=replication_override_study;
+    """End-to-end: source recipe has research_design=replication_override;
     execute_replication accepts it and produces a replay artifact."""
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.execution.build import execute_recipe
 
     recipe = _baseline_recipe()
-    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+    recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
     compile_result = compile_recipe_dict(recipe)
     src_exec = execute_recipe(
         recipe=compile_result.compiled.recipe_spec,

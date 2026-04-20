@@ -40,7 +40,7 @@ recipe_id: ridge-vs-lasso-indpro
 path:
   0_meta:
     fixed_axes:
-      study_mode: single_path_benchmark_study
+      research_design: single_path_benchmark
       experiment_unit: single_target_model_grid
 
   1_data_task:

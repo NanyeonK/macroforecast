@@ -21,7 +21,7 @@ def _base_recipe() -> dict:
     return {
         "recipe_id": "derived-test",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -103,10 +103,10 @@ def test_derived_axes_must_be_mapping() -> None:
 
 def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
     selection_map = {
-        "study_mode": AxisSelection(
-            axis_name="study_mode", layer="0_meta", selection_mode="fixed",
-            selected_values=("single_path_benchmark_study",),
-            selected_status={"single_path_benchmark_study": "operational"},
+        "research_design": AxisSelection(
+            axis_name="research_design", layer="0_meta", selection_mode="fixed",
+            selected_values=("single_path_benchmark",),
+            selected_status={"single_path_benchmark": "operational"},
         ),
         "model_family": AxisSelection(
             axis_name="model_family", layer="3_training", selection_mode="sweep",

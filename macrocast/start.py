@@ -18,7 +18,7 @@ _AVAILABLE_STAGES = (
 )
 
 _WIZARD_KEYS = (
-    "study_mode",
+    "research_design",
     "task",
     "experiment_unit",
     "target",
@@ -112,8 +112,8 @@ def _single_run_extension_message(tree_context: dict[str, Any], warnings: list[s
 
 
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
-    if key == "study_mode":
-        return _recipe_fixed(recipe, "0_meta").get("study_mode")
+    if key == "research_design":
+        return _recipe_fixed(recipe, "0_meta").get("research_design")
     if key == "task":
         return _recipe_fixed(recipe, "1_data_task").get("task")
     if key == "experiment_unit":
@@ -123,7 +123,7 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         training = _recipe_fixed(recipe, "3_training")
         training_sweep = _recipe_sweep(recipe, "3_training")
         return derive_experiment_unit_default(
-            study_mode=_recipe_fixed(recipe, "0_meta").get("study_mode", "single_path_benchmark_study"),
+            research_design=_recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark"),
             task=_recipe_fixed(recipe, "1_data_task").get("task", "single_target_point_forecast"),
             model_axis_mode="sweep" if "model_family" in training_sweep else "fixed",
             feature_axis_mode="sweep" if "feature_builder" in training_sweep else "fixed",
@@ -159,8 +159,8 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
 
 
 def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
-    if key == "study_mode":
-        _recipe_fixed(recipe, "0_meta")["study_mode"] = value
+    if key == "research_design":
+        _recipe_fixed(recipe, "0_meta")["research_design"] = value
         return
     leaf = _recipe_leaf(recipe, "1_data_task")
     preprocess = _recipe_fixed(recipe, "2_preprocessing")
@@ -184,12 +184,12 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         meta["experiment_unit"] = value
         output_leaf = _recipe_leaf(recipe, "5_output_provenance")
         if value == "replication_recipe":
-            meta["study_mode"] = "replication_override_study"
+            meta["research_design"] = "replication_override"
             output_leaf.pop("wrapper_family", None)
             output_leaf.pop("bundle_label", None)
             return
         if value in {"benchmark_suite", "ablation_study"}:
-            meta["study_mode"] = "orchestrated_bundle_study"
+            meta["research_design"] = "orchestrated_bundle"
             _recipe_fixed(recipe, "1_data_task")["task"] = "single_target_point_forecast"
             leaf.pop("targets", None)
             leaf.setdefault("target", "INDPRO")
@@ -197,7 +197,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
         if value in {"multi_target_separate_runs", "multi_target_shared_design"}:
-            meta["study_mode"] = "orchestrated_bundle_study"
+            meta["research_design"] = "orchestrated_bundle"
             _recipe_fixed(recipe, "1_data_task")["task"] = "multi_target_point_forecast"
             leaf.pop("target", None)
             leaf.setdefault("targets", ["INDPRO", "RPI"])
@@ -205,14 +205,14 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
         if value == "multi_output_joint_model":
-            meta["study_mode"] = "single_path_benchmark_study"
+            meta["research_design"] = "single_path_benchmark"
             _recipe_fixed(recipe, "1_data_task")["task"] = "multi_target_point_forecast"
             leaf.pop("target", None)
             leaf.setdefault("targets", ["INDPRO", "RPI"])
             output_leaf.pop("wrapper_family", None)
             output_leaf.pop("bundle_label", None)
             return
-        meta["study_mode"] = "single_path_benchmark_study"
+        meta["research_design"] = "single_path_benchmark"
         _recipe_fixed(recipe, "1_data_task")["task"] = "single_target_point_forecast"
         leaf.pop("targets", None)
         leaf.setdefault("target", "INDPRO")
@@ -319,12 +319,12 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
     benchmark_family = _recipe_fixed(recipe, "3_training").get("benchmark_family", "zero_change")
     stack = [
         {
-            "key": "study_mode",
+            "key": "research_design",
             "prompt": "Study mode",
             "options": [
-                "single_path_benchmark_study",
-                "controlled_variation_study",
-                "orchestrated_bundle_study",
+                "single_path_benchmark",
+                "controlled_variation",
+                "orchestrated_bundle",
             ],
         },
         {
@@ -339,7 +339,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "key": "experiment_unit",
             "prompt": "Experiment unit",
             "options": list(experiment_unit_options_for_wizard(
-                _recipe_fixed(recipe, "0_meta").get("study_mode", "single_path_benchmark_study"),
+                _recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark"),
                 task,
             )),
         },
@@ -477,10 +477,10 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
 
 
 def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
-    study_mode = _recipe_fixed(recipe, "0_meta").get("study_mode", "single_path_benchmark_study")
+    research_design = _recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark")
     task = _recipe_fixed(recipe, "1_data_task").get("task", "single_target_point_forecast")
     explicit_unit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
-    route_owner = "wrapper" if study_mode == "orchestrated_bundle_study" else "single_run"
+    route_owner = "wrapper" if research_design == "orchestrated_bundle" else "single_run"
     if explicit_unit in {"single_target_full_sweep", "multi_target_separate_runs", "multi_target_shared_design", "benchmark_suite", "ablation_study"}:
         route_owner = "wrapper"
     elif explicit_unit == "replication_recipe":
@@ -501,7 +501,7 @@ def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
         "message": message,
         "warnings": [error],
         "blocked_reasons": [],
-        "tree_context_summary": f"route_owner={route_owner}; study_mode={study_mode}; task={task}",
+        "tree_context_summary": f"route_owner={route_owner}; research_design={research_design}; task={task}",
         "wrapper_handoff": {},
     }
 

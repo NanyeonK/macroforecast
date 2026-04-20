@@ -8,7 +8,7 @@
 macrocast enforces a fixed layer order for every forecasting study:
 
 ```
-Stage 0: Meta / Grammar        — study_mode, experiment_unit, comparison_contract
+Stage 0: Meta / Grammar        — research_design, experiment_unit, comparison_contract
 Stage 1: Data / Task            — dataset, frequency, forecast_type, horizons
 Stage 2: Preprocessing          — tcode, missing, outlier, scaling, governance
 Stage 3: Training               — framework, model, feature_builder, tuning

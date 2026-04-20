@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from .errors import DesignNormalizationError
-from .types import ComparisonContract, FixedDesign, ReplicationInput, StudyMode, VaryingDesign
+from .types import ComparisonContract, FixedDesign, ReplicationInput, ResearchDesign, VaryingDesign
 
-_ALLOWED_STUDY_MODES: tuple[StudyMode, ...] = (
-    "single_path_benchmark_study",
-    "controlled_variation_study",
-    "orchestrated_bundle_study",
-    "replication_override_study",
+_ALLOWED_RESEARCH_DESIGNS: tuple[ResearchDesign, ...] = (
+    "single_path_benchmark",
+    "controlled_variation",
+    "orchestrated_bundle",
+    "replication_override",
 )
 
 
@@ -25,10 +25,10 @@ def _tupleize(value: object) -> tuple[str, ...]:
     raise DesignNormalizationError(f"expected tuple/list of strings, got {type(value).__name__}")
 
 
-def normalize_study_mode(value: str) -> str:
-    if value not in _ALLOWED_STUDY_MODES:
+def normalize_research_design(value: str) -> str:
+    if value not in _ALLOWED_RESEARCH_DESIGNS:
         raise DesignNormalizationError(
-            f"unknown study_mode={value!r}; expected one of {_ALLOWED_STUDY_MODES}"
+            f"unknown research_design={value!r}; expected one of {_ALLOWED_RESEARCH_DESIGNS}"
         )
     return value
 

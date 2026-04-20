@@ -146,14 +146,14 @@ def get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry:
     return _BY_ID[experiment_unit]
 
 
-def experiment_unit_options_for_wizard(study_mode: str, task: str) -> tuple[str, ...]:
+def experiment_unit_options_for_wizard(research_design: str, task: str) -> tuple[str, ...]:
     """Return the experiment_unit options the wizard/UI should surface.
 
     Only values whose current registry status is operational are
     returned — registry_only and future entries are intentionally filtered
     so UIs do not propose non-executable units.
     """
-    if study_mode == "replication_override_study":
+    if research_design == "replication_override":
         candidates = ("replication_recipe",)
     elif task == "multi_target_point_forecast":
         candidates = (
@@ -161,7 +161,7 @@ def experiment_unit_options_for_wizard(study_mode: str, task: str) -> tuple[str,
             "multi_target_separate_runs",
             "multi_output_joint_model",
         )
-    elif study_mode == "orchestrated_bundle_study":
+    elif research_design == "orchestrated_bundle":
         candidates = ("benchmark_suite", "ablation_study")
     else:
         candidates = (
@@ -174,13 +174,13 @@ def experiment_unit_options_for_wizard(study_mode: str, task: str) -> tuple[str,
 
 def derive_experiment_unit_default(
     *,
-    study_mode: str,
+    research_design: str,
     task: str,
     model_axis_mode: str = "fixed",
     feature_axis_mode: str = "fixed",
     wrapper_family: str | None = None,
 ) -> str:
-    if study_mode == "replication_override_study":
+    if research_design == "replication_override":
         return "replication_recipe"
     if wrapper_family in _BY_ID:
         return wrapper_family
@@ -188,7 +188,7 @@ def derive_experiment_unit_default(
         # shared_design is the operational multi-target path handled by
         # execute_recipe. separate_runs is registry_only (v1.1 wrapper).
         return "multi_target_shared_design"
-    if study_mode == "orchestrated_bundle_study":
+    if research_design == "orchestrated_bundle":
         return "benchmark_suite"
     if model_axis_mode == "sweep" and feature_axis_mode == "sweep":
         return "single_target_full_sweep"

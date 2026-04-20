@@ -17,7 +17,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Pat
     recipe = {
         "recipe_id": "importance-ridge-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -53,7 +53,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_randomforest(tmp_pa
     recipe = {
         "recipe_id": "importance-rf-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -100,7 +100,7 @@ def test_compile_recipe_rejects_incompatible_preprocessing_without_silent_fallba
     bad_recipe = {
         "recipe_id": "bad-importance-ar",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -153,7 +153,7 @@ def test_compile_cw_recipe_is_executable_and_writes_artifact(tmp_path: Path) -> 
     recipe = {
         "recipe_id": "cw-ridge-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -201,7 +201,7 @@ def test_compile_custom_benchmark_recipe_is_executable(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "custom-benchmark-ridge-expanding",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -237,7 +237,7 @@ def test_compile_custom_benchmark_recipe_requires_plugin_contract() -> None:
     recipe = {
         "recipe_id": "custom-benchmark-missing-plugin",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -284,7 +284,7 @@ def test_compile_robust_scaling_recipe_is_executable(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "robust-scaling-ridge-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -319,7 +319,7 @@ def test_compile_lasso_minimal_importance_recipe_is_executable(tmp_path: Path) -
     recipe = {
         "recipe_id": "importance-lasso-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -355,7 +355,7 @@ def test_compile_real_time_recipe_requires_data_vintage() -> None:
     recipe = {
         "recipe_id": "real-time-missing-vintage",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "real_time", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -383,7 +383,7 @@ def test_compile_real_time_recipe_is_executable(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "real-time-expanding-ar",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "real_time", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3], "data_vintage": "2020-01"},
@@ -418,7 +418,7 @@ def test_compile_wrapper_bundle_requires_wrapper_metadata() -> None:
     recipe = {
         "recipe_id": "wrapper-missing-metadata",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "orchestrated_bundle_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "orchestrated_bundle"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -446,7 +446,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
     recipe = {
         "recipe_id": "wrapper-benchmark-suite",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "orchestrated_bundle_study"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
+            "0_meta": {"fixed_axes": {"research_design": "orchestrated_bundle"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -475,7 +475,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
     assert handoff["route_owner"] == "wrapper"
     assert handoff["execution_posture"] == "wrapper_bundle_plan"
     assert tree_context["route_owner"] == "wrapper"
-    assert tree_context["fixed_axes"]["study_mode"] == "orchestrated_bundle_study"
+    assert tree_context["fixed_axes"]["research_design"] == "orchestrated_bundle"
     assert tree_context["leaf_config"]["bundle_label"] == "fred-md-baselines"
 
 
@@ -483,7 +483,7 @@ def test_compile_multi_target_recipe_requires_targets() -> None:
     recipe = {
         "recipe_id": "multi-target-missing-targets",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "multi_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -511,7 +511,7 @@ def test_compile_multi_target_recipe_is_executable(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "multi-target-expanding-ar",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "multi_target_point_forecast"},
                 "leaf_config": {"targets": ["INDPRO", "RPI"], "horizons": [1, 3]},
@@ -547,7 +547,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
     recipe = {
         "recipe_id": "tree-context-controlled-variation",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "controlled_variation_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -571,7 +571,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
     compile_result = compile_recipe_dict(recipe)
     tree_context = compile_result.manifest["tree_context"]
     assert compile_result.compiled.execution_status == "representable_but_not_executable"
-    assert tree_context["study_mode"] == "controlled_variation_study"
+    assert tree_context["research_design"] == "controlled_variation"
     assert tree_context["route_owner"] == "single_run"
     assert tree_context["fixed_design"]["dataset_adapter"] == "fred_md"
     assert tree_context["varying_design"]["model_families"] == ["ar", "ridge"]
@@ -594,7 +594,7 @@ def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
         "recipe_id": "experiment-unit-single-model",
         "path": {
             "0_meta": {"fixed_axes": {
-                "study_mode": "single_path_benchmark_study",
+                "research_design": "single_path_benchmark",
                 "experiment_unit": "single_target_single_model",
             }},
             "1_data_task": {
@@ -633,7 +633,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
     recipe = {
         "recipe_id": "fixed-policy-swept-axis",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -675,7 +675,7 @@ def test_compile_seeded_reproducible_requires_random_seed() -> None:
     recipe = {
         "recipe_id": "seed-required",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "reproducibility_mode": "seeded_reproducible"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "reproducibility_mode": "seeded_reproducible"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -703,7 +703,7 @@ def test_compile_reproducibility_spec_preserved_in_manifest() -> None:
     recipe = {
         "recipe_id": "seeded-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "reproducibility_mode": "seeded_reproducible"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "reproducibility_mode": "seeded_reproducible"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3], "random_seed": 42},
@@ -741,7 +741,7 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
     recipe = {
         "recipe_id": "fail-fast-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "failure_policy": "fail_fast"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "failure_policy": "fail_fast"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -771,7 +771,7 @@ def test_compile_warn_only_is_now_executable() -> None:
     recipe = {
         "recipe_id": "warn-only-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "failure_policy": "warn_only"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "failure_policy": "warn_only"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -808,7 +808,7 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
     recipe = {
         "recipe_id": "skip-failed-model-executable",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "failure_policy": "skip_failed_model"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "failure_policy": "skip_failed_model"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -845,7 +845,7 @@ def test_compile_compute_mode_spec_defaults_to_serial() -> None:
     recipe = {
         "recipe_id": "default-serial-compute-mode",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -874,7 +874,7 @@ def test_compile_parallel_by_model_is_executable() -> None:
     recipe = {
         "recipe_id": "parallel-by-model-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "compute_mode": "parallel_by_model"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "compute_mode": "parallel_by_model"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -912,7 +912,7 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
     recipe = {
         "recipe_id": "parallel-by-model-executable",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study", "compute_mode": "parallel_by_model"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark", "compute_mode": "parallel_by_model"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -942,7 +942,7 @@ def test_compile_recipe_accepts_legacy_info_set_alias() -> None:
     recipe = {
         "recipe_id": "legacy-info-set-alias",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
@@ -969,7 +969,7 @@ def test_compile_recipe_accepts_canonical_information_set_type_axis() -> None:
     recipe = {
         "recipe_id": "canonical-information-set",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "real_time_vintage", "task": "single_target_point_forecast", "vintage_policy": "single_vintage"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1], "data_vintage": "2019-12"},
@@ -996,7 +996,7 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
     recipe = {
         "recipe_id": "bad-predictor-family",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -1046,7 +1046,7 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
     recipe = {
         "recipe_id": "stage2-preprocess-governance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1086,7 +1086,7 @@ def test_compile_recipe_accepts_stage3_training_axes() -> None:
     recipe = {
         "recipe_id": "stage3-training-axes",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1132,7 +1132,7 @@ def test_compile_quantile_linear_point_median_recipe_is_executable(tmp_path: Pat
     recipe = {
         "recipe_id": "quantile-linear-median-rolling",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast", "forecast_object": "point_median"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1188,7 +1188,7 @@ def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
     recipe = {
         "recipe_id": "stage4-primary-metric-rmse",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1245,7 +1245,7 @@ def test_multi_target_derives_shared_design_experiment_unit() -> None:
     recipe = {
         "recipe_id": "multi-target-shared-derive",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -1282,7 +1282,7 @@ def test_wizard_options_filter_registry_only_entries() -> None:
     from macrocast.registry.stage0.experiment_unit import experiment_unit_options_for_wizard
     # multi-target options should exclude registry_only separate_runs + joint_model
     options = experiment_unit_options_for_wizard(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         task="multi_target_point_forecast",
     )
     assert options == ("multi_target_shared_design",)
@@ -1291,7 +1291,7 @@ def test_wizard_options_filter_registry_only_entries() -> None:
 def test_wizard_options_single_target_returns_operational_only() -> None:
     from macrocast.registry.stage0.experiment_unit import experiment_unit_options_for_wizard
     options = experiment_unit_options_for_wizard(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         task="single_target_point_forecast",
     )
     # all three single-target operational values should be present
@@ -1302,14 +1302,14 @@ def test_wizard_options_single_target_returns_operational_only() -> None:
     }
 
 
-# --- 0.6 study_mode compile status per-value ---
+# --- 0.6 research_design compile status per-value ---
 
 
 def _study_mode_recipe_base() -> dict:
     return {
         "recipe_id": "study-mode-compile-status",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "PLACEHOLDER"}},
+            "0_meta": {"fixed_axes": {"research_design": "PLACEHOLDER"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
@@ -1335,40 +1335,40 @@ def _study_mode_recipe_base() -> dict:
     }
 
 
-def test_study_mode_single_path_benchmark_study_compiles_executable() -> None:
+def test_study_mode_single_path_benchmark_compiles_executable() -> None:
     recipe = _study_mode_recipe_base()
-    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "single_path_benchmark_study"
+    recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "single_path_benchmark"
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"
 
 
-def test_study_mode_controlled_variation_study_compiles_executable() -> None:
+def test_study_mode_controlled_variation_compiles_executable() -> None:
     recipe = _study_mode_recipe_base()
-    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "controlled_variation_study"
+    recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "controlled_variation"
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"
 
 
-def test_study_mode_replication_override_study_compiles_executable_after_cleanup() -> None:
-    """After 0.6 cleanup, replication_override_study no longer triggers the
+def test_study_mode_replication_override_compiles_executable_after_cleanup() -> None:
+    """After 0.6 cleanup, replication_override no longer triggers the
     wrapper-route warning; execute_replication is the dedicated runner."""
     recipe = _study_mode_recipe_base()
-    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+    recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"
 
 
-def test_study_mode_orchestrated_bundle_study_is_still_representable_not_executable() -> None:
-    """orchestrated_bundle_study stays on the wrapper-warning path until the
+def test_study_mode_orchestrated_bundle_is_still_representable_not_executable() -> None:
+    """orchestrated_bundle stays on the wrapper-warning path until the
     Phase 8 PaperReadyBundle consumer lands. Requires wrapper_family +
     bundle_label in leaf_config (wrapper_handoff contract)."""
     recipe = _study_mode_recipe_base()
-    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "orchestrated_bundle_study"
+    recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "orchestrated_bundle"
     recipe["path"]["5_output_provenance"]["leaf_config"]["wrapper_family"] = "benchmark_suite"
     recipe["path"]["5_output_provenance"]["leaf_config"]["bundle_label"] = "bundle-test"
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "representable_but_not_executable"
     assert any(
-        "orchestrated_bundle_study" in w and "wrapper/orchestrator route" in w
+        "orchestrated_bundle" in w and "wrapper/orchestrator route" in w
         for w in r.manifest.get("warnings", [])
     )

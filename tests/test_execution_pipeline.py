@@ -25,7 +25,7 @@ def _stage0(
         "rolling": "rolling_window_oos",
     }[framework]
     return build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": info_set,
@@ -437,7 +437,7 @@ def test_execute_recipe_runs_real_time_vintage_slice(tmp_path: Path) -> None:
 def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -483,7 +483,7 @@ def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
 def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -510,7 +510,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
     )
     provenance_payload = {
         "tree_context": {
-            "study_mode": "single_path_benchmark_study",
+            "research_design": "single_path_benchmark",
             "design_shape": "one_fixed_env_one_tool_surface",
             "execution_posture": "single_run_recipe",
             "experiment_unit": "single_model_path",
@@ -565,7 +565,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
 def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -653,7 +653,7 @@ def test_execute_recipe_parallel_by_horizon_writes_manifest(tmp_path: Path) -> N
 def test_execute_recipe_parallel_by_target_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

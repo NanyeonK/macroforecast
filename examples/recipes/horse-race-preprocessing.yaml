@@ -2,7 +2,7 @@ recipe_id: horse-race-preprocessing
 path:
   0_meta:
     fixed_axes:
-      study_mode: controlled_variation_study
+      research_design: controlled_variation
   1_data_task:
     fixed_axes:
       dataset: fred_md

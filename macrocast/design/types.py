@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-StudyMode = Literal[
-    "single_path_benchmark_study",
-    "controlled_variation_study",
-    "orchestrated_bundle_study",
-    "replication_override_study",
+ResearchDesign = Literal[
+    "single_path_benchmark",
+    "controlled_variation",
+    "orchestrated_bundle",
+    "replication_override",
 ]
 
 ExecutionPosture = Literal[
@@ -62,7 +62,7 @@ class ReplicationInput:
 
 @dataclass(frozen=True)
 class DesignFrame:
-    study_mode: str
+    research_design: str
     fixed_design: FixedDesign
     comparison_contract: ComparisonContract
     varying_design: VaryingDesign

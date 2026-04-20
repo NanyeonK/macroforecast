@@ -40,7 +40,7 @@ def _base_contract() -> dict:
 
 def test_stage0_roundtrip_dict() -> None:
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar", "ridge"), "horizons": ("h1", "h3")},
@@ -53,7 +53,7 @@ def test_stage0_roundtrip_dict() -> None:
 
 def test_replication_route_owner_and_execution_posture() -> None:
     stage0 = build_design_frame(
-        study_mode="replication_override_study",
+        research_design="replication_override",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},
@@ -68,7 +68,7 @@ def test_replication_route_owner_and_execution_posture() -> None:
 def test_invalid_study_mode_raises_normalization_error() -> None:
     with pytest.raises(DesignNormalizationError):
         build_design_frame(
-            study_mode="unknown_mode",
+            research_design="unknown_mode",
             fixed_design=_base_fixed(),
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
@@ -81,7 +81,7 @@ def test_blank_fixed_design_field_raises_validation_error() -> None:
 
     with pytest.raises(DesignValidationError):
         build_design_frame(
-            study_mode="single_path_benchmark_study",
+            research_design="single_path_benchmark",
             fixed_design=fixed,
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
@@ -90,7 +90,7 @@ def test_blank_fixed_design_field_raises_validation_error() -> None:
 
 def test_single_run_without_model_families_raises_completeness_error() -> None:
     stage0 = build_design_frame(
-        study_mode="single_path_benchmark_study",
+        research_design="single_path_benchmark",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design=VaryingDesign(),
@@ -102,7 +102,7 @@ def test_single_run_without_model_families_raises_completeness_error() -> None:
 
 def test_orchestrated_bundle_route_owner_is_wrapper() -> None:
     stage0 = build_design_frame(
-        study_mode="orchestrated_bundle_study",
+        research_design="orchestrated_bundle",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},

@@ -5,7 +5,7 @@ from .types import ComparisonContract, DesignShape, ExecutionPosture, Replicatio
 
 
 def derive_design_shape(
-    study_mode: str,
+    research_design: str,
     varying_design: VaryingDesign,
     experiment_unit: str | None = None,
 ) -> str:
@@ -16,7 +16,7 @@ def derive_design_shape(
         if experiment_unit == "single_target_model_grid":
             return "one_fixed_env_controlled_axis_variation"
 
-    if study_mode == "orchestrated_bundle_study":
+    if research_design == "orchestrated_bundle":
         return "wrapper_managed_multi_run_bundle"
 
     n_models = len(varying_design.model_families)
@@ -29,7 +29,7 @@ def derive_design_shape(
         )
     )
 
-    if study_mode == "controlled_variation_study" or n_control_axes > 0:
+    if research_design == "controlled_variation" or n_control_axes > 0:
         return "one_fixed_env_controlled_axis_variation"
     if n_models <= 1:
         return "one_fixed_env_one_tool_surface"
@@ -37,7 +37,7 @@ def derive_design_shape(
 
 
 def derive_execution_posture(
-    study_mode: str,
+    research_design: str,
     design_shape: str,
     replication_input: ReplicationInput | None,
     experiment_unit: str | None = None,
@@ -52,9 +52,9 @@ def derive_execution_posture(
             return "single_run_with_internal_sweep"
         return "single_run_recipe"
 
-    if replication_input is not None or study_mode == "replication_override_study":
+    if replication_input is not None or research_design == "replication_override":
         return "replication_locked_plan"
-    if study_mode == "orchestrated_bundle_study" or design_shape == "wrapper_managed_multi_run_bundle":
+    if research_design == "orchestrated_bundle" or design_shape == "wrapper_managed_multi_run_bundle":
         return "wrapper_bundle_plan"
     if design_shape == "one_fixed_env_controlled_axis_variation":
         return "single_run_with_internal_sweep"
@@ -62,13 +62,13 @@ def derive_execution_posture(
 
 
 def derive_experiment_unit(
-    study_mode: str,
+    research_design: str,
     execution_posture: str,
     forecast_task: str = "single_target_point_forecast",
 ) -> str | None:
     if execution_posture == "wrapper_bundle_plan":
         return derive_experiment_unit_default(
-            study_mode=study_mode,
+            research_design=research_design,
             task=forecast_task,
             wrapper_family=(
                 # multi_target_separate_runs is the intended wrapper-bundle unit
@@ -87,6 +87,6 @@ def derive_experiment_unit(
         # execute_recipe's multi-target path (single aggregated output). See
         # docs/user_guide/design.md §0.3.
         return "multi_target_shared_design"
-    if study_mode == "controlled_variation_study":
+    if research_design == "controlled_variation":
         return "single_target_model_grid"
     return "single_target_single_model"

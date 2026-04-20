@@ -19,7 +19,7 @@ def _base_recipe() -> dict:
     return {
         "recipe_id": "sweep-test",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "controlled_variation_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
@@ -166,7 +166,7 @@ def _nested_recipe() -> dict:
     return {
         "recipe_id": "nested-test",
         "path": {
-            "0_meta": {"fixed_axes": {"study_mode": "controlled_variation_study"}},
+            "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},

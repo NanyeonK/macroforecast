@@ -18,7 +18,7 @@ recipe_id: horse-race-model
 path:
   0_meta:
     fixed_axes:
-      study_mode: controlled_variation_study
+      research_design: controlled_variation
   3_training:
     fixed_axes:
       framework: rolling
@@ -84,5 +84,5 @@ same plan twice produces byte-identical predictions per variant.
 ## Next
 
 - [Sweep recipe grammar](../user_guide/sweep_recipes.md)
-- [controlled_variation_study guide](../user_guide/controlled_variation_study.md)
+- [controlled_variation guide](../user_guide/controlled_variation.md)
 - [execute_sweep API reference](../api/sweep_runner.md)
