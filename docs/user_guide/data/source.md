@@ -1,6 +1,6 @@
 # Source & Frame (1.1)
 
-Declares **where the data comes from and which information-set regime applies**. These five axes together answer: which dataset, at what frequency, over which real-time regime, under what domain label — before the task (§1.2) or the evaluation window (§1.3) is fixed.
+Declares **where the data comes from and which information-set regime applies**. These four axes together answer: which dataset, at what frequency, and under which real-time regime — before the task (§1.2) or the evaluation window (§1.3) is fixed.
 
 | § | axis | Role |
 |---|---|---|
