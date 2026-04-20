@@ -357,33 +357,116 @@ path:
 
 ## 0.5 `reproducibility_mode`
 
-**Declares the deterministic replay contract.** Default is `seeded_reproducible`.
+**Declares the deterministic-replay contract** for a recipe. Controls both (1) the seed returned by `current_seed()` for explicit random-consuming call sites and (2) the global RNG state + determinism flags that downstream libraries (NumPy, Python `random`, PyTorch, cuDNN, CUBLAS) read directly. Installed once at the start of `execute_recipe()` via `apply_reproducibility_mode()`.
+
+Default is `seeded_reproducible`.
 
 ### Value catalog
 
-| Value | Status | Contract |
-|---|---|---|
-| `strict_reproducible` | operational | Byte-identical reruns required; hash-derived per-variant seeds. |
-| `seeded_reproducible` | operational | Default. Fixed `base_seed`; small numerical drift across library versions accepted. |
-| `best_effort` | operational | No seed pinning; identical behavior to `seeded_reproducible` but marked non-strict for CI reporting. |
-| `exploratory` | registry_only (v1.1) | Exploratory path; not wired. |
+| Value | Status | What it installs | Variant seed strategy |
+|---|---|---|---|
+| `strict_reproducible` | operational | Python `random.seed` + `numpy.random.seed` + `torch.manual_seed` (+ CUDA) + `cudnn.deterministic=True` + `cudnn.benchmark=False` + `torch.use_deterministic_algorithms(True, warn_only=True)` + `CUBLAS_WORKSPACE_CONFIG=':4096:8'` (if unset). Emits `RuntimeWarning` if `PYTHONHASHSEED` is not set in the shell. | `hashlib.sha256(f"{recipe_id}|{variant_id}|{model_family}")` — variants get distinct but reproducible seeds. |
+| `seeded_reproducible` | operational | Python `random.seed` + `numpy.random.seed` + `torch.manual_seed` (+ CUDA) with the `base_seed` from the recipe. **No cuDNN / deterministic-algorithm flags** — small numerical drift across library versions accepted. Default mode. | Same `base_seed` for every variant. |
+| `best_effort` | operational | Identical install-time behaviour to `seeded_reproducible`. The label exists so CI can exclude such runs from strict-regression checks. | Same as `seeded_reproducible`. |
+| `exploratory` | operational | **No-op** at install time. Whatever the caller's pre-existing RNG state is, stays untouched. | `np.random.randint(0, 2**31 - 1)` per call — fresh non-deterministic seed each time. |
+
+All four modes are now wired to `apply_reproducibility_mode()`; there is no registry_only value on this axis.
+
+### What strict actually guarantees (and does not)
+
+**Controlled by the package** (runtime-installed per mode):
+
+- Python `random` module global state.
+- NumPy global RNG state.
+- PyTorch CPU + CUDA seeds (when torch is importable).
+- cuDNN deterministic / benchmark flags (torch present, strict only).
+- `torch.use_deterministic_algorithms` (torch present, strict only).
+- `CUBLAS_WORKSPACE_CONFIG` environment variable (strict only, if currently unset).
+
+**NOT controllable at runtime** — must be set in the shell before launching Python:
+
+- `PYTHONHASHSEED` — Python hashes dict/set keys using a per-interpreter random salt. Strict mode emits a `RuntimeWarning` when this is unset; the recommendation is `export PYTHONHASHSEED=0` before invoking macrocast.
+- `OPENBLAS_NUM_THREADS` / `MKL_NUM_THREADS` / `OMP_NUM_THREADS` — BLAS libraries read these at import time. Thread-count non-determinism is generally small but observable at the 1e-15 level; pin to `=1` in the shell for bit-exact matrix operations.
+
+**Out of scope for v1.0**:
+
+- GPU atomics non-determinism in operations that torch does not mark as deterministic (some scatter/gather variants, some cuDNN algorithms). `warn_only=True` is passed to `use_deterministic_algorithms` so these emit a warning rather than raising.
+- Driver-level floating-point variation across CUDA versions.
+- Python versions (CPython <3.11 ordering of small integers, etc.).
+
+### Manifest recording
+
+Every `execute_recipe()` call writes a `reproducibility_applied` dict into its manifest alongside the existing `reproducibility_spec`. Keys:
+
+- `mode` — the mode that was installed
+- `python_hash_seed` — value read from `os.environ` at install time (may be `None`)
+- `numpy_seed_set` — whether NumPy global state was set
+- `torch_seed_set` — whether torch seed was set (requires torch installed)
+- `cudnn_deterministic` / `cudnn_benchmark` — strict-mode only; `None` otherwise
+- `torch_deterministic_algorithms` — strict-mode only; `None` otherwise
+- `cublas_workspace_config` — resulting env var value
+
+This is sufficient to audit whether a strict-claimed manifest actually ran under strict conditions (e.g., was `PYTHONHASHSEED` set? did torch actually apply deterministic flags?).
 
 ### Functions & features
 
-- `macrocast.execution.seed_policy` — implements the 3 operational modes. The Literal `Mode = Literal["strict_reproducible", "seeded_reproducible", "best_effort"]` pins the set.
-- Compiler spec: `reproducibility_spec` on the compiled payload.
-- Runtime dispatch: every randomised operation pulls its RNG via `derive_seed(base_seed, scope, mode)` so the mode deterministically picks the seed policy.
+- `apply_reproducibility_mode(*, mode, seed, configure_torch=True)` in `macrocast.execution.seed_policy` — installs the global state described above; returns the audit summary. Called from `execute_recipe` after the `ReproducibilityContext` is pinned.
+- `current_seed(model_family=None)` — returns a variant-aware seed under the installed mode; used by explicit random-consuming call sites.
+- `resolve_seed(*, recipe_id, variant_id, reproducibility_spec, model_family=None)` — the underlying function that `current_seed` wraps.
+- `VALID_MODES` frozenset in `seed_policy` — enumerates the 4 accepted mode strings.
+- Compiler guard: `strict_reproducible` and `seeded_reproducible` require `leaf_config.random_seed`. `best_effort` and `exploratory` do not.
 
 ### Recipe usage
 
 ```yaml
+# Strict bit-identical reproducibility. Also run with `PYTHONHASHSEED=0` in shell.
 path:
   0_meta:
     fixed_axes:
       reproducibility_mode: strict_reproducible
+  5_output_provenance:
+    leaf_config:
+      random_seed: 42
 ```
 
-See also: `docs/dev/reproducibility_policy.md`.
+```yaml
+# Default: fixed seed, no strict deterministic flags.
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: seeded_reproducible
+  5_output_provenance:
+    leaf_config:
+      random_seed: 42
+```
+
+```yaml
+# Explicit best-effort marker (for CI filters).
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: best_effort
+```
+
+```yaml
+# Ad-hoc exploration: fresh seed per call, no reproducibility claim.
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: exploratory
+```
+
+### Shell recipe for reviewer-grade strict runs
+
+```bash
+export PYTHONHASHSEED=0
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+macrocast run --recipe strict.yaml
+```
+
+See also: `docs/dev/reproducibility_policy.md`, `macrocast.execution.seed_policy`.
 
 ---
 

@@ -16,6 +16,9 @@ for the operational contract.
 
 from __future__ import annotations
 
+import os
+import random
+import warnings
 import contextvars
 import hashlib
 from dataclasses import dataclass
@@ -134,3 +137,127 @@ def current_seed(model_family: str | None = None) -> int:
         reproducibility_spec=ctx.reproducibility_spec,
         model_family=model_family,
     )
+
+
+def apply_reproducibility_mode(
+    *,
+    mode: str,
+    seed: int,
+    configure_torch: bool = True,
+) -> dict:
+    """Install global RNG state + determinism flags for the given mode.
+
+    Called once at the start of each :func:`execute_recipe` invocation so
+    that libraries downstream of our explicit ``resolve_seed`` calls (numpy
+    globals, torch, cudnn, scikit-learn defaults, etc.) share the same
+    deterministic regime.
+
+    Behaviour per mode:
+
+    * ``strict_reproducible`` — pin Python/NumPy/torch seeds AND enable
+      torch deterministic algorithms + cuDNN ``deterministic=True`` +
+      ``benchmark=False``. Set ``CUBLAS_WORKSPACE_CONFIG=':4096:8'``
+      (required by torch for CUDA determinism if CUDA is active) when not
+      already set. Emit a ``RuntimeWarning`` if ``PYTHONHASHSEED`` is not
+      set — that one MUST be configured in the shell before Python starts.
+
+    * ``seeded_reproducible`` — pin Python/NumPy/torch seeds but do not
+      flip cuDNN / deterministic-algorithms flags (small numerical drift
+      across library versions is accepted).
+
+    * ``best_effort`` — identical to ``seeded_reproducible`` at install
+      time; the label exists to mark runs that callers explicitly do not
+      want counted as strict for CI regression checks.
+
+    * ``exploratory`` — **no-op**. Whatever the caller's pre-existing RNG
+      state is stays untouched. The variant will still receive a fresh,
+      non-deterministic seed from :func:`current_seed` but we do not
+      reset global state.
+
+    Args:
+        mode: One of ``VALID_MODES``.
+        seed: Base seed to install (typically the value returned by
+            :func:`resolve_seed` for the recipe root).
+        configure_torch: Set False to skip torch/cuDNN configuration even
+            when torch is importable. Useful for unit tests that want to
+            assert the NumPy/Python side independently.
+
+    Returns:
+        A dict summarising what was installed — suitable for embedding in
+        the run manifest. Keys: ``mode``, ``python_hash_seed``,
+        ``numpy_seed_set``, ``torch_seed_set``, ``cudnn_deterministic``,
+        ``cudnn_benchmark``, ``torch_deterministic_algorithms``,
+        ``cublas_workspace_config``.
+
+    Raises:
+        ValueError: if ``mode`` is not in :data:`VALID_MODES`.
+    """
+
+    if mode not in VALID_MODES:
+        raise ValueError(f"unknown reproducibility_mode: {mode!r}")
+
+    summary: dict = {
+        "mode": mode,
+        "python_hash_seed": os.environ.get("PYTHONHASHSEED"),
+        "numpy_seed_set": False,
+        "torch_seed_set": False,
+        "cudnn_deterministic": None,
+        "cudnn_benchmark": None,
+        "torch_deterministic_algorithms": None,
+        "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+    }
+
+    if mode == "exploratory":
+        return summary
+
+    # Python + NumPy global RNG state — applied for all three non-exploratory modes.
+    random.seed(seed)
+    np.random.seed(seed)
+    summary["numpy_seed_set"] = True
+
+    if configure_torch:
+        try:
+            import torch
+        except ImportError:
+            torch = None
+        if torch is not None:
+            torch.manual_seed(seed)
+            try:
+                torch.cuda.manual_seed_all(seed)
+            except Exception:  # CUDA unavailable or not compiled in
+                pass
+            summary["torch_seed_set"] = True
+
+            if mode == "strict_reproducible":
+                try:
+                    torch.backends.cudnn.deterministic = True
+                    torch.backends.cudnn.benchmark = False
+                    summary["cudnn_deterministic"] = True
+                    summary["cudnn_benchmark"] = False
+                except AttributeError:
+                    pass
+                try:
+                    torch.use_deterministic_algorithms(True, warn_only=True)
+                    summary["torch_deterministic_algorithms"] = True
+                except (AttributeError, RuntimeError):
+                    pass
+
+    if mode == "strict_reproducible":
+        # CUBLAS workspace is required by torch for CUDA deterministic algorithms.
+        # Only set it if not already configured so we do not override a user's explicit choice.
+        if not os.environ.get("CUBLAS_WORKSPACE_CONFIG"):
+            os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        summary["cublas_workspace_config"] = os.environ["CUBLAS_WORKSPACE_CONFIG"]
+
+        if summary["python_hash_seed"] is None:
+            warnings.warn(
+                "reproducibility_mode='strict_reproducible' but PYTHONHASHSEED "
+                "is not set. Hash-randomised structures (sets, dicts, "
+                "PYTHONHASHSEED-dependent paths) may still vary across runs. "
+                "Set PYTHONHASHSEED=0 in the shell before launching Python to "
+                "fully pin hash ordering.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+    return summary

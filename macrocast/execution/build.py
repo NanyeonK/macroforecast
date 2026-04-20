@@ -28,6 +28,7 @@ from .errors import ExecutionError
 from .seed_policy import (
     ReproducibilityContext,
     current_seed,
+    apply_reproducibility_mode,
     reset_context,
     resolve_seed,
     set_context,
@@ -3030,6 +3031,14 @@ def execute_recipe(
             reproducibility_spec=reproducibility_spec,
         )
     )
+    # Install global RNG state + determinism flags based on the recipe's mode.
+    # current_seed() uses the same policy for per-variant seeds; this call
+    # covers the global state that downstream libraries (numpy, torch, cudnn)
+    # read directly without passing through resolve_seed.
+    _reproducibility_applied = apply_reproducibility_mode(
+        mode=str(reproducibility_spec.get("reproducibility_mode", "seeded_reproducible")),
+        seed=int(reproducibility_spec.get("seed", 42)),
+    )
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
     _release_lag = _data_task_axis(recipe, "release_lag_rule")
     _missing_avail = _data_task_axis(recipe, "missing_availability")
@@ -3125,6 +3134,7 @@ def execute_recipe(
         "stat_test_spec": stat_test_spec,
         "importance_spec": importance_spec,
         "reproducibility_spec": reproducibility_spec,
+        "reproducibility_applied": _reproducibility_applied,
         "failure_policy_spec": failure_policy_spec,
         "compute_mode_spec": compute_mode_spec,
         "lag_selection": _LAG_SELECTION,

@@ -122,3 +122,105 @@ def test_current_seed_falls_back_without_context():
         assert current_seed(model_family="rf") == 42
     finally:
         reset_context(token)
+
+
+# --- apply_reproducibility_mode — 0.5 global state tightening ---
+
+
+def test_apply_strict_sets_numpy_global_state():
+    import numpy as np
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    apply_reproducibility_mode(mode="strict_reproducible", seed=42, configure_torch=False)
+    a = np.random.rand(4)
+    apply_reproducibility_mode(mode="strict_reproducible", seed=42, configure_torch=False)
+    b = np.random.rand(4)
+    assert (a == b).all(), "strict_reproducible must pin numpy global RNG"
+
+
+def test_apply_seeded_pins_python_random():
+    import random
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    apply_reproducibility_mode(mode="seeded_reproducible", seed=7, configure_torch=False)
+    a = [random.random() for _ in range(4)]
+    apply_reproducibility_mode(mode="seeded_reproducible", seed=7, configure_torch=False)
+    b = [random.random() for _ in range(4)]
+    assert a == b, "seeded_reproducible must pin Python random.random state"
+
+
+def test_apply_exploratory_is_noop_on_global_state():
+    import random
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    random.seed(99)
+    baseline_next = random.random()
+    random.seed(99)
+    # apply_reproducibility_mode must NOT reset the RNG state
+    apply_reproducibility_mode(mode="exploratory", seed=42, configure_torch=False)
+    actual_next = random.random()
+    assert actual_next == baseline_next, "exploratory mode must not touch Python random state"
+
+
+def test_apply_strict_warns_without_python_hash_seed():
+    import os
+    import warnings
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    original = os.environ.pop("PYTHONHASHSEED", None)
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            apply_reproducibility_mode(mode="strict_reproducible", seed=42, configure_torch=False)
+        assert any(
+            issubclass(w.category, RuntimeWarning) and "PYTHONHASHSEED" in str(w.message)
+            for w in caught
+        ), f"expected PYTHONHASHSEED RuntimeWarning; got {[str(w.message) for w in caught]}"
+    finally:
+        if original is not None:
+            os.environ["PYTHONHASHSEED"] = original
+
+
+def test_apply_strict_sets_cublas_workspace_config():
+    import os
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    original = os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
+    try:
+        summary = apply_reproducibility_mode(mode="strict_reproducible", seed=42, configure_torch=False)
+        assert os.environ.get("CUBLAS_WORKSPACE_CONFIG") == ":4096:8"
+        assert summary["cublas_workspace_config"] == ":4096:8"
+    finally:
+        if original is not None:
+            os.environ["CUBLAS_WORKSPACE_CONFIG"] = original
+        else:
+            os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
+
+
+def test_apply_torch_flags_when_torch_available():
+    torch = None
+    try:
+        import torch
+    except ImportError:
+        pass
+    if torch is None:
+        import pytest as _pytest
+        _pytest.skip("torch not installed")
+
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    apply_reproducibility_mode(mode="strict_reproducible", seed=42)
+    assert torch.backends.cudnn.deterministic is True
+    assert torch.backends.cudnn.benchmark is False
+    t1 = torch.rand(4)
+    apply_reproducibility_mode(mode="strict_reproducible", seed=42)
+    t2 = torch.rand(4)
+    assert torch.equal(t1, t2), "torch tensors must be bit-identical under strict with fixed seed"
+
+
+def test_apply_unknown_mode_raises():
+    import pytest as _pytest
+    from macrocast.execution.seed_policy import apply_reproducibility_mode
+
+    with _pytest.raises(ValueError, match="unknown reproducibility_mode"):
+        apply_reproducibility_mode(mode="not_a_mode", seed=42, configure_torch=False)
