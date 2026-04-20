@@ -34,6 +34,8 @@ from .seed_policy import (
     set_context,
 )
 from .horizon_target import forward_scalar as _horizon_forward_scalar
+from ..raw.windowing import WindowSpec as _WindowSpec, _resolve_min_train_obs as _resolve_min_train_obs
+from .nber import filter_origins_by_regime as _filter_origins_by_regime
 from .types import ExecutionResult, ExecutionSpec
 from .deep_training import fit_factor_model, fit_with_optional_tuning, fit_adaptive_lasso, predict_adaptive_lasso
 from ..preprocessing import (
@@ -194,8 +196,36 @@ def _benchmark_spec(recipe: RecipeSpec) -> dict[str, object]:
     return spec
 
 
-def _minimum_train_size(recipe: RecipeSpec) -> int:
-    return int(_benchmark_spec(recipe)["minimum_train_size"])
+def _minimum_train_size(recipe: RecipeSpec, *, horizon: int | None = None) -> int:
+    """Resolve minimum_train_size honouring the §1.3 min_train_size axis.
+
+    The base value comes from ``benchmark_config.minimum_train_size`` (leaf_config
+    scalar, default 60). The axis value selects a transform applied on top:
+
+    - ``fixed_n_obs``: base (default, identity).
+    - ``fixed_years``: base * 12 (interpret the scalar as years).
+    - ``model_specific_min_train``: max(base, per-family floor).
+    - ``target_specific_min_train``: max(base, per-target floor).
+    - ``horizon_specific_min_train``: base + 6 * max(0, horizon-1).
+
+    The model_family / target / horizon context is looked up from the recipe when
+    available; horizon falls back to the largest recipe horizon when not supplied
+    explicitly, giving the most conservative (largest) minimum_train_size.
+    """
+    benchmark_spec = _benchmark_spec(recipe)
+    base = int(benchmark_spec["minimum_train_size"])
+    rule = str(recipe.data_task_spec.get("min_train_size", "fixed_n_obs"))
+    if rule == "fixed_n_obs":
+        return base
+    model_family = _model_family(recipe)
+    target = str(recipe.target) if getattr(recipe, "target", None) else None
+    effective_horizon = int(horizon) if horizon is not None else max((int(h) for h in recipe.horizons), default=1)
+    spec = _WindowSpec(minimum_train_rule=rule, minimum_train_value=base)
+    try:
+        resolved = _resolve_min_train_obs(spec, model_family=model_family, target=target, horizon=effective_horizon)
+    except ValueError as exc:
+        raise ExecutionError(str(exc)) from exc
+    return int(resolved)
 
 
 def _max_ar_lag(recipe: RecipeSpec) -> int:
@@ -2672,6 +2702,24 @@ def _build_predictions(
     anchored_max_window_size = int(recipe.training_spec.get("anchored_max_window_size", rolling_window_size))
     refit_k_steps = int(recipe.training_spec.get("refit_k_steps", 3))
     _horizon_construction = str(recipe.data_task_spec.get("horizon_target_construction", "future_level_y_t_plus_h"))
+    _oos_period = str(recipe.data_task_spec.get("oos_period", "all_oos_data"))
+
+    # §1.3 training_start_rule=fixed_start: resolve the calendar date to an index floor
+    _training_start_rule = str(recipe.data_task_spec.get("training_start_rule", "earliest_possible"))
+    _fixed_start_idx = 0
+    if _training_start_rule == "fixed_start":
+        _fixed_start_date = recipe.data_task_spec.get("training_start_date")
+        if _fixed_start_date is None:
+            raise ExecutionError("training_start_rule='fixed_start' requires data_task_spec['training_start_date'] (validated at compile time)")
+        import pandas as _pd
+        try:
+            _ts = _pd.Timestamp(_fixed_start_date)
+        except Exception as _e:
+            raise ExecutionError(f"training_start_date={_fixed_start_date!r} is not a valid ISO date: {_e}") from _e
+        _idx = target_series.index.searchsorted(_ts)
+        if _idx >= len(target_series.index):
+            raise ExecutionError(f"training_start_date={_fixed_start_date!r} is after the last available observation")
+        _fixed_start_idx = int(_idx)
 
     def _rows_for_horizon(horizon: int) -> list[dict[str, object]]:
         nonlocal last_tuning_payload
@@ -2682,6 +2730,8 @@ def _build_predictions(
         locked_origin_idx = None
         for origin_idx in range(minimum_train_size - 1, len(target_series) - horizon):
             base_start_idx = max(0, origin_idx + 1 - rolling_window_size) if rolling else 0
+            if _fixed_start_idx > 0:
+                base_start_idx = max(base_start_idx, _fixed_start_idx)
             if outer_window == "anchored_rolling":
                 if origin_idx + 1 > anchored_max_window_size:
                     base_start_idx = max(0, origin_idx + 1 - anchored_max_window_size)
@@ -2703,6 +2753,10 @@ def _build_predictions(
                 start_idx = base_start_idx
                 effective_origin_idx = origin_idx
             origin_plan.append((origin_idx, start_idx, effective_origin_idx))
+
+        # §1.3 oos_period regime filter — applied after origin_plan is finalized.
+        if _oos_period in {"recession_only_oos", "expansion_only_oos"} and origin_plan:
+            origin_plan = _filter_origins_by_regime(origin_plan, index=target_series.index, regime=_oos_period)
 
         # Stage 2 — compute each origin's row. Thread-pool when requested.
         def _compute_origin(origin_idx: int, start_idx: int, effective_origin_idx: int) -> tuple[dict[str, object], dict[str, object] | None]:

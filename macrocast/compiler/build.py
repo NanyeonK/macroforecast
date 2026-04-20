@@ -399,6 +399,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
         "exogenous_block": _selection_value(selection_map, "exogenous_block", default=("endogenous_allowed" if feature_builder == "raw_feature_panel" else "none")),
         "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
+        "training_start_date": leaf_config.get("training_start_date"),
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
@@ -600,9 +601,11 @@ def _build_stage0_and_recipe(
 def _execution_status(
     selections: tuple[AxisSelection, ...],
     preprocess_contract,
+    leaf_config: dict[str, Any] | None = None,
 ) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
     warnings: list[str] = []
     blocked: list[str] = []
+    leaf_config = dict(leaf_config or {})
     selection_map = _selection_map(selections)
     registry = get_axis_registry()
 
@@ -638,7 +641,13 @@ def _execution_status(
     if model_family == "quantile_linear" and forecast_object not in {"point_median", "quantile"}:
         blocked.append("model_family='quantile_linear' requires forecast_object='point_median' or 'quantile'")
 
-    # §1.2.2 forecast_type × feature_builder compatibility (v1.0)
+    # §1.3 training_start_rule=fixed_start requires leaf_config.training_start_date
+    if feature_builder is not None:
+        _ts_rule = _selection_value(selection_map, "training_start_rule", default="earliest_possible")
+        if _ts_rule == "fixed_start" and not leaf_config.get("training_start_date"):
+            blocked.append("training_start_rule='fixed_start' requires leaf_config.training_start_date (ISO date string)")
+
+        # §1.2.2 forecast_type × feature_builder compatibility (v1.0)
     if feature_builder is not None:
         forecast_type_default = "iterated" if feature_builder == "autoreg_lagged_target" else "direct"
         forecast_type = _selection_value(selection_map, "forecast_type", default=forecast_type_default)
@@ -646,6 +655,17 @@ def _execution_status(
             blocked.append("forecast_type='iterated' is not implemented for feature_builder='raw_feature_panel' in v1.0 (requires exogenous X forecasting)")
         if feature_builder == "autoreg_lagged_target" and forecast_type == "direct":
             blocked.append("forecast_type='direct' is not implemented for feature_builder='autoreg_lagged_target' in v1.0 (the operational path is iterated); use forecast_type='iterated' or leave unset to take the dynamic default")
+
+    # §1.3 overlap_handling=evaluate_with_hac compatibility (v1.0)
+    _overlap = _selection_value(selection_map, "overlap_handling", default="allow_overlap")
+    if _overlap == "evaluate_with_hac":
+        _stat_test = _selection_value(selection_map, "stat_test", default="none")
+        _hac_compatible = {"dm_hln", "dm_modified", "spa", "mcs", "cw", "cpa"}
+        if _stat_test not in _hac_compatible and _stat_test != "none":
+            blocked.append(
+                f"overlap_handling='evaluate_with_hac' requires a HAC-capable stat_test "
+                f"(one of {sorted(_hac_compatible)}); got stat_test={_stat_test!r}"
+            )
 
     if feature_builder is not None:
         predictor_family = _selection_value(selection_map, "predictor_family", default=("target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"))
@@ -772,7 +792,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
 
     preprocess_contract = _build_preprocess_contract(selection_map)
     stage0, recipe_spec, run_spec = _build_stage0_and_recipe(recipe_dict, selection_map, leaf_config)
-    execution_status, warnings, blocked = _execution_status(selections, preprocess_contract)
+    execution_status, warnings, blocked = _execution_status(selections, preprocess_contract, leaf_config=leaf_config)
     tree_context = _build_tree_context(stage0, run_spec, selections, leaf_config)
     wrapper_handoff = _build_wrapper_handoff(
         stage0,

@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='fixed_start',
             description='fixed start (leaf_config.training_start_date)',
-            status='registry_only',
+            status='operational',
             priority='A',
         ),
     ),

@@ -24,19 +24,19 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='model_specific_min_train',
             description='model specific min train',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(
             id='target_specific_min_train',
             description='target specific min train',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(
             id='horizon_specific_min_train',
             description='horizon specific min train',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
     ),

@@ -128,3 +128,23 @@ Mirror `task.md` structure: intro + per-axis subsections with Value catalog / Fu
 - Full structural-break-aware training (the `post_break_start` drop defers this until the break axis is itself operational).
 - §1.4 / §1.5 per-axis walks — separate PRs.
 - Phase 8 paper_ready_bundle — independent critical path.
+
+---
+
+## 7. v1.0 implementation status (2026-04-20 follow-up)
+
+**All 8 demoted values flipped operational.** §1.3 registry has zero registry_only entries across all 4 axes.
+
+Implementation highlights (commits on top of the cleanup PR):
+
+- `training_start_rule.fixed_start` — leaf_config.training_start_date wired as a base_start_idx floor in _rows_for_horizon; compile-time guard validates presence.
+- `min_train_size` (3 demoted registry_only flipped to operational) — _minimum_train_size rewritten to dispatch through raw/windowing._resolve_min_train_obs, using recipe.data_task_spec[min_train_size] as the selector.
+- `oos_period.recession_only_oos` / `expansion_only_oos` — new macrocast/execution/nber.py with the 12-segment NBER recession fixture; filter_origins_by_regime applied to origin_plan before per-origin compute.
+- `overlap_handling.evaluate_with_hac` — compiler compatibility gate requires stat_test in {dm_hln, dm_modified, spa, mcs, cw, cpa, none}; existing HAC paths in dm_hln/dm_modified executors remain the implementation.
+
+Tests: 17 new positive / guard tests in tests/test_stage1_3_impl.py covering every new wiring. Full suite 700 -> 717 passed.
+
+Docs:
+- docs/user_guide/data/horizon.md written (§1.3 page, 4-axis catalog + per-axis semantics).
+- docs/user_guide/data/index.md "Honest operational status" paragraph rewritten — §1.1/§1.2/§1.3 now honest, §1.4/§1.5 still pending walks.
+- plans/coverage_ledger.md §1.2.2 / §1.2.3 / §1.2.4 / §1.3.5 flipped to OPERATIONAL 2026-04-20 markers.

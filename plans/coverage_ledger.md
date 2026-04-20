@@ -273,7 +273,7 @@ above. Historical rows preserved for archaeology:
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | earliest_possible | operational | - | - | Default, no-op (current behaviour). |
-| fixed_start | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — implementation pending leaf_config.training_start_date wiring in the implementation PR. |
+| fixed_start | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.training_start_date wired as base_start_idx floor in _rows_for_horizon; compiler guard validates presence. |
 | post_warmup_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — warmup_rule axis is itself dropped; the dependency no longer makes sense. |
 | rolling_train_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
 | post_break_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — depended on structural_break_segmentation which is not v1.0-operational. |
@@ -284,8 +284,8 @@ above. Historical rows preserved for archaeology:
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | all_oos_data | operational | - | - | **ADDED 2026-04-20 (§1.3 cleanup)** — new default value covering the base behaviour when no OOS filter is applied. |
-| recession_only_oos | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — NBER-date filter pending implementation in the impl PR. |
-| expansion_only_oos | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — complement of recession_only_oos, same implementation. |
+| recession_only_oos | operational | - | - | **OPERATIONAL 2026-04-20** — NBER fixture (12 recessions 1948-2020) wired via filter_origins_by_regime in _rows_for_horizon. |
+| expansion_only_oos | operational | - | - | **OPERATIONAL 2026-04-20** — complement of recession_only_oos, same filter. |
 | single_oos_block | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=expanding` default. |
 | rolling_origin | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
 | multiple_oos_blocks | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
@@ -373,7 +373,7 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | allow_overlap | operational | - | - | Default, no-op (current behaviour). |
-| evaluate_with_hac | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — wiring into dm_hln / cpa stat tests pending the impl PR. |
+| evaluate_with_hac | operational | - | - | **OPERATIONAL 2026-04-20** — compiler compatibility gate requires stat_test in {dm_hln, dm_modified, spa, mcs, cw, cpa, none}. HAC covariance is already used inside dm_hln/dm_modified executors. |
 | evaluate_with_block_bootstrap | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — requires bootstrap infrastructure not in v1.0 scope. |
 | non_overlapping_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |
 | horizon_specific_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |

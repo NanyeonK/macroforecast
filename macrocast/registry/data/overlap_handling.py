@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='evaluate_with_hac',
             description='evaluate with hac covariance in stat tests',
-            status='registry_only',
+            status='operational',
             priority='A',
         ),
     ),
