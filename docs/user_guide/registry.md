@@ -17,7 +17,7 @@ macrocast/registry/
   base.py           # BaseRegistryEntry, EnumRegistryEntry, AxisDefinition
   build.py          # auto-discovery loader, get_axis_registry()
   types.py          # AxisRegistryEntry, AxisSelection, SupportStatus
-  stage0/           # 7 axes (study_mode, experiment_unit, axis_type, ...)
+  stage0/           # 6 axes (study_mode, experiment_unit, axis_type, ...)
   data/             # 29 axes (dataset, frequency, forecast_type, ...)
   preprocessing/    # 24 axes (tcode_policy, scaling_policy, ...)
   training/         # 28 axes (model_family, search_algorithm, ...)

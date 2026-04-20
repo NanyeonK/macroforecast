@@ -422,7 +422,7 @@ path:
 
 ## Framework surface
 
-The 7 axes above are consumed by a compact framework that the user typically touches only via `build_design_frame()`:
+The 6 axes above are consumed by a compact framework that the user typically touches only via `build_design_frame()`:
 
 ```python
 from macrocast.design import (
