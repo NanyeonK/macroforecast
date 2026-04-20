@@ -7,6 +7,11 @@ In-depth documentation for every macrocast layer. Each page is self-contained; f
 :caption: Stages
 
 design
+data/index
+data/source
+data/datasets/fred_md
+data/datasets/fred_qd
+data/datasets/fred_sd
 ```
 
 ```{toctree}

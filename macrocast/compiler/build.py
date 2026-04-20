@@ -384,7 +384,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     information_set_type = _first_selected_value(selection_map, "information_set_type", "revised")
     predictor_family_default = "target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"
     return {
-        "data_domain": _selection_value(selection_map, "data_domain", default="macro"),
+        "custom_data_path": leaf_config.get("custom_data_path"),
         "dataset_source": _selection_value(selection_map, "dataset_source", default=dataset),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
@@ -751,6 +751,12 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         if "target" not in leaf_config:
             raise CompileValidationError("recipe leaf_config missing 'target'")
 
+    # Custom data source validation: custom_csv / custom_parquet require leaf_config.custom_data_path
+    ds_source_choice = selection_map["dataset_source"].selected_values[0] if "dataset_source" in selection_map else None
+    if ds_source_choice in {"custom_csv", "custom_parquet"} and not leaf_config.get("custom_data_path"):
+        raise CompileValidationError(
+            f"dataset_source={ds_source_choice!r} requires leaf_config.custom_data_path"
+        )
     reproducibility_mode = _selection_value(selection_map, "reproducibility_mode", default="best_effort")
     random_seed = leaf_config.get("random_seed")
     if reproducibility_mode in {"strict_reproducible", "seeded_reproducible"} and random_seed is None:
