@@ -25,132 +25,108 @@ macrocast compares forecasting tools under identical information set, sample spl
 
 ---
 
-## 0.1 `axis_type`
+## 0.1 `research_design`
 
-**Declares how an axis participates in a recipe.** Every axis carries a `default_policy`; the recipe overrides by placing the axis in one of five sections.
+**Top-level research identity** of the study. Determines which execution route the compiler produces and which runner the user invokes. Default is `single_path_benchmark`.
+
+Default recorded on study manifests (when swept via `execute_sweep`) is `controlled_variation`.
 
 ### Value catalog
 
-| Value | Status | Recipe section | Role |
-|---|---|---|---|
-| `fixed` | operational | `fixed_axes` | Held constant across the study. One value per axis. |
-| `sweep` | operational | `sweep_axes` | Cartesian-expanded across the listed values. |
-| `conditional` | operational | `conditional_axes` | Value depends on another axis's choice; activated only when the trigger axis takes a matching value. |
-| `nested_sweep` | operational | `nested_sweep_axes` | Hierarchical sweep: each parent value carries its own (possibly different) child axis and child values. |
-| `derived` | operational | `derived_axes` | Computed by a registered derivation rule at compile time (e.g. `experiment_unit_default`). |
+Operational values are subdivided by **how they are executed**:
+
+- **direct** — `execute_recipe()` handles the recipe path as-is.
+- **sweep runner** — `execute_sweep()` expands and executes variants.
+- **dedicated runner** — a purpose-built top-level function drives execution.
+- **wrapper handoff (pending consumer)** — compile emits a `wrapper_handoff` payload but no in-package runner ships yet.
+
+| Value | Status | Execution form | Compile status | Runner |
+|---|---|---|---|---|
+| `single_path_benchmark` | operational | direct | executable | `execute_recipe` |
+| `controlled_variation` | operational | sweep runner | executable | `execute_sweep` (internally compiles each variant to single-path) |
+| `replication_override` | operational | dedicated runner | executable (since 2026-04-20) | `execute_replication` (applies overrides, compiles, runs via `execute_recipe`) |
+| `orchestrated_bundle` | operational | wrapper handoff (pending) | representable_but_not_executable | Phase 8 `PaperReadyBundle` consumer — not shipped yet |
+
+### Which one to pick
+
+- **You are running one recipe against a baseline** → `single_path_benchmark`. Default, no need to set explicitly.
+- **You are sweeping an axis (horse race)** → `controlled_variation`. Required by `execute_sweep`.
+- **You are reproducing a prior study with locked overrides** → `replication_override`. Then call `execute_replication(source_recipe_dict=..., overrides=...)`.
+- **You are bundling multiple recipes for paper artifact (Phase 8)** → `orchestrated_bundle`. Compile-only today; the consumer ships in Phase 8 (`PaperReadyBundle`).
 
 ### Functions & features
 
-- `AxisSelectionMode` Literal in `macrocast.registry.types` — the 5 modes are the exhaustive type space for axis selection.
-- `AxisSelection` dataclass — each selected axis carries `selection_mode` set to one of the 5 above.
-- `compile_sweep_plan()` in `macrocast.compiler.sweep_plan` — expands `sweep_axes` + `nested_sweep_axes` into the Cartesian variant grid.
-- `DERIVATION_RULES` dict in `macrocast.compiler.build` — registered rules for `derived_axes`. Currently: `experiment_unit_default`.
-- `_resolve_derived_axes()` in `macrocast.compiler.build` — compile-time resolver that adds AxisSelections with `selection_mode="derived"` to the selection tuple.
+- `DEFAULT_RESEARCH_DESIGN = "controlled_variation"` in `macrocast.execution.sweep_runner` — the value recorded on study manifests by default when `execute_sweep` is invoked without an override.
+- `macrocast.design.normalize.normalize_research_design(value)` — rejects unknown values with `DesignValidationError`. The 4 accepted values live in `_ALLOWED_RESEARCH_DESIGNS`.
+- `macrocast.design.derive.derive_execution_posture(research_design, design_shape, replication_input, experiment_unit)`:
+  - `replication_override` → `replication_locked_plan`
+  - `orchestrated_bundle` → `wrapper_bundle_plan`
+  - otherwise driven by design_shape
+- `macrocast.compiler.build.compile_recipe_dict()`:
+  - Rejects `research_design` that is not one of the 4 registered values.
+  - Emits `representable_but_not_executable` + wrapper-route warning for `orchestrated_bundle` (until Phase 8 consumer lands).
+  - `replication_override` now passes as `executable` (was rejected until 2026-04-20 cleanup).
+- `macrocast.execution.sweep_runner.execute_sweep(..., research_design=...)` — parameter; study manifest records the choice.
+- `macrocast.studies.replication.execute_replication(...)` — dedicated runner for `replication_override`. Accepts source recipe with any research_design; applies overrides; compiles and runs.
 
 ### Recipe usage
 
 ```yaml
+# Single-path benchmark study (default; omitting research_design gets this).
 path:
-  3_training:
-    fixed_axes:
-      framework: rolling
-    sweep_axes:
-      model_family: [ridge, lasso]
-    nested_sweep_axes:
-      model_family:
-        ridge: {hp_space_style: [paper_fixed_hp, grid_linear]}
-        lasso: {hp_space_style: [paper_fixed_hp, grid_linear, grid_log]}
   0_meta:
-    derived_axes:
-      experiment_unit: experiment_unit_default
+    fixed_axes:
+      research_design: single_path_benchmark
 ```
 
-An axis can appear in at most one section; putting the same axis in multiple sections raises `CompileValidationError`. The YAML above expands to `sweep(2) × nested(5) = 10` variants, with `experiment_unit` derived per-variant.
-
----
-
-## 0.2 `compute_mode`
-
-**Declares the parallelism unit** for sweep / multi-target / multi-horizon execution. Default is `serial`. All parallel modes use `concurrent.futures.ThreadPoolExecutor` with `max_workers` capped at 4; speedup on CPU-heavy work depends on whether the underlying numpy/pandas/model code releases the GIL.
-
-### Value catalog
-
-| Value | Status | Trigger condition | Effect |
-|---|---|---|---|
-| `serial` | operational | — | Single-threaded execution throughout. Default. |
-| `parallel_by_model` | operational | sweep plan contains a `model_family` sweep axis AND `len(plan.variants) > 1` | Variant-level threading in `execute_sweep`: different model_family variants run concurrently. Silent no-op (serial fallback) if the trigger condition fails. |
-| `parallel_by_horizon` | operational | `len(recipe.horizons) > 1` | Horizon-level threading inside `execute_recipe`: each horizon computed in its own worker. Silent no-op for single-horizon recipes. |
-| `parallel_by_target` | operational | `len(recipe.targets) > 1` | Target-level threading inside `execute_recipe`: each target's slice computed concurrently. Silent no-op for single-target recipes. |
-| `parallel_by_oos_date` | operational | `len(origin_plan) > 1` within each horizon loop | Origin-level threading inside `_rows_for_horizon`: refit_policy state is computed serially in a pre-pass (ensures determinism with `fit_once_predict_many` / `refit_every_k_steps`), then model/benchmark fits run concurrently across OOS origins. Silent no-op for short OOS ranges. |
-| `parallel_by_trial` | registry_only (v1.1) | — | Compiler rejects. Awaits tuning backend integration (`execution_backend.joblib`). |
-| `distributed_cluster` | registry_only (v2) | — | Compiler rejects. Needs a distributed runtime (phase-11). |
-
-The three operational parallel modes are mutually independent — they operate at different pipeline layers (sweep, horizon, target) — but a single study picks one. Stacked parallelism across layers is not supported in v1.
-
-### Functions & features
-
-- Compiler spec: `compute_mode_spec` dict embedded in `CompiledRecipeSpec` (`macrocast/compiler/build.py`).
-- Compiler guard: `compute_mode` restricted to the 4 operational values at compile time; registry_only and future values raise "representable but not executable".
-- Sweep runner (`macrocast.execution.sweep_runner`):
-  - `_extract_parent_compute_mode(plan)` reads the compute_mode from the parent recipe's `0_meta` block; defaults to `serial`.
-  - `execute_sweep()` dispatches variants via `ThreadPoolExecutor` when `compute_mode == "parallel_by_model"` and a `model_family` sweep axis is present.
-- Execution build (`macrocast.execution.build`):
-  - Horizon loop wraps its row-builder in `ThreadPoolExecutor` when `compute_mode == "parallel_by_horizon"` and `len(horizons) > 1`.
-  - Target loop wraps its per-target job in `ThreadPoolExecutor` when `compute_mode == "parallel_by_target"` and `len(targets) > 1`.
-  - OOS origin loop (inside `_rows_for_horizon`) builds a deterministic plan, then dispatches the per-origin compute via `ThreadPoolExecutor` when `compute_mode == "parallel_by_oos_date"` and `len(origin_plan) > 1`.
-
-### Recipe usage
-
 ```yaml
-# Variant-level parallelism — run a model horse-race with different families in parallel.
+# Horse-race sweep.
 path:
   0_meta:
     fixed_axes:
-      compute_mode: parallel_by_model
+      research_design: controlled_variation
   3_training:
     sweep_axes:
       model_family: [ridge, lasso, random_forest]
 ```
 
 ```yaml
-# Target-level parallelism — multi-target recipe with concurrent per-target execution.
+# Replication of a prior recipe — marks the source; execute_replication reruns.
 path:
   0_meta:
     fixed_axes:
-      compute_mode: parallel_by_target
-  1_data_task:
-    fixed_axes:
-      task: multi_target_point_forecast
-    leaf_config:
-      targets: [INDPRO, RPI, CPIAUCSL]
+      research_design: replication_override
 ```
 
 ```yaml
-# Horizon-level parallelism — single recipe computing multiple horizons concurrently.
+# Orchestrated bundle — compile-only in v1.0; Phase 8 PaperReadyBundle will consume.
 path:
   0_meta:
     fixed_axes:
-      compute_mode: parallel_by_horizon
-  1_data_task:
+      research_design: orchestrated_bundle
+  5_output_provenance:
     leaf_config:
-      horizons: [1, 3, 6, 12]
+      wrapper_family: benchmark_suite     # required by wrapper_handoff contract
+      bundle_label: my-bundle             # required
 ```
 
-```yaml
-# OOS-origin-level parallelism — best with long OOS ranges and fast models.
-path:
-  0_meta:
-    fixed_axes:
-      compute_mode: parallel_by_oos_date
-  1_data_task:
-    leaf_config:
-      target: INDPRO
-      horizons: [1, 3]
-```
+### Relation to other Layer 0 axes
+
+- `experiment_unit` (§0.2) interacts with `research_design`. E.g., `orchestrated_bundle` combined with `experiment_unit=benchmark_suite` produces a wrapper_handoff payload; `replication_override` defaults `experiment_unit` to `replication_recipe`.
+- `reproducibility_mode` (§0.5) applies independently; a `replication_override` with `strict_reproducible` produces a byte-identical replay.
+- `failure_policy` (§0.4) drives per-variant and per-recipe failure handling regardless of research_design.
+
+### Not implemented in v1.0
+
+| Value | Gap | Target |
+|---|---|---|
+| `orchestrated_bundle` consumer | Phase 8 `PaperReadyBundle` is the intended runner — not shipped. Compile handoff exists; runtime consumer pending. | Phase 8 |
+
+All other research_design values execute end-to-end in v1.0.
 
 ---
 
-## 0.3 `experiment_unit`
+## 0.2 `experiment_unit`
 
 **Declares the per-recipe execution shape** — how many targets / models / variants the recipe produces, and which runner handles it. This is the richest Layer 0 axis, with a dedicated entry dataclass and helper functions. Auto-derived from the rest of the recipe when not set explicitly.
 
@@ -189,7 +165,7 @@ path:
   - optional `runner: str | None` — dotted path to the dedicated runner function.
 - **`get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry`** — lookup by id.
 - **`experiment_unit_options_for_wizard(research_design, task)`** — returns operational options only (registry_only / future values are filtered). Use from CLI wizards / UI to offer users the currently usable shapes.
-- **`derive_experiment_unit_default(research_design, task, model_axis_mode, feature_axis_mode, wrapper_family)`** — chooses the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (§0.1 `derived_axes`).
+- **`derive_experiment_unit_default(research_design, task, model_axis_mode, feature_axis_mode, wrapper_family)`** — chooses the default unit from recipe shape. Also exposed as the `experiment_unit_default` derivation rule in `DERIVATION_RULES` (§0.3 `derived_axes`).
 - **`derive_experiment_unit(research_design, execution_posture, forecast_task)`** in `macrocast.design.derive` — the framework-level hook used by `build_design_frame`. Honours `execution_posture` (wrapper / replication) first, then falls back to multi_target_shared_design for multi-target, model_grid for controlled_variation, and single_target_single_model otherwise.
 - **Compiler integration**: `compile_recipe_dict()` auto-derives `experiment_unit` when not explicit; conflict-checks explicit declarations against the derived default; emits a `wrapper_handoff` payload when `route_owner == "wrapper"`. Values `benchmark_suite` convert the compile status to `representable_but_not_executable` (wrapper runner pending).
 
@@ -237,7 +213,7 @@ path:
 # Run via execute_ablation(), not execute_recipe().
 ```
 
-Explicit (declarative derivation via `derived_axes` from §0.1):
+Explicit (declarative derivation via `derived_axes` from §0.3):
 
 ```yaml
 path:
@@ -272,6 +248,50 @@ Run via `execute_separate_runs(source_recipe_dict=..., output_root=...)`; produc
 | `benchmark_suite` wrapper runner | operational · handoff | Same as above; Phase 8 `PaperReadyBundle` will be the first consumer. | Phase 8 |
 
 In short: 6 of 11 values execute end-to-end inside the package (3 direct + 3 dedicated runners). 2 more compile successfully with a wrapper_handoff payload but wait for an external or Phase 8 consumer. The remaining 3 are future entries (v2 Phase 11) with no runtime in v1.0. multi_output_joint_model was dropped — its semantics turned out to be model-family dependent (Ridge/Lasso with sklearn multi-output API produce identical predictions to shared_design; only trees / MultiTaskLasso give distinct predictions). Deferred to v1.1 as a proper set of model_family values rather than an experiment_unit label.
+
+---
+
+## 0.3 `axis_type`
+
+**Declares how an axis participates in a recipe.** Every axis carries a `default_policy`; the recipe overrides by placing the axis in one of five sections.
+
+### Value catalog
+
+| Value | Status | Recipe section | Role |
+|---|---|---|---|
+| `fixed` | operational | `fixed_axes` | Held constant across the study. One value per axis. |
+| `sweep` | operational | `sweep_axes` | Cartesian-expanded across the listed values. |
+| `conditional` | operational | `conditional_axes` | Value depends on another axis's choice; activated only when the trigger axis takes a matching value. |
+| `nested_sweep` | operational | `nested_sweep_axes` | Hierarchical sweep: each parent value carries its own (possibly different) child axis and child values. |
+| `derived` | operational | `derived_axes` | Computed by a registered derivation rule at compile time (e.g. `experiment_unit_default`). |
+
+### Functions & features
+
+- `AxisSelectionMode` Literal in `macrocast.registry.types` — the 5 modes are the exhaustive type space for axis selection.
+- `AxisSelection` dataclass — each selected axis carries `selection_mode` set to one of the 5 above.
+- `compile_sweep_plan()` in `macrocast.compiler.sweep_plan` — expands `sweep_axes` + `nested_sweep_axes` into the Cartesian variant grid.
+- `DERIVATION_RULES` dict in `macrocast.compiler.build` — registered rules for `derived_axes`. Currently: `experiment_unit_default`.
+- `_resolve_derived_axes()` in `macrocast.compiler.build` — compile-time resolver that adds AxisSelections with `selection_mode="derived"` to the selection tuple.
+
+### Recipe usage
+
+```yaml
+path:
+  3_training:
+    fixed_axes:
+      framework: rolling
+    sweep_axes:
+      model_family: [ridge, lasso]
+    nested_sweep_axes:
+      model_family:
+        ridge: {hp_space_style: [paper_fixed_hp, grid_linear]}
+        lasso: {hp_space_style: [paper_fixed_hp, grid_linear, grid_log]}
+  0_meta:
+    derived_axes:
+      experiment_unit: experiment_unit_default
+```
+
+An axis can appear in at most one section; putting the same axis in multiple sections raises `CompileValidationError`. The YAML above expands to `sweep(2) × nested(5) = 10` variants, with `experiment_unit` derived per-variant.
 
 ---
 
@@ -482,104 +502,84 @@ See also: `docs/dev/reproducibility_policy.md`, `macrocast.execution.seed_policy
 
 ---
 
-## 0.6 `research_design`
+## 0.6 `compute_mode`
 
-**Top-level research identity** of the study. Determines which execution route the compiler produces and which runner the user invokes. Default is `single_path_benchmark`.
-
-Default recorded on study manifests (when swept via `execute_sweep`) is `controlled_variation`.
+**Declares the parallelism unit** for sweep / multi-target / multi-horizon execution. Default is `serial`. All parallel modes use `concurrent.futures.ThreadPoolExecutor` with `max_workers` capped at 4; speedup on CPU-heavy work depends on whether the underlying numpy/pandas/model code releases the GIL.
 
 ### Value catalog
 
-Operational values are subdivided by **how they are executed**:
+| Value | Status | Trigger condition | Effect |
+|---|---|---|---|
+| `serial` | operational | — | Single-threaded execution throughout. Default. |
+| `parallel_by_model` | operational | sweep plan contains a `model_family` sweep axis AND `len(plan.variants) > 1` | Variant-level threading in `execute_sweep`: different model_family variants run concurrently. Silent no-op (serial fallback) if the trigger condition fails. |
+| `parallel_by_horizon` | operational | `len(recipe.horizons) > 1` | Horizon-level threading inside `execute_recipe`: each horizon computed in its own worker. Silent no-op for single-horizon recipes. |
+| `parallel_by_target` | operational | `len(recipe.targets) > 1` | Target-level threading inside `execute_recipe`: each target's slice computed concurrently. Silent no-op for single-target recipes. |
+| `parallel_by_oos_date` | operational | `len(origin_plan) > 1` within each horizon loop | Origin-level threading inside `_rows_for_horizon`: refit_policy state is computed serially in a pre-pass (ensures determinism with `fit_once_predict_many` / `refit_every_k_steps`), then model/benchmark fits run concurrently across OOS origins. Silent no-op for short OOS ranges. |
+| `parallel_by_trial` | registry_only (v1.1) | — | Compiler rejects. Awaits tuning backend integration (`execution_backend.joblib`). |
+| `distributed_cluster` | registry_only (v2) | — | Compiler rejects. Needs a distributed runtime (phase-11). |
 
-- **direct** — `execute_recipe()` handles the recipe path as-is.
-- **sweep runner** — `execute_sweep()` expands and executes variants.
-- **dedicated runner** — a purpose-built top-level function drives execution.
-- **wrapper handoff (pending consumer)** — compile emits a `wrapper_handoff` payload but no in-package runner ships yet.
-
-| Value | Status | Execution form | Compile status | Runner |
-|---|---|---|---|---|
-| `single_path_benchmark` | operational | direct | executable | `execute_recipe` |
-| `controlled_variation` | operational | sweep runner | executable | `execute_sweep` (internally compiles each variant to single-path) |
-| `replication_override` | operational | dedicated runner | executable (since 2026-04-20) | `execute_replication` (applies overrides, compiles, runs via `execute_recipe`) |
-| `orchestrated_bundle` | operational | wrapper handoff (pending) | representable_but_not_executable | Phase 8 `PaperReadyBundle` consumer — not shipped yet |
-
-### Which one to pick
-
-- **You are running one recipe against a baseline** → `single_path_benchmark`. Default, no need to set explicitly.
-- **You are sweeping an axis (horse race)** → `controlled_variation`. Required by `execute_sweep`.
-- **You are reproducing a prior study with locked overrides** → `replication_override`. Then call `execute_replication(source_recipe_dict=..., overrides=...)`.
-- **You are bundling multiple recipes for paper artifact (Phase 8)** → `orchestrated_bundle`. Compile-only today; the consumer ships in Phase 8 (`PaperReadyBundle`).
+The three operational parallel modes are mutually independent — they operate at different pipeline layers (sweep, horizon, target) — but a single study picks one. Stacked parallelism across layers is not supported in v1.
 
 ### Functions & features
 
-- `DEFAULT_RESEARCH_DESIGN = "controlled_variation"` in `macrocast.execution.sweep_runner` — the value recorded on study manifests by default when `execute_sweep` is invoked without an override.
-- `macrocast.design.normalize.normalize_research_design(value)` — rejects unknown values with `DesignValidationError`. The 4 accepted values live in `_ALLOWED_RESEARCH_DESIGNS`.
-- `macrocast.design.derive.derive_execution_posture(research_design, design_shape, replication_input, experiment_unit)`:
-  - `replication_override` → `replication_locked_plan`
-  - `orchestrated_bundle` → `wrapper_bundle_plan`
-  - otherwise driven by design_shape
-- `macrocast.compiler.build.compile_recipe_dict()`:
-  - Rejects `research_design` that is not one of the 4 registered values.
-  - Emits `representable_but_not_executable` + wrapper-route warning for `orchestrated_bundle` (until Phase 8 consumer lands).
-  - `replication_override` now passes as `executable` (was rejected until 2026-04-20 cleanup).
-- `macrocast.execution.sweep_runner.execute_sweep(..., research_design=...)` — parameter; study manifest records the choice.
-- `macrocast.studies.replication.execute_replication(...)` — dedicated runner for `replication_override`. Accepts source recipe with any research_design; applies overrides; compiles and runs.
+- Compiler spec: `compute_mode_spec` dict embedded in `CompiledRecipeSpec` (`macrocast/compiler/build.py`).
+- Compiler guard: `compute_mode` restricted to the 4 operational values at compile time; registry_only and future values raise "representable but not executable".
+- Sweep runner (`macrocast.execution.sweep_runner`):
+  - `_extract_parent_compute_mode(plan)` reads the compute_mode from the parent recipe's `0_meta` block; defaults to `serial`.
+  - `execute_sweep()` dispatches variants via `ThreadPoolExecutor` when `compute_mode == "parallel_by_model"` and a `model_family` sweep axis is present.
+- Execution build (`macrocast.execution.build`):
+  - Horizon loop wraps its row-builder in `ThreadPoolExecutor` when `compute_mode == "parallel_by_horizon"` and `len(horizons) > 1`.
+  - Target loop wraps its per-target job in `ThreadPoolExecutor` when `compute_mode == "parallel_by_target"` and `len(targets) > 1`.
+  - OOS origin loop (inside `_rows_for_horizon`) builds a deterministic plan, then dispatches the per-origin compute via `ThreadPoolExecutor` when `compute_mode == "parallel_by_oos_date"` and `len(origin_plan) > 1`.
 
 ### Recipe usage
 
 ```yaml
-# Single-path benchmark study (default; omitting research_design gets this).
+# Variant-level parallelism — run a model horse-race with different families in parallel.
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
-```
-
-```yaml
-# Horse-race sweep.
-path:
-  0_meta:
-    fixed_axes:
-      research_design: controlled_variation
+      compute_mode: parallel_by_model
   3_training:
     sweep_axes:
       model_family: [ridge, lasso, random_forest]
 ```
 
 ```yaml
-# Replication of a prior recipe — marks the source; execute_replication reruns.
+# Target-level parallelism — multi-target recipe with concurrent per-target execution.
 path:
   0_meta:
     fixed_axes:
-      research_design: replication_override
+      compute_mode: parallel_by_target
+  1_data_task:
+    fixed_axes:
+      task: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI, CPIAUCSL]
 ```
 
 ```yaml
-# Orchestrated bundle — compile-only in v1.0; Phase 8 PaperReadyBundle will consume.
+# Horizon-level parallelism — single recipe computing multiple horizons concurrently.
 path:
   0_meta:
     fixed_axes:
-      research_design: orchestrated_bundle
-  5_output_provenance:
+      compute_mode: parallel_by_horizon
+  1_data_task:
     leaf_config:
-      wrapper_family: benchmark_suite     # required by wrapper_handoff contract
-      bundle_label: my-bundle             # required
+      horizons: [1, 3, 6, 12]
 ```
 
-### Relation to other Layer 0 axes
-
-- `experiment_unit` (§0.3) interacts with `research_design`. E.g., `orchestrated_bundle` combined with `experiment_unit=benchmark_suite` produces a wrapper_handoff payload; `replication_override` defaults `experiment_unit` to `replication_recipe`.
-- `reproducibility_mode` (§0.5) applies independently; a `replication_override` with `strict_reproducible` produces a byte-identical replay.
-- `failure_policy` (§0.4) drives per-variant and per-recipe failure handling regardless of research_design.
-
-### Not implemented in v1.0
-
-| Value | Gap | Target |
-|---|---|---|
-| `orchestrated_bundle` consumer | Phase 8 `PaperReadyBundle` is the intended runner — not shipped. Compile handoff exists; runtime consumer pending. | Phase 8 |
-
-All other research_design values execute end-to-end in v1.0.
+```yaml
+# OOS-origin-level parallelism — best with long OOS ranges and fast models.
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_oos_date
+  1_data_task:
+    leaf_config:
+      target: INDPRO
+      horizons: [1, 3]
+```
 
 ---
 
@@ -621,7 +621,7 @@ from macrocast.design import (
 
 ### DesignFrame derived fields
 
-Two fields are derived rather than hand-authored (distinct from `axis_type.derived` in §0.1 — these live on `DesignFrame`):
+Two fields are derived rather than hand-authored (distinct from `axis_type.derived` in §0.3 — these live on `DesignFrame`):
 
 - **`design_shape`** — inferred from `research_design` + `varying_design`. Examples: `one_fixed_env_one_tool_surface`, `one_fixed_env_controlled_axis_variation`, `wrapper_managed_multi_run_bundle`.
 - **`execution_posture`** — inferred from `research_design` + `design_shape` + optional replication input. Examples: `single_run_recipe`, `single_run_with_internal_sweep`, `wrapper_bundle_plan`, `replication_locked_plan`.
@@ -666,12 +666,12 @@ Framework:
 
 Layer 0 meta axes registry (6 axes, curated 2026-04-20):
 
-- `axis_type`: 5/5 operational (fixed, sweep, conditional, nested_sweep, derived). All wired to compiler + sweep_plan.
-- `compute_mode`: 5/9 operational (serial, parallel_by_model, parallel_by_horizon, parallel_by_target, parallel_by_oos_date). 4 registry_only: parallel_by_trial (v1.1 HPO backend), gpu_single / gpu_multi (scheduled for drop in Tier 1-3 PR #18), distributed_cluster (v2 Phase 11).
+- `research_design`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark via `execute_recipe`, controlled_variation via `execute_sweep`, replication_override via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle → `PaperReadyBundle`).
 - `experiment_unit`: 8/11 operational — 3 direct executable via `execute_recipe` (single_target_single_model, single_target_model_grid, multi_target_shared_design), 3 dedicated-runner (ablation_study via `execute_ablation`, replication_recipe via `execute_replication`, multi_target_separate_runs via `execute_separate_runs`), 2 wrapper-handoff pending Phase 8 (single_target_full_sweep, benchmark_suite). 3 future (v2 Phase 11): hierarchical_forecasting_run, panel_forecasting_run, state_space_run. `multi_output_joint_model` dropped — joint multi-output semantics are model-family dependent (Ridge/Lasso with sklearn multi-output API are mathematically equivalent to shared_design; only trees / MultiTaskLasso give distinct predictions). Deferred to v1.1 as a proper set of model_family values rather than an experiment_unit label.
+- `axis_type`: 5/5 operational (fixed, sweep, conditional, nested_sweep, derived). All wired to compiler + sweep_plan.
 - `failure_policy`: 5/7 operational (fail_fast, skip_failed_cell, skip_failed_model, save_partial_results, warn_only). 2 registry_only (v1.1): retry_then_skip, fallback_to_default_hp. `hard_error` dropped (fail_fast synonym, no distinct runtime branch).
 - `reproducibility_mode`: 4/4 operational (strict_reproducible, seeded_reproducible, best_effort, exploratory). strict now controls numpy + torch + cudnn + CUBLAS globals via `apply_reproducibility_mode()`; emits RuntimeWarning when PYTHONHASHSEED is not set in the shell.
-- `research_design`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark via `execute_recipe`, controlled_variation via `execute_sweep`, replication_override via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle → `PaperReadyBundle`).
+- `compute_mode`: 5/9 operational (serial, parallel_by_model, parallel_by_horizon, parallel_by_target, parallel_by_oos_date). 4 registry_only: parallel_by_trial (v1.1 HPO backend), gpu_single / gpu_multi (scheduled for drop in Tier 1-3 PR #18), distributed_cluster (v2 Phase 11).
 
 `registry_type` axis was dropped 2026-04-20 (PR #23) — it had zero runtime effect and every axis defaulted to `enum_registry`. If v1.1 adds numeric/callable/plugin dispatch, the AxisDefinition field can regrow at that point without migration.
 
