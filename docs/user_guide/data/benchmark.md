@@ -84,6 +84,11 @@ path:
 - `macrocast.execution.build._raw_panel_columns(frame, target, predictor_family, spec)` dispatches on the rule.
 - Target column is always excluded from the predictor set.
 
+### Dropped values
+
+- `text_only`: requires text-embedding / NN domain stack — deferred to v2 (Transformer scope).
+- `mixed_blocks`: multi-block NN architecture — deferred to v2.
+
 ### Recipe usage
 
 ```yaml
@@ -124,6 +129,10 @@ path:
 - Target and date columns are always preserved after filtering.
 - Runtime discovery (stability / correlation) is out of scope — users supply the subset.
 
+### Dropped values
+
+- `feature_selection_dynamic_subset`: CV-in-training feature selection loop requires a tuning-engine extension — deferred to v1.1.
+
 ### Recipe usage
 
 ```yaml
@@ -160,6 +169,10 @@ path:
 - Wired into `_build_raw_panel_training_data` after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.
 - `monthly_seasonal` / `quarterly_seasonal` require a `DatetimeIndex`.
 - `break_dummies` raises `ExecutionError` if `leaf_config.break_dates` is missing or empty.
+
+### Dropped values
+
+- `trend_and_quadratic`: redundant with `linear_trend` + a future `leaf_config.trend_order` channel. The quadratic / higher-order polynomial trend will re-enter as a trend-order parameter when needed rather than a separate axis value.
 
 ### Recipe usage
 
