@@ -11,6 +11,11 @@ from .manifest import (
     build_study_manifest,
     validate_study_manifest,
 )
+from .multi_target import (
+    SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION,
+    SeparateRunsResult,
+    execute_separate_runs,
+)
 from .replication import (
     REPLICATION_DIFF_SCHEMA_VERSION,
     ReplicationResult,
@@ -22,10 +27,13 @@ __all__ = [
     "AblationSpec",
     "REPLICATION_DIFF_SCHEMA_VERSION",
     "ReplicationResult",
+    "SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION",
     "STUDY_MANIFEST_SCHEMA_VERSION",
+    "SeparateRunsResult",
     "VariantManifestEntry",
     "build_study_manifest",
     "execute_ablation",
     "execute_replication",
+    "execute_separate_runs",
     "validate_study_manifest",
 ]

@@ -50,11 +50,14 @@ from .studies import (
     AblationSpec,
     REPLICATION_DIFF_SCHEMA_VERSION,
     ReplicationResult,
+    SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION,
     STUDY_MANIFEST_SCHEMA_VERSION,
+    SeparateRunsResult,
     VariantManifestEntry,
     build_study_manifest,
     execute_ablation,
     execute_replication,
+    execute_separate_runs,
     validate_study_manifest,
 )
 from .preprocessing import (
@@ -235,4 +238,7 @@ __all__ = [
     "run_decomposition",
     "execute_ablation",
     "execute_replication",
+    "execute_separate_runs",
+    "SeparateRunsResult",
+    "SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION",
 ]

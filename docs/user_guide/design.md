@@ -171,8 +171,7 @@ path:
 | `ablation_study` | operational · dedicated runner | `execute_ablation()` | wrapper | `macrocast.studies.ablation:execute_ablation` |
 | `replication_recipe` | operational · dedicated runner | `execute_replication()` | replication | `macrocast.studies.replication:execute_replication` |
 | `benchmark_suite` | operational · wrapper handoff | `wrapper_handoff` payload; Phase 8 `PaperReadyBundle` consumer | wrapper | — (Phase 8 pending) |
-| `multi_target_separate_runs` | registry_only (v1.1) | would emit per-target artifact directories via a fan-out wrapper | wrapper | pending — Phase 10 |
-| `multi_output_joint_model` | registry_only (v1.1) | would call a joint multi-output predictor adapter | single_run | pending — Phase 10 (needs joint adapters) |
+| `multi_target_separate_runs` | operational · dedicated runner | `execute_separate_runs()` — N single-target `execute_recipe` calls, per-target artifact directories + top-level aggregate manifest | wrapper | `macrocast.studies.multi_target:execute_separate_runs` |
 | `hierarchical_forecasting_run` | future (v2) | hierarchical reconciliation orchestrator | orchestrator | Phase 11 |
 | `panel_forecasting_run` | future (v2) | panel-data forecasting orchestrator | orchestrator | Phase 11 |
 | `state_space_run` | future (v2) | single-run state-space predictor | single_run | Phase 11 |
@@ -247,19 +246,32 @@ path:
       experiment_unit: experiment_unit_default
 ```
 
+Multi-target separate-runs (fan-out):
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      experiment_unit: multi_target_separate_runs
+  1_data_task:
+    fixed_axes:
+      task: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI, CPIAUCSL]
+```
+Run via `execute_separate_runs(source_recipe_dict=..., output_root=...)`; produces `output_root/targets/<T>/` per target and a top-level `separate_runs_manifest.json`. Distinct from `multi_target_shared_design` which aggregates all targets into one predictions table via `execute_recipe`.
+
 ### Not implemented in v1.0
 
 | Value | Status | Gap | Target |
 |---|---|---|---|
-| `multi_target_separate_runs` | registry_only | No wrapper runner that fans out per-target artifact directories. Current multi-target path aggregates into one output. | v1.1 / Phase 10 |
-| `multi_output_joint_model` | registry_only | No joint multi-output predictor adapter. | v1.1 / Phase 10 |
 | `hierarchical_forecasting_run` | future | No hierarchical reconciliation orchestrator. | v2 / Phase 11 |
 | `panel_forecasting_run` | future | No panel-data executor. | v2 / Phase 11 |
 | `state_space_run` | future | No state-space predictor family. | v2 / Phase 11 |
 | `single_target_full_sweep` wrapper runner | operational · handoff | Compile produces wrapper_handoff payload; external wrapper consumes. No built-in wrapper runtime ships with v1.0. | Phase 8+ |
 | `benchmark_suite` wrapper runner | operational · handoff | Same as above; Phase 8 `PaperReadyBundle` will be the first consumer. | Phase 8 |
 
-In short: 5 of 12 values execute end-to-end inside the package (3 direct + 2 dedicated runners). 2 more compile successfully with a wrapper_handoff payload but wait for an external or Phase 8 consumer. The remaining 5 are registry or future entries with no runtime in v1.0.
+In short: 6 of 11 values execute end-to-end inside the package (3 direct + 3 dedicated runners). 2 more compile successfully with a wrapper_handoff payload but wait for an external or Phase 8 consumer. The remaining 3 are future entries (v2 Phase 11) with no runtime in v1.0. multi_output_joint_model was dropped — its semantics turned out to be model-family dependent (Ridge/Lasso with sklearn multi-output API produce identical predictions to shared_design; only trees / MultiTaskLasso give distinct predictions). Deferred to v1.1 as a proper set of model_family values rather than an experiment_unit label.
 
 ---
 
@@ -656,7 +668,7 @@ Layer 0 meta axes registry (6 axes, curated 2026-04-20):
 
 - `axis_type`: 5/5 operational (fixed, sweep, conditional, nested_sweep, derived). All wired to compiler + sweep_plan.
 - `compute_mode`: 5/9 operational (serial, parallel_by_model, parallel_by_horizon, parallel_by_target, parallel_by_oos_date). 4 registry_only: parallel_by_trial (v1.1 HPO backend), gpu_single / gpu_multi (scheduled for drop in Tier 1-3 PR #18), distributed_cluster (v2 Phase 11).
-- `experiment_unit`: 7/12 operational — 3 direct executable via `execute_recipe` (single_target_single_model, single_target_model_grid, multi_target_shared_design), 2 dedicated-runner (ablation_study via `execute_ablation`, replication_recipe via `execute_replication`), 2 wrapper-handoff pending Phase 8 (single_target_full_sweep, benchmark_suite). 2 registry_only (v1.1): multi_target_separate_runs, multi_output_joint_model. 3 future (v2 Phase 11): hierarchical_forecasting_run, panel_forecasting_run, state_space_run.
+- `experiment_unit`: 8/11 operational — 3 direct executable via `execute_recipe` (single_target_single_model, single_target_model_grid, multi_target_shared_design), 3 dedicated-runner (ablation_study via `execute_ablation`, replication_recipe via `execute_replication`, multi_target_separate_runs via `execute_separate_runs`), 2 wrapper-handoff pending Phase 8 (single_target_full_sweep, benchmark_suite). 3 future (v2 Phase 11): hierarchical_forecasting_run, panel_forecasting_run, state_space_run. `multi_output_joint_model` dropped — joint multi-output semantics are model-family dependent (Ridge/Lasso with sklearn multi-output API are mathematically equivalent to shared_design; only trees / MultiTaskLasso give distinct predictions). Deferred to v1.1 as a proper set of model_family values rather than an experiment_unit label.
 - `failure_policy`: 5/7 operational (fail_fast, skip_failed_cell, skip_failed_model, save_partial_results, warn_only). 2 registry_only (v1.1): retry_then_skip, fallback_to_default_hp. `hard_error` dropped (fail_fast synonym, no distinct runtime branch).
 - `reproducibility_mode`: 4/4 operational (strict_reproducible, seeded_reproducible, best_effort, exploratory). strict now controls numpy + torch + cudnn + CUBLAS globals via `apply_reproducibility_mode()`; emits RuntimeWarning when PYTHONHASHSEED is not set in the shell.
 - `research_design`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark via `execute_recipe`, controlled_variation via `execute_sweep`, replication_override via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle → `PaperReadyBundle`).

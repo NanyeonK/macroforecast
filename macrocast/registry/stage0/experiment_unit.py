@@ -46,27 +46,19 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="multi_target_separate_runs",
-        description="Multi-target wrapper that fans out per-target single-target runs under separate artifact directories (pending — v1.1, Phase 10). Distinct from shared_design which aggregates into one predictions table.",
-        status="registry_only",
+        description="Multi-target wrapper that fans out N single-target execute_recipe calls, one per target, each under its own artifact directory. Distinct from shared_design (same design, aggregated predictions.csv). Runner: macrocast.studies.multi_target.execute_separate_runs.",
+        status="operational",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=True,
         requires_wrapper=True,
+        runner="macrocast.studies.multi_target:execute_separate_runs",
     ),
     ExperimentUnitEntry(
         id="multi_target_shared_design",
         description="Multi-target shared-design run: one compiled recipe evaluates all targets with the same design and produces an aggregated predictions table. Handled by execute_recipe's multi-target path.",
         status="operational",
         priority="A",
-        route_owner="single_run",
-        requires_multi_target=True,
-        requires_wrapper=False,
-    ),
-    ExperimentUnitEntry(
-        id="multi_output_joint_model",
-        description="Multi-target single-run joint-model family.",
-        status="registry_only",
-        priority="B",
         route_owner="single_run",
         requires_multi_target=True,
         requires_wrapper=False,
@@ -159,7 +151,6 @@ def experiment_unit_options_for_wizard(research_design: str, task: str) -> tuple
         candidates = (
             "multi_target_shared_design",
             "multi_target_separate_runs",
-            "multi_output_joint_model",
         )
     elif research_design == "orchestrated_bundle":
         candidates = ("benchmark_suite", "ablation_study")

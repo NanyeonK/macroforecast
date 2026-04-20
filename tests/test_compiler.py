@@ -1280,12 +1280,15 @@ def test_multi_target_derives_shared_design_experiment_unit() -> None:
 
 def test_wizard_options_filter_registry_only_entries() -> None:
     from macrocast.registry.stage0.experiment_unit import experiment_unit_options_for_wizard
-    # multi-target options should exclude registry_only separate_runs + joint_model
+    # Multi-target options should include both operational units (shared_design,
+    # separate_runs) after the PR #27 cleanup. multi_output_joint_model was
+    # dropped from the registry entirely in the same PR; filter would exclude
+    # any registry_only future additions.
     options = experiment_unit_options_for_wizard(
         research_design="single_path_benchmark",
         task="multi_target_point_forecast",
     )
-    assert options == ("multi_target_shared_design",)
+    assert set(options) == {"multi_target_shared_design", "multi_target_separate_runs"}
 
 
 def test_wizard_options_single_target_returns_operational_only() -> None:

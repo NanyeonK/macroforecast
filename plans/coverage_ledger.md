@@ -65,7 +65,7 @@ consumed it).
 | single_target_full_sweep | operational | - | - | 이미 완료 |
 | multi_target_separate_runs | registry_only | v1.0 | phase-01 | sweep infra 확장시 활성 |
 | multi_target_shared_design | planned | v1.1 | phase-10 | shared design runner 필요 |
-| multi_output_joint_model | registry_only | v1.1 | phase-10 | joint multivariate 합류 |
+| multi_output_joint_model | **dropped** | - | - | **DROPPED 2026-04-20 (PR #27)** — semantics model-family dependent; deferred to v1.1 as model_family values (MultiTaskLasso etc.) rather than experiment_unit label |
 | hierarchical_forecasting_run | future | v2 | phase-11 | hierarchy reconciliation 필요 |
 | panel_forecasting_run | future | v2 | phase-11 | panel data executor 필요 |
 | state_space_run | future | v2 | phase-11 | SS framework 필요 |

@@ -204,14 +204,6 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             output_leaf["wrapper_family"] = value
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
-        if value == "multi_output_joint_model":
-            meta["research_design"] = "single_path_benchmark"
-            _recipe_fixed(recipe, "1_data_task")["task"] = "multi_target_point_forecast"
-            leaf.pop("target", None)
-            leaf.setdefault("targets", ["INDPRO", "RPI"])
-            output_leaf.pop("wrapper_family", None)
-            output_leaf.pop("bundle_label", None)
-            return
         meta["research_design"] = "single_path_benchmark"
         _recipe_fixed(recipe, "1_data_task")["task"] = "single_target_point_forecast"
         leaf.pop("targets", None)
