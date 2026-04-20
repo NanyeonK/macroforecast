@@ -1,11 +1,11 @@
-# `macrocast.stage0`
+# `macrocast.design`
 
 Study grammar layer: fixed vs varying design, comparison contract, execution posture.
 
-See the [user guide](../user_guide/stage0.md) for conceptual background.
+See the [user guide](../user_guide/design.md) for conceptual background.
 
 ```{eval-rst}
-.. automodule:: macrocast.stage0
+.. automodule:: macrocast.design
    :members:
    :imported-members:
    :show-inheritance:

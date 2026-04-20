@@ -9,8 +9,6 @@ AXIS_TYPE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="nested_sweep", description="Axis participates in nested sweep designs.", status="operational", priority="A"),
     EnumRegistryEntry(id="conditional", description="Axis is activated conditionally on other choices.", status="operational", priority="A"),
     EnumRegistryEntry(id="derived", description="Axis is derived from other recipe state.", status="operational", priority="A"),
-    EnumRegistryEntry(id="eval_only", description="Axis affects evaluation/reporting but not path identity.", status="registry_only", priority="A"),
-    EnumRegistryEntry(id="report_only", description="Axis affects reporting only.", status="registry_only", priority="B"),
 )
 
 AXIS_DEFINITION = AxisDefinition(

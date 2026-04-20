@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..stage0 import Stage0Frame
+from ..design import DesignFrame
 
 
 @dataclass(frozen=True)
 class RecipeSpec:
     recipe_id: str
-    stage0: Stage0Frame
+    stage0: DesignFrame
     target: str
     horizons: tuple[int, ...]
     raw_dataset: str

@@ -61,8 +61,6 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
         "nested_sweep",
         "conditional",
         "derived",
-        "eval_only",
-        "report_only",
     )
 
 

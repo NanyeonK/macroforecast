@@ -2,14 +2,14 @@ from __future__ import annotations
 from macrocast import (
     build_recipe_spec,
     build_run_spec,
-    build_stage0_frame,
+    build_design_frame,
     check_recipe_completeness,
     recipe_summary,
 )
 
 
 def _stage0(task: str = "single_target_point_forecast"):
-    return build_stage0_frame(
+    return build_design_frame(
         study_mode="single_path_benchmark_study",
         fixed_design={
             "dataset_adapter": "fred_md",

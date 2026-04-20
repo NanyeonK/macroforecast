@@ -9,16 +9,16 @@ from .normalize import (
     normalize_study_mode,
     normalize_varying_design,
 )
-from .types import Stage0Frame
-from .build import build_stage0_frame
+from .types import DesignFrame
+from .build import build_design_frame
 
 
-def stage0_to_dict(stage0: Stage0Frame) -> dict:
+def design_to_dict(stage0: DesignFrame) -> dict:
     return asdict(stage0)
 
 
-def stage0_from_dict(payload: dict) -> Stage0Frame:
-    return build_stage0_frame(
+def design_from_dict(payload: dict) -> DesignFrame:
+    return build_design_frame(
         study_mode=normalize_study_mode(payload["study_mode"]),
         fixed_design=normalize_fixed_design(payload["fixed_design"]),
         comparison_contract=normalize_comparison_contract(payload["comparison_contract"]),

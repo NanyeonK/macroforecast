@@ -40,6 +40,7 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 .claude/session-*.md
+CLAUDE.md
 
 # mkdocs build output
 site/

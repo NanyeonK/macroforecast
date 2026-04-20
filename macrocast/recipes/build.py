@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .types import RecipeSpec, RunSpec
-from ..stage0 import resolve_route_owner
+from ..design import resolve_route_owner
 
 
 def _target_token(recipe: RecipeSpec) -> str:

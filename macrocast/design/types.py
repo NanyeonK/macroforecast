@@ -61,7 +61,7 @@ class ReplicationInput:
 
 
 @dataclass(frozen=True)
-class Stage0Frame:
+class DesignFrame:
     study_mode: str
     fixed_design: FixedDesign
     comparison_contract: ComparisonContract

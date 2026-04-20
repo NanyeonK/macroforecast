@@ -157,3 +157,107 @@ def test_missing_path_raises() -> None:
 
 def test_default_max_variants_is_1000() -> None:
     assert DEFAULT_MAX_VARIANTS == 1000
+
+
+# --- Nested sweep tests (axis_type.nested_sweep support) ---
+
+
+def _nested_recipe() -> dict:
+    return {
+        "recipe_id": "nested-test",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "controlled_variation_study"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": {"scaling_policy": "standard"}},
+            "3_training": {
+                "fixed_axes": {"framework": "expanding", "benchmark_family": "ar_bic"},
+                "nested_sweep_axes": {
+                    "model_family": {
+                        "ridge": {"hp_space_style": ["paper_fixed_hp", "grid_linear"]},
+                        "lasso": {"hp_space_style": ["paper_fixed_hp", "grid_linear", "grid_log"]},
+                    },
+                },
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+        },
+    }
+
+
+def test_nested_sweep_expands_non_uniform_children() -> None:
+    plan = compile_sweep_plan(_nested_recipe())
+    # 2 (ridge children) + 3 (lasso children) = 5
+    assert plan.size == 5
+    assert plan.axes_swept == (
+        "3_training.model_family",
+        "3_training.hp_space_style",
+    )
+    for v in plan.variants:
+        # every variant pins both parent and child
+        assert "3_training.model_family" in v.axis_values
+        assert "3_training.hp_space_style" in v.axis_values
+        # materialised recipe has nested_sweep_axes cleared
+        assert "nested_sweep_axes" not in v.variant_recipe_dict["path"]["3_training"]
+
+
+def test_nested_sweep_variant_ids_are_stable_and_unique() -> None:
+    plan_a = compile_sweep_plan(_nested_recipe())
+    plan_b = compile_sweep_plan(_nested_recipe())
+    # byte-identical variant_id set across runs
+    assert [v.variant_id for v in plan_a.variants] == [v.variant_id for v in plan_b.variants]
+    # no collisions
+    assert len({v.variant_id for v in plan_a.variants}) == plan_a.size
+
+
+def test_nested_sweep_combines_with_regular_sweep_cartesian() -> None:
+    recipe = _nested_recipe()
+    recipe["path"]["2_preprocessing"] = {"sweep_axes": {"scaling_policy": ["standard", "robust"]}}
+    plan = compile_sweep_plan(recipe)
+    # 2 regular sweep * 5 nested = 10
+    assert plan.size == 10
+    assert set(plan.axes_swept) == {
+        "2_preprocessing.scaling_policy",
+        "3_training.model_family",
+        "3_training.hp_space_style",
+    }
+
+
+def test_nested_sweep_parent_cannot_duplicate_fixed_or_sweep() -> None:
+    recipe = _nested_recipe()
+    recipe["path"]["3_training"]["fixed_axes"]["model_family"] = "ridge"
+    with pytest.raises(SweepPlanError, match="nested_sweep parent axis"):
+        compile_sweep_plan(recipe)
+
+
+def test_nested_sweep_child_spec_must_be_single_axis() -> None:
+    recipe = _nested_recipe()
+    recipe["path"]["3_training"]["nested_sweep_axes"]["model_family"]["ridge"] = {
+        "hp_space_style": ["paper_fixed_hp"],
+        "max_iter": [100, 500],
+    }
+    with pytest.raises(SweepPlanError, match="single-key mapping"):
+        compile_sweep_plan(recipe)
+
+
+def test_nested_sweep_rejects_empty_children() -> None:
+    recipe = _nested_recipe()
+    recipe["path"]["3_training"]["nested_sweep_axes"] = {"model_family": {}}
+    with pytest.raises(SweepPlanError, match="non-empty mapping"):
+        compile_sweep_plan(recipe)
+
+
+def test_nested_sweep_alone_without_regular_sweep_is_allowed() -> None:
+    recipe = _nested_recipe()
+    # no regular sweep_axes anywhere
+    assert all("sweep_axes" not in block for block in recipe["path"].values() if isinstance(block, dict))
+    plan = compile_sweep_plan(recipe)
+    assert plan.size == 5
+
+
+def test_no_sweep_and_no_nested_raises_sweep_plan_error() -> None:
+    recipe = _nested_recipe()
+    recipe["path"]["3_training"].pop("nested_sweep_axes")
+    with pytest.raises(SweepPlanError, match="no sweep_axes or nested_sweep_axes"):
+        compile_sweep_plan(recipe)

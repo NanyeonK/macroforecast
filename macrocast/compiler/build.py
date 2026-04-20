@@ -17,7 +17,7 @@ from ..preprocessing import (
 from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
-from ..stage0 import build_stage0_frame, resolve_route_owner, stage0_to_dict
+from ..design import build_design_frame, resolve_route_owner, design_to_dict
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
 
@@ -85,6 +85,98 @@ def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, 
                     )
                 )
     return tuple(selections)
+
+
+def _rule_experiment_unit_default(
+    *,
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+) -> str:
+    """Derivation rule: default experiment_unit from recipe shape.
+
+    Thin wrapper around macrocast.registry.stage0.experiment_unit.
+    derive_experiment_unit_default. Registered under the rule key
+    experiment_unit_default in :data:`DERIVATION_RULES`.
+    """
+
+    def _sv(name: str, default: str | None = None) -> str | None:
+        if name in selection_map:
+            return selection_map[name].selected_values[0]
+        return default
+
+    study_mode = _sv("study_mode", "single_path_benchmark_study")
+    task = leaf_config.get("task", "single_target_point_forecast")
+    model_sel = selection_map.get("model_family")
+    feature_sel = selection_map.get("feature_builder")
+    return derive_experiment_unit_default(
+        study_mode=study_mode or "single_path_benchmark_study",
+        task=task,
+        model_axis_mode=model_sel.selection_mode if model_sel else "fixed",
+        feature_axis_mode=feature_sel.selection_mode if feature_sel else "fixed",
+        wrapper_family=leaf_config.get("wrapper_family"),
+    )
+
+
+DERIVATION_RULES: dict[str, Any] = {
+    "experiment_unit_default": _rule_experiment_unit_default,
+}
+
+
+def _resolve_derived_axes(
+    recipe_dict: dict[str, Any],
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+) -> list[AxisSelection]:
+    """Parse recipe's derived_axes sections and resolve each via a registered rule.
+
+    Shape: derived_axes: {axis_name: rule_name} at any layer block.
+    Conflict if the axis also appears in fixed/sweep/conditional; unknown
+    rule raises CompileValidationError.
+    """
+    registry = get_axis_registry()
+    additions: list[AxisSelection] = []
+    for layer in get_canonical_layer_order():
+        layer_block = recipe_dict.get("path", {}).get(layer) or {}
+        if not isinstance(layer_block, dict):
+            continue
+        derived = layer_block.get("derived_axes") or {}
+        if not isinstance(derived, dict):
+            raise CompileValidationError(
+                f"layer {layer!r}: derived_axes must be a mapping of axis_name -> rule_name"
+            )
+        for raw_axis_name, rule_name in derived.items():
+            axis_name = _canonical_axis_name(raw_axis_name)
+            if axis_name not in registry:
+                raise CompileValidationError(
+                    f"layer {layer!r}: unknown axis {raw_axis_name!r} in derived_axes"
+                )
+            if axis_name in selection_map:
+                raise CompileValidationError(
+                    f"axis {raw_axis_name!r} declared as derived but also appears "
+                    "in fixed/sweep/conditional_axes"
+                )
+            if not isinstance(rule_name, str) or rule_name not in DERIVATION_RULES:
+                raise CompileValidationError(
+                    f"unknown derivation rule {rule_name!r} for axis {raw_axis_name!r}"
+                )
+            rule = DERIVATION_RULES[rule_name]
+            value = rule(selection_map=selection_map, leaf_config=leaf_config)
+            entry = registry[axis_name]
+            if value not in entry.allowed_values:
+                raise CompileValidationError(
+                    f"derivation rule {rule_name!r} produced value {value!r} which is "
+                    f"not an allowed value of axis {raw_axis_name!r}"
+                )
+            additions.append(
+                AxisSelection(
+                    axis_name=axis_name,
+                    layer=layer,
+                    selection_mode="derived",
+                    selected_values=(value,),
+                    selected_status={value: entry.current_status[value]},
+                )
+            )
+    return additions
 
 
 def _leaf_config(recipe_dict: dict[str, Any]) -> dict[str, Any]:
@@ -226,7 +318,7 @@ def _build_tree_context(
     selections: tuple[AxisSelection, ...],
     leaf_config: dict[str, Any],
 ) -> dict[str, Any]:
-    stage0_payload = stage0_to_dict(stage0)
+    stage0_payload = design_to_dict(stage0)
     fixed_axes: dict[str, Any] = {}
     sweep_axes: dict[str, Any] = {}
     conditional_axes: dict[str, Any] = {}
@@ -465,7 +557,7 @@ def _build_stage0_and_recipe(
         "publication_lag_aware": "publication_lag_aware",
     }.get(information_set_type, information_set_type)
 
-    stage0 = build_stage0_frame(
+    stage0 = build_design_frame(
         study_mode=study_mode,
         experiment_unit=experiment_unit if experiment_unit_explicit else None,
         fixed_design={
@@ -642,6 +734,14 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
     leaf_config = _leaf_config(recipe_dict)
     if "horizons" not in leaf_config:
         raise CompileValidationError("recipe leaf_config missing 'horizons'")
+    # Resolve declarative derived_axes (axis_type=derived). Each derivation rule
+    # computes a concrete value from the current selection_map + leaf_config and
+    # is appended to the selection tuple with selection_mode="derived".
+    derived_additions = _resolve_derived_axes(recipe_dict, selection_map, leaf_config)
+    if derived_additions:
+        selections = selections + tuple(derived_additions)
+        _ensure_unique_axis_selections(selections)
+        selection_map = _selection_map(selections)
     task_value = _selection_value(selection_map, "task")
     experiment_unit_explicit = "experiment_unit" in selection_map
     if task_value == "multi_target_point_forecast":

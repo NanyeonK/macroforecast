@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 from .types import RecipeSpec
-from ..stage0 import Stage0Frame
+from ..design import DesignFrame
 
 
 def build_recipe_spec(
     *,
     recipe_id: str,
-    stage0: Stage0Frame,
+    stage0: DesignFrame,
     target: str,
     horizons: tuple[int, ...],
     raw_dataset: str,

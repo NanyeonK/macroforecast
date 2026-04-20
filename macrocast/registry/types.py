@@ -24,6 +24,8 @@ AxisSelectionMode = Literal[
     "fixed",
     "sweep",
     "conditional",
+    "nested_sweep",
+    "derived",
 ]
 
 

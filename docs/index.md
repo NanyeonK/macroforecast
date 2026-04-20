@@ -33,7 +33,7 @@ macrocast has eight layers, executed in canonical order:
 
 | Layer | Module | Purpose |
 |-------|--------|---------|
-| Stage 0 | [`macrocast.stage0`](user_guide/stage0.md) | Study grammar: fixed/varying design, comparison contract |
+| Stage 0 (Design) | [`macrocast.design`](user_guide/design.md) | Study grammar: fixed/varying design, comparison contract |
 | Stage 1 | [`macrocast.raw`](user_guide/raw.md) | FRED-MD/QD/SD raw data loading and provenance |
 | Stage 2 | [`macrocast.recipes`](user_guide/recipes.md) | Declarative recipe and run specification |
 | Stage 3 | [`macrocast.preprocessing`](user_guide/preprocessing.md) | Preprocessing contract and governance |

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from .errors import Stage0ValidationError
-from .types import ComparisonContract, FixedDesign, ReplicationInput, Stage0Frame, VaryingDesign
+from .errors import DesignValidationError
+from .types import ComparisonContract, FixedDesign, ReplicationInput, DesignFrame, VaryingDesign
 
 
 def _ensure_nonempty(value: str, field_name: str) -> None:
     if not isinstance(value, str) or not value.strip():
-        raise Stage0ValidationError(f"{field_name} must be a non-empty string")
+        raise DesignValidationError(f"{field_name} must be a non-empty string")
 
 
 def validate_fixed_design(fixed_design: FixedDesign) -> None:
@@ -28,7 +28,7 @@ def validate_varying_design(varying_design: VaryingDesign) -> None:
     ):
         value = getattr(varying_design, field_name)
         if not isinstance(value, tuple) or not all(isinstance(item, str) and item for item in value):
-            raise Stage0ValidationError(f"varying_design.{field_name} must be a tuple of non-empty strings")
+            raise DesignValidationError(f"varying_design.{field_name} must be a tuple of non-empty strings")
 
 
 def validate_comparison_contract(contract: ComparisonContract) -> None:
@@ -44,10 +44,10 @@ def validate_replication_input(replication_input: ReplicationInput | None) -> No
     _ensure_nonempty(replication_input.source_type, "replication_input.source_type")
     _ensure_nonempty(replication_input.source_id, "replication_input.source_id")
     if not isinstance(replication_input.locked_constraints, tuple):
-        raise Stage0ValidationError("replication_input.locked_constraints must be a tuple")
+        raise DesignValidationError("replication_input.locked_constraints must be a tuple")
 
 
-def validate_stage0_frame(stage0: Stage0Frame) -> None:
+def validate_stage0_frame(stage0: DesignFrame) -> None:
     validate_fixed_design(stage0.fixed_design)
     validate_varying_design(stage0.varying_design)
     validate_comparison_contract(stage0.comparison_contract)

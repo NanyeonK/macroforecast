@@ -110,7 +110,7 @@ print(f"Artifacts: {execution.artifact_dir}")
 
 ## What just happened?
 
-1. **Compile**: macrocast validated all axis selections against the registry, built a Stage 0 grammar frame, and confirmed the recipe is executable.
+1. **Compile**: macrocast validated all axis selections against the registry, built a design (Stage 0) grammar frame via `build_design_frame`, and confirmed the recipe is executable.
 2. **Execute**: The runtime loaded FRED-MD data, built an expanding-window out-of-sample evaluation, fitted Ridge at each forecast origin, computed predictions and the AR-BIC benchmark, and ran a Diebold-Mariano test.
 3. **Artifacts**: The run directory contains `predictions.csv`, `metrics.json`, `stat_test_dm.json`, `comparison_summary.json`, `manifest.json`, and `tuning_result.json`.
 

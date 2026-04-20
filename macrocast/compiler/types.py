@@ -6,7 +6,7 @@ from typing import Any
 from ..preprocessing import PreprocessContract
 from ..recipes import RecipeSpec, RunSpec
 from ..registry import AxisSelection
-from ..stage0 import Stage0Frame
+from ..design import DesignFrame
 
 
 @dataclass(frozen=True)
@@ -16,7 +16,7 @@ class CompiledRecipeSpec:
     axis_selections: tuple[AxisSelection, ...]
     leaf_config: dict[str, Any]
     preprocess_contract: PreprocessContract
-    stage0: Stage0Frame
+    stage0: DesignFrame
     recipe_spec: RecipeSpec
     run_spec: RunSpec
     execution_status: str
