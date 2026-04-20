@@ -17,6 +17,5 @@ AXIS_DEFINITION = AxisDefinition(
     entries=REPRODUCIBILITY_MODE_ENTRIES,
     compatible_with={},
     incompatible_with={},
-    registry_type="enum_registry",
     default_policy="fixed",
 )

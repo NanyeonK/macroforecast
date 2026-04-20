@@ -20,6 +20,5 @@ AXIS_DEFINITION = AxisDefinition(
     entries=FAILURE_POLICY_ENTRIES,
     compatible_with={},
     incompatible_with={},
-    registry_type="enum_registry",
     default_policy="fixed",
 )

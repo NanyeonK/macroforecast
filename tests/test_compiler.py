@@ -664,14 +664,6 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
 
 
 
-def test_axis_governance_table_includes_registry_type() -> None:
-    table = axis_governance_table()
-    by_name = {row["axis_name"]: row for row in table}
-    assert by_name["registry_type"]["current_status"]["enum_registry"] == "operational"
-    assert by_name["registry_type"]["current_status"]["custom_plugin"] == "operational"
-
-
-
 def test_axis_governance_table_includes_reproducibility_mode() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}

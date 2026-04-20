@@ -16,8 +16,6 @@ from macrocast.registry.build import _discover_axis_definitions
 PROMOTED: tuple[tuple[str, str], ...] = (
     # 0_meta
     ("axis_type", "nested_sweep"),
-    ("registry_type", "callable_registry"),
-    ("registry_type", "custom_plugin"),
     ("reproducibility_mode", "strict_reproducible"),
     ("failure_policy", "skip_failed_cell"),
     # 1_data_task metadata

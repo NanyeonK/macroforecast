@@ -4,7 +4,7 @@
 
 !!! note "Design framework vs. Layer 0 meta axes registry"
     - **Design framework** — pre-execution grammar dataclasses. Lives at ``macrocast.design``. Small set of pre-execution dataclasses (`FixedDesign`, `VaryingDesign`, `ComparisonContract`, `DesignFrame`) plus one builder (`build_design_frame`).
-    - **Layer 0 meta axes registry** — 7 enum catalogs consumed by the framework. Lives at ``macrocast.registry.stage0``. This page walks through all 7 in order (§0.1 through §0.7).
+    - **Layer 0 meta axes registry** — 6 enum catalogs consumed by the framework. Lives at ``macrocast.registry.stage0``. This page walks through all 6 in order (§0.1 through §0.6).
 
 ## Purpose
 
@@ -16,7 +16,6 @@ The design frame fixes the execution language of a macrocast study before later 
 - what happens on failure? (`failure_policy`)
 - how reproducible must it be? (`reproducibility_mode`)
 - how is parallelism applied? (`compute_mode`)
-- what kind of catalog is each axis? (`registry_type`)
 
 Design does not decide registry inventories such as which model ids or dataset ids exist. It fixes the grammar those later content layers must obey.
 
@@ -356,33 +355,7 @@ path:
 
 ---
 
-## 0.5 `registry_type`
-
-**Declares the catalog kind** of each axis in the registry. Set by the axis's own registry module, not by users.
-
-### Value catalog
-
-| Value | Status | Kind |
-|---|---|---|
-| `enum_registry` | operational | Finite enumerated catalog — most axes. |
-| `numeric_registry` | operational | Numeric range/grid. |
-| `callable_registry` | operational | Callable-signature validated catalog. |
-| `custom_plugin` | operational | Plugin-backed catalog. |
-| `user_defined_yaml` | registry_only (v1.1) | User-supplied YAML schema adapter; not yet wired. |
-
-### Functions & features
-
-- `AxisDefinition.registry_type` field in `macrocast.registry.base`. Each axis module sets this explicitly (usually to `enum_registry`).
-- Informs the validation path in registry loaders (e.g. callable catalogs get signature checks; numeric catalogs get range checks).
-- Users rarely consume this directly; it is infrastructure metadata.
-
-### Recipe usage
-
-Not set in a recipe. It is part of axis registration source, not recipe authoring.
-
----
-
-## 0.6 `reproducibility_mode`
+## 0.5 `reproducibility_mode`
 
 **Declares the deterministic replay contract.** Default is `seeded_reproducible`.
 
@@ -414,7 +387,7 @@ See also: `docs/dev/reproducibility_policy.md`.
 
 ---
 
-## 0.7 `study_mode`
+## 0.6 `study_mode`
 
 **Top-level research identity** of the study. Selects which execution route the compiler produces.
 
@@ -449,7 +422,7 @@ path:
 
 ## Framework surface
 
-The 7 axes above are consumed by a compact framework that the user typically touches only via `build_design_frame()`:
+The 6 axes above are consumed by a compact framework that the user typically touches only via `build_design_frame()`:
 
 ```python
 from macrocast.design import (
@@ -528,13 +501,12 @@ Framework:
 
 - canonical dataclasses (5), main builder, route ownership resolution, completeness check, dict serialization round-trip, replication override path, explicit error classes.
 
-Layer 0 meta axes registry (7 axes, curated 2026-04-18):
+Layer 0 meta axes registry (6 axes, curated 2026-04-20):
 
 - `axis_type`: 5 values, all operational, all with real runtime wiring (fixed/sweep/conditional/nested_sweep/derived).
 - `compute_mode`: 3 operational (serial/parallel_by_model/parallel_by_horizon), 3 registry_only (v1.1+).
 - `experiment_unit`: 7 operational, 2 registry_only (v1.1), 3 future (v2).
 - `failure_policy`: 5 operational, 3 registry_only (v1.1).
-- `registry_type`: 4 operational, 1 registry_only (v1.1).
 - `reproducibility_mode`: 3 operational, 1 registry_only (v1.1).
 - `study_mode`: 4 operational (2 executable + 2 wrapper-route).
 

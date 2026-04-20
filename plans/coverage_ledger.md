@@ -40,6 +40,20 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 
 ---
 
+## Drops 2026-04-20 (0.5 registry_type axis)
+
+Entire `registry_type` axis removed from the 0_meta layer: PR #23. Carried
+zero runtime effect (AxisDefinition field silently dropped by the loader,
+no branching logic anywhere, 100% of axes used the default enum_registry).
+AxisDefinition.registry_type field + Literal type + three stage0-module
+kwargs also removed. Layer 0 meta 7 → 6 axes.
+
+If v1.1 introduces numeric/callable/plugin dispatch, the field can regrow
+on AxisDefinition at that point without migration (nothing in v1.0
+consumed it).
+
+---
+
 ## Layer 0: Meta (~45 values)
 
 ### 0.1 experiment_unit
@@ -71,16 +85,19 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | eval_only | registry_only | v1.0 | phase-01 | eval-only plumbing 활성 |
 | report_only | registry_only | v1.1 | phase-10 | reporting 전용 플래그 승격 |
 
-### 0.3 registry_type
+### 0.3 registry_type — **AXIS DROPPED 2026-04-20 (PR #23)**
+
+The entire axis was removed from the 0_meta layer. See "Drops 2026-04-20"
+above. Historical rows preserved for archaeology:
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| enum_registry | operational | - | - | 이미 완료 |
-| numeric_registry | operational | - | - | 이미 완료 |
-| callable_registry | planned | v1.0 | phase-01 | callable 검증 활성 |
-| custom_plugin | planned | v1.0 | phase-01 | plugin 경로 |
-| user_defined_yaml | registry_only | v1.1 | phase-10 | YAML adapter 승격 |
-| external_adapter | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
+| enum_registry | **dropped** | - | - | axis itself dropped - field was no-op at runtime |
+| numeric_registry | **dropped** | - | - | never used by any axis |
+| callable_registry | **dropped** | - | - | never used by any axis |
+| custom_plugin | **dropped** | - | - | never used by any axis |
+| user_defined_yaml | **dropped** | - | - | axis dropped before adapter landed |
+| external_adapter | **dropped 2026-04-18 (Tier 1-3) + axis itself dropped 2026-04-20 (PR #23)** | - | - | both drops apply |
 
 ### 0.4 reproducibility_mode
 
