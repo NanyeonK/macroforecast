@@ -41,6 +41,7 @@ Each of the three built-in datasets (FRED-MD, FRED-QD, FRED-SD) has its own docu
 :maxdepth: 1
 :hidden:
 
+source
 datasets/fred_md
 datasets/fred_qd
 datasets/fred_sd
