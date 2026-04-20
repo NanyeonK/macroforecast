@@ -29,12 +29,6 @@ _NEW_AXES = {
             'correlation_screened_subset', 'feature_selection_dynamic_subset',
         },
     },
-    'horizon_list': {
-        'layer': '1_data_task',
-        'expected': {
-            'arbitrary_grid', 'default_1_3_6_12', 'short_only_1_3', 'long_only_12_24', 'paper_specific',
-        },
-    },
     'separation_rule': {
         'layer': '2_preprocessing',
         'expected': {

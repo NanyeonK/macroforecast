@@ -34,10 +34,6 @@ METADATA_FLIPS = (
     ("importance_temporal", "rolling_path"),
     ("importance_gradient_path", "coefficient_path"),
     # data_task rules
-    ("warmup_rule", "lags_and_factors_warmup"),
-    ("warmup_rule", "transform_warmup"),
-    ("training_start_rule", "fixed_start"),
-    ("training_start_rule", "post_warmup_start"),
     ("alignment_rule", "last_available"),
     ("alignment_rule", "month_to_quarter_average"),
     ("alignment_rule", "month_to_quarter_last"),

@@ -114,11 +114,6 @@ def test_structural_break_segmentation_round_trip():
     assert _data_task_axis(r, 'structural_break_segmentation') == 'pre_post_covid'
 
 
-def test_horizon_list_round_trip():
-    r = _recipe_with(horizon_list='short_only_1_3')
-    assert _data_task_axis(r, 'horizon_list') == 'short_only_1_3'
-
-
 def test_evaluation_scale_round_trip():
     r = _recipe_with(evaluation_scale='both')
     assert _data_task_axis(r, 'evaluation_scale') == 'both'

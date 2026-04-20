@@ -272,22 +272,25 @@ above. Historical rows preserved for archaeology:
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| earliest_possible | operational | - | - | 이미 완료 |
-| fixed_start | planned | v1.0 | phase-03 | 날짜 픽스 |
-| post_warmup_start | planned | v1.0 | phase-03 | warmup 결합 |
-| post_break_start | registry_only | v1.0 | phase-03 | break segmentation 결합 |
-| rolling_train_start | operational | - | - | 이미 완료 |
+| earliest_possible | operational | - | - | Default, no-op (current behaviour). |
+| fixed_start | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — implementation pending leaf_config.training_start_date wiring in the implementation PR. |
+| post_warmup_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — warmup_rule axis is itself dropped; the dependency no longer makes sense. |
+| rolling_train_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
+| post_break_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — depended on structural_break_segmentation which is not v1.0-operational. |
+
 
 ### 1.2.3 oos_period
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| single_oos_block | operational | - | - | 이미 완료 |
-| multiple_oos_blocks | registry_only | v1.0 | phase-03 | multi-block OOS |
-| rolling_origin | operational | - | - | 이미 완료 |
-| recession_only_oos | planned | v1.0 | phase-04 | regime task 결합 |
-| expansion_only_oos | planned | v1.0 | phase-04 | regime task 결합 |
-| event_window_oos | registry_only | v1.1 | phase-10 | event study 지원 |
+| all_oos_data | operational | - | - | **ADDED 2026-04-20 (§1.3 cleanup)** — new default value covering the base behaviour when no OOS filter is applied. |
+| recession_only_oos | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — NBER-date filter pending implementation in the impl PR. |
+| expansion_only_oos | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — complement of recession_only_oos, same implementation. |
+| single_oos_block | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=expanding` default. |
+| rolling_origin | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
+| multiple_oos_blocks | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
+| event_window_oos | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
+
 
 ### 1.2.4 minimum_train_size
 
@@ -301,13 +304,10 @@ above. Historical rows preserved for archaeology:
 
 ### 1.2.5 warmup_rule
 
-| Value | Current | Target version | Target phase | Rationale |
-|-------|---------|:---:|:---:|-----------|
-| lags_only_warmup | operational | - | - | 이미 완료 |
-| lags_and_factors_warmup | planned | v1.0 | phase-03 | factor warmup |
-| sequence_warmup | future | v2 | phase-11 | seq2seq 대응 |
-| transform_warmup | planned | v1.0 | phase-03 | transform warmup |
-| indicator_warmup | registry_only | v1.1 | phase-10 | indicator 계열 |
+> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — abstract axis with no v1.0 dispatch semantic. The default `lags_only_warmup` was trivially implicit (lag_order observations consumed during feature construction). Re-enter as its own axis if/when a concrete warmup strategy requires user control.
+
+All 5 values dropped (lags_only_warmup, lags_and_factors_warmup, transform_warmup, indicator_warmup, sequence_warmup).
+
 
 ### 1.2.6 break_segmentation
 
@@ -322,13 +322,9 @@ above. Historical rows preserved for archaeology:
 
 ### 1.3.1 horizon_list
 
-| Value | Current | Target version | Target phase | Rationale |
-|-------|---------|:---:|:---:|-----------|
-| default_1_3_6_12 | absent | v1.0 | phase-03 | 축 분해 대상 |
-| short_only_1_3 | absent | v1.0 | phase-03 | 축 분해 대상 |
-| long_only_12_24 | absent | v1.0 | phase-03 | 축 분해 대상 |
-| paper_specific | absent | v1.0 | phase-03 | replication 지원 |
-| arbitrary_grid | absent | v1.0 | phase-03 | 사용자 정의 |
+> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — redundant with leaf_config.horizons which already specifies the horizons list directly. Future preset labels can be added as leaf_config sugar if needed.
+
+All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_only_12_24, paper_specific).
 
 ### 1.3.2 forecast_type
 
@@ -376,11 +372,12 @@ above. Historical rows preserved for archaeology:
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| allow_overlap | operational | - | - | 이미 완료 |
-| evaluate_with_hac | planned | v1.0 | phase-02 | (Layer 6 stat_test 연계 — 정책 여기) |
-| evaluate_with_block_bootstrap | registry_only | v1.1 | phase-10 | bootstrap module |
-| non_overlapping_subsample | registry_only | v1.1 | phase-10 | subsample 정책 |
-| horizon_specific_subsample | registry_only | v1.1 | phase-10 | subsample 정책 |
+| allow_overlap | operational | - | - | Default, no-op (current behaviour). |
+| evaluate_with_hac | registry_only | v1.0 (§1.3 impl) | phase-10 | **DEMOTED 2026-04-20 (§1.3 cleanup)** — wiring into dm_hln / cpa stat tests pending the impl PR. |
+| evaluate_with_block_bootstrap | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — requires bootstrap infrastructure not in v1.0 scope. |
+| non_overlapping_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |
+| horizon_specific_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |
+
 
 ### 1.4.1 target_family
 
@@ -426,13 +423,10 @@ above. Historical rows preserved for archaeology:
 
 ### 1.4.4 own_target_lags
 
-| Value | Current | Target version | Target phase | Rationale |
-|-------|---------|:---:|:---:|-----------|
-| include | operational | - | - | 이미 완료 |
-| exclude | planned | v1.0 | phase-03 | 간단 스위치 |
-| cv_select_lags | planned | v1.0 | phase-03 | CV 통합 |
-| fixed_lag_count | absent | v1.0 | phase-03 | 고정 lag |
-| target_specific_lag_count | registry_only | v1.1 | phase-10 | 타겟별 lag |
+> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — `feature_builder` already determines whether y-lags are used (autoreg_lagged_target = lags are the features; raw_feature_panel = exogenous X only). The axis label never had independent runtime dispatch. Re-enter as its own axis if a combined "raw panel + y lags" path becomes a real option.
+
+All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_count).
+
 
 ### 1.4.5 deterministic_components
 

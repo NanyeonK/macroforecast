@@ -21,10 +21,7 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     # 1_data_task metadata
     ("x_map_policy", "shared_X"),
     ("information_set_type", "pseudo_oos_revised"),
-    ("min_train_size", "fixed_years"),
-    ("overlap_handling", "evaluate_with_hac"),
     ("deterministic_components", "linear_trend"),
-    ("own_target_lags", "exclude"),
     # 2_preprocessing metadata
     ("preprocessing_axis_role", "swept_preprocessing"),
     ("preprocessing_axis_role", "ablation_preprocessing"),

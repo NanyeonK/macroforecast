@@ -56,7 +56,6 @@ _PHASE3_DEFAULTS = {
     "variable_universe": "all_variables",
     "min_train_size": "fixed_n_obs",
     "structural_break_segmentation": "none",
-    "horizon_list": "arbitrary_grid",
     "evaluation_scale": "original_scale",
     "separation_rule": "strict_separation",
 }
@@ -3072,7 +3071,6 @@ def execute_recipe(
     _var_universe = _data_task_axis(recipe, "variable_universe")
     _min_train_axis = _data_task_axis(recipe, "min_train_size")
     _break_seg = _data_task_axis(recipe, "structural_break_segmentation")
-    _horizon_list_axis = _data_task_axis(recipe, "horizon_list")
     _eval_scale = _data_task_axis(recipe, "evaluation_scale")
     _separation = _data_task_axis(recipe, "separation_rule")
     raw_result = _apply_release_lag(raw_result, _release_lag)
