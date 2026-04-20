@@ -1242,3 +1242,68 @@ def test_compile_extended_stage6_stat_test_manifest() -> None:
 def test_compile_stage7_importance_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     assert compile_result.manifest["importance_spec"]["importance_method"] == "none"
+
+
+def test_multi_target_derives_shared_design_experiment_unit() -> None:
+    """Multi-target recipes with no explicit experiment_unit must auto-derive
+    multi_target_shared_design (operational, single_run route). Prior to
+    2026-04-18 this returned the registry_only multi_target_separate_runs,
+    producing an executable status but a latent label mismatch."""
+    recipe = {
+        "recipe_id": "multi-target-shared-derive",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "single_path_benchmark_study"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "info_set": "revised",
+                    "task": "multi_target_point_forecast",
+                },
+                "leaf_config": {"targets": ["INDPRO", "RPI"], "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level",
+                "tcode_policy": "raw_only", "target_missing_policy": "none",
+                "x_missing_policy": "none", "target_outlier_policy": "none",
+                "x_outlier_policy": "none", "scaling_policy": "none",
+                "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable",
+                "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "rolling", "benchmark_family": "zero_change",
+                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.compiled.stage0.experiment_unit == "multi_target_shared_design"
+
+
+def test_wizard_options_filter_registry_only_entries() -> None:
+    from macrocast.registry.stage0.experiment_unit import experiment_unit_options_for_wizard
+    # multi-target options should exclude registry_only separate_runs + joint_model
+    options = experiment_unit_options_for_wizard(
+        study_mode="single_path_benchmark_study",
+        task="multi_target_point_forecast",
+    )
+    assert options == ("multi_target_shared_design",)
+
+
+def test_wizard_options_single_target_returns_operational_only() -> None:
+    from macrocast.registry.stage0.experiment_unit import experiment_unit_options_for_wizard
+    options = experiment_unit_options_for_wizard(
+        study_mode="single_path_benchmark_study",
+        task="single_target_point_forecast",
+    )
+    # all three single-target operational values should be present
+    assert set(options) == {
+        "single_target_single_model",
+        "single_target_model_grid",
+        "single_target_full_sweep",
+    }

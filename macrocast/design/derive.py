@@ -71,6 +71,10 @@ def derive_experiment_unit(
             study_mode=study_mode,
             task=forecast_task,
             wrapper_family=(
+                # multi_target_separate_runs is the intended wrapper-bundle unit
+                # for multi-target recipes (v1.1). For now the default returns
+                # it so the wrapper path is explicit at design time; execution
+                # via the wrapper runtime is still pending.
                 "multi_target_separate_runs"
                 if forecast_task == "multi_target_point_forecast"
                 else "benchmark_suite"
@@ -78,6 +82,11 @@ def derive_experiment_unit(
         )
     if execution_posture == "replication_locked_plan":
         return "replication_recipe"
+    if forecast_task == "multi_target_point_forecast":
+        # Default operational multi-target unit — shared_design is handled by
+        # execute_recipe's multi-target path (single aggregated output). See
+        # docs/user_guide/design.md §0.3.
+        return "multi_target_shared_design"
     if study_mode == "controlled_variation_study":
         return "single_target_model_grid"
     return "single_target_single_model"

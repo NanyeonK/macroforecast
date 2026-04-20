@@ -660,7 +660,7 @@ def _execution_status(
             f"study_mode={study_mode!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
         )
     experiment_unit = _selection_value(selection_map, "experiment_unit", default="single_target_single_model") if "experiment_unit" in selection_map else "single_target_single_model"
-    if experiment_unit in {"multi_target_shared_design", "benchmark_suite"}:
+    if experiment_unit in {"benchmark_suite"}:
         warnings.append(
             f"experiment_unit={experiment_unit!r} is a wrapper-managed unit; execute via the wrapper runtime"
         )

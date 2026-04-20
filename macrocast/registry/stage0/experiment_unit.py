@@ -46,7 +46,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="multi_target_separate_runs",
-        description="Multi-target wrapper that fans out separate single-target runs.",
+        description="Multi-target wrapper that fans out per-target single-target runs under separate artifact directories (pending — v1.1, Phase 10). Distinct from shared_design which aggregates into one predictions table.",
         status="registry_only",
         priority="A",
         route_owner="wrapper",
@@ -55,12 +55,12 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="multi_target_shared_design",
-        description="Multi-target shared-design wrapper family.",
+        description="Multi-target shared-design run: one compiled recipe evaluates all targets with the same design and produces an aggregated predictions table. Handled by execute_recipe's multi-target path.",
         status="operational",
         priority="A",
-        route_owner="wrapper",
+        route_owner="single_run",
         requires_multi_target=True,
-        requires_wrapper=True,
+        requires_wrapper=False,
     ),
     ExperimentUnitEntry(
         id="multi_output_joint_model",
@@ -147,21 +147,29 @@ def get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry:
 
 
 def experiment_unit_options_for_wizard(study_mode: str, task: str) -> tuple[str, ...]:
+    """Return the experiment_unit options the wizard/UI should surface.
+
+    Only values whose current registry status is operational are
+    returned — registry_only and future entries are intentionally filtered
+    so UIs do not propose non-executable units.
+    """
     if study_mode == "replication_override_study":
-        return ("replication_recipe",)
-    if task == "multi_target_point_forecast":
-        return (
-            "multi_target_separate_runs",
+        candidates = ("replication_recipe",)
+    elif task == "multi_target_point_forecast":
+        candidates = (
             "multi_target_shared_design",
+            "multi_target_separate_runs",
             "multi_output_joint_model",
         )
-    if study_mode == "orchestrated_bundle_study":
-        return ("benchmark_suite", "ablation_study")
-    return (
-        "single_target_single_model",
-        "single_target_model_grid",
-        "single_target_full_sweep",
-    )
+    elif study_mode == "orchestrated_bundle_study":
+        candidates = ("benchmark_suite", "ablation_study")
+    else:
+        candidates = (
+            "single_target_single_model",
+            "single_target_model_grid",
+            "single_target_full_sweep",
+        )
+    return tuple(cid for cid in candidates if _BY_ID[cid].status == "operational")
 
 
 def derive_experiment_unit_default(
@@ -177,7 +185,9 @@ def derive_experiment_unit_default(
     if wrapper_family in _BY_ID:
         return wrapper_family
     if task == "multi_target_point_forecast":
-        return "multi_target_separate_runs"
+        # shared_design is the operational multi-target path handled by
+        # execute_recipe. separate_runs is registry_only (v1.1 wrapper).
+        return "multi_target_shared_design"
     if study_mode == "orchestrated_bundle_study":
         return "benchmark_suite"
     if model_axis_mode == "sweep" and feature_axis_mode == "sweep":
