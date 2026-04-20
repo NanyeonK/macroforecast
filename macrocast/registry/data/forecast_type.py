@@ -18,25 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='iterated',
             description='iterated',
-            status="operational",
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='dirrec',
-            description='dirrec',
             status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='mimo',
-            description='mimo',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='seq2seq',
-            description='seq2seq',
-            status='future',
             priority='B',
         ),
     ),
