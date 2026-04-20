@@ -206,6 +206,9 @@ above. Historical rows preserved for archaeology:
 
 ### 1.1.5 vintage_policy
 
+> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+
+
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | latest_only | operational | - | - | 이미 완료 |
@@ -216,6 +219,9 @@ above. Historical rows preserved for archaeology:
 | vintage_range | registry_only | v1.1 | phase-10 | range subset |
 
 ### 1.1.6 alignment_rule
+
+> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
@@ -444,6 +450,9 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.4.6 exogenous_block
 
+> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+
+
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | none | operational | - | - | 이미 완료 |
@@ -453,6 +462,9 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | policy_shock_block | absent | v2 | phase-11 | 정책 충격 라벨 |
 
 ### 1.5.1 x_map_policy
+
+> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
@@ -492,6 +504,8 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.6.1 scale_at_evaluation
 
+> **AXIS RE-HOMED 2026-04-20 (§1.5 cleanup)** — the duplicate Layer 1 axis was removed; evaluation_scale lives as a Layer 2 PreprocessContract field (the actual runtime effect is at the preprocessing boundary, not at a Layer 1 data-task axis). Recipe fixed_axes on 2_preprocessing continue to declare it.
+
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | transformed_scale | registry_only | v1.0 | phase-03 | inverse_transform 결합 |
@@ -514,6 +528,8 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | paper_specific_benchmark | registry_only | v1.0 | phase-04 | replication 지원 |
 
 ### 1.6.3 regime_conditional_task
+
+> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — duplicates §1.3 oos_period.recession_only_oos / expansion_only_oos; see plans/stage1_5_plan.md §2.1.
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|

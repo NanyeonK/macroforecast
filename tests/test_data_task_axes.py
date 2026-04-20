@@ -10,15 +10,12 @@ _NEW_AXES = {
         'layer': '1_data_task',
         'expected': {
             'ignore_release_lag', 'fixed_lag_all_series', 'series_specific_lag',
-            'calendar_exact_lag', 'lag_conservative', 'lag_aggressive',
         },
     },
     'missing_availability': {
         'layer': '1_data_task',
         'expected': {
-            'complete_case_only', 'available_case', 'target_date_drop_if_missing',
-            'x_impute_only', 'real_time_missing_as_missing',
-            'state_space_fill', 'factor_fill', 'em_fill',
+            'complete_case_only', 'available_case', 'x_impute_only',
         },
     },
     'variable_universe': {
@@ -75,17 +72,8 @@ def test_min_train_size_values_match_plan():
 
 
 def test_structural_break_segmentation_values_match_plan():
-    expected = {
-        'none', 'pre_post_crisis', 'pre_post_covid',
-        'user_break_dates', 'break_test_detected', 'rolling_break_adaptive',
-    }
+    # v1.0 §1.5 cleanup trimmed 2 future values (break_test_detected, rolling_break_adaptive).
+    expected = {"none", "pre_post_crisis", "pre_post_covid", "user_break_dates"}
     assert set(get_axis_registry()['structural_break_segmentation'].allowed_values) == expected
 
 
-def test_evaluation_scale_renamed_and_extended():
-    entry = get_axis_registry()['evaluation_scale']
-    values = set(entry.allowed_values)
-    assert values == {'original_scale', 'transformed_scale', 'both'}
-    assert 'raw_level' not in values
-    for v in values:
-        assert entry.current_status[v] == 'operational'

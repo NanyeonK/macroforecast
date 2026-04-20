@@ -34,9 +34,6 @@ METADATA_FLIPS = (
     ("importance_temporal", "rolling_path"),
     ("importance_gradient_path", "coefficient_path"),
     # data_task rules
-    ("alignment_rule", "last_available"),
-    ("alignment_rule", "month_to_quarter_average"),
-    ("alignment_rule", "month_to_quarter_last"),
 )
 
 

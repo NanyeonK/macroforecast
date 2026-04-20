@@ -27,7 +27,6 @@ _AXIS_NAME_ALIASES = {
 
 _AXIS_VALUE_ALIASES = {
     ("information_set_type", "real_time"): "real_time_vintage",
-    ("evaluation_scale", "raw_level"): "original_scale",
 }
 
 _DATASET_DEFAULT_FREQUENCY = {
@@ -388,8 +387,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "dataset_source": _selection_value(selection_map, "dataset_source", default=dataset),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
-        "vintage_policy": _selection_value(selection_map, "vintage_policy", default=("single_vintage" if information_set_type == "real_time_vintage" else "latest_only")),
-        "alignment_rule": _selection_value(selection_map, "alignment_rule", default="end_of_period"),
         "forecast_type": _selection_value(selection_map, "forecast_type", default=("iterated" if feature_builder == "autoreg_lagged_target" else "direct")),
         "forecast_object": _selection_value(selection_map, "forecast_object", default="point_mean"),
         "horizon_target_construction": _selection_value(selection_map, "horizon_target_construction", default="future_level_y_t_plus_h"),
@@ -397,7 +394,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "predictor_family": _selection_value(selection_map, "predictor_family", default=predictor_family_default),
         "contemporaneous_x_rule": _selection_value(selection_map, "contemporaneous_x_rule", default="forbid_contemporaneous"),
         "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
-        "exogenous_block": _selection_value(selection_map, "exogenous_block", default=("endogenous_allowed" if feature_builder == "raw_feature_panel" else "none")),
         "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
         "training_start_date": leaf_config.get("training_start_date"),
         # §1.4 variable_universe input channels
@@ -421,10 +417,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
-        "x_map_policy": _selection_value(selection_map, "x_map_policy", default="shared_X"),
-        "evaluation_scale": _selection_value(selection_map, "evaluation_scale", default="original_scale"),
         "benchmark_family": _selection_value(selection_map, "benchmark_family"),
-        "regime_task": _selection_value(selection_map, "regime_task", default="unconditional"),
         "data_vintage": leaf_config.get("data_vintage"),
     }
 

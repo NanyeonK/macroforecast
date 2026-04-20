@@ -971,7 +971,7 @@ def test_compile_recipe_accepts_canonical_information_set_type_axis() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "real_time_vintage", "task": "single_target_point_forecast", "vintage_policy": "single_vintage"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "real_time_vintage", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1], "data_vintage": "2019-12"},
             },
             "2_preprocessing": {"fixed_axes": {

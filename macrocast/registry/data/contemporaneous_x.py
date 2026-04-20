@@ -21,18 +21,6 @@ AXIS_DEFINITION = AxisDefinition(
             status='operational',
             priority='A',
         ),
-        EnumRegistryEntry(
-            id='allow_if_available_in_real_time',
-            description='allow if available in real time',
-            status='future',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='series_specific_contemporaneous',
-            description='series specific contemporaneous',
-            status='future',
-            priority='B',
-        ),
     ),
     compatible_with={},
     incompatible_with={},

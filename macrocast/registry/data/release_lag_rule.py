@@ -24,25 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='series_specific_lag',
             description='apply per-series publication lag from lag table',
-            status='operational',
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='calendar_exact_lag',
-            description='apply calendar-exact publication date for each release',
-            status='operational',
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='lag_conservative',
-            description='conservative larger publication lag',
-            status='operational',
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='lag_aggressive',
-            description='aggressive smaller publication lag',
-            status='operational',
+            status='registry_only',
             priority='A',
         ),
     ),
