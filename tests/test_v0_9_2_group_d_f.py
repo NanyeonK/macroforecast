@@ -19,7 +19,6 @@ METADATA_FLIPS = (
     ("decomposition_target", "preprocessing_effect"),
     ("decomposition_target", "feature_builder_effect"),
     ("decomposition_target", "benchmark_effect"),
-    ("forecast_type", "iterated"),
     # training + meta
     ("embargo_gap", "fixed_gap"),
     ("embargo_gap", "horizon_gap"),
