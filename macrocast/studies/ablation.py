@@ -46,6 +46,20 @@ class AblationSpec:
     ablation_study_id: str | None = None
 
 
+def _ensure_baseline_failure_policy(spec) -> None:
+    """Default the baseline recipe's failure_policy to skip_failed_cell.
+
+    Ablation studies are tolerant of individual cell failures by design; a
+    broken ablation variant should not abort the full study. If the user
+    pinned a specific policy in the baseline recipe, honour it.
+    """
+    recipe = spec.baseline_recipe_dict
+    path = recipe.setdefault("path", {})
+    meta = path.setdefault("0_meta", {})
+    fixed = meta.setdefault("fixed_axes", {})
+    fixed.setdefault("failure_policy", "skip_failed_cell")
+
+
 def execute_ablation(
     *,
     spec: AblationSpec,
@@ -58,6 +72,7 @@ def execute_ablation(
     study_id = spec.ablation_study_id or _hash_ablation_id(spec)
     parent_recipe_id = spec.baseline_recipe_dict.get("recipe_id", "baseline")
 
+    _ensure_baseline_failure_policy(spec)
     baseline_variant = SweepVariant(
         variant_id="v-baseline",
         axis_values={},
@@ -91,7 +106,6 @@ def execute_ablation(
         plan=plan,
         output_root=output_root,
         local_raw_source=local_raw_source,
-        fail_fast=False,
     )
 
     _write_ablation_report(

@@ -126,7 +126,6 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
         "fallback_to_default_hp",
         "save_partial_results",
         "warn_only",
-        "hard_error",
     )
 
 

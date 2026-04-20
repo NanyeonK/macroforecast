@@ -266,35 +266,93 @@ In short: 5 of 12 values execute end-to-end inside the package (3 direct + 2 ded
 
 ## 0.4 `failure_policy`
 
-**Declares sweep-cell failure semantics.** Default is `fail_fast`.
+**Declares how execution handles in-recipe and in-sweep failures.** Drives both `execute_recipe` (per-recipe failure branches) and `execute_sweep` (per-variant failure branches). Default is `fail_fast`.
 
 ### Value catalog
 
-| Value | Status | Behaviour |
-|---|---|---|
-| `fail_fast` | operational | Abort entire sweep on first failed cell. |
-| `hard_error` | operational | Strict fail-fast with explicit `HardError`. |
-| `skip_failed_cell` | operational | Skip the failed cell, continue remaining cells, emit warning log. |
-| `skip_failed_model` | operational | Skip the failed model inside a model-family variant. |
-| `save_partial_results` | operational | Persist partial state of the failed cell before skipping. |
-| `retry_then_skip` | registry_only (v1.1) | Not wired. |
-| `fallback_to_default_hp` | registry_only (v1.1) | HP fallback not wired. |
-| `warn_only` | registry_only (v1.1) | Warn-only path not wired. |
+| Value | Status | Recipe-level behaviour (`execute_recipe`) | Sweep-level behaviour (`execute_sweep`) |
+|---|---|---|---|
+| `fail_fast` | operational | First failure re-raises (abort). | First variant failure re-raises (abort the sweep). |
+| `skip_failed_cell` | operational | Same as `fail_fast` at the recipe level (a "cell" is a sweep variant, so within one recipe the cell is the whole run). | Record the failure in the study manifest and continue with the remaining variants. |
+| `skip_failed_model` | operational | Record the per-target/per-model failure and continue with the remaining targets/models. | Same as `skip_failed_cell` at the sweep level (the failed variant is skipped). |
+| `save_partial_results` | operational | Record the failure, set `manifest.partial_run = True`, and still persist whatever partial output exists (predictions, stat tests, importance). | Same as `skip_failed_cell` at the sweep level. |
+| `warn_only` | operational | Record the failure in `failed_components`, emit a `RuntimeWarning` at the failing stage, and continue. Matches `save_partial_results` semantics with the extra warning side-effect. | Same as `save_partial_results` at the sweep level plus a `RuntimeWarning` per failed variant. |
+| `retry_then_skip` | registry_only (v1.1) | Compile rejects as "representable but not executable". Needs retry loop with backoff. | — |
+| `fallback_to_default_hp` | registry_only (v1.1) | Compile rejects. Needs HP-fallback wiring into the tuning backend. | — |
+
+Note: `hard_error` was dropped in this release — it had no runtime branch distinct from `fail_fast`.
+
+### How the sweep runner reads the policy
+
+`execute_sweep` no longer takes a `fail_fast: bool` parameter. Instead it reads `failure_policy` from the parent recipe's `0_meta.fixed_axes.failure_policy` (or `sweep_axes`). The mapping is:
+
+- `fail_fast` → abort on the first failed variant (`raise`).
+- `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only` → continue past the failed variant, record it in the study manifest.
+- `warn_only` additionally emits `RuntimeWarning(f"variant {id} failed: ...")` per failed variant.
+
+Recipes that do not specify `failure_policy` default to `fail_fast`.
 
 ### Functions & features
 
-- Compiler spec: `failure_policy_spec` on the compiled payload (`compiler/build.py`).
-- Runtime dispatch: `macrocast.execution.build` branches on the policy string — 4 of 5 operational values have explicit runtime paths; `hard_error` is equivalent to `fail_fast` with a different exception.
-- Sweep runner integration: `execute_sweep()` honors `skip_failed_cell` / `skip_failed_model` / `save_partial_results` per-variant.
+- **Compiler spec**: `failure_policy_spec` emitted on `CompiledRecipeSpec` (`macrocast/compiler/build.py`).
+- **Compiler guard**: `failure_policy` restricted to the 5 operational values at compile time; `retry_then_skip` / `fallback_to_default_hp` raise "representable but not executable".
+- **Recipe runtime** (`macrocast/execution/build.py`): four failure sites — `prediction_build` (per-target threaded + serial branches), `stat_test_artifact`, `importance_artifact` — all share the same policy-dispatch shape. Failures are collected into `manifest.failed_components`; the manifest also carries `partial_run: bool`.
+- **Sweep runtime** (`macrocast/execution/sweep_runner.py`):
+  - `_extract_parent_failure_policy(plan)` reads the parent recipe's failure_policy (defaults to `fail_fast`).
+  - `_CONTINUE_ON_VARIANT_FAILURE` frozenset enumerates policies that allow the sweep to continue past a failed variant.
+  - `execute_sweep` emits `RuntimeWarning` per failed variant when policy is `warn_only`.
+- **Studies integration** (`macrocast/studies/ablation.py`): `execute_ablation` injects `failure_policy=skip_failed_cell` into the baseline recipe by default (ablations are tolerant of individual cell failures by design). User override via the baseline recipe's `0_meta.fixed_axes.failure_policy` is honoured.
 
 ### Recipe usage
 
 ```yaml
+# Fail fast (default) - abort on first failure.
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: fail_fast
+```
+
+```yaml
+# Skip failed variants in a horse-race sweep; continue remaining.
 path:
   0_meta:
     fixed_axes:
       failure_policy: skip_failed_cell
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
 ```
+
+```yaml
+# Multi-target recipe that tolerates per-model failures and persists partial output.
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: save_partial_results
+  1_data_task:
+    fixed_axes:
+      task: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI, CPIAUCSL]
+```
+
+```yaml
+# Research exploration: log warnings instead of aborting; continue.
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: warn_only
+```
+
+### Not implemented in v1.0
+
+| Value | Status | Gap | Target |
+|---|---|---|---|
+| `retry_then_skip` | registry_only | Needs a retry loop with backoff inside both `execute_recipe` failure branches and `execute_sweep` variant dispatch. | v1.1 / Phase 10 |
+| `fallback_to_default_hp` | registry_only | Needs integration with the tuning backend to swap the failing model's HP for a registered default when fit fails. | v1.1 / Phase 10 |
+
+`hard_error` was dropped: it had no runtime branch distinct from `fail_fast`, so carrying it as a separate value only created confusion.
 
 ---
 

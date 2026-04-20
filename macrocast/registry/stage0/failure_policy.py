@@ -10,9 +10,8 @@ FAILURE_POLICY_ENTRIES: tuple[EnumRegistryEntry, ...] = (
     EnumRegistryEntry(id="retry_then_skip", description="Retry then skip on persistent failure.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="fallback_to_default_hp", description="Fallback to default hyperparameters after failure.", status="registry_only", priority="B"),
     EnumRegistryEntry(id="save_partial_results", description="Persist partial results after failure.", status="operational", priority="A"),
-    EnumRegistryEntry(id="warn_only", description="Warn only without halting.", status="registry_only", priority="B"),
-    EnumRegistryEntry(id="hard_error", description="Hard error semantics equivalent to strict fail-fast.", status="operational", priority="A"),
-)
+    EnumRegistryEntry(id="warn_only", description="Record the failure in the manifest and emit a RuntimeWarning per failed unit; continue execution (both sweep and recipe layers).", status="operational", priority="A"),
+    )
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name="failure_policy",

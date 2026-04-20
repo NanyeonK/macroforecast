@@ -650,7 +650,7 @@ def _execution_status(
         if predictor_family == "all_macro_vars" and feature_builder not in {"raw_feature_panel", "factor_pca", "factors_plus_AR"}:
             blocked.append("predictor_family='all_macro_vars' requires feature_builder in {'raw_feature_panel', 'factor_pca', 'factors_plus_AR'} in the current runtime slice")
 
-    if failure_policy not in {"fail_fast", "hard_error", "skip_failed_model", "save_partial_results"}:
+    if failure_policy not in {"fail_fast", "skip_failed_cell", "skip_failed_model", "save_partial_results", "warn_only"}:
         warnings.append(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )

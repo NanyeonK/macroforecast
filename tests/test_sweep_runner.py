@@ -107,12 +107,12 @@ def test_fail_fast_raises_on_first_failure(tmp_path: Path) -> None:
             plan=plan,
             output_root=tmp_path,
             local_raw_source=FIXTURE_RAW,
-            fail_fast=True,
         )
 
 
 def test_fail_slow_records_failure_and_continues(tmp_path: Path) -> None:
     recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["failure_policy"] = "skip_failed_cell"
     recipe["path"]["3_training"]["sweep_axes"] = {
         "model_family": ["ridge", "not_a_real_model"],
     }
@@ -122,7 +122,6 @@ def test_fail_slow_records_failure_and_continues(tmp_path: Path) -> None:
         plan=plan,
         output_root=tmp_path,
         local_raw_source=FIXTURE_RAW,
-        fail_fast=False,
     )
 
     assert result.successful_count == 1
@@ -232,3 +231,62 @@ def test_extract_parent_compute_mode_defaults_to_serial() -> None:
 
     plan = compile_sweep_plan(_horse_race_recipe())  # no compute_mode set
     assert _extract_parent_compute_mode(plan) == "serial"
+
+
+# --- failure_policy-driven sweep behaviour (0.4) ---
+
+
+def test_skip_failed_cell_records_failure_and_continues(tmp_path: Path) -> None:
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["failure_policy"] = "skip_failed_cell"
+    recipe["path"]["3_training"]["sweep_axes"] = {
+        "model_family": ["ridge", "not_a_real_model"],
+    }
+    plan = compile_sweep_plan(recipe)
+    result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+    assert result.successful_count == 1
+    assert result.failed_count == 1
+
+
+def test_warn_only_emits_warning_and_continues(tmp_path: Path) -> None:
+    import warnings as warnings_mod
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["failure_policy"] = "warn_only"
+    recipe["path"]["3_training"]["sweep_axes"] = {
+        "model_family": ["ridge", "not_a_real_model"],
+    }
+    plan = compile_sweep_plan(recipe)
+    with warnings_mod.catch_warnings(record=True) as caught:
+        warnings_mod.simplefilter("always")
+        result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+    assert result.successful_count == 1
+    assert result.failed_count == 1
+    assert any(
+        issubclass(w.category, RuntimeWarning) and "variant" in str(w.message) and "failed" in str(w.message)
+        for w in caught
+    ), f"expected a RuntimeWarning about a failed variant, got {[str(w.message) for w in caught]}"
+
+
+def test_fail_fast_is_the_default_failure_policy(tmp_path: Path) -> None:
+    recipe = _horse_race_recipe()
+    # no failure_policy set => defaults to fail_fast
+    recipe["path"]["3_training"]["sweep_axes"] = {
+        "model_family": ["ridge", "not_a_real_model"],
+    }
+    plan = compile_sweep_plan(recipe)
+    with pytest.raises(Exception):
+        execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+
+
+def test_extract_parent_failure_policy_reads_fixed_axes() -> None:
+    from macrocast.execution.sweep_runner import _extract_parent_failure_policy
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["failure_policy"] = "save_partial_results"
+    plan = compile_sweep_plan(recipe)
+    assert _extract_parent_failure_policy(plan) == "save_partial_results"
+
+
+def test_extract_parent_failure_policy_defaults_to_fail_fast() -> None:
+    from macrocast.execution.sweep_runner import _extract_parent_failure_policy
+    plan = compile_sweep_plan(_horse_race_recipe())
+    assert _extract_parent_failure_policy(plan) == "fail_fast"
