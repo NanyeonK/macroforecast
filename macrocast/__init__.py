@@ -83,6 +83,8 @@ from .preprocessing import (
     preprocess_to_dict,
 )
 from .raw import (
+    load_custom_csv,
+    load_custom_parquet,
     RawArtifactRecord,
     RawDatasetMetadata,
     RawLoadResult,
@@ -158,6 +160,8 @@ __all__ = [
     "append_raw_manifest_entry",
     "read_raw_manifest",
     "parse_fred_csv",
+    "load_custom_csv",
+    "load_custom_parquet",
     "load_fred_md",
     "load_fred_qd",
     "load_fred_sd",

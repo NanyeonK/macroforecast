@@ -41,7 +41,7 @@ from ..preprocessing import (
     preprocess_summary,
     preprocess_to_dict,
 )
-from ..raw import load_fred_md, load_fred_qd, load_fred_sd
+from ..raw import load_custom_csv, load_custom_parquet, load_fred_md, load_fred_qd, load_fred_sd
 from ..recipes import RecipeSpec, RunSpec, build_run_spec, recipe_summary
 
 _EXECUTION_ARCHITECTURE = "separate_model_and_benchmark_executors"
@@ -166,6 +166,17 @@ def build_execution_spec(
 
 def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | None, cache_root: Path):
     vintage = recipe.data_vintage
+    dataset_source = recipe.data_task_spec.get("dataset_source") or recipe.raw_dataset
+    if dataset_source in {"custom_csv", "custom_parquet"}:
+        custom_path = local_raw_source or recipe.data_task_spec.get("custom_data_path")
+        if custom_path is None:
+            raise ExecutionError(
+                f"dataset_source={dataset_source!r} requires leaf_config.custom_data_path "
+                "(or pass local_raw_source to execute_recipe)"
+            )
+        if dataset_source == "custom_csv":
+            return load_custom_csv(custom_path, dataset=recipe.raw_dataset, cache_root=cache_root)
+        return load_custom_parquet(custom_path, dataset=recipe.raw_dataset, cache_root=cache_root)
     if recipe.raw_dataset == "fred_md":
         return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=local_raw_source)
     if recipe.raw_dataset == "fred_qd":

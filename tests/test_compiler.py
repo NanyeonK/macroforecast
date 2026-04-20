@@ -1027,7 +1027,6 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
 def test_compiled_manifest_records_stage1_data_task_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     spec = compile_result.manifest["data_task_spec"]
-    assert spec["data_domain"] == "macro"
     assert spec["dataset_source"] == "fred_md"
     assert spec["information_set_type"] == "revised"
     assert spec["forecast_type"] == "direct"

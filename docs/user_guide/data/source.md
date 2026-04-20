@@ -5,10 +5,11 @@ Declares **where the data comes from and which information-set regime applies**.
 | § | axis | Role |
 |---|---|---|
 | 1.1.1 | [`dataset`](#111-dataset) | Which FRED-family dataset schema to load |
-| 1.1.2 | [`dataset_source`](#112-dataset_source) | Where the actual bytes came from (usually same as dataset; provenance field) |
+| 1.1.2 | [`dataset_source`](#112-dataset_source) | Which loader to use (FRED canonical / user CSV / user Parquet) |
 | 1.1.3 | [`frequency`](#113-frequency) | Series frequency (monthly/quarterly); dataset-derived |
-| 1.1.4 | [`data_domain`](#114-data_domain) | Coarse subject-area label (macro / macro_finance / ...) |
-| 1.1.5 | [`information_set_type`](#115-information_set_type) | Real-time regime (revised vs. vintage-aware) |
+| 1.1.4 | [`information_set_type`](#114-information_set_type) | Real-time regime (revised vs. vintage-aware) |
+
+**Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as §0.5 `registry_type` drop).
 
 ---
 
@@ -49,40 +50,81 @@ path:
 
 ## 1.1.2 `dataset_source`
 
-**Provenance label** for where the dataset bytes were loaded from. In v1.0 this is largely a recording-only field; the actual loader is dispatched by `dataset`, not by `dataset_source`.
+**Selects which loader is used.** Orthogonal to `dataset` (which declares the schema). The canonical FRED values call the corresponding `load_fred_*` loader; the two `custom_*` values load a user-supplied file conforming to the declared schema.
 
 ### Value catalog
 
-| Value | Status | Semantics |
-|---|---|---|
-| `fred_md` | operational | FRED-MD canonical source (St. Louis Fed) |
-| `fred_qd` | operational | FRED-QD canonical source |
-| `fred_sd` | operational | FRED-SD canonical source |
-| `fred_api_custom` | registry_only (v1.1) | User-supplied FRED API pull; adapter pending |
-| `bea` / `bls` / `census` / `oecd` / `imf_ifs` / `ecb_sdw` / `bis` / `world_bank` / `wrds_macro_finance` / `survey_spf` | registry_only (v1.1) | Third-party source adapters; all registered as reserved slots, none wired yet |
-| `custom_csv` | registry_only (v1.1) | User-supplied CSV matching a FRED-* schema; adapter pending |
-| `custom_parquet` | registry_only (v1.1) | Same, Parquet format |
-| `market_prices` / `news_text` / `custom_sql` | future (v2) | Alt-data + SQL adapters, phase-11 scope |
+| Value | Status | Loader | What it does |
+|---|---|---|---|
+| `fred_md` | operational | `load_fred_md` | FRED-MD from St. Louis Fed (default for `dataset=fred_md`) |
+| `fred_qd` | operational | `load_fred_qd` | FRED-QD from St. Louis Fed |
+| `fred_sd` | operational | `load_fred_sd` | FRED-SD from St. Louis Fed |
+| `custom_csv` | operational | `load_custom_csv` | **User-supplied CSV** at `leaf_config.custom_data_path`; must conform to `dataset` schema |
+| `custom_parquet` | operational | `load_custom_parquet` | **User-supplied Parquet** at `leaf_config.custom_data_path`; same schema rules |
 
-### Why most values are registry_only in v1.0
+### What was dropped in this pass
 
-`dataset_source` is designed for a world where the schema (`dataset`) and the byte source can differ — e.g., `dataset=fred_md` + `dataset_source=custom_csv` meaning "load a user CSV that conforms to the FRED-MD schema." That dispatch layer is not built in v1.0; the loader is chosen by `dataset` alone. The 3 FRED operational values exist because they coincide with the canonical FRED loader paths; setting any other value triggers no special loader today, so they remain `registry_only` until the custom-adapter dispatcher lands.
+The previous iteration carried 14 reserved source-adapter labels (`bea`, `bls`, `census`, `oecd`, `imf_ifs`, `ecb_sdw`, `bis`, `world_bank`, `wrds_macro_finance`, `survey_spf`, `fred_api_custom`, `market_prices`, `news_text`, `custom_sql`) as registry_only or future. None had a concrete adapter roadmap for v1.0 / v1.1 that justified keeping them in the registry, so they were dropped outright. If and when a third-party adapter ships, the corresponding value can be re-registered.
+
+### Custom CSV / Parquet — implementation contract
+
+When `dataset_source` is `custom_csv` or `custom_parquet`:
+
+- **`leaf_config.custom_data_path`** is **required**. Compile-time validation in `compile_recipe_dict` raises `CompileValidationError` if missing.
+- **`dataset`** still declares the schema the custom file must conform to (`fred_md` / `fred_qd` / `fred_sd`). The loader validates the schema label and labels the resulting panel accordingly.
+- **CSV shape**: first column is a date index (parseable by `pandas.read_csv(..., parse_dates=True)`); remaining columns are numeric with series IDs as headers. Optional FRED-style T-code row is not consumed automatically — pre-strip it or use `tcode_policy: raw_only`.
+- **Parquet shape**: DatetimeIndex OR first column parseable as date; numeric columns.
+- **No caching** — the custom loader reads the file fresh each time (no vintage / no cache key). For reproducibility, users should treat the path as part of the recipe provenance and keep the file pinned.
+- **`support_tier = provisional`** on the returned `RawLoadResult` — signals the user-supplied panel has not been through FRED's QC / vintage pipeline.
 
 ### Functions & features
 
-- Compiler: `dataset_source` default = the value of `dataset` (`_selection_value(..., default=dataset)`). No downstream branch.
-- Manifest: `dataset_source` recorded for provenance audit.
+- `macrocast.load_custom_csv(path, *, dataset, cache_root=None)` — direct call.
+- `macrocast.load_custom_parquet(path, *, dataset, cache_root=None)` — direct call (requires pyarrow or fastparquet).
+- Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` checks `recipe.data_task_spec[dataset_source]` first; falls through to the FRED-canonical path otherwise.
+- Compile guard: `dataset_source ∈ {custom_csv, custom_parquet}` + no `leaf_config.custom_data_path` → `CompileValidationError`.
 
 ### Recipe usage
 
-Usually omitted; the default mirrors `dataset`. Explicit:
+Canonical FRED (most common):
 
 ```yaml
 path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      dataset_source: fred_md   # redundant but explicit
+      # dataset_source: fred_md  (omit — defaults to dataset value)
+    leaf_config:
+      target: INDPRO
+      horizons: [1, 3, 6]
+```
+
+User-supplied CSV:
+
+```yaml
+path:
+  1_data_task:
+    fixed_axes:
+      dataset: fred_md          # schema declaration
+      dataset_source: custom_csv
+    leaf_config:
+      target: INDPRO
+      horizons: [1, 3]
+      custom_data_path: /path/to/my_fred_md_extract.csv
+```
+
+User-supplied Parquet:
+
+```yaml
+path:
+  1_data_task:
+    fixed_axes:
+      dataset: fred_qd
+      dataset_source: custom_parquet
+    leaf_config:
+      target: GDPC1
+      horizons: [1, 2, 4]
+      custom_data_path: /path/to/my_fred_qd_extract.parquet
 ```
 
 ---
@@ -112,32 +154,7 @@ Usually omitted (dataset implies the frequency). Explicit only when the manifest
 
 ---
 
-## 1.1.4 `data_domain`
-
-**Coarse subject-area label** for the panel — declarative tagging, not a runtime switch.
-
-### Value catalog
-
-| Value | Status | Rough meaning |
-|---|---|---|
-| `macro` | operational | Standard macroeconomic panel (default) |
-| `macro_finance` | registry_only (v1.1) | Macro + finance mixed panel |
-| `housing` / `energy` / `labor` / `regional` | registry_only (v1.1) | Specialised sub-domains; no dedicated loaders yet |
-| `panel_macro` / `text_macro` / `mixed_domain` | future (v2) | Cross-sectional panels, NLP-augmented macro, multi-domain fusion |
-
-### Functions & features
-
-- Compiler reads `data_domain` into the manifest with default `"macro"`.
-- No downstream dispatch; purely declarative.
-- Downgrading `macro_finance` to `registry_only` in this §1.1 pass reflects the honest status — v1.0 does not produce different behaviour for `macro` vs. `macro_finance`.
-
-### Recipe usage
-
-Usually omitted; default `"macro"` covers FRED-MD / FRED-QD / FRED-SD. Not a load-time dispatcher.
-
----
-
-## 1.1.5 `information_set_type`
+## 1.1.4 `information_set_type`
 
 **Real-time regime** that governs which version of each observation the model is allowed to see at each forecast origin. Fully wired — this is the only §1.1 axis with compile-time validation AND runtime dispatch across its operational values.
 
@@ -194,6 +211,8 @@ path:
 ## §1.1 takeaways
 
 - **`dataset`** and **`information_set_type`** are the two axes the user actually decides. Every operational value dispatches.
-- **`dataset_source`**, **`frequency`**, **`data_domain`** are declarative / provenance-only in v1.0 — most values demoted to `registry_only` in this pass to match reality. Keep them for manifest audit and future adapter work (v1.1+).
+- **`dataset_source`** now carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. 14 reserved third-party adapter labels dropped.
+- **`frequency`** is declarative / dataset-derived in v1.0.
+- **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).
 
 Next group: [§1.2 Task & target](task.md) (coming) — what exactly is being forecast.
