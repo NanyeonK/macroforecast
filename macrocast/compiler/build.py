@@ -405,7 +405,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "warmup_rule": _selection_value(selection_map, "warmup_rule", default="lags_only_warmup"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
         "x_map_policy": _selection_value(selection_map, "x_map_policy", default="shared_X"),
-        "target_to_target_inclusion": _selection_value(selection_map, "target_to_target_inclusion", default="forbid_other_targets_as_X"),
         "evaluation_scale": _selection_value(selection_map, "evaluation_scale", default="original_scale"),
         "benchmark_family": _selection_value(selection_map, "benchmark_family"),
         "regime_task": _selection_value(selection_map, "regime_task", default="unconditional"),

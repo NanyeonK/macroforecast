@@ -20,13 +20,10 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     ("failure_policy", "skip_failed_cell"),
     # 1_data_task metadata
     ("x_map_policy", "shared_X"),
-    ("target_to_target_inclusion", "forbid_other_targets_as_X"),
     ("information_set_type", "pseudo_oos_revised"),
     ("min_train_size", "fixed_years"),
     ("overlap_handling", "evaluate_with_hac"),
     ("deterministic_components", "linear_trend"),
-    ("forecast_object", "quantile"),
-    ("forecast_object", "direction"),
     ("own_target_lags", "exclude"),
     # 2_preprocessing metadata
     ("preprocessing_axis_role", "swept_preprocessing"),
