@@ -124,3 +124,50 @@ def test_replication_no_overrides_no_source_artifact(tmp_path: Path) -> None:
     assert diff["metrics_delta"] == {}
     assert diff["source_artifact_dir"] is None
     assert diff["override_diff_entries"] == []
+
+
+def test_replication_override_study_mode_compiles_executable(tmp_path: Path) -> None:
+    """After 0.6 cleanup, a source recipe marked with
+    study_mode=replication_override_study compiles as executable (no
+    representable_but_not_executable warning). execute_replication can
+    process it directly, and the replay runs end-to-end."""
+    from macrocast.compiler.build import compile_recipe_dict
+
+    src_recipe = _baseline_recipe()
+    src_recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+
+    compile_result = compile_recipe_dict(src_recipe)
+    assert compile_result.compiled.execution_status == "executable"
+    # No study_mode wrapper-route warning in the manifest.
+    manifest_warnings = compile_result.manifest.get("warnings", [])
+    assert not any(
+        "replication_override_study" in w and "wrapper/orchestrator route" in w
+        for w in manifest_warnings
+    ), f"unexpected wrapper-route warning: {manifest_warnings}"
+
+
+def test_replication_with_study_mode_replication_override_runs_end_to_end(tmp_path: Path) -> None:
+    """End-to-end: source recipe has study_mode=replication_override_study;
+    execute_replication accepts it and produces a replay artifact."""
+    from macrocast.compiler.build import compile_recipe_dict
+    from macrocast.execution.build import execute_recipe
+
+    recipe = _baseline_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+    compile_result = compile_recipe_dict(recipe)
+    src_exec = execute_recipe(
+        recipe=compile_result.compiled.recipe_spec,
+        preprocess=compile_result.compiled.preprocess_contract,
+        output_root=tmp_path / "source",
+        local_raw_source=FIXTURE_RAW,
+    )
+
+    result = execute_replication(
+        source_recipe_dict=recipe,
+        overrides={"path.3_training.fixed_axes.model_family": "lasso"},
+        source_artifact_dir=src_exec.artifact_dir,
+        output_root=tmp_path / "replay",
+        local_raw_source=FIXTURE_RAW,
+    )
+    assert result.overrides_applied == {"path.3_training.fixed_axes.model_family": "lasso"}
+    assert Path(result.diff_report_path).exists()

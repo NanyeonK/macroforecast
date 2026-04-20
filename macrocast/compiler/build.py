@@ -655,7 +655,7 @@ def _execution_status(
             f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
         )
     study_mode = _selection_value(selection_map, "study_mode", default="single_path_benchmark_study")
-    if study_mode in {"orchestrated_bundle_study", "replication_override_study"}:
+    if study_mode in {"orchestrated_bundle_study"}:
         warnings.append(
             f"study_mode={study_mode!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
         )

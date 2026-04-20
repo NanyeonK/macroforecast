@@ -1300,3 +1300,75 @@ def test_wizard_options_single_target_returns_operational_only() -> None:
         "single_target_model_grid",
         "single_target_full_sweep",
     }
+
+
+# --- 0.6 study_mode compile status per-value ---
+
+
+def _study_mode_recipe_base() -> dict:
+    return {
+        "recipe_id": "study-mode-compile-status",
+        "path": {
+            "0_meta": {"fixed_axes": {"study_mode": "PLACEHOLDER"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level",
+                "tcode_policy": "raw_only", "target_missing_policy": "none",
+                "x_missing_policy": "none", "target_outlier_policy": "none",
+                "x_outlier_policy": "none", "scaling_policy": "none",
+                "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable",
+                "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "rolling", "benchmark_family": "zero_change",
+                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+
+
+def test_study_mode_single_path_benchmark_study_compiles_executable() -> None:
+    recipe = _study_mode_recipe_base()
+    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "single_path_benchmark_study"
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "executable"
+
+
+def test_study_mode_controlled_variation_study_compiles_executable() -> None:
+    recipe = _study_mode_recipe_base()
+    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "controlled_variation_study"
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "executable"
+
+
+def test_study_mode_replication_override_study_compiles_executable_after_cleanup() -> None:
+    """After 0.6 cleanup, replication_override_study no longer triggers the
+    wrapper-route warning; execute_replication is the dedicated runner."""
+    recipe = _study_mode_recipe_base()
+    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "replication_override_study"
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "executable"
+
+
+def test_study_mode_orchestrated_bundle_study_is_still_representable_not_executable() -> None:
+    """orchestrated_bundle_study stays on the wrapper-warning path until the
+    Phase 8 PaperReadyBundle consumer lands. Requires wrapper_family +
+    bundle_label in leaf_config (wrapper_handoff contract)."""
+    recipe = _study_mode_recipe_base()
+    recipe["path"]["0_meta"]["fixed_axes"]["study_mode"] = "orchestrated_bundle_study"
+    recipe["path"]["5_output_provenance"]["leaf_config"]["wrapper_family"] = "benchmark_suite"
+    recipe["path"]["5_output_provenance"]["leaf_config"]["bundle_label"] = "bundle-test"
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "representable_but_not_executable"
+    assert any(
+        "orchestrated_bundle_study" in w and "wrapper/orchestrator route" in w
+        for w in r.manifest.get("warnings", [])
+    )

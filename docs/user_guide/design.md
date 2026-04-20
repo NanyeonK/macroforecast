@@ -472,34 +472,102 @@ See also: `docs/dev/reproducibility_policy.md`, `macrocast.execution.seed_policy
 
 ## 0.6 `study_mode`
 
-**Top-level research identity** of the study. Selects which execution route the compiler produces.
+**Top-level research identity** of the study. Determines which execution route the compiler produces and which runner the user invokes. Default is `single_path_benchmark_study`.
+
+Default recorded on study manifests (when swept via `execute_sweep`) is `controlled_variation_study`.
 
 ### Value catalog
 
-| Value | Status | Route |
-|---|---|---|
-| `single_path_benchmark_study` | operational | Default. One recipe → one evaluation path. Runs via `execute_recipe()`. |
-| `controlled_variation_study` | operational | One or more axes swept; the rest stays identical. Runs via `execute_sweep()`. |
-| `orchestrated_bundle_study` | operational (wrapper-route) | Multiple recipes bundled by an external orchestrator. Compiler emits a `wrapper_handoff` payload. |
-| `replication_override_study` | operational (wrapper-route) | Replication with locked overrides. Runs via `execute_replication()`. |
+Operational values are subdivided by **how they are executed**:
 
-The two wrapper-route modes compile to `representable_but_not_executable` for a direct `execute_recipe()` call. They are consumed through the sweep runner, `execute_replication()`, or Phase 8's `PaperReadyBundle`.
+- **direct** — `execute_recipe()` handles the recipe path as-is.
+- **sweep runner** — `execute_sweep()` expands and executes variants.
+- **dedicated runner** — a purpose-built top-level function drives execution.
+- **wrapper handoff (pending consumer)** — compile emits a `wrapper_handoff` payload but no in-package runner ships yet.
+
+| Value | Status | Execution form | Compile status | Runner |
+|---|---|---|---|---|
+| `single_path_benchmark_study` | operational | direct | executable | `execute_recipe` |
+| `controlled_variation_study` | operational | sweep runner | executable | `execute_sweep` (internally compiles each variant to single-path) |
+| `replication_override_study` | operational | dedicated runner | executable (since 2026-04-20) | `execute_replication` (applies overrides, compiles, runs via `execute_recipe`) |
+| `orchestrated_bundle_study` | operational | wrapper handoff (pending) | representable_but_not_executable | Phase 8 `PaperReadyBundle` consumer — not shipped yet |
+
+### Which one to pick
+
+- **You are running one recipe against a baseline** → `single_path_benchmark_study`. Default, no need to set explicitly.
+- **You are sweeping an axis (horse race)** → `controlled_variation_study`. Required by `execute_sweep`.
+- **You are reproducing a prior study with locked overrides** → `replication_override_study`. Then call `execute_replication(source_recipe_dict=..., overrides=...)`.
+- **You are bundling multiple recipes for paper artifact (Phase 8)** → `orchestrated_bundle_study`. Compile-only today; the consumer ships in Phase 8 (`PaperReadyBundle`).
 
 ### Functions & features
 
-- `DEFAULT_STUDY_MODE` constant in `macrocast.execution.sweep_runner` (`"controlled_variation_study"`).
-- `execute_sweep(recipe, study_mode=..., ...)` — sweep runner accepts an override; default is `controlled_variation_study`.
-- Compiler routing: `compile_recipe_dict()` uses `study_mode` to pick executable vs wrapper-route, set execution_status, and bind the right runner.
-- Study manifest: the chosen mode is recorded on `study_manifest.json` (schema v1).
+- `DEFAULT_STUDY_MODE = "controlled_variation_study"` in `macrocast.execution.sweep_runner` — the value recorded on study manifests by default when `execute_sweep` is invoked without an override.
+- `macrocast.design.normalize.normalize_study_mode(value)` — rejects unknown values with `DesignValidationError`. The 4 accepted values live in `_ALLOWED_STUDY_MODES`.
+- `macrocast.design.derive.derive_execution_posture(study_mode, design_shape, replication_input, experiment_unit)`:
+  - `replication_override_study` → `replication_locked_plan`
+  - `orchestrated_bundle_study` → `wrapper_bundle_plan`
+  - otherwise driven by design_shape
+- `macrocast.compiler.build.compile_recipe_dict()`:
+  - Rejects `study_mode` that is not one of the 4 registered values.
+  - Emits `representable_but_not_executable` + wrapper-route warning for `orchestrated_bundle_study` (until Phase 8 consumer lands).
+  - `replication_override_study` now passes as `executable` (was rejected until 2026-04-20 cleanup).
+- `macrocast.execution.sweep_runner.execute_sweep(..., study_mode=...)` — parameter; study manifest records the choice.
+- `macrocast.studies.replication.execute_replication(...)` — dedicated runner for `replication_override_study`. Accepts source recipe with any study_mode; applies overrides; compiles and runs.
 
 ### Recipe usage
 
 ```yaml
+# Single-path benchmark study (default; omitting study_mode gets this).
+path:
+  0_meta:
+    fixed_axes:
+      study_mode: single_path_benchmark_study
+```
+
+```yaml
+# Horse-race sweep.
 path:
   0_meta:
     fixed_axes:
       study_mode: controlled_variation_study
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
 ```
+
+```yaml
+# Replication of a prior recipe — marks the source; execute_replication reruns.
+path:
+  0_meta:
+    fixed_axes:
+      study_mode: replication_override_study
+```
+
+```yaml
+# Orchestrated bundle — compile-only in v1.0; Phase 8 PaperReadyBundle will consume.
+path:
+  0_meta:
+    fixed_axes:
+      study_mode: orchestrated_bundle_study
+  5_output_provenance:
+    leaf_config:
+      wrapper_family: benchmark_suite     # required by wrapper_handoff contract
+      bundle_label: my-bundle             # required
+```
+
+### Relation to other Layer 0 axes
+
+- `experiment_unit` (§0.3) interacts with `study_mode`. E.g., `orchestrated_bundle_study` combined with `experiment_unit=benchmark_suite` produces a wrapper_handoff payload; `replication_override_study` defaults `experiment_unit` to `replication_recipe`.
+- `reproducibility_mode` (§0.5) applies independently; a `replication_override_study` with `strict_reproducible` produces a byte-identical replay.
+- `failure_policy` (§0.4) drives per-variant and per-recipe failure handling regardless of study_mode.
+
+### Not implemented in v1.0
+
+| Value | Gap | Target |
+|---|---|---|
+| `orchestrated_bundle_study` consumer | Phase 8 `PaperReadyBundle` is the intended runner — not shipped. Compile handoff exists; runtime consumer pending. | Phase 8 |
+
+All other study_mode values execute end-to-end in v1.0.
 
 ---
 
