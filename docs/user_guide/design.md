@@ -654,11 +654,13 @@ Framework:
 
 Layer 0 meta axes registry (6 axes, curated 2026-04-20):
 
-- `axis_type`: 5 values, all operational, all with real runtime wiring (fixed/sweep/conditional/nested_sweep/derived).
-- `compute_mode`: 3 operational (serial/parallel_by_model/parallel_by_horizon), 3 registry_only (v1.1+).
-- `experiment_unit`: 7 operational, 2 registry_only (v1.1), 3 future (v2).
-- `failure_policy`: 5 operational, 3 registry_only (v1.1).
-- `reproducibility_mode`: 3 operational, 1 registry_only (v1.1).
-- `study_mode`: 4 operational (2 executable + 2 wrapper-route).
+- `axis_type`: 5/5 operational (fixed, sweep, conditional, nested_sweep, derived). All wired to compiler + sweep_plan.
+- `compute_mode`: 5/9 operational (serial, parallel_by_model, parallel_by_horizon, parallel_by_target, parallel_by_oos_date). 4 registry_only: parallel_by_trial (v1.1 HPO backend), gpu_single / gpu_multi (scheduled for drop in Tier 1-3 PR #18), distributed_cluster (v2 Phase 11).
+- `experiment_unit`: 7/12 operational — 3 direct executable via `execute_recipe` (single_target_single_model, single_target_model_grid, multi_target_shared_design), 2 dedicated-runner (ablation_study via `execute_ablation`, replication_recipe via `execute_replication`), 2 wrapper-handoff pending Phase 8 (single_target_full_sweep, benchmark_suite). 2 registry_only (v1.1): multi_target_separate_runs, multi_output_joint_model. 3 future (v2 Phase 11): hierarchical_forecasting_run, panel_forecasting_run, state_space_run.
+- `failure_policy`: 5/7 operational (fail_fast, skip_failed_cell, skip_failed_model, save_partial_results, warn_only). 2 registry_only (v1.1): retry_then_skip, fallback_to_default_hp. `hard_error` dropped (fail_fast synonym, no distinct runtime branch).
+- `reproducibility_mode`: 4/4 operational (strict_reproducible, seeded_reproducible, best_effort, exploratory). strict now controls numpy + torch + cudnn + CUBLAS globals via `apply_reproducibility_mode()`; emits RuntimeWarning when PYTHONHASHSEED is not set in the shell.
+- `study_mode`: 4/4 operational — 3 end-to-end executable today (single_path_benchmark_study via `execute_recipe`, controlled_variation_study via `execute_sweep`, replication_override_study via `execute_replication`), 1 wrapper-handoff pending Phase 8 (orchestrated_bundle_study → `PaperReadyBundle`).
+
+`registry_type` axis was dropped 2026-04-20 (PR #23) — it had zero runtime effect and every axis defaulted to `enum_registry`. If v1.1 adds numeric/callable/plugin dispatch, the AxisDefinition field can regrow at that point without migration.
 
 The design layer is a stable foundation. Later package surfaces are built above it.
