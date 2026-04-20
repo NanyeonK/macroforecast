@@ -31,7 +31,7 @@ Declares **what is being forecast and how the prediction is framed**. These four
 ### Functions & features
 
 - Compiler branches at three sites in `compiler/build.py`: default derivation for dependent axes (line 397), multi-target aggregator activation (line 516), `experiment_unit` compatibility guard (line 542), and downstream spec propagation (line 747).
-- `derive_experiment_unit_default` (`macrocast.design`) reads `task` to pick `single_run` vs. `multi_target_shared_design` as the default recipe shape.
+- `derive_experiment_unit_default` (`macrocast.design`) reads `task` to pick between single-target units (`single_target_single_model` / `single_target_model_grid` / `single_target_full_sweep`) and `multi_target_shared_design` as the default recipe shape.
 - No standalone module — the task identity flows through `CompiledRecipeSpec.task`.
 
 ### Recipe usage
