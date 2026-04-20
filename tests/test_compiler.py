@@ -774,7 +774,8 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
     assert compile_result.manifest["tree_context"]["failure_policy"] == "fail_fast"
 
 
-def test_compile_warn_only_is_representable_not_executable() -> None:
+def test_compile_warn_only_is_now_executable() -> None:
+    """warn_only flipped to operational in the 0.4 cleanup — compile should pass as executable."""
     recipe = {
         "recipe_id": "warn-only-provenance",
         "path": {
@@ -799,8 +800,8 @@ def test_compile_warn_only_is_representable_not_executable() -> None:
         },
     }
     compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
-    assert any("status=registry_only" in warning or "representable but not executable" in warning for warning in compile_result.manifest["warnings"])
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.manifest["warnings"] == []
 
 
 

@@ -3069,8 +3069,10 @@ def execute_recipe(
                     target_name = None
                     if "target '" in err:
                         target_name = err.split("target '", 1)[1].split("'", 1)[0]
-                    if failure_policy in {"skip_failed_model", "save_partial_results"}:
+                    if failure_policy in {"skip_failed_model", "save_partial_results", "warn_only"}:
                         failed_components.append({"stage": "prediction_build", "target": target_name, "error": err})
+                        if failure_policy == "warn_only":
+                            warnings.warn(f"prediction_build failure (target={target_name!r}): {err}", RuntimeWarning, stacklevel=2)
                         continue
                     raise
     else:
@@ -3081,8 +3083,10 @@ def execute_recipe(
                 prediction_frames.append(frame)
                 successful_targets.append(target)
             except Exception as exc:
-                if failure_policy in {"skip_failed_model", "save_partial_results"}:
+                if failure_policy in {"skip_failed_model", "save_partial_results", "warn_only"}:
                     failed_components.append({"stage": "prediction_build", "target": target, "error": str(exc)})
+                    if failure_policy == "warn_only":
+                        warnings.warn(f"prediction_build failure (target={target!r}): {exc}", RuntimeWarning, stacklevel=2)
                     continue
                 raise
     if not prediction_frames:
@@ -3219,8 +3223,10 @@ def execute_recipe(
             dependence_correction=dependence_correction,
         )
     except Exception as exc:
-        if failure_policy == "save_partial_results":
+        if failure_policy in {"save_partial_results", "warn_only"}:
             failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
+            if failure_policy == "warn_only":
+                warnings.warn(f"stat_test_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
             stat_results = {}
         else:
             raise
@@ -3262,8 +3268,10 @@ def execute_recipe(
             _write_json(run_dir / importance_file, importance_payload)
             manifest["importance_file"] = importance_file
         except Exception as exc:
-            if failure_policy == "save_partial_results":
+            if failure_policy in {"save_partial_results", "warn_only"}:
                 failed_components.append({"stage": "importance_artifact", "target": None, "error": str(exc)})
+                if failure_policy == "warn_only":
+                    warnings.warn(f"importance_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
             else:
                 raise
     manifest["partial_run"] = bool(failed_components)

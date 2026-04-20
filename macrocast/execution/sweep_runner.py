@@ -9,6 +9,7 @@ See plans/phases/phase_01_sweep_executor.md section 4.2.
 """
 
 from __future__ import annotations
+import warnings
 
 import contextvars
 import json
@@ -113,16 +114,55 @@ def _extract_parent_compute_mode(plan: SweepPlan) -> str:
     return "serial"
 
 
+def _extract_parent_failure_policy(plan: SweepPlan) -> str:
+    """Read failure_policy from the plan's parent recipe (defaults to "fail_fast")."""
+    parent = plan.parent_recipe_dict.get("path", {}) if isinstance(plan.parent_recipe_dict, dict) else {}
+    meta = parent.get("0_meta", {}) if isinstance(parent, dict) else {}
+    if not isinstance(meta, dict):
+        return "fail_fast"
+    for section in ("fixed_axes", "sweep_axes"):
+        block = meta.get(section, {}) or {}
+        if not isinstance(block, dict):
+            continue
+        if "failure_policy" in block:
+            val = block["failure_policy"]
+            if isinstance(val, list) and val:
+                return str(val[0])
+            return str(val)
+    return "fail_fast"
+
+
+# Policies that signal "continue past variant failure" at the sweep level.
+_CONTINUE_ON_VARIANT_FAILURE = frozenset({
+    "skip_failed_cell",
+    "skip_failed_model",
+    "save_partial_results",
+    "warn_only",
+})
+
+
 def execute_sweep(
     *,
     plan: SweepPlan,
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
-    fail_fast: bool = False,
     study_mode: str = DEFAULT_STUDY_MODE,
     extra_provenance: dict[str, Any] | None = None,
 ) -> SweepResult:
     """Execute every variant of ``plan`` under ``output_root``.
+
+    Failure handling is driven by the parent recipe's ``failure_policy``
+    meta axis (Layer 0, section 0.4). Supported policies and sweep-level
+    behaviour:
+
+    - ``fail_fast`` - the first variant failure re-raises (abort).
+    - ``skip_failed_cell`` / ``skip_failed_model`` / ``save_partial_results``
+      - record the failure in the study manifest and continue.
+    - ``warn_only`` - same as the continue set above, plus emit a
+      ``RuntimeWarning`` per failed variant.
+
+    Recipes that do not specify ``failure_policy`` default to
+    ``fail_fast``.
 
     Args:
         plan: A :class:`SweepPlan` produced by
@@ -132,9 +172,6 @@ def execute_sweep(
             the aggregate ``study_manifest.json``.
         local_raw_source: Passed through to :func:`execute_recipe` so
             tests can use fixture CSVs.
-        fail_fast: When True, the first variant failure aborts the sweep
-            (the exception is re-raised). When False (default), failures
-            are recorded in the study manifest and the sweep continues.
         study_mode: Recorded on the study manifest. Defaults to
             ``controlled_variation_study``.
         extra_provenance: Optional dict merged into each variant's
@@ -143,6 +180,9 @@ def execute_sweep(
     Returns:
         A :class:`SweepResult` summarising per-variant outcomes.
     """
+
+    failure_policy = _extract_parent_failure_policy(plan)
+    continue_on_failure = failure_policy in _CONTINUE_ON_VARIANT_FAILURE
 
     output_root_path = Path(output_root)
     output_root_path.mkdir(parents=True, exist_ok=True)
@@ -212,8 +252,14 @@ def execute_sweep(
             )
         except Exception as exc:
             runtime = time.monotonic() - t0
-            if fail_fast:
+            if not continue_on_failure:
                 raise
+            if failure_policy == "warn_only":
+                warnings.warn(
+                    f"variant {variant.variant_id} failed: {type(exc).__name__}: {exc}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
             rel_artifact = _relative_to(variant_output, output_root_path)
             return (
                 VariantManifestEntry(
