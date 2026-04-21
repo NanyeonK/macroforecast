@@ -19,6 +19,7 @@ Stages 2 through 7 (preprocessing, training, evaluation, provenance, stat tests,
 | [Getting Started](getting_started/index.md) | Quickstart + Stages Reference cheat sheet |
 | [User Guide — Design (Stage 0)](user_guide/design.md) | Six axes that decide study shape |
 | [User Guide — Data (Stage 1)](user_guide/data/index.md) | Twenty axes that decide data, task, and evaluation window |
+| [Sources](sources/index.md) | FRED-MD / FRED-QD / FRED-SD — what macrocast actually downloads, variable groups, T-codes, vintages |
 | [API Reference](api/index.md) | Function signatures and class documentation |
 | [Docs Conventions](CONVENTIONS.md) | Rules that every docs page follows |
 
@@ -37,6 +38,7 @@ Stages 2 through 7 (preprocessing, training, evaluation, provenance, stat tests,
 install
 getting_started/index
 user_guide/index
+sources/index
 api/index
 CONVENTIONS
 ```

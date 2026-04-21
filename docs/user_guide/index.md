@@ -17,7 +17,7 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 
 [Data (Stage 1)](data/index.md) — twenty axes, organised into five groups:
 
-- [1.1 Source & Frame](data/source.md) — `dataset`, `dataset_source`, `frequency`, `information_set_type`.
+- [1.1 Source & Frame](data/source.md) — `dataset`, `dataset_source`, `frequency`, `information_set_type`. Each FRED dataset is documented in depth under [Sources](../sources/index.md).
 - [1.2 Task & Target](data/task.md) — `task`, `forecast_type`, `forecast_object`, `horizon_target_construction`.
 - [1.3 Horizon & Evaluation Window](data/horizon.md) — `min_train_size`, `training_start_rule`, `oos_period`, `overlap_handling`.
 - [1.4 Benchmark & Predictor Universe](data/benchmark.md) — `benchmark_family`, `predictor_family`, `variable_universe`, `deterministic_components`.

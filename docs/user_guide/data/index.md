@@ -34,9 +34,9 @@ Each 1.x group document flags the honest status of every value it covers. Treat 
 
 Each of the three built-in datasets (FRED-MD, FRED-QD, FRED-SD) has its own documentation covering citation, download path, variable categories, transformation codes, and changes from the original working paper to the current vintage:
 
-- [FRED-MD](datasets/fred_md.md) — monthly U.S. macro panel (McCracken & Ng 2016).
-- [FRED-QD](datasets/fred_qd.md) — quarterly U.S. macro panel (McCracken & Ng 2020).
-- [FRED-SD](datasets/fred_sd.md) — state-level real-time panel, mixed-frequency (Bokun, Jackson, Kliesen, Owyang 2022).
+- [FRED-MD](../../sources/fred_md.md) — monthly U.S. macro panel (McCracken & Ng 2016).
+- [FRED-QD](../../sources/fred_qd.md) — quarterly U.S. macro panel (McCracken & Ng 2020).
+- [FRED-SD](../../sources/fred_sd.md) — state-level real-time panel, mixed-frequency (Bokun, Jackson, Kliesen, Owyang 2022).
 
 ```{toctree}
 :maxdepth: 1
@@ -47,7 +47,4 @@ task
 horizon
 benchmark
 policies
-datasets/fred_md
-datasets/fred_qd
-datasets/fred_sd
 ```
