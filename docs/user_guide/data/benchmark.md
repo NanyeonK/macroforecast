@@ -29,7 +29,6 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 |---|---|---|
 | `historical_mean` | operational | Training-set mean. Default. |
 | `zero_change` | operational | Random-walk at `y_t`. |
-| `random_walk` | operational | Same as zero_change — separate label for recipe expressivity. |
 | `ar_bic` | operational | AR model with BIC-selected lag order. |
 | `ar_fixed_p` | operational | AR model at a fixed lag `p` (`benchmark_config.benchmark_fixed_p`). |
 | `ardi` | operational | AR + Diffusion Index (factor) model. |
@@ -45,7 +44,7 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 - `macrocast.execution.build._run_benchmark_executor` dispatches by `benchmark_family` value.
 - `factor_model`: z-scored leading-factor regression; falls back to `historical_mean` for training windows < 6 rows.
-- `multi_benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, random_walk, ar_fixed_p, ardi).
+- `multi_benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi).
 - `paper_specific_benchmark` / `survey_forecast`: look up the forecast at `train.index[-1] + horizon` months (monthly freq); fall back to the most recent trailing value on miss.
 
 ### Recipe usage
@@ -74,7 +73,6 @@ path:
 |---|---|---|
 | `target_lags_only` | operational | Only the target's own lags (forces `feature_builder=autoreg_lagged_target`). Default for autoreg recipes. |
 | `all_macro_vars` | operational | Every column except the target. Default for raw-panel recipes. |
-| `all_except_target` | operational | Alias of `all_macro_vars` (makes intent explicit). |
 | `category_based` | operational | User-supplied category mapping: `leaf_config.predictor_category_columns: dict[str, list[str]]` + `leaf_config.predictor_category`. |
 | `factor_only` | operational | Columns whose name starts with `F_` (factor outputs). |
 | `handpicked_set` | operational | User-supplied column list: `leaf_config.handpicked_columns: list[str]`. |

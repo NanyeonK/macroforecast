@@ -207,11 +207,11 @@ path:
 ```
 
 ```yaml
-# Growth-rate evaluation (CLSS 2021 style)
+# Log-growth-rate evaluation (CLSS 2021 style)
 path:
   1_data_task:
     fixed_axes:
-      horizon_target_construction: cumulative_growth_to_h
+      horizon_target_construction: future_logdiff
 ```
 
 ---
@@ -221,7 +221,7 @@ path:
 - **`task`** is the only §1.2 axis that truly branches at runtime today. It flows into multi-target aggregator activation and `experiment_unit` default derivation.
 - **`forecast_type`** is feature-builder-dynamic: `iterated` for `autoreg_lagged_target`, `direct` for `raw_feature_panel` and the panel variants. Cross combinations are blocked at compile time.
 - **`forecast_object`** has all three values operational (`point_mean`, `point_median`, `quantile`). `quantile` pairs with `model_family=quantile_linear`; level via `hp.quantile`.
-- **`horizon_target_construction`** is fully operational with 4 values — default `future_level_y_t_plus_h` plus 3 metric-scale transforms (`future_diff`, `future_logdiff`, `cumulative_growth_to_h`).
+- **`horizon_target_construction`** is fully operational with 3 values — default `future_level_y_t_plus_h` plus 2 metric-scale transforms (`future_diff`, `future_logdiff`). `cumulative_growth_to_h` was dropped as a duplicate of future_logdiff (identical telescoping-sum formula).
 - `target_family`, `multi_target_architecture`, `target_to_target_inclusion` are gone — see the "Dropped axes" note at the top.
 
 Next group: §1.3 Horizon & evaluation window (coming).
