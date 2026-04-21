@@ -36,8 +36,7 @@ Stages 2 through 7 (preprocessing, training, evaluation, provenance, stat tests,
 
 install
 getting_started/index
-user_guide/design
-user_guide/data/index
+user_guide/index
 api/index
 CONVENTIONS
 ```
