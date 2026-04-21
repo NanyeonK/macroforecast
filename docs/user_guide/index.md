@@ -8,7 +8,6 @@ In-depth documentation for every macrocast layer. Each page is self-contained; f
 
 design
 data/index
-data/source
 ```
 
 ```{toctree}

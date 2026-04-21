@@ -19,7 +19,6 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     ("reproducibility_mode", "strict_reproducible"),
     ("failure_policy", "skip_failed_cell"),
     # 1_data_task metadata
-    ("target_family", "multiple_macro_series"),
     ("x_map_policy", "shared_X"),
     ("target_to_target_inclusion", "forbid_other_targets_as_X"),
     ("information_set_type", "pseudo_oos_revised"),
