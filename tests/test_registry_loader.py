@@ -168,11 +168,8 @@ def test_registry_loader_discovers_information_set_type_axis() -> None:
     entry = get_axis_registry_entry("information_set_type")
     assert entry.allowed_values == (
         "revised",
-        "real_time_vintage",
         "pseudo_oos_revised",
         "pseudo_oos_vintage_aware",
-        "release_calendar_aware",
-        "publication_lag_aware",
     )
 
 

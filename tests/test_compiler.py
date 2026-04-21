@@ -351,67 +351,6 @@ def test_compile_lasso_minimal_importance_recipe_is_executable(tmp_path: Path) -
     assert manifest["importance_file"] == "importance_minimal.json"
 
 
-def test_compile_real_time_recipe_requires_data_vintage() -> None:
-    recipe = {
-        "recipe_id": "real-time-missing-vintage",
-        "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
-            "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "real_time", "task": "single_target_point_forecast"},
-                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
-            },
-            "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
-                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
-                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
-                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
-            }},
-            "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
-            }},
-            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
-            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
-            "7_importance": {"fixed_axes": {"importance_method": "none"}},
-        },
-    }
-    with __import__("pytest").raises(CompileValidationError):
-        compile_recipe_dict(recipe)
-
-
-def test_compile_real_time_recipe_is_executable(tmp_path: Path) -> None:
-    recipe = {
-        "recipe_id": "real-time-expanding-ar",
-        "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
-            "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "real_time", "task": "single_target_point_forecast"},
-                "leaf_config": {"target": "INDPRO", "horizons": [1, 3], "data_vintage": "2020-01"},
-            },
-            "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
-                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
-                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
-                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
-            }},
-            "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
-            }},
-            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
-            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
-            "7_importance": {"fixed_axes": {"importance_method": "none"}},
-        },
-    }
-    compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "executable"
-    execution = run_compiled_recipe(
-        compile_result.compiled,
-        output_root=tmp_path,
-        local_raw_source=Path("tests/fixtures/fred_md_sample.csv"),
-    )
-    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["raw_artifact"].endswith("2020-01.csv")
 
 
 def test_compile_wrapper_bundle_requires_wrapper_metadata() -> None:
@@ -964,32 +903,6 @@ def test_compile_recipe_accepts_legacy_info_set_alias() -> None:
     assert compile_result.compiled.execution_status == "executable"
     assert compile_result.manifest["data_task_spec"]["information_set_type"] == "revised"
 
-
-def test_compile_recipe_accepts_canonical_information_set_type_axis() -> None:
-    recipe = {
-        "recipe_id": "canonical-information-set",
-        "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
-            "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "real_time_vintage", "task": "single_target_point_forecast"},
-                "leaf_config": {"target": "INDPRO", "horizons": [1], "data_vintage": "2019-12"},
-            },
-            "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
-                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
-                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
-                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
-            }},
-            "3_training": {"fixed_axes": {"framework": "expanding", "benchmark_family": "historical_mean", "feature_builder": "autoreg_lagged_target", "model_family": "ar"}},
-            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
-            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
-            "7_importance": {"fixed_axes": {"importance_method": "none"}},
-        },
-    }
-    compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "executable"
-    assert compile_result.manifest["data_task_spec"]["information_set_type"] == "real_time_vintage"
 
 
 def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder() -> None:

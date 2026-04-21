@@ -139,13 +139,15 @@ path:
 |---|---|---|
 | `monthly` | operational | `fred_md`, `fred_sd` |
 | `quarterly` | operational | `fred_qd` |
-| `daily` / `weekly` / `yearly` | registry_only (v1.1) | Reserved for future daily/weekly/yearly FRED-variant loaders |
-| `mixed_frequency` | future (v2) | MIDAS-style mixed-frequency infra (phase-11) |
 
 ### Functions & features
 
 - Compiler default: `_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")` — so `dataset=fred_md` implies `frequency=monthly`, `dataset=fred_qd` implies `frequency=quarterly`, etc.
 - User can place `frequency` in `fixed_axes`, but downstream execution does not dispatch on it — the actual data cadence comes from the loaded panel's index, not this axis.
+
+### Dropped values
+
+- `daily`, `weekly`, `yearly`, `mixed_frequency` — FRED-MD/QD only expose monthly and quarterly cadences. Daily/weekly/yearly would require new loaders (FRED-SD mixed-freq is v1.1); mixed_frequency requires MIDAS-style infra (v2).
 - Manifest records `frequency` for provenance.
 
 ### Recipe usage
@@ -163,18 +165,17 @@ Usually omitted (dataset implies the frequency). Explicit only when the manifest
 | Value | Status | Contract |
 |---|---|---|
 | `revised` | operational | Latest revised values (post-revision truth). Default. |
-| `real_time_vintage` | operational | Load the vintage available at each forecast origin. Requires `leaf_config.data_vintage` at compile time. |
 | `pseudo_oos_revised` | operational | Pseudo out-of-sample: latest revised values but masked according to (fake) release-lag discipline. |
-| `pseudo_oos_vintage_aware` | registry_only (v1.1) | Vintage-aware pseudo-OOS; needs release-calendar infrastructure |
-| `release_calendar_aware` | future (v2) | Full publication-calendar-driven data feed |
-| `publication_lag_aware` | future (v2) | Richer publication-lag metadata beyond `release_lag_rule` |
+| `pseudo_oos_vintage_aware` | registry_only (v1.1) | Vintage-aware pseudo-OOS; needs release-calendar infrastructure. |
 
 ### Functions & features
 
-- Compile-time validation (`compiler/build.py:514-515`): `information_set_type == "real_time_vintage"` requires `leaf_config.data_vintage`. Missing vintage → `CompileValidationError`.
-- Runtime: loaders (`raw/datasets/fred_md.py` etc.) dispatch on this axis to pick the correct vintage source.
+- Runtime: loaders (`raw/datasets/fred_md.py` etc.) pick the correct data source based on the dataset axis; `information_set_type` shapes the downstream pseudo-OOS masking when set.
 - Compat mirror: the older recipe alias `info_set` is canonicalised to `information_set_type` (compiler/build.py alias map).
-- `information_set_type` also interacts with `vintage_policy` (§1.5) — `real_time_vintage` defaults `vintage_policy` to `single_vintage`, `revised` defaults to `latest_only`.
+
+### Dropped values
+
+- `real_time_vintage`, `release_calendar_aware`, `publication_lag_aware` — real-time vintage / release-calendar / publication-lag stacks require data-infrastructure that is outside v1.0 scope. The associated `vintage_policy` axis was dropped in the §1.5 cleanup for the same reason.
 
 ### Recipe usage
 
@@ -188,16 +189,6 @@ path:
     leaf_config:
       target: INDPRO
 
-# Real-time vintage — requires data_vintage
-path:
-  1_data_task:
-    fixed_axes:
-      dataset: fred_md
-      information_set_type: real_time_vintage
-    leaf_config:
-      target: INDPRO
-      data_vintage: "2023-06-01"
-
 # Pseudo-OOS on revised data
 path:
   1_data_task:
@@ -210,7 +201,7 @@ path:
 
 ## Source & Frame (1.1) takeaways
 
-- **`dataset`** and **`information_set_type`** are the two axes the user actually decides. Every operational value dispatches.
+- **`dataset`** and **`information_set_type`** are the two axes the user actually decides in §1.1.
 - **`dataset_source`** now carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. 14 reserved third-party adapter labels dropped.
 - **`frequency`** is declarative / dataset-derived in v1.0.
 - **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).

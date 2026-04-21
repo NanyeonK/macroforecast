@@ -10,18 +10,6 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy='fixed',
     entries=(
         EnumRegistryEntry(
-            id='daily',
-            description='daily',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='weekly',
-            description='weekly',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='monthly',
             description='monthly',
             status='operational',
@@ -32,18 +20,6 @@ AXIS_DEFINITION = AxisDefinition(
             description='quarterly',
             status='operational',
             priority='A',
-        ),
-        EnumRegistryEntry(
-            id='yearly',
-            description='yearly',
-            status='registry_only',
-            priority='B',
-        ),
-        EnumRegistryEntry(
-            id='mixed_frequency',
-            description='mixed frequency',
-            status='future',
-            priority='B',
         ),
     ),
     compatible_with={},

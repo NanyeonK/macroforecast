@@ -22,7 +22,7 @@ The 6 meta axes of Stage 0 ([design](../design.md)) — `research_design`, `expe
 
 Layer 1 covers 20 axes. After the v0.9.3 Tier 1-3 drop and the §1.1 / §1.2 / §1.3 / §1.4 / §1.5 per-group walks (§1.5 cleanup PR in flight), the current breakdown is:
 
-- **§1.1 Source & Frame** — fully honest. 4 axes, all values either operational or dropped.
+- **§1.1 Source & Frame** — fully honest. 4 axes (dataset / dataset_source / frequency / information_set_type), all values either operational or dropped. 80 op values across §1.1-§1.5; only pseudo_oos_vintage_aware remains registry_only as a label-reserved v1.1 slot.
 - **§1.2 Task & Target** — fully operational (task / forecast_type / forecast_object / horizon_target_construction); horizon_target_construction applies as a metric-scale transform at the central row site.
 - **§1.3 Horizon & Evaluation Window** — fully operational (min_train_size / training_start_rule / oos_period / overlap_handling); see horizon.md for per-axis semantics.
 - **§1.4 Benchmark & Predictor Universe** — fully operational (benchmark_family / predictor_family / variable_universe / deterministic_components). 19 formerly-demoted values wired via leaf_config input channels + deterministic feature augmentation; 4 dropped values stay out of v1.0 scope.

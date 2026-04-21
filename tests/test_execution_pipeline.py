@@ -411,28 +411,6 @@ def test_execute_recipe_writes_minimal_importance_artifact_for_lasso(tmp_path: P
     assert len(importance["feature_importance"]) > 0
 
 
-def test_execute_recipe_runs_real_time_vintage_slice(tmp_path: Path) -> None:
-    fixture = Path("tests/fixtures/fred_md_sample.csv")
-    result = execute_recipe(
-        recipe=_recipe(
-            model_family="ar",
-            feature_builder="autoreg_lagged_target",
-            framework="expanding",
-            benchmark_config={"minimum_train_size": 5},
-            info_set="real_time_vintage",
-            data_vintage="2020-01",
-        ),
-        preprocess=_preprocess_raw_only(),
-        output_root=tmp_path,
-        local_raw_source=fixture,
-    )
-
-    run_dir = tmp_path / result.run.artifact_subdir
-    manifest = json.loads((run_dir / "manifest.json").read_text())
-    assert manifest["raw_dataset"] == "fred_md"
-    assert manifest["raw_artifact"].endswith("2020-01.csv")
-    assert manifest["route_owner"] == "single_run"
-
 
 def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
