@@ -1,15 +1,23 @@
 # Source & Frame (1.1)
 
-Declares **where the data comes from and which information-set regime applies**. These four axes together answer: which dataset, at what frequency, and under which real-time regime — before the task (§1.2) or the evaluation window (§1.3) is fixed.
+Declares **where the data comes from and which information-set regime applies**. These four axes together answer: which dataset, at what frequency, and under which real-time regime — before the task (1.2) or the evaluation window (1.3) is fixed.
 
-| § | axis | Role |
+| Section | axis | Role |
 |---|---|---|
 | 1.1.1 | [`dataset`](#111-dataset) | Which FRED-family dataset schema to load |
 | 1.1.2 | [`dataset_source`](#112-dataset_source) | Which loader to use (FRED canonical / user CSV / user Parquet) |
 | 1.1.3 | [`frequency`](#113-frequency) | Series frequency (monthly/quarterly); dataset-derived |
 | 1.1.4 | [`information_set_type`](#114-information_set_type) | Real-time regime (revised vs. vintage-aware) |
 
-**Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as §0.5 `registry_type` drop).
+**Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as 0.5 `registry_type` drop).
+**At a glance (defaults):**
+- `dataset` — no default; you always pick one of fred_md / fred_qd / fred_sd.
+- `dataset_source` — mirrors `dataset` automatically (canonical FRED loader). Override only for `custom_csv` / `custom_parquet`.
+- `frequency` — derived from `dataset` (fred_md→monthly, fred_qd→quarterly). Rarely set by hand.
+- `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_revised` only when you want synthetic release-lag masking.
+
+**Most research runs need only `dataset` + `information_set_type`.** The other two auto-derive.
+
 
 ---
 
@@ -25,7 +33,7 @@ Declares **where the data comes from and which information-set regime applies**.
 | `fred_qd` | operational | `macrocast.raw.load_fred_qd` | FRED-QD quarterly macro panel (McCracken & Ng 2020) — see [fred_qd.md](datasets/fred_qd.md) |
 | `fred_sd` | operational | `macrocast.raw.load_fred_sd` | FRED-SD state-level real-time panel (Bokun, Jackson, Kliesen, Owyang 2022) — see [fred_sd.md](datasets/fred_sd.md) |
 
-Each dataset has its own dedicated documentation page covering citation, download path, variable groups, transformation codes, and changes from the original working paper to the current vintage. All three values are fully wired end-to-end: the registry entry is used by the compiler, the loader is chosen at run time via `_get_dataset_loader`, and the resulting panel flows into every downstream axis.
+Each dataset has its own dedicated documentation page covering citation, download path, variable groups, transformation codes, and changes from the original working paper to the current vintage. All three values are fully wired end-to-end: the registry entry is used by the compiler, the loader is chosen at run time via `_load_raw_for_recipe`, and the resulting panel flows into every downstream axis.
 
 ### Functions & features
 
@@ -158,7 +166,7 @@ Usually omitted (dataset implies the frequency). Explicit only when the manifest
 
 ## 1.1.4 `information_set_type`
 
-**Real-time regime** that governs which version of each observation the model is allowed to see at each forecast origin. Fully wired — this is the only §1.1 axis with compile-time validation AND runtime dispatch across its operational values.
+**Real-time regime** that governs which version of each observation the model is allowed to see at each forecast origin. Fully wired — this is the only 1.1 axis with compile-time validation AND runtime dispatch across its operational values.
 
 ### Value catalog
 
@@ -174,8 +182,8 @@ Usually omitted (dataset implies the frequency). Explicit only when the manifest
 
 ### Dropped values
 
-- `real_time_vintage`, `release_calendar_aware`, `publication_lag_aware` — real-time vintage / release-calendar / publication-lag stacks require data-infrastructure that is outside v1.0 scope. The associated `vintage_policy` axis was dropped in the §1.5 cleanup for the same reason.
-- `pseudo_oos_vintage_aware` — metadata-only label whose intended semantics (publication-lag-aware pseudo OOS) is already expressible through `release_lag_rule` (§1.5, `fixed_lag_all_series` / `series_specific_lag`). Dropped to remove the duplicate surface.
+- `real_time_vintage`, `release_calendar_aware`, `publication_lag_aware` — real-time vintage / release-calendar / publication-lag stacks require data-infrastructure that is outside v1.0 scope. The associated `vintage_policy` axis was dropped in the 1.5 cleanup for the same reason.
+- `pseudo_oos_vintage_aware` — metadata-only label whose intended semantics (publication-lag-aware pseudo OOS) is already expressible through `release_lag_rule` (1.5, `fixed_lag_all_series` / `series_specific_lag`). Dropped to remove the duplicate surface.
 
 ### Recipe usage
 
@@ -201,9 +209,9 @@ path:
 
 ## Source & Frame (1.1) takeaways
 
-- **`dataset`** and **`information_set_type`** are the two axes the user actually decides in §1.1.
+- **`dataset`** and **`information_set_type`** are the two axes the user actually decides in 1.1.
 - **`dataset_source`** now carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. 14 reserved third-party adapter labels dropped.
 - **`frequency`** is declarative / dataset-derived in v1.0.
 - **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).
 
-Next group: [§1.2 Task & target](task.md) (coming) — what exactly is being forecast.
+Next group: [1.2 Task & target](task.md) (coming) — what exactly is being forecast.

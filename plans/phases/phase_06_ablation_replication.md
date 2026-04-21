@@ -347,5 +347,5 @@ def test_synthetic_replication_roundtrip(tmp_path):
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 6에서 추출)
-- 2026-04-17 (kickoff revision): §4.5 `apply_overrides` signature changed RecipeSpec→dict (dotted paths target YAML recipe-dict layer/field structure). §4.6 registry schema reconciled with actual `ExperimentUnitEntry` dataclass (add optional `runner` field, flip two statuses). §9 factual correction (no prior `controlled_variation.py`). §10 ADR-008/009 + `override_syntax.md` references removed — in-module docstrings carry the contract until v1.1+. §4.7 added with autonomous-execution decisions pinned (report-file locations, id hashing, byte-identical mode, nested paths, delta_pct formula).
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 6에서 추출)
+- 2026-04-17 (kickoff revision): 4.5 `apply_overrides` signature changed RecipeSpec→dict (dotted paths target YAML recipe-dict layer/field structure). 4.6 registry schema reconciled with actual `ExperimentUnitEntry` dataclass (add optional `runner` field, flip two statuses). 9 factual correction (no prior `controlled_variation.py`). 10 ADR-008/009 + `override_syntax.md` references removed — in-module docstrings carry the contract until v1.1+. 4.7 added with autonomous-execution decisions pinned (report-file locations, id hashing, byte-identical mode, nested paths, delta_pct formula).

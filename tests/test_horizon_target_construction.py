@@ -1,4 +1,4 @@
-"""End-to-end tests for horizon_target_construction (§1.2.4).
+"""End-to-end tests for horizon_target_construction (1.2.4).
 
 Each operational value (future_level_y_t_plus_h, future_diff, future_logdiff,
 cumulative_growth_to_h) must:

@@ -1,5 +1,5 @@
 """Re-create evaluation_scale as a Layer 2 preprocessing axis (mirror of the
-PreprocessContract field). Not part of §1.5 — lives in 2_preprocessing because
+PreprocessContract field). Not part of 1.5 — lives in 2_preprocessing because
 it is a preprocess-contract field with a direct runtime effect at the
 preprocessing boundary.
 """

@@ -20,7 +20,7 @@ Package의 stated identity — **horse race research benchmark** — 가 아직 
 
 ## 2. Target Identity
 
-> **"연구자가 한 recipe를 기준으로 임의의 축을 sweep하면 — 나머지가 공정하게 고정된 상태에서 — 결과가 paper-ready bundle로 출력된다. Forecast 성능 차이의 효과 분해 (§4.5)가 포함되어 연구자가 자신의 기여를 cite-worthy 수준으로 입증할 수 있다."**
+> **"연구자가 한 recipe를 기준으로 임의의 축을 sweep하면 — 나머지가 공정하게 고정된 상태에서 — 결과가 paper-ready bundle로 출력된다. Forecast 성능 차이의 효과 분해 (4.5)가 포함되어 연구자가 자신의 기여를 cite-worthy 수준으로 입증할 수 있다."**
 
 v1.0은 universe 전체 커버리지가 아닌 **horse race + decomposition + bundle 축의 최소 완결**을 목표로 합니다.
 
@@ -60,7 +60,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
    │
    └─▶ Phase 6 (ablation + replication runner)
           │
-          └─▶ Phase 7 (§4.5 decomposition engine)
+          └─▶ Phase 7 (4.5 decomposition engine)
                  │
                  └─▶ Phase 8 (paper_ready_bundle + regime eval)
                         │
@@ -85,7 +85,7 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 | 4 | Benchmark evaluation axes | P1 | v0.6 | [phase_04_benchmark_eval.md](phases/phase_04_benchmark_eval.md) | **completed** |
 | 5 | Deep models (LSTM/GRU/TCN + sequence adapter) | P1 | v0.7 | [phase_05_deep_models.md](phases/phase_05_deep_models.md) | **completed** |
 | 6 | Ablation + replication runners | P1 | v0.8 | [phase_06_ablation_replication.md](phases/phase_06_ablation_replication.md) | **completed** |
-| 7 | §4.5 Decomposition engine | **P0** | v0.9 | [phase_07_decomposition.md](phases/phase_07_decomposition.md) | **completed** |
+| 7 | 4.5 Decomposition engine | **P0** | v0.9 | [phase_07_decomposition.md](phases/phase_07_decomposition.md) | **completed** |
 | 8 | paper_ready_bundle + aggregation | **P0** | v0.9 | [phase_08_paper_bundle.md](phases/phase_08_paper_bundle.md) | pending |
 | 9 | Docs rewrite + v1.0 cutoff | **P0** | **v1.0** | [phase_09_v1_cutoff.md](phases/phase_09_v1_cutoff.md) | pending |
 | 10 | v1.1 scope catalog | P2 | v1.1 | [phase_10_v1_1_scope.md](phases/phase_10_v1_1_scope.md) | pending |
@@ -95,9 +95,9 @@ Phase 1 (sweep executor) ◀── IDENTITY UNLOCK
 
 - **P0 critical path:** 0 → 1 → 7 → 8 → 9
 - **P1 (v1.0 gate):** 2, 3, 4, 5, 6
-- **P2 (post-v1.0):** 10, 11 (Phase 5b/5c content absorbed as catalog items — see §10)
+- **P2 (post-v1.0):** 10, 11 (Phase 5b/5c content absorbed as catalog items — see 10)
 
-Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참조.
+Phase 내 sub-task 우선순위는 각 phase plan의 3 Sub-Tasks 테이블 참조.
 
 ## 7. Version Ladder
 
@@ -199,7 +199,7 @@ Phase 내 sub-task 우선순위는 각 phase plan의 §3 Sub-Tasks 테이블 참
 
 ## 12. Revision History
 
-- **v3.3 (2026-04-17):** Phase 2 구현 완료 반영 (stat_test 8축 분해, 402/402 tests green, pending v0.4 tag), Phase 10 §10.8 amendment로 미구현 19개 검정 편입
+- **v3.3 (2026-04-17):** Phase 2 구현 완료 반영 (stat_test 8축 분해, 402/402 tests green, pending v0.4 tag), Phase 10 10.8 amendment로 미구현 19개 검정 편입
 - **v3.2 (2026-04-17):** Phase 1 구현 완료 반영 (horse race executor identity unlock, pending v0.3 tag)
 - **v3.1 (2026-04-17):** Phase 0 완료 반영 (status completed, v0.2 tag 준비)
 - **v3.0 (2026-04-17):** 단일 파일 → master + per-phase + infra/ADR + coverage_ledger + issue templates 재구조화

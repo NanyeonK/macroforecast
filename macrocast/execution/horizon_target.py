@@ -1,4 +1,4 @@
-"""Target construction for §1.2.4 horizon_target_construction axis.
+"""Target construction for 1.2.4 horizon_target_construction axis.
 
 Provides forward-transform (build training target from raw y at horizon h) and
 inverse-transform (convert model's forecast back to raw y-scale so metrics can

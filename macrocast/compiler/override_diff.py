@@ -12,7 +12,7 @@ axis the override path is::
 not the abbreviated ``2_preprocessing.scaling_policy`` the plan's early drafts
 sketched. The literal form avoids hidden layer↔fixed_axes↔leaf_config magic
 and matches the recipe dict's actual shape one-to-one. The drafts at
-``plans/phases/phase_06_ablation_replication.md`` §4.5 are updated to match.
+``plans/phases/phase_06_ablation_replication.md`` 4.5 are updated to match.
 """
 from __future__ import annotations
 

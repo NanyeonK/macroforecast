@@ -395,22 +395,22 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
         "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
         "training_start_date": leaf_config.get("training_start_date"),
-        # §1.4 variable_universe input channels
+        # 1.4 variable_universe input channels
         "variable_universe_category": leaf_config.get("variable_universe_category"),
         "variable_universe_category_columns": leaf_config.get("variable_universe_category_columns"),
         "target_specific_columns": leaf_config.get("target_specific_columns"),
         "variable_universe_columns": leaf_config.get("variable_universe_columns"),
-        # §1.4 predictor_family input channels
+        # 1.4 predictor_family input channels
         "handpicked_columns": leaf_config.get("handpicked_columns"),
         "predictor_category": leaf_config.get("predictor_category"),
         "predictor_category_columns": leaf_config.get("predictor_category_columns"),
-        # §1.4 benchmark_family input channels
+        # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
         "survey_forecast_series": leaf_config.get("survey_forecast_series"),
-        # §1.4 deterministic_components input channels
+        # 1.4 deterministic_components input channels
         "break_dates": leaf_config.get("break_dates"),
-        # §1.5 release_lag_rule + missing_availability + contemporaneous_x_rule input channels
+        # 1.5 release_lag_rule + missing_availability + contemporaneous_x_rule input channels
         "release_lag_per_series": leaf_config.get("release_lag_per_series"),
         "x_imputation": leaf_config.get("x_imputation"),
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
@@ -647,13 +647,13 @@ def _execution_status(
     if model_family == "quantile_linear" and forecast_object not in {"point_median", "quantile"}:
         blocked.append("model_family='quantile_linear' requires forecast_object='point_median' or 'quantile'")
 
-    # §1.3 training_start_rule=fixed_start requires leaf_config.training_start_date
+    # 1.3 training_start_rule=fixed_start requires leaf_config.training_start_date
     if feature_builder is not None:
         _ts_rule = _selection_value(selection_map, "training_start_rule", default="earliest_possible")
         if _ts_rule == "fixed_start" and not leaf_config.get("training_start_date"):
             blocked.append("training_start_rule='fixed_start' requires leaf_config.training_start_date (ISO date string)")
 
-        # §1.2.2 forecast_type × feature_builder compatibility (v1.0)
+        # 1.2.2 forecast_type × feature_builder compatibility (v1.0)
     if feature_builder is not None:
         forecast_type_default = "iterated" if feature_builder == "autoreg_lagged_target" else "direct"
         forecast_type = _selection_value(selection_map, "forecast_type", default=forecast_type_default)
@@ -662,7 +662,7 @@ def _execution_status(
         if feature_builder == "autoreg_lagged_target" and forecast_type == "direct":
             blocked.append("forecast_type='direct' is not implemented for feature_builder='autoreg_lagged_target' in v1.0 (the operational path is iterated); use forecast_type='iterated' or leave unset to take the dynamic default")
 
-    # §1.3 overlap_handling=evaluate_with_hac compatibility (v1.0)
+    # 1.3 overlap_handling=evaluate_with_hac compatibility (v1.0)
     _overlap = _selection_value(selection_map, "overlap_handling", default="allow_overlap")
     if _overlap == "evaluate_with_hac":
         _stat_test = _selection_value(selection_map, "stat_test", default="none")

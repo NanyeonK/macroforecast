@@ -16,9 +16,9 @@ relative-RMSE horse race의 "relative to what?" 질문을 declarative 하게 표
 
 ## 1a. Plan Revision — 2026-04-17 (코드 일치)
 
-Phase 0~3 구현 후 registry 실측 결과, plan §4의 3축 모두 기존 axis 확장으로 정리. §3~§9의 plan 이름은 아래 매핑으로 읽음.
+Phase 0~3 구현 후 registry 실측 결과, plan 4의 3축 모두 기존 axis 확장으로 정리. 3~9의 plan 이름은 아래 매핑으로 읽음.
 
-| Plan §4 name | Final action | Registry name |
+| Plan 4 name | Final action | Registry name |
 |---|---|---|
 | `benchmark_model` | 기존 확장 | `benchmark_family` (layer=1_data_task) — 9개 신규 값 status 승격 (operational/stub) |
 | `benchmark_estimation_window` | 기존 확장 | `benchmark_window` (layer=4_evaluation) — fixed→operational, paper_exact_window→stub |
@@ -249,5 +249,5 @@ Benchmark 축이 single (multi_benchmark_suite 아님)인 경우 relative_* 는 
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 4에서 추출)
-- 2026-04-17 (Phase 4 kickoff): §1a 추가 — registry 실측 일치 axis 매핑 (3축 모두 기존 확장)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 4에서 추출)
+- 2026-04-17 (Phase 4 kickoff): 1a 추가 — registry 실측 일치 axis 매핑 (3축 모두 기존 확장)

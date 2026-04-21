@@ -2,7 +2,7 @@
 
 Declares **how the raw panel is prepared before it reaches the model** — release-lag shifts, missing-data treatment, structural-break handling, and contemporaneous-X rules. Four axes in v1.0 — every value operational.
 
-| § | axis | Role |
+| Section | axis | Role |
 |---|---|---|
 | 1.5.1 | [`missing_availability`](#151-missing_availability) | What to do when predictor / target rows contain NaN |
 | 1.5.2 | [`release_lag_rule`](#152-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
@@ -14,9 +14,17 @@ Declares **how the raw panel is prepared before it reaches the model** — relea
 - `alignment_rule` — mixed-frequency calendar axis; meaningful only for FRED-SD (v1.1 scope).
 - `evaluation_scale` — re-homed to Layer 2 (`PreprocessContract.evaluation_scale`) where the actual runtime effect lives.
 - `exogenous_block` — redundant with `feature_builder` default logic.
-- `regime_task` — duplicates §1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.
+- `regime_task` — duplicates 1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.
 - `vintage_policy` — non-default values require real-time-vintage data infrastructure (v1.1 FRED-SD).
-- `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (§0.2).
+- `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
+**At a glance (defaults):**
+- `missing_availability = complete_case_only` — no panel-level filter; downstream executors handle NaNs per their own policy. Switch to `available_case` / `x_impute_only` only when a specific missing-data treatment matters.
+- `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
+- `structural_break_segmentation = none` — no break dummies. Switch to `pre_post_crisis` / `pre_post_covid` to add a single NBER-dated break dummy.
+- `contemporaneous_x_rule = forbid_contemporaneous` — realistic real-time constraint. Switch to `allow_contemporaneous` only for oracle / data-leak benchmarks.
+
+**Most research runs leave all four at the default.**
+
 
 ---
 
@@ -109,7 +117,7 @@ path:
 ### Functions & features
 
 - Resolution helper: `macrocast.execution.build._resolve_structural_break_dates(spec)` maps the axis value to a list of break dates.
-- The actual augmentation reuses the §1.4 `deterministic_components.break_dummies` path (`augment_array` in `macrocast.execution.deterministic`). Both X_train and X_pred receive the same dummy columns.
+- The actual augmentation reuses the 1.4 `deterministic_components.break_dummies` path (`augment_array` in `macrocast.execution.deterministic`). Both X_train and X_pred receive the same dummy columns.
 - If both `deterministic_components=break_dummies` and `structural_break_segmentation` are set, the augmentations stack (both sets of dummies are added). For user-supplied break dates, use `deterministic_components=break_dummies` with `leaf_config.break_dates` — this is the canonical path after the 2026-04-21 dedup.
 
 ### Dropped values
@@ -165,9 +173,9 @@ path:
 
 ## Data Handling Policies (1.5) takeaways
 
-- Every value in every §1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
+- Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
 - All non-default behaviours read their inputs from `leaf_config` (release_lag_per_series, x_imputation, break_dates), propagated into `data_task_spec` at compile time.
-- `structural_break_segmentation` reuses the §1.4 `deterministic_components.break_dummies` augmentation path — the axis just supplies the break-date list.
-- `contemporaneous_x_rule` is the only §1.5 axis that affects fit-time X alignment; the other three act on the raw panel before preprocessing.
+- `structural_break_segmentation` reuses the 1.4 `deterministic_components.break_dummies` augmentation path — the axis just supplies the break-date list.
+- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other three act on the raw panel before preprocessing.
 
-Layer 1 per-axis walk complete — §1.1 through §1.5 are all fully honest & operational.
+Layer 1 per-axis walk complete — 1.1 through 1.5 are all fully honest & operational.

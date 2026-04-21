@@ -1,4 +1,4 @@
-"""§1.2 Task & Target cleanup — dropped-value and demoted-value compile tests.
+"""1.2 Task & Target cleanup — dropped-value and demoted-value compile tests.
 
 Each dropped registry value must now raise `CompileValidationError` when it
 appears on a recipe. Each value demoted to `registry_only` must still compile

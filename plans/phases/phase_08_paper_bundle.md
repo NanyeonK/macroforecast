@@ -242,4 +242,4 @@ def aggregate_regime_metrics(
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 8에서 추출)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 8에서 추출)

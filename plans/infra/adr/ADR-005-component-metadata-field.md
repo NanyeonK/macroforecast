@@ -1,4 +1,4 @@
-# ADR-005: Registry Axis Declares `component` Metadata for §4.5 Decomposition
+# ADR-005: Registry Axis Declares `component` Metadata for 4.5 Decomposition
 
 Status: **Accepted** (2026-04-17)
 Date: 2026-04-17
@@ -6,7 +6,7 @@ Context-phase: phase-07
 
 ## Context
 
-Phase 7 decomposition engine은 "이 axis가 어느 §4.5 component에 기여하는가?"를 알아야 함 (nonlinearity/regularization/cv_scheme/loss/preprocessing/feature_builder/benchmark/importance).
+Phase 7 decomposition engine은 "이 axis가 어느 4.5 component에 기여하는가?"를 알아야 함 (nonlinearity/regularization/cv_scheme/loss/preprocessing/feature_builder/benchmark/importance).
 
 **선택지:**
 - (A) Engine이 hard-coded axis→component mapping 유지

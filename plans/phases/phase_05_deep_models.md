@@ -53,8 +53,8 @@ Phase 5 is the *minimum viable* deep catalog — three architectures chosen beca
 | 05.9 | Executor dispatch in `build.py` | P1 | ~150 | `macrocast/execution/build.py` | 3 new `_run_{lstm,gru,tcn}_autoreg_executor` functions wired into dispatch | pending |
 | 05.10 | `ci-deep.yml` GitHub Actions | P1 | ~80 | `.github/workflows/ci-deep.yml` | deep install + `pytest -m deep` green | pending |
 | 05.11 | `pytest` markers | P1 | ~5 | `pyproject.toml` | `deep` registered under `[tool.pytest.ini_options].markers` | pending |
-| 05.12 | Tests (7 files) | **P0** | ~700 | see §6 | all green (deep tests run only when torch is present) | pending |
-| 05.13 | Docs (3 additions + 1 extension) | P1 | ~400 | see §8 | RTD build green including deep autodoc stubs | pending |
+| 05.12 | Tests (7 files) | **P0** | ~700 | see 6 | all green (deep tests run only when torch is present) | pending |
+| 05.13 | Docs (3 additions + 1 extension) | P1 | ~400 | see 8 | RTD build green including deep autodoc stubs | pending |
 
 **Progress pointer:** sub-tasks 05.1 / 05.2 / 05.3 landed in commit `26b7fdf` on branch `feat/phase-05-deep-models` (né `feat/phase-05a-deep-tsm`, to be renamed at push time).
 
@@ -431,16 +431,16 @@ Monkey-patch `sys.modules['torch']` to `None` (simulating the core-only install)
 
 This plan is designed to be executed end-to-end without further design decisions from the user. Before starting implementation, verify:
 
-- All hyperparameters in §4.5 are fixed and no tuning axis is introduced.
-- All file paths in §5 are absolute under the repo root and do not overlap with existing files (checked against `ls macrocast/execution/` on branch `feat/phase-05-deep-models`).
-- The dispatch integration in §4.10 adds three keys to the `autoreg` branch of `_get_model_executor` without reshaping the existing dispatch dict.
-- Seed handling (§4.6) uses the existing `current_seed` contract — no new reproducibility knobs.
-- Every acceptance-gate checkbox in §7 has a concrete test file in §6 that flips it.
+- All hyperparameters in 4.5 are fixed and no tuning axis is introduced.
+- All file paths in 5 are absolute under the repo root and do not overlap with existing files (checked against `ls macrocast/execution/` on branch `feat/phase-05-deep-models`).
+- The dispatch integration in 4.10 adds three keys to the `autoreg` branch of `_get_model_executor` without reshaping the existing dispatch dict.
+- Seed handling (4.6) uses the existing `current_seed` contract — no new reproducibility knobs.
+- Every acceptance-gate checkbox in 7 has a concrete test file in 6 that flips it.
 
-If any of the above becomes false during implementation (e.g. a test reveals that `torch.nn.LSTM` with `num_layers=1` and `dropout>0` raises — a known warning that requires the `if n_layers > 1` guard already in §4.8), resolve by following the guard rails in the plan and noting the incident in §12 Revision Log, not by pausing for user input.
+If any of the above becomes false during implementation (e.g. a test reveals that `torch.nn.LSTM` with `num_layers=1` and `dropout>0` raises — a known warning that requires the `if n_layers > 1` guard already in 4.8), resolve by following the guard rails in the plan and noting the incident in 12 Revision Log, not by pausing for user input.
 
 ## 12. Revision Log
 
-- 2026-04-17 (first draft of phase-05a): ultraplan v2.2 §Phase 5 extraction (included VAR / BVAR)
-- 2026-04-17 (plan revision §1a): axis name mapping to existing registry entries
+- 2026-04-17 (first draft of phase-05a): ultraplan v2.2 Phase 5 extraction (included VAR / BVAR)
+- 2026-04-17 (plan revision 1a): axis name mapping to existing registry entries
 - 2026-04-17 (**phase-05 consolidation**): Phase 5a / 5b / 5c split retired. VAR / BVAR dropped (factor-based multivariate axes already in core). Transformer / NBEATS / TFT / DFM / FAVAR absorbed into Phase 10 (v1.1) catalog. State-space / TVP_AR / MIDAS absorbed into Phase 11 (v2) catalog. `pytorch-lightning` dropped from `[deep]` extra (not needed for three MSE regression models). Plan rewritten as autonomous-execution-ready — every design choice is pre-committed so impl can run without user check-ins. File renamed `phase_05a_deep_tsm.md` → `phase_05_deep_models.md`.

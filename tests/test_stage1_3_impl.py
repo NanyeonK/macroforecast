@@ -1,4 +1,4 @@
-"""End-to-end tests for §1.3 implementation wiring.
+"""End-to-end tests for 1.3 implementation wiring.
 
 Covers:
 - training_start_rule=fixed_start + leaf_config.training_start_date (+ missing-date guard).

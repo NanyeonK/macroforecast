@@ -1,9 +1,9 @@
-# §1.2 Task & Target — cleanup plan (resolution locked 2026-04-20)
+# 1.2 Task & Target — cleanup plan (resolution locked 2026-04-20)
 
-**Goal:** make Layer 1 §1.2 honest. Of the 13 currently-operational values, 7 are label-lies (compiler records them, no execution branch). Plus the axis registry holds many registry_only / future values that will either become v1.1 roadmap items or get cut. This plan locks the resolution, demotes the label-lies, drops the cut values, drops one redundant axis (`target_to_target_inclusion`), writes the §1.2 user-guide page, and closes the ledger.
+**Goal:** make Layer 1 1.2 honest. Of the 13 currently-operational values, 7 are label-lies (compiler records them, no execution branch). Plus the axis registry holds many registry_only / future values that will either become v1.1 roadmap items or get cut. This plan locks the resolution, demotes the label-lies, drops the cut values, drops one redundant axis (`target_to_target_inclusion`), writes the 1.2 user-guide page, and closes the ledger.
 
-**Starting state (post PR #32):** 135 axes, 684 tests green. §1.2 has 5 axes, 29 values (13 op).
-**Ending state (this PR):** 134 axes, ~690 tests green. §1.2 has 4 axes, 11 values (6 op, 5 registry_only marked for v1.1).
+**Starting state (post PR #32):** 135 axes, 684 tests green. 1.2 has 5 axes, 29 values (13 op).
+**Ending state (this PR):** 134 axes, ~690 tests green. 1.2 has 4 axes, 11 values (6 op, 5 registry_only marked for v1.1).
 
 ---
 
@@ -88,28 +88,28 @@ Total: **20 new negative tests**.
 - Annotate dropped values with `**DROPPED 2026-04-20**` + one-line rationale.
 - Annotate demoted values with `**DEMOTED 2026-04-20 → registry_only (v1.1)**`.
 - Annotate `target_to_target_inclusion` section with `**AXIS DROPPED 2026-04-20**`.
-- Mark §1.4.1 `target_family` + §1.5.3 `multi_target_architecture` with `**AXIS DROPPED 2026-04-20 (PR #32)**` (carryover from previous PR).
+- Mark 1.4.1 `target_family` + 1.5.3 `multi_target_architecture` with `**AXIS DROPPED 2026-04-20 (PR #32)**` (carryover from previous PR).
 - Historical plan files (`v0_91_plan.md`, `v0_9_2_planned_completion_plan.md`, `implementation-issues.md`, `archive/*`) left untouched.
 
 ### 2.7 Docs — `docs/user_guide/data/task.md`
 - New file mirroring `data/source.md` structure: title `# Task & Target (1.2)`, intro, value catalog table linking to 4 per-axis subsections.
 - Each subsection (Purpose / Value catalog w/ honest-status column / Functions & features / Recipe usage / Known gaps):
-  - §1.2.1 `task`
-  - §1.2.2 `forecast_type`
-  - §1.2.3 `forecast_object`
-  - §1.2.4 `horizon_target_construction`
+  - 1.2.1 `task`
+  - 1.2.2 `forecast_type`
+  - 1.2.3 `forecast_object`
+  - 1.2.4 `horizon_target_construction`
 - End with `## Task & Target (1.2) takeaways` summarising kept / demoted / dropped.
-- Update `docs/user_guide/data/index.md` table: row §1.2 becomes `| §1.2 | [Task & Target (1.2)](task.md) | 4 | ... |` (4 axes after target_to_target_inclusion drop).
+- Update `docs/user_guide/data/index.md` table: row 1.2 becomes `| 1.2 | [Task & Target (1.2)](task.md) | 4 | ... |` (4 axes after target_to_target_inclusion drop).
 - Update `docs/user_guide/index.md` Stages toctree: add `data/task` after `data/source`.
 
 ---
 
 ## 3. Acceptance gate
 
-- [ ] Registry: **135 → 134 axes**. §1.2 value count **29 → 11**. §1.2 op values **13 → 6**.
+- [ ] Registry: **135 → 134 axes**. 1.2 value count **29 → 11**. 1.2 op values **13 → 6**.
 - [ ] `pytest tests/` green. 684 → ~703 (+20 negative − 1 PROMOTED entry). Actual count TBD.
 - [ ] `data/task.md` Sphinx builds with no new warnings (pre-existing 4 SweepVariant baseline holds).
-- [ ] `data/index.md` table §1.2 links to task.md, lists 4 axes.
+- [ ] `data/index.md` table 1.2 links to task.md, lists 4 axes.
 - [ ] `user_guide/index.md` Stages toctree includes `data/task`.
 - [ ] coverage_ledger entries annotated.
 
@@ -123,11 +123,11 @@ Branch: `feat/stage-1-12-cleanup` off main (after PR #32 merges).
 2. `refactor(forecast_object)`: demote quantile, drop {direction, interval, density, turning_point, regime_probability, event_probability}
 3. `refactor(horizon_target_construction)`: demote 3, drop 5
 4. `refactor(stage-1): drop target_to_target_inclusion axis` + registry_loader / PROMOTED tuple updates
-5. `test(stage-1): §1.2 negative compile tests` — the 20 new tests
+5. `test(stage-1): 1.2 negative compile tests` — the 20 new tests
 6. `docs(coverage_ledger)`: annotate dropped + demoted entries
-7. `docs(stage-1): §1.2 Task & Target page` + data/index table + user_guide toctree
+7. `docs(stage-1): 1.2 Task & Target page` + data/index table + user_guide toctree
 
-PR title: `refactor(stage-1): §1.2 Task & Target honest cleanup`
+PR title: `refactor(stage-1): 1.2 Task & Target honest cleanup`
 
 ---
 
@@ -157,7 +157,7 @@ These belong in the Phase 10 (v1.1) catalog section "Layer 1 deferred dispatch";
 ## 7. Out of scope
 
 - Actual v1.1 runtime for demoted values.
-- §1.3 / §1.4 / §1.5 per-axis walks (separate PRs).
+- 1.3 / 1.4 / 1.5 per-axis walks (separate PRs).
 - Phase 8 paper_ready_bundle (independent critical path).
 
 ---
@@ -175,6 +175,6 @@ These belong in the Phase 10 (v1.1) catalog section "Layer 1 deferred dispatch";
 - **forecast_type=iterated** — flipped operational. The autoreg_lagged_target executor path is already iterated by construction (1-step fit + recursive prediction); the compiler now picks forecast_type dynamically by feature_builder (autoreg → iterated, raw_panel → direct). Cross combinations blocked_by_incompatibility: raw_feature_panel+iterated (requires exogenous X forecasting) and autoreg_lagged_target+direct (true direct autoreg executor deferred). No executor refactor needed.
 - **forecast_object=quantile** — flipped operational. Compiler guard loosened from quantile_linear => forecast_object=point_median to quantile_linear => forecast_object IN {point_median, quantile}. The QuantileRegressor already reads quantile from training_spec.hp; users set leaf_config.training_spec.hp.quantile to pick the level (default 0.5 = numerically median).
 
-**§1.2 registry final state** — task/forecast_type/forecast_object/horizon_target_construction: every value in every axis is either operational or dropped. No registry_only entries remain in §1.2.
+**1.2 registry final state** — task/forecast_type/forecast_object/horizon_target_construction: every value in every axis is either operational or dropped. No registry_only entries remain in 1.2.
 
 Tests: 9 new positive / guard tests in tests/test_forecast_type_quantile.py. Full suite 712 passed.

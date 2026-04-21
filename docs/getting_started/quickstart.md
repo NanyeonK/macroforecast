@@ -140,6 +140,5 @@ print(f"DM statistic: {dm['statistic']:.3f}, p-value: {dm['p_value']:.4f}")
 
 - [Your First Study](first_study.md) — design a complete model comparison with preprocessing and importance
 - [Understanding Output](understanding_output.md) — detailed guide to every artifact
-- [User Guide: Models](../user_guide/models.md) — all 24 model families explained
 
 **See also:** [Installation](../install.md) | [API Reference](../api/index.md)

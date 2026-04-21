@@ -2,7 +2,7 @@
 
 Declares **which benchmark to compare against, which predictors the model sees, which raw variables are even in play, and which deterministic features augment the X panel**. Four axes in v1.0 — every value operational via a leaf_config input channel or a simple in-code filter.
 
-| § | axis | Role |
+| Section | axis | Role |
 |---|---|---|
 | 1.4.1 | [`benchmark_family`](#141-benchmark_family) | The reference forecast used for relative metrics |
 | 1.4.2 | [`predictor_family`](#142-predictor_family) | Which columns of the raw panel are fed to the model |
@@ -15,7 +15,15 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 - `variable_universe.feature_selection_dynamic_subset` — CV-in-training feature selection loop; deferred to v1.1 tuning-engine extension.
 - `deterministic_components.trend_and_quadratic` — redundant with `linear_trend` + a future `leaf_config.trend_order` channel.
 
-`target_family` (the old §1.4.1 axis) was dropped in PR #32 — subsumed by `task`.
+`target_family` (the old 1.4.1 axis) was dropped in PR #32 — subsumed by `task`.
+**At a glance (defaults):**
+- `benchmark_family` — no default; you always pick one (most studies start with `historical_mean` or `ar_bic`).
+- `predictor_family` — feature-builder dynamic default. autoreg_lagged_target → `target_lags_only`; raw_feature_panel → `all_macro_vars`. You rarely set it.
+- `variable_universe = all_variables` — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.
+- `deterministic_components = none` — no X augmentation. Switch to `linear_trend` / seasonals / `break_dummies` when your target needs them.
+
+**Most research runs pick `benchmark_family` and leave the other three at the default.**
+
 
 ---
 
@@ -200,9 +208,9 @@ path:
 
 ## Benchmark & Predictor Universe (1.4) takeaways
 
-- Every value in every §1.4 axis is operational in v1.0. Zero `registry_only` entries remain.
+- Every value in every 1.4 axis is operational in v1.0. Zero `registry_only` entries remain.
 - `benchmark_family` gains 4 formerly-metadata variants as real implementations: `factor_model`, `multi_benchmark_suite`, `paper_specific_benchmark`, `survey_forecast`.
 - `predictor_family` and `variable_universe` use the same design pattern: the user provides a pre-computed column list (or category mapping) via `leaf_config`; runtime discovery is out of scope.
 - `deterministic_components` augments the raw-panel X with classical econometric terms (trend / seasonals / break dummies) via a dedicated module.
 
-Next group: §1.5 Data handling policies (coming).
+Next group: 1.5 Data handling policies (coming).

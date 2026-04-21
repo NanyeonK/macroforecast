@@ -1,4 +1,4 @@
-"""End-to-end tests for §1.4 implementation: 19 values flipped operational.
+"""End-to-end tests for 1.4 implementation: 19 values flipped operational.
 
 Covers:
 - benchmark_family: factor_model, multi_benchmark_suite, paper_specific_benchmark, survey_forecast.

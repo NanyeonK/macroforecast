@@ -1,4 +1,4 @@
-# Phase 07 — §4.5 Decomposition Engine
+# Phase 07 — 4.5 Decomposition Engine
 
 | Field | Value |
 |-------|-------|
@@ -11,7 +11,7 @@
 
 ## 1. Goal
 
-macrocast를 cite-worthy로 만드는 레이어입니다. §4.5에서 user가 "macrocast의 identity"로 명시했습니다. Horse race 결과를 단순히 "누가 이겼는가"에서 멈추지 않고, **forecast-error variance component**으로 분해하여 "왜 이겼는가 / 어떤 axis가 variance의 몇 %를 설명하는가"를 reviewer-defensible하게 attribute합니다. ANOVA baseline이 v1.0, Shapley attribution은 v1.1 enhancement로 예약.
+macrocast를 cite-worthy로 만드는 레이어입니다. 4.5에서 user가 "macrocast의 identity"로 명시했습니다. Horse race 결과를 단순히 "누가 이겼는가"에서 멈추지 않고, **forecast-error variance component**으로 분해하여 "왜 이겼는가 / 어떤 axis가 variance의 몇 %를 설명하는가"를 reviewer-defensible하게 attribute합니다. ANOVA baseline이 v1.0, Shapley attribution은 v1.1 enhancement로 예약.
 
 ## 2. Scope
 
@@ -115,7 +115,7 @@ def run_decomposition(plan: DecompositionPlan) -> DecompositionResult:
 
     Per-(oos_date) decomposition (reading each variant's predictions.csv for
     per-date squared error) is a v1.1 enhancement — aggregate-level is enough
-    for the Phase 7 acceptance gate and for §4.5 identity.
+    for the Phase 7 acceptance gate and for 4.5 identity.
     """
 ```
 
@@ -233,16 +233,16 @@ Significance p-value는 scipy.stats.f_oneway로 부가 계산. H0: 모든 axis-g
 - Infra files used: `plans/infra/decomposition_result_schema.md`, `plans/infra/adr/ADR-005-component-metadata-field.md`, `plans/infra/adr/ADR-002-anova-before-shapley.md`
 - ADRs referenced: ADR-005 (component metadata field), ADR-002 (ANOVA baseline before Shapley)
 - Coverage Ledger rows resolved:
-  - §4.5 "decomposition as identity" → operational
+  - 4.5 "decomposition as identity" → operational
   - 8-component attribution → operational (ANOVA baseline)
   - Shapley attribution → deferred (v1.1)
 
 ## 11. GitHub Issue Map
 
-- Epic: (TBD at kickoff — [PHASE-07] §4.5 Decomposition engine)
+- Epic: (TBD at kickoff — [PHASE-07] 4.5 Decomposition engine)
 - Sub-task issues: 7개 (07.1~07.7)
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 7에서 추출)
-- 2026-04-17 (kickoff revision): §4.1 AxisDefinition sketch rewritten to match the actual dataclass (adds `component: str | None = None` as a single optional field; 120+ existing axes stay intact); concrete axis-to-component mapping table added in place of the sample list so the missing `regularization_penalty` / `cv_strategy` / `loss_function` axes don't block implementation. §4.2 algorithm simplified to aggregate-level ANOVA (per-(variant, horizon)) — per-date loss attribution deferred to v1.1. §10 ADR paths corrected from `plans/adr/` to `plans/infra/adr/`. §4.5 added with the autonomous-execution decisions pinned (observation granularity, primary-metric default, component enum, parquet engine, determinism policy, zero-variance handling).
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 7에서 추출)
+- 2026-04-17 (kickoff revision): 4.1 AxisDefinition sketch rewritten to match the actual dataclass (adds `component: str | None = None` as a single optional field; 120+ existing axes stay intact); concrete axis-to-component mapping table added in place of the sample list so the missing `regularization_penalty` / `cv_strategy` / `loss_function` axes don't block implementation. 4.2 algorithm simplified to aggregate-level ANOVA (per-(variant, horizon)) — per-date loss attribution deferred to v1.1. 10 ADR paths corrected from `plans/adr/` to `plans/infra/adr/`. 4.5 added with the autonomous-execution decisions pinned (observation granularity, primary-metric default, component enum, parquet engine, determinism policy, zero-variance handling).

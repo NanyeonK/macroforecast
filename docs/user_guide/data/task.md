@@ -2,7 +2,7 @@
 
 Declares **what is being forecast and how the prediction is framed**. These four axes together answer: single- or multi-target? direct or iterated multi-step? what forecast object (point / quantile / ...)? and how is y_{t+h} constructed from the raw series?
 
-| § | axis | Role |
+| Section | axis | Role |
 |---|---|---|
 | 1.2.1 | [`task`](#121-task) | Single-target vs. multi-target point forecasting |
 | 1.2.2 | [`forecast_type`](#122-forecast_type) | Direct h-step vs. iterated 1-step |
@@ -12,8 +12,16 @@ Declares **what is being forecast and how the prediction is framed**. These four
 **Note on dropped axes:**
 
 - `target_family` was dropped (PR #32) — its two operational values (`single_macro_series` / `multiple_macro_series`) duplicated `task`. Future panel / state / factor / latent / constructed / classification targets will re-enter as independent axes in v1.1+ when their runtime arrives.
-- `multi_target_architecture` was dropped (PR #32) — duplicated `experiment_unit` (§0.3), which already owns separate_runs / shared_design dispatch.
+- `multi_target_architecture` was dropped (PR #32) — duplicated `experiment_unit` (0.3), which already owns separate_runs / shared_design dispatch.
 - `target_to_target_inclusion` was dropped (this cleanup) — operational set was a single hardcoded value with no dispatch. If cross-target predictor policy becomes a real choice in v1.1, it will re-enter as a clean axis.
+**At a glance (defaults):**
+- `task = single_target_point_forecast` — one target, one point forecast. Switch to multi-target only when the recipe genuinely forecasts multiple series together.
+- `forecast_type` — feature-builder dynamic default. autoreg_lagged_target → iterated; raw_feature_panel → direct. You rarely set it.
+- `forecast_object = point_mean` — conditional-mean point forecast. Switch to `point_median` only with quantile_linear, or to `quantile` for explicit quantile forecasting.
+- `horizon_target_construction = future_level_y_t_plus_h` — metrics on the raw y scale. Switch to `future_diff` / `future_logdiff` for growth-rate evaluation.
+
+**Most research runs leave all four at the default.**
+
 
 ---
 
@@ -26,7 +34,7 @@ Declares **what is being forecast and how the prediction is framed**. These four
 | Value | Status | What it does |
 |---|---|---|
 | `single_target_point_forecast` | operational | One target variable. Standard univariate-output benchmarking — this is the path every executor, metric, and statistical test in v1.0 is written for. |
-| `multi_target_point_forecast` | operational | Multiple target variables. Triggers the multi-target aggregator in `execute_recipe`; runner choice (`separate_runs` vs. `shared_design`) is owned by `experiment_unit` (§0.3). |
+| `multi_target_point_forecast` | operational | Multiple target variables. Triggers the multi-target aggregator in `execute_recipe`; runner choice (`separate_runs` vs. `shared_design`) is owned by `experiment_unit` (0.3). |
 
 ### Functions & features
 
@@ -77,12 +85,12 @@ Cross combinations are not runtime-wired in v1.0 and are rejected at compile tim
 
 - `macrocast.execution.build._recursive_predict_sklearn(model, train, horizon, lag_order)` — the iterated 1-step executor used by every autoreg_lagged_target model family.
 - `macrocast.execution.build._build_raw_panel_training_data(frame, target, horizon, start, origin, contract)` — builds the direct h-step target `y.iloc[start+horizon : origin+1]` used by the raw-panel executors.
-- Compiler-side wiring: `macrocast.compiler.build._data_task_spec` reads `feature_builder` and derives the default `forecast_type`; the compatibility guards live alongside the other §1.2 guards in the compile function's blocked-reasons block.
+- Compiler-side wiring: `macrocast.compiler.build._data_task_spec` reads `feature_builder` and derives the default `forecast_type`; the compatibility guards live alongside the other 1.2 guards in the compile function's blocked-reasons block.
 - Manifest: `data_task_spec["forecast_type"]` records the value (default or explicit) used for the run.
 
 ### Dropped values
 
-`dirrec` (Taieb-Bontempi 2011 hybrid), `mimo`, `seq2seq` — niche / deep-only strategies that belong to model capabilities rather than to a general forecast_type. See coverage_ledger §1.3.2.
+`dirrec` (Taieb-Bontempi 2011 hybrid), `mimo`, `seq2seq` — niche / deep-only strategies that belong to model capabilities rather than to a general forecast_type. See coverage_ledger 1.3.2.
 
 ### Recipe usage
 
@@ -218,10 +226,10 @@ path:
 
 ## Task & Target (1.2) takeaways
 
-- **`task`** is the only §1.2 axis that truly branches at runtime today. It flows into multi-target aggregator activation and `experiment_unit` default derivation.
+- **`task`** is the only 1.2 axis that truly branches at runtime today. It flows into multi-target aggregator activation and `experiment_unit` default derivation.
 - **`forecast_type`** is feature-builder-dynamic: `iterated` for `autoreg_lagged_target`, `direct` for `raw_feature_panel` and the panel variants. Cross combinations are blocked at compile time.
 - **`forecast_object`** has all three values operational (`point_mean`, `point_median`, `quantile`). `quantile` pairs with `model_family=quantile_linear`; level via `hp.quantile`.
 - **`horizon_target_construction`** is fully operational with 3 values — default `future_level_y_t_plus_h` plus 2 metric-scale transforms (`future_diff`, `future_logdiff`). `cumulative_growth_to_h` was dropped as a duplicate of future_logdiff (identical telescoping-sum formula).
 - `target_family`, `multi_target_architecture`, `target_to_target_inclusion` are gone — see the "Dropped axes" note at the top.
 
-Next group: §1.3 Horizon & evaluation window (coming).
+Next group: 1.3 Horizon & evaluation window (coming).

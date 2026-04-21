@@ -168,8 +168,6 @@ for feat in sorted(imp["feature_importances"], key=lambda x: -abs(x["importance"
 ## Next steps
 
 - [Understanding Output](understanding_output.md) — every artifact explained
-- [User Guide: Models](../user_guide/models.md) — all 24 model families
-- [User Guide: Statistical Tests](../user_guide/stat_tests.md) — when to use each test
-- [Examples](../examples/index.md) — more runnable examples
-
-**See also:** [User Guide: Preprocessing](../user_guide/preprocessing.md) | [User Guide: Tuning](../user_guide/tuning.md)
+- [User Guide: Design (Stage 0)](../user_guide/design.md) — six axes that decide study shape.
+- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — twenty axes for data, task, evaluation window.
+- [Stages Reference](stages_reference.md) — cheat sheet with every operational value.

@@ -15,9 +15,9 @@
 
 ## 1a. Plan Revision — 2026-04-17 (코드 일치)
 
-Phase 0/1/2 구현 후 registry 실측 결과, plan §4의 8개 축 중 5개는 신규 추가, 3개는 기존 axis 재사용/확장으로 정리. §3~§9의 plan 이름은 아래 매핑으로 읽음.
+Phase 0/1/2 구현 후 registry 실측 결과, plan 4의 8개 축 중 5개는 신규 추가, 3개는 기존 axis 재사용/확장으로 정리. 3~9의 plan 이름은 아래 매핑으로 읽음.
 
-| Plan §4 name | Final action | Registry name |
+| Plan 4 name | Final action | Registry name |
 |---|---|---|
 | `release_lag_rule` | 신규 | `release_lag_rule` (layer=1_data_task) |
 | `missing_availability` | 신규 | `missing_availability` (layer=1_data_task) |
@@ -228,7 +228,7 @@ def compute_train_test_blocks(
 
 ### `tests/test_data_task_axes.py`
 - 8개 신규 axis 모두 registry에 등록 + status = operational
-- 각 axis의 value set이 §4.1/§4.2 표와 일치
+- 각 axis의 value set이 4.1/4.2 표와 일치
 - Layer 필드 정확 (`release_lag_rule`~`scale_at_evaluation`: layer 1, `separation_rule`: layer 2)
 - `horizon_list`가 `sweep_axes` 허용 목록에 포함
 
@@ -308,12 +308,12 @@ def compute_train_test_blocks(
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 3에서 추출)
-- 2026-04-17 (Phase 3 kickoff): §1a 추가 — registry 실측 일치 axis 매핑 (5신규 + 3재사용/확장)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 3에서 추출)
+- 2026-04-17 (Phase 3 kickoff): 1a 추가 — registry 실측 일치 axis 매핑 (5신규 + 3재사용/확장)
 
 ## 13. References
 
-- `plans/ultraplan_v2.2.md` §Phase 3 — 원본 사양
+- `plans/ultraplan_v2.2.md` Phase 3 — 원본 사양
 - ADR-002 — axis layer 정의
 - ADR-005 — leak discipline 기본값
 - `plans/phase0_audit_2026_04_17.md` — 현재 `_minimum_train_size()` 구현 상태 (확장 대상)

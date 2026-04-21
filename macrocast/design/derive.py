@@ -85,7 +85,7 @@ def derive_experiment_unit(
     if forecast_task == "multi_target_point_forecast":
         # Default operational multi-target unit — shared_design is handled by
         # execute_recipe's multi-target path (single aggregated output). See
-        # docs/user_guide/design.md §0.3.
+        # docs/user_guide/design.md 0.3.
         return "multi_target_shared_design"
     if research_design == "controlled_variation":
         return "single_target_model_grid"

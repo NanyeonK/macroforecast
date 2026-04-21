@@ -206,7 +206,7 @@ above. Historical rows preserved for archaeology:
 
 ### 1.1.5 vintage_policy
 
-> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+> **AXIS DROPPED 2026-04-20 (1.5 cleanup)** — see plans/stage1_5_plan.md 2.1 for rationale.
 
 
 | Value | Current | Target version | Target phase | Rationale |
@@ -220,7 +220,7 @@ above. Historical rows preserved for archaeology:
 
 ### 1.1.6 alignment_rule
 
-> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+> **AXIS DROPPED 2026-04-20 (1.5 cleanup)** — see plans/stage1_5_plan.md 2.1 for rationale.
 
 
 | Value | Current | Target version | Target phase | Rationale |
@@ -266,13 +266,13 @@ above. Historical rows preserved for archaeology:
 |-------|---------|:---:|:---:|-----------|
 | all_variables | absent | v1.0 | phase-03 | 축 분해 대상 |
 | preselected_core | absent | v1.0 | phase-03 | 축 분해 대상 |
-| category_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.variable_universe_category_columns mapping (§1.4 impl) |
-| paper_replication_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.paper_replication_columns list (§1.4 impl) |
+| category_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.variable_universe_category_columns mapping (1.4 impl) |
+| paper_replication_subset | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.paper_replication_columns list (1.4 impl) |
 | target_specific_subset | absent | v1.0 | phase-03 | 축 분해 대상 |
 | expert_curated_subset | absent | v1.1 | phase-10 | 큐레이션 필요 |
 | stability_filtered_subset | absent | v1.1 | phase-10 | 안정성 필터 필요 |
 | correlation_screened_subset | absent | v1.0 | phase-03 | screen 재사용 |
-| feature_selection_dynamic_subset | **dropped** | - | - | **DROPPED 2026-04-20 (§1.4 cleanup)** — CV-in-training feature selection loop needs tuning-engine extension — v1.1 scope |
+| feature_selection_dynamic_subset | **dropped** | - | - | **DROPPED 2026-04-20 (1.4 cleanup)** — CV-in-training feature selection loop needs tuning-engine extension — v1.1 scope |
 
 ### 1.2.2 training_start_rule
 
@@ -280,22 +280,22 @@ above. Historical rows preserved for archaeology:
 |-------|---------|:---:|:---:|-----------|
 | earliest_possible | operational | - | - | Default, no-op (current behaviour). |
 | fixed_start | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.training_start_date wired as base_start_idx floor in _rows_for_horizon; compiler guard validates presence. |
-| post_warmup_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — warmup_rule axis is itself dropped; the dependency no longer makes sense. |
-| rolling_train_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
-| post_break_start | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — depended on structural_break_segmentation which is not v1.0-operational. |
+| post_warmup_start | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — warmup_rule axis is itself dropped; the dependency no longer makes sense. |
+| rolling_train_start | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — duplicated `framework=rolling`. |
+| post_break_start | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — depended on structural_break_segmentation which is not v1.0-operational. |
 
 
 ### 1.2.3 oos_period
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| all_oos_data | operational | - | - | **ADDED 2026-04-20 (§1.3 cleanup)** — new default value covering the base behaviour when no OOS filter is applied. |
+| all_oos_data | operational | - | - | **ADDED 2026-04-20 (1.3 cleanup)** — new default value covering the base behaviour when no OOS filter is applied. |
 | recession_only_oos | operational | - | - | **OPERATIONAL 2026-04-20** — NBER fixture (12 recessions 1948-2020) wired via filter_origins_by_regime in _rows_for_horizon. |
 | expansion_only_oos | operational | - | - | **OPERATIONAL 2026-04-20** — complement of recession_only_oos, same filter. |
-| single_oos_block | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=expanding` default. |
-| rolling_origin | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — duplicated `framework=rolling`. |
-| multiple_oos_blocks | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
-| event_window_oos | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
+| single_oos_block | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — duplicated `framework=expanding` default. |
+| rolling_origin | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — duplicated `framework=rolling`. |
+| multiple_oos_blocks | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
+| event_window_oos | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — niche, no v1.0/v1.1 demand. |
 
 
 ### 1.2.4 minimum_train_size
@@ -310,7 +310,7 @@ above. Historical rows preserved for archaeology:
 
 ### 1.2.5 warmup_rule
 
-> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — abstract axis with no v1.0 dispatch semantic. The default `lags_only_warmup` was trivially implicit (lag_order observations consumed during feature construction). Re-enter as its own axis if/when a concrete warmup strategy requires user control.
+> **AXIS DROPPED 2026-04-20 (1.3 cleanup)** — abstract axis with no v1.0 dispatch semantic. The default `lags_only_warmup` was trivially implicit (lag_order observations consumed during feature construction). Re-enter as its own axis if/when a concrete warmup strategy requires user control.
 
 All 5 values dropped (lags_only_warmup, lags_and_factors_warmup, transform_warmup, indicator_warmup, sequence_warmup).
 
@@ -328,7 +328,7 @@ All 5 values dropped (lags_only_warmup, lags_and_factors_warmup, transform_warmu
 
 ### 1.3.1 horizon_list
 
-> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — redundant with leaf_config.horizons which already specifies the horizons list directly. Future preset labels can be added as leaf_config sugar if needed.
+> **AXIS DROPPED 2026-04-20 (1.3 cleanup)** — redundant with leaf_config.horizons which already specifies the horizons list directly. Future preset labels can be added as leaf_config sugar if needed.
 
 All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_only_12_24, paper_specific).
 
@@ -338,11 +338,11 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 |-------|---------|:---:|:---:|-----------|
 | direct | operational | - | - | 이미 완료 |
 | iterated | operational | - | - | **OPERATIONAL 2026-04-20** — autoreg_lagged_target path already iterated by construction; registry status now matches. Dynamic default: iterated for autoreg, direct for raw_panel. Cross combinations blocked by compiler. |
-| dirrec | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — niche hybrid (Taieb-Bontempi 2011), no v1.x demand |
-| mimo | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — v2 Transformer will re-enter as model capability, not a forecast_type |
+| dirrec | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — niche hybrid (Taieb-Bontempi 2011), no v1.x demand |
+| mimo | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — v2 Transformer will re-enter as model capability, not a forecast_type |
 | multi_horizon_joint | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | recursive_state_space | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
-| seq2seq | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — v2 Transformer will re-enter as model capability |
+| seq2seq | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — v2 Transformer will re-enter as model capability |
 
 ### 1.3.3 forecast_object
 
@@ -351,28 +351,28 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 | point_mean | operational | - | - | 이미 완료 |
 | point_median | operational | - | - | 이미 완료 |
 | quantile | operational | - | - | **OPERATIONAL 2026-04-20** — quantile_linear compiler guard loosened to accept point_median OR quantile; quantile level via training_spec.hp.quantile (default 0.5). |
-| interval | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — subsumed by v1.1 conformal wrapper on point mean |
-| density | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — v2 distributional work, will re-enter |
-| direction | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — sign is a metric view on point forecast, not an independent forecast object |
-| turning_point | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — niche, reconstructible post-hoc |
-| regime_probability | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — bound to state_space (v2), will re-enter with that stack |
-| event_probability | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — niche, no v1.1 commitment |
+| interval | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — subsumed by v1.1 conformal wrapper on point mean |
+| density | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — v2 distributional work, will re-enter |
+| direction | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — sign is a metric view on point forecast, not an independent forecast object |
+| turning_point | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — niche, reconstructible post-hoc |
+| regime_probability | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — bound to state_space (v2), will re-enter with that stack |
+| event_probability | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — niche, no v1.1 commitment |
 
 ### 1.3.4 horizon_target_construction
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | future_level_y_t+h | operational | - | - | 이미 완료 |
-| future_diff | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (§1.2 cleanup implementation) |
-| future_logdiff | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (§1.2 cleanup implementation) |
-| cumulative_growth_to_h | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (§1.2 cleanup implementation) |
-| average_growth_1_to_h | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — scaled variant of cumulative, redundant |
-| annualized_growth_to_h | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — linear (×12/h) transform of cumulative_growth_to_h, belongs in metric-time reporting |
-| realized_future_average | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — niche, no v1.1 demand |
-| future_sum | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — niche |
+| future_diff | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (1.2 cleanup implementation) |
+| future_logdiff | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (1.2 cleanup implementation) |
+| cumulative_growth_to_h | operational | - | - | **OPERATIONAL 2026-04-20** — v1.0 metric-scale transform wired in execution._compute_origin (1.2 cleanup implementation) |
+| average_growth_1_to_h | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — scaled variant of cumulative, redundant |
+| annualized_growth_to_h | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — linear (×12/h) transform of cumulative_growth_to_h, belongs in metric-time reporting |
+| realized_future_average | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — niche, no v1.1 demand |
+| future_sum | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — niche |
 | future_volatility | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | future_drawdown | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
-| future_indicator | **dropped** | - | - | **DROPPED 2026-04-20 (§1.2 cleanup)** — overlapped dropped forecast_object=direction / event_probability |
+| future_indicator | **dropped** | - | - | **DROPPED 2026-04-20 (1.2 cleanup)** — overlapped dropped forecast_object=direction / event_probability |
 
 ### 1.3.5 overlap_handling
 
@@ -380,9 +380,9 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 |-------|---------|:---:|:---:|-----------|
 | allow_overlap | operational | - | - | Default, no-op (current behaviour). |
 | evaluate_with_hac | operational | - | - | **OPERATIONAL 2026-04-20** — compiler compatibility gate requires stat_test in {dm_hln, dm_modified, spa, mcs, cw, cpa, none}. HAC covariance is already used inside dm_hln/dm_modified executors. |
-| evaluate_with_block_bootstrap | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — requires bootstrap infrastructure not in v1.0 scope. |
-| non_overlapping_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |
-| horizon_specific_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (§1.3 cleanup)** — niche. |
+| evaluate_with_block_bootstrap | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — requires bootstrap infrastructure not in v1.0 scope. |
+| non_overlapping_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — niche. |
+| horizon_specific_subsample | **dropped** | - | - | **DROPPED 2026-04-20 (1.3 cleanup)** — niche. |
 
 
 ### 1.4.1 target_family
@@ -406,13 +406,13 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 |-------|---------|:---:|:---:|-----------|
 | target_lags_only | operational | - | - | 이미 완료 |
 | all_macro_vars | operational | - | - | 이미 완료 |
-| all_except_target | operational | - | - | **OPERATIONAL 2026-04-20** — raw_panel column filter excluding target (§1.4 impl) |
-| category_based | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.predictor_category_columns mapping (§1.4 impl) |
+| all_except_target | operational | - | - | **OPERATIONAL 2026-04-20** — raw_panel column filter excluding target (1.4 impl) |
+| category_based | operational | - | - | **OPERATIONAL 2026-04-20** — leaf_config.predictor_category_columns mapping (1.4 impl) |
 | financial_only | absent | v1.1 | phase-10 | finance 축 합류 |
 | macro_plus_finance | absent | v1.1 | phase-10 | finance 축 합류 |
 | survey_plus_macro | absent | v1.1 | phase-10 | SPF 합류 |
 | text_plus_macro | absent | v2 | phase-11 | text 합류 |
-| factor_only | operational | - | - | **OPERATIONAL 2026-04-20** — F_-prefixed factor column filter (§1.4 impl) |
+| factor_only | operational | - | - | **OPERATIONAL 2026-04-20** — F_-prefixed factor column filter (1.4 impl) |
 | latent_state_plus_lags | absent | v2 | phase-11 | SS 필요 |
 | selected_sparse_set | absent | v1.0 | phase-03 | feature selection 결합 |
 | handpicked_set | registry_only | v1.0 | phase-03 | replication 지원 |
@@ -429,7 +429,7 @@ All 5 values dropped (arbitrary_grid, default_1_3_6_12, short_only_1_3, long_onl
 
 ### 1.4.4 own_target_lags
 
-> **AXIS DROPPED 2026-04-20 (§1.3 cleanup)** — `feature_builder` already determines whether y-lags are used (autoreg_lagged_target = lags are the features; raw_feature_panel = exogenous X only). The axis label never had independent runtime dispatch. Re-enter as its own axis if a combined "raw panel + y lags" path becomes a real option.
+> **AXIS DROPPED 2026-04-20 (1.3 cleanup)** — `feature_builder` already determines whether y-lags are used (autoreg_lagged_target = lags are the features; raw_feature_panel = exogenous X only). The axis label never had independent runtime dispatch. Re-enter as its own axis if a combined "raw panel + y lags" path becomes a real option.
 
 All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_count).
 
@@ -439,8 +439,8 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
 | none | operational | - | - | 이미 완료 |
-| constant_only | operational | - | - | **OPERATIONAL 2026-04-20** — explicit 1s column in X (§1.4 impl) |
-| linear_trend | operational | - | - | **OPERATIONAL 2026-04-20** — _dc_trend column (0..n-1) (§1.4 impl) |
+| constant_only | operational | - | - | **OPERATIONAL 2026-04-20** — explicit 1s column in X (1.4 impl) |
+| linear_trend | operational | - | - | **OPERATIONAL 2026-04-20** — _dc_trend column (0..n-1) (1.4 impl) |
 | seasonal_dummies | absent | v1.0 | phase-03 | 계절 더미 |
 | month_dummies | registry_only | v1.0 | phase-03 | monthly_seasonal 매핑 |
 | quarter_dummies | registry_only | v1.0 | phase-03 | quarterly_seasonal 매핑 |
@@ -450,7 +450,7 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.4.6 exogenous_block
 
-> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+> **AXIS DROPPED 2026-04-20 (1.5 cleanup)** — see plans/stage1_5_plan.md 2.1 for rationale.
 
 
 | Value | Current | Target version | Target phase | Rationale |
@@ -463,7 +463,7 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.5.1 x_map_policy
 
-> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — see plans/stage1_5_plan.md §2.1 for rationale.
+> **AXIS DROPPED 2026-04-20 (1.5 cleanup)** — see plans/stage1_5_plan.md 2.1 for rationale.
 
 
 | Value | Current | Target version | Target phase | Rationale |
@@ -478,19 +478,19 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.5.2 target_to_target_inclusion
 
-> **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** — operational set = 1 value (forbid_other_targets_as_X = current hardcoded behaviour), no dispatch anywhere. Single-operational axis is a non-axis. Future cross-target predictor policy will re-enter as a clean axis (e.g. cross_target_predictor_policy) in v1.1 if demand arises.
+> **AXIS DROPPED 2026-04-20 (1.2 cleanup)** — operational set = 1 value (forbid_other_targets_as_X = current hardcoded behaviour), no dispatch anywhere. Single-operational axis is a non-axis. Future cross-target predictor policy will re-enter as a clean axis (e.g. cross_target_predictor_policy) in v1.1 if demand arises.
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
-| allow_other_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** |
-| forbid_other_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** — was the hardcoded default |
-| allow_selected_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** |
-| Granger_style_lagged_targets_only | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** |
-| system_wide_joint_model | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (§1.2 cleanup)** |
+| allow_other_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (1.2 cleanup)** |
+| forbid_other_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (1.2 cleanup)** — was the hardcoded default |
+| allow_selected_targets_as_X | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (1.2 cleanup)** |
+| Granger_style_lagged_targets_only | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (1.2 cleanup)** |
+| system_wide_joint_model | **dropped** | - | - | **AXIS DROPPED 2026-04-20 (1.2 cleanup)** |
 
 ### 1.5.3 multi_target_architecture
 
-> **AXIS DROPPED 2026-04-20 (PR #32)** — duplicated experiment_unit (§0.3), which already owns the actual runner dispatch (multi_target_separate_runs / multi_target_shared_design) after PR #27. Future joint multivariate / multitask will re-enter as model_family values in v1.1+, not as a separate architecture axis.
+> **AXIS DROPPED 2026-04-20 (PR #32)** — duplicated experiment_unit (0.3), which already owns the actual runner dispatch (multi_target_separate_runs / multi_target_shared_design) after PR #27. Future joint multivariate / multitask will re-enter as model_family values in v1.1+, not as a separate architecture axis.
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
@@ -504,7 +504,7 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 
 ### 1.6.1 scale_at_evaluation
 
-> **AXIS RE-HOMED 2026-04-20 (§1.5 cleanup)** — the duplicate Layer 1 axis was removed; evaluation_scale lives as a Layer 2 PreprocessContract field (the actual runtime effect is at the preprocessing boundary, not at a Layer 1 data-task axis). Recipe fixed_axes on 2_preprocessing continue to declare it.
+> **AXIS RE-HOMED 2026-04-20 (1.5 cleanup)** — the duplicate Layer 1 axis was removed; evaluation_scale lives as a Layer 2 PreprocessContract field (the actual runtime effect is at the preprocessing boundary, not at a Layer 1 data-task axis). Recipe fixed_axes on 2_preprocessing continue to declare it.
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
@@ -522,14 +522,14 @@ All 4 values dropped (include, exclude, cv_select_lags, target_specific_lag_coun
 | ar_bic | operational | - | - | 이미 완료 |
 | ar_fixed_p | planned | v1.0 | phase-04 | benchmark 정리 |
 | ardi | registry_only | v1.0 | phase-04 | benchmark 정리 |
-| factor_model | operational | - | - | **OPERATIONAL 2026-04-20** — auxiliary panel leading-factor OLS regression (§1.4 impl) |
+| factor_model | operational | - | - | **OPERATIONAL 2026-04-20** — auxiliary panel leading-factor OLS regression (1.4 impl) |
 | var | **dropped** | - | - | **DROPPED 2026-04-18 (Tier 1-3)** — see plans/drops_2026_04_18.md |
 | expert_benchmark | future | v1.1 | phase-10 | 전문가 벤치 |
 | paper_specific_benchmark | registry_only | v1.0 | phase-04 | replication 지원 |
 
 ### 1.6.3 regime_conditional_task
 
-> **AXIS DROPPED 2026-04-20 (§1.5 cleanup)** — duplicates §1.3 oos_period.recession_only_oos / expansion_only_oos; see plans/stage1_5_plan.md §2.1.
+> **AXIS DROPPED 2026-04-20 (1.5 cleanup)** — duplicates 1.3 oos_period.recession_only_oos / expansion_only_oos; see plans/stage1_5_plan.md 2.1.
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|
@@ -1467,7 +1467,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 | crisis_period_gain | operational | - | - | 이미 완료 |
 | state_dependent_oos_r2 | operational | - | - | 이미 완료 |
 
-### 4.5 decomposition layer (§4.5, macrocast identity)
+### 4.5 decomposition layer (4.5, macrocast identity)
 
 #### 4.5.1 decomposition_target
 
@@ -1592,7 +1592,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 - **Phase 5a (deep extras)**: Layer 3.4.1 VAR/BVAR, Layer 3.4.5 DeepMLP/LSTM/GRU/TCN, Layer 3.4.8 pytorch_adapter, Layer 3.6.1 sequence_tensor, Layer 3.5.3 max_epochs (companion).
 - **Phase 5b (v1.1 deep)**: FAVAR, DFM, Transformer_encoder, Informer, NBEATS, TFT, seq2seq_rnn.
 - **Phase 5c (v2 state-space/mixed-freq)**: state_space, TVP_AR, MIDAS, U_MIDAS, UnobservedComponents, TVP_Ridge, mixed_frequency_features.
-- **Phase 7 (§4.5 decomposition v0.9)**: Layer 4.5.1 all 7 operational-track decomposition_target values + decomposition_order marginal_effect_only; Layer 5.1 importance_outputs companion.
+- **Phase 7 (4.5 decomposition v0.9)**: Layer 4.5.1 all 7 operational-track decomposition_target values + decomposition_order marginal_effect_only; Layer 5.1 importance_outputs companion.
 - **Phase 8 (ranking/reporting)**: Layer 4.3.4 ranking (5 planned), Layer 4.3.5 latex_table/markdown_table/paper_ready_bundle, Layer 4.4.3 regime_transition_performance, Layer 4.3.1 regime_subsample_average/pre_post_break_average, Layer 5.1 paper_tables, Layer 5.3 latex.
 - **Phase 10 v1.1**: Layer 4.1.4 full quantile/density family (pinball/CRPS/interval_score/coverage_rate/winkler), Layer 4.1.5 utility_gain/certainty_equivalent/cost_sensitive_loss, Layer 4.4.1 quantile_uncertainty/financial_stress/volatility_regime.
 - **Phase 11 v2**: Layer 3.4.6 panel/spatial/hierarchical/GNN (8 absent), Layer 3.4.7 probabilistic/quantile (8 absent), Layer 3.7.4 ray/dask/local_gpu/slurm, regime_specific_model, Markov_switching_regime, Shapley decomp.

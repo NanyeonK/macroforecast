@@ -13,7 +13,7 @@
 
 Monolithic `stat_test` axis 1개를 의미론적 8축 (equal_predictive / nested / cpa_instability / multiple_model / density_interval / direction / residual_diagnostics / test_scope)으로 분해합니다. Horse race 결과를 해석할 때 어떤 가설을 어떤 검정으로 수행했는지 축별로 명시되어야 하며, 이는 Phase 1 sweep이 산출한 variant 비교의 통계적 defensibility를 직결로 결정합니다.
 
-**Scope 결정 (2026-04-17):** 본 phase는 **재분류 전용**. 현재 operational 20개 검정을 8축으로 재배치만 수행합니다. Plan §4.1 원안 표에 포함됐던 19개 미구현 검정(density_interval 7개, cpa_instability 확장 3개, direction 2개, residual_diagnostics 2개, equal_predictive 2개, nested 1개, multiple_model 2개) 및 test_scope의 확장 값 4개는 **Phase 10 §10.8로 이월**. density_interval 축은 Phase 2에서는 빈 축으로 등록(status=planned).
+**Scope 결정 (2026-04-17):** 본 phase는 **재분류 전용**. 현재 operational 20개 검정을 8축으로 재배치만 수행합니다. Plan 4.1 원안 표에 포함됐던 19개 미구현 검정(density_interval 7개, cpa_instability 확장 3개, direction 2개, residual_diagnostics 2개, equal_predictive 2개, nested 1개, multiple_model 2개) 및 test_scope의 확장 값 4개는 **Phase 10 10.8로 이월**. density_interval 축은 Phase 2에서는 빈 축으로 등록(status=planned).
 
 ## 2. Scope
 
@@ -65,9 +65,9 @@ AXIS_DEFINITION = AxisDefinition(
 )
 ```
 
-8축 values — Phase 2 operational set (total 23 leaf; 신규 검정은 Phase 10 §10.8):
+8축 values — Phase 2 operational set (total 23 leaf; 신규 검정은 Phase 10 10.8):
 
-| Axis | Phase 2 operational values | Phase 10 §10.8 ($\rightarrow$ v1.1) |
+| Axis | Phase 2 operational values | Phase 10 10.8 ($\rightarrow$ v1.1) |
 |------|---------------------------|--------|
 | `equal_predictive` | `dm`, `dm_hln`, `dm_modified` | + `paired_t_on_loss_diff`, `wilcoxon_signed_rank` |
 | `nested` | `cw`, `enc_new`, `mse_f`, `mse_t` | + `forecast_encompassing_nested` |
@@ -203,7 +203,7 @@ def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
 
 ### `tests/test_stat_test_split.py`
 - 8 axis 파일이 모두 axis registry에 등록됨 (`get_axis("equal_predictive")` 등)
-- 각 axis의 value set이 §4.1 표와 일치
+- 각 axis의 value set이 4.1 표와 일치
 - `layer=6` 필드 일관성
 - status = `operational`
 
@@ -224,7 +224,7 @@ def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
 ## 7. Acceptance Gate
 
 - [x] Phase 1 gate 선통과 — feat/phase-01 merge pending (b3cb6ae, 340 tests)
-- [x] 8개 axis 파일 모두 registry에 등록 — 7축 operational (density_interval은 Phase 10 §10.8로 이월), 20 legacy operational 값 전부 새 축에 배치
+- [x] 8개 axis 파일 모두 registry에 등록 — 7축 operational (density_interval은 Phase 10 10.8로 이월), 20 legacy operational 값 전부 새 축에 배치
 - [x] dispatch_stat_tests() 공개 API export — macrocast.__init__
 - [x] 기존 + Phase 0/1 + Phase 2 신규 test 전부 green — 402/402 passed, 0 regressions
 - [x] Legacy stat_test recipe 로드 시 DeprecationWarning 1회 발생 — test_stat_test_migration.py
@@ -266,12 +266,12 @@ def migrate_legacy_stat_test(path_layer_6: dict) -> dict:
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 2에서 추출)
-- 2026-04-17: Phase 2 구현 완료 — 8축 등록(7축 operational, density_interval은 Phase 10 §10.8로 이월), dispatch_stat_tests() + migration shim + build.py 통합, 402/402 tests green, v0.4 tag 준비 (merge 후)
-- 2026-04-17: Plan-현실 간극 반영 correction — §4.1 표를 현재 operational 20개(+test_scope MVP 3개)로 축소해 (total 23 leaf) Phase 2 scope에 정렬; §4.1 API 예시를 `AxisSpec`/`register_axis()` → 실제 `AxisDefinition`/`EnumRegistryEntry` 패턴으로 정정; §4.2 결과 키를 `pvalue`/`test` → `p_value`/`stat_test` (기존 per-test 계약 유지); §4.3 `_LEGACY_TO_NEW`를 operational 20개 전부 커버하도록 재작성 (이전 초안은 rolling_dm/arch_lm/bias_test/diagnostics_full/binomial_hit 5개 누락). 미구현 19개 검정 + test_scope 확장 4개는 Phase 10 §10.8로 이월.
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 2에서 추출)
+- 2026-04-17: Phase 2 구현 완료 — 8축 등록(7축 operational, density_interval은 Phase 10 10.8로 이월), dispatch_stat_tests() + migration shim + build.py 통합, 402/402 tests green, v0.4 tag 준비 (merge 후)
+- 2026-04-17: Plan-현실 간극 반영 correction — 4.1 표를 현재 operational 20개(+test_scope MVP 3개)로 축소해 (total 23 leaf) Phase 2 scope에 정렬; 4.1 API 예시를 `AxisSpec`/`register_axis()` → 실제 `AxisDefinition`/`EnumRegistryEntry` 패턴으로 정정; 4.2 결과 키를 `pvalue`/`test` → `p_value`/`stat_test` (기존 per-test 계약 유지); 4.3 `_LEGACY_TO_NEW`를 operational 20개 전부 커버하도록 재작성 (이전 초안은 rolling_dm/arch_lm/bias_test/diagnostics_full/binomial_hit 5개 누락). 미구현 19개 검정 + test_scope 확장 4개는 Phase 10 10.8로 이월.
 
 ## 13. References
 
-- `plans/ultraplan_v2.2.md` §Phase 2 — 원본 사양
+- `plans/ultraplan_v2.2.md` Phase 2 — 원본 사양
 - ADR-006 — v1.x breaking change window policy
 - `docs/math/stat_tests.md` (current) — 기존 21 test 수식 (재분류 기준)

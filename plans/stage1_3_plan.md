@@ -1,10 +1,10 @@
-# §1.3 Horizon & Evaluation Window — cleanup + implementation plan
+# 1.3 Horizon & Evaluation Window — cleanup + implementation plan
 
-**Goal:** make Layer 1 §1.3 honest. All 7 §1.3 candidate axes (as grouped in `docs/user_guide/data/index.md`) have "operational" labels but the live execution path branches on exactly zero of them — 22 of 22 op labels are metadata-only. This plan drops 3 redundant / abstract axes entirely, prunes the remaining 4 axes to a clean value set, and schedules the real v1.0 runtime wiring as a second follow-up PR.
+**Goal:** make Layer 1 1.3 honest. All 7 1.3 candidate axes (as grouped in `docs/user_guide/data/index.md`) have "operational" labels but the live execution path branches on exactly zero of them — 22 of 22 op labels are metadata-only. This plan drops 3 redundant / abstract axes entirely, prunes the remaining 4 axes to a clean value set, and schedules the real v1.0 runtime wiring as a second follow-up PR.
 
-**Starting state (post-#35):** 133 axes, 712 tests green. §1.3 has 7 axes / 35 values (22 op + 12 registry_only + 1 future).
-**After cleanup PR:** 130 axes, §1.3 has 4 axes / 12 values (4 op + 8 registry_only). Registry_only entries are acceptance criteria for the implementation PR.
-**After implementation PR:** §1.3 fully operational — 4 axes, 12 values, every value either operational or dropped.
+**Starting state (post-#35):** 133 axes, 712 tests green. 1.3 has 7 axes / 35 values (22 op + 12 registry_only + 1 future).
+**After cleanup PR:** 130 axes, 1.3 has 4 axes / 12 values (4 op + 8 registry_only). Registry_only entries are acceptance criteria for the implementation PR.
+**After implementation PR:** 1.3 fully operational — 4 axes, 12 values, every value either operational or dropped.
 
 ---
 
@@ -94,7 +94,7 @@ HAC covariance is already used inside `dm_hln` / `cpa`-family stat tests. The ax
 
 Estimated ~50 LOC + tests.
 
-### 3.5 Docs — `docs/user_guide/data/horizon.md` (§1.3 page)
+### 3.5 Docs — `docs/user_guide/data/horizon.md` (1.3 page)
 
 Mirror `task.md` structure: intro + per-axis subsections with Value catalog / Functions & features / Recipe usage. Note dropped axes at the top.
 
@@ -103,7 +103,7 @@ Mirror `task.md` structure: intro + per-axis subsections with Value catalog / Fu
 ## 4. Acceptance gates
 
 ### Cleanup PR (this)
-- [ ] Registry: 133 → 130 axes; §1.3 axes 7 → 4; values 35 → 12.
+- [ ] Registry: 133 → 130 axes; 1.3 axes 7 → 4; values 35 → 12.
 - [ ] `pytest tests/` green. Expected ~700 passed.
 - [ ] coverage_ledger entries annotated for dropped axes + dropped values + demotions.
 
@@ -111,7 +111,7 @@ Mirror `task.md` structure: intro + per-axis subsections with Value catalog / Fu
 - [ ] 8 registry_only values flip to operational as wiring lands: `oos_period.recession_only_oos`/`expansion_only_oos`, `training_start_rule.fixed_start`, `overlap_handling.evaluate_with_hac`, plus the 3 `min_train_size` registry_only entries once windowing is wired (total 8 — 2 + 1 + 1 + 3 + plus `min_train_size.fixed_years` re-verification).
 - [ ] Per-value positive tests for each new runtime path.
 - [ ] `docs/user_guide/data/horizon.md` reflects operational status.
-- [ ] `plans/coverage_ledger.md` §1.2.2 / §1.2.3 / §1.2.4 / §1.3.5 flipped to OPERATIONAL 2026-04-20 markers.
+- [ ] `plans/coverage_ledger.md` 1.2.2 / 1.2.3 / 1.2.4 / 1.3.5 flipped to OPERATIONAL 2026-04-20 markers.
 
 ---
 
@@ -126,14 +126,14 @@ Mirror `task.md` structure: intro + per-axis subsections with Value catalog / Fu
 
 - Training-time horizon_target_construction (the v1.0 metric-scale approach is the current reality; training-time transforms are future work).
 - Full structural-break-aware training (the `post_break_start` drop defers this until the break axis is itself operational).
-- §1.4 / §1.5 per-axis walks — separate PRs.
+- 1.4 / 1.5 per-axis walks — separate PRs.
 - Phase 8 paper_ready_bundle — independent critical path.
 
 ---
 
 ## 7. v1.0 implementation status (2026-04-20 follow-up)
 
-**All 8 demoted values flipped operational.** §1.3 registry has zero registry_only entries across all 4 axes.
+**All 8 demoted values flipped operational.** 1.3 registry has zero registry_only entries across all 4 axes.
 
 Implementation highlights (commits on top of the cleanup PR):
 
@@ -145,6 +145,6 @@ Implementation highlights (commits on top of the cleanup PR):
 Tests: 17 new positive / guard tests in tests/test_stage1_3_impl.py covering every new wiring. Full suite 700 -> 717 passed.
 
 Docs:
-- docs/user_guide/data/horizon.md written (§1.3 page, 4-axis catalog + per-axis semantics).
-- docs/user_guide/data/index.md "Honest operational status" paragraph rewritten — §1.1/§1.2/§1.3 now honest, §1.4/§1.5 still pending walks.
-- plans/coverage_ledger.md §1.2.2 / §1.2.3 / §1.2.4 / §1.3.5 flipped to OPERATIONAL 2026-04-20 markers.
+- docs/user_guide/data/horizon.md written (1.3 page, 4-axis catalog + per-axis semantics).
+- docs/user_guide/data/index.md "Honest operational status" paragraph rewritten — 1.1/1.2/1.3 now honest, 1.4/1.5 still pending walks.
+- plans/coverage_ledger.md 1.2.2 / 1.2.3 / 1.2.4 / 1.3.5 flipped to OPERATIONAL 2026-04-20 markers.

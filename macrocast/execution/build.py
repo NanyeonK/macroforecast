@@ -289,7 +289,7 @@ def _benchmark_spec(recipe: RecipeSpec) -> dict[str, object]:
 
 
 def _minimum_train_size(recipe: RecipeSpec, *, horizon: int | None = None) -> int:
-    """Resolve minimum_train_size honouring the §1.3 min_train_size axis.
+    """Resolve minimum_train_size honouring the 1.3 min_train_size axis.
 
     The base value comes from ``benchmark_config.minimum_train_size`` (leaf_config
     scalar, default 60). The axis value selects a transform applied on top:
@@ -668,7 +668,7 @@ def _recursive_predict_sklearn(model, train: pd.Series, horizon: int, lag_order:
 
 
 def _raw_panel_columns(frame: pd.DataFrame, target: str, *, predictor_family: str = "all_macro_vars", spec: dict | None = None) -> list[str]:
-    """Return the predictor column list honouring §1.4 predictor_family.
+    """Return the predictor column list honouring 1.4 predictor_family.
 
     predictor_family values wired in v1.0:
 
@@ -958,7 +958,7 @@ def _build_raw_panel_training_data(
     predictors = _raw_panel_columns(frame, target, predictor_family=predictor_family, spec=spec)
     if origin_idx - horizon < start_idx:
         raise ExecutionError("insufficient history for raw_feature_panel training data")
-    # §1.5 contemporaneous_x_rule: default forbid (X at origin + train pairs X_t with y_{t+h});
+    # 1.5 contemporaneous_x_rule: default forbid (X at origin + train pairs X_t with y_{t+h});
     # allow uses X aligned to the target date (X_{t+h} with y_{t+h}) — the oracle / data-leak
     # benchmark variant.
     contemp_rule = (spec or {}).get("contemporaneous_x_rule", "forbid_contemporaneous")
@@ -977,7 +977,7 @@ def _build_raw_panel_training_data(
         raise ExecutionError("raw_feature_panel produced empty training data")
     X_train_arr, X_pred_arr = _apply_raw_panel_preprocessing(X_train, y_train, X_pred, contract)
 
-    # §1.4.5 deterministic_components augmentation (applied after preprocessing)
+    # 1.4.5 deterministic_components augmentation (applied after preprocessing)
     det_component = None
     break_dates = None
     if spec is not None:
@@ -996,8 +996,8 @@ def _build_raw_panel_training_data(
         except ValueError as exc:
             raise ExecutionError(str(exc)) from exc
 
-    # §1.5 structural_break_segmentation augmentation — reuses the break_dummies
-    # path from §1.4 deterministic_components with dates resolved from the axis
+    # 1.5 structural_break_segmentation augmentation — reuses the break_dummies
+    # path from 1.4 deterministic_components with dates resolved from the axis
     # value (pre_post_crisis / pre_post_covid presets or user_break_dates).
     sb_dates = _resolve_structural_break_dates(spec)
     if sb_dates:
@@ -2996,7 +2996,7 @@ def _build_predictions(
     _horizon_construction = str(recipe.data_task_spec.get("horizon_target_construction", "future_level_y_t_plus_h"))
     _oos_period = str(recipe.data_task_spec.get("oos_period", "all_oos_data"))
 
-    # §1.3 training_start_rule=fixed_start: resolve the calendar date to an index floor
+    # 1.3 training_start_rule=fixed_start: resolve the calendar date to an index floor
     _training_start_rule = str(recipe.data_task_spec.get("training_start_rule", "earliest_possible"))
     _fixed_start_idx = 0
     if _training_start_rule == "fixed_start":
@@ -3046,7 +3046,7 @@ def _build_predictions(
                 effective_origin_idx = origin_idx
             origin_plan.append((origin_idx, start_idx, effective_origin_idx))
 
-        # §1.3 oos_period regime filter — applied after origin_plan is finalized.
+        # 1.3 oos_period regime filter — applied after origin_plan is finalized.
         if _oos_period in {"recession_only_oos", "expansion_only_oos"} and origin_plan:
             origin_plan = _filter_origins_by_regime(origin_plan, index=target_series.index, regime=_oos_period)
 
@@ -3059,7 +3059,7 @@ def _build_predictions(
             benchmark_pred = float(benchmark_executor(train, horizon, recipe))
             y_true = float(target_series.iloc[origin_idx + horizon])
             # Level-scale values are kept for provenance; metric-scale values
-            # honour horizon_target_construction (§1.2.4).
+            # honour horizon_target_construction (1.2.4).
             y_pred_level = y_pred
             benchmark_pred_level = benchmark_pred
             y_true_level = y_true

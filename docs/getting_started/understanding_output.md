@@ -144,6 +144,5 @@ When tuning is enabled (via `search_algorithm` in the recipe), this contains the
 
 **See also:**
 - [Quickstart](quickstart.md) — run your first study
-- [User Guide: Evaluation](../user_guide/execution.md) — how metrics are computed
-- [Mathematical Background: Metrics](../math/evaluation_metrics.md) — formal definitions
-- [Mathematical Background: Statistical Tests](../math/stat_tests.md) — test formulas
+- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — axes that shape metric inputs (horizon, oos_period, overlap_handling).
+- [Stages Reference](stages_reference.md) — cheat sheet with every operational value.

@@ -1,4 +1,4 @@
-"""End-to-end tests for forecast_type (§1.2.2) + forecast_object=quantile (§1.2.3).
+"""End-to-end tests for forecast_type (1.2.2) + forecast_object=quantile (1.2.3).
 
 v1.0 semantics:
 - `forecast_type` default is feature-builder dynamic:

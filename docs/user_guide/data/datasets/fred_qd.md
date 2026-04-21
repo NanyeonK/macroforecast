@@ -55,7 +55,7 @@ FRED-QD extends the FRED-MD T-code table with one additional entry (Case 8), ref
 
 Case 8 is used sparingly — the paper notes that unit-root-test-driven T-code selection sometimes differs from codes used by prior literature, and the appendix flags these cases explicitly.
 
-Flow into macrocast is via the same `tcode_policy` axis as FRED-MD (§1.1 does not override it).
+Flow into macrocast is via the same `tcode_policy` axis as FRED-MD (1.1 does not override it).
 
 ## Changes from the 2020 working paper / 2021 Fed Review publication to current
 
@@ -80,7 +80,7 @@ Mirror of FRED-MD:
 ## Known limitations in macrocast v1.0
 
 - Same as FRED-MD: no per-variable metadata surface, no auto T-code validation across vintages, `data_vintage` required for real-time_vintage mode.
-- **Quarterly / monthly alignment**: when a study mixes FRED-QD with FRED-MD, aligning them requires the `alignment_rule` axis (§1.5). v1.0 implements month-to-quarter aggregation (operational) but mixed-frequency evaluation is limited to single-frequency panels at each horizon.
+- **Quarterly / monthly alignment**: when a study mixes FRED-QD with FRED-MD, aligning them requires the `alignment_rule` axis (1.5). v1.0 implements month-to-quarter aggregation (operational) but mixed-frequency evaluation is limited to single-frequency panels at each horizon.
 
 ## See also
 

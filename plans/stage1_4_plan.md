@@ -1,10 +1,10 @@
-# §1.4 Benchmark & Predictor Universe — cleanup + implementation plan
+# 1.4 Benchmark & Predictor Universe — cleanup + implementation plan
 
-**Goal:** make Layer 1 §1.4 honest. After an audit through "can this value be implemented via a recipe/leaf_config input channel?" many values that looked drop-worthy turn out to be implementable. This plan splits the work into (a) a cleanup PR that drops 4 values needing new infrastructure (NN/text embeddings, dynamic CV feature selection) and honest-demotes 9 metadata-only operational labels, and (b) an implementation PR that wires 19 values back to operational via simple recipe inputs + deterministic feature additions.
+**Goal:** make Layer 1 1.4 honest. After an audit through "can this value be implemented via a recipe/leaf_config input channel?" many values that looked drop-worthy turn out to be implementable. This plan splits the work into (a) a cleanup PR that drops 4 values needing new infrastructure (NN/text embeddings, dynamic CV feature selection) and honest-demotes 9 metadata-only operational labels, and (b) an implementation PR that wires 19 values back to operational via simple recipe inputs + deterministic feature additions.
 
-**Starting state:** 130 axes, 717 tests. §1.4 has 4 axes / 37 values (23 op + 12 registry_only + 2 future).
-**After cleanup PR:** §1.4 has 4 axes / 33 values (14 op + 19 registry_only). Registry_only entries are the v1.0 impl roadmap.
-**After implementation PR:** §1.4 fully operational — 4 axes, 33 values, every one either operational or dropped.
+**Starting state:** 130 axes, 717 tests. 1.4 has 4 axes / 37 values (23 op + 12 registry_only + 2 future).
+**After cleanup PR:** 1.4 has 4 axes / 33 values (14 op + 19 registry_only). Registry_only entries are the v1.0 impl roadmap.
+**After implementation PR:** 1.4 fully operational — 4 axes, 33 values, every one either operational or dropped.
 
 ---
 
@@ -94,7 +94,7 @@ Deterministic feature additions to the X matrix, applied at `_build_raw_panel_tr
 
 ### 3.5 Docs — `docs/user_guide/data/benchmark.md`
 
-New §1.4 page mirroring `task.md` / `horizon.md` style: 4 axes, per-axis Value catalog / Functions & features / Dropped values / Recipe usage. Takeaways.
+New 1.4 page mirroring `task.md` / `horizon.md` style: 4 axes, per-axis Value catalog / Functions & features / Dropped values / Recipe usage. Takeaways.
 
 ### 3.6 Total scope
 
@@ -105,9 +105,9 @@ New §1.4 page mirroring `task.md` / `horizon.md` style: 4 axes, per-axis Value 
 ## 4. Acceptance gates
 
 ### Cleanup PR (this)
-- [ ] Registry 130 axes unchanged; §1.4 values 37 → 33; §1.4 op 23 → 14.
+- [ ] Registry 130 axes unchanged; 1.4 values 37 → 33; 1.4 op 23 → 14.
 - [ ] `pytest tests/` green (~716 passed).
-- [ ] coverage_ledger §1.4 / §1.5 / §1.6 sections annotated for drops + demotions.
+- [ ] coverage_ledger 1.4 / 1.5 / 1.6 sections annotated for drops + demotions.
 
 ### Implementation PR (next)
 - [ ] 19 registry_only values flip to operational with real runtime wiring.
@@ -128,14 +128,14 @@ New §1.4 page mirroring `task.md` / `horizon.md` style: 4 axes, per-axis Value 
 
 - `predictor_family.text_only` / `mixed_blocks` — deferred to v2 (NN / text embeddings stack).
 - `variable_universe.feature_selection_dynamic_subset` — deferred to v1.1 (tuning-engine extension).
-- §1.5 per-axis walk — separate PR.
+- 1.5 per-axis walk — separate PR.
 - Phase 8 paper_ready_bundle — independent critical path.
 
 ---
 
 ## 7. v1.0 implementation status (2026-04-20 follow-up)
 
-**All 19 demoted values flipped operational.** §1.4 registry has zero registry_only entries across all 4 axes.
+**All 19 demoted values flipped operational.** 1.4 registry has zero registry_only entries across all 4 axes.
 
 Implementation highlights:
 
@@ -149,6 +149,6 @@ Compiler propagates 12 new leaf_config fields into data_task_spec for the impl.
 Tests: 20 new positive / guard tests in tests/test_stage1_4_impl.py covering every new wiring. Full suite 716 -> 735 passed.
 
 Docs:
-- docs/user_guide/data/benchmark.md written (§1.4 page, 4-axis catalog + per-axis Functions & features / Recipe usage / Takeaways).
-- docs/user_guide/data/index.md §1.4 row now links to benchmark.md; Honest operational status paragraph updated; hidden toctree adds benchmark.
-- plans/coverage_ledger.md §1.1.9 / §1.4.2 / §1.4.5 / §1.6.2 rows flipped to OPERATIONAL 2026-04-20 markers.
+- docs/user_guide/data/benchmark.md written (1.4 page, 4-axis catalog + per-axis Functions & features / Recipe usage / Takeaways).
+- docs/user_guide/data/index.md 1.4 row now links to benchmark.md; Honest operational status paragraph updated; hidden toctree adds benchmark.
+- plans/coverage_ledger.md 1.1.9 / 1.4.2 / 1.4.5 / 1.6.2 rows flipped to OPERATIONAL 2026-04-20 markers.

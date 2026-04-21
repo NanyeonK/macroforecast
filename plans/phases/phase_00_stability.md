@@ -104,7 +104,7 @@ Single-path 호출자는 기존 동작 유지 (cache_root=None → output_root/.
 
 ### 4.3 Seed 교체 대상 사이트
 
-`phase0_audit_2026_04_17.md` §1 참조. `macrocast/execution/build.py`의 다음 라인:
+`phase0_audit_2026_04_17.md` 1 참조. `macrocast/execution/build.py`의 다음 라인:
 - 557, 577, 587, 592, 597, 602, 607, 612 — autoreg model variants (RF/SVR/ET/GBM/XGB/LGB/CB/MLP)
 - 648, 672, 684, 690, 696, 702, 708, 714 — raw-panel model variants
 - 1429, 1576, 1592, 1640, 1722, 1727 — importance / permutation_importance / default_rng
@@ -202,7 +202,7 @@ def test_distinct_variant_id_yields_distinct_artifacts(tmp_path):
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 0에서 추출)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 0에서 추출)
 - 2026-04-17: Phase 0 완료 — PR #8 (commit 08c0e70) 머지, Acceptance Gate 전부 통과, v0.2 tag 준비
 
 ## 13. References

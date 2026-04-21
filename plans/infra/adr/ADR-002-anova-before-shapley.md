@@ -6,7 +6,7 @@ Context-phase: phase-07
 
 ## Context
 
-§4.5 Decomposition engine은 forecast-error variance를 component (nonlinearity/regularization/cv_scheme/loss/preprocessing/feature_builder/benchmark/importance)로 분해. **선택지:**
+4.5 Decomposition engine은 forecast-error variance를 component (nonlinearity/regularization/cv_scheme/loss/preprocessing/feature_builder/benchmark/importance)로 분해. **선택지:**
 - (A) ANOVA 기반 — 일원분산분석, 수학적 투명
 - (B) Shapley attribution — 축 간 interaction까지 정확히, 계산 비싸
 - (C) 둘 다 동시에
@@ -26,5 +26,5 @@ Context-phase: phase-07
 ## References
 
 - Used by: phase-07 (v1.0 implementation), phase-10.5 (v1.1 Shapley enhancement)
-- Cross: Phase 7 plan §4 engine algorithm
+- Cross: Phase 7 plan 4 engine algorithm
 - Rationale: v1.0 cite-worthy 판정에 ANOVA 분해만으로 충분. Shapley는 독립 논문 형태로 v1.1에서 publish 가능.

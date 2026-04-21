@@ -289,5 +289,5 @@ path:
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 1에서 추출)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 1에서 추출)
 - 2026-04-17: Phase 1 구현 완료 — sweep_plan + sweep_runner + studies.manifest + 28 tests green (340 total); docs/examples 연결; v0.3 tag는 feat/phase-01 브랜치 merge 후

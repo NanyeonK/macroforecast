@@ -161,7 +161,7 @@ def test_registry_loader_discovers_stage4_evaluation_axes() -> None:
 def test_registry_loader_moves_benchmark_family_and_evaluation_scale_to_data_task() -> None:
     registry = get_axis_registry()
     assert registry["benchmark_family"].layer == "1_data_task"
-    assert registry["evaluation_scale"].layer == "2_preprocessing"  # §1.5 cleanup: re-homed to Layer 2 where the PreprocessContract field lives
+    assert registry["evaluation_scale"].layer == "2_preprocessing"  # 1.5 cleanup: re-homed to Layer 2 where the PreprocessContract field lives
 
 
 def test_registry_loader_discovers_information_set_type_axis() -> None:

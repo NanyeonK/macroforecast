@@ -2,7 +2,7 @@
 
 Real-time U.S. state-level macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Provides per-state variables (labor market, production, housing) with vintage history, enabling real-time forecasting exercises at the state level. Loaded via `macrocast.load_fred_sd()` when `path.1_data_task.fixed_axes.dataset == "fred_sd"`.
 
-FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel workbook, and the panel **mixes monthly and quarterly series** — a user-facing complication discussed in §v1.0 limitations below.
+FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel workbook, and the panel **mixes monthly and quarterly series** — a user-facing complication discussed in v1.0 limitations below.
 
 ## Citation & authoritative source
 
@@ -51,7 +51,7 @@ Within a single workbook, the monthly series have 12 observations per year while
   - Pick `variables=[...]` to include only same-frequency series (pure-monthly or pure-quarterly).
   - Let missing values propagate and use a Layer 2 preprocessing imputation (`x_missing_policy`) to fill quarterly observations into monthly gaps.
 
-A **proper mixed-frequency adapter** (MIDAS-style or state-space filling) is scheduled for v1.1 / Phase 10. See §1.3 Horizon & evaluation window and the `frequency` registry entry (`mixed_frequency` is `future` status, v2 Phase 11).
+A **proper mixed-frequency adapter** (MIDAS-style or state-space filling) is scheduled for v1.1 / Phase 10. See 1.3 Horizon & evaluation window and the `frequency` registry entry (`mixed_frequency` is `future` status, v2 Phase 11).
 
 ## Real-time vintage discipline
 
@@ -75,7 +75,7 @@ A proper `states` leaf_config field (parallel to `target` / `targets` for variab
 
 ## Variable selection
 
-Same caveat — `variables=[...]` works at the loader level but there is no Layer 1 axis for it in v1.0. The existing `variable_universe` axis (§1.4) operates on FRED-MD / FRED-QD column names; its mapping to FRED-SD sheet names is not wired.
+Same caveat — `variables=[...]` works at the loader level but there is no Layer 1 axis for it in v1.0. The existing `variable_universe` axis (1.4) operates on FRED-MD / FRED-QD column names; its mapping to FRED-SD sheet names is not wired.
 
 ## Changes from the 2020 working paper to current
 
@@ -104,4 +104,4 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 - [FRED-MD](fred_md.md), [FRED-QD](fred_qd.md) — sister databases.
 - [Source & Frame (1.1)](../source.md) — `dataset` / `information_set_type` / `frequency` axis interaction.
-- [§1.3 horizon & evaluation window](../window.md) (coming) — how mixed-frequency panels interact with horizon / OOS structure.
+- [1.3 horizon & evaluation window](../window.md) (coming) — how mixed-frequency panels interact with horizon / OOS structure.

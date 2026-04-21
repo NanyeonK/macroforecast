@@ -77,7 +77,7 @@ def test_release_lag_fixed_lag_shifts_columns():
 
 def test_missing_availability_complete_case_is_noop():
     # complete_case_only is the default no-op; available_case and x_impute_only
-    # now do real work (§1.5 impl) — see tests/test_stage1_5_impl.py for their coverage.
+    # now do real work (1.5 impl) — see tests/test_stage1_5_impl.py for their coverage.
     r = _make_raw()
     out = _apply_missing_availability(r, 'complete_case_only')
     assert out is r

@@ -2,65 +2,42 @@
 
 > Given a standardized macro dataset adapter and a fixed forecasting recipe, compare forecasting tools under identical information set, sample split, benchmark, and evaluation protocol.
 
-## Why macrocast?
+macrocast is a research-oriented forecasting package with **opinionated defaults** and **auditable choice points**. Most studies don't need to touch 90% of the axes — the defaults match the empirical-macro baseline. When you *do* want to deviate, there's exactly one place that documents each choice, and the choice lands in `manifest.json` so you can verify it at the artifact level.
 
-Macroeconomic forecasting studies often suffer from a common problem: models are compared under conditions that are not fully aligned. Differences in sample periods, information sets, preprocessing rules, or benchmark definitions make it difficult to determine whether one method truly outperforms another.
+## What is complete (v0.9.4)
 
-macrocast addresses this by enforcing a **recipe-based experimental grammar** where every design choice is explicit. One YAML recipe defines one complete forecasting study. Comparisons are fair because the comparison environment is held fixed while only the forecasting tool varies.
+- **Stage 0 — Design** (6 axes, 31 operational values). Recipe grammar: runner dispatch, sweep shape, reproducibility, compute.
+- **Stage 1 — Data** (20 axes, 73 operational values). Dataset + task + forecast object + time windows + benchmark + predictors + break policy.
 
-**Core design principles:**
-
-1. **One recipe = one fully specified study.** No hidden defaults, no implicit preprocessing.
-2. **Grammar first, content later.** The study language is fixed before registry inventories are filled.
-3. **Represent before execute.** The registry can express more choices than the runtime currently supports.
-4. **Fair comparison by construction.** Preprocessing, splits, benchmarks, and metrics are governed explicitly.
+Stages 2 through 7 (preprocessing, training, evaluation, provenance, stat tests, importance) are still in active development and are deliberately **not** exposed in the user-facing docs until their per-axis walk lands.
 
 ## Documentation
 
 | Section | Description |
 |---------|-------------|
 | [Installation](install.md) | Install macrocast and optional dependencies |
-| [Getting Started](getting_started/index.md) | Your first forecasting study in 5 minutes |
-| [User Guide](user_guide/index.md) | In-depth guide to every package layer |
-| [Examples](examples/index.md) | End-to-end runnable example gallery |
+| [Getting Started](getting_started/index.md) | Quickstart + Stages Reference cheat sheet |
+| [User Guide — Design (Stage 0)](user_guide/design.md) | Six axes that decide study shape |
+| [User Guide — Data (Stage 1)](user_guide/data/index.md) | Twenty axes that decide data, task, and evaluation window |
 | [API Reference](api/index.md) | Function signatures and class documentation |
-| [Mathematical Background](math/index.md) | Formal definitions for statistical tests, metrics, and importance methods |
-| [Developer Guide](dev/index.md) | Architecture, contributing, extending the package |
+| [Docs Conventions](CONVENTIONS.md) | Rules that every docs page follows |
 
-## Package surfaces
+## Core design principles
 
-macrocast has eight layers, executed in canonical order:
-
-| Layer | Module | Purpose |
-|-------|--------|---------|
-| Stage 0 (Design) | [`macrocast.design`](user_guide/design.md) | Study grammar: fixed/varying design, comparison contract |
-| Stage 1 | [`macrocast.raw`](user_guide/raw.md) | FRED-MD/QD/SD raw data loading and provenance |
-| Stage 2 | [`macrocast.recipes`](user_guide/recipes.md) | Declarative recipe and run specification |
-| Stage 3 | [`macrocast.preprocessing`](user_guide/preprocessing.md) | Preprocessing contract and governance |
-| Stage 4 | [`macrocast.registry`](user_guide/registry.md) | Per-axis choice-space registry |
-| Stage 5 | [`macrocast.compiler`](user_guide/compiler.md) | Recipe compilation and execution eligibility |
-| Stage 6 | [`macrocast.execution`](user_guide/execution.md) | Runtime: models, benchmarks, metrics, artifacts |
-| Stage 7 | [`macrocast.tuning`](user_guide/tuning.md) | Hyperparameter tuning engine |
-
-## Current operational scale
-
-- **24 model families** from AR to MLP, including linear boosting, factor models, SVR, tree ensembles
-- **20 statistical tests** covering equal/conditional predictive ability, nested models, multiple comparison, diagnostics
-- **12 importance methods** including SHAP, permutation, LIME, PDP/ICE/ALE, grouped, stability
-- **4 tuning algorithms**: grid search, random search, Bayesian optimization, genetic algorithm
-- **125 registry axes**, 717 values, 310 operational (43%)
-
-**See also:** [Getting Started: Quickstart](getting_started/quickstart.md) | [API Reference](api/index.md)
+1. **One recipe = one fully specified study.** No hidden defaults, no implicit preprocessing.
+2. **Defaults match empirical-macro baseline.** Most users don't read docs until they want to deviate.
+3. **Single source of truth per axis.** Each axis is documented on exactly one page.
+4. **Docs and code stay in sync.** Every value cites the exact dispatch function.
+5. **Verify through the manifest.** `manifest.json` records every resolved axis value.
 
 ```{toctree}
 :hidden:
-:maxdepth: 2
+:maxdepth: 1
 
 install
 getting_started/index
-user_guide/index
-examples/index
+user_guide/design
+user_guide/data/index
 api/index
-math/index
-dev/index
+CONVENTIONS
 ```

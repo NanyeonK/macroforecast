@@ -1,4 +1,4 @@
-"""End-to-end tests for §1.5 implementation (9 values flipped operational).
+"""End-to-end tests for 1.5 implementation (9 values flipped operational).
 
 Covers:
 - contemporaneous_x_rule.allow_contemporaneous vs. forbid_contemporaneous (default).

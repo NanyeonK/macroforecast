@@ -2,7 +2,7 @@
 
 Declares **which observations count as training data, which count as OOS, and how OOS rows are filtered or aggregated**. Four axes in v1.0 — all values operational.
 
-| § | axis | Role |
+| Section | axis | Role |
 |---|---|---|
 | 1.3.1 | [`min_train_size`](#131-min_train_size) | How the minimum training window is computed (fixed obs, years, model/target/horizon-specific) |
 | 1.3.2 | [`training_start_rule`](#132-training_start_rule) | Where the training window starts — earliest observation or a fixed calendar date |
@@ -11,9 +11,17 @@ Declares **which observations count as training data, which count as OOS, and ho
 
 **Note on dropped axes:**
 
-- `horizon_list` was dropped (§1.3 cleanup) — redundant with `leaf_config.horizons` which already specifies the horizons list directly.
-- `warmup_rule` was dropped (§1.3 cleanup) — abstract axis with no concrete v1.0 dispatch semantic.
-- `own_target_lags` was dropped (§1.3 cleanup) — redundant with `feature_builder` (autoreg_lagged_target includes y-lags, raw_feature_panel does not).
+- `horizon_list` was dropped (1.3 cleanup) — redundant with `leaf_config.horizons` which already specifies the horizons list directly.
+- `warmup_rule` was dropped (1.3 cleanup) — abstract axis with no concrete v1.0 dispatch semantic.
+- `own_target_lags` was dropped (1.3 cleanup) — redundant with `feature_builder` (autoreg_lagged_target includes y-lags, raw_feature_panel does not).
+**At a glance (defaults):**
+- `min_train_size = fixed_n_obs` — your recipe's `benchmark_config.minimum_train_size` is the observation count.
+- `training_start_rule = earliest_possible` — training starts at the first feasible row. Override only for paper-replication (calendar-exact) start dates.
+- `oos_period = all_oos_data` — no regime filter. Switch to `recession_only_oos` / `expansion_only_oos` for NBER-conditioned evaluation.
+- `overlap_handling = allow_overlap` — DM / CW / MCS tests run with their default covariance. Switch to `evaluate_with_hac` only with an HAC-capable stat test and h > 1.
+
+**Most research runs leave all four at the default.**
+
 
 ---
 
@@ -177,10 +185,10 @@ path:
 
 ## Horizon & Evaluation Window (1.3) takeaways
 
-- Every value in every §1.3 axis is operational in v1.0. Zero `registry_only` entries remain.
+- Every value in every 1.3 axis is operational in v1.0. Zero `registry_only` entries remain.
 - `min_train_size` exposes the five rules already implemented in `raw.windowing`, now live in the main execution path.
 - `training_start_rule = fixed_start` unlocks calendar-exact replication of published paper samples via `leaf_config.training_start_date`.
 - `oos_period` delivers NBER regime conditioning without any recipe-side date bookkeeping.
 - `overlap_handling = evaluate_with_hac` wires the HAC requirement into compile-time validation rather than leaving it implicit in stat-test choice.
 
-Next group: §1.4 Benchmark & predictor universe (coming).
+Next group: 1.4 Benchmark & predictor universe (coming).

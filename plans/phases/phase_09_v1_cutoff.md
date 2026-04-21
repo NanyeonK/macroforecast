@@ -182,4 +182,4 @@ Phase 9 자체가 migration guide 작성 Phase입니다. 사용자 관점 요약
 
 ## 12. Revision Log
 
-- 2026-04-17: 초안 (ultraplan v2.2 §Phase 9에서 추출)
+- 2026-04-17: 초안 (ultraplan v2.2 Phase 9에서 추출)

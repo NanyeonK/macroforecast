@@ -1,4 +1,4 @@
-"""Deterministic component augmentation for §1.4.5.
+"""Deterministic component augmentation for 1.4.5.
 
 v1.0 semantics: the selected rule adds deterministic feature columns to the
 raw-feature-panel X matrix. Values:
