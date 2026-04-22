@@ -1,7 +1,6 @@
 """End-to-end tests for horizon_target_construction (1.2.4).
 
-Each operational value (future_target_level_t_plus_h, future_diff,
-future_logdiff) must:
+Each operational value must:
 1. compile to execution_status == "executable",
 2. produce rows carrying `horizon_target_construction` + level-scale provenance,
 3. produce metrics (error / squared_error / benchmark_error) on the declared
@@ -13,20 +12,28 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from macrocast.compiler.build import compile_recipe_dict
 from macrocast.compiler.build import run_compiled_recipe
+from macrocast.execution.horizon_target import build_horizon_target
+from macrocast.execution.horizon_target import construction_scale
+from macrocast.execution.horizon_target import forward_scalar
+from macrocast.execution.horizon_target import inverse_horizon_target
 
 
 OPERATIONAL_CONSTRUCTIONS = (
     "future_target_level_t_plus_h",
     "future_diff",
     "future_logdiff",
+    "average_growth_1_to_h",
+    "average_difference_1_to_h",
+    "average_log_growth_1_to_h",
 )
 
 
-def _recipe(construction: str) -> dict:
+def _recipe(construction: str, *, horizons: list[int] | None = None) -> dict:
     axes_1 = {
         "dataset": "fred_md",
         "info_set": "revised",
@@ -39,7 +46,7 @@ def _recipe(construction: str) -> dict:
             "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
-                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+                "leaf_config": {"target": "INDPRO", "horizons": horizons or [1]},
             },
             "2_preprocessing": {"fixed_axes": {
                 "target_transform_policy": "raw_level",
@@ -74,8 +81,8 @@ def _recipe(construction: str) -> dict:
     }
 
 
-def _run(construction: str, tmp_path: Path):
-    recipe = _recipe(construction)
+def _run(construction: str, tmp_path: Path, *, horizons: list[int] | None = None):
+    recipe = _recipe(construction, horizons=horizons)
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable", (
         f"{construction} did not compile as executable"
@@ -88,7 +95,6 @@ def _run(construction: str, tmp_path: Path):
 
 
 def _predictions(execution) -> pd.DataFrame:
-    import pandas as pd
     return pd.read_csv(Path(execution.artifact_dir) / "predictions.csv")
 
 
@@ -99,6 +105,93 @@ def test_horizon_target_construction_executes(construction: str, tmp_path: Path)
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
     # Compiler records the construction in the data_task spec
     assert manifest["data_task_spec"]["horizon_target_construction"] == construction
+
+
+def test_build_direct_average_targets_aligns_to_origin_and_trails_missing() -> None:
+    target = pd.Series(
+        [100.0, 105.0, 111.0, 120.0],
+        index=pd.period_range("2020-01", periods=4, freq="M").to_timestamp(),
+    )
+    expected_diff = pd.Series([5.5, 7.5, np.nan, np.nan], index=target.index)
+    expected_growth = pd.Series([0.055, (120.0 / 105.0 - 1.0) / 2.0, np.nan, np.nan], index=target.index)
+    expected_log = pd.Series([
+        (np.log(111.0) - np.log(100.0)) / 2.0,
+        (np.log(120.0) - np.log(105.0)) / 2.0,
+        np.nan,
+        np.nan,
+    ], index=target.index)
+
+    assert np.allclose(
+        build_horizon_target(target, 2, "average_difference_1_to_h"),
+        expected_diff,
+        equal_nan=True,
+    )
+    assert np.allclose(
+        build_horizon_target(target, 2, "average_growth_1_to_h"),
+        expected_growth,
+        equal_nan=True,
+    )
+    assert np.allclose(
+        build_horizon_target(target, 2, "average_log_growth_1_to_h"),
+        expected_log,
+        equal_nan=True,
+    )
+
+
+def test_direct_average_targets_reduce_to_one_step_constructions() -> None:
+    target = pd.Series([100.0, 105.0, 111.0, 120.0])
+    assert np.allclose(
+        build_horizon_target(target, 1, "average_difference_1_to_h"),
+        build_horizon_target(target, 1, "future_diff"),
+        equal_nan=True,
+    )
+    assert np.allclose(
+        build_horizon_target(target, 1, "average_log_growth_1_to_h"),
+        build_horizon_target(target, 1, "future_logdiff"),
+        equal_nan=True,
+    )
+
+
+def test_direct_average_inverse_and_forward_scalar_round_trip() -> None:
+    anchor = 100.0
+    future = 121.0
+    horizon = 2
+    for construction in (
+        "average_growth_1_to_h",
+        "average_difference_1_to_h",
+        "average_log_growth_1_to_h",
+    ):
+        transformed = forward_scalar(future, anchor, construction, horizon=horizon)
+        recovered = inverse_horizon_target(
+            transformed,
+            anchor,
+            construction,
+            horizon=horizon,
+        )
+        assert recovered == pytest.approx(future)
+
+
+@pytest.mark.parametrize(
+    ("construction", "scale"),
+    (
+        ("average_growth_1_to_h", "average_growth"),
+        ("average_difference_1_to_h", "average_difference"),
+        ("average_log_growth_1_to_h", "average_log_growth"),
+    ),
+)
+def test_direct_average_execution_records_horizon_two_scale(
+    construction: str,
+    scale: str,
+    tmp_path: Path,
+) -> None:
+    execution = _run(construction, tmp_path / construction, horizons=[2])
+    predictions = _predictions(execution)
+    assert not predictions.empty
+    assert (predictions["horizon"] == 2).all()
+    assert (predictions["horizon_target_construction"] == construction).all()
+    assert (predictions["target_construction_scale"] == scale).all()
+    assert construction_scale(construction) == scale
+    assert {"y_true_level", "y_pred_level", "benchmark_pred_level"}.issubset(predictions.columns)
 
 
 def test_future_level_matches_level_scale_metrics(tmp_path: Path) -> None:
@@ -158,4 +251,3 @@ def test_legacy_future_level_y_alias_canonicalizes(tmp_path: Path) -> None:
     assert manifest["data_task_spec"]["horizon_target_construction"] == "future_target_level_t_plus_h"
     predictions = _predictions(execution)
     assert (predictions["horizon_target_construction"] == "future_target_level_t_plus_h").all()
-

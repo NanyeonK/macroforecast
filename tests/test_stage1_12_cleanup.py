@@ -88,11 +88,8 @@ def test_dropped_value_is_rejected(axis: str, value: str) -> None:
 
 # Values demoted to registry_only — compile succeeds but execution is gated.
 DEMOTED: tuple[tuple[str, str], ...] = (
-    ("horizon_target_construction", "average_growth_1_to_h"),
     ("horizon_target_construction", "path_average_growth_1_to_h"),
-    ("horizon_target_construction", "average_difference_1_to_h"),
     ("horizon_target_construction", "path_average_difference_1_to_h"),
-    ("horizon_target_construction", "average_log_growth_1_to_h"),
     ("horizon_target_construction", "path_average_log_growth_1_to_h"),
 )
 
@@ -102,6 +99,19 @@ def test_demoted_value_is_not_supported(axis: str, value: str) -> None:
     recipe = _base_recipe({axis: value})
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "not_supported"
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "average_growth_1_to_h",
+        "average_difference_1_to_h",
+        "average_log_growth_1_to_h",
+    ),
+)
+def test_direct_average_target_construction_is_supported(value: str) -> None:
+    result = compile_recipe_dict(_base_recipe({"horizon_target_construction": value}))
+    assert result.compiled.execution_status == "executable"
 
 
 def test_target_to_target_inclusion_axis_dropped() -> None:

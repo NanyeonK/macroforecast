@@ -36,7 +36,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='average_growth_1_to_h',
             description='direct average growth target over steps 1 through h',
-            status='registry_only',
+            status='operational',
             priority='A',
         ),
         EnumRegistryEntry(
@@ -48,7 +48,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='average_difference_1_to_h',
             description='direct average difference target over steps 1 through h',
-            status='registry_only',
+            status='operational',
             priority='A',
         ),
         EnumRegistryEntry(
@@ -60,7 +60,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='average_log_growth_1_to_h',
             description='direct average log-growth target over steps 1 through h',
-            status='registry_only',
+            status='operational',
             priority='B',
         ),
         EnumRegistryEntry(

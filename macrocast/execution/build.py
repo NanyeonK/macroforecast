@@ -37,6 +37,7 @@ from .seed_policy import (
 )
 from .horizon_target import (
     canonicalize_horizon_target_construction as _canonicalize_horizon_target_construction,
+    construction_scale as _horizon_construction_scale,
     forward_scalar as _horizon_forward_scalar,
 )
 from ..raw.windowing import WindowSpec as _WindowSpec, _resolve_min_train_obs as _resolve_min_train_obs
@@ -4039,9 +4040,9 @@ def _build_predictions(
             y_true_level = y_true
             if _horizon_construction != "future_target_level_t_plus_h":
                 y_anchor = float(target_series.iloc[effective_origin_idx])
-                y_pred = _horizon_forward_scalar(y_pred_level, y_anchor, _horizon_construction)
-                benchmark_pred = _horizon_forward_scalar(benchmark_pred_level, y_anchor, _horizon_construction)
-                y_true = _horizon_forward_scalar(y_true_level, y_anchor, _horizon_construction)
+                y_pred = _horizon_forward_scalar(y_pred_level, y_anchor, _horizon_construction, horizon=horizon)
+                benchmark_pred = _horizon_forward_scalar(benchmark_pred_level, y_anchor, _horizon_construction, horizon=horizon)
+                y_true = _horizon_forward_scalar(y_true_level, y_anchor, _horizon_construction, horizon=horizon)
             error = y_true - y_pred
             benchmark_error = y_true - benchmark_pred
             row = {
@@ -4064,6 +4065,7 @@ def _build_predictions(
                 "target_transformer": target_transformer_spec.name if target_transformer_spec is not None else "none",
                 "model_target_scale": "transformed" if target_transformer_spec is not None else "raw",
                 "forecast_scale": "raw",
+                "target_construction_scale": _horizon_construction_scale(_horizon_construction),
                 "error": error,
                 "abs_error": abs(error),
                 "squared_error": error**2,

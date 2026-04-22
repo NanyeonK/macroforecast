@@ -269,6 +269,9 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
     target_construction = get_axis_registry_entry("horizon_target_construction")
     assert target_construction.current_status["future_target_level_t_plus_h"] == "operational"
     assert target_construction.current_status["future_level_y_t_plus_h"] == "operational"
+    assert target_construction.current_status["average_growth_1_to_h"] == "operational"
+    assert target_construction.current_status["average_difference_1_to_h"] == "operational"
+    assert target_construction.current_status["average_log_growth_1_to_h"] == "operational"
 
 
 def test_registry_loader_demotes_stage2_non_executable_values() -> None:
@@ -293,8 +296,9 @@ def test_registry_loader_demotes_stage2_non_executable_values() -> None:
     assert separation_rule.current_status["shared_transform_then_split"] == "registry_only"
     assert separation_rule.current_status["X_only_transform"] == "registry_only"
     assert separation_rule.current_status["target_only_transform"] == "registry_only"
-    assert target_construction.current_status["average_growth_1_to_h"] == "registry_only"
     assert target_construction.current_status["path_average_growth_1_to_h"] == "registry_only"
+    assert target_construction.current_status["path_average_difference_1_to_h"] == "registry_only"
+    assert target_construction.current_status["path_average_log_growth_1_to_h"] == "registry_only"
 
 
 

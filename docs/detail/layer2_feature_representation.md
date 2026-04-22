@@ -87,8 +87,8 @@ Layer 2 therefore owns the target representation choice:
 
 | Axis | Values | Runtime status |
 |---|---|---|
-| `horizon_target_construction` | `future_target_level_t_plus_h`, `future_diff`, `future_logdiff` | operational |
-| `horizon_target_construction` | `average_growth_1_to_h`, `path_average_growth_1_to_h`, `average_difference_1_to_h`, `path_average_difference_1_to_h`, `average_log_growth_1_to_h`, `path_average_log_growth_1_to_h` | registry-only |
+| `horizon_target_construction` | `future_target_level_t_plus_h`, `future_diff`, `future_logdiff`, `average_growth_1_to_h`, `average_difference_1_to_h`, `average_log_growth_1_to_h` | operational |
+| `horizon_target_construction` | `path_average_growth_1_to_h`, `path_average_difference_1_to_h`, `path_average_log_growth_1_to_h` | registry-only |
 
 Path-average target construction also requires Layer 3 support because the
 forecast generator must fit multiple stepwise models and aggregate their
