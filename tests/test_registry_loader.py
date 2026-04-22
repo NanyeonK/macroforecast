@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 129
+EXPECTED_AXIS_COUNT = 137
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -214,8 +214,34 @@ def test_registry_loader_discovers_stage2_governance_axes() -> None:
         "predictor_family",
         "data_richness_mode",
         "factor_count",
+        "feature_block_set",
+        "target_lag_block",
+        "x_lag_feature_block",
+        "factor_feature_block",
+        "level_feature_block",
+        "rotation_feature_block",
+        "temporal_feature_block",
+        "feature_block_combination",
     }
     assert expected.issubset(registry)
+
+
+def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
+    registry = get_axis_registry()
+    block_axes = {
+        "feature_block_set",
+        "target_lag_block",
+        "x_lag_feature_block",
+        "factor_feature_block",
+        "level_feature_block",
+        "rotation_feature_block",
+        "temporal_feature_block",
+        "feature_block_combination",
+    }
+    assert all(registry[axis].layer == "2_preprocessing" for axis in block_axes)
+    assert registry["feature_block_set"].current_status["mixed_blocks"] == "registry_only"
+    assert registry["rotation_feature_block"].current_status["marx_rotation"] == "registry_only"
+    assert registry["factor_feature_block"].current_status["pca_static_factors"] == "registry_only"
 
 
 def test_registry_loader_expands_stage2_operational_values() -> None:

@@ -21,7 +21,7 @@ The 6 meta axes of Stage 0 ([design](../design.md)) — `research_design`, `expe
 Layer 1 now covers 13 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
 
 - **Kept in Layer 1** — dataset/source/frequency/information set, target structure, official availability, release lag, contemporaneous information rule, raw variable universe.
-- **Moved to Layer 2** — target representation, predictor family, feature builder / data-richness representation, factor-count representation, and deterministic/break features.
+- **Moved to Layer 2** — target representation, predictor family, feature builder / data-richness representation, feature-block grammar, factor-count representation, and deterministic/break features.
 - **Moved to Layer 3** — benchmark, forecast type/object, model family, and training-window rules.
 - **Moved to Layer 4** — OOS regime subset evaluation.
 - **Moved to Layer 6** — overlap/HAC inference handling.

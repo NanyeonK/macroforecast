@@ -32,7 +32,7 @@ feature-representation bridge axes. The canonical decision groups are:
 
 | Group | Axes | What the group decides |
 |-------|------|------------------------|
-| Research feature representation | `feature_builder`, `predictor_family`, `data_richness_mode`, `factor_count`, future `feature_block_set` | Which feature matrix `Z` is constructed from Layer 1 outputs before forecasting. Current axes are migrated compatibility names; future work should split them into feature-block primitives. |
+| Research feature representation | `feature_builder`, `predictor_family`, `data_richness_mode`, `factor_count`, `feature_block_set`, `target_lag_block`, `x_lag_feature_block`, `factor_feature_block`, `level_feature_block`, `rotation_feature_block`, `temporal_feature_block`, `feature_block_combination` | Which feature matrix `Z` is constructed from Layer 1 outputs before forecasting. Current runtime uses the migrated compatibility names; the explicit feature-block axes are registry-only. |
 | X additional preprocessing | `x_missing_policy`, `x_outlier_policy`, `scaling_policy`, `scaling_scope`, `additional_preprocessing`, `x_lag_creation` | How predictor columns are imputed, clipped, scaled, filtered, or lag-augmented after Layer 1. |
 | X representation and selection | `dimensionality_reduction_policy`, `feature_selection_policy`, `feature_grouping` | Whether the predictor panel is reduced to factors/components, screened to a subset, or grouped before modeling. |
 | Target-side preprocessing | `target_transform`, `target_normalization`, `target_domain`, `target_missing_policy`, `target_outlier_policy`, `inverse_transform_policy`, `evaluation_scale`, `target_transformer` | How y is transformed or normalized, how forecasts are inverted, and which scale metrics use. |
@@ -62,6 +62,7 @@ records what the current runtime can execute today.
 | Axis | Executable values today | Notes |
 |------|-------------------------|-------|
 | `feature_builder` | `autoreg_lagged_target`, `factors_plus_AR`, `raw_feature_panel`, `raw_X_only`, `factor_pca` | Currently used by compiler/runtime dispatch; semantically this chooses feature representation. `sequence_tensor` is future. |
+| `feature_block_set` and feature-block primitive axes | none | The explicit grammar is defined as registry-only: `target_lag_block`, `x_lag_feature_block`, `factor_feature_block`, `level_feature_block`, `rotation_feature_block`, `temporal_feature_block`, and `feature_block_combination`. |
 | `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` | Canonical Layer 2 owner; runtime support is constrained by `feature_builder` compatibility guards. |
 | `data_richness_mode` | `target_lags_only`, `factor_plus_lags`, `full_high_dimensional_X`, `selected_sparse_X` | Canonical Layer 2 owner; `mixed_mode` remains registry-only. |
 | `factor_count` | `fixed`, `cv_select`, `BaiNg_rule` | Canonical Layer 2 owner for factor representation dimensions. `variance_explained_rule` and `model_specific` remain registry-only. |
@@ -106,10 +107,12 @@ only for raw-panel style feature builders.** The default official T-code path is
 executable, and supported extra preprocessing can now be attached after the
 Layer 1 official T-code step through the derived
 `tcode_then_extra_preprocess` bridge contract.
-The next Layer 2 expansion should split the migrated representation axes into
-general feature-block primitives: target-lag blocks, transformed-X lag blocks,
-factor blocks, level add-backs, lag rotations, local temporal factors,
-volatility blocks, cointegration/error-correction blocks, and custom blocks.
+This definition pass splits the migrated representation axes into general
+feature-block primitives: target-lag blocks, transformed-X lag blocks, factor
+blocks, level add-backs, lag rotations, local temporal factors, volatility
+blocks, and custom blocks. The split is defined in
+`layer2_feature_representation.md`; runtime support remains a separate
+implementation task.
 
 
 ## Full Closure Status

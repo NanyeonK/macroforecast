@@ -23,7 +23,7 @@ The directory names are legacy-compatible. The semantic ownership is:
 |---|---|---|
 | 0 | Study design / execution grammar | Research design, experiment unit, sweep grammar, reproducibility, failure policy, compute mode. |
 | 1 | Official data frame | Dataset loading, source adapter, frequency, information set, target identity, sample period, official availability handling, official release-lag discipline. |
-| 2 | Research preprocessing / feature representation | Researcher-chosen target/X transforms, scaling, imputation, outlier treatment, feature-block selection, predictor family, feature builder, PCA/factors, factor counts, deterministic features, custom preprocessors. |
+| 2 | Research preprocessing / feature representation | Researcher-chosen target/X transforms, scaling, imputation, outlier treatment, feature-block grammar, predictor family, feature builder bridge, PCA/factors, factor counts, deterministic features, custom preprocessors. |
 | 3 | Forecast generator / model / benchmark | Model family, benchmark family, forecast type, forecast object, training windows, refit, model lag order, tuning, model execution settings. |
 | 4 | Evaluation protocol / metrics | Metric families, aggregation, rankings, reporting, regime-specific evaluation subsets. |
 | 5 | Artifacts / provenance | Export format, saved objects, provenance depth, artifact granularity. |

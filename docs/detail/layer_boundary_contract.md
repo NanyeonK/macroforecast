@@ -70,6 +70,24 @@ only after Layer 1 has produced the selected official or raw feature frame. In
 that case the treatment may be mixed with transform-induced missing values and
 other preprocessing artifacts; full provenance should preserve that ordering.
 
+Layer 2's canonical output is `Z_train`/`Z_pred`, plus feature names, block
+metadata, and fit state for train-window preprocessing. The newly defined
+feature-block grammar is:
+
+- `feature_block_set`
+- `target_lag_block`
+- `x_lag_feature_block`
+- `factor_feature_block`
+- `level_feature_block`
+- `rotation_feature_block`
+- `temporal_feature_block`
+- `feature_block_combination`
+
+These axes are registry-only in the current runtime. Existing executable paths
+still use the coarse `feature_builder`, `predictor_family`,
+`data_richness_mode`, and `factor_count` bridge, but those bridge names are
+Layer 2 concepts because they define `Z`, not estimator behavior.
+
 ## Layer 3: Forecast Generator
 
 Owns all choices that generate forecasts:

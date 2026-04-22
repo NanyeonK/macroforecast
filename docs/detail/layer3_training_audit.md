@@ -30,7 +30,14 @@ Canonical Layer 2 ownership now includes:
 - `predictor_family`;
 - `data_richness_mode`;
 - `factor_count`;
-- future `feature_block_set` and feature-block primitive axes.
+- `feature_block_set`;
+- `target_lag_block`;
+- `x_lag_feature_block`;
+- `factor_feature_block`;
+- `level_feature_block`;
+- `rotation_feature_block`;
+- `temporal_feature_block`;
+- `feature_block_combination`.
 
 These axes decide how `H`, `X`, and `Y` become `Z`; they are not model
 estimator choices.
@@ -58,7 +65,7 @@ The canonical Layer 3 registry surface is:
   feature-block grammar.
 - `predictor_family`: keep accepted for existing guards, but express as Layer 2
   block/input selection.
-- `data_richness_mode`: keep accepted while `feature_block_set` is introduced.
-- `factor_count`: keep accepted while factor block axes are introduced.
+- `data_richness_mode`: keep accepted while runtime migrates to `feature_block_set`.
+- `factor_count`: keep accepted while runtime migrates to explicit factor block dimensions.
 - `factor_ar_lags`: split into target-lag feature block dimensions versus model
   lag-order selection.
