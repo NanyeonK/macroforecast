@@ -39,6 +39,13 @@ registry axes are:
 Target, targets, horizons, sample start/end, data vintage, and official
 availability reports remain Layer 1 `leaf_config`/provenance responsibilities.
 
+Full mode additionally distinguishes raw-source data defects from
+post-transform/model-input defects. A raw-source missing value or raw-source
+outlier is already present in the source panel before the official dataset
+transform/T-code step. Layer 1 owns the policy and provenance for those raw
+defects when the researcher chooses to inspect, fill, drop, winsorize, clip, or
+otherwise repair the source panel before official transforms are applied.
+
 The following axes were moved out of Layer 1 ownership:
 
 - to Layer 2: `horizon_target_construction`, `deterministic_components`,
@@ -114,6 +121,33 @@ Kept values that require extra user inputs are now compile-time contracts:
 - `missing_availability=x_impute_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.
 - `release_lag_rule=series_specific_lag` requires non-empty `leaf_config.release_lag_per_series`.
 - `structural_break_segmentation` remains executable through fixed built-in dates; user-supplied break dates are owned by `deterministic_components=break_dummies`.
+
+Full-mode interpretation:
+
+- `missing_availability` is the current executable Layer 1 availability axis.
+  It covers official-frame availability and the compatibility path for simple
+  X imputation validation.
+- The detailed contract should be read as a two-stage policy. Stage 1 is
+  raw-source missing/outlier treatment before `official_transform_policy`
+  applies dataset transforms or T-codes.
+- Stage 2 is post-transform/model-input missing/outlier treatment in Layer 2.
+- Raw-source missing values belong to Layer 1 when the decision is "repair the
+  raw source panel, then apply official transforms/T-codes."
+- Raw-source outliers follow the same ownership rule. If a researcher clips,
+  winsorizes, or converts a raw outlier to missing before T-code construction,
+  that is a Layer 1 full-contract decision and must be recorded in provenance.
+- Layer 2 may still handle the same observed problem after official transforms
+  have been applied. That path is valid but semantically different: it can mix
+  raw-source missing/outliers with transform-induced missing values,
+  differencing endpoints, and model-input preprocessing artifacts. The numerical
+  difference can be small in many empirical settings, but full mode must record
+  the phase and order.
+- `x_impute_only` remains accepted for migration compatibility. Conceptually,
+  imputation applied after the official frame exists belongs to Layer 2.
+- Current implementation gap: Layer 1 has a concrete `missing_availability`
+  axis, but it does not yet expose a separate raw outlier axis. A future full
+  axis should make the raw-before-T-code outlier decision explicit instead of
+  relying on Layer 2 `x_outlier_policy`.
 
 ## Simple Contract
 

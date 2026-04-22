@@ -29,13 +29,19 @@ Owns the official data frame before researcher-specific transformations:
 - information set and release-lag availability
 - target identity, horizons, sample start/end
 - official dataset transformation policy and target/X transform scope
-- basic official availability handling
+- official availability handling
+- raw-source missing/outlier policy before official transforms/T-codes
 - raw eligible variable universe
 - contemporaneous information-set rule
 
 Layer 1 output is an official frame plus provenance reports. It should be enough
 to reproduce "what data were available to the study" before model-specific
 choices.
+
+In full mode, Layer 1 may clean or flag raw-source missing values and
+raw-source outliers before official transforms/T-codes. That order must be
+recorded because it differs from imputing or clipping after transformed model
+inputs already exist.
 
 ## Layer 2: Research Preprocessing
 
@@ -44,8 +50,8 @@ Owns transformations researchers can vary within the same official data frame:
 - target transforms beyond official dataset codes
 - X transforms beyond official dataset codes
 - scaling and normalization
-- missing imputation algorithms
-- outlier handling
+- post-transform/model-input missing imputation algorithms
+- post-transform/model-input outlier handling
 - smoothing / filters
 - PCA, static factors, IPCA, dimensionality reduction
 - feature selection
@@ -53,6 +59,11 @@ Owns transformations researchers can vary within the same official data frame:
 - custom preprocessors
 - fit scope and leakage discipline
 - inverse transform and evaluation scale
+
+Layer 2 can handle values that originated as raw-source missing/outliers, but
+only after Layer 1 has produced the selected official or raw feature frame. In
+that case the treatment may be mixed with transform-induced missing values and
+other preprocessing artifacts; full provenance should preserve that ordering.
 
 ## Layer 3: Forecast Generator
 

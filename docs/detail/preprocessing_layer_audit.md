@@ -32,6 +32,21 @@ Layer ownership after the migration pass:
 - Layer 2 still owns researcher-controlled extra preprocessing after the
   official frame exists.
 
+Missing/outlier boundary after the migration pass:
+
+- Layer 1 owns raw-source missing/outlier treatment when it happens before
+  official dataset transforms or T-codes. This is the "clean raw, then T-code"
+  order.
+- Layer 2 owns missing imputation and outlier handling after the official frame
+  exists. This is the "T-code first, then impute/clip/select/scale" order.
+- Both orders can be reasonable for detailed empirical work. The second order
+  can mix raw-source defects with transform-induced missing values and model
+  input artifacts, so full-mode provenance must record whether the action
+  happened before or after the official transform step.
+- Simple mode should keep the current default and avoid exposing this choice
+  until the full contract has explicit raw missing/outlier axes and runtime
+  support.
+
 Current bridge status:
 
 - New default recipes emit only the Layer 1 official-transform axes.
@@ -102,6 +117,11 @@ Runtime helpers exist for:
 - `x_lag_creation`: `fixed_x_lags`
 
 Important caveat: these helpers are wired through `_apply_raw_panel_preprocessing`, which is used by raw-panel style feature builders. They are not a drop-in extension of the default autoregressive t-code path.
+
+These helpers operate after the selected official frame or raw-panel feature
+frame has been handed to Layer 2. They should not be documented as raw-source
+cleaning unless the recipe explicitly chooses a raw-only preprocessing path and
+records that the action occurred before any official transform/T-code step.
 
 ## Not Supported Until Wired
 
