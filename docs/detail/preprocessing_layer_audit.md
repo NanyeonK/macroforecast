@@ -4,64 +4,91 @@ This audit records the current preprocessing contract after the `Experiment` MVP
 
 The practical question is whether the simple API can safely expose preprocessing sweeps. Current answer: not yet.
 
-## Layer 2 Scope
+## Canonical Layer 2 Role
 
-Layer 2 decides researcher-controlled transformations after Layer 1 has
-produced the selected official or raw feature frame. It does not decide dataset
-identity, source adapter, frequency, information set, target identity, horizons,
-sample window, release-lag availability, raw-source missing/outlier repair
-before T-codes, official T-code scope, model family, benchmark family, metrics,
-or statistical tests.
+Layer 2 is the researcher additional-preprocessing layer. Layer 1 produces the
+baseline official or raw feature frame: dataset/source/frequency, information
+set, target/horizon/sample window, release-lag availability, official
+transform/T-code policy, raw-source missing/outlier repair before T-codes, and
+the eligible variable universe. Layer 2 starts after that point.
 
-Layer 2 has 26 registry axes today, but they are not all equally public or
-equally executable. They fall into these decision groups:
+The purpose of Layer 2 is to support research designs that ask how forecasts
+change when the researcher applies additional preprocessing before model
+estimation. It owns optional transformations of X and y, feature engineering,
+dimensionality reduction, target-scale handling, preprocessing order, and
+leakage discipline. It does not own dataset identity, official data
+availability, model family, benchmark family, scoring metrics, or statistical
+tests.
 
-| Group | Axes | What the group decides | Current status |
-|-------|------|------------------------|----------------|
-| Representation / T-code bridge | `target_transform_policy`, `x_transform_policy`, `tcode_policy`, `representation_policy`, `tcode_application_scope`, `preprocess_order` | Whether the runtime sees raw values, official T-code values, or extra preprocessing order. | `raw_only`, `tcode_only`, and `extra_preprocess_without_tcode` are executable. Official dataset transforms should be set by Layer 1 and derived into these fields. `tcode_then_extra_preprocess` and `extra_then_tcode` are not executable. |
-| Fit and leakage discipline | `preprocess_fit_scope`, `separation_rule` | Whether preprocessing is fitted on training data only and how train/test separation is enforced. | `not_applicable` and `train_only` are executable in the main contract. `expanding_train_only` and `rolling_train_only` are registry-only. `separation_rule` has a tested helper, but it is not wired into the main execution loop as a general dispatcher. |
-| X missing / outlier / scale / lag treatment | `x_missing_policy`, `x_outlier_policy`, `scaling_policy`, `scaling_scope`, `additional_preprocessing`, `x_lag_creation` | Post-frame, model-input treatment of predictor columns. | Executable only in the raw-panel extra-preprocess path. Supported subsets are listed below. |
-| X reduction and selection | `dimensionality_reduction_policy`, `feature_selection_policy`, `feature_grouping` | PCA/factor representation, supervised feature selection, and future grouped feature operations. | `pca`, `static_factor`, `correlation_filter`, and `lasso_select` are executable. Dimensionality reduction and feature selection cannot be combined. `feature_grouping` is blocked beyond `none`. |
-| Target-side preprocessing | `target_transform`, `target_normalization`, `target_domain`, `target_missing_policy`, `target_outlier_policy`, `inverse_transform_policy`, `evaluation_scale`, `target_transformer` | Built-in or custom transformations of y and metric scale. | Built-in target transforms/normalization are narrow and do not provide a general inverse/evaluation-scale system. `target_missing_policy` and `target_outlier_policy` are effectively `none` only in the supported contract. `target_transformer` is the executable custom y-side path under documented constraints. |
-| Plugin hooks | `custom_preprocessor`, `target_transformer` | User-supplied X-side or y-side extension points. | Fixed custom preprocessors are executable. Target transformers are executable for constrained feature-builder/model paths and raw-scale evaluation. |
+This means the canonical Layer 2 question is not "what preprocessing happens by
+default?" but "what additional preprocessing design does the researcher want to
+study after Layer 1 has created the baseline frame?"
 
-## What Can Be Chosen Today
+## Layer 2 Decision Space
 
-The following choices are meaningful in current runtime, assuming the compiled
-recipe also satisfies the surrounding model/feature-builder constraints.
+Layer 2 has 26 registry axes today. The canonical decision groups are:
 
-| Axis | Chooseable values now | Notes |
-|------|-----------------------|-------|
-| `target_transform_policy` | `raw_level`, derived `tcode_transformed` | New official T-code recipes should not set this directly; Layer 1 derives it. |
-| `x_transform_policy` | `raw_level`, derived `dataset_tcode_transformed` | Same bridge rule as target side. |
-| `tcode_policy` | `raw_only`, derived `tcode_only`, `extra_preprocess_without_tcode` | `tcode_then_extra_preprocess` is the expected future profile but not executable. |
-| `representation_policy` | `raw_only`, derived `tcode_only` | `custom_transform_only` is registry-only. |
-| `tcode_application_scope` | derived from Layer 1 or `apply_tcode_to_none` for raw paths | New recipes should use Layer 1 `official_transform_scope` for official transforms. |
-| `preprocess_order` | `none`, derived `tcode_only`, `extra_only` | `tcode_then_extra` and `extra_then_tcode` are registry-only. |
-| `preprocess_fit_scope` | `not_applicable`, `train_only` | Extra preprocessing requires `train_only` in current runtime. |
-| `x_missing_policy` | `none`, `drop`, `drop_rows`, `drop_columns`, `drop_if_above_threshold`, `missing_indicator`, `em_impute`, `mean_impute`, `median_impute`, `ffill`, `interpolate_linear` | `drop` and `drop_rows` are pass-through aliases at this layer because X/y row coordination happens upstream. |
+| Group | Axes | What the group decides |
+|-------|------|------------------------|
+| X additional preprocessing | `x_missing_policy`, `x_outlier_policy`, `scaling_policy`, `scaling_scope`, `additional_preprocessing`, `x_lag_creation` | How predictor columns are imputed, clipped, scaled, filtered, or lag-augmented after Layer 1. |
+| X representation and selection | `dimensionality_reduction_policy`, `feature_selection_policy`, `feature_grouping` | Whether the predictor panel is reduced to factors/components, screened to a subset, or grouped before modeling. |
+| Target-side preprocessing | `target_transform`, `target_normalization`, `target_domain`, `target_missing_policy`, `target_outlier_policy`, `inverse_transform_policy`, `evaluation_scale`, `target_transformer` | How y is transformed or normalized, how forecasts are inverted, and which scale metrics use. |
+| Preprocessing order and leakage discipline | `preprocess_order`, `preprocess_fit_scope`, `separation_rule` | Whether extra preprocessing is applied before/after official transforms, and whether each step is fit on train-only data. |
+| Custom extension hooks | `custom_preprocessor`, `target_transformer` | Researcher-supplied X-side and y-side preprocessing protocols when built-ins are insufficient. |
+| Legacy representation bridge | `target_transform_policy`, `x_transform_policy`, `tcode_policy`, `representation_policy`, `tcode_application_scope` | Compatibility fields that still help the runtime `PreprocessContract` represent raw vs official T-code frames. They are not the canonical place to choose official transforms in new recipes. |
+
+The natural full Layer 2 profile is
+`dataset_tcode_then_train_only_extra`: Layer 1 applies official FRED-MD/QD
+transforms/T-codes, then Layer 2 applies researcher-selected imputation,
+scaling, filtering, dimensionality reduction, feature selection, or custom
+preprocessing under train-only fit discipline. That profile is the target
+contract for preprocessing research support.
+
+## Current Implementation Surface
+
+The table below is the implementation status, not the boundary definition. It
+records what the current runtime can execute today.
+
+| Axis | Executable values today | Notes |
+|------|-------------------------|-------|
+| `x_missing_policy` | `none`, `drop`, `drop_rows`, `drop_columns`, `drop_if_above_threshold`, `missing_indicator`, `em_impute`, `mean_impute`, `median_impute`, `ffill`, `interpolate_linear` | Executes in the raw-panel extra-preprocess path. `drop` and `drop_rows` are pass-through aliases because X/y row coordination happens upstream. |
 | `x_outlier_policy` | `none`, `winsorize`, `trim`, `iqr_clip`, `mad_clip`, `zscore_clip`, `outlier_to_missing` | Operates on post-frame X_train/X_pred. Raw-source outlier handling belongs to Layer 1. |
 | `scaling_policy` | `none`, `standard`, `robust`, `minmax`, `demean_only`, `unit_variance_only` | Fitted on X_train and applied to X_pred. |
 | `scaling_scope` | `columnwise`, `global_train_only` | Other scopes are blocked by governance. |
-| `additional_preprocessing` | `none`, `hp_filter` | HP filter is executable; moving average, EMA, bandpass are registry-only. |
+| `additional_preprocessing` | `none`, `hp_filter` | Moving average, EMA, and bandpass are registry-only. |
 | `x_lag_creation` | `no_x_lags`, `fixed_x_lags` | CV-selected and variable/category-specific lags are not wired. |
 | `dimensionality_reduction_policy` | `none`, `pca`, `static_factor` | Cannot be combined with feature selection. |
 | `feature_selection_policy` | `none`, `correlation_filter`, `lasso_select` | Cannot be combined with dimensionality reduction. |
 | `feature_grouping` | `none` | Non-`none` grouping is blocked in governance. |
 | `target_transform` | `level`, `difference`, `log`, `log_difference`, `growth_rate` | Applied to the target series before model execution, with limited inverse/evaluation semantics. |
-| `target_normalization` | `none`, `zscore_train_only`, `robust_zscore` | Current support is narrow; no general metric-scale system. |
+| `target_normalization` | `none`, `zscore_train_only`, `robust_zscore` | Current support is narrow; no general metric-scale system yet. |
 | `target_domain` | `unconstrained` | Domain constraints are not implemented. |
 | `target_missing_policy` | `none` | Target-side missing algorithms are not supported in the operational contract. |
 | `target_outlier_policy` | `none` | Target-side outlier algorithms are not supported in the operational contract. |
 | `inverse_transform_policy` | `none` | Inverse-transform policy needs a separate target/evaluation contract. |
 | `evaluation_scale` | `raw_level`, `original_scale` | `transformed_scale` and `both` are overexposed by registry today. |
-| `custom_preprocessor` | fixed registered plugin name or `none` | X-side function must return transformed X_train/X_test and not transform y. |
+| `preprocess_order` | `none`, derived `tcode_only`, `extra_only` | `tcode_then_extra` is the desired full profile but not executable yet. |
+| `preprocess_fit_scope` | `not_applicable`, `train_only` | Extra preprocessing requires `train_only` today. |
+| `separation_rule` | helper supports several values | The helper is tested, but not wired into the main execution loop as a general dispatcher. |
+| `custom_preprocessor` | fixed registered plugin name or `none` | X-side function must return transformed X_train/X_test and must not transform y. |
 | `target_transformer` | fixed registered plugin name or `none` | Executable under target-transformer constraints; raw-scale evaluation only. |
 
-The main practical point: **Layer 2 can choose post-frame preprocessing
-methods, but only the raw-panel extra-preprocess profile executes those built-in
-methods today.** The official T-code default path is executable, but extra
-preprocessing cannot yet be attached after T-code.
+Current runtime profiles:
+
+- `dataset_tcode_only`: executable default. Layer 1 chooses official transforms;
+  compiler derives a runtime bridge contract with no extra Layer 2 preprocessing.
+- `raw_only`: executable non-default path with no official T-code and no extra
+  preprocessing.
+- `raw_train_only_extra`: executable for raw-panel style feature builders using
+  train-only X-side extra preprocessing.
+- `dataset_tcode_then_train_only_extra`: canonical Layer 2 research target, but
+  not executable yet.
+
+The main practical point: **Layer 2 is the research support layer for
+additional preprocessing, but current built-in extra preprocessing executes only
+in the raw-panel `extra_preprocess_without_tcode` profile.** The default
+official T-code path is executable, but extra preprocessing cannot yet be
+attached after T-code.
 
 ## Current Default
 
