@@ -18,6 +18,7 @@ import pytest
 from macrocast.compiler.build import compile_recipe_dict
 from macrocast.compiler.build import run_compiled_recipe
 from macrocast.execution.horizon_target import build_horizon_target
+from macrocast.execution.horizon_target import build_path_average_target_protocol
 from macrocast.execution.horizon_target import construction_scale
 from macrocast.execution.horizon_target import forward_scalar
 from macrocast.execution.horizon_target import inverse_horizon_target
@@ -192,6 +193,48 @@ def test_direct_average_execution_records_horizon_two_scale(
     assert (predictions["target_construction_scale"] == scale).all()
     assert construction_scale(construction) == scale
     assert {"y_true_level", "y_pred_level", "benchmark_pred_level"}.issubset(predictions.columns)
+
+
+def test_path_average_target_protocol_builds_stepwise_specs_without_models() -> None:
+    protocol = build_path_average_target_protocol("path_average_log_growth_1_to_h", 3)
+    assert protocol["schema_version"] == "path_average_target_protocol_v1"
+    assert protocol["runtime_effect"] == "protocol_only"
+    assert protocol["formula_owner"] == "2_preprocessing"
+    assert protocol["execution_owner"] == "3_training"
+    assert protocol["aggregation_rule"] == "equal_weight_mean"
+    assert protocol["step_count"] == 3
+    assert protocol["stepwise_target_specs"] == [
+        {
+            "step": 1,
+            "step_target_kind": "one_step_log_growth",
+            "target_formula": "log(target_{t+s}) - log(target_{t+s-1})",
+            "anchor_policy": "previous_step_target",
+            "fit_requirement": "separate_stepwise_forecast_generator",
+        },
+        {
+            "step": 2,
+            "step_target_kind": "one_step_log_growth",
+            "target_formula": "log(target_{t+s}) - log(target_{t+s-1})",
+            "anchor_policy": "previous_step_target",
+            "fit_requirement": "separate_stepwise_forecast_generator",
+        },
+        {
+            "step": 3,
+            "step_target_kind": "one_step_log_growth",
+            "target_formula": "log(target_{t+s}) - log(target_{t+s-1})",
+            "anchor_policy": "previous_step_target",
+            "fit_requirement": "separate_stepwise_forecast_generator",
+        },
+    ]
+
+
+def test_path_average_target_protocol_validates_aggregation_rule() -> None:
+    with pytest.raises(ValueError, match="equal_weight_mean"):
+        build_path_average_target_protocol(
+            "path_average_difference_1_to_h",
+            2,
+            aggregation_rule="last_step",
+        )
 
 
 def test_future_level_matches_level_scale_metrics(tmp_path: Path) -> None:

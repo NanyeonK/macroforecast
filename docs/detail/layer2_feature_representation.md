@@ -93,7 +93,11 @@ Layer 2 therefore owns the target representation choice:
 Path-average target construction also requires Layer 3 support because the
 forecast generator must fit multiple stepwise models and aggregate their
 predictions. The target formula remains Layer 2; the multi-model forecast
-execution protocol remains Layer 3.
+execution protocol remains Layer 3. The package therefore records a
+protocol-only `path_average_target_protocol_v1` payload for these choices:
+Layer 2 lists the stepwise target formulas and equal-weight aggregation rule,
+while the compiler keeps execution gated until Layer 3 can write per-step and
+aggregate forecast artifacts.
 
 ## Mapping From Existing Bridge Names
 

@@ -1062,6 +1062,67 @@ def test_compiled_manifest_records_layer2_representation_provenance() -> None:
     assert compile_result.compiled.recipe_spec.layer2_representation_spec == spec
 
 
+def test_layer2_path_average_protocol_records_layer3_gate() -> None:
+    recipe = {
+        "recipe_id": "l2-path-average-protocol",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                    "horizon_target_construction": "path_average_log_growth_1_to_h",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "autoreg_lagged_target",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "not_supported"
+    assert any("Layer 3 multi-step fit/aggregation" in warning for warning in result.compiled.warnings)
+    target_repr = result.manifest["layer2_representation_spec"]["target_representation"]
+    assert target_repr["horizon_target_construction"] == "path_average_log_growth_1_to_h"
+    assert target_repr["target_construction_scale"] == "path_average_log_growth"
+    protocol = target_repr["path_average_protocol"]
+    assert protocol["runtime_effect"] == "protocol_only"
+    assert protocol["formula_owner"] == "2_preprocessing"
+    assert protocol["execution_owner"] == "3_training"
+    assert "1" in protocol["protocols_by_horizon"]
+    assert protocol["protocols_by_horizon"]["3"]["step_count"] == 3
+    assert len(protocol["protocols_by_horizon"]["3"]["stepwise_target_specs"]) == 3
+
+
 def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -> None:
     def _recipe(feature_builder: str, model_family: str, **axes: str) -> dict:
         preprocessing_axes = {

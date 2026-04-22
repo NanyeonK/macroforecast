@@ -75,7 +75,7 @@ records what the current runtime can execute today.
 | `dimensionality_reduction_policy` | `none`, `pca`, `static_factor` | Cannot be combined with feature selection. |
 | `feature_selection_policy` | `none`, `correlation_filter`, `lasso_select` | Cannot be combined with dimensionality reduction. |
 | `feature_grouping` | `none` | Non-`none` grouping is blocked in governance. |
-| `horizon_target_construction` | `future_target_level_t_plus_h`, `future_diff`, `future_logdiff`, `average_growth_1_to_h`, `average_difference_1_to_h`, `average_log_growth_1_to_h` | Path-average target constructions remain registry-only until multi-step target execution is wired. |
+| `horizon_target_construction` | `future_target_level_t_plus_h`, `future_diff`, `future_logdiff`, `average_growth_1_to_h`, `average_difference_1_to_h`, `average_log_growth_1_to_h` | Path-average target constructions have Layer 2 protocol metadata but remain registry-only until multi-step target execution is wired in Layer 3. |
 | `target_transform` | `level`, `difference`, `log`, `log_difference`, `growth_rate` | Applied to the target series before model execution, with limited inverse/evaluation semantics. |
 | `target_normalization` | `none` | Z-score variants are helper-tested but registry-only until normalization is fit inside each training window. |
 | `target_domain` | `unconstrained` | Domain constraints are not implemented. |

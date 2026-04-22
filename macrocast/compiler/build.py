@@ -9,6 +9,11 @@ import yaml
 from .errors import CompileValidationError
 from .types import CompiledRecipeSpec, CompileResult
 from ..execution import execute_recipe
+from ..execution.horizon_target import (
+    build_path_average_target_protocol as _build_path_average_target_protocol,
+    construction_scale as _target_construction_scale,
+    is_path_average_construction as _is_path_average_construction,
+)
 from ..preprocessing import (
     build_preprocess_contract,
     check_preprocess_governance,
@@ -65,6 +70,10 @@ _MULTI_BENCHMARK_ALLOWED_MEMBERS = {
 
 _TARGET_TRANSFORMER_FEATURE_BUILDERS = {"autoreg_lagged_target", "raw_feature_panel", "raw_X_only"}
 _TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
+_PATH_AVERAGE_LAYER3_GATE = (
+    "path-average target construction has Layer 2 protocol metadata but requires "
+    "Layer 3 multi-step fit/aggregation runtime"
+)
 
 
 def load_recipe_yaml(path: str | Path) -> dict[str, Any]:
@@ -1032,6 +1041,21 @@ def _feature_block_combination_from_bridge(feature_builder: str, x_lag_creation:
     }
 
 
+def _path_average_protocols_for_horizons(construction: str, horizons: Sequence[int]) -> dict[str, Any] | None:
+    if not _is_path_average_construction(construction):
+        return None
+    return {
+        "runtime_effect": "protocol_only",
+        "formula_owner": "2_preprocessing",
+        "execution_owner": "3_training",
+        "layer3_gate": _PATH_AVERAGE_LAYER3_GATE,
+        "protocols_by_horizon": {
+            str(int(horizon)): _build_path_average_target_protocol(construction, int(horizon))
+            for horizon in horizons
+        },
+    }
+
+
 def _layer2_representation_spec(
     selection_map: dict[str, AxisSelection],
     leaf_config: dict[str, Any],
@@ -1051,6 +1075,9 @@ def _layer2_representation_spec(
     target_lag_count_source = "target_lag_count" if "target_lag_count" in dict(leaf_config.get("training_config", {})) else "factor_ar_lags"
     x_lag_creation = getattr(preprocess_contract, "x_lag_creation", "no_x_lags")
     dimred = getattr(preprocess_contract, "dimensionality_reduction_policy", "none")
+    horizon_target_construction = data_task_spec.get("horizon_target_construction", "future_target_level_t_plus_h")
+    horizons = tuple(int(h) for h in leaf_config.get("horizons", [1]))
+    path_average_protocol = _path_average_protocols_for_horizons(str(horizon_target_construction), horizons)
     factor_feature_block = "pca_static_factors" if feature_builder in {"factor_pca", "factors_plus_AR"} or dimred in {"pca", "static_factor"} else "none"
     target_lag_block = (
         _target_lag_block_from_selection(
@@ -1082,7 +1109,9 @@ def _layer2_representation_spec(
             "count_source": target_lag_count_source,
         },
         "target_representation": {
-            "horizon_target_construction": data_task_spec.get("horizon_target_construction", "future_target_level_t_plus_h"),
+            "horizon_target_construction": horizon_target_construction,
+            "target_construction_scale": _target_construction_scale(str(horizon_target_construction)),
+            "path_average_protocol": path_average_protocol,
             "target_transform": getattr(preprocess_contract, "target_transform", "level"),
             "target_normalization": getattr(preprocess_contract, "target_normalization", "none"),
             "target_domain": getattr(preprocess_contract, "target_domain", "unconstrained"),
@@ -1304,6 +1333,14 @@ def _execution_status(
                 not_supported.append(
                     f"axis {selection.axis_name} value {value} is not supported by the current runtime (status={status})"
                 )
+
+    horizon_target_construction = _selection_value(
+        selection_map,
+        "horizon_target_construction",
+        default="future_target_level_t_plus_h",
+    )
+    if _is_path_average_construction(str(horizon_target_construction)):
+        not_supported.append(_PATH_AVERAGE_LAYER3_GATE)
 
     if not is_operational_preprocess_contract(preprocess_contract):
         not_supported.append("preprocessing contract is not supported by the current runtime slice")

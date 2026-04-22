@@ -41,7 +41,7 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='path_average_growth_1_to_h',
-            description='path-average target built from separate stepwise growth targets',
+            description='protocol-only path-average target built from separate stepwise growth targets',
             status='registry_only',
             priority='A',
         ),
@@ -53,7 +53,7 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='path_average_difference_1_to_h',
-            description='path-average target built from separate stepwise difference targets',
+            description='protocol-only path-average target built from separate stepwise difference targets',
             status='registry_only',
             priority='A',
         ),
@@ -65,7 +65,7 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='path_average_log_growth_1_to_h',
-            description='path-average target built from separate stepwise log-growth targets',
+            description='protocol-only path-average target built from separate stepwise log-growth targets',
             status='registry_only',
             priority='B',
         ),

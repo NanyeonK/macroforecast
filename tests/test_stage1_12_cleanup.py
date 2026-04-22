@@ -99,6 +99,7 @@ def test_demoted_value_is_not_supported(axis: str, value: str) -> None:
     recipe = _base_recipe({axis: value})
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "not_supported"
+    assert any("Layer 3 multi-step fit/aggregation" in warning for warning in result.compiled.warnings)
 
 
 @pytest.mark.parametrize(

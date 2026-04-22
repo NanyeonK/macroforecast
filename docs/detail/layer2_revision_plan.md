@@ -214,7 +214,9 @@ Acceptance:
   Layer 3 multi-step execution are wired;
 - tests prove that Layer 2 can build the stepwise target specs without fitting
   models;
-- runtime tests prove that Layer 3 writes per-step and aggregate provenance.
+- compiler tests prove that manifests record the Layer 2 protocol and the Layer
+  3 execution gate. Runtime tests for per-step and aggregate artifacts belong to
+  the later Layer 3 implementation patch.
 
 ### Patch L2-E: Target-Lag And X-Lag Blocks
 
@@ -359,7 +361,7 @@ For feature-block patches, also test:
 | Compile-time provenance | done | Compiled and runtime manifests record `layer2_representation_spec`; runtime matrices are unchanged. |
 | Compatibility name cleanup | done, provenance-only | Added `target_lag_selection` and `target_lag_count` provenance while keeping legacy `y_lag_count` / `factor_ar_lags` accepted. |
 | Direct target constructions | done | Direct average growth/difference/log-growth values compile and execute with construction-scale metrics plus level-scale preservation columns. |
-| Path-average target constructions | planned | Needs Layer 2 specs plus Layer 3 multi-step execution. |
+| Path-average target constructions | done, protocol-only | Layer 2 stepwise target protocol is recorded; execution remains gated until Layer 3 multi-step fit/aggregation lands. |
 | Explicit target/X lag blocks | planned | First runtime block migration. |
 | Factor/selection blocks | planned | PCA/static factors and selection provenance. |
 | Level/rotation/temporal blocks | planned | MARX/MAF and related macro-forecasting blocks. |
