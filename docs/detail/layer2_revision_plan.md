@@ -357,7 +357,7 @@ For feature-block patches, also test:
 | Terminology cleanup | done | `target` is canonical; legacy `y_*` artifacts remain compatible. |
 | Feature-block grammar | done, registry-only | Runtime still uses the coarse bridge. |
 | Compile-time provenance | done | Compiled and runtime manifests record `layer2_representation_spec`; runtime matrices are unchanged. |
-| Compatibility name cleanup | next | Split `y_lag_count` and `factor_ar_lags` by semantic owner. |
+| Compatibility name cleanup | done, provenance-only | Added `target_lag_selection` and `target_lag_count` provenance while keeping legacy `y_lag_count` / `factor_ar_lags` accepted. |
 | Direct target constructions | planned | Single target vector; Layer 2 runtime work. |
 | Path-average target constructions | planned | Needs Layer 2 specs plus Layer 3 multi-step execution. |
 | Explicit target/X lag blocks | planned | First runtime block migration. |

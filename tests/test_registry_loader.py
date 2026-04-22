@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 137
+EXPECTED_AXIS_COUNT = 138
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -216,6 +216,7 @@ def test_registry_loader_discovers_stage2_governance_axes() -> None:
         "factor_count",
         "feature_block_set",
         "target_lag_block",
+        "target_lag_selection",
         "x_lag_feature_block",
         "factor_feature_block",
         "level_feature_block",
@@ -231,6 +232,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     block_axes = {
         "feature_block_set",
         "target_lag_block",
+        "target_lag_selection",
         "x_lag_feature_block",
         "factor_feature_block",
         "level_feature_block",
@@ -242,6 +244,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["feature_block_set"].current_status["mixed_blocks"] == "registry_only"
     assert registry["rotation_feature_block"].current_status["marx_rotation"] == "registry_only"
     assert registry["factor_feature_block"].current_status["pca_static_factors"] == "registry_only"
+    assert registry["target_lag_selection"].current_status["ic_select"] == "registry_only"
 
 
 def test_registry_loader_expands_stage2_operational_values() -> None:

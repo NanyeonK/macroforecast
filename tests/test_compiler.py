@@ -1051,6 +1051,10 @@ def test_compiled_manifest_records_layer2_representation_provenance() -> None:
     assert spec["runtime_effect"] == "provenance_only"
     assert spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"
     assert spec["source_bridge"]["data_richness_mode"] == "target_lags_only"
+    assert spec["source_bridge"]["target_lag_selection"] == "ic_select"
+    assert spec["source_bridge"]["legacy_y_lag_count"] == "IC_select"
+    assert spec["target_lag_config"]["selection"] == "ic_select"
+    assert spec["target_lag_config"]["selection_source_axis"] == "y_lag_count"
     assert spec["target_representation"]["horizon_target_construction"] == "future_target_level_t_plus_h"
     assert spec["feature_blocks"]["feature_block_set"]["value"] == "target_lags_only"
     assert spec["feature_blocks"]["target_lag_block"]["value"] == "ic_selected_target_lags"
@@ -1122,6 +1126,71 @@ def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -
         assert spec["feature_blocks"]["feature_block_set"]["value"] == block_set
         assert spec["feature_blocks"]["target_lag_block"]["value"] == target_lag_block
         assert spec["feature_blocks"]["factor_feature_block"]["value"] == factor_block
+
+
+def test_layer2_target_lag_selection_axis_records_target_language_provenance() -> None:
+    recipe = {
+        "recipe_id": "l2-target-lag-selection",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_selection": "fixed",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "factors_plus_AR",
+                    "model_family": "factor_augmented_linear",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    spec = result.manifest["layer2_representation_spec"]
+    assert result.manifest["training_spec"]["target_lag_selection"] == "fixed"
+    assert result.manifest["training_spec"]["target_lag_count"] == 2
+    assert result.manifest["training_spec"]["factor_ar_lags"] == 2
+    assert spec["target_lag_config"] == {
+        "selection": "fixed",
+        "selection_source_axis": "target_lag_selection",
+        "selection_source_value": "fixed",
+        "count": 2,
+        "count_source": "target_lag_count",
+    }
+    assert spec["feature_blocks"]["target_lag_block"]["value"] == "fixed_target_lags"
 
 
 def test_compile_recipe_accepts_stage3_training_axes() -> None:

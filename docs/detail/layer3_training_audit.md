@@ -55,7 +55,7 @@ The canonical Layer 3 registry surface is:
 |---|---|
 | Forecast generator | `model_family`, `benchmark_family`, `forecast_type`, `forecast_object`, `horizon_modelization` |
 | Training window | `min_train_size`, `training_start_rule`, `outer_window`, `refit_policy`, `lookback` |
-| Model order | `y_lag_count` for AR/model-order selection; future target-lag feature blocks should move to Layer 2 |
+| Model order | legacy `y_lag_count` for AR/model-order selection; target-lag feature construction is Layer 2 `target_lag_selection` / `target_lag_block` provenance |
 | Validation/search | `validation_size_rule`, `validation_location`, `embargo_gap`, `split_family`, `shuffle_rule`, `alignment_fairness`, `search_algorithm`, `tuning_objective`, `tuning_budget`, `hp_space_style` |
 | Runtime discipline | `seed_policy`, `early_stopping`, `convergence_handling`, `logging_level`, `checkpointing`, `cache_policy`, `execution_backend` |
 
@@ -67,5 +67,6 @@ The canonical Layer 3 registry surface is:
   block/input selection.
 - `data_richness_mode`: keep accepted while runtime migrates to `feature_block_set`.
 - `factor_count`: keep accepted while runtime migrates to explicit factor block dimensions.
-- `factor_ar_lags`: split into target-lag feature block dimensions versus model
-  lag-order selection.
+- `factor_ar_lags`: legacy runtime key remains accepted; target-lag feature
+  count next to factor blocks is recorded as Layer 2 `target_lag_count`
+  provenance, while model-specific lag-order selection remains Layer 3.

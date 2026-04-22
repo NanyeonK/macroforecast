@@ -871,6 +871,19 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
     target_transformer = _selection_value(selection_map, "target_transformer", default="none")
     if target_transformer != "none":
         get_custom_target_transformer(target_transformer)
+    legacy_y_lag_count = _selection_value(selection_map, "y_lag_count", default=("IC_select" if model_family == "ar" else "fixed"))
+    target_lag_selection = _selection_value(
+        selection_map,
+        "target_lag_selection",
+        default=_target_lag_selection_from_legacy_y_lag_count(str(legacy_y_lag_count)),
+    )
+    if "target_lag_count" in training_cfg and "factor_ar_lags" in training_cfg:
+        if int(training_cfg["target_lag_count"]) != int(training_cfg["factor_ar_lags"]):
+            raise CompileValidationError(
+                "training_config.target_lag_count and legacy training_config.factor_ar_lags "
+                "must match when both are supplied"
+            )
+    target_lag_count = training_cfg.get("target_lag_count", training_cfg.get("factor_ar_lags", 1))
     return {
         "outer_window": _selection_value(selection_map, "outer_window", default=framework),
         "refit_policy": _selection_value(selection_map, "refit_policy", default="refit_every_step"),
@@ -890,7 +903,9 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "seed_policy": _selection_value(selection_map, "seed_policy", default="fixed_seed"),
         "early_stopping": _selection_value(selection_map, "early_stopping", default="none"),
         "convergence_handling": _selection_value(selection_map, "convergence_handling", default="mark_fail"),
-        "y_lag_count": _selection_value(selection_map, "y_lag_count", default=("IC_select" if model_family == "ar" else "fixed")),
+        "y_lag_count": legacy_y_lag_count,
+        "target_lag_selection": target_lag_selection,
+        "target_lag_count": target_lag_count,
         "factor_count": _selection_value(selection_map, "factor_count", default="fixed"),
         "lookback": _selection_value(selection_map, "lookback", default="fixed_lookback"),
         "logging_level": _selection_value(selection_map, "logging_level", default="silent"),
@@ -910,7 +925,7 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
         "fixed_factor_count": training_cfg.get("fixed_factor_count", 3),
         "max_factors": training_cfg.get("max_factors", 5),
-        "factor_ar_lags": training_cfg.get("factor_ar_lags", 1),
+        "factor_ar_lags": training_cfg.get("factor_ar_lags", target_lag_count),
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
         "custom_preprocessor": custom_preprocessor,
@@ -922,23 +937,36 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
     }
 
 
-def _target_lag_block_from_legacy_y_lag_count(value: str) -> dict[str, Any]:
+def _target_lag_selection_from_legacy_y_lag_count(value: str) -> str:
     mapping = {
-        "fixed": "fixed_target_lags",
-        "IC_select": "ic_selected_target_lags",
-        "cv_select": "custom_target_lags",
-        "model_specific": "custom_target_lags",
+        "fixed": "fixed",
+        "IC_select": "ic_select",
+        "cv_select": "cv_select",
+        "model_specific": "custom",
     }
-    block = mapping.get(value, "custom_target_lags")
+    return mapping.get(value, "custom")
+
+
+def _target_lag_block_from_selection(selection: str, *, source_axis: str, source_value: Any) -> dict[str, Any]:
+    mapping = {
+        "none": "none",
+        "fixed": "fixed_target_lags",
+        "ic_select": "ic_selected_target_lags",
+        "cv_select": "custom_target_lags",
+        "horizon_specific": "horizon_specific_target_lags",
+        "custom": "custom_target_lags",
+    }
+    block = mapping.get(selection, "custom_target_lags")
     payload: dict[str, Any] = {
         "value": block,
-        "source_axis": "y_lag_count",
-        "source_value": value,
+        "source_axis": source_axis,
+        "source_value": source_value,
+        "target_lag_selection": selection,
     }
-    if value in {"cv_select", "model_specific"}:
+    if selection in {"cv_select", "custom"}:
         payload["note"] = (
-            "legacy y_lag_count value has no dedicated target_lag_block value yet; "
-            "L2-B should split target-lag feature selection from Layer 3 model-order selection"
+            "target_lag_block does not yet have a dedicated CV/custom runtime path; "
+            "explicit target-lag feature execution remains a later Layer 2 block task"
         )
     return payload
 
@@ -1016,11 +1044,20 @@ def _layer2_representation_spec(
     predictor_family = data_task_spec.get("predictor_family", "target_lags_only")
     data_richness_mode = training_spec.get("data_richness_mode", "target_lags_only")
     y_lag_count = training_spec.get("y_lag_count", "fixed")
+    target_lag_selection = training_spec.get("target_lag_selection", _target_lag_selection_from_legacy_y_lag_count(str(y_lag_count)))
+    target_lag_selection_source_axis = "target_lag_selection" if "target_lag_selection" in selection_map else "y_lag_count"
+    target_lag_selection_source_value = target_lag_selection if target_lag_selection_source_axis == "target_lag_selection" else y_lag_count
+    target_lag_count = training_spec.get("target_lag_count", training_spec.get("factor_ar_lags", 1))
+    target_lag_count_source = "target_lag_count" if "target_lag_count" in dict(leaf_config.get("training_config", {})) else "factor_ar_lags"
     x_lag_creation = getattr(preprocess_contract, "x_lag_creation", "no_x_lags")
     dimred = getattr(preprocess_contract, "dimensionality_reduction_policy", "none")
     factor_feature_block = "pca_static_factors" if feature_builder in {"factor_pca", "factors_plus_AR"} or dimred in {"pca", "static_factor"} else "none"
     target_lag_block = (
-        _target_lag_block_from_legacy_y_lag_count(str(y_lag_count))
+        _target_lag_block_from_selection(
+            str(target_lag_selection),
+            source_axis=target_lag_selection_source_axis,
+            source_value=target_lag_selection_source_value,
+        )
         if feature_builder in {"autoreg_lagged_target", "factors_plus_AR"}
         else {"value": "none", "source_axis": "feature_builder", "source_value": feature_builder}
     )
@@ -1032,8 +1069,17 @@ def _layer2_representation_spec(
             "predictor_family": predictor_family,
             "data_richness_mode": data_richness_mode,
             "factor_count": training_spec.get("factor_count", "fixed"),
-            "y_lag_count": y_lag_count,
-            "factor_ar_lags": training_spec.get("factor_ar_lags", 1),
+            "target_lag_selection": target_lag_selection,
+            "target_lag_count": target_lag_count,
+            "legacy_y_lag_count": y_lag_count,
+            "legacy_factor_ar_lags": training_spec.get("factor_ar_lags", 1),
+        },
+        "target_lag_config": {
+            "selection": target_lag_selection,
+            "selection_source_axis": target_lag_selection_source_axis,
+            "selection_source_value": target_lag_selection_source_value,
+            "count": target_lag_count,
+            "count_source": target_lag_count_source,
         },
         "target_representation": {
             "horizon_target_construction": data_task_spec.get("horizon_target_construction", "future_target_level_t_plus_h"),
@@ -1078,7 +1124,7 @@ def _layer2_representation_spec(
         },
         "compatibility_notes": [
             "This payload is provenance-only; runtime Z construction still uses the legacy bridge.",
-            "L2-B should split legacy y_lag_count and factor_ar_lags into target-language Layer 2 feature dimensions versus Layer 3 model-order settings.",
+            "Legacy y_lag_count and factor_ar_lags remain accepted; target_lag_selection and target_lag_count are the target-language provenance names.",
         ],
     }
 

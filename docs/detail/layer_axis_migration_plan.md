@@ -36,8 +36,8 @@ describes the registry layer after migration.
 | legacy official t-code bridge fields | 2_preprocessing | compatibility bridge | Keep accepting `target_transform_policy`, `x_transform_policy`, `tcode_policy=tcode_only`, `tcode_application_scope`, and `preprocess_order=tcode_only` while generated recipes move to Layer 1 official-transform axes. |
 | `tcode_policy` values beyond official transform | 2_preprocessing | 2_preprocessing | Keep extra/custom transform pipelines in Layer 2. |
 | `preprocess_order=tcode_only` | 2_preprocessing | compatibility bridge | Official-only order is represented by Layer 1 `official_transform_policy=dataset_tcode`; extra orders remain Layer 2. |
-| `y_lag_count` | 3_training | split later | AR model-order selection remains Layer 3 for now; target-lag feature construction should move to Layer 2 `target_lag_block` when runtime adopts the feature-block grammar. |
-| `factor_ar_lags` leaf/training config | 3_training config | split later | Factor-plus-target-lag feature construction belongs to Layer 2 feature-block dimensions; model-specific lag-order selection remains Layer 3. |
+| `y_lag_count` | 3_training | split in provenance | AR model-order selection remains Layer 3 for now; target-lag feature construction is recorded with Layer 2 `target_lag_selection` / `target_lag_block` provenance until runtime adopts the feature-block grammar. |
+| `factor_ar_lags` leaf/training config | 3_training config | split in provenance | Legacy runtime key remains accepted; target-lag feature count next to factor blocks is recorded as Layer 2 `target_lag_count` provenance. |
 
 ## Feature-Block Grammar Introduced
 
@@ -48,7 +48,7 @@ tests and provenance.
 
 | Axis | Canonical owner | Current support |
 |---|---|---|
-| `feature_block_set`, `target_lag_block`, `x_lag_feature_block` | 2_preprocessing | registry-only |
+| `feature_block_set`, `target_lag_block`, `target_lag_selection`, `x_lag_feature_block` | 2_preprocessing | registry-only |
 | `factor_feature_block`, `level_feature_block`, `rotation_feature_block` | 2_preprocessing | registry-only |
 | `temporal_feature_block`, `feature_block_combination` | 2_preprocessing | registry-only |
 

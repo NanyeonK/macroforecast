@@ -63,6 +63,7 @@ recipes can name research intentions before runtime support is widened.
 |---|---|---|
 | `feature_block_set` | `legacy_feature_builder_bridge`, `target_lags_only`, `transformed_x`, `transformed_x_lags`, `factors_plus_target_lags`, `high_dimensional_x`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks` | Top-level recipe for which blocks should form `Z`. |
 | `target_lag_block` | `none`, `fixed_target_lags`, `ic_selected_target_lags`, `horizon_specific_target_lags`, `custom_target_lags` | Target-history features built from the target series. |
+| `target_lag_selection` | `none`, `fixed`, `ic_select`, `cv_select`, `horizon_specific`, `custom` | Target-language replacement for public Layer 2 lag-selection provenance; legacy `y_lag_count` remains accepted for Layer 3/model-order compatibility. |
 | `x_lag_feature_block` | `none`, `fixed_x_lags`, `variable_specific_x_lags`, `category_specific_x_lags`, `cv_selected_x_lags`, `custom_x_lags` | Lagged predictor features built from `X`. |
 | `factor_feature_block` | `none`, `pca_static_factors`, `pca_factor_lags`, `supervised_factors`, `custom_factors` | Reduced-rank/factor features built from `X`. |
 | `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level or level-growth add-back features built from `H` and target history. |
@@ -115,15 +116,16 @@ new axes until each block has train-window fit/apply tests and provenance.
 
 ## Boundary Cases
 
-`y_lag_count` is split by meaning:
+`y_lag_count` is legacy compatibility language and is split by meaning:
 
 - if it selects AR/model order inside an estimator, it remains Layer 3;
-- if it creates lagged target columns in `Z`, it belongs to
-  `target_lag_block` in Layer 2.
+- if it creates lagged target columns in `Z`, the Layer 2 provenance name is
+  `target_lag_selection` plus `target_lag_block`.
 
 `factor_ar_lags` is also split by meaning:
 
-- factor or target-lag feature construction belongs to Layer 2;
+- target-lag feature construction next to factor blocks is recorded as
+  `target_lag_count` in Layer 2 provenance;
 - model-specific lag-order selection belongs to Layer 3.
 
 `dimensionality_reduction_policy` and `factor_feature_block` are related but
