@@ -176,7 +176,11 @@ def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: Preproc
     data_task_spec = dict(getattr(recipe, "data_task_spec", {}) or {})
     policy = data_task_spec.get("official_transform_policy")
     if policy is None:
-        policy = "dataset_tcode" if getattr(contract, "tcode_policy", "raw_only") == "tcode_only" else "raw_official_frame"
+        policy = (
+            "dataset_tcode"
+            if getattr(contract, "tcode_policy", "raw_only") in {"tcode_only", "tcode_then_extra_preprocess"}
+            else "raw_official_frame"
+        )
     if policy == "raw_official_frame":
         return raw_result
     if policy != "dataset_tcode":

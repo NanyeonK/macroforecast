@@ -124,6 +124,30 @@ def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
     check_preprocess_governance(contract, preprocessing_sweep=True)
 
 
+def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="tcode_transformed",
+        x_transform_policy="dataset_tcode_transformed",
+        tcode_policy="tcode_then_extra_preprocess",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="winsorize",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="tcode_then_extra",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        representation_policy="tcode_only",
+        tcode_application_scope="apply_tcode_to_both",
+    )
+
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract, preprocessing_sweep=False)
+
+
 def test_preprocess_governance_rejects_dual_axis_sweep() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",

@@ -351,18 +351,20 @@ def _validate_official_transform_contract(selection_map: dict[str, AxisSelection
 
 
 def _extra_preprocessing_requested(selection_map: dict[str, AxisSelection]) -> bool:
-    for axis in (
-        "target_missing_policy",
-        "x_missing_policy",
-        "target_outlier_policy",
-        "x_outlier_policy",
-        "scaling_policy",
-        "dimensionality_reduction_policy",
-        "feature_selection_policy",
-        "additional_preprocessing",
-    ):
+    neutral_values = {
+        "target_missing_policy": "none",
+        "x_missing_policy": "none",
+        "target_outlier_policy": "none",
+        "x_outlier_policy": "none",
+        "scaling_policy": "none",
+        "dimensionality_reduction_policy": "none",
+        "feature_selection_policy": "none",
+        "additional_preprocessing": "none",
+        "x_lag_creation": "no_x_lags",
+    }
+    for axis, neutral in neutral_values.items():
         selection = selection_map.get(axis)
-        if selection is not None and selection.selected_values[0] != "none":
+        if selection is not None and selection.selected_values[0] != neutral:
             return True
     return False
 

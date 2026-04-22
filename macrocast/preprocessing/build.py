@@ -243,16 +243,17 @@ def build_preprocess_contract(
 
 def _has_extra_preprocessing(contract: PreprocessContract) -> bool:
     return any(
-        value != "none"
-        for value in (
-            contract.target_missing_policy,
-            contract.x_missing_policy,
-            contract.target_outlier_policy,
-            contract.x_outlier_policy,
-            contract.scaling_policy,
-            contract.dimensionality_reduction_policy,
-            contract.feature_selection_policy,
-            contract.additional_preprocessing,
+        value != neutral
+        for value, neutral in (
+            (contract.target_missing_policy, "none"),
+            (contract.x_missing_policy, "none"),
+            (contract.target_outlier_policy, "none"),
+            (contract.x_outlier_policy, "none"),
+            (contract.scaling_policy, "none"),
+            (contract.dimensionality_reduction_policy, "none"),
+            (contract.feature_selection_policy, "none"),
+            (contract.additional_preprocessing, "none"),
+            (contract.x_lag_creation, "no_x_lags"),
         )
     )
 
@@ -276,14 +277,34 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.target_outlier_policy != "none":
         return False
-    if contract.representation_policy != "raw_only":
+    if not _has_extra_preprocessing(contract):
         return False
-    if contract.tcode_application_scope != "apply_tcode_to_none":
+
+    if contract.tcode_policy == "extra_preprocess_without_tcode":
+        if contract.representation_policy != "raw_only":
+            return False
+        if contract.tcode_application_scope != "apply_tcode_to_none":
+            return False
+        if contract.preprocess_order != "extra_only":
+            return False
+        if contract.target_transform_policy != "raw_level" or contract.x_transform_policy != "raw_level":
+            return False
+    elif contract.tcode_policy == "tcode_then_extra_preprocess":
+        if contract.representation_policy != "tcode_only":
+            return False
+        if contract.tcode_application_scope == "apply_tcode_to_none":
+            return False
+        if contract.preprocess_order != "tcode_then_extra":
+            return False
+        target_expected = contract.tcode_application_scope in {"apply_tcode_to_target", "apply_tcode_to_both"}
+        x_expected = contract.tcode_application_scope in {"apply_tcode_to_X", "apply_tcode_to_both"}
+        if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+            return False
+        if x_expected != (contract.x_transform_policy == "dataset_tcode_transformed"):
+            return False
+    else:
         return False
-    if contract.tcode_policy != "extra_preprocess_without_tcode":
-        return False
-    if contract.preprocess_order != "extra_only":
-        return False
+
     if contract.preprocess_fit_scope != "train_only":
         return False
     if contract.inverse_transform_policy != "none":

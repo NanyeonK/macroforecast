@@ -67,7 +67,7 @@ records what the current runtime can execute today.
 | `target_outlier_policy` | `none` | Target-side outlier algorithms are not supported in the operational contract. |
 | `inverse_transform_policy` | `none` | Inverse-transform policy needs a separate target/evaluation contract. |
 | `evaluation_scale` | `raw_level`, `original_scale` | `transformed_scale` and `both` remain representable but are registry-only until inverse/evaluation semantics are finalized. |
-| `preprocess_order` | `none`, derived `tcode_only`, `extra_only` | `tcode_then_extra` is the desired full profile but not executable yet. |
+| `preprocess_order` | `none`, derived `tcode_only`, `extra_only`, `tcode_then_extra` | `tcode_then_extra` is executable for supported raw-panel extra preprocessing after Layer 1 official t-codes. |
 | `preprocess_fit_scope` | `not_applicable`, `train_only` | Extra preprocessing requires `train_only` today. |
 | `separation_rule` | helper supports several values | The helper is tested, but not wired into the main execution loop as a general dispatcher. |
 | `custom_preprocessor` | fixed registered plugin name or `none` | X-side function must return transformed X_train/X_test and must not transform y. |
@@ -81,14 +81,16 @@ Current runtime profiles:
   preprocessing.
 - `raw_train_only_extra`: executable for raw-panel style feature builders using
   train-only X-side extra preprocessing.
-- `dataset_tcode_then_train_only_extra`: canonical Layer 2 research target, but
-  not executable yet.
+- `dataset_tcode_then_train_only_extra`: executable for raw-panel style feature
+  builders when Layer 1 applies dataset t-codes first and Layer 2 applies
+  supported train-only X-side extra preprocessing.
 
 The main practical point: **Layer 2 is the research support layer for
-additional preprocessing, but current built-in extra preprocessing executes only
-in the raw-panel `extra_preprocess_without_tcode` profile.** The default
-official T-code path is executable, but extra preprocessing cannot yet be
-attached after T-code.
+additional preprocessing, and the current built-in implementation supports that
+only for raw-panel style feature builders.** The default official T-code path is
+executable, and supported extra preprocessing can now be attached after the
+Layer 1 official T-code step through the derived
+`tcode_then_extra_preprocess` bridge contract.
 
 ## Current Default
 
@@ -143,7 +145,7 @@ Current bridge status:
 
 ## Executable Contract Classes
 
-The code currently recognizes three useful preprocessing classes.
+The code currently recognizes four useful preprocessing classes.
 
 ### `tcode_only`
 
@@ -203,31 +205,46 @@ Runtime helpers exist for:
 
 Important caveat: these helpers are wired through `_apply_raw_panel_preprocessing`, which is used by raw-panel style feature builders. They are not a drop-in extension of the default autoregressive t-code path.
 
+### `tcode_then_extra_preprocess`
+
+Status: executable for supported raw-panel feature-builder paths.
+
+This is the natural contract researchers expect for "official FRED transform,
+then scale/impute/select features." The public recipe should express the
+official transform through Layer 1 axes:
+
+- `official_transform_policy='dataset_tcode'`
+- `official_transform_scope` in `apply_tcode_to_target`, `apply_tcode_to_X`, or
+  `apply_tcode_to_both`
+
+When a supported Layer 2 extra-preprocessing axis is non-neutral, the compiler
+derives the runtime bridge:
+
+- `tcode_policy='tcode_then_extra_preprocess'`
+- `preprocess_order='tcode_then_extra'`
+- `representation_policy='tcode_only'`
+
+Runtime order:
+
+1. Layer 1 applies official dataset t-codes to the selected frame.
+2. Layer 2 builds supervised train/test slices from that official frame.
+3. Layer 2 fits supported extra preprocessing on each training slice only and
+   applies it to the prediction slice.
+
+Constraints:
+
+- Supported extra preprocessing is X-side only: X missing, X outlier, scaling,
+  HP filter, fixed X lags, dimensionality reduction, or feature selection.
+- Target-side missing/outlier handling remains non-executable.
+- `inverse_transform_policy` must remain `none`.
+- `evaluation_scale` must remain `raw_level` or `original_scale`.
+- Legacy bridge fields remain compatibility fields. New recipes should set the
+  Layer 1 official-transform axes and let the compiler derive the bridge.
+
 These helpers operate after the selected official frame or raw-panel feature
 frame has been handed to Layer 2. They should not be documented as raw-source
 cleaning unless the recipe explicitly chooses a raw-only preprocessing path and
 records that the action occurred before any official transform/T-code step.
-
-## Not Supported Until Wired
-
-### `tcode_then_extra_preprocess`
-
-This is the natural contract researchers will expect for "official FRED transform, then scale/impute/select features." It is currently not executable.
-
-Compiler result today:
-
-```text
-tcode_then_scaling -> not_supported
-```
-
-Reasons:
-
-- `tcode_policy='tcode_then_extra_preprocess'` is `registry_only`.
-- `preprocess_order='tcode_then_extra'` is `registry_only`.
-- `_apply_tcode_preprocessing` only executes `tcode_policy='tcode_only'`; it raises for other t-code policies.
-- inverse-transform/evaluation semantics for target-side t-code plus extra preprocessing are not finalized.
-
-This is the main blocker for exposing built-in preprocessing sweeps in the simple API.
 
 ## Registry Status Cleanup
 
@@ -273,15 +290,18 @@ The simple API now blocks preprocessing sweeps before execution.
 
 Reasons:
 
-1. Default preprocessing is `tcode_only`.
-2. Extra built-in preprocessing cannot be attached to `tcode_only`.
-3. The expected bridge, `tcode_then_extra_preprocess`, is not executable.
-4. Co-sweeping model and preprocessing is explicitly rejected by governance for ordinary baseline comparison.
-5. Some registry values overstate runtime support.
+1. Default preprocessing is still `dataset_tcode_only`.
+2. `dataset_tcode_then_train_only_extra` is executable only as a fixed
+   preprocessing contract, not as a public simple sweep.
+3. Co-sweeping model and preprocessing is explicitly rejected by governance for
+   ordinary baseline comparison.
+4. Target-side inverse/evaluation-scale semantics are not finalized.
+5. Some full grammar values remain `registry_only`.
 
 Therefore, the executable MVP is:
 
 - default `tcode_only`
+- fixed `dataset_tcode_then_train_only_extra` for supported raw-panel paths
 - model sweeps
 - fixed custom model
 - fixed custom preprocessor
@@ -293,7 +313,6 @@ The blocked MVP surface is:
 - built-in preprocessing sweeps
 - model and preprocessing co-sweeps
 - target-side preprocessing beyond the target-transformer protocol
-- t-code followed by train-only scaling/imputation/feature selection
 
 ## Required Work Before Opening Preprocessing Sweeps
 
@@ -302,24 +321,17 @@ The blocked MVP surface is:
    - `raw_train_only_extra`
    - `dataset_tcode_then_train_only_extra`
 
-2. Implement or demote registry values:
-   - demote overstated `operational` values, or wire their runtime support.
+2. Keep registry statuses aligned with runtime:
+   - keep representable-but-not-executable values as `registry_only`
+   - promote values only with execution tests
 
-3. Implement `tcode_then_extra_preprocess`:
-   - apply dataset t-codes first
-   - build supervised train/test slices afterward
-   - fit extra preprocessing on each training slice only
-   - record each step in manifest reports
-
-4. Define sweep governance:
+3. Define sweep governance:
    - preprocessing-only sweep with fixed model
    - model-only sweep
    - explicit advanced grid for model x preprocessing, if allowed
 
-5. Add acceptance tests:
+4. Add remaining acceptance tests:
    - fixed extra preprocessing with `raw_feature_panel`
-   - blocked `tcode_then_extra_preprocess` until implemented
-   - executable `tcode_then_extra_preprocess` after implementation
    - preprocessing-only sweep once governance allows it
    - model x preprocessing co-sweep blocked unless explicitly advanced
 
@@ -327,4 +339,8 @@ The blocked MVP surface is:
 
 Do not expose built-in preprocessing sweeps in the simple docs yet.
 
-Next implementation target should be `dataset_tcode_then_train_only_extra`, because it matches the researcher expectation: start from official FRED-MD/QD transformations, then optionally sweep scaling, imputation, dimensionality reduction, or feature selection under train-only fit discipline.
+Next implementation target should be the `PreprocessContract` bridge cleanup:
+keep Layer 1 official-transform axes as the public source of truth, keep legacy
+Layer 2 t-code fields accepted for compatibility, and progressively remove
+runtime dependence on those bridge fields after compiled manifests and tests no
+longer need them.
