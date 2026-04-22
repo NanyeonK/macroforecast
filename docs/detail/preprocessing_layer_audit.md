@@ -6,30 +6,33 @@ The practical question is whether the simple API can safely expose preprocessing
 
 ## Canonical Layer 2 Role
 
-Layer 2 is the researcher additional-preprocessing layer. Layer 1 produces the
+Layer 2 is the researcher preprocessing and feature-representation layer. Layer 1 produces the
 baseline official or raw feature frame: dataset/source/frequency, information
 set, target/horizon/sample window, release-lag availability, official
 transform/T-code policy, raw-source missing/outlier repair before T-codes, and
 the eligible variable universe. Layer 2 starts after that point.
 
 The purpose of Layer 2 is to support research designs that ask how forecasts
-change when the researcher applies additional preprocessing before model
-estimation. It owns optional transformations of X and y, feature engineering,
-dimensionality reduction, target-scale handling, preprocessing order, and
-leakage discipline. It does not own dataset identity, official data
-availability, model family, benchmark family, scoring metrics, or statistical
-tests.
+change when the researcher changes the representation handed to the forecast
+generator. It owns optional transformations of X and y, feature engineering,
+feature-block selection, predictor family, feature builders, dimensionality
+reduction, factor-count decisions, target-scale handling, preprocessing order,
+and leakage discipline. It does not own dataset identity, official data
+availability, model family, benchmark family, model training/tuning protocol,
+scoring metrics, or statistical tests.
 
 This means the canonical Layer 2 question is not "what preprocessing happens by
-default?" but "what additional preprocessing design does the researcher want to
-study after Layer 1 has created the baseline frame?"
+default?" but "what feature representation `Z` should the researcher construct
+from Layer 1 outputs `H`, `X`, and `Y` before Layer 3 fits a model?"
 
 ## Layer 2 Decision Space
 
-Layer 2 has 26 registry axes today. The canonical decision groups are:
+Layer 2 currently has the original preprocessing contract axes plus migrated
+feature-representation bridge axes. The canonical decision groups are:
 
 | Group | Axes | What the group decides |
 |-------|------|------------------------|
+| Research feature representation | `feature_builder`, `predictor_family`, `data_richness_mode`, `factor_count`, future `feature_block_set` | Which feature matrix `Z` is constructed from Layer 1 outputs before forecasting. Current axes are migrated compatibility names; future work should split them into feature-block primitives. |
 | X additional preprocessing | `x_missing_policy`, `x_outlier_policy`, `scaling_policy`, `scaling_scope`, `additional_preprocessing`, `x_lag_creation` | How predictor columns are imputed, clipped, scaled, filtered, or lag-augmented after Layer 1. |
 | X representation and selection | `dimensionality_reduction_policy`, `feature_selection_policy`, `feature_grouping` | Whether the predictor panel is reduced to factors/components, screened to a subset, or grouped before modeling. |
 | Target-side preprocessing | `target_transform`, `target_normalization`, `target_domain`, `target_missing_policy`, `target_outlier_policy`, `inverse_transform_policy`, `evaluation_scale`, `target_transformer` | How y is transformed or normalized, how forecasts are inverted, and which scale metrics use. |
@@ -41,14 +44,15 @@ The natural full Layer 2 profile is
 `dataset_tcode_then_train_only_extra`: Layer 1 applies official FRED-MD/QD
 transforms/T-codes, then Layer 2 applies researcher-selected imputation,
 scaling, filtering, dimensionality reduction, feature selection, or custom
-preprocessing under train-only fit discipline. That profile is the target
-contract for preprocessing research support.
+preprocessing under train-only fit discipline. That profile is the current
+generic preprocessing support surface, not the full research feature-block grammar.
 
-Built-in Layer 2 choices should stay aligned with macro-forecasting designs in
-the Coulombe-style FRED-MD/FRED-QD literature: official dataset transforms,
-X-side imputation, scaling, filtering, PCA/static factor extraction,
-feature screening, fixed lag construction, and custom hooks for researcher
-extensions. Asset-pricing-specific reductions are outside scope.
+Built-in Layer 2 choices should stay aligned with macro-forecasting research:
+official dataset transforms, X-side imputation, scaling, filtering, PCA/static
+factor extraction, feature screening, fixed lag construction, level add-backs,
+lag rotations, local temporal factors, and custom hooks for researcher
+extensions. Named papers such as Goulet Coulombe et al. (2021) should be
+represented as presets over general feature-block primitives, not as layer names.
 
 ## Current Implementation Surface
 
@@ -57,6 +61,10 @@ records what the current runtime can execute today.
 
 | Axis | Executable values today | Notes |
 |------|-------------------------|-------|
+| `feature_builder` | `autoreg_lagged_target`, `factors_plus_AR`, `raw_feature_panel`, `raw_X_only`, `factor_pca` | Currently used by compiler/runtime dispatch; semantically this chooses feature representation. `sequence_tensor` is future. |
+| `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` | Canonical Layer 2 owner; runtime support is constrained by `feature_builder` compatibility guards. |
+| `data_richness_mode` | `target_lags_only`, `factor_plus_lags`, `full_high_dimensional_X`, `selected_sparse_X` | Canonical Layer 2 owner; `mixed_mode` remains registry-only. |
+| `factor_count` | `fixed`, `cv_select`, `BaiNg_rule` | Canonical Layer 2 owner for factor representation dimensions. `variance_explained_rule` and `model_specific` remain registry-only. |
 | `x_missing_policy` | `none`, `drop`, `drop_rows`, `drop_columns`, `drop_if_above_threshold`, `missing_indicator`, `em_impute`, `mean_impute`, `median_impute`, `ffill`, `interpolate_linear` | Executes in the raw-panel extra-preprocess path. `drop` and `drop_rows` are pass-through aliases because X/y row coordination happens upstream. |
 | `x_outlier_policy` | `none`, `winsorize`, `trim`, `iqr_clip`, `mad_clip`, `zscore_clip`, `outlier_to_missing` | Operates on post-frame X_train/X_pred. Raw-source outlier handling belongs to Layer 1. |
 | `scaling_policy` | `none`, `standard`, `robust`, `minmax`, `demean_only`, `unit_variance_only` | Fitted on X_train and applied to X_pred. |
@@ -91,12 +99,18 @@ Current runtime profiles:
   builders when Layer 1 applies dataset t-codes first and Layer 2 applies
   supported train-only X-side extra preprocessing.
 
+
 The main practical point: **Layer 2 is the research support layer for
 additional preprocessing, and the current built-in implementation supports that
 only for raw-panel style feature builders.** The default official T-code path is
 executable, and supported extra preprocessing can now be attached after the
 Layer 1 official T-code step through the derived
 `tcode_then_extra_preprocess` bridge contract.
+The next Layer 2 expansion should split the migrated representation axes into
+general feature-block primitives: target-lag blocks, transformed-X lag blocks,
+factor blocks, level add-backs, lag rotations, local temporal factors,
+volatility blocks, cointegration/error-correction blocks, and custom blocks.
+
 
 ## Full Closure Status
 

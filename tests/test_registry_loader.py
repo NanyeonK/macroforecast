@@ -168,7 +168,10 @@ def test_registry_loader_tracks_migrated_axis_layers() -> None:
     assert registry["benchmark_family"].layer == "3_training"
     assert registry["forecast_type"].layer == "3_training"
     assert registry["forecast_object"].layer == "3_training"
-    assert registry["predictor_family"].layer == "3_training"
+    assert registry["predictor_family"].layer == "2_preprocessing"
+    assert registry["feature_builder"].layer == "2_preprocessing"
+    assert registry["data_richness_mode"].layer == "2_preprocessing"
+    assert registry["factor_count"].layer == "2_preprocessing"
     assert registry["horizon_target_construction"].layer == "2_preprocessing"
     assert registry["deterministic_components"].layer == "2_preprocessing"
     assert registry["structural_break_segmentation"].layer == "2_preprocessing"
@@ -207,6 +210,10 @@ def test_registry_loader_discovers_stage2_governance_axes() -> None:
         "additional_preprocessing",
         "x_lag_creation",
         "feature_grouping",
+        "feature_builder",
+        "predictor_family",
+        "data_richness_mode",
+        "factor_count",
     }
     assert expected.issubset(registry)
 
@@ -262,7 +269,6 @@ def test_registry_loader_discovers_stage3_training_axes() -> None:
         "benchmark_family",
         "forecast_type",
         "forecast_object",
-        "predictor_family",
         "min_train_size",
         "training_start_rule",
         "outer_window",
@@ -284,7 +290,6 @@ def test_registry_loader_discovers_stage3_training_axes() -> None:
         "early_stopping",
         "convergence_handling",
         "y_lag_count",
-        "factor_count",
         "lookback",
         "logging_level",
         "checkpointing",

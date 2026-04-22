@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='data_richness_mode',
-    layer='3_training',
+    layer='2_preprocessing',
     axis_type='enum',
     default_policy='fixed',
     entries=(

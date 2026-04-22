@@ -62,6 +62,8 @@ These axes are no longer Layer 1 target-structure choices:
   logic.
 - `forecast_object`: Layer 3, because mean/median/quantile is model output
   contract.
+- `predictor_family` and `feature_builder`: Layer 2, because they choose the
+  feature representation handed to the forecast generator.
 - `horizon_target_construction`: Layer 2, because level/diff/logdiff target
   construction is target representation.
 - `multi_target_architecture`: Layer 0, through `experiment_unit`.

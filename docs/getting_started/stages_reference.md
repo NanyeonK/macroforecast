@@ -121,7 +121,8 @@ blocked. Layers 3+ are outside this quick-reference page.
 Moved out of Layer 1:
 
 - Layer 2: `horizon_target_construction`, `deterministic_components`, `structural_break_segmentation`
-- Layer 3: `benchmark_family`, `forecast_type`, `forecast_object`, `predictor_family`, `min_train_size`, `training_start_rule`
+- Layer 2: `predictor_family`, `feature_builder`, `data_richness_mode`, `factor_count`
+- Layer 3: `benchmark_family`, `forecast_type`, `forecast_object`, `min_train_size`, `training_start_rule`
 - Layer 4: `oos_period`
 - Layer 6: `overlap_handling`
 

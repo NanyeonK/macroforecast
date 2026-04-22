@@ -18,6 +18,7 @@ layer_axis_migration_plan
 layer0_meta_audit
 layer1_data_task_audit
 registry_axes
+layer3_training_audit
 execution_engine
 artifacts_and_manifest
 custom_extensions

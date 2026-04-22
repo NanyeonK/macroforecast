@@ -114,7 +114,7 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
             selected_status={"ols": "operational", "ridge": "operational"},
         ),
         "feature_builder": AxisSelection(
-            axis_name="feature_builder", layer="3_training", selection_mode="fixed",
+            axis_name="feature_builder", layer="2_preprocessing", selection_mode="fixed",
             selected_values=("autoreg_lagged_target",),
             selected_status={"autoreg_lagged_target": "operational"},
         ),
@@ -137,7 +137,7 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() ->
             selected_status={"ridge": "operational"},
         ),
         "feature_builder": AxisSelection(
-            axis_name="feature_builder", layer="3_training", selection_mode="sweep",
+            axis_name="feature_builder", layer="2_preprocessing", selection_mode="sweep",
             selected_values=("autoreg_lagged_target", "raw_feature_panel"),
             selected_status={"autoreg_lagged_target": "operational", "raw_feature_panel": "operational"},
         ),

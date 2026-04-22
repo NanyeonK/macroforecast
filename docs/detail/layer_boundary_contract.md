@@ -44,9 +44,10 @@ raw-source outliers before official transforms/T-codes. That order must be
 recorded because it differs from imputing or clipping after transformed model
 inputs already exist.
 
-## Layer 2: Research Preprocessing
+## Layer 2: Research Preprocessing / Feature Representation
 
-Owns transformations researchers can vary within the same official data frame:
+Owns transformations and feature representations researchers can vary within
+the same official data frame:
 
 - target transforms beyond official dataset codes
 - X transforms beyond official dataset codes
@@ -56,6 +57,9 @@ Owns transformations researchers can vary within the same official data frame:
 - smoothing / filters
 - PCA, static factors, dimensionality reduction
 - feature selection
+- predictor family and feature-block selection
+- feature builders that construct the model input matrix `Z`
+- factor count and other representation dimensions
 - deterministic features, including trends, seasonals, and break dummies
 - custom preprocessors
 - fit scope and leakage discipline
@@ -72,15 +76,21 @@ Owns all choices that generate forecasts:
 
 - model family
 - benchmark family
-- feature builder and predictor recipe
 - direct vs iterated forecast generation
 - forecast object, including mean/median/quantile
 - training window, refit policy, min train size, training start rule
-- lag counts and horizon modelization
+- model lag counts and horizon modelization
 - validation split, hyperparameter search, tuning objective, budget
 - model seed, early stopping, convergence, cache, checkpointing, execution backend
 
 Benchmarks belong here because they produce forecasts.
+
+Layer 3 consumes `Z_train`/`Z_pred` from Layer 2 and fits/predicts with a model
+or benchmark. During migration, legacy recipe paths may still place
+`feature_builder`, `predictor_family`, `data_richness_mode`, and `factor_count`
+near training settings because old executors use those names for dispatch. Their
+canonical ownership is Layer 2 because they define feature representation, not
+estimator behavior.
 
 ## Layer 4: Evaluation
 
