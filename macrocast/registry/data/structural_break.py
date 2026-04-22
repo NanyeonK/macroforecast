@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='structural_break_segmentation',
-    layer='1_data_task',
+    layer='2_preprocessing',
     axis_type='enum',
     default_policy='fixed',
     entries=(

@@ -406,7 +406,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
         },
     }
     compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "not_supported"
     handoff = compile_result.manifest["wrapper_handoff"]
     tree_context = compile_result.manifest["tree_context"]
     assert handoff["wrapper_family"] == "benchmark_suite"
@@ -509,7 +509,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     tree_context = compile_result.manifest["tree_context"]
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "ready_for_sweep_runner"
     assert tree_context["research_design"] == "controlled_variation"
     assert tree_context["route_owner"] == "single_run"
     assert tree_context["fixed_design"]["dataset_adapter"] == "fred_md"
@@ -525,7 +525,7 @@ def test_axis_governance_table_includes_experiment_unit_axis() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["experiment_unit"]["current_status"]["single_target_model_grid"] == "operational"
-    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "operational"
+    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "registry_only"
 
 
 def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
@@ -599,7 +599,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     assert any("fixed-policy axis 'feature_builder' placed in sweep_axes" in warning for warning in compile_result.manifest["warnings"])
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "ready_for_sweep_runner"
 
 
 
@@ -1208,11 +1208,10 @@ def test_wizard_options_single_target_returns_operational_only() -> None:
         research_design="single_path_benchmark",
         task="single_target_point_forecast",
     )
-    # all three single-target operational values should be present
+    # unsupported full-sweep wrapper routes are not offered by the wizard.
     assert set(options) == {
         "single_target_single_model",
         "single_target_model_grid",
-        "single_target_full_sweep",
     }
 
 
@@ -1263,26 +1262,26 @@ def test_study_mode_controlled_variation_compiles_executable() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_study_mode_replication_override_compiles_executable_after_cleanup() -> None:
-    """After 0.6 cleanup, replication_override no longer triggers the
-    wrapper-route warning; execute_replication is the dedicated runner."""
+def test_study_mode_replication_override_requires_replication_runner() -> None:
+    """replication_override is a replication handoff, not a direct recipe run."""
     recipe = _study_mode_recipe_base()
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
     r = compile_recipe_dict(recipe)
-    assert r.compiled.execution_status == "executable"
+    assert r.compiled.execution_status == "ready_for_replication_runner"
+    assert r.manifest["tree_context"]["route_owner"] == "replication"
+    assert r.manifest["tree_context"]["route_contract"] == "replication_handoff"
 
 
-def test_study_mode_orchestrated_bundle_is_still_representable_not_executable() -> None:
-    """orchestrated_bundle stays on the wrapper-warning path until the
-    Phase 8 PaperReadyBundle consumer lands. Requires wrapper_family +
-    bundle_label in leaf_config (wrapper_handoff contract)."""
+def test_study_mode_orchestrated_bundle_without_runner_contract_is_not_supported() -> None:
+    """orchestrated_bundle stays in the grammar, but unsupported wrapper
+    families must not be reported as runnable."""
     recipe = _study_mode_recipe_base()
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "orchestrated_bundle"
     recipe["path"]["5_output_provenance"]["leaf_config"]["wrapper_family"] = "benchmark_suite"
     recipe["path"]["5_output_provenance"]["leaf_config"]["bundle_label"] = "bundle-test"
     r = compile_recipe_dict(recipe)
-    assert r.compiled.execution_status == "representable_but_not_executable"
+    assert r.compiled.execution_status == "not_supported"
     assert any(
-        "orchestrated_bundle" in w and "wrapper/orchestrator route" in w
+        "benchmark_suite" in w and "no executable wrapper runner contract" in w
         for w in r.manifest.get("warnings", [])
     )

@@ -119,7 +119,7 @@ path:
 
 ## 1.2.3 `forecast_object`
 
-**Selects what statistic of the predictive distribution the model emits.** All three values are operational in v1.0.
+**Selects what statistic of the predictive distribution the model emits.** All three values are operational in v1.0, with distributional objects tied to the quantile-linear model.
 
 ### Value catalog
 
@@ -129,9 +129,14 @@ path:
 | `point_median` | operational | Conditional-median point forecast. Compatible with `model_family=quantile_linear` (which fits a quantile regression at `τ=0.5`). |
 | `quantile` | operational | Quantile forecast at a user-specified `τ`. Requires `model_family=quantile_linear`; the level comes from `training_spec.hp.quantile` (default `0.5`). |
 
-### Compatibility guard (v1.0)
+### Compatibility guards (v1.0)
 
-The v1.0 guard enforces `model_family=quantile_linear ⇒ forecast_object ∈ {point_median, quantile}`. Setting `forecast_object=point_mean` with `quantile_linear` is rejected at compile time.
+The v1.0 guard is symmetric:
+
+- `model_family=quantile_linear` requires `forecast_object ∈ {point_median, quantile}`.
+- `forecast_object ∈ {point_median, quantile}` requires `model_family=quantile_linear`.
+
+This prevents a non-quantile model from silently emitting a conditional-mean forecast while the manifest says `quantile` or `point_median`.
 
 ### Picking a quantile level
 
@@ -154,7 +159,7 @@ If `quantile` is set but no explicit `hp.quantile` is provided, the underlying `
 ### Functions & features
 
 - `macrocast.execution.deep_training._build_model("quantile_linear", hp)` wraps `sklearn.linear_model.QuantileRegressor(quantile=hp.get("quantile", 0.5), alpha=hp.get("alpha", 1.0), solver="highs")`. The `quantile` hyperparameter is the τ level applied at fit time.
-- Compiler guard lives in `macrocast.compiler.build`'s main compile function and enforces `model_family=quantile_linear ⇒ forecast_object ∈ {point_median, quantile}`.
+- Compiler guard lives in `macrocast.compiler.build`'s execution-status block and enforces both directions of the `forecast_object` / `quantile_linear` contract.
 - Manifest: `data_task_spec["forecast_object"]` records the selected value; the τ level (if provided) is carried through `training_spec["hp"]["quantile"]`.
 
 ### Dropped values

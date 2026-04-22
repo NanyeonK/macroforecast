@@ -1,18 +1,16 @@
 # Data (Stage 1)
 
-Stage 1 answers **"what data problem is this study solving?"** — once the design (Stage 0) has fixed the research identity and recipe shape, Stage 1 nails down the data source, the task, the evaluation window, the predictor universe, and the data-handling policies.
+Stage 1 answers **"what official data frame does this study start from?"** — once the design (Stage 0) has fixed the research identity and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.
 
-Stage 1 holds **20 meta axes** under the `1_data_task` layer, organised into five groups:
+After the layer-boundary migration, Stage 1 holds **9 canonical axes** under the `1_data_task` layer:
 
-| # | Group | Axes | Focus |
+| Group | Axes | Focus |
 |---|---|---:|---|
-| 1.1 | [Source & Frame (1.1)](source.md) | 4 | Which dataset, at what frequency, within what information-set regime |
-| 1.2 | [Task & Target (1.2)](task.md) | 4 | What is being forecast (task shape), how multi-step is produced, what forecast object, and how y_{t+h} is constructed |
-| 1.3 | [Horizon & Evaluation Window (1.3)](horizon.md) | 4 | Training window size rule, training start, OOS regime filter, overlap handling |
-| 1.4 | [Benchmark & Predictor Universe (1.4)](benchmark.md) | 4 | Benchmark families, predictor family, variable universe, deterministic components |
-| 1.5 | [Data Handling Policies (1.5)](policies.md) | 4 | Missing data policy, release lag, structural-break segmentation, contemporaneous X |
+| Source & frame | 4 | `dataset`, `dataset_source`, `frequency`, `information_set_type` |
+| Task identity | 1 | `task`; target/targets/horizons live in `leaf_config` |
+| Availability and universe | 4 | `missing_availability`, `release_lag_rule`, `contemporaneous_x_rule`, `variable_universe` |
 
-Stage 1 does not fix which model, which preprocessor, or which evaluation metric — those belong to Stage 2+ layers.
+Stage 1 does not fix which model, benchmark, researcher preprocessing, or evaluation metric to use — those belong to Stage 2+ layers.
 
 ## Relation to Stage 0
 
@@ -20,15 +18,15 @@ The 6 meta axes of Stage 0 ([design](../design.md)) — `research_design`, `expe
 
 ## Honest operational status
 
-Layer 1 covers 20 axes. After the v0.9.3 Tier 1-3 drop and the 1.1 / 1.2 / 1.3 / 1.4 / 1.5 per-group walks (1.5 cleanup PR in flight), the current breakdown is:
+Layer 1 now covers 9 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
 
-- **1.1 Source & Frame** — fully honest. 4 axes (dataset / dataset_source / frequency / information_set_type), every value operational or dropped.
-- **1.2 Task & Target** — fully operational (task / forecast_type / forecast_object / horizon_target_construction); horizon_target_construction applies as a metric-scale transform at the central row site.
-- **1.3 Horizon & Evaluation Window** — fully operational (min_train_size / training_start_rule / oos_period / overlap_handling); see horizon.md for per-axis semantics.
-- **1.4 Benchmark & Predictor Universe** — fully operational (benchmark_family / predictor_family / variable_universe / deterministic_components). 19 formerly-demoted values wired via leaf_config input channels + deterministic feature augmentation; 4 dropped values stay out of v1.0 scope.
-- **1.5 Data Handling Policies** — fully operational (missing_availability / release_lag_rule / structural_break_segmentation / contemporaneous_x_rule). 9 formerly-demoted values wired via leaf_config input channels (x_imputation, release_lag_per_series, break_dates) + reuse of the 1.4 break_dummies augmentation. evaluation_scale re-homed to Layer 2 as a PreprocessContract field. See policies.md.
+- **Kept in Layer 1** — dataset/source/frequency/information set, task identity, official availability, release lag, contemporaneous information rule, raw variable universe.
+- **Moved to Layer 2** — target representation and deterministic/break features.
+- **Moved to Layer 3** — benchmark, forecast type/object, predictor family, training-window rules.
+- **Moved to Layer 4** — OOS regime subset evaluation.
+- **Moved to Layer 6** — overlap/HAC inference handling.
 
-Each 1.x group document flags the honest status of every value it covers. Treat the current `design.md` / `data/*.md` state as the source of truth rather than the raw registry dump.
+During migration, some detailed pages still document the old historical grouping. Treat `docs/detail/layer_boundary_contract.md` and `docs/detail/layer_axis_migration_plan.md` as the source of truth.
 
 ## Data source
 

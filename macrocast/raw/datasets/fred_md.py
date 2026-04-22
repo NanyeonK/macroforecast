@@ -59,7 +59,7 @@ def load_fred_md(
             raise RawDownloadError(f"failed to obtain FRED-MD raw file for request={request}") from exc
 
     try:
-        df, _ = parse_fred_csv(target)
+        df, tcodes = parse_fred_csv(target)
     except Exception as exc:
         raise RawParseError(f"failed to parse FRED-MD CSV at {target}") from exc
 
@@ -79,6 +79,6 @@ def load_fred_md(
         data_through=df.index[-1].strftime("%Y-%m") if len(df) else None,
         support_tier="stable",
     )
-    result = RawLoadResult(data=df, dataset_metadata=metadata, artifact=artifact)
+    result = RawLoadResult(data=df, dataset_metadata=metadata, artifact=artifact, transform_codes=tcodes)
     append_raw_manifest_entry(result, cache_root=cache_root)
     return result

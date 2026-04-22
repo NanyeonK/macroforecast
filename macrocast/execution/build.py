@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import contextvars
+import hashlib
 import importlib.util
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 import json
 import math
@@ -46,12 +48,27 @@ from ..preprocessing import (
     preprocess_to_dict,
 )
 from ..raw import load_custom_csv, load_custom_parquet, load_fred_md, load_fred_qd, load_fred_sd
+from ..raw.sd_inferred_tcodes import (
+    MAP_VERSION as SD_INFERRED_TCODE_MAP_VERSION,
+    build_sd_inferred_transform_codes,
+    normalize_sd_tcode_policy,
+)
 from ..recipes import RecipeSpec, RunSpec, build_run_spec, recipe_summary
+from ..custom import (
+    get_custom_model,
+    get_custom_preprocessor,
+    get_custom_target_transformer,
+    is_custom_model,
+    is_custom_preprocessor,
+    is_custom_target_transformer,
+)
 
 _EXECUTION_ARCHITECTURE = "separate_model_and_benchmark_executors"
 _DEFAULT_MINIMUM_TRAIN_SIZE = 5
 _DEFAULT_MAX_AR_LAG = 3
 _LAG_SELECTION = "bic"
+_TARGET_TRANSFORMER_FEATURE_BUILDERS = {"autoreg_lagged_target", "raw_feature_panel", "raw_X_only"}
+_TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
 
 _PHASE3_DEFAULTS = {
     "release_lag_rule": "ignore_release_lag",
@@ -84,6 +101,264 @@ def _replace_raw_data(raw_result, new_data):
         new.__dict__['data'] = new_data
         return new
     return raw_result
+
+
+def _raw_result_with(raw_result, *, data=None, metadata=None, artifact=None, transform_codes=None):
+    from dataclasses import replace as _replace, is_dataclass
+    updates = {}
+    if data is not None:
+        updates["data"] = data
+    if metadata is not None:
+        updates["dataset_metadata"] = metadata
+    if artifact is not None:
+        updates["artifact"] = artifact
+    if transform_codes is not None:
+        updates["transform_codes"] = transform_codes
+    if is_dataclass(raw_result):
+        return _replace(raw_result, **updates)
+    if hasattr(raw_result, "__dict__"):
+        new = type(raw_result).__new__(type(raw_result))
+        new.__dict__.update(raw_result.__dict__)
+        new.__dict__.update(updates)
+        return new
+    return raw_result
+
+
+def _append_frame_report(frame: pd.DataFrame, key: str, payload: object) -> None:
+    reports = dict(frame.attrs.get("macrocast_reports", {}))
+    reports[key] = payload
+    frame.attrs["macrocast_reports"] = reports
+
+
+def _append_frame_warning(frame: pd.DataFrame, message: str) -> None:
+    warnings_list = list(frame.attrs.get("macrocast_warnings", []))
+    warnings_list.append(message)
+    frame.attrs["macrocast_warnings"] = warnings_list
+    warnings.warn(message, RuntimeWarning, stacklevel=2)
+
+
+def _data_warnings(raw_result) -> list[str]:
+    data = getattr(raw_result, "data", None)
+    if data is None:
+        return []
+    return list(getattr(data, "attrs", {}).get("macrocast_warnings", []))
+
+
+def _data_reports(raw_result) -> dict[str, object]:
+    data = getattr(raw_result, "data", None)
+    if data is None:
+        return {}
+    return dict(getattr(data, "attrs", {}).get("macrocast_reports", {}))
+
+
+def _fred_tcode_transform(series: pd.Series, code: int) -> pd.Series:
+    s = series.astype(float)
+    if code == 1:
+        return s
+    if code == 2:
+        return s.diff()
+    if code == 3:
+        return s.diff().diff()
+    if code == 4:
+        return np.log(s.where(s > 0))
+    if code == 5:
+        return np.log(s.where(s > 0)).diff()
+    if code == 6:
+        return np.log(s.where(s > 0)).diff().diff()
+    if code == 7:
+        return s.pct_change().diff()
+    return s
+
+
+def _apply_tcode_preprocessing(raw_result, contract: PreprocessContract, *, target: str | None):
+    if getattr(contract, "tcode_policy", "raw_only") in {"raw_only", "extra_preprocess_without_tcode"}:
+        return raw_result
+    if getattr(contract, "tcode_policy", "raw_only") != "tcode_only":
+        raise ExecutionError(f"tcode_policy={contract.tcode_policy!r} is not executable in this runtime slice")
+
+    data = getattr(raw_result, "data", None)
+    if data is None:
+        return raw_result
+    tcodes = dict(getattr(raw_result, "transform_codes", {}) or {})
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    if not tcodes:
+        _append_frame_warning(frame, "tcode_policy='tcode_only' requested but no dataset transform codes were available; data left unchanged")
+        _append_frame_report(frame, "tcode", {"applied": False, "reason": "missing_transform_codes"})
+        return _replace_raw_data(raw_result, frame)
+
+    scope = getattr(contract, "tcode_application_scope", "apply_tcode_to_both")
+    applied: dict[str, int] = {}
+    for col in frame.columns:
+        is_target = target is not None and col == target
+        if scope == "apply_tcode_to_target" and not is_target:
+            continue
+        if scope == "apply_tcode_to_X" and is_target:
+            continue
+        if scope == "apply_tcode_to_none":
+            continue
+        code = int(tcodes.get(col, 1))
+        frame[col] = _fred_tcode_transform(frame[col], code)
+        applied[str(col)] = code
+    _append_frame_report(frame, "tcode", {"applied": True, "columns": applied})
+    return _replace_raw_data(raw_result, frame)
+
+
+def _dataset_has_fred_sd(dataset: object) -> bool:
+    return "fred_sd" in _dataset_parts(str(dataset))
+
+
+def _apply_sd_inferred_tcodes(raw_result, recipe: RecipeSpec):
+    policy = normalize_sd_tcode_policy(recipe.data_task_spec.get("sd_tcode_policy"))
+    if policy == "none":
+        return raw_result
+    if not _dataset_has_fred_sd(recipe.raw_dataset):
+        raise ExecutionError("sd_tcode_policy was requested, but raw_dataset does not include fred_sd")
+
+    requested_version = recipe.data_task_spec.get("sd_tcode_map_version")
+    if requested_version not in {None, "", SD_INFERRED_TCODE_MAP_VERSION}:
+        raise ExecutionError(
+            f"unsupported sd_tcode_map_version={requested_version!r}; "
+            f"available version is {SD_INFERRED_TCODE_MAP_VERSION!r}"
+        )
+
+    data = getattr(raw_result, "data", None)
+    if data is None:
+        return raw_result
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    frequency = str(recipe.data_task_spec.get("frequency") or getattr(raw_result.dataset_metadata, "frequency", "monthly"))
+    allowed_statuses = recipe.data_task_spec.get("sd_tcode_allowed_statuses")
+    codes, report = build_sd_inferred_transform_codes(
+        frame.columns,
+        frequency=frequency,
+        allowed_statuses=allowed_statuses,
+    )
+    report["policy"] = policy
+    _append_frame_report(frame, "sd_inferred_tcodes", report)
+    if not codes:
+        _append_frame_warning(frame, "sd_tcode_policy requested but no reviewed FRED-SD inferred t-codes matched the loaded columns")
+        return _replace_raw_data(raw_result, frame)
+
+    existing_tcodes = dict(getattr(raw_result, "transform_codes", {}) or {})
+    existing_tcodes.update(codes)
+    _append_frame_warning(frame, "FRED-SD inferred t-codes are macrocast research metadata, not official FRED-SD metadata")
+    return _raw_result_with(raw_result, data=frame, transform_codes=existing_tcodes)
+
+
+def _convert_raw_frequency(raw_result, target_frequency: str):
+    data = getattr(raw_result, "data", None)
+    if data is None or not isinstance(data.index, pd.DatetimeIndex):
+        return raw_result
+    source_frequency = str(getattr(raw_result.dataset_metadata, "frequency", "monthly"))
+    source_norm = "monthly" if source_frequency in {"monthly", "state_monthly"} else source_frequency
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    conversion = {
+        "source_frequency": source_frequency,
+        "target_frequency": target_frequency,
+        "method": "none",
+    }
+
+    if source_norm == target_frequency:
+        _append_frame_report(frame, "frequency_conversion", conversion)
+        return _replace_raw_data(raw_result, frame)
+
+    if source_norm == "monthly" and target_frequency == "quarterly":
+        converted = frame.resample("QS").mean()
+        converted.attrs.update(frame.attrs)
+        conversion["method"] = "monthly_to_quarterly_3_month_average"
+        message = "monthly data converted to quarterly by 3-month average"
+    elif source_norm == "quarterly" and target_frequency == "monthly":
+        converted = frame.resample("MS").asfreq().interpolate(method="linear", limit_direction="both")
+        converted.attrs.update(frame.attrs)
+        conversion["method"] = "quarterly_to_monthly_linear_interpolation"
+        message = "quarterly data converted to monthly by linear interpolation"
+    else:
+        raise ExecutionError(f"cannot convert frequency from {source_frequency!r} to {target_frequency!r}")
+
+    _append_frame_warning(converted, message)
+    _append_frame_report(converted, "frequency_conversion", conversion)
+    metadata = replace(
+        raw_result.dataset_metadata,
+        frequency=target_frequency,
+        parse_notes=tuple(getattr(raw_result.dataset_metadata, "parse_notes", ())) + (message,),
+    )
+    return _raw_result_with(raw_result, data=converted, metadata=metadata)
+
+
+def _apply_frequency_policy(raw_result, recipe: RecipeSpec):
+    target_frequency = str(recipe.data_task_spec.get("frequency") or getattr(raw_result.dataset_metadata, "frequency", "monthly"))
+    return _convert_raw_frequency(raw_result, target_frequency)
+
+
+def _apply_sample_period_and_availability(raw_result, recipe: RecipeSpec, *, target: str | None):
+    data = getattr(raw_result, "data", None)
+    if data is None or not isinstance(data.index, pd.DatetimeIndex):
+        return raw_result
+    start = recipe.data_task_spec.get("sample_start_date")
+    end = recipe.data_task_spec.get("sample_end_date")
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    if start is not None:
+        frame = frame.loc[frame.index >= pd.Timestamp(start)].copy()
+    if end is not None:
+        frame = frame.loc[frame.index <= pd.Timestamp(end)].copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    if frame.empty:
+        raise ExecutionError(f"sample period start={start!r}, end={end!r} produced no observations")
+
+    rule = str(recipe.data_task_spec.get("missing_availability", "complete_case_only"))
+    if rule != "zero_fill_before_start":
+        return _replace_raw_data(raw_result, frame)
+    if target is None or target not in frame.columns:
+        return _replace_raw_data(raw_result, frame)
+
+    report = {
+        "sample_start_date": None if start is None else str(start),
+        "sample_end_date": None if end is None else str(end),
+        "leading_zero_filled": {},
+        "fully_missing_in_period": [],
+        "mid_sample_missing": {},
+        "target_leading_missing": [],
+    }
+    target_series = frame[target]
+    if target_series.notna().sum() == 0:
+        raise ExecutionError(f"target {target!r} is fully missing in selected sample period")
+    target_first_valid = target_series.first_valid_index()
+    if target_first_valid is not None:
+        target_leading = target_series.index[target_series.index < target_first_valid]
+        if len(target_leading):
+            report["target_leading_missing"] = [str(idx.date()) for idx in target_leading]
+    target_after_start = target_series.loc[target_first_valid:]
+    if target_after_start.isna().any():
+        missing_dates = [str(idx.date()) for idx in target_after_start[target_after_start.isna()].index]
+        raise ExecutionError(f"target {target!r} has missing observations inside selected sample period: {missing_dates[:5]}")
+
+    for col in [c for c in frame.columns if c != target]:
+        series = frame[col]
+        if series.notna().sum() == 0:
+            report["fully_missing_in_period"].append(str(col))
+            frame[col] = series.fillna(0.0)
+            continue
+        first_valid = series.first_valid_index()
+        if first_valid is not None:
+            leading_mask = series.index < first_valid
+            leading_missing = leading_mask & series.isna()
+            if leading_missing.any():
+                report["leading_zero_filled"][str(col)] = [str(idx.date()) for idx in series.index[leading_missing]]
+                frame.loc[leading_missing, col] = 0.0
+            mid_missing = series.loc[first_valid:].isna()
+            if mid_missing.any():
+                report["mid_sample_missing"][str(col)] = [str(idx.date()) for idx in series.loc[first_valid:][mid_missing].index]
+    if report["fully_missing_in_period"]:
+        _append_frame_warning(frame, f"predictors fully missing in selected sample period were filled with zero: {report['fully_missing_in_period']}")
+    if report["leading_zero_filled"]:
+        _append_frame_warning(frame, "predictor leading missing values before each series start were filled with zero")
+    if report["mid_sample_missing"]:
+        _append_frame_warning(frame, f"predictors have mid-sample missing values: {sorted(report['mid_sample_missing'])}")
+    _append_frame_report(frame, "availability", report)
+    return _replace_raw_data(raw_result, frame)
 
 
 def _apply_release_lag(raw_result, rule: str, *, spec: dict | None = None):
@@ -137,7 +412,7 @@ def _apply_missing_availability(raw_result, rule: str, *, target: str | None = N
       strategy declared in ``spec['x_imputation']`` (one of 'mean', 'median', 'ffill', 'bfill').
       Target column is left untouched so NaNs in y remain visible to the OOS loop.
     """
-    if rule in {'complete_case_only', None} or not rule:
+    if rule in {'complete_case_only', 'zero_fill_before_start', None} or not rule:
         return raw_result
     data = getattr(raw_result, 'data', None)
     if data is None:
@@ -258,7 +533,105 @@ def build_execution_spec(
     return ExecutionSpec(recipe=recipe, run=run, preprocess=preprocess)
 
 
-def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | None, cache_root: Path):
+def _dataset_parts(dataset: str) -> set[str]:
+    tokens = str(dataset).replace(",", "+").split("+")
+    return {token.strip() for token in tokens if token.strip()}
+
+
+def _local_source_for_dataset(local_raw_source, dataset: str):
+    if isinstance(local_raw_source, Mapping):
+        return local_raw_source.get(dataset)
+    return local_raw_source
+
+
+def _load_single_raw_dataset(dataset: str, *, vintage: str | None, cache_root: Path, local_raw_source):
+    source = _local_source_for_dataset(local_raw_source, dataset)
+    if dataset == "fred_md":
+        return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=source)
+    if dataset == "fred_qd":
+        return load_fred_qd(vintage=vintage, cache_root=cache_root, local_source=source)
+    if dataset == "fred_sd":
+        return load_fred_sd(vintage=vintage, cache_root=cache_root, local_source=source)
+    raise ExecutionError(f"unsupported raw_dataset={dataset!r}")
+
+
+def _component_data_through(results) -> str | None:
+    dates = [getattr(result.dataset_metadata, "data_through", None) for _, result in results]
+    dates = [date for date in dates if date]
+    return min(dates) if dates else None
+
+
+def _combine_raw_results(dataset: str, target_frequency: str, components):
+    converted_components = []
+    combined_warnings: list[str] = []
+    component_reports: dict[str, object] = {}
+    frames: list[pd.DataFrame] = []
+    seen_columns: set[str] = set()
+    combined_tcodes: dict[str, int] = {}
+
+    for component_name, raw_result in components:
+        converted = _convert_raw_frequency(raw_result, target_frequency)
+        converted_components.append((component_name, converted))
+        frame = converted.data.copy()
+        frame.attrs.update(getattr(converted.data, "attrs", {}))
+        rename_map: dict[object, str] = {}
+        for col in frame.columns:
+            if str(col) in seen_columns:
+                rename_map[col] = f"{col}__{component_name}"
+            else:
+                seen_columns.add(str(col))
+        if rename_map:
+            frame = frame.rename(columns=rename_map)
+        frames.append(frame)
+
+        tcodes = dict(getattr(converted, "transform_codes", {}) or {})
+        for col, code in tcodes.items():
+            combined_tcodes[rename_map.get(col, col)] = code
+        combined_warnings.extend(_data_warnings(converted))
+        component_reports[component_name] = _data_reports(converted)
+
+    if not frames:
+        raise ExecutionError(f"composite dataset={dataset!r} did not load any components")
+
+    combined = pd.concat(frames, axis=1).sort_index()
+    combined.attrs["macrocast_warnings"] = combined_warnings
+    combined.attrs["macrocast_reports"] = {
+        "combined_dataset": {
+            "dataset": dataset,
+            "components": [name for name, _ in converted_components],
+            "frequency": target_frequency,
+        },
+        "components": component_reports,
+    }
+
+    primary_name, primary = converted_components[0]
+    source_url = ";".join(str(result.artifact.source_url) for _, result in converted_components)
+    local_path = ";".join(str(result.artifact.local_path) for _, result in converted_components)
+    sha_payload = "|".join(str(result.artifact.file_sha256) for _, result in converted_components)
+    artifact = replace(
+        primary.artifact,
+        dataset=dataset,
+        source_url=source_url,
+        local_path=local_path,
+        file_format="mixed",
+        file_sha256=hashlib.sha256(sha_payload.encode("utf-8")).hexdigest(),
+        file_size_bytes=sum(int(result.artifact.file_size_bytes) for _, result in converted_components),
+        cache_hit=all(bool(result.artifact.cache_hit) for _, result in converted_components),
+    )
+    metadata = replace(
+        primary.dataset_metadata,
+        dataset=dataset,
+        source_family="+".join(str(result.dataset_metadata.source_family) for _, result in converted_components),
+        frequency=target_frequency,
+        data_through=_component_data_through(converted_components),
+        support_tier="provisional",
+        parse_notes=tuple(getattr(primary.dataset_metadata, "parse_notes", ()))
+        + (f"combined components: {', '.join(name for name, _ in converted_components)}",),
+    )
+    return _raw_result_with(primary, data=combined, metadata=metadata, artifact=artifact, transform_codes=combined_tcodes)
+
+
+def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapping[str, str | Path] | None, cache_root: Path):
     vintage = recipe.data_vintage
     dataset_source = recipe.data_task_spec.get("dataset_source") or recipe.raw_dataset
     if dataset_source in {"custom_csv", "custom_parquet"}:
@@ -271,12 +644,25 @@ def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | None
         if dataset_source == "custom_csv":
             return load_custom_csv(custom_path, dataset=recipe.raw_dataset, cache_root=cache_root)
         return load_custom_parquet(custom_path, dataset=recipe.raw_dataset, cache_root=cache_root)
-    if recipe.raw_dataset == "fred_md":
-        return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=local_raw_source)
-    if recipe.raw_dataset == "fred_qd":
-        return load_fred_qd(vintage=vintage, cache_root=cache_root, local_source=local_raw_source)
-    if recipe.raw_dataset == "fred_sd":
-        return load_fred_sd(vintage=vintage, cache_root=cache_root, local_source=local_raw_source)
+    parts = _dataset_parts(recipe.raw_dataset)
+    if parts == {"fred_md", "fred_sd"}:
+        if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
+            raise ExecutionError("composite FRED datasets require local_raw_source as a mapping keyed by component dataset")
+        components = [
+            ("fred_md", _load_single_raw_dataset("fred_md", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+            ("fred_sd", _load_single_raw_dataset("fred_sd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+        ]
+        return _combine_raw_results(recipe.raw_dataset, "monthly", components)
+    if parts == {"fred_qd", "fred_sd"}:
+        if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
+            raise ExecutionError("composite FRED datasets require local_raw_source as a mapping keyed by component dataset")
+        components = [
+            ("fred_qd", _load_single_raw_dataset("fred_qd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+            ("fred_sd", _load_single_raw_dataset("fred_sd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+        ]
+        return _combine_raw_results(recipe.raw_dataset, "quarterly", components)
+    if len(parts) == 1:
+        return _load_single_raw_dataset(recipe.raw_dataset, vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)
     raise ExecutionError(f"unsupported raw_dataset={recipe.raw_dataset!r}")
 
 
@@ -400,6 +786,8 @@ def _recipe_for_target(recipe: RecipeSpec, target: str) -> RecipeSpec:
 
 def _model_executor_name(model_family: str, feature_builder: str) -> str:
     if feature_builder == "autoreg_lagged_target":
+        if is_custom_model(model_family):
+            return f"custom_model:{model_family}:autoreg_lagged_target_v0"
         return {
             "ar": "ar_bic_autoreg_v0",
             "ols": "ols_autoreg_v0",
@@ -427,6 +815,8 @@ def _model_executor_name(model_family: str, feature_builder: str) -> str:
             "quantile_linear": "quantile_linear_autoreg_v0",
         }[model_family]
     if feature_builder in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
+        if is_custom_model(model_family):
+            return f"custom_model:{model_family}:raw_feature_panel_v0"
         return {
             "ols": "ols_raw_feature_panel_v0",
             "ridge": "ridge_raw_feature_panel_v0",
@@ -465,12 +855,17 @@ def _model_spec(recipe: RecipeSpec) -> dict[str, object]:
         "framework": recipe.stage0.fixed_design.sample_split,
         "lag_selection": _LAG_SELECTION if model_family == "ar" else "fixed_lag_feature_builder",
         "max_ar_lag": _max_ar_lag(recipe),
+        "custom_model": is_custom_model(model_family),
     }
 
 
 def _get_model_executor(recipe: RecipeSpec):
     model_family = _model_family(recipe)
     feature_builder = _feature_builder(recipe)
+    if is_custom_model(model_family) and feature_builder == "autoreg_lagged_target":
+        return _run_custom_autoreg_executor
+    if is_custom_model(model_family) and feature_builder in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
+        return _run_custom_raw_panel_executor
     if feature_builder == "autoreg_lagged_target":
         dispatch = {
             "ar": _run_ar_model_executor,
@@ -545,7 +940,7 @@ def _get_benchmark_executor(recipe: RecipeSpec):
         "paper_specific_benchmark", "survey_forecast",
     }:
         return _run_benchmark_executor
-    raise ExecutionError(f"benchmark_family {benchmark_family!r} is representable but not executable in current runtime slice")
+    raise ExecutionError(f"benchmark_family {benchmark_family!r} is not supported in current runtime slice")
 
 
 def _apply_target_transform_and_normalization(series: pd.Series, contract: PreprocessContract | None) -> pd.Series:
@@ -602,7 +997,10 @@ def _get_target_series(frame: pd.DataFrame, target: str, minimum_train_size: int
     series = frame[target].dropna().astype(float).copy()
     inferred_freq = pd.infer_freq(series.index)
     if inferred_freq is not None:
-        series.index = pd.DatetimeIndex(series.index, freq=inferred_freq)
+        try:
+            series.index = pd.DatetimeIndex(series.index, freq=inferred_freq)
+        except ValueError:
+            series.index = pd.DatetimeIndex(series.index)
     if len(series) < minimum_train_size + 1:
         raise ExecutionError(
             f"target {target!r} has insufficient non-missing observations for benchmark execution"
@@ -660,8 +1058,16 @@ def _build_lagged_supervised_matrix(train: pd.Series, lag_order: int) -> tuple[n
 
 def _recursive_predict_sklearn(model, train: pd.Series, horizon: int, lag_order: int) -> float:
     history = list(train.to_numpy(dtype=float))
+    custom_recipe = getattr(model, "_macrocast_custom_preprocessor_recipe", None)
+    custom_X_train = getattr(model, "_macrocast_custom_preprocessor_X_train", None)
+    custom_y_train = getattr(model, "_macrocast_custom_preprocessor_y_train", None)
     for _ in range(horizon):
         features = np.asarray(history[-lag_order:][::-1], dtype=float).reshape(1, -1)
+        if custom_recipe is not None:
+            _, _, features = _apply_custom_preprocessor_arrays(
+                custom_X_train, custom_y_train, features, custom_recipe,
+                context_extra={"feature_builder": "autoreg_lagged_target", "mode": "predict"},
+            )
         pred = float(model.predict(features)[0])
         history.append(pred)
     return float(history[-1])
@@ -954,24 +1360,37 @@ def _build_raw_panel_training_data(
     *,
     predictor_family: str = "all_macro_vars",
     spec: dict | None = None,
+    target_window: pd.Series | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     predictors = _raw_panel_columns(frame, target, predictor_family=predictor_family, spec=spec)
     if origin_idx - horizon < start_idx:
         raise ExecutionError("insufficient history for raw_feature_panel training data")
+
+    def _target_values() -> np.ndarray:
+        if target_window is None:
+            return frame[target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
+        expected_len = origin_idx - start_idx + 1
+        if len(target_window) != expected_len:
+            raise ExecutionError(
+                "target_window length does not match raw-panel origin window: "
+                f"expected {expected_len}, got {len(target_window)}"
+            )
+        return target_window.iloc[horizon:].to_numpy(dtype=float)
+
     # 1.5 contemporaneous_x_rule: default forbid (X at origin + train pairs X_t with y_{t+h});
     # allow uses X aligned to the target date (X_{t+h} with y_{t+h}) — the oracle / data-leak
     # benchmark variant.
     contemp_rule = (spec or {}).get("contemporaneous_x_rule", "forbid_contemporaneous")
     if contemp_rule == "allow_contemporaneous":
         X_train = frame[predictors].iloc[start_idx + horizon : origin_idx + 1].astype(float).copy()
-        y_train = frame[target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
+        y_train = _target_values()
         pred_idx = origin_idx + horizon
         if pred_idx >= len(frame):
             raise ExecutionError("contemporaneous_x_rule='allow_contemporaneous' requires X observed at the target date; target falls beyond the available index")
         X_pred = frame[predictors].iloc[[pred_idx]].astype(float).copy()
     else:
         X_train = frame[predictors].iloc[start_idx : origin_idx - horizon + 1].astype(float).copy()
-        y_train = frame[target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
+        y_train = _target_values()
         X_pred = frame[predictors].iloc[[origin_idx]].astype(float).copy()
     if len(X_train) == 0 or len(y_train) == 0:
         raise ExecutionError("raw_feature_panel produced empty training data")
@@ -1025,11 +1444,278 @@ def _run_ar_model_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, c
     }
 
 
+def _target_transformer_name(recipe: RecipeSpec | None) -> str:
+    if recipe is None:
+        return "none"
+    return str(recipe.training_spec.get("target_transformer", "none"))
+
+
+def _target_transformer_spec(recipe: RecipeSpec | None):
+    name = _target_transformer_name(recipe)
+    if name == "none":
+        return None
+    if not is_custom_target_transformer(name):
+        raise ExecutionError(f"target transformer {name!r} is not registered")
+    return get_custom_target_transformer(name)
+
+
+def _target_transformer_manifest(recipe: RecipeSpec) -> dict[str, object]:
+    spec = _target_transformer_spec(recipe)
+    if spec is None:
+        return {
+            "name": "none",
+            "model_scale": "raw",
+            "forecast_scale": "raw",
+            "evaluation_scale": "raw",
+            "runtime": "not_applicable",
+        }
+    feature_builder = _feature_builder(recipe)
+    runtime = "raw_panel_v1" if feature_builder in {"raw_feature_panel", "raw_X_only"} else "autoreg_lagged_target_v1"
+    return {
+        "name": spec.name,
+        "model_scale": spec.model_scale,
+        "forecast_scale": spec.forecast_scale,
+        "evaluation_scale": spec.evaluation_scale,
+        "runtime": runtime,
+    }
+
+
+def _coerce_target_transformer_series(value, *, index, name: str | None, transformer_name: str, role: str) -> pd.Series:
+    if isinstance(value, pd.Series):
+        arr = value.to_numpy(dtype=float)
+    else:
+        arr = np.asarray(value, dtype=float)
+    if arr.ndim == 0:
+        raise ExecutionError(f"target transformer {transformer_name!r} returned scalar {role}; expected one value per y observation")
+    flat = arr.reshape(-1)
+    if len(flat) != len(index):
+        raise ExecutionError(
+            f"target transformer {transformer_name!r} returned {role} with length {len(flat)}; expected {len(index)}"
+        )
+    return pd.Series(flat, index=index, name=name, dtype=float)
+
+
+def _target_transform_context(
+    *,
+    spec_name: str,
+    recipe: RecipeSpec,
+    horizon: int,
+    train: pd.Series,
+    target_date,
+    mode: str,
+) -> dict[str, object]:
+    return {
+        "target_transformer": spec_name,
+        "target": recipe.target,
+        "horizon": int(horizon),
+        "mode": mode,
+        "train_start_date": train.index[0].strftime("%Y-%m-%d"),
+        "train_end_date": train.index[-1].strftime("%Y-%m-%d"),
+        "origin_date": train.index[-1].strftime("%Y-%m-%d"),
+        "target_date": target_date.strftime("%Y-%m-%d") if hasattr(target_date, "strftime") else str(target_date),
+        "model_scale": "transformed",
+        "forecast_scale": "raw",
+        "evaluation_scale": "raw",
+        "contract_version": "target_transformer_v1",
+    }
+
+
+def _fit_target_transformer_for_window(
+    train: pd.Series,
+    *,
+    recipe: RecipeSpec,
+    horizon: int,
+    target_date,
+):
+    spec = _target_transformer_spec(recipe)
+    if spec is None:
+        return None, train.astype(float), {}
+    transformer = spec.factory()
+    context = _target_transform_context(
+        spec_name=spec.name,
+        recipe=recipe,
+        horizon=horizon,
+        train=train,
+        target_date=target_date,
+        mode="fit_transform",
+    )
+    fitted = transformer.fit(train.copy(), context)
+    if fitted is None:
+        fitted = transformer
+    for method in ("transform", "inverse_transform_prediction"):
+        if not callable(getattr(fitted, method, None)):
+            raise ExecutionError(f"target transformer {spec.name!r} fit result must provide callable {method}()")
+    transformed = fitted.transform(train.copy(), context)
+    transformed_series = _coerce_target_transformer_series(
+        transformed,
+        index=train.index,
+        name=train.name,
+        transformer_name=spec.name,
+        role="transformed y",
+    )
+    return fitted, transformed_series, context
+
+
+def _inverse_target_transformer_prediction(
+    fitted,
+    y_pred,
+    *,
+    recipe: RecipeSpec,
+    context: dict[str, object],
+) -> float:
+    spec = _target_transformer_spec(recipe)
+    if spec is None:
+        return float(y_pred)
+    inverse_context = dict(context)
+    inverse_context["mode"] = "inverse_prediction"
+    value = fitted.inverse_transform_prediction(float(y_pred), inverse_context)
+    arr = np.asarray(value, dtype=float)
+    if arr.ndim == 0:
+        return float(arr)
+    flat = arr.reshape(-1)
+    if len(flat) != 1:
+        raise ExecutionError(
+            f"target transformer {spec.name!r} inverse_transform_prediction must return a scalar or one-element value; got shape {arr.shape}"
+        )
+    return float(flat[0])
+
+
+def _custom_preprocessor_name(recipe: RecipeSpec | None) -> str:
+    if recipe is None:
+        return "none"
+    return str(recipe.training_spec.get("custom_preprocessor", "none"))
+
+
+def _custom_preprocessor_spec(recipe: RecipeSpec | None):
+    name = _custom_preprocessor_name(recipe)
+    if name == "none":
+        return None
+    if not is_custom_preprocessor(name):
+        raise ExecutionError(f"custom preprocessor {name!r} is not registered")
+    return get_custom_preprocessor(name)
+
+
+def _coerce_custom_preprocessor_result(result, *, name: str):
+    if isinstance(result, dict):
+        try:
+            return result["X_train"], result["X_test"]
+        except KeyError as exc:
+            raise ExecutionError(
+                f"custom preprocessor {name!r} returned a dict missing {exc.args[0]!r}"
+            ) from exc
+    if isinstance(result, tuple) and len(result) == 2:
+        return result
+    raise ExecutionError(
+        f"custom preprocessor {name!r} must return (X_train, X_test) or a dict with those keys"
+    )
+
+
+def _apply_custom_preprocessor_arrays(
+    X_train,
+    y_train,
+    X_test,
+    recipe: RecipeSpec,
+    *,
+    context_extra: dict[str, object] | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    spec = _custom_preprocessor_spec(recipe)
+    if spec is None:
+        return np.asarray(X_train, dtype=float), np.asarray(y_train, dtype=float), np.asarray(X_test, dtype=float)
+    y_arr = np.asarray(y_train, dtype=float).reshape(-1)
+    context = {
+        "preprocessor_name": spec.name,
+        "target": recipe.target,
+        "y_train_role": "read_only_context",
+        "contract_version": "custom_preprocessor_v1",
+    }
+    context.update(context_extra or {})
+    X_new, X_test_new = _coerce_custom_preprocessor_result(
+        spec.function(np.asarray(X_train, dtype=float), y_arr.copy(), np.asarray(X_test, dtype=float), context),
+        name=spec.name,
+    )
+    X_arr = np.asarray(X_new, dtype=float)
+    X_test_arr = np.asarray(X_test_new, dtype=float)
+    if X_arr.ndim != 2 or X_test_arr.ndim != 2:
+        raise ExecutionError(f"custom preprocessor {spec.name!r} must return 2-D X arrays")
+    if len(X_arr) != len(y_arr):
+        raise ExecutionError(f"custom preprocessor {spec.name!r} returned X_train/y_train with mismatched rows")
+    if X_test_arr.shape[0] != 1:
+        raise ExecutionError(f"custom preprocessor {spec.name!r} must return one-row X_test")
+    return X_arr, y_arr, X_test_arr
+
+
 def _fit_autoreg_sklearn(train: pd.Series, recipe: RecipeSpec, model_family: str, model) -> tuple[int, np.ndarray, np.ndarray, object, dict[str, object]]:
     lag_order = _lag_order(recipe, train)
     X, y = _build_lagged_supervised_matrix(train, lag_order)
-    fitted, tuning_payload = fit_with_optional_tuning(model_family, X, y, recipe.training_spec)
-    return lag_order, X, y, fitted, tuning_payload
+    X_fit, y_fit, _ = _apply_custom_preprocessor_arrays(
+        X, y, X[-1:].copy(), recipe,
+        context_extra={"feature_builder": "autoreg_lagged_target", "mode": "fit"},
+    )
+    fitted, tuning_payload = fit_with_optional_tuning(model_family, X_fit, y_fit, recipe.training_spec)
+    if _custom_preprocessor_spec(recipe) is not None:
+        setattr(fitted, "_macrocast_custom_preprocessor_recipe", recipe)
+        setattr(fitted, "_macrocast_custom_preprocessor_X_train", X)
+        setattr(fitted, "_macrocast_custom_preprocessor_y_train", y)
+    return lag_order, X_fit, y_fit, fitted, tuning_payload
+
+
+def _as_scalar_prediction(value, *, model_name: str) -> float:
+    arr = np.asarray(value, dtype=float)
+    if arr.ndim == 0:
+        return float(arr)
+    flat = arr.reshape(-1)
+    if len(flat) != 1:
+        raise ExecutionError(
+            f"custom model {model_name!r} must return a scalar or one-element prediction; got shape {arr.shape}"
+        )
+    return float(flat[0])
+
+
+def _run_custom_autoreg_executor(
+    train: pd.Series,
+    horizon: int,
+    recipe: RecipeSpec,
+    contract: PreprocessContract,
+    raw_frame: pd.DataFrame | None = None,
+    origin_idx: int | None = None,
+    start_idx: int = 0,
+) -> dict[str, float | int]:
+    model_name = _model_family(recipe)
+    spec = get_custom_model(model_name)
+    lag_order = _lag_order(recipe, train)
+    X_train, y_train = _build_lagged_supervised_matrix(train, lag_order)
+    X_train_for_custom = X_train
+    y_train_for_custom = y_train
+    history = list(train.to_numpy(dtype=float))
+    feature_names = [f"y_lag_{idx}" for idx in range(1, lag_order + 1)]
+    for step in range(1, int(horizon) + 1):
+        X_test = np.asarray(history[-lag_order:][::-1], dtype=float).reshape(1, -1)
+        context = {
+            "model_name": model_name,
+            "feature_builder": "autoreg_lagged_target",
+            "target": recipe.target,
+            "horizon": int(horizon),
+            "recursive_step": step,
+            "feature_names": feature_names,
+            "train_index": list(train.index),
+            "contract_version": "custom_model_v1",
+        }
+        if _custom_preprocessor_spec(recipe) is not None:
+            X_train_for_custom, y_train_for_custom, X_test = _apply_custom_preprocessor_arrays(
+                X_train, y_train, X_test, recipe,
+                context_extra={"feature_builder": "autoreg_lagged_target", "mode": "custom_model"},
+            )
+        pred = _as_scalar_prediction(
+            spec.function(X_train_for_custom, y_train_for_custom, X_test, context),
+            model_name=model_name,
+        )
+        history.append(pred)
+    return {
+        "y_pred": float(history[-1]),
+        "selected_lag": lag_order,
+        "selected_bic": math.nan,
+        "tuning_payload": {},
+    }
 
 
 
@@ -1177,36 +1863,83 @@ def _run_tcn_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
     return _run_deep_autoreg_executor("tcn", train, horizon)
 
 
-def _fit_raw_panel_model(raw_frame: pd.DataFrame, recipe: RecipeSpec, horizon: int, start_idx: int, origin_idx: int, contract: PreprocessContract, model_family: str, model) -> tuple[np.ndarray, np.ndarray, np.ndarray, object, dict[str, object]]:
+def _fit_raw_panel_model(
+    raw_frame: pd.DataFrame,
+    recipe: RecipeSpec,
+    horizon: int,
+    start_idx: int,
+    origin_idx: int,
+    contract: PreprocessContract,
+    model_family: str,
+    model,
+    *,
+    target_window: pd.Series | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, object, dict[str, object]]:
     X_train, y_train, X_pred = _build_raw_panel_training_data(
         raw_frame, recipe.target, horizon, start_idx, origin_idx, contract,
-        predictor_family=_predictor_family(recipe), spec=dict(recipe.data_task_spec),
+        predictor_family=_predictor_family(recipe), spec=dict(recipe.data_task_spec), target_window=target_window,
     )
-    fitted, tuning_payload = fit_with_optional_tuning(model_family, X_train, y_train, recipe.training_spec)
-    return X_train, y_train, X_pred, fitted, tuning_payload
+    X_fit, y_fit, X_pred_fit = _apply_custom_preprocessor_arrays(
+        X_train, y_train, X_pred, recipe,
+        context_extra={"feature_builder": _feature_builder(recipe), "mode": "fit"},
+    )
+    fitted, tuning_payload = fit_with_optional_tuning(model_family, X_fit, y_fit, recipe.training_spec)
+    return X_fit, y_fit, X_pred_fit, fitted, tuning_payload
+
+
+def _run_custom_raw_panel_executor(
+    train: pd.Series,
+    horizon: int,
+    recipe: RecipeSpec,
+    contract: PreprocessContract,
+    raw_frame: pd.DataFrame | None = None,
+    origin_idx: int | None = None,
+    start_idx: int = 0,
+) -> dict[str, float | int]:
+    assert raw_frame is not None and origin_idx is not None
+    model_name = _model_family(recipe)
+    spec = get_custom_model(model_name)
+    X_train, y_train, X_pred = _build_raw_panel_training_data(
+        raw_frame, recipe.target, horizon, start_idx, origin_idx, contract,
+        predictor_family=_predictor_family(recipe), spec=dict(recipe.data_task_spec), target_window=train,
+    )
+    X_train, y_train, X_pred = _apply_custom_preprocessor_arrays(
+        X_train, y_train, X_pred, recipe,
+        context_extra={"feature_builder": _feature_builder(recipe), "mode": "custom_model"},
+    )
+    context = {
+        "model_name": model_name,
+        "feature_builder": _feature_builder(recipe),
+        "target": recipe.target,
+        "horizon": int(horizon),
+        "feature_names": _raw_panel_columns(raw_frame, recipe.target, predictor_family=_predictor_family(recipe), spec=dict(recipe.data_task_spec)),
+        "contract_version": "custom_model_v1",
+    }
+    pred = _as_scalar_prediction(spec.function(X_train, y_train, X_pred, context), model_name=model_name)
+    return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": {}}
 
 
 def _run_ols_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "ols", LinearRegression())
+    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "ols", LinearRegression(), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_ridge_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "ridge", Ridge(alpha=1.0))
+    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "ridge", Ridge(alpha=1.0), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_lasso_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "lasso", Lasso(alpha=1e-4, max_iter=10000))
+    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "lasso", Lasso(alpha=1e-4, max_iter=10000), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_elasticnet_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "elasticnet", ElasticNet(alpha=1e-4, l1_ratio=0.5, max_iter=10000))
+    _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "elasticnet", ElasticNet(alpha=1e-4, l1_ratio=0.5, max_iter=10000), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -2984,6 +3717,25 @@ def _build_predictions(
     model_spec = _model_spec(recipe)
     model_executor = _get_model_executor(recipe)
     benchmark_executor = _get_benchmark_executor(recipe)
+    target_transformer_spec = _target_transformer_spec(recipe)
+    feature_builder = _feature_builder(recipe)
+    model_family = _model_family(recipe)
+    if target_transformer_spec is not None and feature_builder not in _TARGET_TRANSFORMER_FEATURE_BUILDERS:
+        raise ExecutionError(
+            "target_transformer runtime currently supports feature_builder in "
+            f"{sorted(_TARGET_TRANSFORMER_FEATURE_BUILDERS)}"
+        )
+    if (
+        target_transformer_spec is not None
+        and feature_builder in {"raw_feature_panel", "raw_X_only"}
+        and model_family not in _TARGET_TRANSFORMER_RAW_PANEL_MODELS
+        and not is_custom_model(model_family)
+    ):
+        raise ExecutionError(
+            "target_transformer raw-panel runtime currently supports "
+            f"model_family in {sorted(_TARGET_TRANSFORMER_RAW_PANEL_MODELS)} or a registered custom model; "
+            f"got {model_family!r}"
+        )
 
     last_tuning_payload: dict[str, object] = {}
     aligned_frame = raw_frame.loc[target_series.index]
@@ -3053,9 +3805,25 @@ def _build_predictions(
         # Stage 2 — compute each origin's row. Thread-pool when requested.
         def _compute_origin(origin_idx: int, start_idx: int, effective_origin_idx: int) -> tuple[dict[str, object], dict[str, object] | None]:
             train = target_series.iloc[start_idx : effective_origin_idx + 1]
-            model_output = model_executor(train, horizon, recipe, contract, aligned_frame, effective_origin_idx, start_idx)
+            train_for_model = train
+            target_transform_context: dict[str, object] = {}
+            fitted_target_transformer = None
+            if target_transformer_spec is not None:
+                fitted_target_transformer, train_for_model, target_transform_context = _fit_target_transformer_for_window(
+                    train,
+                    recipe=recipe,
+                    horizon=horizon,
+                    target_date=target_series.index[origin_idx + horizon],
+                )
+            model_output = model_executor(train_for_model, horizon, recipe, contract, aligned_frame, effective_origin_idx, start_idx)
             tuning_payload = model_output.get("tuning_payload") or None
-            y_pred = float(model_output["y_pred"])
+            y_pred_model_scale = float(model_output["y_pred"])
+            y_pred = _inverse_target_transformer_prediction(
+                fitted_target_transformer,
+                y_pred_model_scale,
+                recipe=recipe,
+                context=target_transform_context,
+            ) if target_transformer_spec is not None else y_pred_model_scale
             benchmark_pred = float(benchmark_executor(train, horizon, recipe))
             y_true = float(target_series.iloc[origin_idx + horizon])
             # Level-scale values are kept for provenance; metric-scale values
@@ -3086,6 +3854,10 @@ def _build_predictions(
                 "y_true": y_true,
                 "y_pred": y_pred,
                 "benchmark_pred": benchmark_pred,
+                "y_pred_model_scale": y_pred_model_scale,
+                "target_transformer": target_transformer_spec.name if target_transformer_spec is not None else "none",
+                "model_target_scale": "transformed" if target_transformer_spec is not None else "raw",
+                "forecast_scale": "raw",
                 "error": error,
                 "abs_error": abs(error),
                 "squared_error": error**2,
@@ -3370,7 +4142,7 @@ def execute_recipe(
         "expert_benchmark", "multi_benchmark_suite",
     }:
         raise ExecutionError(
-            f"benchmark_family {_benchmark_family(recipe)!r} is representable but not executable in current runtime slice"
+            f"benchmark_family {_benchmark_family(recipe)!r} is not supported in current runtime slice"
         )
     # Touch new benchmark axes so grep can confirm wiring (Phase 4).
     _ = _benchmark_window(recipe)
@@ -3412,6 +4184,10 @@ def execute_recipe(
         seed=int(reproducibility_spec.get("seed", 42)),
     )
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
+    raw_result = _apply_frequency_policy(raw_result, recipe)
+    raw_result = _apply_sd_inferred_tcodes(raw_result, recipe)
+    raw_result = _apply_tcode_preprocessing(raw_result, preprocess, target=str(recipe.target) if getattr(recipe, 'target', None) else None)
+    raw_result = _apply_sample_period_and_availability(raw_result, recipe, target=str(recipe.target) if getattr(recipe, 'target', None) else None)
     _release_lag = _data_task_axis(recipe, "release_lag_rule")
     _missing_avail = _data_task_axis(recipe, "missing_availability")
     _var_universe = _data_task_axis(recipe, "variable_universe")
@@ -3496,9 +4272,12 @@ def execute_recipe(
         "execution_architecture": _EXECUTION_ARCHITECTURE,
         "forecast_engine": _model_spec(recipe)["executor_name"],
         "model_spec": _model_spec(recipe),
+        "target_transformer": _target_transformer_manifest(recipe),
         "benchmark_name": _benchmark_family(recipe),
         "benchmark_spec": _benchmark_spec(recipe),
         "data_task_spec": dict(recipe.data_task_spec),
+        "data_warnings": _data_warnings(raw_result),
+        "data_reports": _data_reports(raw_result),
         "training_spec": dict(recipe.training_spec),
         "evaluation_spec": evaluation_spec,
         "stat_test_spec": stat_test_spec,

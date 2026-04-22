@@ -99,9 +99,9 @@ def test_release_lag_fixed_lag_all_series_executes() -> None:
 
 # ---------- missing_availability ----------
 
-def test_missing_availability_complete_case_default_compiles() -> None:
+def test_missing_availability_zero_fill_default_compiles() -> None:
     r = compile_recipe_dict(_recipe())
-    assert r.manifest["data_task_spec"]["missing_availability"] == "complete_case_only"
+    assert r.manifest["data_task_spec"]["missing_availability"] == "zero_fill_before_start"
 
 
 def test_missing_availability_available_case_compiles() -> None:
@@ -109,10 +109,7 @@ def test_missing_availability_available_case_compiles() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_missing_availability_x_impute_only_requires_strategy() -> None:
-    # Compile is executable; runtime guard fires when the execution path calls
-    # _apply_missing_availability without the strategy. Here we confirm the
-    # axis value is accepted at compile time.
+def test_missing_availability_x_impute_only_compiles_with_strategy() -> None:
     r = compile_recipe_dict(_recipe(
         missing_availability="x_impute_only",
         _leaf={"x_imputation": "ffill"},

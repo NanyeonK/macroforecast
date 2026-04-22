@@ -11,9 +11,9 @@ Declares **where the data comes from and which information-set regime applies**.
 
 **Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as 0.5 `registry_type` drop).
 **At a glance (defaults):**
-- `dataset` — no default; you always pick one of fred_md / fred_qd / fred_sd.
+- `dataset` — no default; you pick one of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`.
 - `dataset_source` — mirrors `dataset` automatically (canonical FRED loader). Override only for `custom_csv` / `custom_parquet`.
-- `frequency` — derived from `dataset` (fred_md→monthly, fred_qd→quarterly). Rarely set by hand.
+- `frequency` — derived from `dataset` for MD/QD/composites. Standalone `fred_sd` requires an explicit monthly/quarterly choice.
 - `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_revised` only when you want synthetic release-lag masking.
 
 **Most research runs need only `dataset` + `information_set_type`.** The other two auto-derive.
@@ -32,15 +32,18 @@ Declares **where the data comes from and which information-set regime applies**.
 | `fred_md` | operational | `macrocast.raw.load_fred_md` | FRED-MD monthly macro panel (McCracken & Ng 2016) — see [fred_md.md](datasets/fred_md.md) |
 | `fred_qd` | operational | `macrocast.raw.load_fred_qd` | FRED-QD quarterly macro panel (McCracken & Ng 2020) — see [fred_qd.md](datasets/fred_qd.md) |
 | `fred_sd` | operational | `macrocast.raw.load_fred_sd` | FRED-SD state-level real-time panel (Bokun, Jackson, Kliesen, Owyang 2022) — see [fred_sd.md](datasets/fred_sd.md) |
+| `fred_md+fred_sd` | operational | composite loader | FRED-MD monthly panel plus FRED-SD state panel converted to monthly when needed. |
+| `fred_qd+fred_sd` | operational | composite loader | FRED-QD quarterly panel plus FRED-SD state panel converted to quarterly when needed. |
 
-Each dataset has its own dedicated documentation page covering citation, download path, variable groups, transformation codes, and changes from the original working paper to the current vintage. All three values are fully wired end-to-end: the registry entry is used by the compiler, the loader is chosen at run time via `_load_raw_for_recipe`, and the resulting panel flows into every downstream axis.
+Each base dataset has its own dedicated documentation page covering citation, download path, variable groups, transformation codes, and changes from the original working paper to the current vintage. Composite dataset values are compiler/runtime contracts over those base loaders: the registry entry is used by the compiler, the composite loader chooses the relevant FRED loaders at run time, and the merged panel flows into every downstream axis.
 
 ### Functions & features
 
 - `macrocast.load_fred_md()` / `load_fred_qd()` / `load_fred_sd()` — public loaders.
 - `macrocast.raw.datasets.fred_md` / `fred_qd` / `fred_sd` — per-dataset modules with cache + manifest logic.
 - Compiler reads `dataset` via `_selection_value(selection_map, "dataset")` → propagated into `CompiledRecipeSpec.dataset` and every downstream spec.
-- `_DATASET_DEFAULT_FREQUENCY` in `compiler/build.py` maps each dataset to its default `frequency` value.
+- `_DATASET_DEFAULT_FREQUENCY` in `compiler/build.py` maps MD/QD/composite datasets to their default `frequency` value.
+- Compile guard: standalone `dataset=fred_sd` requires explicit `frequency`; `fred_md+fred_sd` requires monthly; `fred_qd+fred_sd` requires quarterly.
 
 ### Recipe usage
 
@@ -139,19 +142,21 @@ path:
 
 ## 1.1.3 `frequency`
 
-**Series frequency of the dataset panel.** Dataset-derived in v1.0; user override has no runtime effect.
+**Series frequency of the dataset panel.** Dataset-derived for MD/QD/composite runs; required for standalone FRED-SD runs.
 
 ### Value catalog
 
 | Value | Status | Which dataset uses this |
 |---|---|---|
-| `monthly` | operational | `fred_md`, `fred_sd` |
-| `quarterly` | operational | `fred_qd` |
+| `monthly` | operational | `fred_md`, `fred_md+fred_sd`, standalone `fred_sd` when requested |
+| `quarterly` | operational | `fred_qd`, `fred_qd+fred_sd`, standalone `fred_sd` when requested |
 
 ### Functions & features
 
-- Compiler default: `_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")` — so `dataset=fred_md` implies `frequency=monthly`, `dataset=fred_qd` implies `frequency=quarterly`, etc.
-- User can place `frequency` in `fixed_axes`, but downstream execution does not dispatch on it — the actual data cadence comes from the loaded panel's index, not this axis.
+- Compiler default: `dataset=fred_md` implies `frequency=monthly`, `dataset=fred_qd` implies `frequency=quarterly`, `dataset=fred_md+fred_sd` implies `monthly`, and `dataset=fred_qd+fred_sd` implies `quarterly`.
+- Standalone `dataset=fred_sd` has no safe default because the source contains monthly and quarterly state series. The compiler requires `frequency` in `fixed_axes`.
+- Runtime frequency conversion is active: monthly data requested as quarterly are converted by 3-month average; quarterly data requested as monthly are linearly interpolated. Both conversions append warnings/reports to provenance.
+- Composite rules are strict: `fred_md+fred_sd` is monthly and `fred_qd+fred_sd` is quarterly. Explicit conflicting `frequency` values raise `CompileValidationError`.
 
 ### Dropped values
 
@@ -160,7 +165,7 @@ path:
 
 ### Recipe usage
 
-Usually omitted (dataset implies the frequency). Explicit only when the manifest needs to carry an override tag — but the override does not change runtime behaviour in v1.0.
+Usually omitted for MD/QD/composites because the dataset implies the frequency. Required for standalone FRED-SD.
 
 ---
 
@@ -209,9 +214,9 @@ path:
 
 ## Source & Frame (1.1) takeaways
 
-- **`dataset`** and **`information_set_type`** are the two axes the user actually decides in 1.1.
+- **`dataset`** and **`information_set_type`** are the two axes the user usually decides in 1.1; standalone FRED-SD also requires `frequency`.
 - **`dataset_source`** now carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. 14 reserved third-party adapter labels dropped.
-- **`frequency`** is declarative / dataset-derived in v1.0.
+- **`frequency`** is executable: it controls conversion and is compile-checked for FRED-SD composites.
 - **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).
 
 Next group: [1.2 Task & target](task.md) (coming) — what exactly is being forecast.

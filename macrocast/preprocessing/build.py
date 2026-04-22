@@ -340,7 +340,26 @@ def is_operational_preprocess_contract(contract: PreprocessContract) -> bool:
     # Normalize evaluation_scale: original_scale and raw_level are aliases for back-compat (Phase 3 rename).
     eval_norm = "raw_level" if contract.evaluation_scale in {"raw_level", "original_scale"} else contract.evaluation_scale
     contract_norm = _replace(contract, evaluation_scale=eval_norm)
-    return contract_norm == raw_only or _supported_train_only_extra(contract)
+    tcode_only = build_preprocess_contract(
+        target_transform_policy="tcode_transformed",
+        x_transform_policy="dataset_tcode_transformed",
+        tcode_policy="tcode_only",
+        target_missing_policy="none",
+        x_missing_policy="none",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="none",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="tcode_only",
+        preprocess_fit_scope="not_applicable",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        representation_policy="tcode_only",
+        tcode_application_scope="apply_tcode_to_both",
+    )
+    tcode_only_norm = _replace(tcode_only, evaluation_scale=eval_norm)
+    return contract_norm in (raw_only, tcode_only_norm) or _supported_train_only_extra(contract)
 
 
 def check_preprocess_governance(

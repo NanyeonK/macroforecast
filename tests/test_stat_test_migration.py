@@ -111,4 +111,4 @@ def test_compile_hook_runs_migration_via_compile_recipe_dict(tmp_path) -> None:
     assert any(issubclass(w.category, DeprecationWarning) for w in caught), (
         "compile_recipe_dict should emit DeprecationWarning via the migration shim"
     )
-    assert result.compiled.execution_status in ("executable", "representable_but_not_executable")
+    assert result.compiled.execution_status == "executable"

@@ -16,6 +16,7 @@ _NEW_AXES = {
         'layer': '1_data_task',
         'expected': {
             'complete_case_only', 'available_case', 'x_impute_only',
+            'zero_fill_before_start',
         },
     },
     'variable_universe': {
@@ -74,5 +75,5 @@ def test_structural_break_segmentation_values_match_plan():
     # v1.0 1.5 cleanup trimmed 2 future values (break_test_detected, rolling_break_adaptive).
     expected = {"none", "pre_post_crisis", "pre_post_covid"}
     assert set(get_axis_registry()['structural_break_segmentation'].allowed_values) == expected
-
+    assert get_axis_registry()['structural_break_segmentation'].layer == "2_preprocessing"
 

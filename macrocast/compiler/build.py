@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,13 @@ from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
 from ..design import build_design_frame, resolve_route_owner, design_to_dict
+from ..custom import (
+    get_custom_target_transformer,
+    get_custom_preprocessor,
+    is_custom_model,
+    is_custom_preprocessor,
+    is_custom_target_transformer,
+)
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
 
@@ -32,7 +40,28 @@ _DATASET_DEFAULT_FREQUENCY = {
     "fred_md": "monthly",
     "fred_qd": "quarterly",
     "fred_sd": "monthly",
+    "fred_md+fred_sd": "monthly",
+    "fred_qd+fred_sd": "quarterly",
 }
+
+_COMPOSITE_DATASET_FREQUENCY = {
+    "fred_md+fred_sd": "monthly",
+    "fred_qd+fred_sd": "quarterly",
+}
+
+_X_IMPUTATION_METHODS = {"mean", "median", "ffill", "bfill"}
+
+_MULTI_BENCHMARK_ALLOWED_MEMBERS = {
+    "historical_mean",
+    "zero_change",
+    "ar_bic",
+    "rolling_mean",
+    "ar_fixed_p",
+    "ardi",
+}
+
+_TARGET_TRANSFORMER_FEATURE_BUILDERS = {"autoreg_lagged_target", "raw_feature_panel", "raw_X_only"}
+_TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
 
 
 def load_recipe_yaml(path: str | Path) -> dict[str, Any]:
@@ -69,17 +98,23 @@ def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, 
                 raw_values = tuple(raw_value) if isinstance(raw_value, list) else (raw_value,)
                 values = tuple(_canonical_axis_value(axis_name, str(value)) for value in raw_values)
                 for value in values:
-                    if value not in entry.allowed_values:
+                    dynamic_allowed = (
+                        (axis_name == "model_family" and is_custom_model(value))
+                        or (axis_name == "custom_preprocessor" and is_custom_preprocessor(value))
+                        or (axis_name == "target_transformer" and is_custom_target_transformer(value))
+                    )
+                    if value not in entry.allowed_values and not dynamic_allowed:
                         raise CompileValidationError(
                             f"axis {raw_axis_name!r} received unknown value {value!r}"
                         )
+                selected_status = {value: entry.current_status.get(value, "operational") for value in values}
                 selections.append(
                     AxisSelection(
                         axis_name=axis_name,
                         layer=layer,
                         selection_mode=mode_name,
                         selected_values=values,
-                        selected_status={value: entry.current_status[value] for value in values},
+                        selected_status=selected_status,
                     )
                 )
     return tuple(selections)
@@ -213,6 +248,68 @@ def _selection_value(selection_map: dict[str, AxisSelection], axis_name: str, de
     return values[0]
 
 
+_OFFICIAL_TCODE_POLICIES = {"tcode_only", "tcode_then_extra_preprocess", "extra_then_tcode"}
+
+
+def _legacy_official_transform_policy(selection_map: dict[str, AxisSelection]) -> str:
+    tcode_policy = _selection_value(selection_map, "tcode_policy", default="raw_only")
+    target_policy = _selection_value(selection_map, "target_transform_policy", default="raw_level")
+    x_policy = _selection_value(selection_map, "x_transform_policy", default="raw_level")
+    scope = _selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none")
+    if (
+        tcode_policy in _OFFICIAL_TCODE_POLICIES
+        or target_policy == "tcode_transformed"
+        or x_policy == "dataset_tcode_transformed"
+        or scope != "apply_tcode_to_none"
+    ):
+        return "dataset_tcode"
+    return "raw_official_frame"
+
+
+def _official_transform_policy(selection_map: dict[str, AxisSelection]) -> str:
+    return _selection_value(
+        selection_map,
+        "official_transform_policy",
+        default=_legacy_official_transform_policy(selection_map),
+    )
+
+
+def _official_transform_scope(selection_map: dict[str, AxisSelection]) -> str:
+    return _selection_value(
+        selection_map,
+        "official_transform_scope",
+        default=_selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none"),
+    )
+
+
+def _validate_official_transform_contract(selection_map: dict[str, AxisSelection]) -> None:
+    """Keep the new Layer 1 official-transform axes aligned with legacy Layer 2 bridge axes."""
+
+    policy = _official_transform_policy(selection_map)
+    scope = _official_transform_scope(selection_map)
+    if policy == "raw_official_frame" and scope != "apply_tcode_to_none":
+        raise CompileValidationError(
+            "official_transform_policy='raw_official_frame' requires official_transform_scope='apply_tcode_to_none'"
+        )
+    if policy == "dataset_tcode" and scope == "apply_tcode_to_none":
+        raise CompileValidationError(
+            "official_transform_policy='dataset_tcode' requires an official_transform_scope other than 'apply_tcode_to_none'"
+        )
+
+    legacy_policy = _legacy_official_transform_policy(selection_map)
+    legacy_scope = _selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none")
+    if "official_transform_policy" in selection_map and policy != legacy_policy:
+        raise CompileValidationError(
+            "official_transform_policy conflicts with legacy Layer 2 t-code representation axes; "
+            f"got official_transform_policy={policy!r}, legacy policy={legacy_policy!r}"
+        )
+    if "official_transform_scope" in selection_map and scope != legacy_scope:
+        raise CompileValidationError(
+            "official_transform_scope conflicts with legacy Layer 2 tcode_application_scope; "
+            f"got official_transform_scope={scope!r}, tcode_application_scope={legacy_scope!r}"
+        )
+
+
 def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
     required = {
         "target_transform_policy",
@@ -332,11 +429,15 @@ def _build_tree_context(
     if reproducibility_mode is None:
         reproducibility_mode = next((selection.selected_values[0] for selection in selections if selection.axis_name == "reproducibility_mode"), "best_effort")
     failure_policy = next((selection.selected_values[0] for selection in selections if selection.axis_name == "failure_policy"), "fail_fast")
+    variation_axes = _variation_axes(selections)
     return {
         "research_design": stage0.research_design,
         "design_shape": stage0.design_shape,
         "execution_posture": stage0.execution_posture,
         "experiment_unit": stage0.experiment_unit,
+        "route_contract": _route_contract(stage0, run_spec, selections),
+        "variation_axes": list(variation_axes),
+        "controlled_axis_kind": _controlled_axis_kind(variation_axes),
         "reproducibility_mode": reproducibility_mode,
         "failure_policy": failure_policy,
         "compute_mode": next((selection.selected_values[0] for selection in selections if selection.axis_name == "compute_mode"), "serial"),
@@ -350,6 +451,51 @@ def _build_tree_context(
         "axis_layers": _json_like(axis_layers),
         "leaf_config": _json_like(dict(leaf_config)),
     }
+
+
+def _variation_axes(selections: tuple[AxisSelection, ...]) -> tuple[str, ...]:
+    return tuple(
+        f"{selection.layer}.{selection.axis_name}"
+        for selection in selections
+        if selection.selection_mode in {"sweep", "conditional"} and len(selection.selected_values) > 1
+    )
+
+
+def _controlled_axis_kind(variation_axes: tuple[str, ...]) -> str:
+    if not variation_axes:
+        return "none"
+    kinds: list[str] = []
+    for axis in variation_axes:
+        axis_name = axis.rsplit(".", 1)[-1]
+        if axis_name == "model_family":
+            kinds.append("model")
+        elif axis_name == "feature_builder":
+            kinds.append("feature")
+        elif axis.startswith("2_preprocessing."):
+            kinds.append("preprocessing")
+        elif axis_name in {"hp_space_style", "search_algorithm", "validation_splitter"}:
+            kinds.append("tuning")
+        else:
+            kinds.append(axis_name)
+    unique = tuple(dict.fromkeys(kinds))
+    if len(unique) == 1:
+        return unique[0]
+    return "multi_axis"
+
+
+def _route_contract(stage0, run_spec: RunSpec, selections: tuple[AxisSelection, ...]) -> str:
+    route_owner = run_spec.route_owner
+    if route_owner == "single_run":
+        if _variation_axes(selections):
+            return "sweep_runner_executable"
+        return "single_run_executable"
+    if route_owner == "wrapper":
+        return "wrapper_handoff"
+    if route_owner == "replication":
+        return "replication_handoff"
+    if route_owner == "orchestrator":
+        return "orchestrator_handoff"
+    return "not_supported_route"
 
 
 def _tree_context_summary(tree_context: dict[str, Any]) -> str:
@@ -372,6 +518,170 @@ def _first_selected_value(selection_map: dict[str, AxisSelection], axis_name: st
     return selection.selected_values[0]
 
 
+def _is_non_empty_sequence(value: Any) -> bool:
+    return isinstance(value, Sequence) and not isinstance(value, (str, bytes)) and len(value) > 0
+
+
+def _require_non_empty_sequence(leaf_config: dict[str, Any], key: str, context: str) -> Sequence:
+    value = leaf_config.get(key)
+    if not _is_non_empty_sequence(value):
+        raise CompileValidationError(f"{context} requires leaf_config.{key} as a non-empty list")
+    return value
+
+
+def _require_non_empty_mapping(leaf_config: dict[str, Any], key: str, context: str) -> Mapping:
+    value = leaf_config.get(key)
+    if not isinstance(value, Mapping) or not value:
+        raise CompileValidationError(f"{context} requires leaf_config.{key} as a non-empty dict")
+    return value
+
+
+def _targets_for_layer1_contract(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> tuple[str, ...]:
+    task = _selection_value(selection_map, "task")
+    if task == "multi_target_point_forecast":
+        targets = leaf_config.get("targets")
+        if not _is_non_empty_sequence(targets):
+            return ()
+        return tuple(str(target) for target in targets)
+    target = leaf_config.get("target")
+    return (str(target),) if target else ()
+
+
+def _require_mapping_entries_for_targets(
+    leaf_config: dict[str, Any],
+    key: str,
+    context: str,
+    targets: tuple[str, ...],
+) -> Mapping:
+    mapping = _require_non_empty_mapping(leaf_config, key, context)
+    missing = [target for target in targets if target not in mapping]
+    if missing:
+        raise CompileValidationError(f"{context} requires leaf_config.{key} entries for targets: {missing}")
+    return mapping
+
+
+def _validate_layer1_data_task_contract(
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+) -> None:
+    """Close Layer 1 values whose runtime semantics require leaf_config inputs."""
+
+    _validate_official_transform_contract(selection_map)
+
+    dataset = _selection_value(selection_map, "dataset")
+    if dataset == "fred_sd" and "frequency" not in selection_map:
+        raise CompileValidationError("dataset='fred_sd' requires explicit frequency ('monthly' or 'quarterly')")
+    if dataset in _COMPOSITE_DATASET_FREQUENCY:
+        expected = _COMPOSITE_DATASET_FREQUENCY[dataset]
+        frequency = _selection_value(selection_map, "frequency", default=expected)
+        if frequency != expected:
+            raise CompileValidationError(
+                f"dataset={dataset!r} requires frequency={expected!r}; got {frequency!r}"
+            )
+
+    targets = _targets_for_layer1_contract(selection_map, leaf_config)
+
+    variable_universe = _selection_value(selection_map, "variable_universe", default="all_variables")
+    if variable_universe == "handpicked_set":
+        _require_non_empty_sequence(
+            leaf_config,
+            "variable_universe_columns",
+            "variable_universe='handpicked_set'",
+        )
+    elif variable_universe == "category_subset":
+        _require_non_empty_mapping(
+            leaf_config,
+            "variable_universe_category_columns",
+            "variable_universe='category_subset'",
+        )
+        if not leaf_config.get("variable_universe_category"):
+            raise CompileValidationError(
+                "variable_universe='category_subset' requires leaf_config.variable_universe_category"
+            )
+    elif variable_universe == "target_specific_subset":
+        _require_mapping_entries_for_targets(
+            leaf_config,
+            "target_specific_columns",
+            "variable_universe='target_specific_subset'",
+            targets,
+        )
+
+    predictor_family = _selection_value(selection_map, "predictor_family", default="target_lags_only")
+    if predictor_family == "handpicked_set":
+        _require_non_empty_sequence(
+            leaf_config,
+            "handpicked_columns",
+            "predictor_family='handpicked_set'",
+        )
+    elif predictor_family == "category_based":
+        _require_non_empty_mapping(
+            leaf_config,
+            "predictor_category_columns",
+            "predictor_family='category_based'",
+        )
+        if not leaf_config.get("predictor_category"):
+            raise CompileValidationError("predictor_family='category_based' requires leaf_config.predictor_category")
+
+    deterministic_components = _selection_value(selection_map, "deterministic_components", default="none")
+    if deterministic_components == "break_dummies":
+        _require_non_empty_sequence(
+            leaf_config,
+            "break_dates",
+            "deterministic_components='break_dummies'",
+        )
+
+    benchmark_family = _selection_value(selection_map, "benchmark_family")
+    if benchmark_family == "multi_benchmark_suite":
+        suite = _require_non_empty_sequence(
+            leaf_config,
+            "benchmark_suite",
+            "benchmark_family='multi_benchmark_suite'",
+        )
+        unknown = sorted(set(suite) - _MULTI_BENCHMARK_ALLOWED_MEMBERS)
+        if unknown:
+            raise CompileValidationError(
+                "benchmark_family='multi_benchmark_suite' supports benchmark_suite members "
+                f"{sorted(_MULTI_BENCHMARK_ALLOWED_MEMBERS)}; got unsupported members {unknown}"
+            )
+    elif benchmark_family == "paper_specific_benchmark":
+        _require_mapping_entries_for_targets(
+            leaf_config,
+            "paper_forecast_series",
+            "benchmark_family='paper_specific_benchmark'",
+            targets,
+        )
+    elif benchmark_family == "survey_forecast":
+        _require_mapping_entries_for_targets(
+            leaf_config,
+            "survey_forecast_series",
+            "benchmark_family='survey_forecast'",
+            targets,
+        )
+    elif benchmark_family == "expert_benchmark":
+        benchmark_config = leaf_config.get("benchmark_config", {})
+        if not isinstance(benchmark_config, Mapping) or not benchmark_config.get("expert_callable"):
+            raise CompileValidationError(
+                "benchmark_family='expert_benchmark' requires leaf_config.benchmark_config.expert_callable"
+            )
+
+    missing_availability = _selection_value(selection_map, "missing_availability", default="zero_fill_before_start")
+    if missing_availability == "x_impute_only":
+        method = leaf_config.get("x_imputation")
+        if method not in _X_IMPUTATION_METHODS:
+            raise CompileValidationError(
+                "missing_availability='x_impute_only' requires leaf_config.x_imputation "
+                f"in {sorted(_X_IMPUTATION_METHODS)}"
+            )
+
+    release_lag_rule = _selection_value(selection_map, "release_lag_rule", default="ignore_release_lag")
+    if release_lag_rule == "series_specific_lag":
+        _require_non_empty_mapping(
+            leaf_config,
+            "release_lag_per_series",
+            "release_lag_rule='series_specific_lag'",
+        )
+
+
 def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     dataset = _first_selected_value(selection_map, "dataset", "fred_md")
     task = _first_selected_value(selection_map, "task", "single_target_point_forecast")
@@ -382,6 +692,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     return {
         "custom_data_path": leaf_config.get("custom_data_path"),
         "dataset_source": _selection_value(selection_map, "dataset_source", default=dataset),
+        "official_transform_policy": _official_transform_policy(selection_map),
+        "official_transform_scope": _official_transform_scope(selection_map),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
         "forecast_type": _selection_value(selection_map, "forecast_type", default=("iterated" if feature_builder == "autoreg_lagged_target" else "direct")),
@@ -393,6 +705,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
         "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
         "training_start_date": leaf_config.get("training_start_date"),
+        "sample_start_date": leaf_config.get("sample_start_date"),
+        "sample_end_date": leaf_config.get("sample_end_date"),
         # 1.4 variable_universe input channels
         "variable_universe_category": leaf_config.get("variable_universe_category"),
         "variable_universe_category_columns": leaf_config.get("variable_universe_category_columns"),
@@ -411,10 +725,15 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         # 1.5 release_lag_rule + missing_availability + contemporaneous_x_rule input channels
         "release_lag_per_series": leaf_config.get("release_lag_per_series"),
         "x_imputation": leaf_config.get("x_imputation"),
+        # FRED-SD inferred t-codes are opt-in research metadata, not source
+        # metadata. Runtime consumes these fields before t-code preprocessing.
+        "sd_tcode_policy": leaf_config.get("sd_tcode_policy", "none"),
+        "sd_tcode_map_version": leaf_config.get("sd_tcode_map_version"),
+        "sd_tcode_allowed_statuses": leaf_config.get("sd_tcode_allowed_statuses"),
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
-        "missing_availability": _selection_value(selection_map, "missing_availability", default="complete_case_only"),
+        "missing_availability": _selection_value(selection_map, "missing_availability", default="zero_fill_before_start"),
         "release_lag_rule": _selection_value(selection_map, "release_lag_rule", default="ignore_release_lag"),
         "benchmark_family": _selection_value(selection_map, "benchmark_family"),
         "data_vintage": leaf_config.get("data_vintage"),
@@ -426,6 +745,12 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
     feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
     model_family = _first_selected_value(selection_map, "model_family", "ar")
     training_cfg = dict(leaf_config.get("training_config", {}))
+    custom_preprocessor = _selection_value(selection_map, "custom_preprocessor", default="none")
+    if custom_preprocessor != "none":
+        get_custom_preprocessor(custom_preprocessor)
+    target_transformer = _selection_value(selection_map, "target_transformer", default="none")
+    if target_transformer != "none":
+        get_custom_target_transformer(target_transformer)
     return {
         "outer_window": _selection_value(selection_map, "outer_window", default=framework),
         "refit_policy": _selection_value(selection_map, "refit_policy", default="refit_every_step"),
@@ -468,6 +793,11 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "factor_ar_lags": training_cfg.get("factor_ar_lags", 1),
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
+        "custom_preprocessor": custom_preprocessor,
+        "target_transformer": target_transformer,
+        "target_transformer_model_scale": "transformed" if target_transformer != "none" else "raw",
+        "target_transformer_forecast_scale": "raw",
+        "target_transformer_evaluation_scale": "raw",
         "random_seed": leaf_config.get("random_seed", 42),
     }
 
@@ -606,12 +936,19 @@ def _execution_status(
     selections: tuple[AxisSelection, ...],
     preprocess_contract,
     leaf_config: dict[str, Any] | None = None,
+    stage0=None,
+    run_spec: RunSpec | None = None,
 ) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
     warnings: list[str] = []
     blocked: list[str] = []
+    not_supported: list[str] = []
     leaf_config = dict(leaf_config or {})
     selection_map = _selection_map(selections)
     registry = get_axis_registry()
+    has_runner_managed_sweep = any(
+        selection.selection_mode in {"sweep", "conditional"} and len(selection.selected_values) > 1
+        for selection in selections
+    )
 
     failure_policy = _selection_value(selection_map, "failure_policy", default="fail_fast")
 
@@ -619,20 +956,20 @@ def _execution_status(
         entry = registry[selection.axis_name]
         if selection.selection_mode == "sweep" and entry.default_policy == "fixed":
             warnings.append(
-                f"fixed-policy axis '{selection.axis_name}' placed in sweep_axes; grammar allows representation, but governance expects a fixed selection for this axis"
+                f"fixed-policy axis '{selection.axis_name}' placed in sweep_axes; grammar accepts it, but governance expects a fixed selection for this axis"
             )
         if selection.selection_mode in {"sweep", "conditional"} and len(selection.selected_values) > 1:
             warnings.append(
-                f"axis {selection.axis_name} uses internal sweep values {selection.selected_values}; internal sweep runtime not yet operational"
+                f"axis {selection.axis_name} uses runner-managed sweep values {selection.selected_values}; execute via compile_sweep_plan/execute_sweep"
             )
         for value, status in selection.selected_status.items():
             if status in {"registry_only", "planned", "external_plugin", "not_supported_yet"}:
-                warnings.append(
-                    f"axis {selection.axis_name} value {value} is representable but not executable (status={status})"
+                not_supported.append(
+                    f"axis {selection.axis_name} value {value} is not supported by the current runtime (status={status})"
                 )
 
     if not is_operational_preprocess_contract(preprocess_contract):
-        warnings.append("preprocessing contract is representable but not executable in the current runtime slice")
+        not_supported.append("preprocessing contract is not supported by the current runtime slice")
 
     if preprocess_contract.tcode_policy == "raw_only" and preprocess_contract.preprocess_order != "none":
         blocked.append("raw_only tcode_policy cannot be paired with non-none preprocess_order")
@@ -644,6 +981,10 @@ def _execution_status(
     forecast_object = _selection_value(selection_map, "forecast_object", default="point_mean")
     if model_family == "quantile_linear" and forecast_object not in {"point_median", "quantile"}:
         blocked.append("model_family='quantile_linear' requires forecast_object='point_median' or 'quantile'")
+    if forecast_object in {"point_median", "quantile"} and model_family != "quantile_linear":
+        blocked.append(
+            f"forecast_object={forecast_object!r} requires model_family='quantile_linear' in the current runtime slice"
+        )
 
     # 1.3 training_start_rule=fixed_start requires leaf_config.training_start_date
     if feature_builder is not None:
@@ -678,33 +1019,94 @@ def _execution_status(
         if predictor_family == "all_macro_vars" and feature_builder not in {"raw_feature_panel", "factor_pca", "factors_plus_AR"}:
             blocked.append("predictor_family='all_macro_vars' requires feature_builder in {'raw_feature_panel', 'factor_pca', 'factors_plus_AR'} in the current runtime slice")
 
+    target_transformer = _selection_value(selection_map, "target_transformer", default="none")
+    if target_transformer != "none":
+        if feature_builder not in _TARGET_TRANSFORMER_FEATURE_BUILDERS:
+            blocked.append(
+                "target_transformer is currently executable only with feature_builder in "
+                f"{sorted(_TARGET_TRANSFORMER_FEATURE_BUILDERS)}"
+            )
+        if (
+            feature_builder in {"raw_feature_panel", "raw_X_only"}
+            and model_family is not None
+            and model_family not in _TARGET_TRANSFORMER_RAW_PANEL_MODELS
+            and not is_custom_model(model_family)
+        ):
+            blocked.append(
+                "target_transformer raw-panel runtime currently supports "
+                f"model_family in {sorted(_TARGET_TRANSFORMER_RAW_PANEL_MODELS)} or a registered custom model; "
+                f"got {model_family!r}"
+            )
+        if getattr(preprocess_contract, "target_transform", "level") != "level":
+            blocked.append("target_transformer requires target_transform='level' until built-in and custom y transforms are composed")
+        if getattr(preprocess_contract, "target_normalization", "none") != "none":
+            blocked.append("target_transformer requires target_normalization='none' until normalization composition is implemented")
+        if getattr(preprocess_contract, "inverse_transform_policy", "none") != "none":
+            blocked.append("target_transformer requires inverse_transform_policy='none'; the plugin performs prediction inverse-transform")
+        if getattr(preprocess_contract, "evaluation_scale", "raw_level") not in {"raw_level", "original_scale"}:
+            blocked.append("target_transformer runtime currently supports raw-scale evaluation only")
+
     if failure_policy not in {"fail_fast", "skip_failed_cell", "skip_failed_model", "save_partial_results", "warn_only"}:
-        warnings.append(
-            f"failure_policy {failure_policy!r} is representable but not executable in the current runtime slice"
+        not_supported.append(
+            f"failure_policy {failure_policy!r} is not supported by the current runtime slice"
         )
-    research_design = _selection_value(selection_map, "research_design", default="single_path_benchmark")
-    if research_design in {"orchestrated_bundle"}:
-        warnings.append(
-            f"research_design={research_design!r} uses the wrapper/orchestrator route; execute via a wrapper runtime rather than single-path execute_recipe"
+    experiment_unit = (
+        stage0.experiment_unit
+        if stage0 is not None
+        else (
+            _selection_value(selection_map, "experiment_unit", default="single_target_single_model")
+            if "experiment_unit" in selection_map
+            else "single_target_single_model"
         )
-    experiment_unit = _selection_value(selection_map, "experiment_unit", default="single_target_single_model") if "experiment_unit" in selection_map else "single_target_single_model"
-    if experiment_unit in {"benchmark_suite"}:
-        warnings.append(
-            f"experiment_unit={experiment_unit!r} is a wrapper-managed unit; execute via the wrapper runtime"
-        )
+    )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
     if compute_mode not in {"serial", "parallel_by_model", "parallel_by_horizon", "parallel_by_target", "parallel_by_oos_date"}:
-        warnings.append(
-            f"compute_mode {compute_mode!r} is representable but not executable in the current runtime slice"
+        not_supported.append(
+            f"compute_mode {compute_mode!r} is not supported by the current runtime slice"
         )
+    route_owner = run_spec.route_owner if run_spec is not None else None
+    if route_owner in {"wrapper", "replication", "orchestrator"} and has_runner_managed_sweep:
+        not_supported.append(
+            f"route_owner={route_owner!r} cannot contain sweep_axes/conditional_axes until a composed runner contract is implemented"
+        )
+    runner_ready_status: str | None = None
+    if route_owner == "wrapper":
+        if experiment_unit == "multi_target_separate_runs":
+            runner_ready_status = "ready_for_wrapper_runner"
+            warnings.append(
+                "route_owner='wrapper' requires execute_separate_runs; direct run_compiled_recipe/execute_recipe is not supported"
+            )
+        else:
+            not_supported.append(
+                f"experiment_unit={experiment_unit!r} has no executable wrapper runner contract in the current runtime"
+            )
+    elif route_owner == "replication":
+        if experiment_unit == "replication_recipe":
+            runner_ready_status = "ready_for_replication_runner"
+            warnings.append(
+                "route_owner='replication' requires execute_replication; direct run_compiled_recipe/execute_recipe is not supported"
+            )
+        else:
+            not_supported.append(
+                f"experiment_unit={experiment_unit!r} cannot use route_owner='replication'"
+            )
+    elif route_owner == "orchestrator":
+        not_supported.append(
+            "route_owner='orchestrator' has no executable runner contract in the current runtime"
+        )
+    elif route_owner == "single_run" and has_runner_managed_sweep:
+        runner_ready_status = "ready_for_sweep_runner"
 
     if blocked:
-        return "blocked_by_incompatibility", tuple(warnings), tuple(blocked)
+        return "blocked_by_incompatibility", tuple(warnings + not_supported), tuple(blocked)
 
-    executable = not warnings
-    if executable:
+    if not_supported:
+        return "not_supported", tuple(warnings + not_supported), ()
+    if runner_ready_status is not None:
+        return runner_ready_status, tuple(warnings), ()
+    if not warnings:
         return "executable", (), ()
-    return "representable_but_not_executable", tuple(warnings), ()
+    return "not_supported", tuple(warnings), ()
 
 
 def _build_wrapper_handoff(
@@ -785,6 +1187,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         raise CompileValidationError(
             f"dataset_source={ds_source_choice!r} requires leaf_config.custom_data_path"
         )
+    _validate_layer1_data_task_contract(selection_map, leaf_config)
     reproducibility_mode = _selection_value(selection_map, "reproducibility_mode", default="best_effort")
     random_seed = leaf_config.get("random_seed")
     if reproducibility_mode in {"strict_reproducible", "seeded_reproducible"} and random_seed is None:
@@ -796,7 +1199,13 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
 
     preprocess_contract = _build_preprocess_contract(selection_map)
     stage0, recipe_spec, run_spec = _build_stage0_and_recipe(recipe_dict, selection_map, leaf_config)
-    execution_status, warnings, blocked = _execution_status(selections, preprocess_contract, leaf_config=leaf_config)
+    execution_status, warnings, blocked = _execution_status(
+        selections,
+        preprocess_contract,
+        leaf_config=leaf_config,
+        stage0=stage0,
+        run_spec=run_spec,
+    )
     tree_context = _build_tree_context(stage0, run_spec, selections, leaf_config)
     wrapper_handoff = _build_wrapper_handoff(
         stage0,
@@ -896,6 +1305,11 @@ def run_compiled_recipe(
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
 ):
+    if compiled.run_spec.route_owner != "single_run":
+        raise CompileValidationError(
+            f"compiled recipe route_owner={compiled.run_spec.route_owner!r} requires a dedicated runner; "
+            "run_compiled_recipe only executes route_owner='single_run'"
+        )
     if compiled.execution_status != "executable":
         raise CompileValidationError(
             f"compiled recipe is not executable: {compiled.execution_status}; warnings={compiled.warnings}; blocked={compiled.blocked_reasons}"

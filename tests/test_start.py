@@ -16,14 +16,14 @@ def test_macrocast_single_run_executable_route_preview() -> None:
     assert "comparison_summary.json" in out["manifest_preview"]["expected_artifacts"]
 
 
-def test_macrocast_single_run_planned_single_run_extension_blocks_run_manifest() -> None:
+def test_macrocast_single_run_sweep_runner_route_blocks_run_manifest() -> None:
     out = macrocast_single_run(yaml_path="examples/recipes/feature-builder-comparison.yaml")
     assert out["route_preview"]["route_owner"] == "single_run"
-    assert out["route_preview"]["wizard_status"] == "planned_single_run_extension"
-    assert out["compile_preview"]["execution_status"] == "representable_but_not_executable"
+    assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
+    assert out["compile_preview"]["execution_status"] == "ready_for_sweep_runner"
     assert out["tree_context"]["sweep_axes"]["feature_builder"] == ["autoreg_lagged_target", "raw_feature_panel"]
     assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
-    assert "downstream internal sweep branching is not implemented yet" in out["blocked_preview_reason"]
+    assert "execute_sweep" in out["blocked_preview_reason"]
 
 
 def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) -> None:
@@ -55,11 +55,12 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
 
     out = macrocast_single_run(yaml_path=str(path))
     assert out["route_preview"]["route_owner"] == "wrapper"
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
+    assert out["route_preview"]["wizard_status"] == "wrapper_not_supported"
+    assert out["compile_preview"]["execution_status"] == "not_supported"
     assert out["compile_preview"]["wrapper_handoff"]["wrapper_family"] == "benchmark_suite"
     assert out["tree_context"]["route_owner"] == "wrapper"
     assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
-    assert "wrapper-owned" in out["blocked_preview_reason"]
+    assert "no executable wrapper runner contract" in out["blocked_preview_reason"]
 
 
 
@@ -75,16 +76,12 @@ def test_macrocast_single_run_interactive_first_step(monkeypatch, tmp_path: Path
     assert out["route_preview"]["route_owner"] == "single_run"
 
 
-def test_macrocast_single_run_interactive_wrapper_stops_early(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "wrapper.yaml"), "3"])
+def test_macrocast_single_run_interactive_drops_unsupported_wrapper_choice(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "wrapper.yaml")])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_single_run(max_steps=1)
-    assert out["completed_choices"][0]["value"] == "orchestrated_bundle"
-    assert out["route_preview"]["route_owner"] == "wrapper"
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
-    assert "Wrapper-owned route chosen" in out["stop_reason"]
-    payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
-    assert payload["path"]["0_meta"]["fixed_axes"]["research_design"] == "orchestrated_bundle"
+    out = macrocast_single_run(max_steps=0)
+    assert out["current_choice"]["key"] == "research_design"
+    assert "orchestrated_bundle" not in out["current_choice"]["options"]
 
 
 def test_macrocast_single_run_interactive_task_switches_next_choice(monkeypatch, tmp_path: Path) -> None:
@@ -220,19 +217,16 @@ def test_macrocast_single_run_model_grid_route_message(monkeypatch, tmp_path: Pa
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "model_grid"}
     assert payload["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge", "lasso", "randomforest"]
-    assert out["route_preview"]["wizard_status"] == "planned_single_run_extension"
-    assert "model grid" in out["route_preview"]["message"]
+    assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
+    assert "Model grid" in out["route_preview"]["message"]
 
 
-def test_macrocast_single_run_full_sweep_route_message(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", "", "", "3"])
+def test_macrocast_single_run_drops_full_sweep_choice(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_single_run(max_steps=13)
-    payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
-    assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "full_sweep"}
-    assert payload["path"]["3_training"]["sweep_axes"]["feature_builder"] == ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"]
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
-    assert out["route_preview"]["route_owner"] == "wrapper"
+    out = macrocast_single_run(max_steps=11)
+    assert out["current_choice"]["key"] == "model_path_mode"
+    assert "full_sweep" not in out["current_choice"]["options"]
 
 
 

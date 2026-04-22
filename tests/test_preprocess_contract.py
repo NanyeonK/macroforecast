@@ -99,7 +99,7 @@ def test_build_preprocess_contract_train_only_raw_panel_robust_is_operational() 
     check_preprocess_governance(contract, preprocessing_sweep=False)
 
 
-def test_build_preprocess_contract_tcode_then_extra_is_representable() -> None:
+def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="tcode_transformed",
         x_transform_policy="dataset_tcode_transformed",

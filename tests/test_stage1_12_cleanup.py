@@ -2,8 +2,8 @@
 
 Each dropped registry value must now raise `CompileValidationError` when it
 appears on a recipe. Each value demoted to `registry_only` must still compile
-but produce `execution_status=representable_but_not_executable` so end-to-end
-execution is gated until the v1.1 runtime lands.
+but produce `execution_status=not_supported` so end-to-end execution is gated
+until a concrete runner lands.
 """
 from __future__ import annotations
 
@@ -92,10 +92,10 @@ DEMOTED: tuple[tuple[str, str], ...] = ()
 
 
 @pytest.mark.parametrize("axis,value", DEMOTED)
-def test_demoted_value_is_representable_not_executable(axis: str, value: str) -> None:
+def test_demoted_value_is_not_supported(axis: str, value: str) -> None:
     recipe = _base_recipe({axis: value})
     result = compile_recipe_dict(recipe)
-    assert result.compiled.execution_status == "representable_but_not_executable"
+    assert result.compiled.execution_status == "not_supported"
 
 
 def test_target_to_target_inclusion_axis_dropped() -> None:

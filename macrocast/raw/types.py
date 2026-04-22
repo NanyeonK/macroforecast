@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
-DatasetId = Literal["fred_md", "fred_qd", "fred_sd"]
+DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 VersionMode = Literal["current", "vintage"]
-ArtifactFormat = Literal["csv", "xlsx"]
+ArtifactFormat = Literal["csv", "xlsx", "mixed"]
 SupportTier = Literal["stable", "provisional"]
 
 
@@ -48,3 +48,4 @@ class RawLoadResult:
     data: Any
     dataset_metadata: RawDatasetMetadata
     artifact: RawArtifactRecord
+    transform_codes: dict[str, int] = field(default_factory=dict)

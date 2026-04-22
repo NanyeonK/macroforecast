@@ -26,7 +26,7 @@ Deviate when you explicitly want multiple variants, different runners, looser er
 |---|---|---|---|
 | `single_path_benchmark` | operational (default) | Default. Any study that compares the chosen model against a benchmark on one dataset/target combination. | `manifest["research_design"] == "single_path_benchmark"` |
 | `controlled_variation` | operational | Horse-race studies — one axis sweeps across values, everything else held fixed. | One `study_manifest.json` per sweep plan; one `run/` directory per variant. |
-| `orchestrated_bundle` | operational (compile-only) | Placeholder for Phase 8 `PaperReadyBundle`; currently emits `wrapper_handoff` at compile time without running. | `manifest["wrapper_handoff"]` populated; `execution_status == "representable_but_not_executable"`. |
+| `orchestrated_bundle` | operational as a routing shape | Use only with an experiment unit that has a concrete runner contract. Unsupported wrapper families compile as `not_supported`. | `execution_status` is `ready_for_wrapper_runner` for supported wrappers, otherwise `not_supported`. |
 | `replication_override` | operational | Re-running an existing recipe and asserting byte-identical output. | `execute_replication()` returns `ReplicationResult`; identical forecast + manifest hashes. |
 
 ### Functions & features
@@ -63,12 +63,12 @@ The compiler calls `derive_experiment_unit_default(research_design, task, model_
 |---|---|---|---|
 | `single_target_single_model` | operational (default for single-target, no sweeps) | Default auto-derivation. | `manifest["experiment_unit"] == "single_target_single_model"` |
 | `single_target_model_grid` | operational | Auto-picked when `model_family` sweeps. | manifest records the derived value. |
-| `single_target_full_sweep` | operational | Auto-picked when `model_family` and `feature_builder` both sweep. | manifest records it. |
+| `single_target_full_sweep` | registry_only | Grammar retained for future wrapper/orchestrator work; not exposed as runnable. | `execution_status == "not_supported"`. |
 | `multi_target_separate_runs` | operational | Multi-target recipe, each target runs independently via `execute_separate_runs`. | N `run/` directories; `separate_runs_manifest.json`. |
 | `multi_target_shared_design` | operational (default for multi-target) | Multi-target with shared preprocessing / benchmarks (default auto-derivation). | Single run directory; `predictions.csv` contains all targets. |
 | `replication_recipe` | operational | Auto-derived when `research_design=replication_override`. | `ReplicationResult` artefact. |
-| `benchmark_suite` | operational (compile-only) | Used with `research_design=orchestrated_bundle`; handed off to a wrapper in Phase 8. | `wrapper_handoff["wrapper_family"] == "benchmark_suite"`. |
-| `ablation_study` | operational | `execute_ablation()` — baseline + per-axis revert variants. | `ablation_report.json`. |
+| `benchmark_suite` | registry_only | Reserved for a future PaperReadyBundle/runtime contract. | `execution_status == "not_supported"`. |
+| `ablation_study` | registry_only | Standalone `AblationSpec` runner exists, but compiled-recipe wrapper handoff is not wired. | `execution_status == "not_supported"`. |
 
 ### Compatibility guards
 
@@ -78,17 +78,19 @@ The compiler calls `derive_experiment_unit_default(research_design, task, model_
 ### Functions & features
 
 - Auto-derivation: `macrocast.design.derive.derive_experiment_unit_default`.
-- Runners: `execute_recipe`, `execute_separate_runs` (`macrocast.studies.multi_target`), `execute_ablation` (`macrocast.studies.ablation`), `execute_replication` (`macrocast.studies.replication`).
+- Runners: `execute_recipe`, `execute_sweep`, `execute_separate_runs` (`macrocast.studies.multi_target`), `execute_replication` (`macrocast.studies.replication`). `execute_ablation` is standalone until a compiled-recipe contract is added.
 
 ### Recipe usage
 
 ```yaml
-# Ablation study: revert each axis one at a time against the baseline.
+# Controlled model comparison: variants are executed by execute_sweep().
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
-      experiment_unit: ablation_study
+      research_design: controlled_variation
+  3_training:
+    sweep_axes:
+      model_family: [ar, ridge, lasso]
 ```
 
 ---

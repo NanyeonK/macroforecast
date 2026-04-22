@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='forecast_type',
-    layer='1_data_task',
+    layer='3_training',
     axis_type='enum',
     default_policy='fixed',
     entries=(

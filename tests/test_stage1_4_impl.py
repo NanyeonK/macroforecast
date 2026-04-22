@@ -6,7 +6,7 @@ Covers:
 - variable_universe: 6 subset rules via leaf_config input channels.
 - deterministic_components: 5 feature-augmentation rules.
 
-Every case verifies compile → executable plus the behavioural invariant specific to the rule.
+Every case verifies compile-time closure plus the behavioural invariant specific to the rule.
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ import pandas as pd
 import pytest
 
 from macrocast.compiler.build import compile_recipe_dict, run_compiled_recipe
+from macrocast.compiler.errors import CompileValidationError
 
 
 def _recipe(**axes_1_extras) -> dict:
@@ -82,8 +83,14 @@ def test_benchmark_family_factor_model_compiles() -> None:
 def test_benchmark_family_multi_suite_requires_list() -> None:
     recipe = _recipe()
     recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "multi_benchmark_suite"
-    # No benchmark_suite in leaf_config → compile is executable (guard happens at run time);
-    # runtime ExecutionError surfaces when _run_benchmark_executor is called.
+    with pytest.raises(CompileValidationError, match="benchmark_suite"):
+        compile_recipe_dict(recipe)
+
+
+def test_benchmark_family_multi_suite_compiles_with_list() -> None:
+    recipe = _recipe()
+    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "multi_benchmark_suite"
+    recipe["path"]["1_data_task"]["leaf_config"]["benchmark_suite"] = ["historical_mean", "zero_change"]
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"
 

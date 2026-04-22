@@ -1,0 +1,70 @@
+# Quickstart
+
+Run one default macroeconomic forecasting experiment with explicit data, target, sample period, and horizons.
+
+```python
+import macrocast as mc
+
+result = mc.forecast(
+    "fred_md",
+    target="INDPRO",
+    start="1980-01",
+    end="2019-12",
+    horizons=[1, 3, 6],
+)
+```
+
+The return value is an `ExperimentRunResult` facade over saved artifacts:
+
+```python
+forecasts = result.forecasts
+metrics = result.metrics
+manifest = result.manifest
+```
+
+The default profile is `macrocast-default-v1`. It uses a conservative baseline path:
+
+- revised information set
+- expanding-window point forecast
+- `ar` model
+- `zero_change` benchmark
+- `msfe` primary metric
+- official FRED-MD/FRED-QD transformation codes when available
+- no extra scaling, imputation, outlier handling, feature selection, or dimensionality reduction
+
+The sample period is required. `start` and `end` are part of the experiment definition, not optional runtime filters.
+
+## Data Frequency
+
+`fred_md` fixes frequency to monthly:
+
+```python
+mc.forecast("fred_md", target="INDPRO", start="1980-01", end="2019-12")
+```
+
+`fred_qd` fixes frequency to quarterly:
+
+```python
+mc.forecast("fred_qd", target="GDPC1", start="1980-01", end="2019-12")
+```
+
+`fred_sd` can be used alone only when `frequency` is supplied:
+
+```python
+mc.forecast(
+    "fred_sd",
+    target="UR_CA",
+    start="1980-01",
+    end="2019-12",
+    frequency="monthly",
+)
+```
+
+When FRED-SD is combined with FRED-MD or FRED-QD, the MD/QD dataset fixes the experiment frequency:
+
+```python
+mc.forecast("fred_md+fred_sd", target="INDPRO", start="1980-01", end="2019-12")
+mc.forecast("fred_qd+fred_sd", target="GDPC1", start="1980-01", end="2019-12")
+```
+
+FRED-SD inferred transformation codes are off by default because FRED-SD does not publish official t-codes. Use `Experiment.use_sd_inferred_tcodes()` when that research layer is needed.

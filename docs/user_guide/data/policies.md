@@ -18,7 +18,7 @@ Declares **how the raw panel is prepared before it reaches the model** — relea
 - `vintage_policy` — non-default values require real-time-vintage data infrastructure (v1.1 FRED-SD).
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
 **At a glance (defaults):**
-- `missing_availability = complete_case_only` — no panel-level filter; downstream executors handle NaNs per their own policy. Switch to `available_case` / `x_impute_only` only when a specific missing-data treatment matters.
+- `missing_availability = zero_fill_before_start` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `complete_case_only`, `available_case`, or `x_impute_only` only when a specific missing-data treatment matters.
 - `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
 - `structural_break_segmentation = none` — no break dummies. Switch to `pre_post_crisis` / `pre_post_covid` to add a single NBER-dated break dummy.
 - `contemporaneous_x_rule = forbid_contemporaneous` — realistic real-time constraint. Switch to `allow_contemporaneous` only for oracle / data-leak benchmarks.
@@ -30,21 +30,23 @@ Declares **how the raw panel is prepared before it reaches the model** — relea
 
 ## 1.5.1 `missing_availability`
 
-**Selects how NaN rows are handled before training.** Three operational values.
+**Selects how NaN rows are handled before training.** Four operational values.
 
 ### Value catalog
 
 | Value | Status | What it does |
 |---|---|---|
-| `complete_case_only` | operational | Default. No panel-level filter; downstream executors handle NaNs per their own policy. |
+| `zero_fill_before_start` | operational | Default. Within the selected sample period, predictor leading missing values are filled with 0. Fully missing predictors are also filled with 0 and warned. Target leading missing dates are reported; target mid-sample missing blocks execution. |
+| `complete_case_only` | operational | No panel-level filter; downstream executors handle NaNs per their own policy. |
 | `available_case` | operational | Drop rows where any non-date column has NaN before training. Aggressive but legitimate on short fixture windows. |
 | `x_impute_only` | operational | Impute predictor (non-target) columns using `leaf_config.x_imputation` ∈ {`mean`, `median`, `ffill`, `bfill`}. Target column retains NaNs so the OOS loop still sees missingness in y. |
 
 ### Functions & features
 
-- Module: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
+- Sample-period availability path: `macrocast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_before_start` and records `data_reports["availability"]`.
+- General missing policy path: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
 - Called during dataset loading in `execute_recipe` before preprocessing runs.
-- `x_impute_only` without `leaf_config.x_imputation` raises `ExecutionError` at runtime.
+- Compile guard: `x_impute_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
 
 ### Dropped values
 
@@ -79,7 +81,7 @@ path:
 ### Functions & features
 
 - Module: `macrocast.execution.build._apply_release_lag(raw_result, rule, *, spec)`.
-- `series_specific_lag` without the dict (or with empty dict) raises `ExecutionError` at runtime.
+- Compile guard: `series_specific_lag` without a non-empty `leaf_config.release_lag_per_series` dict raises `CompileValidationError`.
 
 ### Dropped values
 
@@ -174,7 +176,7 @@ path:
 ## Data Handling Policies (1.5) takeaways
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
-- All non-default behaviours read their inputs from `leaf_config` (release_lag_per_series, x_imputation, break_dates), propagated into `data_task_spec` at compile time.
+- All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `break_dates`) and are propagated into `data_task_spec`.
 - `structural_break_segmentation` reuses the 1.4 `deterministic_components.break_dummies` augmentation path — the axis just supplies the break-date list.
 - `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other three act on the raw panel before preprocessing.
 

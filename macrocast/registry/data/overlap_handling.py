@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='overlap_handling',
-    layer='1_data_task',
+    layer='6_stat_tests',
     axis_type='enum',
     default_policy='fixed',
     entries=(

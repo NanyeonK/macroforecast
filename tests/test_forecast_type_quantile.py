@@ -10,7 +10,7 @@ v1.0 semantics:
 - `forecast_type=direct`   + feature_builder=raw_feature_panel       : executable.
 
 - `forecast_object=quantile` + `model_family=quantile_linear`         : executable (quantile level via training_spec.hp.quantile, default 0.5).
-- `forecast_object=quantile` + any other model_family                 : falls outside the compat guard but the existing executor still emits a point-mean forecast — registry_only behaviour for non-quantile_linear models is explicitly out of scope.
+- `forecast_object in {point_median, quantile}` + any other model_family: blocked_by_incompatibility.
 """
 from __future__ import annotations
 
@@ -170,5 +170,18 @@ def test_forecast_object_point_mean_rejected_with_quantile_linear() -> None:
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
         "quantile_linear" in r_msg and "point_median" in r_msg
+        for r_msg in r.manifest.get("blocked_reasons", [])
+    )
+
+
+@pytest.mark.parametrize("forecast_object", ["point_median", "quantile"])
+def test_forecast_object_distributional_values_require_quantile_linear(forecast_object: str) -> None:
+    r = compile_recipe_dict(_recipe(
+        model_family="ar",
+        forecast_object=forecast_object,
+    ))
+    assert r.compiled.execution_status == "blocked_by_incompatibility"
+    assert any(
+        forecast_object in r_msg and "quantile_linear" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )

@@ -51,7 +51,12 @@ def execute_replication(
     new_dict, diff_entries = apply_overrides(source_recipe_dict, overrides)
     compile_result = compile_recipe_dict(new_dict)
     compiled = compile_result.compiled
-    if compiled.execution_status != "executable":
+    replication_handoff = (
+        compiled.run_spec.route_owner == "replication"
+        and compiled.execution_status == "ready_for_replication_runner"
+        and not compiled.blocked_reasons
+    )
+    if compiled.execution_status != "executable" and not replication_handoff:
         raise ValueError(
             f"replicated recipe is not executable: "
             f"status={compiled.execution_status!r} "

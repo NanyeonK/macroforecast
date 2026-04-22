@@ -28,7 +28,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="single_target_model_grid",
-        description="Single-target model-grid comparison within the single-run family.",
+        description="Single-target controlled one-axis comparison within the single-run family; usually a model grid.",
         status="operational",
         priority="A",
         route_owner="single_run",
@@ -37,8 +37,8 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="single_target_full_sweep",
-        description="Single-target full sweep requiring wrapper/orchestrator ownership.",
-        status="operational",
+        description="Single-target full sweep grammar retained for future wrapper/orchestrator ownership; no executable runner contract in the current runtime.",
+        status="registry_only",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=False,
@@ -102,8 +102,8 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="benchmark_suite",
-        description="Wrapper-managed benchmark suite.",
-        status="operational",
+        description="Wrapper-managed benchmark suite grammar retained for future PaperReadyBundle/runtime work; no executable runner contract in the current runtime.",
+        status="registry_only",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=False,
@@ -111,8 +111,8 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ),
     ExperimentUnitEntry(
         id="ablation_study",
-        description="Wrapper-managed ablation study.",
-        status="operational",
+        description="Ablation study grammar retained for the standalone AblationSpec runner; not yet a compiled-recipe wrapper contract.",
+        status="registry_only",
         priority="A",
         route_owner="wrapper",
         requires_multi_target=False,
@@ -176,13 +176,13 @@ def derive_experiment_unit_default(
     if wrapper_family in _BY_ID:
         return wrapper_family
     if task == "multi_target_point_forecast":
-        # shared_design is the operational multi-target path handled by
-        # execute_recipe. separate_runs is registry_only (v1.1 wrapper).
+        # shared_design is handled by execute_recipe; separate_runs is the
+        # supported wrapper-runner fan-out path.
         return "multi_target_shared_design"
     if research_design == "orchestrated_bundle":
         return "benchmark_suite"
     if model_axis_mode == "sweep" and feature_axis_mode == "sweep":
         return "single_target_full_sweep"
-    if model_axis_mode == "sweep":
+    if model_axis_mode == "sweep" or feature_axis_mode == "sweep":
         return "single_target_model_grid"
     return "single_target_single_model"

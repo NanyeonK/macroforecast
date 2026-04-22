@@ -5,10 +5,13 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
+EXPECTED_AXIS_COUNT = 127
+
+
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 123
-    assert {"research_design", "dataset", "information_set_type", "task", "model_family", "importance_method", "dataset_source", "relative_metrics", "direction_metrics", "regime_definition"}.issubset(registry)
+    assert len(registry) == EXPECTED_AXIS_COUNT
+    assert {"research_design", "dataset", "information_set_type", "task", "model_family", "importance_method", "dataset_source", "relative_metrics", "direction_metrics", "regime_definition", "custom_preprocessor", "target_transformer"}.issubset(registry)
 
 
 def test_registry_loader_preserves_legacy_entry_contract() -> None:
@@ -52,7 +55,7 @@ def test_base_registry_types_available() -> None:
 
 def test_registry_loader_discovers_axis_type_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 123
+    assert len(registry) == EXPECTED_AXIS_COUNT
     assert "axis_type" in registry
     entry = get_axis_registry_entry("axis_type")
     assert entry.allowed_values == (
@@ -67,7 +70,7 @@ def test_registry_loader_discovers_axis_type_meta_axis() -> None:
 
 def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 123
+    assert len(registry) == EXPECTED_AXIS_COUNT
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
@@ -81,7 +84,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
 
 def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 123
+    assert len(registry) == EXPECTED_AXIS_COUNT
     assert "failure_policy" in registry
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
@@ -98,7 +101,7 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
 
 def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
     registry = get_axis_registry()
-    assert len(registry) == 123
+    assert len(registry) == EXPECTED_AXIS_COUNT
     assert "compute_mode" in registry
     entry = get_axis_registry_entry("compute_mode")
     assert entry.allowed_values == (
@@ -119,24 +122,22 @@ def test_registry_loader_discovers_stage1_data_task_axes() -> None:
         "dataset_source",
         "frequency",
         "information_set_type",
-        "forecast_type",
-        "forecast_object",
-        "horizon_target_construction",
-        "overlap_handling",
-        "predictor_family",
-        "training_start_rule",
-        "oos_period",
-        "min_train_size",
-        "structural_break_segmentation",
+        "official_transform_policy",
+        "official_transform_scope",
         "contemporaneous_x_rule",
-        "deterministic_components",
+        "missing_availability",
+        "release_lag_rule",
+        "task",
+        "variable_universe",
     }
     assert expected.issubset(registry)
+    assert all(registry[axis].layer == "1_data_task" for axis in expected)
 
 
 def test_registry_loader_discovers_stage4_evaluation_axes() -> None:
     registry = get_axis_registry()
     expected = {
+        "oos_period",
         "point_metrics",
         "relative_metrics",
         "direction_metrics",
@@ -158,9 +159,17 @@ def test_registry_loader_discovers_stage4_evaluation_axes() -> None:
     assert expected.issubset(registry)
 
 
-def test_registry_loader_moves_benchmark_family_and_evaluation_scale_to_data_task() -> None:
+def test_registry_loader_tracks_migrated_axis_layers() -> None:
     registry = get_axis_registry()
-    assert registry["benchmark_family"].layer == "1_data_task"
+    assert registry["benchmark_family"].layer == "3_training"
+    assert registry["forecast_type"].layer == "3_training"
+    assert registry["forecast_object"].layer == "3_training"
+    assert registry["predictor_family"].layer == "3_training"
+    assert registry["horizon_target_construction"].layer == "2_preprocessing"
+    assert registry["deterministic_components"].layer == "2_preprocessing"
+    assert registry["structural_break_segmentation"].layer == "2_preprocessing"
+    assert registry["oos_period"].layer == "4_evaluation"
+    assert registry["overlap_handling"].layer == "6_stat_tests"
     assert registry["evaluation_scale"].layer == "2_preprocessing"  # 1.5 cleanup: re-homed to Layer 2 where the PreprocessContract field lives
 
 
@@ -173,15 +182,18 @@ def test_registry_loader_discovers_information_set_type_axis() -> None:
 
 
 def test_registry_loader_preserves_stage1_operational_values() -> None:
-    predictor_family = get_axis_registry_entry("predictor_family")
-    assert predictor_family.current_status["target_lags_only"] == "operational"
-    assert predictor_family.current_status["all_macro_vars"] == "operational"
+    variable_universe = get_axis_registry_entry("variable_universe")
+    assert variable_universe.current_status["all_variables"] == "operational"
+    assert variable_universe.current_status["handpicked_set"] == "operational"
 
 
 
 def test_registry_loader_discovers_stage2_governance_axes() -> None:
     registry = get_axis_registry()
     expected = {
+        "horizon_target_construction",
+        "deterministic_components",
+        "structural_break_segmentation",
         "representation_policy",
         "tcode_application_scope",
         "target_transform",
@@ -216,6 +228,12 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
 def test_registry_loader_discovers_stage3_training_axes() -> None:
     registry = get_axis_registry()
     expected = {
+        "benchmark_family",
+        "forecast_type",
+        "forecast_object",
+        "predictor_family",
+        "min_train_size",
+        "training_start_rule",
         "outer_window",
         "refit_policy",
         "data_richness_mode",
@@ -265,6 +283,7 @@ def test_registry_loader_discovers_stage5_output_axes() -> None:
 
 def test_registry_loader_discovers_stage6_test_axes() -> None:
     registry = get_axis_registry()
+    assert registry["overlap_handling"].layer == "6_stat_tests"
     assert registry["stat_test"].current_status["mcs"] == "operational"
     assert registry["stat_test"].current_status["spa"] == "operational"
     assert registry["stat_test"].current_status["diagnostics_full"] == "operational"

@@ -122,3 +122,26 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
     leaf_config = {"task": "single_target_point_forecast"}
     result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
     assert result == "single_target_model_grid"
+
+
+def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() -> None:
+    selection_map = {
+        "research_design": AxisSelection(
+            axis_name="research_design", layer="0_meta", selection_mode="fixed",
+            selected_values=("single_path_benchmark",),
+            selected_status={"single_path_benchmark": "operational"},
+        ),
+        "model_family": AxisSelection(
+            axis_name="model_family", layer="3_training", selection_mode="fixed",
+            selected_values=("ridge",),
+            selected_status={"ridge": "operational"},
+        ),
+        "feature_builder": AxisSelection(
+            axis_name="feature_builder", layer="3_training", selection_mode="sweep",
+            selected_values=("autoreg_lagged_target", "raw_feature_panel"),
+            selected_status={"autoreg_lagged_target": "operational", "raw_feature_panel": "operational"},
+        ),
+    }
+    leaf_config = {"task": "single_target_point_forecast"}
+    result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
+    assert result == "single_target_model_grid"

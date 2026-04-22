@@ -99,16 +99,16 @@ def _planned_branch_message(warnings: list[str]) -> str | None:
     planned_hits = [warning for warning in warnings if "status=planned" in warning]
     if not planned_hits:
         return None
-    return "Planned branch selected. Current YAML is valid as representation, but this branch is not yet executable in the current single-run runtime."
+    return "Planned branch selected. Current YAML parses, but this branch is not executable in the current single-run runtime."
 
 
 def _single_run_extension_message(tree_context: dict[str, Any], warnings: list[str]) -> str:
     sweep_axes = tree_context.get("sweep_axes", {})
     if "model_family" in sweep_axes and "feature_builder" in sweep_axes:
-        return "Planned single-run extension selected: full sweep. Current YAML is representable, but full sweep branching is not executable yet."
+        return "Full model/feature sweep is not a single-run preview. Use the sweep runtime only if the compiler reports ready_for_sweep_runner; otherwise drop this route."
     if "model_family" in sweep_axes:
-        return "Planned single-run extension selected: model grid. Current YAML is representable, but model-grid branching is not executable yet."
-    return _planned_branch_message(warnings) or "Route still belongs to the single-run family, but downstream internal sweep branching is not implemented yet."
+        return "Model grid selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe."
+    return _planned_branch_message(warnings) or "Sweep route selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe."
 
 
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
@@ -316,7 +316,6 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "options": [
                 "single_path_benchmark",
                 "controlled_variation",
-                "orchestrated_bundle",
             ],
         },
         {
@@ -385,7 +384,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "model_path_mode",
             "prompt": "Model path mode",
-            "options": ["single_model", "model_grid", "full_sweep"],
+            "options": ["single_model", "model_grid"],
         },
         {
             "key": "model_family",
@@ -438,18 +437,26 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
     warnings = list(compile_manifest.get("warnings", []))
     blocked_reasons = list(compile_manifest.get("blocked_reasons", []))
 
-    if route_owner == "wrapper":
-        wizard_status = "wrapper_required"
-        continue_in_single_run = False
-        message = "Route is wrapper-owned. Inspect compiler provenance and wrapper_handoff, but do not treat it as a runnable single-path preview."
-    elif execution_status == "executable":
+    if execution_status == "executable":
         wizard_status = "implemented"
         continue_in_single_run = True
         message = "Route remains inside the current executable single-run surface."
-    elif tree_context.get("execution_posture") == "single_run_with_internal_sweep":
-        wizard_status = "planned_single_run_extension"
+    elif execution_status == "ready_for_sweep_runner":
+        wizard_status = "sweep_runner_ready"
         continue_in_single_run = False
         message = _single_run_extension_message(tree_context, warnings)
+    elif execution_status == "ready_for_wrapper_runner":
+        wizard_status = "wrapper_runner_ready"
+        continue_in_single_run = False
+        message = "Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; single-run previews stop here."
+    elif execution_status == "ready_for_replication_runner":
+        wizard_status = "replication_runner_ready"
+        continue_in_single_run = False
+        message = "Route is replication-owned and has a runner contract. Use execute_replication; single-run previews stop here."
+    elif route_owner == "wrapper":
+        wizard_status = "wrapper_not_supported"
+        continue_in_single_run = False
+        message = "Route is wrapper-owned but has no executable wrapper runner contract in the current runtime."
     else:
         wizard_status = "blocked_or_nonexecutable"
         continue_in_single_run = False
@@ -478,9 +485,9 @@ def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
     elif explicit_unit == "replication_recipe":
         route_owner = "replication"
     if route_owner == "wrapper":
-        wizard_status = "wrapper_required"
+        wizard_status = "wrapper_not_supported"
         continue_in_single_run = False
-        message = "Wrapper-owned route chosen. Single-run wizard stops here; use current YAML as handoff seed for a future wrapper/orchestrator."
+        message = "Wrapper-owned route chosen, but no executable wrapper runner contract is available for this draft."
     else:
         wizard_status = "draft_incomplete"
         continue_in_single_run = True
