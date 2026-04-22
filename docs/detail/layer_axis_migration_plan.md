@@ -41,4 +41,10 @@ describes the registry layer after migration.
 - Compiler now records Layer 1 `official_transform_policy` and
   `official_transform_scope` in `data_task_spec`, deriving them from legacy
   Layer 2 t-code fields when old recipes omit the new canonical axes.
+- Generated default recipes no longer need to place official t-code bridge
+  fields in `2_preprocessing`; the compiler derives the runtime
+  `PreprocessContract` bridge from Layer 1 official-transform axes.
+- Runtime official dataset transformation now reads `data_task_spec` first.
+  Legacy `PreprocessContract.tcode_*` fields remain only as fallback for older
+  compiled specs.
 - Generated recipes should be updated gradually after tests lock the canonical layers.

@@ -92,8 +92,13 @@ def test_experiment_mvp_public_contract_single_run(tmp_path: Path) -> None:
     assert recipe["path"]["0_meta"]["leaf_config"]["default_profile"] == DEFAULT_PROFILE_NAME
     assert recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] == "fred_md"
     assert recipe["path"]["1_data_task"]["fixed_axes"]["frequency"] == "monthly"
+    assert recipe["path"]["1_data_task"]["fixed_axes"]["official_transform_policy"] == "dataset_tcode"
+    assert recipe["path"]["1_data_task"]["fixed_axes"]["official_transform_scope"] == "apply_tcode_to_both"
     assert recipe["path"]["1_data_task"]["leaf_config"]["sample_start_date"] == FIXTURE_START
     assert recipe["path"]["1_data_task"]["leaf_config"]["sample_end_date"] == FIXTURE_END
+    assert "tcode_policy" not in recipe["path"]["2_preprocessing"]["fixed_axes"]
+    assert "target_transform_policy" not in recipe["path"]["2_preprocessing"]["fixed_axes"]
+    assert "x_transform_policy" not in recipe["path"]["2_preprocessing"]["fixed_axes"]
     assert recipe["path"]["3_training"]["fixed_axes"]["model_family"] == "ar"
 
     result = exp.run(output_root=tmp_path, local_raw_source=FIXTURE_RAW)
@@ -172,6 +177,8 @@ def test_forecast_default_runs_and_records_default_profile(tmp_path: Path) -> No
     assert manifest["evaluation_spec"]["primary_metric"] == "msfe"
     assert manifest["data_task_spec"]["sample_start_date"] == FIXTURE_START
     assert manifest["data_task_spec"]["sample_end_date"] == FIXTURE_END
+    assert manifest["data_task_spec"]["official_transform_policy"] == "dataset_tcode"
+    assert manifest["data_task_spec"]["official_transform_scope"] == "apply_tcode_to_both"
     assert manifest["preprocess_contract"]["tcode_policy"] == "tcode_only"
     assert manifest["preprocess_contract"]["target_transform_policy"] == "tcode_transformed"
     assert manifest["preprocess_contract"]["x_transform_policy"] == "dataset_tcode_transformed"

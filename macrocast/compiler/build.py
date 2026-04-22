@@ -248,14 +248,42 @@ def _selection_value(selection_map: dict[str, AxisSelection], axis_name: str, de
     return values[0]
 
 
+_LEGACY_OFFICIAL_TRANSFORM_BRIDGE_AXES = {
+    "target_transform_policy",
+    "x_transform_policy",
+    "tcode_policy",
+    "preprocess_order",
+    "representation_policy",
+    "tcode_application_scope",
+}
 _OFFICIAL_TCODE_POLICIES = {"tcode_only", "tcode_then_extra_preprocess", "extra_then_tcode"}
+
+
+def _has_legacy_official_transform_bridge(selection_map: dict[str, AxisSelection]) -> bool:
+    return any(axis in selection_map for axis in _LEGACY_OFFICIAL_TRANSFORM_BRIDGE_AXES)
+
+
+def _legacy_official_transform_scope(selection_map: dict[str, AxisSelection]) -> str:
+    if "tcode_application_scope" in selection_map:
+        return _selection_value(selection_map, "tcode_application_scope")
+    target_tcode = _selection_value(selection_map, "target_transform_policy", default="raw_level") == "tcode_transformed"
+    x_tcode = _selection_value(selection_map, "x_transform_policy", default="raw_level") == "dataset_tcode_transformed"
+    if target_tcode and x_tcode:
+        return "apply_tcode_to_both"
+    if target_tcode:
+        return "apply_tcode_to_target"
+    if x_tcode:
+        return "apply_tcode_to_X"
+    if _selection_value(selection_map, "tcode_policy", default="raw_only") in _OFFICIAL_TCODE_POLICIES:
+        return "apply_tcode_to_both"
+    return "apply_tcode_to_none"
 
 
 def _legacy_official_transform_policy(selection_map: dict[str, AxisSelection]) -> str:
     tcode_policy = _selection_value(selection_map, "tcode_policy", default="raw_only")
     target_policy = _selection_value(selection_map, "target_transform_policy", default="raw_level")
     x_policy = _selection_value(selection_map, "x_transform_policy", default="raw_level")
-    scope = _selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none")
+    scope = _legacy_official_transform_scope(selection_map)
     if (
         tcode_policy in _OFFICIAL_TCODE_POLICIES
         or target_policy == "tcode_transformed"
@@ -278,7 +306,7 @@ def _official_transform_scope(selection_map: dict[str, AxisSelection]) -> str:
     return _selection_value(
         selection_map,
         "official_transform_scope",
-        default=_selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none"),
+        default=_legacy_official_transform_scope(selection_map),
     )
 
 
@@ -296,25 +324,23 @@ def _validate_official_transform_contract(selection_map: dict[str, AxisSelection
             "official_transform_policy='dataset_tcode' requires an official_transform_scope other than 'apply_tcode_to_none'"
         )
 
+    has_legacy_bridge = _has_legacy_official_transform_bridge(selection_map)
     legacy_policy = _legacy_official_transform_policy(selection_map)
-    legacy_scope = _selection_value(selection_map, "tcode_application_scope", default="apply_tcode_to_none")
-    if "official_transform_policy" in selection_map and policy != legacy_policy:
+    legacy_scope = _legacy_official_transform_scope(selection_map)
+    if has_legacy_bridge and "official_transform_policy" in selection_map and policy != legacy_policy:
         raise CompileValidationError(
             "official_transform_policy conflicts with legacy Layer 2 t-code representation axes; "
             f"got official_transform_policy={policy!r}, legacy policy={legacy_policy!r}"
         )
-    if "official_transform_scope" in selection_map and scope != legacy_scope:
+    if has_legacy_bridge and "official_transform_scope" in selection_map and scope != legacy_scope:
         raise CompileValidationError(
             "official_transform_scope conflicts with legacy Layer 2 tcode_application_scope; "
             f"got official_transform_scope={scope!r}, tcode_application_scope={legacy_scope!r}"
         )
 
 
-def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
-    required = {
-        "target_transform_policy",
-        "x_transform_policy",
-        "tcode_policy",
+def _extra_preprocessing_requested(selection_map: dict[str, AxisSelection]) -> bool:
+    for axis in (
         "target_missing_policy",
         "x_missing_policy",
         "target_outlier_policy",
@@ -322,14 +348,63 @@ def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
         "scaling_policy",
         "dimensionality_reduction_policy",
         "feature_selection_policy",
-        "preprocess_order",
+        "additional_preprocessing",
+    ):
+        selection = selection_map.get(axis)
+        if selection is not None and selection.selected_values[0] != "none":
+            return True
+    return False
+
+
+def _official_preprocess_bridge_defaults(selection_map: dict[str, AxisSelection]) -> dict[str, str]:
+    policy = _official_transform_policy(selection_map)
+    scope = _official_transform_scope(selection_map)
+    extra_requested = _extra_preprocessing_requested(selection_map)
+    if policy == "raw_official_frame":
+        return {
+            "target_transform_policy": "raw_level",
+            "x_transform_policy": "raw_level",
+            "tcode_policy": "extra_preprocess_without_tcode" if extra_requested else "raw_only",
+            "preprocess_order": "extra_only" if extra_requested else "none",
+            "representation_policy": "raw_only",
+            "tcode_application_scope": "apply_tcode_to_none",
+        }
+
+    target_policy = "tcode_transformed" if scope in {"apply_tcode_to_target", "apply_tcode_to_both"} else "raw_level"
+    x_policy = "dataset_tcode_transformed" if scope in {"apply_tcode_to_X", "apply_tcode_to_both"} else "raw_level"
+    return {
+        "target_transform_policy": target_policy,
+        "x_transform_policy": x_policy,
+        "tcode_policy": "tcode_then_extra_preprocess" if extra_requested else "tcode_only",
+        "preprocess_order": "tcode_then_extra" if extra_requested else "tcode_only",
+        "representation_policy": "tcode_only",
+        "tcode_application_scope": scope,
+    }
+
+
+def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
+    required = {
+        "target_missing_policy",
+        "x_missing_policy",
+        "target_outlier_policy",
+        "x_outlier_policy",
+        "scaling_policy",
+        "dimensionality_reduction_policy",
+        "feature_selection_policy",
         "preprocess_fit_scope",
         "inverse_transform_policy",
         "evaluation_scale",
     }
+    bridge_defaults = _official_preprocess_bridge_defaults(selection_map)
+    bridge_axes = {
+        "target_transform_policy",
+        "x_transform_policy",
+        "tcode_policy",
+        "preprocess_order",
+        "representation_policy",
+        "tcode_application_scope",
+    }
     defaults = {
-        "representation_policy": "raw_only",
-        "tcode_application_scope": "apply_tcode_to_none",
         "target_transform": "level",
         "target_normalization": "none",
         "target_domain": "unconstrained",
@@ -342,6 +417,12 @@ def _build_preprocess_contract(selection_map: dict[str, AxisSelection]) -> Any:
     if missing:
         raise CompileValidationError(f"preprocessing layer missing required axes: {missing}")
     payload = {axis: selection_map[axis].selected_values[0] for axis in required}
+    payload.update(
+        {
+            axis: _selection_value(selection_map, axis, default=bridge_defaults[axis])
+            for axis in bridge_axes
+        }
+    )
     payload.update({axis: _selection_value(selection_map, axis, default=value) for axis, value in defaults.items()})
     try:
         contract = build_preprocess_contract(**payload)

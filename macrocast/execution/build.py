@@ -170,11 +170,15 @@ def _fred_tcode_transform(series: pd.Series, code: int) -> pd.Series:
     return s
 
 
-def _apply_tcode_preprocessing(raw_result, contract: PreprocessContract, *, target: str | None):
-    if getattr(contract, "tcode_policy", "raw_only") in {"raw_only", "extra_preprocess_without_tcode"}:
+def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: PreprocessContract, *, target: str | None):
+    data_task_spec = dict(getattr(recipe, "data_task_spec", {}) or {})
+    policy = data_task_spec.get("official_transform_policy")
+    if policy is None:
+        policy = "dataset_tcode" if getattr(contract, "tcode_policy", "raw_only") == "tcode_only" else "raw_official_frame"
+    if policy == "raw_official_frame":
         return raw_result
-    if getattr(contract, "tcode_policy", "raw_only") != "tcode_only":
-        raise ExecutionError(f"tcode_policy={contract.tcode_policy!r} is not executable in this runtime slice")
+    if policy != "dataset_tcode":
+        raise ExecutionError(f"official_transform_policy={policy!r} is not executable in this runtime slice")
 
     data = getattr(raw_result, "data", None)
     if data is None:
@@ -183,11 +187,11 @@ def _apply_tcode_preprocessing(raw_result, contract: PreprocessContract, *, targ
     frame = data.copy()
     frame.attrs.update(getattr(data, "attrs", {}))
     if not tcodes:
-        _append_frame_warning(frame, "tcode_policy='tcode_only' requested but no dataset transform codes were available; data left unchanged")
-        _append_frame_report(frame, "tcode", {"applied": False, "reason": "missing_transform_codes"})
+        _append_frame_warning(frame, "official_transform_policy='dataset_tcode' requested but no dataset transform codes were available; data left unchanged")
+        _append_frame_report(frame, "tcode", {"applied": False, "policy": policy, "reason": "missing_transform_codes"})
         return _replace_raw_data(raw_result, frame)
 
-    scope = getattr(contract, "tcode_application_scope", "apply_tcode_to_both")
+    scope = data_task_spec.get("official_transform_scope") or getattr(contract, "tcode_application_scope", "apply_tcode_to_both")
     applied: dict[str, int] = {}
     for col in frame.columns:
         is_target = target is not None and col == target
@@ -200,7 +204,7 @@ def _apply_tcode_preprocessing(raw_result, contract: PreprocessContract, *, targ
         code = int(tcodes.get(col, 1))
         frame[col] = _fred_tcode_transform(frame[col], code)
         applied[str(col)] = code
-    _append_frame_report(frame, "tcode", {"applied": True, "columns": applied})
+    _append_frame_report(frame, "tcode", {"applied": True, "policy": policy, "scope": scope, "columns": applied})
     return _replace_raw_data(raw_result, frame)
 
 
@@ -4186,7 +4190,7 @@ def execute_recipe(
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
     raw_result = _apply_frequency_policy(raw_result, recipe)
     raw_result = _apply_sd_inferred_tcodes(raw_result, recipe)
-    raw_result = _apply_tcode_preprocessing(raw_result, preprocess, target=str(recipe.target) if getattr(recipe, 'target', None) else None)
+    raw_result = _apply_tcode_preprocessing(raw_result, recipe, preprocess, target=str(recipe.target) if getattr(recipe, 'target', None) else None)
     raw_result = _apply_sample_period_and_availability(raw_result, recipe, target=str(recipe.target) if getattr(recipe, 'target', None) else None)
     _release_lag = _data_task_axis(recipe, "release_lag_rule")
     _missing_avail = _data_task_axis(recipe, "missing_availability")

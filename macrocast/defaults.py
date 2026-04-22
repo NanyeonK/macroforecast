@@ -7,11 +7,6 @@ from typing import Any, Iterable
 DEFAULT_PROFILE_NAME = "macrocast-default-v1"
 
 DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
-    "target_transform_policy": "tcode_transformed",
-    "x_transform_policy": "dataset_tcode_transformed",
-    "tcode_policy": "tcode_only",
-    "representation_policy": "tcode_only",
-    "tcode_application_scope": "apply_tcode_to_both",
     "target_missing_policy": "none",
     "x_missing_policy": "none",
     "target_outlier_policy": "none",
@@ -19,7 +14,6 @@ DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
     "scaling_policy": "none",
     "dimensionality_reduction_policy": "none",
     "feature_selection_policy": "none",
-    "preprocess_order": "tcode_only",
     "preprocess_fit_scope": "not_applicable",
     "inverse_transform_policy": "none",
     "evaluation_scale": "raw_level",

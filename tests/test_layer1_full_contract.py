@@ -52,6 +52,20 @@ def _recipe() -> dict:
     }
 
 
+def _drop_legacy_tcode_bridge(recipe: dict) -> dict:
+    fixed_axes = recipe["path"]["2_preprocessing"]["fixed_axes"]
+    for axis in (
+        "target_transform_policy",
+        "x_transform_policy",
+        "tcode_policy",
+        "preprocess_order",
+        "representation_policy",
+        "tcode_application_scope",
+    ):
+        fixed_axes.pop(axis, None)
+    return recipe
+
+
 def test_standalone_fred_sd_requires_explicit_frequency() -> None:
     recipe = _recipe()
     recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_sd"
@@ -134,21 +148,11 @@ def test_official_transform_defaults_are_derived_from_legacy_raw_preprocess_brid
 
 
 def test_official_transform_axes_record_layer1_dataset_tcode_path() -> None:
-    recipe = _recipe()
+    recipe = _drop_legacy_tcode_bridge(_recipe())
     recipe["path"]["1_data_task"]["fixed_axes"].update(
         {
             "official_transform_policy": "dataset_tcode",
             "official_transform_scope": "apply_tcode_to_both",
-        }
-    )
-    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
-        {
-            "target_transform_policy": "tcode_transformed",
-            "x_transform_policy": "dataset_tcode_transformed",
-            "tcode_policy": "tcode_only",
-            "representation_policy": "tcode_only",
-            "tcode_application_scope": "apply_tcode_to_both",
-            "preprocess_order": "tcode_only",
         }
     )
 
@@ -156,10 +160,32 @@ def test_official_transform_axes_record_layer1_dataset_tcode_path() -> None:
 
     data_task = compiled.manifest["data_task_spec"]
     axis_layers = compiled.compiled.tree_context["axis_layers"]
+    preprocess = compiled.manifest["preprocess_contract"]
     assert data_task["official_transform_policy"] == "dataset_tcode"
     assert data_task["official_transform_scope"] == "apply_tcode_to_both"
+    assert preprocess["tcode_policy"] == "tcode_only"
+    assert preprocess["target_transform_policy"] == "tcode_transformed"
+    assert preprocess["x_transform_policy"] == "dataset_tcode_transformed"
     assert axis_layers["official_transform_policy"] == "1_data_task"
     assert axis_layers["official_transform_scope"] == "1_data_task"
+
+
+def test_official_transform_scope_can_target_only_without_layer2_bridge() -> None:
+    recipe = _drop_legacy_tcode_bridge(_recipe())
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "official_transform_policy": "dataset_tcode",
+            "official_transform_scope": "apply_tcode_to_target",
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    preprocess = compiled.manifest["preprocess_contract"]
+    assert preprocess["tcode_policy"] == "tcode_only"
+    assert preprocess["target_transform_policy"] == "tcode_transformed"
+    assert preprocess["x_transform_policy"] == "raw_level"
+    assert preprocess["tcode_application_scope"] == "apply_tcode_to_target"
 
 
 def test_official_transform_policy_rejects_legacy_layer2_conflict() -> None:

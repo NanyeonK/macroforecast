@@ -32,6 +32,15 @@ Layer ownership after the migration pass:
 - Layer 2 still owns researcher-controlled extra preprocessing after the
   official frame exists.
 
+Current bridge status:
+
+- New default recipes emit only the Layer 1 official-transform axes.
+- The compiler derives `PreprocessContract` bridge fields from those Layer 1
+  axes for the runtime.
+- Execution reads `data_task_spec["official_transform_policy"]` and
+  `data_task_spec["official_transform_scope"]` first; `PreprocessContract`
+  t-code fields are fallback only for older compiled specs.
+
 ## Executable Contract Classes
 
 The code currently recognizes three useful preprocessing classes.
