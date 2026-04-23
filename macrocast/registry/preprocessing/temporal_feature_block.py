@@ -41,7 +41,7 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id="custom_temporal_features",
-            description="researcher supplied temporal feature block",
+            description="researcher supplied temporal feature block pending a block-local callable contract",
             status="registry_only",
             priority="B",
         ),

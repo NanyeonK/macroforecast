@@ -111,6 +111,12 @@ Operational support is currently narrow:
   factors are deterministic row-wise cross-sectional summaries of the active
   predictor panel, smoothed over the trailing 3 feature rows; they are not
   learned PCA/static factors.
+- `temporal_feature_block=custom_temporal_features` remains registry-only. It
+  is not the same contract as `custom_preprocessor`: the existing custom
+  preprocessor is a broad matrix hook and does not guarantee block-local
+  feature names, fit-state provenance, or leakage metadata. Operational custom
+  temporal blocks need a callable contract that returns train/pred temporal
+  feature frames plus names and provenance before they can enter `Z`.
 - Feature selection currently applies only to raw predictor blocks. It cannot
   be combined with factor blocks or dimensionality reduction until the package
   defines selection-before-factor vs selection-after-factor semantics.

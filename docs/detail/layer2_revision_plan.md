@@ -318,8 +318,12 @@ Current lowered slice:
   composition for now. Local temporal factors are row-wise cross-sectional
   mean/dispersion summaries of the active predictor panel with trailing time
   smoothing, not learned PCA/static factors.
-- `rotation_feature_block=*` and `temporal_feature_block=custom_temporal_features`
-  remain future block-composition work.
+- `temporal_feature_block=custom_temporal_features` remains registry-only by
+  design. It should not silently reuse the broad `custom_preprocessor` hook:
+  operational custom temporal blocks need a block-local callable contract that
+  returns train/pred feature frames, stable feature names, fit-state
+  provenance, and leakage metadata.
+- `rotation_feature_block=*` remains future block-composition work.
 
 Acceptance:
 

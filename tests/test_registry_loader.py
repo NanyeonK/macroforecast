@@ -254,6 +254,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["temporal_feature_block"].current_status["rolling_moments"] == "operational"
     assert registry["temporal_feature_block"].current_status["volatility_features"] == "operational"
     assert registry["temporal_feature_block"].current_status["local_temporal_factors"] == "operational"
+    assert registry["temporal_feature_block"].current_status["custom_temporal_features"] == "registry_only"
     assert registry["target_lag_selection"].current_status["ic_select"] == "registry_only"
 
 
