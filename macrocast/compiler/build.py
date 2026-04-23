@@ -390,6 +390,25 @@ def _official_transform_scope(selection_map: dict[str, AxisSelection]) -> str:
     )
 
 
+def _official_transform_source_payload(selection_map: dict[str, AxisSelection]) -> dict[str, object]:
+    legacy_axes = sorted(
+        axis for axis in _LEGACY_OFFICIAL_TRANSFORM_BRIDGE_AXES if axis in selection_map
+    )
+
+    def _source(axis_name: str) -> str:
+        if axis_name in selection_map:
+            return "layer1_axis"
+        if legacy_axes:
+            return "legacy_layer2_tcode_bridge"
+        return "compiler_default"
+
+    return {
+        "policy_source": _source("official_transform_policy"),
+        "scope_source": _source("official_transform_scope"),
+        "legacy_bridge_axes": legacy_axes,
+    }
+
+
 def _validate_official_transform_contract(selection_map: dict[str, AxisSelection]) -> None:
     """Keep the new Layer 1 official-transform axes aligned with legacy Layer 2 bridge axes."""
 
@@ -940,6 +959,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "target_structure": target_structure,
         "official_transform_policy": _official_transform_policy(selection_map),
         "official_transform_scope": _official_transform_scope(selection_map),
+        "official_transform_source": _official_transform_source_payload(selection_map),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
         "forecast_type": _selection_value(selection_map, "forecast_type", default=("iterated" if feature_builder == "autoreg_lagged_target" else "direct")),

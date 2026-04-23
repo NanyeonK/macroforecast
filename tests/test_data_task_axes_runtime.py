@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,6 +13,7 @@ from macrocast.execution.build import (
     _apply_missing_availability,
     _apply_raw_missing_policy,
     _apply_raw_outlier_policy,
+    _apply_tcode_preprocessing,
     _apply_variable_universe,
 )
 
@@ -51,10 +53,11 @@ def test_phase3_axis_consumption_grep_anchors_present_in_build_py():
 
 
 class _StubRaw:
-    def __init__(self, data):
+    def __init__(self, data, transform_codes=None):
         self.data = data
         self.dataset_metadata = None
         self.artifact = None
+        self.transform_codes = dict(transform_codes or {})
 
 
 def _make_raw():
@@ -137,6 +140,62 @@ def test_raw_outlier_policy_iqr_clip_raw_clips_before_tcode():
 
     assert out.data['INDPRO'].iloc[-1] < 100.0
     assert out.data.attrs['macrocast_reports']['raw_outliers']['before_official_transform'] is True
+
+
+def test_tcode_preprocessing_prefers_data_task_axes_over_contract_bridge():
+    import pandas as pd
+
+    df = pd.DataFrame({
+        'date': pd.date_range('2000-01-01', periods=4, freq='MS'),
+        'INDPRO': [1.0, 2.0, 4.0, 7.0],
+        'RPI': [10.0, 20.0, 40.0, 80.0],
+    }).set_index('date')
+    raw = _StubRaw(df, transform_codes={'INDPRO': 2, 'RPI': 2})
+    recipe = _recipe_with(
+        official_transform_policy='dataset_tcode',
+        official_transform_scope='apply_tcode_to_target',
+        official_transform_source={
+            'policy_source': 'layer1_axis',
+            'scope_source': 'layer1_axis',
+            'legacy_bridge_axes': [],
+        },
+    )
+    contract = SimpleNamespace(tcode_policy='raw_only', tcode_application_scope='apply_tcode_to_X')
+
+    out = _apply_tcode_preprocessing(raw, recipe, contract, target='INDPRO')
+
+    assert pd.isna(out.data['INDPRO'].iloc[0])
+    assert out.data['INDPRO'].iloc[1:].tolist() == [1.0, 2.0, 3.0]
+    assert out.data['RPI'].tolist() == [10.0, 20.0, 40.0, 80.0]
+    report = out.data.attrs['macrocast_reports']['tcode']
+    assert report['scope'] == 'apply_tcode_to_target'
+    assert report['source']['runtime_policy_source'] == 'data_task_spec'
+    assert report['source']['runtime_scope_source'] == 'data_task_spec'
+    assert report['source']['legacy_contract_fallback'] is False
+
+
+def test_tcode_preprocessing_marks_legacy_contract_fallback_source():
+    import pandas as pd
+
+    df = pd.DataFrame({
+        'date': pd.date_range('2000-01-01', periods=3, freq='MS'),
+        'INDPRO': [1.0, 2.0, 4.0],
+        'RPI': [10.0, 20.0, 40.0],
+    }).set_index('date')
+    raw = _StubRaw(df, transform_codes={'INDPRO': 2, 'RPI': 2})
+    contract = SimpleNamespace(tcode_policy='tcode_only', tcode_application_scope='apply_tcode_to_X')
+
+    out = _apply_tcode_preprocessing(raw, _recipe_with(), contract, target='INDPRO')
+
+    assert out.data['INDPRO'].tolist() == [1.0, 2.0, 4.0]
+    assert pd.isna(out.data['RPI'].iloc[0])
+    assert out.data['RPI'].iloc[1:].tolist() == [10.0, 20.0]
+    report = out.data.attrs['macrocast_reports']['tcode']
+    assert report['policy'] == 'dataset_tcode'
+    assert report['scope'] == 'apply_tcode_to_X'
+    assert report['source']['runtime_policy_source'] == 'legacy_preprocess_contract'
+    assert report['source']['runtime_scope_source'] == 'legacy_preprocess_contract'
+    assert report['source']['legacy_contract_fallback'] is True
 
 
 def test_variable_universe_all_is_noop():

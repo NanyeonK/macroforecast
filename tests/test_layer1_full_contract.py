@@ -146,6 +146,9 @@ def test_official_transform_defaults_are_derived_from_legacy_raw_preprocess_brid
     data_task = compiled.manifest["data_task_spec"]
     assert data_task["official_transform_policy"] == "raw_official_frame"
     assert data_task["official_transform_scope"] == "apply_tcode_to_none"
+    assert data_task["official_transform_source"]["policy_source"] == "legacy_layer2_tcode_bridge"
+    assert data_task["official_transform_source"]["scope_source"] == "legacy_layer2_tcode_bridge"
+    assert "tcode_policy" in data_task["official_transform_source"]["legacy_bridge_axes"]
 
 
 def test_official_transform_axes_record_layer1_dataset_tcode_path() -> None:
@@ -164,6 +167,11 @@ def test_official_transform_axes_record_layer1_dataset_tcode_path() -> None:
     preprocess = compiled.manifest["preprocess_contract"]
     assert data_task["official_transform_policy"] == "dataset_tcode"
     assert data_task["official_transform_scope"] == "apply_tcode_to_both"
+    assert data_task["official_transform_source"] == {
+        "policy_source": "layer1_axis",
+        "scope_source": "layer1_axis",
+        "legacy_bridge_axes": [],
+    }
     assert preprocess["tcode_policy"] == "tcode_only"
     assert preprocess["target_transform_policy"] == "tcode_transformed"
     assert preprocess["x_transform_policy"] == "dataset_tcode_transformed"

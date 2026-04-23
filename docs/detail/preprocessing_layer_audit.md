@@ -193,6 +193,10 @@ Current bridge status:
 - Execution reads `data_task_spec["official_transform_policy"]` and
   `data_task_spec["official_transform_scope"]` first; `PreprocessContract`
   t-code fields are fallback only for older compiled specs.
+- Compiled manifests also record `data_task_spec["official_transform_source"]`
+  so full-mode audits can distinguish canonical Layer 1 axes from legacy Layer 2
+  t-code bridge inputs. Runtime t-code reports repeat whether execution used
+  `data_task_spec` or legacy `PreprocessContract` fallback fields.
 
 ## Executable Contract Classes
 

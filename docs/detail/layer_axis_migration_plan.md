@@ -71,6 +71,10 @@ tests.
 - Runtime official dataset transformation now reads `data_task_spec` first.
   Legacy `PreprocessContract.tcode_*` fields remain only as fallback for older
   compiled specs.
+- Compiled manifests include `data_task_spec["official_transform_source"]`;
+  runtime t-code reports include the matching source/fallback marker. This keeps
+  the bridge visible without making `PreprocessContract` the owner of the
+  official-transform choice.
 - `dataset_source` remains accepted as a legacy recipe alias for
   `source_adapter`. New compiled specs and manifests write
   `data_task_spec["source_adapter"]`; execution falls back to old

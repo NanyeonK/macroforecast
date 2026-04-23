@@ -101,6 +101,14 @@ _PHASE3_DEFAULTS = {
     "structural_break_segmentation": "none",
     "separation_rule": "strict_separation",
 }
+_OFFICIAL_TRANSFORM_POLICIES = {"raw_official_frame", "dataset_tcode"}
+_OFFICIAL_TRANSFORM_SCOPES = {
+    "apply_tcode_to_none",
+    "apply_tcode_to_target",
+    "apply_tcode_to_X",
+    "apply_tcode_to_both",
+}
+_RUNTIME_TCODE_CONTRACT_POLICIES = {"tcode_only", "tcode_then_extra_preprocess"}
 
 
 def _data_task_axis(recipe, axis_name: str) -> str:
@@ -216,19 +224,58 @@ def _fred_tcode_transform(series: pd.Series, code: int) -> pd.Series:
     return s
 
 
-def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: PreprocessContract, *, target: str | None):
+def _official_transform_runtime_axes(
+    recipe: RecipeSpec,
+    contract: PreprocessContract,
+) -> tuple[str, str, dict[str, object]]:
     data_task_spec = dict(getattr(recipe, "data_task_spec", {}) or {})
+
     policy = data_task_spec.get("official_transform_policy")
     if policy is None:
         policy = (
             "dataset_tcode"
-            if getattr(contract, "tcode_policy", "raw_only") in {"tcode_only", "tcode_then_extra_preprocess"}
+            if getattr(contract, "tcode_policy", "raw_only") in _RUNTIME_TCODE_CONTRACT_POLICIES
             else "raw_official_frame"
         )
+        policy_source = "legacy_preprocess_contract"
+    else:
+        policy_source = "data_task_spec"
+    policy = str(policy)
+    if policy not in _OFFICIAL_TRANSFORM_POLICIES:
+        raise ExecutionError(f"official_transform_policy={policy!r} is not executable in this runtime slice")
+
+    scope = data_task_spec.get("official_transform_scope")
+    if scope is None:
+        scope = getattr(contract, "tcode_application_scope", "apply_tcode_to_both")
+        scope_source = "legacy_preprocess_contract"
+    else:
+        scope_source = "data_task_spec"
+    scope = str(scope)
+    if scope not in _OFFICIAL_TRANSFORM_SCOPES:
+        raise ExecutionError(f"official_transform_scope={scope!r} is not executable in this runtime slice")
+
+    source = data_task_spec.get("official_transform_source")
+    if isinstance(source, Mapping):
+        source_payload: dict[str, object] = dict(source)
+    else:
+        source_payload = {}
+    source_payload.update(
+        {
+            "runtime_policy_source": policy_source,
+            "runtime_scope_source": scope_source,
+            "legacy_contract_fallback": (
+                policy_source == "legacy_preprocess_contract"
+                or scope_source == "legacy_preprocess_contract"
+            ),
+        }
+    )
+    return policy, scope, source_payload
+
+
+def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: PreprocessContract, *, target: str | None):
+    policy, scope, source_payload = _official_transform_runtime_axes(recipe, contract)
     if policy == "raw_official_frame":
         return raw_result
-    if policy != "dataset_tcode":
-        raise ExecutionError(f"official_transform_policy={policy!r} is not executable in this runtime slice")
 
     data = getattr(raw_result, "data", None)
     if data is None:
@@ -240,10 +287,19 @@ def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: Preproc
     _attach_level_source(frame, level_source)
     if not tcodes:
         _append_frame_warning(frame, "official_transform_policy='dataset_tcode' requested but no dataset transform codes were available; data left unchanged")
-        _append_frame_report(frame, "tcode", {"applied": False, "policy": policy, "reason": "missing_transform_codes"})
+        _append_frame_report(
+            frame,
+            "tcode",
+            {
+                "applied": False,
+                "policy": policy,
+                "scope": scope,
+                "source": source_payload,
+                "reason": "missing_transform_codes",
+            },
+        )
         return _replace_raw_data(raw_result, frame)
 
-    scope = data_task_spec.get("official_transform_scope") or getattr(contract, "tcode_application_scope", "apply_tcode_to_both")
     applied: dict[str, int] = {}
     for col in frame.columns:
         is_target = target is not None and col == target
@@ -256,7 +312,17 @@ def _apply_tcode_preprocessing(raw_result, recipe: RecipeSpec, contract: Preproc
         code = int(tcodes.get(col, 1))
         frame[col] = _fred_tcode_transform(frame[col], code)
         applied[str(col)] = code
-    _append_frame_report(frame, "tcode", {"applied": True, "policy": policy, "scope": scope, "columns": applied})
+    _append_frame_report(
+        frame,
+        "tcode",
+        {
+            "applied": True,
+            "policy": policy,
+            "scope": scope,
+            "source": source_payload,
+            "columns": applied,
+        },
+    )
     return _replace_raw_data(raw_result, frame)
 
 
