@@ -333,6 +333,13 @@ Current lowered slice:
   not the full MARX or MAF preset. MARX, MAF, custom rotations, and rotation
   composition with temporal, X-lag, or factor blocks remain future block-composer
   work.
+- `rotation_feature_block=marx_rotation`, `maf_rotation`, and
+  `custom_rotation` remain registry-only. The compiler still records explicit
+  boundary metadata when those values are selected: MARX requires a
+  lag-polynomial rotation composer, MAF requires factor-to-rotation composition,
+  and custom rotations require a block-local callable contract. None of these
+  values should silently reuse `moving_average_rotation` or the broad
+  `custom_preprocessor` hook.
 
 Acceptance:
 

@@ -125,6 +125,15 @@ Operational support is currently narrow:
   prediction-origin history. This is the generic rotation primitive; full MARX,
   MAF, and custom rotation presets remain registry-only until lag-polynomial,
   factor-rotation, and callable block-composition semantics are explicit.
+- Advanced rotation values are explicit boundaries, not aliases for the generic
+  primitive. `marx_rotation` remains registry-only until a lag-polynomial
+  rotation composer can build X lags, apply the cumulative lower-triangular
+  moving-average rotation, define duplicate-base-X and naming policy, and prove
+  no-lookahead row/origin alignment. `maf_rotation` remains registry-only until
+  factor-score fit/apply state can compose with rotation blocks. `custom_rotation`
+  remains registry-only until a block-local callable contract returns train/pred
+  rotation feature frames, stable names, fit-state provenance, and leakage
+  metadata.
 - Feature selection currently applies only to raw predictor blocks. It cannot
   be combined with factor blocks or dimensionality reduction until the package
   defines selection-before-factor vs selection-after-factor semantics.

@@ -1710,6 +1710,53 @@ def test_layer2_explicit_moving_average_rotation_lowers_to_raw_panel_bridge() ->
     assert "full MARX/MAF presets remain separate future blocks" in block["scope_note"]
 
 
+@pytest.mark.parametrize(
+    ("rotation_block", "required_contract", "scope_phrase"),
+    [
+        (
+            "marx_rotation",
+            "lag_polynomial_rotation_block_composer",
+            "not equivalent to rotation_feature_block=moving_average_rotation",
+        ),
+        (
+            "maf_rotation",
+            "factor_rotation_block_composer",
+            "not a raw-X moving-average append",
+        ),
+        (
+            "custom_rotation",
+            "block_local_rotation_callable",
+            "custom_preprocessor hook is not enough",
+        ),
+    ],
+)
+def test_layer2_advanced_rotation_blocks_record_registry_only_boundary(
+    rotation_block: str,
+    required_contract: str,
+    scope_phrase: str,
+) -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block=rotation_block,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any(
+        f"axis rotation_feature_block value {rotation_block} is not supported" in warning
+        and "status=registry_only" in warning
+        for warning in result.compiled.warnings
+    )
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == rotation_block
+    assert block["source_axis"] == "rotation_feature_block"
+    assert block["source_value"] == rotation_block
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == required_contract
+    assert scope_phrase in block["scope_note"]
+    assert "runtime_bridge" not in block
+
+
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
     result = compile_recipe_dict(
         _layer2_temporal_block_recipe(

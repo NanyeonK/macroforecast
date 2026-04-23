@@ -1324,6 +1324,49 @@ def _rotation_block_from_selection(selection_map: dict[str, AxisSelection]) -> d
             "runtime_bridge": {"raw_panel_rotation_features": "moving_average_rotation"},
             "scope_note": "generic moving-average rotation primitive; full MARX/MAF presets remain separate future blocks",
         }
+    if block == "marx_rotation":
+        return {
+            "value": "marx_rotation",
+            "source_axis": "rotation_feature_block",
+            "source_value": "marx_rotation",
+            "runtime_status": "registry_only",
+            "required_runtime_contract": "lag_polynomial_rotation_block_composer",
+            "required_semantics": [
+                "build an explicit X-lag block before rotation",
+                "apply cumulative lower-triangular moving-average rotation over the lag polynomial",
+                "define duplicate base-X policy and stable rotated-lag feature names",
+                "prove row-date and prediction-origin no-lookahead alignment",
+            ],
+            "scope_note": "MARX is a preset over lag-polynomial rotation and is not equivalent to rotation_feature_block=moving_average_rotation",
+        }
+    if block == "maf_rotation":
+        return {
+            "value": "maf_rotation",
+            "source_axis": "rotation_feature_block",
+            "source_value": "maf_rotation",
+            "runtime_status": "registry_only",
+            "required_runtime_contract": "factor_rotation_block_composer",
+            "required_semantics": [
+                "fit factor scores on the training window",
+                "rotate or smooth factor-score histories with explicit fit/apply provenance",
+                "compose factor and rotation blocks without leaking prediction-origin information",
+            ],
+            "scope_note": "MAF requires factor-to-rotation block composition and is not a raw-X moving-average append",
+        }
+    if block == "custom_rotation":
+        return {
+            "value": "custom_rotation",
+            "source_axis": "rotation_feature_block",
+            "source_value": "custom_rotation",
+            "runtime_status": "registry_only",
+            "required_runtime_contract": "block_local_rotation_callable",
+            "required_semantics": [
+                "return train and prediction rotation feature frames",
+                "return stable public and runtime feature names",
+                "return fit-state provenance and leakage metadata",
+            ],
+            "scope_note": "custom_rotation needs a block-local callable contract; the broad custom_preprocessor hook is not enough",
+        }
     if explicit_block is not None:
         return {
             "value": block,
