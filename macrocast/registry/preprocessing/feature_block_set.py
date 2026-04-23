@@ -40,6 +40,12 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
+            id="factor_blocks_only",
+            description="factor block without target-lag or raw predictor block append",
+            status="registry_only",
+            priority="A",
+        ),
+        EnumRegistryEntry(
             id="high_dimensional_x",
             description="high dimensional transformed predictor panel",
             status="registry_only",

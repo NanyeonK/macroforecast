@@ -88,7 +88,9 @@ read explicit blocks first for executor-family dispatch, fixed target lags,
 fixed X lags, and static PCA factors. The coarse `feature_builder`,
 `predictor_family`, `data_richness_mode`, and `factor_count` bridge remains
 accepted as compatibility/provenance because those names define `Z`, not
-estimator behavior.
+estimator behavior. New manifests should read the preferred
+`compatibility_source` key for that provenance; `source_bridge` remains as a
+legacy manifest alias.
 
 ## Layer 3: Forecast Generator
 

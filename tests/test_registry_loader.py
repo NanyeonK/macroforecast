@@ -241,6 +241,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
         "feature_block_combination",
     }
     assert all(registry[axis].layer == "2_preprocessing" for axis in block_axes)
+    assert registry["feature_block_set"].current_status["factor_blocks_only"] == "registry_only"
     assert registry["feature_block_set"].current_status["mixed_blocks"] == "registry_only"
     assert registry["rotation_feature_block"].current_status["none"] == "operational"
     assert registry["rotation_feature_block"].current_status["moving_average_rotation"] == "operational"

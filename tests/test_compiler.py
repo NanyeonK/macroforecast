@@ -1186,6 +1186,9 @@ def test_compiled_manifest_records_layer2_representation_provenance() -> None:
     spec = compile_result.manifest["layer2_representation_spec"]
     assert spec["schema_version"] == "layer2_representation_v1"
     assert spec["runtime_effect"] == "provenance_plus_runtime_block_dispatch"
+    assert spec["compatibility_source"]["source_kind"] == "legacy_bridge"
+    assert spec["compatibility_source"]["legacy_manifest_alias"] == "source_bridge"
+    assert spec["compatibility_source"]["feature_builder"] == "autoreg_lagged_target"
     assert spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"
     assert spec["source_bridge"]["data_richness_mode"] == "target_lags_only"
     assert spec["source_bridge"]["target_lag_selection"] == "ic_select"
@@ -1319,12 +1322,15 @@ def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -
         ("autoreg_lagged_target", "ar", {}, "target_lags_only", "ic_selected_target_lags", "none"),
         ("raw_feature_panel", "ridge", {}, "high_dimensional_x", "none", "none"),
         ("raw_X_only", "ridge", {"data_richness_mode": "selected_sparse_X"}, "selected_sparse_x", "none", "none"),
-        ("factor_pca", "pcr", {}, "legacy_feature_builder_bridge", "none", "pca_static_factors"),
+        ("factor_pca", "pcr", {}, "factor_blocks_only", "none", "pca_static_factors"),
         ("factors_plus_AR", "factor_augmented_linear", {}, "factors_plus_target_lags", "fixed_target_lags", "pca_static_factors"),
     ]
     for feature_builder, model_family, axes, block_set, target_lag_block, factor_block in cases:
         result = compile_recipe_dict(_recipe(feature_builder, model_family, **axes))
         spec = result.manifest["layer2_representation_spec"]
+        assert spec["compatibility_source"]["source_kind"] == "legacy_bridge"
+        assert spec["compatibility_source"]["legacy_manifest_alias"] == "source_bridge"
+        assert spec["compatibility_source"]["feature_builder"] == feature_builder
         assert spec["source_bridge"]["feature_builder"] == feature_builder
         assert spec["feature_blocks"]["feature_block_set"]["value"] == block_set
         assert spec["feature_blocks"]["target_lag_block"]["value"] == target_lag_block

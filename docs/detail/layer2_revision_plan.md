@@ -118,7 +118,7 @@ Changes:
   - `feature_builder=raw_X_only` ->
     predictor panel block with no target-lag block;
   - `feature_builder=factor_pca` ->
-    factor block;
+    `feature_block_set=factor_blocks_only` plus a static factor block;
   - `feature_builder=factors_plus_AR` ->
     factor block plus target-lag block;
   - `data_richness_mode=full_high_dimensional_X` ->
@@ -135,7 +135,9 @@ Acceptance:
 - prediction values do not change;
 - manifest contains the new Layer 2 provenance;
 - tests cover each current `feature_builder` bridge value;
-- docs state that this is provenance-only.
+- docs state that this is provenance-only;
+- manifests write preferred `compatibility_source` provenance while keeping
+  `source_bridge` as a compatibility alias for existing readers.
 
 ### Patch L2-B: Compatibility Name Cleanup
 

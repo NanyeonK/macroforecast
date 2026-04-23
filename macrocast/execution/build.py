@@ -82,6 +82,7 @@ _RAW_PANEL_FEATURE_BLOCK_SETS = {
     "transformed_x",
     "transformed_x_lags",
     "factors_plus_target_lags",
+    "factor_blocks_only",
     "high_dimensional_x",
     "selected_sparse_x",
     "level_augmented_x",

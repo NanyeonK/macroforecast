@@ -78,6 +78,7 @@ _RAW_PANEL_FEATURE_BLOCK_SETS = {
     "transformed_x",
     "transformed_x_lags",
     "factors_plus_target_lags",
+    "factor_blocks_only",
     "high_dimensional_x",
     "selected_sparse_x",
     "level_augmented_x",
@@ -1556,7 +1557,7 @@ def _feature_block_set_from_bridge(feature_builder: str, data_richness_mode: str
             "mixed_mode": "mixed_blocks",
         }.get(data_richness_mode, "transformed_x")
     elif feature_builder == "factor_pca":
-        value = "legacy_feature_builder_bridge"
+        value = "factor_blocks_only"
     else:
         value = "legacy_feature_builder_bridge"
     return {
@@ -1623,6 +1624,30 @@ def _feature_runtime_for_validation(
     return fallback_feature_builder
 
 
+def _compatibility_source_payload(
+    *,
+    feature_builder: str,
+    predictor_family: str,
+    data_richness_mode: str,
+    training_spec: Mapping[str, Any],
+    target_lag_selection: str,
+    target_lag_count: Any,
+    legacy_y_lag_count: Any,
+) -> dict[str, Any]:
+    return {
+        "source_kind": "legacy_bridge",
+        "feature_builder": feature_builder,
+        "predictor_family": predictor_family,
+        "data_richness_mode": data_richness_mode,
+        "factor_count": training_spec.get("factor_count", "fixed"),
+        "target_lag_selection": target_lag_selection,
+        "target_lag_count": target_lag_count,
+        "legacy_y_lag_count": legacy_y_lag_count,
+        "legacy_factor_ar_lags": training_spec.get("factor_ar_lags", 1),
+        "legacy_manifest_alias": "source_bridge",
+    }
+
+
 def _path_average_protocols_for_horizons(construction: str, horizons: Sequence[int]) -> dict[str, Any] | None:
     if not _is_path_average_construction(construction):
         return None
@@ -1679,18 +1704,23 @@ def _layer2_representation_spec(
         if has_explicit_target_lag_block or feature_builder in {"autoreg_lagged_target", "factors_plus_AR"}
         else {"value": "none", "source_axis": "feature_builder", "source_value": feature_builder}
     )
+    compatibility_source = _compatibility_source_payload(
+        feature_builder=str(feature_builder),
+        predictor_family=str(predictor_family),
+        data_richness_mode=str(data_richness_mode),
+        training_spec=training_spec,
+        target_lag_selection=str(target_lag_selection),
+        target_lag_count=target_lag_count,
+        legacy_y_lag_count=y_lag_count,
+    )
     return {
         "schema_version": "layer2_representation_v1",
         "runtime_effect": "provenance_plus_runtime_block_dispatch",
+        "compatibility_source": compatibility_source,
         "source_bridge": {
-            "feature_builder": feature_builder,
-            "predictor_family": predictor_family,
-            "data_richness_mode": data_richness_mode,
-            "factor_count": training_spec.get("factor_count", "fixed"),
-            "target_lag_selection": target_lag_selection,
-            "target_lag_count": target_lag_count,
-            "legacy_y_lag_count": y_lag_count,
-            "legacy_factor_ar_lags": training_spec.get("factor_ar_lags", 1),
+            key: value
+            for key, value in compatibility_source.items()
+            if key not in {"source_kind", "legacy_manifest_alias"}
         },
         "target_lag_config": {
             "selection": target_lag_selection,

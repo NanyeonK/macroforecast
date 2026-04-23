@@ -62,7 +62,7 @@ provenance for old recipes.
 
 | Axis | Values | Meaning |
 |---|---|---|
-| `feature_block_set` | `legacy_feature_builder_bridge`, `target_lags_only`, `transformed_x`, `transformed_x_lags`, `factors_plus_target_lags`, `high_dimensional_x`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks` | Top-level recipe for which blocks should form `Z`. |
+| `feature_block_set` | `target_lags_only`, `transformed_x`, `transformed_x_lags`, `factor_blocks_only`, `factors_plus_target_lags`, `high_dimensional_x`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks`, `legacy_feature_builder_bridge` | Top-level recipe for which blocks should form `Z`. `legacy_feature_builder_bridge` is retained only as a compatibility value for unknown old bridge recipes. |
 | `target_lag_block` | `none`, `fixed_target_lags`, `ic_selected_target_lags`, `horizon_specific_target_lags`, `custom_target_lags` | Target-history features built from the target series. |
 | `target_lag_selection` | `none`, `fixed`, `ic_select`, `cv_select`, `horizon_specific`, `custom` | Target-language replacement for public Layer 2 lag-selection provenance; legacy `y_lag_count` remains accepted for Layer 3/model-order compatibility. |
 | `x_lag_feature_block` | `none`, `fixed_x_lags`, `variable_specific_x_lags`, `category_specific_x_lags`, `cv_selected_x_lags`, `custom_x_lags` | Lagged predictor features built from `X`. |
@@ -187,7 +187,7 @@ The current coarse names map to the new language as follows:
 | `feature_builder=autoreg_lagged_target` | target-lag block only; fixed target-lag construction now drives the supervised target-lag matrix path, with legacy fields retained as fallback/provenance. |
 | `feature_builder=raw_feature_panel` | transformed or raw predictor panel block, chosen after Layer 1 official-frame policy and `predictor_family`. |
 | `feature_builder=raw_X_only` | predictor panel block without target-lag features. |
-| `feature_builder=factor_pca` | factor feature block from the predictor panel. |
+| `feature_builder=factor_pca` | `feature_block_set=factor_blocks_only` plus a static factor feature block from the predictor panel. |
 | `feature_builder=factors_plus_AR` | factor feature block plus target-lag block. |
 | `data_richness_mode=target_lags_only` | `feature_block_set=target_lags_only`. |
 | `data_richness_mode=factor_plus_lags` | `feature_block_set=factors_plus_target_lags`. |
@@ -199,6 +199,10 @@ PCA factor blocks can be selected directly in their supported runtime slices.
 Joint composition that is not already represented by an executable runtime path
 remains gated until the block composer has train-window fit/apply tests and
 provenance.
+
+Compiled manifests write `compatibility_source` as the preferred provenance key
+for old bridge values that were accepted as input. The older `source_bridge`
+manifest key remains as a compatibility alias for existing downstream readers.
 
 ## Boundary Cases
 
