@@ -117,32 +117,31 @@ Operational support is currently narrow:
   feature names, fit-state provenance, or leakage metadata. Operational custom
   temporal blocks need a callable contract that returns train/pred temporal
   feature frames plus names and provenance before they can enter `Z`.
-- `rotation_feature_block=none` and `moving_average_rotation` are operational
-  for raw-panel feature builders. `none` records explicit no-rotation
-  provenance. `moving_average_rotation` appends deterministic trailing 3- and
-  6-period moving-average rotations of each active predictor as
+- `rotation_feature_block=none`, `moving_average_rotation`, and `marx_rotation`
+  are operational for raw-panel feature builders. `none` records explicit
+  no-rotation provenance. `moving_average_rotation` appends deterministic
+  trailing 3- and 6-period moving-average rotations of each active predictor as
   `{predictor}_rotma3` and `{predictor}_rotma6`, using only row-date /
-  prediction-origin history. This is the generic rotation primitive; full MARX,
-  MAF, and custom rotation presets remain registry-only until lag-polynomial,
-  factor-rotation, and callable block-composition semantics are explicit.
+  prediction-origin history. `marx_rotation` requires
+  `leaf_config.marx_max_lag`, builds the cumulative lower-triangular
+  lag-polynomial rotation, and replaces the source lag-polynomial basis in
+  final `Z`.
 - Advanced rotation values are explicit boundaries, not aliases for the generic
-  primitive. `marx_rotation` remains registry-only until a lag-polynomial
-  rotation composer can build X lags, apply the cumulative lower-triangular
-  moving-average rotation, define duplicate-base-X and naming policy, and prove
-  no-lookahead row/origin alignment. `maf_rotation` remains registry-only until
-  factor-score fit/apply state can compose with rotation blocks. `custom_rotation`
-  remains registry-only until a block-local callable contract returns train/pred
-  rotation feature frames, stable names, fit-state provenance, and leakage
-  metadata.
-- The MARX composer skeleton is defined by
-  `lag_polynomial_rotation_contract_v1`. Its naming contract is
+  primitive. `maf_rotation` remains registry-only until factor-score fit/apply
+  state can compose with rotation blocks. `custom_rotation` remains registry-only
+  until a block-local callable contract returns train/pred rotation feature
+  frames, stable names, fit-state provenance, and leakage metadata.
+- The MARX composer is defined by `lag_polynomial_rotation_contract_v1`. Its
+  naming contract is
   `{predictor}_marx_ma_lag1_to_lag{p}` for public feature names and
   `{predictor}__marx_ma_lag1_to_lag{p}` for runtime names, ordered by predictor
   and then rotation order. Its alignment contract is
   `Z_{i,p,t} = p^{-1} * sum_{j=1}^{p} X_{i,t-j}` for training rows and
-  `X_{origin-1}, ..., X_{origin-p}` at prediction origin. The rotated MARX
-  basis replaces the source lag-polynomial basis in final `Z`; source lag
-  columns must not be appended a second time when the MARX basis is active.
+  `X_{origin-1}, ..., X_{origin-p}` at prediction origin. Initial unavailable
+  lags follow the package lag convention and are zero-filled before the sample
+  start. Source lag columns must not be appended a second time when the MARX
+  basis is active. MARX currently cannot compose with external X-lag, temporal,
+  or factor blocks until the explicit block composer exists.
 - Feature selection currently applies only to raw predictor blocks. It cannot
   be combined with factor blocks or dimensionality reduction until the package
   defines selection-before-factor vs selection-after-factor semantics.

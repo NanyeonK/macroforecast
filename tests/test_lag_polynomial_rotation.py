@@ -1,7 +1,9 @@
 import pytest
+import pandas as pd
 
 from macrocast.execution.lag_polynomial_rotation import (
     build_marx_rotation_contract,
+    build_marx_rotation_frame,
     marx_rotation_public_feature_name,
     marx_rotation_runtime_feature_name,
 )
@@ -18,6 +20,8 @@ def test_marx_rotation_contract_builds_predictor_major_names() -> None:
     assert contract["schema_version"] == "lag_polynomial_rotation_contract_v1"
     assert contract["rotation_block"] == "marx_rotation"
     assert contract["composer_contract"] == "lag_polynomial_rotation_block_composer"
+    assert contract["runtime_status"] == "operational"
+    assert contract["runtime_builder"] == "build_marx_rotation_frame"
     assert contract["source_feature_name_pattern"] == "{predictor}_lag_{k}"
     assert contract["source_runtime_feature_name_pattern"] == "{predictor}__lag{k}"
     assert contract["rotated_feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
@@ -25,6 +29,7 @@ def test_marx_rotation_contract_builds_predictor_major_names() -> None:
     assert contract["rotation_orders"] == [1, 2, 3]
     assert contract["feature_order"] == "predictor_major_then_rotation_order"
     assert contract["basis_policy"] == "replace_lag_polynomial_basis"
+    assert contract["initial_lag_fill_policy"] == "zero_fill_before_start"
     assert contract["feature_names"] == [
         "a_marx_ma_lag1_to_lag1",
         "a_marx_ma_lag1_to_lag2",
@@ -47,6 +52,32 @@ def test_marx_rotation_contract_builds_predictor_major_names() -> None:
         "lookahead": "forbidden",
     }
     assert "do_not_append_source_lag_columns" in contract["duplicate_base_policy"]
+
+
+def test_build_marx_rotation_frame_uses_zero_filled_origin_history() -> None:
+    source = pd.DataFrame(
+        {
+            "a": [1.0, 2.0, 3.0, 4.0],
+            "b": [2.0, 4.0, 6.0, 8.0],
+        }
+    )
+
+    rotated = build_marx_rotation_frame(source, max_lag=3)
+
+    assert rotated.columns.tolist() == [
+        "a__marx_ma_lag1_to_lag1",
+        "a__marx_ma_lag1_to_lag2",
+        "a__marx_ma_lag1_to_lag3",
+        "b__marx_ma_lag1_to_lag1",
+        "b__marx_ma_lag1_to_lag2",
+        "b__marx_ma_lag1_to_lag3",
+    ]
+    assert rotated.to_numpy().tolist() == [
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.5, 1.0 / 3.0, 2.0, 1.0, 2.0 / 3.0],
+        [2.0, 1.5, 1.0, 4.0, 3.0, 2.0],
+        [3.0, 2.5, 2.0, 6.0, 5.0, 4.0],
+    ]
 
 
 def test_marx_rotation_contract_schema_can_be_emitted_before_lag_order_is_known() -> None:

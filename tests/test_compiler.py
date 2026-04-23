@@ -89,6 +89,7 @@ def _layer2_temporal_block_recipe(
     temporal_feature_block: str = "moving_average_features",
     rotation_feature_block: str | None = None,
     x_lag_feature_block: str | None = None,
+    marx_max_lag: int | None = None,
 ) -> dict:
     preprocessing_axes = {
         "target_transform_policy": "raw_level",
@@ -114,6 +115,12 @@ def _layer2_temporal_block_recipe(
         preprocessing_axes["preprocess_order"] = "extra_only"
         preprocessing_axes["preprocess_fit_scope"] = "train_only"
         preprocessing_axes["x_lag_feature_block"] = x_lag_feature_block
+    leaf_config = {
+        "target": "INDPRO",
+        "horizons": [1],
+    }
+    if marx_max_lag is not None:
+        leaf_config["marx_max_lag"] = marx_max_lag
     return {
         "recipe_id": f"l2-temporal-block-{feature_builder}",
         "path": {
@@ -124,10 +131,7 @@ def _layer2_temporal_block_recipe(
                     "information_set_type": "revised",
                     "target_structure": "single_target_point_forecast",
                 },
-                "leaf_config": {
-                    "target": "INDPRO",
-                    "horizons": [1],
-                },
+                "leaf_config": leaf_config,
             },
             "2_preprocessing": {"fixed_axes": preprocessing_axes},
             "3_training": {
@@ -1707,17 +1711,12 @@ def test_layer2_explicit_moving_average_rotation_lowers_to_raw_panel_bridge() ->
     assert block["runtime_feature_name_patterns"] == ["{predictor}__rotma3", "{predictor}__rotma6"]
     assert block["runtime_bridge"] == {"raw_panel_rotation_features": "moving_average_rotation"}
     assert block["alignment"]["lookahead"] == "forbidden"
-    assert "full MARX/MAF presets remain separate future blocks" in block["scope_note"]
+    assert "MARX uses lag-polynomial basis replacement" in block["scope_note"]
 
 
 @pytest.mark.parametrize(
     ("rotation_block", "required_contract", "scope_phrase"),
     [
-        (
-            "marx_rotation",
-            "lag_polynomial_rotation_block_composer",
-            "not equivalent to rotation_feature_block=moving_average_rotation",
-        ),
         (
             "maf_rotation",
             "factor_rotation_block_composer",
@@ -1755,15 +1754,96 @@ def test_layer2_advanced_rotation_blocks_record_registry_only_boundary(
     assert block["required_runtime_contract"] == required_contract
     assert scope_phrase in block["scope_note"]
     assert "runtime_bridge" not in block
-    if rotation_block == "marx_rotation":
-        composer = block["composer_contract"]
-        assert composer["schema_version"] == "lag_polynomial_rotation_contract_v1"
-        assert composer["runtime_status"] == "skeleton_only"
-        assert composer["rotation_orders"] == "required_from_recipe"
-        assert composer["source_feature_name_pattern"] == "{predictor}_lag_{k}"
-        assert composer["rotated_feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
-        assert composer["basis_policy"] == "replace_lag_polynomial_basis"
-        assert composer["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_marx_rotation_requires_lag_order() -> None:
+    with pytest.raises(CompileValidationError, match="marx_max_lag"):
+        compile_recipe_dict(
+            _layer2_temporal_block_recipe(
+                temporal_feature_block="none",
+                rotation_feature_block="marx_rotation",
+            )
+        )
+
+
+def test_layer2_explicit_marx_rotation_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["data_task_spec"]["marx_max_lag"] == 3
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == "marx_rotation"
+    assert block["source_axis"] == "rotation_feature_block"
+    assert block["runtime_status"] == "operational"
+    assert block["max_lag"] == 3
+    assert block["rotation_orders"] == [1, 2, 3]
+    assert block["feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
+    assert block["runtime_feature_name_pattern"] == "{predictor}__marx_ma_lag1_to_lag{p}"
+    assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
+    assert block["basis_policy"] == "replace_lag_polynomial_basis"
+    assert block["initial_lag_fill_policy"] == "zero_fill_before_start"
+    assert block["alignment"]["lookahead"] == "forbidden"
+    assert "replaces the X lag-polynomial basis" in block["scope_note"]
+    composer = block["composer_contract"]
+    assert composer["schema_version"] == "lag_polynomial_rotation_contract_v1"
+    assert composer["runtime_status"] == "operational"
+    assert composer["runtime_builder"] == "build_marx_rotation_frame"
+    assert composer["max_lag"] == 3
+    assert composer["rotation_orders"] == [1, 2, 3]
+    assert composer["source_feature_name_pattern"] == "{predictor}_lag_{k}"
+    assert composer["rotated_feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
+    assert composer["basis_policy"] == "replace_lag_polynomial_basis"
+
+
+def test_layer2_explicit_marx_rotation_runs_raw_panel_bridge(tmp_path: Path) -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    block = manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == "marx_rotation"
+    assert block["max_lag"] == 3
+    assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
+
+
+def test_layer2_explicit_marx_rotation_rejects_x_lag_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            x_lag_feature_block="fixed_x_lags",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any("cannot yet be combined with x_lag_feature_block" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_explicit_marx_rotation_rejects_temporal_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any("cannot yet be combined with temporal_feature_block" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:

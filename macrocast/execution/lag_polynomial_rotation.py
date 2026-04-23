@@ -1,13 +1,10 @@
-"""Lag-polynomial rotation contracts for Layer 2 feature blocks.
-
-This module defines the naming and alignment contract required before
-``rotation_feature_block=marx_rotation`` can become executable. It intentionally
-does not build runtime matrices yet.
-"""
+"""Lag-polynomial rotation contracts and builders for Layer 2 feature blocks."""
 from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Final
+
+import pandas as pd
 
 
 LAG_POLYNOMIAL_ROTATION_SCHEMA_VERSION: Final = "lag_polynomial_rotation_contract_v1"
@@ -61,6 +58,24 @@ def _feature_names(
     ]
 
 
+def build_marx_rotation_frame(source: pd.DataFrame, *, max_lag: int) -> pd.DataFrame:
+    """Build predictor-major MARX rotated-lag features from a source X panel."""
+    max_lag_i = _positive_int(max_lag, name="max_lag")
+    source = source.astype(float)
+    feature_frames: list[pd.Series] = []
+    for predictor in source.columns:
+        predictor_name = _predictor_name(str(predictor))
+        lagged = [source[predictor].shift(lag).fillna(0.0) for lag in range(1, max_lag_i + 1)]
+        for rotation_order in range(1, max_lag_i + 1):
+            rotated = sum(lagged[:rotation_order]) / float(rotation_order)
+            feature_frames.append(
+                rotated.rename(marx_rotation_runtime_feature_name(predictor_name, rotation_order))
+            )
+    if not feature_frames:
+        return pd.DataFrame(index=source.index)
+    return pd.concat(feature_frames, axis=1)
+
+
 def build_marx_rotation_contract(
     *,
     max_lag: int | None = None,
@@ -85,7 +100,8 @@ def build_marx_rotation_contract(
         "schema_version": LAG_POLYNOMIAL_ROTATION_SCHEMA_VERSION,
         "rotation_block": MARX_ROTATION_BLOCK_ID,
         "composer_contract": MARX_COMPOSER_CONTRACT,
-        "runtime_status": "skeleton_only",
+        "runtime_status": "skeleton_only" if max_lag is None else "operational",
+        "runtime_builder": "build_marx_rotation_frame",
         "source_block": "x_lag_feature_block",
         "source_feature_name_pattern": MARX_SOURCE_PUBLIC_FEATURE_NAME_PATTERN,
         "source_runtime_feature_name_pattern": MARX_SOURCE_RUNTIME_FEATURE_NAME_PATTERN,
@@ -99,6 +115,7 @@ def build_marx_rotation_contract(
             "do_not_append_source_lag_columns when the rotated MARX basis is active; "
             "the p=1 rotated coordinate is retained as the first rotated-basis coordinate"
         ),
+        "initial_lag_fill_policy": "zero_fill_before_start",
         "formula": "Z_{i,p,t} = p^{-1} * sum_{j=1}^{p} X_{i,t-j}",
         "alignment": {
             "train_row_t_uses": "X_{t-1}, ..., X_{t-p} for each rotated order p",
@@ -129,6 +146,7 @@ __all__ = [
     "MARX_PUBLIC_FEATURE_NAME_PATTERN",
     "MARX_RUNTIME_FEATURE_NAME_PATTERN",
     "build_marx_rotation_contract",
+    "build_marx_rotation_frame",
     "marx_rotation_public_feature_name",
     "marx_rotation_runtime_feature_name",
 ]

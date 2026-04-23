@@ -323,30 +323,30 @@ Current lowered slice:
   operational custom temporal blocks need a block-local callable contract that
   returns train/pred feature frames, stable feature names, fit-state
   provenance, and leakage metadata.
-- `rotation_feature_block=none` and `moving_average_rotation` are executable
-  for raw-panel feature builders. `none` records explicit no-rotation
-  provenance when selected. `moving_average_rotation` appends deterministic
-  trailing 3- and 6-period moving-average rotations of each active predictor
-  column with `{predictor}_rotma3` / `{predictor}_rotma6` public names, using
-  only information available through each row date / prediction origin. This is
-  a generic rotation primitive that can support MARX-like presets later; it is
-  not the full MARX or MAF preset. MARX, MAF, custom rotations, and rotation
-  composition with temporal, X-lag, or factor blocks remain future block-composer
-  work.
-- `rotation_feature_block=marx_rotation`, `maf_rotation`, and
-  `custom_rotation` remain registry-only. The compiler still records explicit
-  boundary metadata when those values are selected: MARX requires a
-  lag-polynomial rotation composer, MAF requires factor-to-rotation composition,
-  and custom rotations require a block-local callable contract. None of these
-  values should silently reuse `moving_average_rotation` or the broad
-  `custom_preprocessor` hook.
-- MARX now has a code-level skeleton contract,
+- `rotation_feature_block=none`, `moving_average_rotation`, and
+  `marx_rotation` are executable for raw-panel feature builders. `none` records
+  explicit no-rotation provenance when selected. `moving_average_rotation`
+  appends deterministic trailing 3- and 6-period moving-average rotations of
+  each active predictor column with `{predictor}_rotma3` /
+  `{predictor}_rotma6` public names, using only information available through
+  each row date / prediction origin. `marx_rotation` requires
+  `leaf_config.marx_max_lag`, builds the cumulative moving-average
+  lag-polynomial basis, and replaces the source X lag-polynomial basis in final
+  `Z`.
+- `rotation_feature_block=maf_rotation` and `custom_rotation` remain
+  registry-only. The compiler still records explicit boundary metadata when
+  those values are selected: MAF requires factor-to-rotation composition, and
+  custom rotations require a block-local callable contract. These values should
+  not silently reuse `moving_average_rotation` or the broad `custom_preprocessor`
+  hook.
+- MARX now has an executable code-level contract,
   `lag_polynomial_rotation_contract_v1`. It fixes naming
   (`{predictor}_marx_ma_lag1_to_lag{p}` / `{predictor}__marx_ma_lag1_to_lag{p}`),
   feature order (predictor-major, then rotation order), alignment
   (`Z_{i,p,t} = p^{-1} * sum_{j=1}^{p} X_{i,t-j}`), and basis composition
-  (`replace_lag_polynomial_basis`). The next runtime patch must implement this
-  contract rather than appending an ad hoc moving-average block.
+  (`replace_lag_polynomial_basis`). External X-lag, temporal, and factor
+  composition remains gated until the explicit block composer can combine named
+  blocks without duplicate columns or leakage ambiguity.
 
 Acceptance:
 
@@ -430,6 +430,6 @@ For feature-block patches, also test:
 | Path-average target constructions | done, protocol-only | Layer 2 stepwise target protocol is recorded; execution remains gated until Layer 3 multi-step fit/aggregation lands. |
 | Explicit target/X lag blocks | planned | First runtime block migration. |
 | Factor/selection blocks | planned | PCA/static factors and selection provenance. |
-| Level/rotation/temporal blocks | planned | MARX/MAF and related macro-forecasting blocks. |
+| Level/rotation/temporal blocks | in progress | Level blocks, temporal blocks, moving-average rotation, and MARX lag-polynomial rotation are executable for raw-panel builders; MAF/custom and cross-block composition remain gated. |
 | Bridge dispatch retirement | planned | Only after equivalence tests exist. |
 | Simple/public sweeps | blocked | Wait for fixed full support and compiler guards. |

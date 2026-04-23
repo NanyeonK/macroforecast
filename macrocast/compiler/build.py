@@ -895,6 +895,22 @@ def _validate_layer2_feature_block_contract(
             "level_growth_pair_columns",
             "level_feature_block='level_growth_pairs'",
         )
+    rotation_feature_block = _selection_value(selection_map, "rotation_feature_block", default="none")
+    if rotation_feature_block == "marx_rotation":
+        if leaf_config.get("marx_max_lag") is None:
+            raise CompileValidationError(
+                "rotation_feature_block='marx_rotation' requires leaf_config.marx_max_lag"
+            )
+        try:
+            marx_max_lag = int(leaf_config["marx_max_lag"])
+        except (TypeError, ValueError) as exc:
+            raise CompileValidationError(
+                "rotation_feature_block='marx_rotation' requires leaf_config.marx_max_lag to be a positive integer"
+            ) from exc
+        if marx_max_lag <= 0:
+            raise CompileValidationError(
+                "rotation_feature_block='marx_rotation' requires leaf_config.marx_max_lag to be a positive integer"
+            )
 
 
 def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
@@ -933,9 +949,10 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "handpicked_columns": leaf_config.get("handpicked_columns"),
         "predictor_category": leaf_config.get("predictor_category"),
         "predictor_category_columns": leaf_config.get("predictor_category_columns"),
-        # Layer 2 level-feature block input channels
+        # Layer 2 feature-block input channels
         "selected_level_addback_columns": leaf_config.get("selected_level_addback_columns"),
         "level_growth_pair_columns": leaf_config.get("level_growth_pair_columns"),
+        "marx_max_lag": leaf_config.get("marx_max_lag"),
         # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
@@ -1301,7 +1318,10 @@ def _rotation_feature_block_value(selection_map: dict[str, AxisSelection]) -> st
     )
 
 
-def _rotation_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
+def _rotation_block_from_selection(
+    selection_map: dict[str, AxisSelection],
+    data_task_spec: dict[str, Any],
+) -> dict[str, Any]:
     explicit_block = _rotation_feature_block_value(selection_map)
     block = explicit_block or "none"
     if block == "none" and explicit_block is not None:
@@ -1325,19 +1345,28 @@ def _rotation_block_from_selection(selection_map: dict[str, AxisSelection]) -> d
                 "lookahead": "forbidden",
             },
             "runtime_bridge": {"raw_panel_rotation_features": "moving_average_rotation"},
-            "scope_note": "generic moving-average rotation primitive; full MARX/MAF presets remain separate future blocks",
+            "scope_note": "generic moving-average rotation primitive; MARX uses lag-polynomial basis replacement while MAF/custom rotations remain separate blocks",
         }
     if block == "marx_rotation":
-        contract = _build_marx_rotation_contract()
+        max_lag = int(data_task_spec["marx_max_lag"])
+        contract = _build_marx_rotation_contract(max_lag=max_lag)
         return {
             "value": "marx_rotation",
             "source_axis": "rotation_feature_block",
             "source_value": "marx_rotation",
-            "runtime_status": "registry_only",
+            "runtime_status": "operational",
+            "max_lag": max_lag,
+            "rotation_orders": list(range(1, max_lag + 1)),
+            "feature_name_pattern": contract["rotated_feature_name_pattern"],
+            "runtime_feature_name_pattern": contract["rotated_runtime_feature_name_pattern"],
             "required_runtime_contract": contract["composer_contract"],
             "composer_contract": contract,
-            "required_semantics": contract["composer_requirements"],
-            "scope_note": "MARX is a preset over lag-polynomial rotation and is not equivalent to rotation_feature_block=moving_average_rotation",
+            "alignment": contract["alignment"],
+            "basis_policy": contract["basis_policy"],
+            "duplicate_base_policy": contract["duplicate_base_policy"],
+            "initial_lag_fill_policy": contract["initial_lag_fill_policy"],
+            "runtime_bridge": {"raw_panel_rotation_features": "marx_rotation"},
+            "scope_note": "MARX is a preset over lag-polynomial rotation; it replaces the X lag-polynomial basis rather than appending generic moving-average rotation features",
         }
     if block == "maf_rotation":
         return {
@@ -1639,7 +1668,7 @@ def _layer2_representation_spec(
                 explicit_block=explicit_factor_feature_block,
             ),
             "level_feature_block": _level_block_from_selection(selection_map, data_task_spec),
-            "rotation_feature_block": _rotation_block_from_selection(selection_map),
+            "rotation_feature_block": _rotation_block_from_selection(selection_map, data_task_spec),
             "temporal_feature_block": _temporal_block_from_selection(selection_map),
             "feature_block_combination": _feature_block_combination_from_bridge(str(feature_builder), str(x_lag_creation)),
         },
@@ -1939,7 +1968,7 @@ def _execution_status(
             "volatility_features",
         }
         rotation_feature_block = _selection_value(selection_map, "rotation_feature_block", default="none")
-        rotation_block_active = rotation_feature_block in {"moving_average_rotation"}
+        rotation_block_active = rotation_feature_block in {"moving_average_rotation", "marx_rotation"}
         if temporal_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
                 f"temporal_feature_block={temporal_feature_block!r} currently lowers only through "
@@ -1959,6 +1988,15 @@ def _execution_status(
             not_supported.append(
                 f"rotation_feature_block={rotation_feature_block!r} cannot yet be combined with "
                 "x_lag_feature_block or x_lag_creation; explicit block composition is not implemented"
+            )
+        if (
+            rotation_block_active
+            and _selection_value(selection_map, "contemporaneous_x_rule", default="forbid_contemporaneous")
+            != "forbid_contemporaneous"
+        ):
+            not_supported.append(
+                f"rotation_feature_block={rotation_feature_block!r} requires "
+                "contemporaneous_x_rule='forbid_contemporaneous' so rotation features use forecast-origin history"
             )
         if rotation_block_active and temporal_block_active:
             not_supported.append(

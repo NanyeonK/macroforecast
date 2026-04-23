@@ -40,6 +40,10 @@ from .horizon_target import (
     construction_scale as _horizon_construction_scale,
     forward_scalar as _horizon_forward_scalar,
 )
+from .lag_polynomial_rotation import (
+    build_marx_rotation_frame as _build_marx_rotation_frame,
+    marx_rotation_public_feature_name as _marx_rotation_public_feature_name,
+)
 from ..raw.windowing import WindowSpec as _WindowSpec, _resolve_min_train_obs as _resolve_min_train_obs
 from .nber import filter_origins_by_regime as _filter_origins_by_regime
 from .deterministic import augment_array as _augment_deterministic_array
@@ -1052,6 +1056,24 @@ def _rotation_feature_block(recipe: RecipeSpec | None) -> str:
     return "none"
 
 
+def _marx_rotation_max_lag(recipe: RecipeSpec | None) -> int | None:
+    if recipe is None:
+        return None
+    spec = getattr(recipe, "layer2_representation_spec", {}) or {}
+    blocks = dict(spec.get("feature_blocks", {}) or {})
+    block = blocks.get("rotation_feature_block", {})
+    if isinstance(block, dict) and block.get("value") == "marx_rotation":
+        if block.get("max_lag") is not None:
+            return int(block["max_lag"])
+        composer_contract = block.get("composer_contract", {})
+        if isinstance(composer_contract, dict) and composer_contract.get("max_lag") is not None:
+            return int(composer_contract["max_lag"])
+    data_task_spec = dict(getattr(recipe, "data_task_spec", {}) or {})
+    if data_task_spec.get("marx_max_lag") is not None:
+        return int(data_task_spec["marx_max_lag"])
+    return None
+
+
 def _recipe_targets(recipe: RecipeSpec) -> tuple[str, ...]:
     return recipe.targets if recipe.targets else (recipe.target,)
 
@@ -1863,9 +1885,16 @@ def _apply_rotation_feature_block(
     start_idx: int,
     pred_idx: int,
     rotation_feature_block: str,
+    marx_max_lag: int | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if rotation_feature_block == "none":
         return X_train, X_pred
+    if rotation_feature_block == "marx_rotation":
+        if marx_max_lag is None:
+            raise ExecutionError("rotation_feature_block='marx_rotation' requires marx_max_lag")
+        source = frame[list(predictors)].iloc[start_idx : pred_idx + 1].astype(float).copy()
+        rotated = _build_marx_rotation_frame(source, max_lag=int(marx_max_lag))
+        return rotated.loc[X_train.index].copy(), rotated.loc[X_pred.index].copy()
     if rotation_feature_block != "moving_average_rotation":
         raise ExecutionError(f"unsupported rotation_feature_block={rotation_feature_block!r}")
     source = frame[list(predictors)].iloc[start_idx : pred_idx + 1].astype(float).copy()
@@ -1908,7 +1937,16 @@ def _raw_panel_feature_names(
             ]
         )
     rotation_feature_block = _rotation_feature_block(recipe)
-    if rotation_feature_block == "moving_average_rotation":
+    if rotation_feature_block == "marx_rotation":
+        marx_max_lag = _marx_rotation_max_lag(recipe)
+        if marx_max_lag is None:
+            raise ExecutionError("rotation_feature_block='marx_rotation' requires marx_max_lag")
+        names = [
+            _marx_rotation_public_feature_name(str(column), rotation_order)
+            for column in base_names
+            for rotation_order in range(1, int(marx_max_lag) + 1)
+        ]
+    elif rotation_feature_block == "moving_average_rotation":
         for window in _MOVING_AVERAGE_ROTATION_WINDOWS:
             names.extend(_moving_average_rotation_public_feature_name(str(column), window) for column in base_names)
     level_feature_block = _level_feature_block(recipe)
@@ -1940,6 +1978,7 @@ def _build_raw_panel_training_data(
     level_feature_block: str = "none",
     temporal_feature_block: str = "none",
     rotation_feature_block: str = "none",
+    marx_max_lag: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     predictors = _raw_panel_columns(frame, target, predictor_family=predictor_family, spec=spec)
     if origin_idx - horizon < start_idx:
@@ -1960,6 +1999,11 @@ def _build_raw_panel_training_data(
     # allow uses X aligned to the target date (X_{t+h} with y_{t+h}) — the oracle / data-leak
     # benchmark variant.
     contemp_rule = (spec or {}).get("contemporaneous_x_rule", "forbid_contemporaneous")
+    if rotation_feature_block in {"moving_average_rotation", "marx_rotation"} and contemp_rule != "forbid_contemporaneous":
+        raise ExecutionError(
+            f"rotation_feature_block={rotation_feature_block!r} requires "
+            "contemporaneous_x_rule='forbid_contemporaneous'"
+        )
     if level_feature_block in {"target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"} and contemp_rule != "forbid_contemporaneous":
         raise ExecutionError(
             f"level_feature_block={level_feature_block!r} requires "
@@ -1979,6 +2023,14 @@ def _build_raw_panel_training_data(
         X_pred = frame[predictors].iloc[[origin_idx]].astype(float).copy()
     if len(X_train) == 0 or len(y_train) == 0:
         raise ExecutionError("raw_feature_panel produced empty training data")
+    if rotation_feature_block == "marx_rotation" and temporal_feature_block != "none":
+        raise ExecutionError(
+            "rotation_feature_block='marx_rotation' cannot yet be combined with temporal_feature_block"
+        )
+    if rotation_feature_block == "marx_rotation" and contract.x_lag_creation != "no_x_lags":
+        raise ExecutionError(
+            "rotation_feature_block='marx_rotation' cannot yet be combined with x_lag_creation"
+        )
     preprocessing_contract = contract
     if contract.x_lag_creation == "fixed_x_lags":
         lag_source = frame[predictors].iloc[start_idx : pred_idx + 1].astype(float).copy()
@@ -2003,6 +2055,7 @@ def _build_raw_panel_training_data(
         start_idx=start_idx,
         pred_idx=pred_idx,
         rotation_feature_block=rotation_feature_block,
+        marx_max_lag=marx_max_lag,
     )
     X_train, X_pred = _apply_level_feature_block(
         X_train,
@@ -2507,6 +2560,7 @@ def _fit_raw_panel_model(
         fit_state_sink=fit_state, level_feature_block=_level_feature_block(recipe),
         temporal_feature_block=_temporal_feature_block(recipe),
         rotation_feature_block=_rotation_feature_block(recipe),
+        marx_max_lag=_marx_rotation_max_lag(recipe),
     )
     X_fit, y_fit, X_pred_fit = _apply_custom_preprocessor_arrays(
         X_train, y_train, X_pred, recipe,
@@ -2537,6 +2591,7 @@ def _run_custom_raw_panel_executor(
         level_feature_block=_level_feature_block(recipe),
         temporal_feature_block=_temporal_feature_block(recipe),
         rotation_feature_block=_rotation_feature_block(recipe),
+        marx_max_lag=_marx_rotation_max_lag(recipe),
     )
     X_train, y_train, X_pred = _apply_custom_preprocessor_arrays(
         X_train, y_train, X_pred, recipe,
@@ -4022,6 +4077,7 @@ def _compute_minimal_importance(
         level_feature_block=_level_feature_block(recipe),
         temporal_feature_block=_temporal_feature_block(recipe),
         rotation_feature_block=_rotation_feature_block(recipe),
+        marx_max_lag=_marx_rotation_max_lag(recipe),
     )
 
     if model_family == "ridge":
@@ -4073,6 +4129,7 @@ def _importance_feature_names(recipe: RecipeSpec, raw_frame: pd.DataFrame, targe
             level_feature_block=_level_feature_block(recipe),
             temporal_feature_block=_temporal_feature_block(recipe),
             rotation_feature_block=_rotation_feature_block(recipe),
+            marx_max_lag=_marx_rotation_max_lag(recipe),
         )
         return feature_names, X_train, y_train, X_pred
     if feature_builder == "autoreg_lagged_target":

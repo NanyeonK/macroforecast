@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="marx_rotation",
             description="moving average rotation of X",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
