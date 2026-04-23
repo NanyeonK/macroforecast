@@ -1219,6 +1219,9 @@ def test_execute_recipe_stage7_importance_methods(tmp_path: Path) -> None:
         payload = json.loads((run_dir / filename).read_text())
         assert manifest["importance_file"] == filename
         assert payload["importance_method"] == method
+        assert payload["feature_runtime_builder"] == "raw_feature_panel"
+        assert payload["legacy_feature_builder"] == "raw_feature_panel"
+        assert payload["feature_dispatch_source"] == "layer2_feature_blocks"
 
 
 

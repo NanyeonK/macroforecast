@@ -232,6 +232,7 @@ def test_minimal_importance_uses_runtime_feature_builder_metadata():
     assert payload["feature_builder"] == "raw_feature_panel"
     assert payload["feature_runtime_builder"] == "raw_feature_panel"
     assert payload["legacy_feature_builder"] == "autoreg_lagged_target"
+    assert payload["feature_dispatch_source"] == "layer2_feature_blocks"
     assert {item["feature"] for item in payload["feature_importance"]} == {"a", "a_lag_1"}
 
 

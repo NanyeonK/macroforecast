@@ -90,7 +90,9 @@ fixed X lags, and static PCA factors. The coarse `feature_builder`,
 accepted as compatibility/provenance because those names define `Z`, not
 estimator behavior. New manifests should read the preferred
 `compatibility_source` key for that provenance; `source_bridge` remains as a
-legacy manifest alias.
+legacy manifest alias. Downstream importance artifacts should likewise prefer
+`feature_runtime_builder` plus `legacy_feature_builder`; `feature_builder`
+remains a compatibility alias for existing readers.
 
 ## Layer 3: Forecast Generator
 

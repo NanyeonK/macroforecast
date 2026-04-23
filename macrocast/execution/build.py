@@ -4383,6 +4383,7 @@ def _compute_minimal_importance(
         "feature_builder": feature_builder,
         "feature_runtime_builder": feature_builder,
         "legacy_feature_builder": legacy_feature_builder,
+        "feature_dispatch_source": "layer2_feature_blocks",
         "n_train": int(len(y_train)),
         "feature_importance": feature_importance,
     }
@@ -4449,6 +4450,16 @@ def _importance_training_bundle(raw_frame: pd.DataFrame, target_series: pd.Serie
         "feature_builder": _feature_runtime_builder(recipe),
         "feature_runtime_builder": _feature_runtime_builder(recipe),
         "legacy_feature_builder": _feature_builder(recipe),
+        "feature_dispatch_source": "layer2_feature_blocks",
+    }
+
+
+def _importance_runtime_metadata(bundle: Mapping[str, object]) -> dict[str, object]:
+    return {
+        "feature_builder": bundle["feature_builder"],
+        "feature_runtime_builder": bundle["feature_runtime_builder"],
+        "legacy_feature_builder": bundle["legacy_feature_builder"],
+        "feature_dispatch_source": bundle.get("feature_dispatch_source", "layer2_feature_blocks"),
     }
 
 
@@ -4480,7 +4491,7 @@ def _compute_tree_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Ser
     return {
         "importance_method": "tree_shap",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "n_samples": int(len(sample)),
         "feature_importance": _ranked_feature_payload("mean_abs_shap", bundle["feature_names"], mean_abs),
     }
@@ -4507,7 +4518,7 @@ def _compute_linear_shap_importance(raw_frame: pd.DataFrame, target_series: pd.S
     return {
         "importance_method": "linear_shap",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "n_samples": int(len(sample)),
         "feature_importance": _ranked_feature_payload("mean_abs_shap", bundle["feature_names"], np.asarray(mean_abs, dtype=float)),
     }
@@ -4527,7 +4538,7 @@ def _compute_kernel_shap_importance(raw_frame: pd.DataFrame, target_series: pd.S
     return {
         "importance_method": "kernel_shap",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "n_background": int(len(background)),
         "feature_importance": _ranked_feature_payload("abs_shap", bundle["feature_names"], row_values),
     }
@@ -4539,7 +4550,7 @@ def _compute_permutation_importance_artifact(raw_frame: pd.DataFrame, target_ser
     return {
         "importance_method": "permutation_importance",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "feature_importance": _ranked_feature_payload("mean_importance", bundle["feature_names"], result.importances_mean),
         "importance_std": [float(x) for x in result.importances_std],
     }
@@ -4564,7 +4575,7 @@ def _compute_lime_artifact(raw_frame: pd.DataFrame, target_series: pd.Series, re
         "importance_method": "lime",
         "implementation": "lime_style_local_surrogate",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "local_importance": _ranked_feature_payload("coefficient", bundle["feature_names"], local_coef),
     }
 
@@ -4582,7 +4593,7 @@ def _compute_feature_ablation_artifact(raw_frame: pd.DataFrame, target_series: p
     return {
         "importance_method": "feature_ablation",
         "model_family": bundle["model_family"],
-        "feature_builder": bundle["feature_builder"],
+        **_importance_runtime_metadata(bundle),
         "baseline_prediction": baseline,
         "feature_importance": _ranked_feature_payload("ablation_delta", bundle["feature_names"], np.asarray(deltas, dtype=float)),
     }
@@ -4610,7 +4621,12 @@ def _compute_profile_artifact(raw_frame: pd.DataFrame, target_series: pd.Series,
     X_train = np.asarray(bundle["X_train"], dtype=float)
     feature_names = bundle["feature_names"]
     indices = _top_feature_indices(bundle, top_k=3)
-    payload = {"importance_method": mode, "model_family": bundle["model_family"], "feature_builder": bundle["feature_builder"], "profiles": []}
+    payload = {
+        "importance_method": mode,
+        "model_family": bundle["model_family"],
+        **_importance_runtime_metadata(bundle),
+        "profiles": [],
+    }
     for idx in indices:
         col = X_train[:, idx]
         grid = np.quantile(col, np.linspace(0.1, 0.9, 5))
@@ -4669,6 +4685,11 @@ def _compute_grouped_permutation_artifact(raw_frame: pd.DataFrame, target_series
     return {
         "importance_method": "grouped_permutation",
         "base_method": "permutation_importance",
+        "model_family": base["model_family"],
+        "feature_builder": base["feature_builder"],
+        "feature_runtime_builder": base["feature_runtime_builder"],
+        "legacy_feature_builder": base["legacy_feature_builder"],
+        "feature_dispatch_source": base["feature_dispatch_source"],
         "group_importance": payload,
     }
 
@@ -4696,6 +4717,8 @@ def _compute_importance_stability_artifact(raw_frame: pd.DataFrame, target_serie
     top_rank_positions = [int(np.where(row == top_feature)[0][0] + 1) for row in rank_order]
     return {
         "importance_method": "importance_stability",
+        "model_family": bundle["model_family"],
+        **_importance_runtime_metadata(bundle),
         "n_bootstrap": len(seeds),
         "top_feature": bundle["feature_names"][top_feature],
         "top_rank_positions": top_rank_positions,
