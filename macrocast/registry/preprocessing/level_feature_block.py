@@ -36,7 +36,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="level_growth_pairs",
             description="paired level and growth representations for selected variables",
-            status="registry_only",
+            status="operational",
             priority="B",
         ),
     ),

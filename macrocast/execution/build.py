@@ -1692,7 +1692,7 @@ def _apply_level_feature_block(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if level_feature_block == "none":
         return X_train, X_pred
-    if level_feature_block not in {"target_level_addback", "x_level_addback", "selected_level_addbacks"}:
+    if level_feature_block not in {"target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"}:
         raise ExecutionError(f"unsupported level_feature_block={level_feature_block!r}")
     X_train = X_train.copy()
     X_pred = X_pred.copy()
@@ -1703,14 +1703,15 @@ def _apply_level_feature_block(
         return X_train, X_pred
     level_source = _level_source_frame(frame)
     predictor_columns = tuple(predictors or ())
-    if level_feature_block == "selected_level_addbacks":
-        source_columns = tuple((spec or {}).get("selected_level_addback_columns") or ())
+    if level_feature_block in {"selected_level_addbacks", "level_growth_pairs"}:
+        field = "selected_level_addback_columns" if level_feature_block == "selected_level_addbacks" else "level_growth_pair_columns"
+        source_columns = tuple((spec or {}).get(field) or ())
         if not source_columns:
-            raise ExecutionError("level_feature_block='selected_level_addbacks' requires selected_level_addback_columns")
+            raise ExecutionError(f"level_feature_block={level_feature_block!r} requires {field}")
         outside_predictors = [str(c) for c in source_columns if c not in predictor_columns]
         if outside_predictors:
             raise ExecutionError(
-                "level_feature_block='selected_level_addbacks' columns must be in the active predictor family: "
+                f"level_feature_block={level_feature_block!r} columns must be in the active predictor family: "
                 f"{outside_predictors}"
             )
     else:
@@ -1823,6 +1824,9 @@ def _raw_panel_feature_names(
     elif level_feature_block == "selected_level_addbacks":
         selected_columns = tuple(dict(recipe.data_task_spec).get("selected_level_addback_columns") or ())
         names.extend(_x_level_public_feature_name(str(column)) for column in selected_columns)
+    elif level_feature_block == "level_growth_pairs":
+        pair_columns = tuple(dict(recipe.data_task_spec).get("level_growth_pair_columns") or ())
+        names.extend(_x_level_public_feature_name(str(column)) for column in pair_columns)
     return names
 
 
@@ -1860,7 +1864,7 @@ def _build_raw_panel_training_data(
     # allow uses X aligned to the target date (X_{t+h} with y_{t+h}) — the oracle / data-leak
     # benchmark variant.
     contemp_rule = (spec or {}).get("contemporaneous_x_rule", "forbid_contemporaneous")
-    if level_feature_block in {"target_level_addback", "x_level_addback", "selected_level_addbacks"} and contemp_rule != "forbid_contemporaneous":
+    if level_feature_block in {"target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"} and contemp_rule != "forbid_contemporaneous":
         raise ExecutionError(
             f"level_feature_block={level_feature_block!r} requires "
             "contemporaneous_x_rule='forbid_contemporaneous'"

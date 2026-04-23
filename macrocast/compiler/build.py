@@ -886,6 +886,12 @@ def _validate_layer2_feature_block_contract(
             "selected_level_addback_columns",
             "level_feature_block='selected_level_addbacks'",
         )
+    if level_feature_block == "level_growth_pairs":
+        _require_non_empty_sequence(
+            leaf_config,
+            "level_growth_pair_columns",
+            "level_feature_block='level_growth_pairs'",
+        )
 
 
 def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
@@ -926,6 +932,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "predictor_category_columns": leaf_config.get("predictor_category_columns"),
         # Layer 2 level-feature block input channels
         "selected_level_addback_columns": leaf_config.get("selected_level_addback_columns"),
+        "level_growth_pair_columns": leaf_config.get("level_growth_pair_columns"),
         # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
@@ -1246,6 +1253,25 @@ def _level_block_from_selection(
                 "lookahead": "forbidden",
             },
             "runtime_bridge": {"raw_panel_level_addback": "selected_level_addbacks"},
+        }
+    if block == "level_growth_pairs":
+        pair_columns = [str(column) for column in data_task_spec.get("level_growth_pair_columns") or ()]
+        return {
+            "value": "level_growth_pairs",
+            "source_axis": "level_feature_block",
+            "source_value": "level_growth_pairs",
+            "pair_columns": pair_columns,
+            "transformed_feature_names": pair_columns,
+            "level_feature_names": [f"{column}_level" for column in pair_columns],
+            "runtime_level_feature_names": [f"{column}__level" for column in pair_columns],
+            "level_source": "Layer 1 H after raw missing/outlier policy and before official transforms/T-codes",
+            "pair_semantics": "existing transformed predictor column paired with raw-level H counterpart",
+            "alignment": {
+                "train_row_t_uses": "X_{t} and H_{t}",
+                "prediction_origin_uses": "X_{origin} and H_{origin}",
+                "lookahead": "forbidden",
+            },
+            "runtime_bridge": {"raw_panel_level_addback": "level_growth_pairs"},
         }
     if explicit_block is not None:
         return {
@@ -1786,6 +1812,7 @@ def _execution_status(
             "target_level_addback",
             "x_level_addback",
             "selected_level_addbacks",
+            "level_growth_pairs",
         }
         if level_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(

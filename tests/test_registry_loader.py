@@ -248,6 +248,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["level_feature_block"].current_status["target_level_addback"] == "operational"
     assert registry["level_feature_block"].current_status["x_level_addback"] == "operational"
     assert registry["level_feature_block"].current_status["selected_level_addbacks"] == "operational"
+    assert registry["level_feature_block"].current_status["level_growth_pairs"] == "operational"
     assert registry["temporal_feature_block"].current_status["none"] == "operational"
     assert registry["temporal_feature_block"].current_status["moving_average_features"] == "operational"
     assert registry["temporal_feature_block"].current_status["rolling_moments"] == "operational"

@@ -22,6 +22,7 @@ def _layer2_level_block_recipe(
     level_feature_block: str = "target_level_addback",
     contemporaneous_x_rule: str | None = None,
     selected_level_addback_columns: list[str] | None = None,
+    level_growth_pair_columns: list[str] | None = None,
 ) -> dict:
     data_axes = {
         "dataset": "fred_md",
@@ -36,6 +37,8 @@ def _layer2_level_block_recipe(
     }
     if selected_level_addback_columns is not None:
         leaf_config["selected_level_addback_columns"] = selected_level_addback_columns
+    if level_growth_pair_columns is not None:
+        leaf_config["level_growth_pair_columns"] = level_growth_pair_columns
     return {
         "recipe_id": f"l2-level-block-{feature_builder}",
         "path": {
@@ -1556,6 +1559,31 @@ def test_layer2_explicit_selected_level_block_lowers_to_raw_panel_bridge() -> No
 def test_layer2_explicit_selected_level_block_requires_columns() -> None:
     recipe = _layer2_level_block_recipe(level_feature_block="selected_level_addbacks")
     with pytest.raises(CompileValidationError, match="selected_level_addback_columns"):
+        compile_recipe_dict(recipe)
+
+
+def test_layer2_explicit_level_growth_pairs_lower_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(
+            level_feature_block="level_growth_pairs",
+            level_growth_pair_columns=["RPI", "UNRATE"],
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "level_growth_pairs"
+    assert block["pair_columns"] == ["RPI", "UNRATE"]
+    assert block["transformed_feature_names"] == ["RPI", "UNRATE"]
+    assert block["level_feature_names"] == ["RPI_level", "UNRATE_level"]
+    assert block["runtime_level_feature_names"] == ["RPI__level", "UNRATE__level"]
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "level_growth_pairs"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_level_growth_pairs_require_columns() -> None:
+    recipe = _layer2_level_block_recipe(level_feature_block="level_growth_pairs")
+    with pytest.raises(CompileValidationError, match="level_growth_pair_columns"):
         compile_recipe_dict(recipe)
 
 
