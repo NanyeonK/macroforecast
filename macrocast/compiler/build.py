@@ -1293,6 +1293,22 @@ def _temporal_feature_block_value(selection_map: dict[str, AxisSelection]) -> st
 def _temporal_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
     explicit_block = _temporal_feature_block_value(selection_map)
     block = explicit_block or "none"
+    if block == "local_temporal_factors":
+        return {
+            "value": "local_temporal_factors",
+            "source_axis": "temporal_feature_block",
+            "source_value": "local_temporal_factors",
+            "window": 3,
+            "factor_construction": "deterministic cross-sectional summaries with trailing time smoothing",
+            "feature_names": ["local_temporal_factor_mean3", "local_temporal_factor_dispersion3"],
+            "runtime_feature_names": ["__local_temporal_factor_mean3", "__local_temporal_factor_dispersion3"],
+            "alignment": {
+                "train_row_t_uses": "X_{t}, X_{t-1}, X_{t-2}",
+                "prediction_origin_uses": "X_{origin}, X_{origin-1}, X_{origin-2}",
+                "lookahead": "forbidden",
+            },
+            "runtime_bridge": {"raw_panel_temporal_features": "local_temporal_factors"},
+        }
     if block == "rolling_moments":
         return {
             "value": "rolling_moments",
@@ -1830,7 +1846,12 @@ def _execution_status(
                 "contemporaneous_x_rule='forbid_contemporaneous' so level features are observed at the forecast origin"
             )
         temporal_feature_block = _selection_value(selection_map, "temporal_feature_block", default="none")
-        temporal_block_active = temporal_feature_block in {"moving_average_features", "rolling_moments", "volatility_features"}
+        temporal_block_active = temporal_feature_block in {
+            "local_temporal_factors",
+            "moving_average_features",
+            "rolling_moments",
+            "volatility_features",
+        }
         if temporal_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
                 f"temporal_feature_block={temporal_feature_block!r} currently lowers only through "

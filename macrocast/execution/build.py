@@ -1671,6 +1671,11 @@ _X_LEVEL_ADD_BACK_SUFFIX = "level"
 _MOVING_AVERAGE_FEATURE_WINDOW = 3
 _VOLATILITY_FEATURE_WINDOW = 3
 _ROLLING_MOMENTS_FEATURE_WINDOW = 3
+_LOCAL_TEMPORAL_FACTOR_WINDOW = 3
+_LOCAL_TEMPORAL_FACTOR_MEAN_COLUMN = "__local_temporal_factor_mean3"
+_LOCAL_TEMPORAL_FACTOR_DISPERSION_COLUMN = "__local_temporal_factor_dispersion3"
+_LOCAL_TEMPORAL_FACTOR_MEAN_FEATURE_NAME = "local_temporal_factor_mean3"
+_LOCAL_TEMPORAL_FACTOR_DISPERSION_FEATURE_NAME = "local_temporal_factor_dispersion3"
 
 
 def _x_level_feature_name(column: str) -> str:
@@ -1761,6 +1766,24 @@ def _rolling_variance_public_feature_name(column: str) -> str:
     return f"{column}_var{_ROLLING_MOMENTS_FEATURE_WINDOW}"
 
 
+def _local_temporal_factor_features(source: pd.DataFrame) -> pd.DataFrame:
+    cross_sectional_mean = source.mean(axis=1)
+    cross_sectional_dispersion = source.std(axis=1, ddof=0).fillna(0.0)
+    return pd.DataFrame(
+        {
+            _LOCAL_TEMPORAL_FACTOR_MEAN_COLUMN: cross_sectional_mean.rolling(
+                window=_LOCAL_TEMPORAL_FACTOR_WINDOW,
+                min_periods=1,
+            ).mean(),
+            _LOCAL_TEMPORAL_FACTOR_DISPERSION_COLUMN: cross_sectional_dispersion.rolling(
+                window=_LOCAL_TEMPORAL_FACTOR_WINDOW,
+                min_periods=1,
+            ).mean(),
+        },
+        index=source.index,
+    )
+
+
 def _apply_temporal_feature_block(
     X_train: pd.DataFrame,
     X_pred: pd.DataFrame,
@@ -1773,9 +1796,24 @@ def _apply_temporal_feature_block(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if temporal_feature_block == "none":
         return X_train, X_pred
-    if temporal_feature_block not in {"moving_average_features", "rolling_moments", "volatility_features"}:
+    if temporal_feature_block not in {
+        "local_temporal_factors",
+        "moving_average_features",
+        "rolling_moments",
+        "volatility_features",
+    }:
         raise ExecutionError(f"unsupported temporal_feature_block={temporal_feature_block!r}")
     source = frame[list(predictors)].iloc[start_idx : pred_idx + 1].astype(float).copy()
+    if temporal_feature_block == "local_temporal_factors":
+        if source.empty:
+            return X_train, X_pred
+        local_features = _local_temporal_factor_features(source)
+        X_train = X_train.copy()
+        X_pred = X_pred.copy()
+        for column in local_features.columns:
+            X_train[column] = local_features.loc[X_train.index, column].to_numpy(dtype=float)
+            X_pred[column] = local_features.loc[X_pred.index, column].to_numpy(dtype=float)
+        return X_train, X_pred
     if temporal_feature_block == "moving_average_features":
         feature_frames = [(source.rolling(window=_MOVING_AVERAGE_FEATURE_WINDOW, min_periods=1).mean(), _moving_average_feature_name)]
     elif temporal_feature_block == "rolling_moments":
@@ -1816,6 +1854,13 @@ def _raw_panel_feature_names(
         names.extend(_rolling_variance_public_feature_name(str(column)) for column in base_names)
     elif temporal_feature_block == "volatility_features":
         names.extend(_volatility_public_feature_name(str(column)) for column in base_names)
+    elif temporal_feature_block == "local_temporal_factors" and base_names:
+        names.extend(
+            [
+                _LOCAL_TEMPORAL_FACTOR_MEAN_FEATURE_NAME,
+                _LOCAL_TEMPORAL_FACTOR_DISPERSION_FEATURE_NAME,
+            ]
+        )
     level_feature_block = _level_feature_block(recipe)
     if level_feature_block == "target_level_addback":
         names.append(_TARGET_LEVEL_ADD_BACK_FEATURE_NAME)

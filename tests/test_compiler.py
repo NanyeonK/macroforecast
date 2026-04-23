@@ -1654,6 +1654,23 @@ def test_layer2_explicit_rolling_moments_block_lowers_to_raw_panel_bridge() -> N
     assert block["alignment"]["lookahead"] == "forbidden"
 
 
+def test_layer2_explicit_local_temporal_factor_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(temporal_feature_block="local_temporal_factors")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["temporal_feature_block"]
+    assert block["value"] == "local_temporal_factors"
+    assert block["source_axis"] == "temporal_feature_block"
+    assert block["window"] == 3
+    assert block["factor_construction"] == "deterministic cross-sectional summaries with trailing time smoothing"
+    assert block["feature_names"] == ["local_temporal_factor_mean3", "local_temporal_factor_dispersion3"]
+    assert block["runtime_feature_names"] == ["__local_temporal_factor_mean3", "__local_temporal_factor_dispersion3"]
+    assert block["runtime_bridge"] == {"raw_panel_temporal_features": "local_temporal_factors"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
 def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:
     result = compile_recipe_dict(
         _layer2_temporal_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")

@@ -309,14 +309,17 @@ Current lowered slice:
   raw-level counterparts from `leaf_config.level_growth_pair_columns`. These
   values reject contemporaneous-oracle X alignment because that would require
   target-date information at prediction time.
-- `temporal_feature_block=moving_average_features`, `rolling_moments`, and
-  `volatility_features` are executable for raw-panel feature builders. They
-  append trailing 3-period moving averages, mean/variance moments, or rolling
+- `temporal_feature_block=moving_average_features`, `rolling_moments`,
+  `local_temporal_factors`, and `volatility_features` are executable for
+  raw-panel feature builders. They append trailing 3-period moving averages,
+  mean/variance moments, deterministic local temporal factors, or rolling
   volatility of the base predictor columns using only information available
   through each row date / prediction origin, and reject X-lag/factor bridge
-  composition for now.
-- `rotation_feature_block=*` and the remaining `temporal_feature_block=*`
-  values remain future block-composition work.
+  composition for now. Local temporal factors are row-wise cross-sectional
+  mean/dispersion summaries of the active predictor panel with trailing time
+  smoothing, not learned PCA/static factors.
+- `rotation_feature_block=*` and `temporal_feature_block=custom_temporal_features`
+  remain future block-composition work.
 
 Acceptance:
 

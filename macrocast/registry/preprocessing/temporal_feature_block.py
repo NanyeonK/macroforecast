@@ -30,7 +30,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="local_temporal_factors",
             description="local temporal factor features",
-            status="registry_only",
+            status="operational",
             priority="B",
         ),
         EnumRegistryEntry(

@@ -313,6 +313,40 @@ def test_raw_panel_rolling_moments_features_use_trailing_origin_history():
     assert np.allclose(X_pred, [[5.0, 4.0, trailing_var]])
 
 
+def test_raw_panel_local_temporal_factors_use_trailing_origin_history():
+    frame = pd.DataFrame(
+        {
+            "target": [10.0, 11.0, 12.0, 13.0, 14.0, 15.0],
+            "a": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            "b": [2.0, 4.0, 6.0, 8.0, 10.0, 12.0],
+        }
+    )
+    c = _contract()
+
+    X_train, y_train, X_pred = _build_raw_panel_training_data(
+        frame,
+        "target",
+        horizon=1,
+        start_idx=0,
+        origin_idx=4,
+        contract=c,
+        predictor_family="all_macro_vars",
+        temporal_feature_block="local_temporal_factors",
+    )
+
+    assert np.allclose(
+        X_train,
+        [
+            [1.0, 2.0, 1.5, 0.5],
+            [2.0, 4.0, 2.25, 0.75],
+            [3.0, 6.0, 3.0, 1.0],
+            [4.0, 8.0, 4.5, 1.5],
+        ],
+    )
+    assert y_train.tolist() == [11.0, 12.0, 13.0, 14.0]
+    assert np.allclose(X_pred, [[5.0, 10.0, 6.0, 2.0]])
+
+
 def test_no_x_lags_is_identity():
     X = pd.DataFrame({"a": [1.0, 2.0]})
     Xp = pd.DataFrame({"a": [3.0]})

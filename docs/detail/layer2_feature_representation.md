@@ -101,12 +101,16 @@ Operational support is currently narrow:
   `level_growth_pairs` records existing transformed predictor columns paired
   with selected raw-level counterparts from `leaf_config.level_growth_pair_columns`.
 - `temporal_feature_block=none`, `moving_average_features`,
-  `rolling_moments`, and `volatility_features` are operational for raw-panel
-  feature builders. The current lowered slices append trailing 3-period
-  moving-average `{predictor}_ma3`, moment `{predictor}_mean3` /
-  `{predictor}_var3`, or volatility `{predictor}_vol3` features and forbid
-  composition with X-lag or factor bridges until the explicit block composer
-  exists.
+  `rolling_moments`, `local_temporal_factors`, and `volatility_features` are
+  operational for raw-panel feature builders. The current lowered slices append
+  trailing 3-period moving-average `{predictor}_ma3`, moment
+  `{predictor}_mean3` / `{predictor}_var3`, local temporal factor
+  `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, or
+  volatility `{predictor}_vol3` features and forbid composition with X-lag or
+  factor bridges until the explicit block composer exists. Local temporal
+  factors are deterministic row-wise cross-sectional summaries of the active
+  predictor panel, smoothed over the trailing 3 feature rows; they are not
+  learned PCA/static factors.
 - Feature selection currently applies only to raw predictor blocks. It cannot
   be combined with factor blocks or dimensionality reduction until the package
   defines selection-before-factor vs selection-after-factor semantics.
