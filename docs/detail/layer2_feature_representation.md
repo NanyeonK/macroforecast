@@ -74,8 +74,10 @@ provenance for old recipes.
 
 Operational support is currently narrow:
 
-- `target_lag_block=none` and `fixed_target_lags` are operational through
-  lowering to `target_lag_selection` and the legacy AR-lag runtime bridge.
+- `target_lag_block=none` and `fixed_target_lags` are operational. Fixed
+  target-lag matrix composition reads `target_lag_block` directly; legacy
+  `target_lag_selection`, `y_lag_count`, and `factor_ar_lags` remain accepted
+  as fallback/provenance fields.
 - `target_lag_selection=none` and `fixed` are operational Layer 2 names; IC,
   CV, horizon-specific, and custom lag selection remain registry-only.
 - `x_lag_feature_block=none` and `fixed_x_lags` are operational. Fixed X-lag
@@ -83,8 +85,9 @@ Operational support is currently narrow:
   `x_lag_creation` remains accepted as fallback. Variable, category, CV, and
   custom X-lag blocks remain registry-only.
 - Simultaneous target-lag and X-lag block composition is not executable yet:
-  fixed target lags lower through `feature_builder=autoreg_lagged_target`,
-  while fixed X lags lower through raw-panel feature builders.
+  fixed target lags are supported by the standalone target-lag runtime, while
+  fixed X lags are supported by macro-X panel runtimes. A composer that joins
+  both blocks into one `Z` has not landed.
 - `factor_feature_block=none` and `pca_static_factors` are operational.
   `pca_static_factors` now drives matrix composition directly; old
   `feature_builder=factor_pca` / `factors_plus_AR` and raw-panel
@@ -93,7 +96,7 @@ Operational support is currently narrow:
   stable factor/loadings provenance.
 - `level_feature_block=none`, `target_level_addback`, `x_level_addback`,
   `selected_level_addbacks`, and `level_growth_pairs` are operational for
-  raw-panel feature builders.
+  raw-panel feature runtimes.
   `target_level_addback` appends the observable target level at the feature row
   date (`target_t`) and at the prediction origin (`target_origin`).
   `x_level_addback` appends raw-level `H` values preserved after Layer 1 raw
@@ -104,13 +107,13 @@ Operational support is currently narrow:
   with selected raw-level counterparts from `leaf_config.level_growth_pair_columns`.
 - `temporal_feature_block=none`, `moving_average_features`,
   `rolling_moments`, `local_temporal_factors`, and `volatility_features` are
-  operational for raw-panel feature builders. The current lowered slices append
+  operational for raw-panel feature runtimes. The current lowered slices append
   trailing 3-period moving-average `{predictor}_ma3`, moment
   `{predictor}_mean3` / `{predictor}_var3`, local temporal factor
   `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, or
   volatility `{predictor}_vol3` features. These deterministic append blocks can
   compose with fixed predictor lags and `moving_average_rotation` in raw-panel
-  builders; factor bridges remain gated until the explicit block composer
+  runtimes; factor bridges remain gated until the explicit block composer
   defines append-to-factors vs factor-of-augmented-panel semantics. Local temporal
   factors are deterministic row-wise cross-sectional summaries of the active
   predictor panel, smoothed over the trailing 3 feature rows; they are not
@@ -122,7 +125,7 @@ Operational support is currently narrow:
   temporal blocks need a callable contract that returns train/pred temporal
   feature frames plus names and provenance before they can enter `Z`.
 - `rotation_feature_block=none`, `moving_average_rotation`, and `marx_rotation`
-  are operational for raw-panel feature builders. `none` records explicit
+  are operational for raw-panel feature runtimes. `none` records explicit
   no-rotation provenance. `moving_average_rotation` appends deterministic
   trailing 3- and 6-period moving-average rotations of each active predictor as
   `{predictor}_rotma3` and `{predictor}_rotma6`, using only row-date /
@@ -181,7 +184,7 @@ The current coarse names map to the new language as follows:
 
 | Current bridge | Feature-block interpretation |
 |---|---|
-| `feature_builder=autoreg_lagged_target` | target-lag block only; fixed target-lag construction is recorded as Layer 2 metadata, while the legacy runtime still fits the AR design through its compatibility path. |
+| `feature_builder=autoreg_lagged_target` | target-lag block only; fixed target-lag construction now drives the supervised target-lag matrix path, with legacy fields retained as fallback/provenance. |
 | `feature_builder=raw_feature_panel` | transformed or raw predictor panel block, chosen after Layer 1 official-frame policy and `predictor_family`. |
 | `feature_builder=raw_X_only` | predictor panel block without target-lag features. |
 | `feature_builder=factor_pca` | factor feature block from the predictor panel. |
@@ -192,10 +195,10 @@ The current coarse names map to the new language as follows:
 | `data_richness_mode=selected_sparse_X` | `feature_block_set=selected_sparse_x`. |
 
 This mapping is partly executable. Fixed target-lag, fixed X-lag, and static
-PCA factor blocks can be selected directly when they match the current
-compatibility bridge. Joint composition that is not already represented by a
-legacy bridge remains descriptive until the block composer has train-window
-fit/apply tests and provenance.
+PCA factor blocks can be selected directly in their supported runtime slices.
+Joint composition that is not already represented by an executable runtime path
+remains gated until the block composer has train-window fit/apply tests and
+provenance.
 
 ## Boundary Cases
 
@@ -212,10 +215,10 @@ fit/apply tests and provenance.
 - model-specific lag-order selection belongs to Layer 3.
 
 `dimensionality_reduction_policy` and `factor_feature_block` are related but
-not identical. The former is the current preprocessing contract switch used by
-the runtime; the latter is the future feature-block grammar that will make
-factor blocks composable with target lags, level add-backs, rotations, and
-custom blocks.
+not identical. The explicit `factor_feature_block` now owns static PCA matrix
+composition in the supported slice; `dimensionality_reduction_policy` remains a
+compatibility fallback. Future composer work will define factor blocks combined
+with target lags, level add-backs, rotations, and custom blocks.
 
 ## Implementation Order
 
@@ -234,5 +237,7 @@ A safe implementation order is:
 6. Retire runtime dispatch from coarse `feature_builder` names in slices:
    first route the raw-panel/autoregressive executor choice from explicit
    blocks, then move fixed X-lag matrix composition to `x_lag_feature_block`,
-   then move PCA static-factor matrix composition to `factor_feature_block`,
-   then replace remaining bridge-specific matrix composition.
+   then move fixed target-lag composition to `target_lag_block`, then move PCA
+   static-factor matrix composition to `factor_feature_block`, then move
+   importance/custom hook contexts to the block-derived runtime name. Remaining
+   work is compiler gate wording, docs, and true joint-block composers.

@@ -36,24 +36,25 @@ describes the registry layer after migration.
 | legacy official t-code bridge fields | 2_preprocessing | compatibility bridge | Keep accepting `target_transform_policy`, `x_transform_policy`, `tcode_policy=tcode_only`, `tcode_application_scope`, and `preprocess_order=tcode_only` while generated recipes move to Layer 1 official-transform axes. |
 | `tcode_policy` values beyond official transform | 2_preprocessing | 2_preprocessing | Keep extra/custom transform pipelines in Layer 2. |
 | `preprocess_order=tcode_only` | 2_preprocessing | compatibility bridge | Official-only order is represented by Layer 1 `official_transform_policy=dataset_tcode`; extra orders remain Layer 2. |
-| `y_lag_count` | 3_training | split in provenance | AR model-order selection remains Layer 3 for now; fixed target-lag feature construction is recorded with Layer 2 `target_lag_selection` / `target_lag_block` provenance and lowered to the legacy runtime bridge. |
+| `y_lag_count` | 3_training | split in provenance | AR model-order selection remains Layer 3 for now; fixed target-lag feature construction is recorded with Layer 2 `target_lag_selection` / `target_lag_block` provenance and now executes through the explicit target-lag block path when available. |
 | `factor_ar_lags` leaf/training config | 3_training config | split in provenance | Legacy runtime key remains accepted; target-lag feature count next to factor blocks is recorded as Layer 2 `target_lag_count` provenance. |
 
 ## Feature-Block Grammar Introduced
 
-This pass defines the Layer 2 feature-block grammar and starts runtime support
-through bridge lowering. The new axes are canonical Layer 2 concepts, while
-most runtime execution still flows through the old `feature_builder` bridge
-until each block has train-window fit/apply tests and provenance.
+This pass defines the Layer 2 feature-block grammar and starts retiring the old
+bridge as the runtime owner. The new axes are canonical Layer 2 concepts.
+Supported slices now read explicit blocks first and keep old bridge fields as
+fallback/provenance until each joint block composer has train-window fit/apply
+tests.
 
 | Axis | Canonical owner | Current support |
 |---|---|---|
-| `target_lag_block`, `target_lag_selection`, `x_lag_feature_block` | 2_preprocessing | `none` and fixed-lag values operational through separate bridge lowering; target-plus-X block composition remains gated |
-| `factor_feature_block` | 2_preprocessing | `none` and `pca_static_factors` operational through factor bridge lowering; factor/selection composition remains gated |
-| `level_feature_block` | 2_preprocessing | all built-in values operational through raw-panel bridge lowering: `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, and `level_growth_pairs` |
-| `temporal_feature_block` | 2_preprocessing | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, and `volatility_features` operational through raw-panel bridge lowering; these deterministic append blocks can compose with fixed X lags and `moving_average_rotation`; factor composition remains gated; `custom_temporal_features` remains registry-only pending a block-local callable contract |
+| `target_lag_block`, `target_lag_selection`, `x_lag_feature_block` | 2_preprocessing | `none` and fixed-lag values operational from explicit blocks first; target-plus-X block composition remains gated |
+| `factor_feature_block` | 2_preprocessing | `none` and `pca_static_factors` operational from explicit blocks first; factor/selection composition remains gated |
+| `level_feature_block` | 2_preprocessing | all built-in values operational in raw-panel feature runtimes: `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, and `level_growth_pairs` |
+| `temporal_feature_block` | 2_preprocessing | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, and `volatility_features` operational in raw-panel feature runtimes; these deterministic append blocks can compose with fixed X lags and `moving_average_rotation`; factor composition remains gated; `custom_temporal_features` remains registry-only pending a block-local callable contract |
 | `feature_block_set` | 2_preprocessing | registry-only |
-| `rotation_feature_block` | 2_preprocessing | `none`, `moving_average_rotation`, and `marx_rotation` operational through raw-panel bridge lowering; `moving_average_rotation` composes with fixed X lags and deterministic temporal append blocks; MARX replaces the X lag-polynomial basis and keeps X-lag/temporal/factor composition gated; MAF/custom rotations remain registry-only |
+| `rotation_feature_block` | 2_preprocessing | `none`, `moving_average_rotation`, and `marx_rotation` operational in raw-panel feature runtimes; `moving_average_rotation` composes with fixed X lags and deterministic temporal append blocks; MARX replaces the X lag-polynomial basis and keeps X-lag/temporal/factor composition gated; MAF/custom rotations remain registry-only |
 | `feature_block_combination` | 2_preprocessing | registry-only |
 
 ## Compatibility Policy
@@ -77,7 +78,7 @@ until each block has train-window fit/apply tests and provenance.
 - `task` remains accepted as a legacy recipe alias for `target_structure`.
   New compiled specs and manifests write `data_task_spec["target_structure"]`.
 - Generated recipes should be updated gradually after tests lock the canonical layers.
-- Legacy execution still dispatches on `feature_builder`, `predictor_family`,
-  `data_richness_mode`, and `factor_count` from compiled specs. That is a
-  runtime compatibility shape; the registry layer now records their canonical
-  ownership as Layer 2.
+- Runtime dispatch reads explicit Layer 2 feature blocks first and keeps
+  `feature_builder`, `predictor_family`, `data_richness_mode`, and
+  `factor_count` from compiled specs as compatibility/provenance fields. The
+  registry layer records their canonical ownership as Layer 2.

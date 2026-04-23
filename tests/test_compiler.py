@@ -1608,7 +1608,7 @@ def test_layer2_explicit_level_block_requires_raw_panel_bridge() -> None:
         _layer2_level_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
     )
     assert result.compiled.execution_status == "not_supported"
-    assert any("level_feature_block='target_level_addback' currently lowers only" in warning for warning in result.compiled.warnings)
+    assert any("level_feature_block='target_level_addback' is currently executable only with raw-panel feature runtimes" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_level_block_rejects_contemporaneous_oracle_alignment() -> None:
@@ -1865,7 +1865,7 @@ def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
         )
     )
     assert result.compiled.execution_status == "not_supported"
-    assert any("rotation_feature_block='moving_average_rotation' currently lowers only" in warning for warning in result.compiled.warnings)
+    assert any("rotation_feature_block='moving_average_rotation' is currently executable only with raw-panel feature runtimes" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_moving_average_rotation_allows_temporal_composition() -> None:
@@ -1889,7 +1889,7 @@ def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:
         _layer2_temporal_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
     )
     assert result.compiled.execution_status == "not_supported"
-    assert any("temporal_feature_block='moving_average_features' currently lowers only" in warning for warning in result.compiled.warnings)
+    assert any("temporal_feature_block='moving_average_features' is currently executable only with raw-panel feature runtimes" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_temporal_block_allows_fixed_x_lag_composition() -> None:
@@ -1959,7 +1959,7 @@ def test_layer2_explicit_target_and_x_lag_blocks_require_composition_runtime() -
     }
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "not_supported"
-    assert any("target_lag_block currently lowers only" in warning for warning in result.compiled.warnings)
+    assert any("target_lag_block is currently executable only as the standalone target-lag runtime" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_x_lag_block_rejects_conflicting_legacy_bridge() -> None:

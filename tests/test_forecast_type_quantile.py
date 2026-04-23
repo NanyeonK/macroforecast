@@ -110,7 +110,7 @@ def test_forecast_type_iterated_raw_panel_blocked() -> None:
     ))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
-        "forecast_type='iterated' is not implemented for feature_builder='raw_feature_panel'" in r_msg
+        "forecast_type='iterated' is not implemented for the raw-panel feature runtime" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )
 
@@ -119,7 +119,7 @@ def test_forecast_type_direct_autoreg_blocked() -> None:
     r = compile_recipe_dict(_recipe(forecast_type="direct"))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
-        "forecast_type='direct' is not implemented for feature_builder='autoreg_lagged_target'" in r_msg
+        "forecast_type='direct' is not implemented for the target-lag-only feature runtime" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )
 

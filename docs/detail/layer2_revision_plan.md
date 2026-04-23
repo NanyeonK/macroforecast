@@ -49,8 +49,8 @@ These changes should not happen as part of the Layer 2 revision:
   proven;
 - renaming legacy artifact columns such as `y_true` or `y_pred` without a
   compatibility layer;
-- replacing current runtime dispatch before old `feature_builder` recipes have
-  a lossless bridge.
+- removing compatibility fallbacks before old `feature_builder` recipes have a
+  lossless bridge.
 
 ## Current Bridge
 
@@ -79,12 +79,11 @@ The current fixed full support surface is:
 The explicit feature-block grammar now participates in the first runtime
 dispatch decision: execution derives the raw-panel versus autoregressive model
 executor path from Layer 2 feature blocks and uses old `feature_builder` names
-only as compatibility fallback. Fixed X-lag matrix composition now also reads
-the explicit `x_lag_feature_block` first and uses the old
-`PreprocessContract.x_lag_creation` bridge only as fallback. PCA static-factor
-matrix composition now reads `factor_feature_block=pca_static_factors` first
-and uses old factor/dimensionality-reduction bridges only as fallback. Other
-matrix composition still reuses the existing raw-panel/autoregressive builders.
+only as compatibility fallback. Fixed target-lag, fixed X-lag, and PCA
+static-factor matrix composition now read explicit Layer 2 blocks first and use
+old bridge fields only as fallback. Importance routines and custom model hook
+contexts also report the block-derived feature runtime while retaining the
+legacy builder name as provenance.
 
 ## Revision Principles
 
@@ -256,10 +255,12 @@ Acceptance:
 
 ### Patch L2-F: Factor And Selection Blocks
 
-Status: complete for `factor_feature_block=pca_static_factors` through
-compatibility lowering. Factor lags, supervised factors, custom factors, and
-factor/selection composition remain registry-only or `not_supported` until the
-explicit block composer exists.
+Status: complete for `factor_feature_block=pca_static_factors` in the supported
+runtime slice. Matrix composition reads the explicit factor block first and
+uses old factor/dimensionality-reduction bridge fields only as fallback.
+Factor lags, supervised factors, custom factors, and factor/selection
+composition remain registry-only or `not_supported` until the explicit block
+composer exists.
 
 Goal: move factor construction from coarse runtime switches into explicit
 Layer 2 blocks.
@@ -306,7 +307,7 @@ Current lowered slice:
 
 - `level_feature_block=target_level_addback`, `x_level_addback`,
   `selected_level_addbacks`, and `level_growth_pairs` are executable for
-  raw-panel feature builders.
+  raw-panel feature runtimes.
   Target add-back appends the observed target level at the feature row date and
   at the prediction origin. X-level add-back appends raw-level `H` predictor
   values preserved after Layer 1 raw missing/outlier handling and before
@@ -318,7 +319,7 @@ Current lowered slice:
   target-date information at prediction time.
 - `temporal_feature_block=moving_average_features`, `rolling_moments`,
   `local_temporal_factors`, and `volatility_features` are executable for
-  raw-panel feature builders. They append trailing 3-period moving averages,
+  raw-panel feature runtimes. They append trailing 3-period moving averages,
   mean/variance moments, deterministic local temporal factors, or rolling
   volatility of the base predictor columns using only information available
   through each row date / prediction origin, and reject X-lag/factor bridge
@@ -336,7 +337,7 @@ Current lowered slice:
   after that, and level add-backs keep their existing final append position.
   The feature-name order mirrors this runtime order.
 - `rotation_feature_block=none`, `moving_average_rotation`, and
-  `marx_rotation` are executable for raw-panel feature builders. `none` records
+  `marx_rotation` are executable for raw-panel feature runtimes. `none` records
   explicit no-rotation provenance when selected. `moving_average_rotation`
   appends deterministic trailing 3- and 6-period moving-average rotations of
   each active predictor column with `{predictor}_rotma3` /
@@ -442,8 +443,8 @@ For feature-block patches, also test:
 | Compatibility name cleanup | done, provenance-only | Added `target_lag_selection` and `target_lag_count` provenance while keeping legacy `y_lag_count` / `factor_ar_lags` accepted. |
 | Direct target constructions | done | Direct average growth/difference/log-growth values compile and execute with construction-scale metrics plus level-scale preservation columns. |
 | Path-average target constructions | done, protocol-only | Layer 2 stepwise target protocol is recorded; execution remains gated until Layer 3 multi-step fit/aggregation lands. |
-| Explicit target/X lag blocks | in progress | Fixed X-lag matrix composition now reads `x_lag_feature_block` before the old `x_lag_creation` bridge. |
-| Factor/selection blocks | in progress | PCA static-factor matrix composition now reads `factor_feature_block` before old factor/dimred bridges; feature-selection/factor composition remains gated. |
+| Explicit target/X lag blocks | done for fixed blocks | Fixed target-lag and fixed X-lag matrix composition now read `target_lag_block` / `x_lag_feature_block` before old bridge fields; joint target-plus-X composition remains gated. |
+| Factor/selection blocks | done for static PCA | PCA static-factor matrix composition now reads `factor_feature_block` before old factor/dimred bridges; feature-selection/factor composition remains gated. |
 | Level/rotation/temporal blocks | in progress | Level blocks, temporal blocks, moving-average rotation, and MARX lag-polynomial rotation are executable for raw-panel builders; MAF/custom and cross-block composition remain gated. |
-| Bridge dispatch retirement | in progress | Executor-family dispatch, fixed X-lag matrix composition, and PCA static-factor matrix composition now route through explicit Layer 2 blocks; remaining matrix composition still uses existing builders. |
+| Bridge dispatch retirement | in progress | Executor-family dispatch, fixed target/X-lag matrix composition, PCA static-factor matrix composition, and importance hook contexts now route through explicit Layer 2 blocks; compiler gates and docs are being moved from bridge wording to runtime/block wording. |
 | Simple/public sweeps | blocked | Wait for fixed full support and compiler guards. |

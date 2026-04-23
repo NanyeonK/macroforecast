@@ -36,7 +36,7 @@ MVP custom model contract:
 fn(X_train, y_train, X_test, context) -> scalar
 ```
 
-`X_test` is one row. The function may return a scalar or one-element sequence/array. `context` includes `model_name`, `feature_builder`, `target`, `horizon`, `feature_names`, and `contract_version`.
+`X_test` is one row. The function may return a scalar or one-element sequence/array. `context` includes `model_name`, `feature_runtime_builder`, `legacy_feature_builder`, `feature_dispatch_source`, `target`, `horizon`, `feature_names`, `mode`, and `contract_version`.
 
 Registered custom model names are accepted as `model_family` values in the current Python process and can be used in `Experiment.compare_models`.
 
@@ -66,7 +66,7 @@ class MyTargetTransform:
         return target_pred_raw
 ```
 
-Registered target transformers are executable for `feature_builder="autoreg_lagged_target"` and raw-scale evaluation. See `target_transformer` for the full scale contract.
+Registered target transformers are executable for the target-lag feature runtime and for raw-panel feature runtimes with supported linear model families or registered custom models. Raw-scale evaluation is required. See `target_transformer` for the full scale contract.
 
 The final guide should specify:
 

@@ -2,7 +2,9 @@
 
 `target_transformer` is the target-side extension point. It is intentionally separate from `custom_preprocessor`, which is predictor-only.
 
-Status: executable for `feature_builder="autoreg_lagged_target"`. Raw-panel and exogenous feature builders remain blocked until their horizon-aligned supervised target contract is implemented.
+Status: executable for the target-lag feature runtime and for raw-panel feature
+runtimes with `model_family` in `ols`, `ridge`, `lasso`, or `elasticnet`, plus
+registered custom models. Raw-scale evaluation is required.
 
 ## Why This Is Separate
 
@@ -52,7 +54,13 @@ Benchmarks stay on raw scale. Comparisons happen only after model predictions ar
 
 Metrics are raw-scale only in the first executable version. `evaluation_scale="transformed"` and `evaluation_scale="both"` remain out of scope for this extension until explicitly designed.
 
-The current runtime supports autoregressive target-lag models. It blocks `raw_feature_panel`, `factor_pca`, and other exogenous feature builders because those paths build horizon-specific supervised target vectors inside the raw-panel executor. That needs a separate implementation pass.
+The current runtime supports autoregressive target-lag models and selected
+raw-panel supervised models. Raw-panel support is limited to `ols`, `ridge`,
+`lasso`, `elasticnet`, or registered custom models because those paths can keep
+the target transformer fit/inverse-transform contract aligned with each
+horizon-specific supervised target vector. Factor and other exogenous feature
+runtimes remain gated until their target-transformer scale contract is designed
+and tested.
 
 ## Relationship To Existing Axes
 
@@ -72,6 +80,7 @@ Existing built-in axes still describe dataset or built-in target handling:
 
 `Experiment.use_target_transformer(name)` lowers to the `target_transformer` registry axis.
 
-Compilation accepts registered names. Non-`none` values are executable only for `feature_builder="autoreg_lagged_target"` and raw-scale evaluation.
+Compilation accepts registered names. Non-`none` values are executable only for
+supported target-lag/raw-panel feature runtimes and raw-scale evaluation.
 
 Execution records the transformer in the manifest and adds prediction columns for `target_transformer`, `model_target_scale`, `forecast_scale`, and the legacy `y_pred_model_scale` column.

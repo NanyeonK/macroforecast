@@ -83,10 +83,12 @@ feature-block grammar is:
 - `temporal_feature_block`
 - `feature_block_combination`
 
-These axes are registry-only in the current runtime. Existing executable paths
-still use the coarse `feature_builder`, `predictor_family`,
-`data_richness_mode`, and `factor_count` bridge, but those bridge names are
-Layer 2 concepts because they define `Z`, not estimator behavior.
+These axes are the canonical Layer 2 language. Supported runtime slices now
+read explicit blocks first for executor-family dispatch, fixed target lags,
+fixed X lags, and static PCA factors. The coarse `feature_builder`,
+`predictor_family`, `data_richness_mode`, and `factor_count` bridge remains
+accepted as compatibility/provenance because those names define `Z`, not
+estimator behavior.
 
 ## Layer 3: Forecast Generator
 
@@ -106,9 +108,9 @@ Benchmarks belong here because they produce forecasts.
 Layer 3 consumes `Z_train`/`Z_pred` from Layer 2 and fits/predicts with a model
 or benchmark. During migration, legacy recipe paths may still place
 `feature_builder`, `predictor_family`, `data_richness_mode`, and `factor_count`
-near training settings because old executors use those names for dispatch. Their
-canonical ownership is Layer 2 because they define feature representation, not
-estimator behavior.
+near training settings, but runtime dispatch should prefer the Layer 2 block
+spec when it is present. Their canonical ownership is Layer 2 because they
+define feature representation, not estimator behavior.
 
 ## Layer 4: Evaluation
 

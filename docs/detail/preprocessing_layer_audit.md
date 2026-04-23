@@ -61,14 +61,14 @@ records what the current runtime can execute today.
 
 | Axis | Executable values today | Notes |
 |------|-------------------------|-------|
-| `feature_builder` | `autoreg_lagged_target`, `factors_plus_AR`, `raw_feature_panel`, `raw_X_only`, `factor_pca` | Currently used by compiler/runtime dispatch; semantically this chooses feature representation. `sequence_tensor` is future. |
-| `target_lag_block` / `target_lag_selection` | `none`, `fixed_target_lags` / `none`, `fixed` | Fixed target-lag construction is executable through compatibility lowering; IC, CV, horizon-specific, and custom lag selection remain registry-only. |
-| `x_lag_feature_block` | `none`, `fixed_x_lags` | Fixed predictor lags are executable through the legacy `x_lag_creation` bridge with origin-aligned prediction lags. |
-| `factor_feature_block` | `none`, `pca_static_factors` | Static PCA factors are executable through old `feature_builder=factor_pca` / `factors_plus_AR` or raw-panel `dimensionality_reduction_policy=pca` / `static_factor` lowering. Runtime writes factor fit-state/loadings provenance for the latest recursive window. |
-| `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level add-backs are executable for raw-panel feature builders. Target add-back appends observed `target_t` / `target_origin`; X-level add-back appends raw-level `H` predictor values preserved before official transforms/T-codes; selected subset add-back restricts those columns via `leaf_config.selected_level_addback_columns`; level-growth pairs record existing transformed predictor columns with raw-level counterparts from `leaf_config.level_growth_pair_columns`. |
-| `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features` | Moving-average, rolling-moment, local-temporal-factor, and volatility temporal features are executable for raw-panel feature builders with trailing 3-period `{predictor}_ma3`, `{predictor}_mean3` / `{predictor}_var3`, deterministic `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, and `{predictor}_vol3` features. They can compose with fixed X lags and `moving_average_rotation`; factor composition remains gated. `custom_temporal_features` remains registry-only until a block-local callable contract can return temporal feature frames, names, fit-state provenance, and leakage metadata. |
-| Other feature-block primitive axes | `rotation_feature_block=none`, `moving_average_rotation`, `marx_rotation` | Non-rotated feature representation is executable and records explicit no-rotation provenance when selected. `moving_average_rotation` is executable for raw-panel feature builders as deterministic trailing 3- and 6-period rotations of each active predictor and can compose with fixed X lags plus deterministic temporal append blocks. `marx_rotation` is executable for raw-panel feature builders when `leaf_config.marx_max_lag` is set; it builds `lag_polynomial_rotation_contract_v1` features, replaces the source X lag-polynomial basis, and keeps X-lag/temporal/factor composition gated. MAF and custom rotations remain registry-only with compiler boundary metadata until factor-to-rotation composition and block-local callable contracts exist. `feature_block_set` and `feature_block_combination` remain registry-only or gated until the explicit block composer exists. |
-| `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` | Canonical Layer 2 owner; runtime support is constrained by `feature_builder` compatibility guards. |
+| `feature_builder` | `autoreg_lagged_target`, `factors_plus_AR`, `raw_feature_panel`, `raw_X_only`, `factor_pca` | Compatibility/source bridge for old recipes. Runtime dispatch now derives the supported feature runtime from Layer 2 blocks first, with this value retained as fallback/provenance. `sequence_tensor` is future. |
+| `target_lag_block` / `target_lag_selection` | `none`, `fixed_target_lags` / `none`, `fixed` | Fixed target-lag construction is executable from the explicit block first; legacy target-lag fields remain fallback/provenance. IC, CV, horizon-specific, and custom lag selection remain registry-only. |
+| `x_lag_feature_block` | `none`, `fixed_x_lags` | Fixed predictor lags are executable from the explicit block first with origin-aligned prediction lags; `x_lag_creation` remains a compatibility fallback. |
+| `factor_feature_block` | `none`, `pca_static_factors` | Static PCA factors are executable from the explicit block first; old factor builders and raw-panel `dimensionality_reduction_policy=pca` / `static_factor` remain compatibility fallbacks. Runtime writes factor fit-state/loadings provenance for the latest recursive window. |
+| `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed `target_t` / `target_origin`; X-level add-back appends raw-level `H` predictor values preserved before official transforms/T-codes; selected subset add-back restricts those columns via `leaf_config.selected_level_addback_columns`; level-growth pairs record existing transformed predictor columns with raw-level counterparts from `leaf_config.level_growth_pair_columns`. |
+| `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features` | Moving-average, rolling-moment, local-temporal-factor, and volatility temporal features are executable for raw-panel feature runtimes with trailing 3-period `{predictor}_ma3`, `{predictor}_mean3` / `{predictor}_var3`, deterministic `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, and `{predictor}_vol3` features. They can compose with fixed X lags and `moving_average_rotation`; factor composition remains gated. `custom_temporal_features` remains registry-only until a block-local callable contract can return temporal feature frames, names, fit-state provenance, and leakage metadata. |
+| Other feature-block primitive axes | `rotation_feature_block=none`, `moving_average_rotation`, `marx_rotation` | Non-rotated feature representation is executable and records explicit no-rotation provenance when selected. `moving_average_rotation` is executable for raw-panel feature runtimes as deterministic trailing 3- and 6-period rotations of each active predictor and can compose with fixed X lags plus deterministic temporal append blocks. `marx_rotation` is executable for raw-panel feature runtimes when `leaf_config.marx_max_lag` is set; it builds `lag_polynomial_rotation_contract_v1` features, replaces the source X lag-polynomial basis, and keeps X-lag/temporal/factor composition gated. MAF and custom rotations remain registry-only with compiler boundary metadata until factor-to-rotation composition and block-local callable contracts exist. `feature_block_set` and `feature_block_combination` remain registry-only or gated until the explicit block composer exists. |
+| `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` | Canonical Layer 2 owner; runtime support is constrained by the selected feature runtime and explicit block composer coverage. |
 | `data_richness_mode` | `target_lags_only`, `factor_plus_lags`, `full_high_dimensional_X`, `selected_sparse_X` | Canonical Layer 2 owner; `mixed_mode` remains registry-only. |
 | `factor_count` | `fixed`, `cv_select`, `BaiNg_rule` | Canonical Layer 2 owner for factor representation dimensions. `variance_explained_rule` and `model_specific` remain registry-only. |
 | `x_missing_policy` | `none`, `drop`, `drop_rows`, `drop_columns`, `drop_if_above_threshold`, `missing_indicator`, `em_impute`, `mean_impute`, `median_impute`, `ffill`, `interpolate_linear` | Executes in the raw-panel extra-preprocess path. `drop` and `drop_rows` are pass-through aliases because predictor/target row coordination happens upstream. |
@@ -118,9 +118,10 @@ feature-block primitives: target-lag blocks, transformed-X lag blocks, factor
 blocks, level add-backs, lag rotations, local temporal factors, volatility
 blocks, and custom blocks. The split is defined in
 `layer2_feature_representation.md`; the implementation sequence is defined in
-`layer2_revision_plan.md`. Runtime support has started with fixed target-lag,
-fixed X-lag, and static PCA factor blocks through compatibility bridges. Joint
-block composition beyond those bridges is still an implementation task.
+`layer2_revision_plan.md`. Runtime support now reads fixed target-lag, fixed
+X-lag, and static PCA factor blocks before compatibility bridge fields. Joint
+block composition beyond the supported runtime slices is still an implementation
+task.
 
 
 ## Full Closure Status
@@ -395,8 +396,7 @@ The blocked MVP surface is:
 
 Do not expose built-in preprocessing sweeps in the simple docs yet.
 
-Next implementation target should be the `PreprocessContract` bridge cleanup:
-keep Layer 1 official-transform axes as the public source of truth, keep legacy
-Layer 2 t-code fields accepted for compatibility, and progressively remove
-runtime dependence on those bridge fields after compiled manifests and tests no
-longer need them.
+Next implementation target should be compiler/docs bridge cleanup: keep Layer 1
+official-transform axes as the public source of truth, keep legacy Layer 2
+t-code fields accepted for compatibility, and keep moving warning text and
+manifests from old bridge names to explicit runtime/block names.

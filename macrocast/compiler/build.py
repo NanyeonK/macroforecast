@@ -1914,9 +1914,9 @@ def _execution_status(
         forecast_type_default = "iterated" if feature_builder == "autoreg_lagged_target" else "direct"
         forecast_type = _selection_value(selection_map, "forecast_type", default=forecast_type_default)
         if feature_builder == "raw_feature_panel" and forecast_type == "iterated":
-            blocked.append("forecast_type='iterated' is not implemented for feature_builder='raw_feature_panel' in v1.0 (requires exogenous X forecasting)")
+            blocked.append("forecast_type='iterated' is not implemented for the raw-panel feature runtime in v1.0 (requires exogenous X forecasting)")
         if feature_builder == "autoreg_lagged_target" and forecast_type == "direct":
-            blocked.append("forecast_type='direct' is not implemented for feature_builder='autoreg_lagged_target' in v1.0 (the operational path is iterated); use forecast_type='iterated' or leave unset to take the dynamic default")
+            blocked.append("forecast_type='direct' is not implemented for the target-lag-only feature runtime in v1.0 (the operational path is iterated); use forecast_type='iterated' or leave unset to take the dynamic default")
 
     # 1.3 overlap_handling=evaluate_with_hac compatibility (v1.0)
     _overlap = _selection_value(selection_map, "overlap_handling", default="allow_overlap")
@@ -1932,20 +1932,20 @@ def _execution_status(
     if feature_builder is not None:
         predictor_family = _selection_value(selection_map, "predictor_family", default=("target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"))
         if predictor_family == "target_lags_only" and feature_builder != "autoreg_lagged_target":
-            blocked.append("predictor_family='target_lags_only' requires feature_builder='autoreg_lagged_target' in the current runtime slice")
+            blocked.append("predictor_family='target_lags_only' requires the target-lag-only feature runtime in the current runtime slice")
         if predictor_family == "all_macro_vars" and feature_builder not in {"raw_feature_panel", "factor_pca", "factors_plus_AR"}:
-            blocked.append("predictor_family='all_macro_vars' requires feature_builder in {'raw_feature_panel', 'factor_pca', 'factors_plus_AR'} in the current runtime slice")
+            blocked.append("predictor_family='all_macro_vars' requires a macro-X or factor feature runtime in the current runtime slice")
         target_lag_block = _selection_value(selection_map, "target_lag_block", default="none")
         if target_lag_block != "none" and feature_builder != "autoreg_lagged_target":
             not_supported.append(
-                "target_lag_block currently lowers only through feature_builder='autoreg_lagged_target'; "
+                "target_lag_block is currently executable only as the standalone target-lag runtime; "
                 "explicit target-lag composition with X/factor blocks is not implemented"
             )
         x_lag_feature_block = _selection_value(selection_map, "x_lag_feature_block", default="none")
         if x_lag_feature_block != "none" and feature_builder not in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
             not_supported.append(
-                "x_lag_feature_block currently lowers only through raw-panel feature builders "
-                "{'raw_feature_panel', 'raw_X_only', 'factor_pca', 'factors_plus_AR'}"
+                "x_lag_feature_block is currently executable only in feature runtimes that build from macro-X panels; "
+                "target-lag-only runtime has no X-block composer"
             )
         level_feature_block = _selection_value(selection_map, "level_feature_block", default="none")
         level_block_active = level_feature_block in {
@@ -1956,8 +1956,8 @@ def _execution_status(
         }
         if level_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
-                f"level_feature_block={level_feature_block!r} currently lowers only through "
-                "feature_builder in {'raw_feature_panel', 'raw_X_only'}; factor and target-lag "
+                f"level_feature_block={level_feature_block!r} is currently executable only with "
+                "raw-panel feature runtimes; factor and target-lag "
                 "composition requires a dedicated block composer"
             )
         if (
@@ -1980,13 +1980,13 @@ def _execution_status(
         rotation_block_active = rotation_feature_block in {"moving_average_rotation", "marx_rotation"}
         if temporal_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
-                f"temporal_feature_block={temporal_feature_block!r} currently lowers only through "
-                "feature_builder in {'raw_feature_panel', 'raw_X_only'}"
+                f"temporal_feature_block={temporal_feature_block!r} is currently executable only with "
+                "raw-panel feature runtimes"
             )
         if rotation_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
-                f"rotation_feature_block={rotation_feature_block!r} currently lowers only through "
-                "feature_builder in {'raw_feature_panel', 'raw_X_only'}"
+                f"rotation_feature_block={rotation_feature_block!r} is currently executable only with "
+                "raw-panel feature runtimes"
             )
         if (
             rotation_feature_block == "marx_rotation"
@@ -2027,8 +2027,8 @@ def _execution_status(
             )
         if explicit_factor_block == "none" and factor_bridge_active:
             not_supported.append(
-                "factor_feature_block='none' conflicts with an active factor runtime bridge "
-                f"(feature_builder={feature_builder!r}, dimensionality_reduction_policy={dimred!r})"
+                "factor_feature_block='none' conflicts with an active factor compatibility bridge "
+                f"(legacy feature builder={feature_builder!r}, dimensionality_reduction_policy={dimred!r})"
             )
         if feature_selection != "none" and (factor_block_active or dimred != "none"):
             not_supported.append(
@@ -2040,7 +2040,7 @@ def _execution_status(
     if target_transformer != "none":
         if feature_builder not in _TARGET_TRANSFORMER_FEATURE_BUILDERS:
             blocked.append(
-                "target_transformer is currently executable only with feature_builder in "
+                "target_transformer is currently executable only with supported target-lag or raw-panel feature runtimes "
                 f"{sorted(_TARGET_TRANSFORMER_FEATURE_BUILDERS)}"
             )
         if (
