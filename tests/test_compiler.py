@@ -87,6 +87,7 @@ def _layer2_temporal_block_recipe(
     feature_builder: str = "raw_feature_panel",
     model_family: str = "ridge",
     temporal_feature_block: str = "moving_average_features",
+    rotation_feature_block: str | None = None,
     x_lag_feature_block: str | None = None,
 ) -> dict:
     preprocessing_axes = {
@@ -106,6 +107,8 @@ def _layer2_temporal_block_recipe(
         "evaluation_scale": "raw_level",
         "temporal_feature_block": temporal_feature_block,
     }
+    if rotation_feature_block is not None:
+        preprocessing_axes["rotation_feature_block"] = rotation_feature_block
     if x_lag_feature_block is not None:
         preprocessing_axes["tcode_policy"] = "extra_preprocess_without_tcode"
         preprocessing_axes["preprocess_order"] = "extra_only"
@@ -1669,6 +1672,22 @@ def test_layer2_explicit_local_temporal_factor_block_lowers_to_raw_panel_bridge(
     assert block["runtime_feature_names"] == ["__local_temporal_factor_mean3", "__local_temporal_factor_dispersion3"]
     assert block["runtime_bridge"] == {"raw_panel_temporal_features": "local_temporal_factors"}
     assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_rotation_none_records_no_rotation_block() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="none",
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["rotation_feature_block"] == {
+        "value": "none",
+        "source_axis": "rotation_feature_block",
+        "source_value": "none",
+    }
 
 
 def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:

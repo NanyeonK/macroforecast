@@ -323,7 +323,9 @@ Current lowered slice:
   operational custom temporal blocks need a block-local callable contract that
   returns train/pred feature frames, stable feature names, fit-state
   provenance, and leakage metadata.
-- `rotation_feature_block=*` remains future block-composition work.
+- `rotation_feature_block=none` is executable and records explicit
+  no-rotation provenance when selected. Non-none rotation blocks remain future
+  block-composition work.
 
 Acceptance:
 

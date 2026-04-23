@@ -53,7 +53,7 @@ until each block has train-window fit/apply tests and provenance.
 | `level_feature_block` | 2_preprocessing | all built-in values operational through raw-panel bridge lowering: `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, and `level_growth_pairs` |
 | `temporal_feature_block` | 2_preprocessing | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, and `volatility_features` operational through raw-panel bridge lowering; X-lag/factor composition remains gated; `custom_temporal_features` remains registry-only pending a block-local callable contract |
 | `feature_block_set` | 2_preprocessing | registry-only |
-| `rotation_feature_block` | 2_preprocessing | registry-only |
+| `rotation_feature_block` | 2_preprocessing | `none` operational as explicit no-rotation provenance; non-none values remain registry-only |
 | `feature_block_combination` | 2_preprocessing | registry-only |
 
 ## Compatibility Policy

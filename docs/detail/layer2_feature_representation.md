@@ -120,7 +120,9 @@ Operational support is currently narrow:
 - Feature selection currently applies only to raw predictor blocks. It cannot
   be combined with factor blocks or dimensionality reduction until the package
   defines selection-before-factor vs selection-after-factor semantics.
-- Rotation and custom block-combination axes remain registry-only.
+- `rotation_feature_block=none` is operational as explicit no-rotation
+  provenance. Non-none rotation blocks and custom block-combination axes remain
+  registry-only.
 
 ## Target Representation Grammar
 
@@ -200,7 +202,6 @@ A safe implementation order is:
 4. Implement `factor_feature_block=pca_static_factors` with recursive factor
    fit/apply tests and loadings provenance.
 5. Extend `level_feature_block` beyond whole-panel add-backs, then implement
-   `rotation_feature_block` and the remaining `temporal_feature_block` values
-   as optional blocks.
+   non-none `rotation_feature_block` values as optional blocks.
 6. Move runtime dispatch from coarse `feature_builder` names to explicit block
    composition only after old recipes can be translated losslessly.

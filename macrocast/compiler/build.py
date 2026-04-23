@@ -1290,6 +1290,26 @@ def _temporal_feature_block_value(selection_map: dict[str, AxisSelection]) -> st
     )
 
 
+def _rotation_feature_block_value(selection_map: dict[str, AxisSelection]) -> str | None:
+    return (
+        _selection_value(selection_map, "rotation_feature_block")
+        if "rotation_feature_block" in selection_map
+        else None
+    )
+
+
+def _rotation_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
+    explicit_block = _rotation_feature_block_value(selection_map)
+    block = explicit_block or "none"
+    if block == "none" and explicit_block is not None:
+        return {
+            "value": "none",
+            "source_axis": "rotation_feature_block",
+            "source_value": "none",
+        }
+    return {"value": "none", "source": "not_wired"}
+
+
 def _temporal_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
     explicit_block = _temporal_feature_block_value(selection_map)
     block = explicit_block or "none"
@@ -1553,7 +1573,7 @@ def _layer2_representation_spec(
                 explicit_block=explicit_factor_feature_block,
             ),
             "level_feature_block": _level_block_from_selection(selection_map, data_task_spec),
-            "rotation_feature_block": {"value": "none", "source": "not_wired"},
+            "rotation_feature_block": _rotation_block_from_selection(selection_map),
             "temporal_feature_block": _temporal_block_from_selection(selection_map),
             "feature_block_combination": _feature_block_combination_from_bridge(str(feature_builder), str(x_lag_creation)),
         },
