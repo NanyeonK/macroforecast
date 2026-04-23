@@ -875,6 +875,19 @@ def _validate_layer1_data_task_contract(
         )
 
 
+def _validate_layer2_feature_block_contract(
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+) -> None:
+    level_feature_block = _selection_value(selection_map, "level_feature_block", default="none")
+    if level_feature_block == "selected_level_addbacks":
+        _require_non_empty_sequence(
+            leaf_config,
+            "selected_level_addback_columns",
+            "level_feature_block='selected_level_addbacks'",
+        )
+
+
 def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     dataset = _first_selected_value(selection_map, "dataset", "fred_md")
     source_adapter = _selection_value(selection_map, "source_adapter", default=dataset)
@@ -911,6 +924,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "handpicked_columns": leaf_config.get("handpicked_columns"),
         "predictor_category": leaf_config.get("predictor_category"),
         "predictor_category_columns": leaf_config.get("predictor_category_columns"),
+        # Layer 2 level-feature block input channels
+        "selected_level_addback_columns": leaf_config.get("selected_level_addback_columns"),
         # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
@@ -1180,7 +1195,10 @@ def _level_feature_block_value(selection_map: dict[str, AxisSelection]) -> str |
     )
 
 
-def _level_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
+def _level_block_from_selection(
+    selection_map: dict[str, AxisSelection],
+    data_task_spec: Mapping[str, Any],
+) -> dict[str, Any]:
     explicit_block = _level_feature_block_value(selection_map)
     block = explicit_block or "none"
     if block == "target_level_addback":
@@ -1211,6 +1229,23 @@ def _level_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict
                 "lookahead": "forbidden",
             },
             "runtime_bridge": {"raw_panel_level_addback": "x_level_addback"},
+        }
+    if block == "selected_level_addbacks":
+        selected_columns = [str(column) for column in data_task_spec.get("selected_level_addback_columns") or ()]
+        return {
+            "value": "selected_level_addbacks",
+            "source_axis": "level_feature_block",
+            "source_value": "selected_level_addbacks",
+            "selected_columns": selected_columns,
+            "feature_names": [f"{column}_level" for column in selected_columns],
+            "runtime_feature_names": [f"{column}__level" for column in selected_columns],
+            "level_source": "Layer 1 H after raw missing/outlier policy and before official transforms/T-codes",
+            "alignment": {
+                "train_row_t_uses": "selected H_{t}",
+                "prediction_origin_uses": "selected H_{origin}",
+                "lookahead": "forbidden",
+            },
+            "runtime_bridge": {"raw_panel_level_addback": "selected_level_addbacks"},
         }
     if explicit_block is not None:
         return {
@@ -1475,7 +1510,7 @@ def _layer2_representation_spec(
                 preprocess_contract=preprocess_contract,
                 explicit_block=explicit_factor_feature_block,
             ),
-            "level_feature_block": _level_block_from_selection(selection_map),
+            "level_feature_block": _level_block_from_selection(selection_map, data_task_spec),
             "rotation_feature_block": {"value": "none", "source": "not_wired"},
             "temporal_feature_block": _temporal_block_from_selection(selection_map),
             "feature_block_combination": _feature_block_combination_from_bridge(str(feature_builder), str(x_lag_creation)),
@@ -1747,7 +1782,11 @@ def _execution_status(
                 "{'raw_feature_panel', 'raw_X_only', 'factor_pca', 'factors_plus_AR'}"
             )
         level_feature_block = _selection_value(selection_map, "level_feature_block", default="none")
-        level_block_active = level_feature_block in {"target_level_addback", "x_level_addback"}
+        level_block_active = level_feature_block in {
+            "target_level_addback",
+            "x_level_addback",
+            "selected_level_addbacks",
+        }
         if level_block_active and feature_builder not in {"raw_feature_panel", "raw_X_only"}:
             not_supported.append(
                 f"level_feature_block={level_feature_block!r} currently lowers only through "
@@ -1971,6 +2010,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
             f"source_adapter={source_adapter_choice!r} requires leaf_config.custom_data_path"
         )
     _validate_layer1_data_task_contract(selection_map, leaf_config)
+    _validate_layer2_feature_block_contract(selection_map, leaf_config)
     reproducibility_mode = _selection_value(selection_map, "reproducibility_mode", default="best_effort")
     random_seed = leaf_config.get("random_seed")
     if reproducibility_mode in {"strict_reproducible", "seeded_reproducible"} and random_seed is None:

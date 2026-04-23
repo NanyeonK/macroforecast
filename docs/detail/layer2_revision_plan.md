@@ -297,12 +297,14 @@ Changes:
 
 Current lowered slice:
 
-- `level_feature_block=target_level_addback` and `x_level_addback` are
-  executable for raw-panel feature builders. Target add-back appends the
-  observed target level at the feature row date and at the prediction origin.
-  X-level add-back appends raw-level `H` predictor values preserved after
-  Layer 1 raw missing/outlier handling and before official transforms/T-codes.
-  Both reject contemporaneous-oracle X alignment because that would require
+- `level_feature_block=target_level_addback`, `x_level_addback`, and
+  `selected_level_addbacks` are executable for raw-panel feature builders.
+  Target add-back appends the observed target level at the feature row date and
+  at the prediction origin. X-level add-back appends raw-level `H` predictor
+  values preserved after Layer 1 raw missing/outlier handling and before
+  official transforms/T-codes. Selected level add-back applies the same
+  source/alignment rule to `leaf_config.selected_level_addback_columns`. These
+  values reject contemporaneous-oracle X alignment because that would require
   target-date information at prediction time.
 - `temporal_feature_block=moving_average_features`, `rolling_moments`, and
   `volatility_features` are executable for raw-panel feature builders. They
@@ -310,7 +312,7 @@ Current lowered slice:
   volatility of the base predictor columns using only information available
   through each row date / prediction origin, and reject X-lag/factor bridge
   composition for now.
-- `level_feature_block=selected_level_addbacks`, `level_growth_pairs`,
+- `level_feature_block=level_growth_pairs`,
   `rotation_feature_block=*`, and the remaining `temporal_feature_block=*`
   values remain future block-composition work.
 

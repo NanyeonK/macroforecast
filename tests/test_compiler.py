@@ -21,6 +21,7 @@ def _layer2_level_block_recipe(
     model_family: str = "ridge",
     level_feature_block: str = "target_level_addback",
     contemporaneous_x_rule: str | None = None,
+    selected_level_addback_columns: list[str] | None = None,
 ) -> dict:
     data_axes = {
         "dataset": "fred_md",
@@ -29,16 +30,19 @@ def _layer2_level_block_recipe(
     }
     if contemporaneous_x_rule is not None:
         data_axes["contemporaneous_x_rule"] = contemporaneous_x_rule
+    leaf_config = {
+        "target": "INDPRO",
+        "horizons": [1],
+    }
+    if selected_level_addback_columns is not None:
+        leaf_config["selected_level_addback_columns"] = selected_level_addback_columns
     return {
         "recipe_id": f"l2-level-block-{feature_builder}",
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
             "1_data_task": {
                 "fixed_axes": data_axes,
-                "leaf_config": {
-                    "target": "INDPRO",
-                    "horizons": [1],
-                },
+                "leaf_config": leaf_config,
             },
             "2_preprocessing": {
                 "fixed_axes": {
@@ -1529,6 +1533,30 @@ def test_layer2_explicit_x_level_block_lowers_to_raw_panel_bridge() -> None:
         "prediction_origin_uses": "H_{origin}",
         "lookahead": "forbidden",
     }
+
+
+def test_layer2_explicit_selected_level_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(
+            level_feature_block="selected_level_addbacks",
+            selected_level_addback_columns=["RPI", "UNRATE"],
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "selected_level_addbacks"
+    assert block["selected_columns"] == ["RPI", "UNRATE"]
+    assert block["feature_names"] == ["RPI_level", "UNRATE_level"]
+    assert block["runtime_feature_names"] == ["RPI__level", "UNRATE__level"]
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "selected_level_addbacks"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_selected_level_block_requires_columns() -> None:
+    recipe = _layer2_level_block_recipe(level_feature_block="selected_level_addbacks")
+    with pytest.raises(CompileValidationError, match="selected_level_addback_columns"):
+        compile_recipe_dict(recipe)
 
 
 def test_layer2_explicit_level_block_requires_raw_panel_bridge() -> None:

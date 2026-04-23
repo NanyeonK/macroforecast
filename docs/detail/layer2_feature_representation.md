@@ -89,13 +89,15 @@ Operational support is currently narrow:
   `factors_plus_AR`, or raw-panel `dimensionality_reduction_policy=pca` /
   `static_factor`. Runtime writes a factor fit-state artifact containing stable
   factor/loadings provenance.
-- `level_feature_block=none`, `target_level_addback`, and `x_level_addback`
-  are operational for raw-panel feature builders. `target_level_addback`
-  appends the observable target level at the feature row date (`target_t`) and
-  at the prediction origin (`target_origin`). `x_level_addback` appends
-  raw-level `H` values preserved after Layer 1 raw missing/outlier handling and
-  before official transforms/T-codes, using `{predictor}_level` public names.
-  Selected level add-backs and level-growth pairs remain registry-only.
+- `level_feature_block=none`, `target_level_addback`, `x_level_addback`, and
+  `selected_level_addbacks` are operational for raw-panel feature builders.
+  `target_level_addback` appends the observable target level at the feature row
+  date (`target_t`) and at the prediction origin (`target_origin`).
+  `x_level_addback` appends raw-level `H` values preserved after Layer 1 raw
+  missing/outlier handling and before official transforms/T-codes, using
+  `{predictor}_level` public names. `selected_level_addbacks` applies the same
+  source/alignment rule only to `leaf_config.selected_level_addback_columns`.
+  Level-growth pairs remain registry-only.
 - `temporal_feature_block=none`, `moving_average_features`,
   `rolling_moments`, and `volatility_features` are operational for raw-panel
   feature builders. The current lowered slices append trailing 3-period

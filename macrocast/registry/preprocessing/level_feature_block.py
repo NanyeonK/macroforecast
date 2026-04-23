@@ -30,7 +30,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="selected_level_addbacks",
             description="selected level variables added as features",
-            status="registry_only",
+            status="operational",
             priority="B",
         ),
         EnumRegistryEntry(
