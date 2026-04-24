@@ -2001,6 +2001,68 @@ def _layer3_capability_rejections(
     return tuple(blocked)
 
 
+_LAYER3_CAPABILITY_STATUS_CATALOG = {
+    "operational": "the selected cell has a runtime contract and can execute",
+    "blocked_by_incompatibility": "the selected values are valid individually but cannot compose in the current runtime",
+    "not_supported_yet": "the cell is reserved for a future runtime contract and is not accepted as an executable recipe value",
+    "registry_only": "the registry names a placeholder or extension hook without a built-in runtime contract",
+}
+
+
+_LAYER3_FUTURE_CAPABILITY_CELLS = (
+    {
+        "cell_id": "forecast_object.direction",
+        "dimension": "forecast_object",
+        "runtime_status": "not_supported_yet",
+        "owner_layer": "3_training",
+        "requires": [
+            "directional forecast payload contract",
+            "direction-specific evaluation contract",
+        ],
+    },
+    {
+        "cell_id": "forecast_object.interval",
+        "dimension": "forecast_object",
+        "runtime_status": "not_supported_yet",
+        "owner_layer": "3_training",
+        "requires": [
+            "lower/upper forecast payload contract",
+            "interval coverage and width evaluation contract",
+        ],
+    },
+    {
+        "cell_id": "forecast_object.density",
+        "dimension": "forecast_object",
+        "runtime_status": "not_supported_yet",
+        "owner_layer": "3_training",
+        "requires": [
+            "predictive density payload contract",
+            "density scoring and calibration evaluation contract",
+        ],
+    },
+    {
+        "cell_id": "feature_runtime.sequence_tensor",
+        "dimension": "feature_runtime",
+        "runtime_status": "not_supported_yet",
+        "owner_layer": "2_preprocessing",
+        "requires": [
+            "Layer 2 sequence/tensor representation handoff",
+            "Layer 3 sequence forecast payload coercion",
+        ],
+    },
+    {
+        "cell_id": "forecast_type.raw_panel_iterated",
+        "dimension": "forecast_type x feature_runtime",
+        "runtime_status": "blocked_by_incompatibility",
+        "owner_layer": "3_training",
+        "requires": [
+            "exogenous-X path or scenario contract",
+            "multi-step raw-panel forecast generation contract",
+        ],
+    },
+)
+
+
 def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
     feature_builder = _selected_value_or_none(selection_map, "feature_builder")
     model_family = _selected_value_or_none(selection_map, "model_family")
@@ -2022,7 +2084,10 @@ def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[s
     )
     return {
         "schema_version": "layer3_capability_matrix_v1",
+        "schema_revision": 2,
         "dimensions": ["model_family", "feature_runtime", "forecast_type", "forecast_object"],
+        "status_catalog": dict(_LAYER3_CAPABILITY_STATUS_CATALOG),
+        "future_cells": [dict(cell) for cell in _LAYER3_FUTURE_CAPABILITY_CELLS],
         "rules": {
             "feature_runtime": {
                 "ar": {
@@ -2058,6 +2123,18 @@ def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[s
                 "quantile": {
                     "model_family": "quantile_linear",
                     "runtime_status": "operational",
+                },
+                "direction": {
+                    "model_family": "future_directional_generator",
+                    "runtime_status": "not_supported_yet",
+                },
+                "interval": {
+                    "model_family": "future_interval_generator",
+                    "runtime_status": "not_supported_yet",
+                },
+                "density": {
+                    "model_family": "future_density_generator",
+                    "runtime_status": "not_supported_yet",
                 },
             },
         },

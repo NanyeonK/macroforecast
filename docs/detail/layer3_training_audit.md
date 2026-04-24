@@ -125,6 +125,10 @@ The docs and runtime now mostly follow this split:
 - New compiled manifests include `layer3_capability_matrix`, which records the
   active `model_family x feature_runtime x forecast_type x forecast_object`
   cell and the same blocking reasons used by the compiler gate.
+- The same matrix includes a status catalog and reserved future cells for
+  direction, interval, density, sequence/tensor runtimes, and raw-panel
+  iterated forecasting. These are documentation of future contracts, not
+  accepted recipe values.
 
 ## Current Layer 3 Axes
 

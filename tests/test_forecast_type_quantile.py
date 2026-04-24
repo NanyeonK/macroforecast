@@ -112,6 +112,20 @@ def test_layer3_capability_matrix_records_model_runtime_block() -> None:
     assert cell["blocked_reasons"] == r.manifest["blocked_reasons"]
 
 
+def test_layer3_capability_matrix_records_future_status_catalog() -> None:
+    r = compile_recipe_dict(_recipe(feature_builder="raw_feature_panel", model_family="ridge"))
+    matrix = r.manifest["layer3_capability_matrix"]
+
+    assert matrix["schema_version"] == "layer3_capability_matrix_v1"
+    assert matrix["schema_revision"] == 2
+    assert "not_supported_yet" in matrix["status_catalog"]
+    future_cells = {cell["cell_id"]: cell for cell in matrix["future_cells"]}
+    assert future_cells["forecast_object.interval"]["runtime_status"] == "not_supported_yet"
+    assert future_cells["forecast_object.density"]["dimension"] == "forecast_object"
+    assert future_cells["feature_runtime.sequence_tensor"]["owner_layer"] == "2_preprocessing"
+    assert matrix["rules"]["forecast_object"]["interval"]["runtime_status"] == "not_supported_yet"
+
+
 def test_forecast_type_iterated_autoreg_executes(tmp_path: Path) -> None:
     recipe = _recipe(forecast_type="iterated")
     r = compile_recipe_dict(recipe)

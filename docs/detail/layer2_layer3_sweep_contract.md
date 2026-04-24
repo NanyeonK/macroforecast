@@ -310,6 +310,12 @@ runtime support table over `model_family`, resolved Layer 2 `feature_runtime`,
 recipe. Full sweep runners should use the same matrix to report or prune
 invalid Layer 2 x Layer 3 cells.
 
+The matrix also carries a status catalog and reserved future cells. These do
+not open new recipe values. They document future support targets such as
+direction, interval, density, sequence/tensor runtimes, and raw-panel iterated
+forecasting with exogenous-X paths. Current recipes still reject dropped values
+until the corresponding runtime contract is implemented.
+
 ## Current Operational Sweep Surface
 
 The current runtime can sweep these Layer 2 choices in full recipes, subject to
@@ -380,9 +386,9 @@ Before a Layer 2 x Layer 3 combination is marked operational, tests must cover:
    factor-count configuration into `layer2_representation_spec`. The latest
    pass split legacy `factor_ar_lags` into explicit Layer 2 `target_lag_count`
    and factor-block `factor_lag_count` metadata for new compiled specs.
-3. Extend the manifest `layer3_capability_matrix` from the current point and
-   quantile tabular cells to future direction, interval, density, and
-   sequence/tensor runtimes as those become executable.
+3. Promote reserved `layer3_capability_matrix.future_cells` to executable
+   registry values only when their runtime payload, scoring, and artifact
+   contracts are implemented.
 4. Add full recipe examples for Layer 2 x Layer 3 grids.
 5. Execute remaining semantic composer contracts:
    `factor_then_marx`, MAF rotation, custom combiners, custom-block final-`Z`
