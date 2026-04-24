@@ -17,6 +17,13 @@ class FeatureBlockCallableContext:
     horizon: int | None = None
     forecast_origin: Any | None = None
     feature_namespace: str = "custom"
+    X_train: Any | None = None
+    X_pred: Any | None = None
+    y_train: Any | None = None
+    source_frame: Any | None = None
+    predictors: tuple[str, ...] = ()
+    train_index: Any | None = None
+    pred_index: Any | None = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
 

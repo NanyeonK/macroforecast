@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from macrocast import (
@@ -9,8 +10,11 @@ from macrocast import (
     build_recipe_spec,
     build_run_spec,
     build_design_frame,
+    clear_custom_extensions,
+    custom_feature_block,
     execute_recipe,
 )
+from macrocast.preprocessing import FeatureBlockCallableResult
 
 
 def _stage0(
@@ -108,6 +112,26 @@ def _preprocess_train_only_robust():
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
         evaluation_scale="raw_level",
+    )
+
+
+def _preprocess_target_zscore_both_scales():
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="target_only",
+        evaluation_scale="both",
+        target_normalization="zscore_train_only",
     )
 
 
@@ -390,6 +414,86 @@ def test_execute_recipe_runs_robust_scaling_preprocess_path(tmp_path: Path) -> N
     assert manifest["preprocess_contract"]["x_missing_policy"] == "em_impute"
     assert (run_dir / "predictions.csv").exists()
     assert (run_dir / "comparison_summary.json").exists()
+
+
+def test_execute_recipe_runs_target_normalization_with_dual_scale_artifacts(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="ridge", feature_builder="raw_feature_panel", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_target_zscore_both_scales(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+
+    assert manifest["preprocess_contract"]["target_normalization"] == "zscore_train_only"
+    assert manifest["preprocess_contract"]["evaluation_scale"] == "both"
+    assert set(predictions["target_normalization"]) == {"zscore_train_only"}
+    assert "y_pred_model_scale" in predictions
+    assert "y_pred_transformed_scale" in predictions
+    assert "y_pred_original_scale" in predictions
+    assert metrics["metrics_by_horizon"]["h1"]["scale_metrics"]["original_target_scale"]["msfe"] >= 0.0
+    assert metrics["metrics_by_horizon"]["h1"]["scale_metrics"]["transformed_target_scale"]["msfe"] >= 0.0
+
+
+def test_execute_recipe_runs_registered_custom_temporal_feature_block(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "temporal_spread"},
+        )
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert fit_state["block"] == "custom_temporal_feature_block"
+    assert fit_state["name"] == "temporal_spread"
+    assert fit_state["feature_names"] == ["custom_spread"]
+    clear_custom_extensions()
 
 
 def test_execute_recipe_writes_minimal_importance_artifact_for_lasso(tmp_path: Path) -> None:

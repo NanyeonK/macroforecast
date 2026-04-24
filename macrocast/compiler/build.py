@@ -31,8 +31,10 @@ from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_ord
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
 from ..design import build_design_frame, resolve_route_owner, design_to_dict
 from ..custom import (
+    get_custom_feature_block,
     get_custom_target_transformer,
     get_custom_preprocessor,
+    is_custom_feature_block,
     is_custom_model,
     is_custom_preprocessor,
     is_custom_target_transformer,
@@ -334,6 +336,41 @@ def _selection_value(selection_map: dict[str, AxisSelection], axis_name: str, de
     if len(values) != 1:
         raise CompileValidationError(f"axis {axis_name!r} must be fixed for direct single-run compilation")
     return values[0]
+
+
+_CUSTOM_FEATURE_BLOCK_AXES = {
+    "temporal_feature_block": ("custom_temporal_features", "temporal", "custom_temporal_feature_block"),
+    "rotation_feature_block": ("custom_rotation", "rotation", "custom_rotation_feature_block"),
+    "factor_feature_block": ("custom_factors", "factor", "custom_factor_feature_block"),
+}
+
+
+def _custom_feature_block_name_from_leaf(leaf_config: dict[str, Any], block_kind: str) -> str | None:
+    custom_blocks = leaf_config.get("custom_feature_blocks") or {}
+    if not isinstance(custom_blocks, dict):
+        custom_blocks = {}
+    for key in (
+        block_kind,
+        f"{block_kind}_feature_block",
+        f"custom_{block_kind}_feature_block",
+        f"custom_{block_kind}_block",
+    ):
+        value = custom_blocks.get(key)
+        if value:
+            return str(value)
+    value = leaf_config.get(f"custom_{block_kind}_feature_block") or leaf_config.get(f"custom_{block_kind}_block")
+    return str(value) if value else None
+
+
+def _custom_feature_block_axis_is_registered(selection: AxisSelection, leaf_config: dict[str, Any]) -> bool:
+    spec = _CUSTOM_FEATURE_BLOCK_AXES.get(selection.axis_name)
+    if spec is None or len(selection.selected_values) != 1:
+        return False
+    axis_value, block_kind, _field = spec
+    if selection.selected_values[0] != axis_value:
+        return False
+    block_name = _custom_feature_block_name_from_leaf(leaf_config, block_kind)
+    return bool(block_name and is_custom_feature_block(block_name, block_kind=block_kind))
 
 
 def _target_structure(selection_map: dict[str, AxisSelection], default: str = "single_target_point_forecast") -> str:
@@ -967,6 +1004,9 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
     information_set_type = _first_selected_value(selection_map, "information_set_type", "revised")
     predictor_family_default = "target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"
+    custom_blocks = leaf_config.get("custom_feature_blocks") or {}
+    if not isinstance(custom_blocks, dict):
+        custom_blocks = {}
     return {
         "custom_data_path": leaf_config.get("custom_data_path"),
         "source_adapter": source_adapter,
@@ -1000,6 +1040,10 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "selected_level_addback_columns": leaf_config.get("selected_level_addback_columns"),
         "level_growth_pair_columns": leaf_config.get("level_growth_pair_columns"),
         "marx_max_lag": leaf_config.get("marx_max_lag"),
+        "custom_feature_blocks": leaf_config.get("custom_feature_blocks"),
+        "custom_temporal_feature_block": leaf_config.get("custom_temporal_feature_block") or custom_blocks.get("temporal"),
+        "custom_rotation_feature_block": leaf_config.get("custom_rotation_feature_block") or custom_blocks.get("rotation"),
+        "custom_factor_feature_block": leaf_config.get("custom_factor_feature_block") or custom_blocks.get("factor"),
         # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
@@ -1435,12 +1479,15 @@ def _rotation_block_from_selection(
             "scope_note": "MAF requires factor-to-rotation block composition and is not a raw-X moving-average append",
         }
     if block == "custom_rotation":
-        return {
+        custom_name = data_task_spec.get("custom_rotation_feature_block")
+        registered = bool(custom_name and is_custom_feature_block(str(custom_name), block_kind="rotation"))
+        payload = {
             "value": "custom_rotation",
             "source_axis": "rotation_feature_block",
             "source_value": "custom_rotation",
-            "runtime_status": "registry_only",
+            "runtime_status": "operational" if registered else "registry_only",
             "required_runtime_contract": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+            "custom_feature_block": str(custom_name) if custom_name else None,
             "callable_contract": custom_feature_block_contract_metadata(block_kind="rotation"),
             "required_semantics": [
                 "return train and prediction rotation feature frames",
@@ -1449,6 +1496,9 @@ def _rotation_block_from_selection(
             ],
             "scope_note": "custom_rotation needs a block-local callable contract; the broad custom_preprocessor hook is not enough",
         }
+        if registered:
+            payload["runtime_bridge"] = {"custom_feature_block": str(custom_name), "block_kind": "rotation"}
+        return payload
     if explicit_block is not None:
         return {
             "value": block,
@@ -1458,7 +1508,7 @@ def _rotation_block_from_selection(
     return {"value": "none", "source": "not_wired"}
 
 
-def _temporal_block_from_selection(selection_map: dict[str, AxisSelection]) -> dict[str, Any]:
+def _temporal_block_from_selection(selection_map: dict[str, AxisSelection], data_task_spec: dict[str, Any]) -> dict[str, Any]:
     explicit_block = _temporal_feature_block_value(selection_map)
     block = explicit_block or "none"
     if block == "local_temporal_factors":
@@ -1511,18 +1561,26 @@ def _temporal_block_from_selection(selection_map: dict[str, AxisSelection]) -> d
             "runtime_bridge": {"raw_panel_temporal_features": bridge},
         }
     if block == "custom_temporal_features":
+        custom_name = data_task_spec.get("custom_temporal_feature_block")
+        registered = bool(custom_name and is_custom_feature_block(str(custom_name), block_kind="temporal"))
         return {
             "value": "custom_temporal_features",
             "source_axis": "temporal_feature_block",
             "source_value": "custom_temporal_features",
-            "runtime_status": "registry_only",
+            "runtime_status": "operational" if registered else "registry_only",
             "required_runtime_contract": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+            "custom_feature_block": str(custom_name) if custom_name else None,
             "callable_contract": custom_feature_block_contract_metadata(block_kind="temporal"),
             "required_semantics": [
                 "return train and prediction temporal feature frames",
                 "return stable public and runtime feature names",
                 "return fit-state provenance and leakage metadata",
             ],
+            "runtime_bridge": (
+                {"custom_feature_block": str(custom_name), "block_kind": "temporal"}
+                if registered
+                else {}
+            ),
             "scope_note": "custom_temporal_features is a block-local callable contract; custom_preprocessor is a broader matrix hook",
         }
     if explicit_block is not None:
@@ -1539,6 +1597,7 @@ def _factor_block_from_bridge(
     feature_builder: str,
     dimred: str,
     training_spec: dict[str, Any],
+    data_task_spec: dict[str, Any],
     preprocess_contract,
     explicit_block: str | None,
     rotation_feature_block: str = "none",
@@ -1627,17 +1686,30 @@ def _factor_block_from_bridge(
             "supervised_factors": "supervised_factor_block_contract_v1",
             "custom_factors": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
         }[block]
+        custom_name = data_task_spec.get("custom_factor_feature_block")
+        custom_registered = block == "custom_factors" and bool(
+            custom_name and is_custom_feature_block(str(custom_name), block_kind="factor")
+        )
+        builtin_operational = block in {"pca_factor_lags", "supervised_factors"}
         payload.update(
             {
-                "runtime_status": "registry_only",
+                "runtime_status": "operational" if (custom_registered or builtin_operational) else "registry_only",
                 "required_runtime_contract": required_contract,
+                "custom_feature_block": str(custom_name) if custom_name else None,
+                "runtime_bridge": (
+                    {"custom_feature_block": str(custom_name), "block_kind": "factor"}
+                    if custom_registered
+                    else runtime_bridge
+                ),
                 "callable_contract": (
                     custom_feature_block_contract_metadata(block_kind="factor")
                     if block == "custom_factors"
                     else {}
                 ),
                 "note": (
-                    "factor_feature_block is representable, but this value does not yet "
+                    "factor_feature_block has a dedicated train-window fit/apply runtime path"
+                    if builtin_operational or custom_registered
+                    else "factor_feature_block is representable, but this value does not yet "
                     "have a dedicated train-window fit/apply runtime path"
                 ),
             }
@@ -1672,8 +1744,15 @@ def _feature_block_set_from_bridge(feature_builder: str, data_richness_mode: str
     }
 
 
-def _feature_block_combination_from_bridge(feature_builder: str, x_lag_creation: str) -> dict[str, Any]:
-    if feature_builder == "factors_plus_AR":
+def _feature_block_combination_from_bridge(
+    feature_builder: str,
+    x_lag_creation: str,
+    *,
+    explicit_value: str | None = None,
+) -> dict[str, Any]:
+    if explicit_value is not None:
+        value = explicit_value
+    elif feature_builder == "factors_plus_AR":
         value = "append_to_target_lags"
     elif x_lag_creation != "no_x_lags":
         value = "append_to_base_x"
@@ -1688,10 +1767,12 @@ def _feature_block_combination_from_bridge(feature_builder: str, x_lag_creation:
             "feature_builder": feature_builder,
             "x_lag_creation": x_lag_creation,
         },
-        "sweep_axis_status": "provenance_only_until_explicit_composer_axis",
+        "explicit_axis_value": explicit_value,
+        "runtime_status": "operational" if value in {"replace_with_blocks", "append_to_base_x", "concatenate_named_blocks"} else "registry_only",
+        "sweep_axis_status": "public_axis_with_runtime_pruning",
         "governance_note": (
             "feature_block_combination summarizes the effective composer today; "
-            "it becomes a public sweep axis only after invalid-combination pruning is explicit"
+            "invalid compositions are rejected by compiler/runtime compatibility gates"
         ),
     }
 
@@ -1862,14 +1943,23 @@ def _layer2_representation_spec(
                 feature_builder=str(feature_builder),
                 dimred=str(dimred),
                 training_spec=training_spec,
+                data_task_spec=data_task_spec,
                 preprocess_contract=preprocess_contract,
                 explicit_block=explicit_factor_feature_block,
                 rotation_feature_block=_selection_value(selection_map, "rotation_feature_block", default="none"),
             ),
             "level_feature_block": _level_block_from_selection(selection_map, data_task_spec),
             "rotation_feature_block": _rotation_block_from_selection(selection_map, data_task_spec),
-            "temporal_feature_block": _temporal_block_from_selection(selection_map),
-            "feature_block_combination": _feature_block_combination_from_bridge(str(feature_builder), str(x_lag_creation)),
+            "temporal_feature_block": _temporal_block_from_selection(selection_map, data_task_spec),
+            "feature_block_combination": _feature_block_combination_from_bridge(
+                str(feature_builder),
+                str(x_lag_creation),
+                explicit_value=(
+                    _selection_value(selection_map, "feature_block_combination", default=None)
+                    if "feature_block_combination" in selection_map
+                    else None
+                ),
+            ),
         },
         "frame_conditioning": {
             "x_missing_policy": getattr(preprocess_contract, "x_missing_policy", "none"),
@@ -2063,6 +2153,8 @@ def _execution_status(
             )
         for value, status in selection.selected_status.items():
             if status in {"registry_only", "planned", "external_plugin", "not_supported_yet"}:
+                if _custom_feature_block_axis_is_registered(selection, leaf_config):
+                    continue
                 not_supported.append(
                     f"axis {selection.axis_name} value {value} is not supported by the current runtime (status={status})"
                 )
@@ -2168,9 +2260,12 @@ def _execution_status(
             "moving_average_features",
             "rolling_moments",
             "volatility_features",
+            "custom_temporal_features",
         }
         rotation_feature_block = _selection_value(selection_map, "rotation_feature_block", default="none")
-        rotation_block_active = rotation_feature_block in {"moving_average_rotation", "marx_rotation"}
+        rotation_block_active = rotation_feature_block in {"moving_average_rotation", "marx_rotation", "custom_rotation"}
+        feature_block_combination = _selection_value(selection_map, "feature_block_combination", default="replace_with_blocks")
+        marx_append_mode = feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}
         if temporal_block_active and feature_runtime != "raw_feature_panel":
             not_supported.append(
                 f"temporal_feature_block={temporal_feature_block!r} is currently executable only with "
@@ -2184,10 +2279,11 @@ def _execution_status(
         if (
             rotation_feature_block == "marx_rotation"
             and getattr(preprocess_contract, "x_lag_creation", "no_x_lags") != "no_x_lags"
+            and not marx_append_mode
         ):
             not_supported.append(
                 f"rotation_feature_block={rotation_feature_block!r} cannot yet be combined with "
-                "x_lag_feature_block or x_lag_creation because MARX replaces the X lag-polynomial basis"
+                "x_lag_feature_block or x_lag_creation unless feature_block_combination appends named blocks"
             )
         if (
             rotation_block_active
@@ -2198,10 +2294,10 @@ def _execution_status(
                 f"rotation_feature_block={rotation_feature_block!r} requires "
                 "contemporaneous_x_rule='forbid_contemporaneous' so rotation features use forecast-origin history"
             )
-        if rotation_feature_block == "marx_rotation" and temporal_block_active:
+        if rotation_feature_block == "marx_rotation" and temporal_block_active and not marx_append_mode:
             not_supported.append(
                 f"rotation_feature_block={rotation_feature_block!r} cannot yet be combined with "
-                "temporal_feature_block because MARX currently replaces the raw-panel feature basis"
+                "temporal_feature_block unless feature_block_combination appends named blocks"
             )
         dimred = getattr(preprocess_contract, "dimensionality_reduction_policy", "none")
         feature_selection = getattr(preprocess_contract, "feature_selection_policy", "none")

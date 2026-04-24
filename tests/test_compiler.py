@@ -8,8 +8,10 @@ import pytest
 from macrocast import (
     CompileValidationError,
     axis_governance_table,
+    clear_custom_extensions,
     compile_recipe_dict,
     compile_recipe_yaml,
+    custom_feature_block,
     get_canonical_layer_order,
     run_compiled_recipe,
 )
@@ -1855,6 +1857,7 @@ def test_layer2_explicit_marx_rotation_supports_static_factor_composition(tmp_pa
             "tcode_policy": "extra_preprocess_without_tcode",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
         }
     )
 
@@ -1881,6 +1884,63 @@ def test_layer2_explicit_marx_rotation_supports_static_factor_composition(tmp_pa
     assert all("__marx_ma_lag1_to_lag" in name for name in fit_state["source_feature_names"])
 
 
+def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_factor_lags",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+    assert fit_state["block"] == "pca_factor_lags"
+    assert fit_state["factor_lag_count"] >= 1
+    assert any(name.startswith("factor_1_lag_") for name in fit_state["factor_lag_feature_names"])
+
+
+def test_layer2_supervised_factors_run_as_factor_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "supervised_factors",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+    assert fit_state["block"] == "supervised_factors"
+    assert fit_state["supervision_target"] == "train_window_y"
+
+
 def test_layer2_explicit_marx_rotation_rejects_x_lag_composition() -> None:
     result = compile_recipe_dict(
         _layer2_temporal_block_recipe(
@@ -1905,6 +1965,49 @@ def test_layer2_explicit_marx_rotation_rejects_temporal_composition() -> None:
     assert any("cannot yet be combined with temporal_feature_block" in warning for warning in result.compiled.warnings)
 
 
+def test_layer2_marx_rotation_can_append_with_temporal_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="moving_average_features",
+        rotation_feature_block="marx_rotation",
+        marx_max_lag=2,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "append_to_base_x"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_layer2_marx_rotation_can_append_with_fixed_x_lags(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="marx_rotation",
+        x_lag_feature_block="fixed_x_lags",
+        marx_max_lag=2,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
 def test_layer2_custom_temporal_block_records_callable_contract() -> None:
     result = compile_recipe_dict(
         _layer2_temporal_block_recipe(
@@ -1919,6 +2022,29 @@ def test_layer2_custom_temporal_block_records_callable_contract() -> None:
     assert block["required_runtime_contract"] == "custom_feature_block_callable_v1"
     assert block["callable_contract"]["block_kind"] == "temporal"
     assert "custom_preprocessor is a broader matrix hook" in block["scope_note"]
+
+
+def test_layer2_registered_custom_temporal_block_is_executable() -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        raise AssertionError("compile should not execute custom feature blocks")
+
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="custom_temporal_features",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["custom_temporal_feature_block"] = "temporal_spread"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["temporal_feature_block"]
+    assert block["runtime_status"] == "operational"
+    assert block["custom_feature_block"] == "temporal_spread"
+    assert block["runtime_bridge"] == {"custom_feature_block": "temporal_spread", "block_kind": "temporal"}
+    clear_custom_extensions()
 
 
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
@@ -2467,15 +2593,16 @@ def test_layer2_target_representation_records_scale_contract() -> None:
 
     result = compile_recipe_dict(recipe)
 
-    assert result.compiled.execution_status == "not_supported"
+    assert result.compiled.execution_status == "executable"
     target_rep = result.manifest["layer2_representation_spec"]["target_representation"]
     scale = target_rep["target_scale_contract"]
     assert target_rep["target_transform"] == "log"
     assert target_rep["target_normalization"] == "zscore_train_only"
     assert scale["schema_version"] == "target_scale_contract_v1"
-    assert scale["runtime_status"] == "contract_defined_gated"
+    assert scale["runtime_status"] == "operational"
     assert scale["model_target_scale"] == "transformed_target_scale"
     assert scale["forecast_scale"] == "original_target_scale"
+    assert scale["blockers"] == []
 
 
 def test_layer2_custom_factor_block_records_callable_contract() -> None:

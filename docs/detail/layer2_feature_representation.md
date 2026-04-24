@@ -109,8 +109,12 @@ Operational support is currently narrow:
   on. Fixed target lags can compose with fixed X lags and with
   `pca_static_factors`; in the factor case, PCA is fit on the X-side block and
   target lags are concatenated after the factor scores.
-- `factor_feature_block=none` and `pca_static_factors` are operational.
-  `pca_static_factors` now drives matrix composition directly; old
+- `factor_feature_block=none`, `pca_static_factors`, `pca_factor_lags`,
+  `supervised_factors`, and registered `custom_factors` are operational.
+  `pca_static_factors` now drives matrix composition directly; `pca_factor_lags`
+  appends lagged factor-score blocks; `supervised_factors` uses train-window PLS
+  factors; registered custom factor blocks use `custom_feature_block_callable_v1`.
+  Old
   `feature_builder=factor_pca` / `factors_plus_AR` and raw-panel
   `dimensionality_reduction_policy=pca` / `static_factor` remain accepted
   compatibility paths. Runtime writes a factor fit-state artifact containing
@@ -140,11 +144,12 @@ Operational support is currently narrow:
   factors are deterministic row-wise cross-sectional summaries of the active
   predictor panel, smoothed over the trailing 3 feature rows; they are not
   learned PCA/static factors.
-- `temporal_feature_block=custom_temporal_features` remains registry-only but
-  now has an explicit `custom_feature_block_callable_v1` contract. It is not
-  the same contract as `custom_preprocessor`: the existing custom preprocessor
-  is a broad matrix hook and does not guarantee block-local feature names,
-  fit-state provenance, or leakage metadata.
+- `temporal_feature_block=custom_temporal_features` is executable when the
+  recipe names a registered callable through `custom_feature_blocks` or
+  `custom_temporal_feature_block`. It is not the same contract as
+  `custom_preprocessor`: the existing custom preprocessor is a broad matrix hook
+  and does not guarantee block-local feature names, fit-state provenance, or
+  leakage metadata.
 - `rotation_feature_block=none`, `moving_average_rotation`, and `marx_rotation`
   are operational for raw-panel feature runtimes. `none` records explicit
   no-rotation provenance. `moving_average_rotation` appends deterministic
@@ -154,8 +159,10 @@ Operational support is currently narrow:
   deterministic temporal append blocks. `marx_rotation` requires
   `leaf_config.marx_max_lag`, builds the cumulative lower-triangular
   lag-polynomial rotation, and replaces the source lag-polynomial basis in
-  final `Z`. It now also supports `marx_then_factor`, where static PCA factors
-  are fit on the MARX basis before any target-lag append.
+  final `Z` by default. It now also supports `marx_then_factor`, where static
+  PCA factors are fit on the MARX basis before any target-lag append, plus
+  append composition with fixed X lags or deterministic temporal blocks via
+  `feature_block_combination=append_to_base_x`.
 - Advanced rotation values are explicit boundaries, not aliases for the generic
   primitive. `maf_rotation` remains registry-only until factor-score fit/apply
   state can compose with rotation blocks. `custom_rotation` remains registry-only
@@ -169,11 +176,11 @@ Operational support is currently narrow:
   `X_{origin-1}, ..., X_{origin-p}` at prediction origin. Initial unavailable
   lags follow the package lag convention and are zero-filled before the sample
   start. Source lag columns must not be appended a second time when the MARX
-  basis is active. The current composer now supports raw-panel MARX basis
-  replacement itself and `marx_then_factor` with static PCA factors. External
-  X-lag append, temporal append, `marx_append_to_x`, `factor_then_marx`,
-  MAF/custom rotation, and other MARX composition modes remain explicitly
-  gated.
+  basis-replacement mode is active. The current composer supports raw-panel MARX
+  basis replacement, `marx_then_factor` with static PCA factors, and named-block
+  append to base `X` for fixed X-lag or deterministic temporal compositions.
+  `factor_then_marx`, MAF rotation, unregistered custom rotation, and custom
+  combiners remain explicitly gated.
 - Feature selection is now operational for two explicit static-factor composer
   semantics when `factor_feature_block=pca_static_factors` (or the equivalent
   `dimensionality_reduction_policy` bridge) is active:
@@ -195,12 +202,12 @@ separates:
 - inverse-transform policy;
 - target-normalization fit scope.
 
-The currently executable path is original/raw-scale evaluation with
-`target_normalization=none` and `inverse_transform_policy=none`, plus the
-existing constrained custom `target_transformer` runtime. Non-trivial target
-normalization, inverse prediction transforms, transformed-scale evaluation, and
-dual-scale evaluation are contract-defined but gated until runtime writes
-per-window fit state and scale-specific metric artifacts.
+The executable path now includes per-window target normalization
+(`zscore_train_only`, `robust_zscore`, `minmax`, `unit_variance`), built-in
+target-only inverse policies, `transformed_scale`, and `both` evaluation.
+Prediction artifacts carry model, transformed, and original target-scale
+columns, and metrics include scale-specific summaries. Custom inverse policies
+remain gated.
 
 ## Target Representation Grammar
 
@@ -283,20 +290,22 @@ slices:
    runtime matrices.
 3. Fixed `target_lag_block` and fixed `x_lag_feature_block` execute through
    explicit block paths with train-window alignment tests.
-4. `factor_feature_block=pca_static_factors` executes through the static-factor
-   path with recursive fit/apply tests and loadings provenance.
-5. Built-in level add-backs, deterministic temporal append blocks,
-   `moving_average_rotation`, and MARX lag-polynomial rotation execute for
-   raw-panel feature runtimes where their composition contracts are supported.
-6. Runtime dispatch, target-transformer gates, importance/custom hook
+4. `factor_feature_block=pca_static_factors`, `pca_factor_lags`,
+   `supervised_factors`, and registered `custom_factors` execute through
+   train-window fit/apply paths with provenance.
+5. Built-in level add-backs, deterministic temporal append blocks, registered
+   custom blocks, `moving_average_rotation`, and MARX lag-polynomial rotation
+   execute for raw-panel feature runtimes where their composition contracts are
+   supported.
+6. Built-in target normalization/inverse/evaluation-scale artifacts execute
+   inside the rolling/expanding forecast loop.
+7. Runtime dispatch, target-transformer gates, importance/custom hook
    contexts, and decomposition metadata now use block-derived feature runtime
    provenance for supported slices.
 
-Remaining work is semantic feature-composer work, not bridge cleanup: broader
-factor/selection composition beyond static PCA, MARX with additional
-X-lag/temporal/factor composition, MAF/custom rotations, executable custom
-callables, target-side normalization/evaluation-scale execution, and public
-sweep promotion for composer axes.
+Remaining work is semantic feature-composer work, not bridge cleanup:
+`factor_then_marx`, MAF rotation, custom combiners, feature selection over
+non-PCA/custom/deterministic append blocks, and custom target inverse policies.
 
 The detailed target contract for freely sweeping Layer 2 representations with
 Layer 3 forecast generators is documented in

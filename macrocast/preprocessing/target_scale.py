@@ -16,10 +16,11 @@ def build_target_scale_contract(
 ) -> dict[str, Any]:
     """Describe model, forecast, and evaluation target scales.
 
-    This contract is intentionally metadata-only for non-trivial inverse or
-    dual-scale paths. It lets the compiler record the requested target-side
-    representation while keeping unsupported combinations gated until runtime
-    has train-window fit state and inverse prediction tests.
+    The executable path fits target-normalization state inside each training
+    window and writes model/transformed/original scale forecasts to prediction
+    artifacts. Multi-step inverse for difference-style target transforms is
+    still guarded at execution time because it requires an unobserved raw
+    level between the origin and target date.
     """
 
     transform = str(getattr(contract, "target_transform", "level"))
@@ -41,12 +42,12 @@ def build_target_scale_contract(
         else model_scale
     )
     blockers: list[str] = []
-    if normalization != "none":
-        blockers.append("target_normalization requires per-window fit/apply state before runtime execution")
-    if inverse_policy != "none":
-        blockers.append("inverse_transform_policy requires prediction inverse-transform and artifact tests")
-    if evaluation_scale not in _ORIGINAL_SCALE_ALIASES:
-        blockers.append("evaluation_scale beyond original/raw requires transformed-scale metric artifacts")
+    if normalization not in {"none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"}:
+        blockers.append(f"target_normalization={normalization!r} has no built-in runtime")
+    if inverse_policy not in {"none", "target_only", "forecast_scale_only"}:
+        blockers.append(f"inverse_transform_policy={inverse_policy!r} requires a custom inverse runtime")
+    if evaluation_scale not in _ORIGINAL_SCALE_ALIASES | {"transformed_scale", "both"}:
+        blockers.append(f"evaluation_scale={evaluation_scale!r} has no built-in metric artifact runtime")
     runtime_status = "operational" if not blockers else "contract_defined_gated"
 
     return {

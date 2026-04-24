@@ -242,6 +242,21 @@ def test_registry_loader_discovers_stage2_governance_axes() -> None:
     assert expected.issubset(registry)
 
 
+def test_registry_loader_marks_target_scale_runtime_values_operational() -> None:
+    evaluation_scale = get_axis_registry_entry("evaluation_scale")
+    target_normalization = get_axis_registry_entry("target_normalization")
+    inverse_transform = get_axis_registry_entry("inverse_transform_policy")
+
+    assert evaluation_scale.current_status["transformed_scale"] == "operational"
+    assert evaluation_scale.current_status["both"] == "operational"
+    assert target_normalization.current_status["zscore_train_only"] == "operational"
+    assert target_normalization.current_status["robust_zscore"] == "operational"
+    assert target_normalization.current_status["minmax"] == "operational"
+    assert target_normalization.current_status["unit_variance"] == "operational"
+    assert inverse_transform.current_status["target_only"] == "operational"
+    assert inverse_transform.current_status["forecast_scale_only"] == "operational"
+
+
 def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     registry = get_axis_registry()
     block_axes = {
@@ -275,6 +290,10 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["temporal_feature_block"].current_status["volatility_features"] == "operational"
     assert registry["temporal_feature_block"].current_status["local_temporal_factors"] == "operational"
     assert registry["temporal_feature_block"].current_status["custom_temporal_features"] == "registry_only"
+    assert registry["feature_block_combination"].current_status["replace_with_blocks"] == "operational"
+    assert registry["feature_block_combination"].current_status["append_to_base_x"] == "operational"
+    assert registry["feature_block_combination"].current_status["concatenate_named_blocks"] == "operational"
+    assert registry["feature_block_combination"].current_status["custom_combiner"] == "registry_only"
     assert registry["target_lag_selection"].current_status["ic_select"] == "registry_only"
 
 
@@ -318,15 +337,15 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
     assert x_lag_feature_block.current_status["fixed_x_lags"] == "operational"
     assert factor_feature_block.current_status["none"] == "operational"
     assert factor_feature_block.current_status["pca_static_factors"] == "operational"
+    assert factor_feature_block.current_status["pca_factor_lags"] == "operational"
+    assert factor_feature_block.current_status["supervised_factors"] == "operational"
 
 
-def test_registry_loader_demotes_stage2_non_executable_values() -> None:
+def test_registry_loader_marks_remaining_stage2_non_executable_values() -> None:
     target_missing = get_axis_registry_entry("target_missing_policy")
     dimred = get_axis_registry_entry("dimensionality_reduction_policy")
     x_lag = get_axis_registry_entry("x_lag_creation")
     feature_grouping = get_axis_registry_entry("feature_grouping")
-    evaluation_scale = get_axis_registry_entry("evaluation_scale")
-    target_normalization = get_axis_registry_entry("target_normalization")
     separation_rule = get_axis_registry_entry("separation_rule")
     target_construction = get_axis_registry_entry("horizon_target_construction")
     target_lag_block = get_axis_registry_entry("target_lag_block")
@@ -339,10 +358,6 @@ def test_registry_loader_demotes_stage2_non_executable_values() -> None:
     assert x_lag.current_status["cv_selected_x_lags"] == "registry_only"
     assert feature_grouping.current_status["fred_category_group"] == "registry_only"
     assert feature_grouping.current_status["lag_group"] == "registry_only"
-    assert evaluation_scale.current_status["transformed_scale"] == "registry_only"
-    assert evaluation_scale.current_status["both"] == "registry_only"
-    assert target_normalization.current_status["zscore_train_only"] == "registry_only"
-    assert target_normalization.current_status["robust_zscore"] == "registry_only"
     assert separation_rule.current_status["shared_transform_then_split"] == "registry_only"
     assert separation_rule.current_status["X_only_transform"] == "registry_only"
     assert separation_rule.current_status["target_only_transform"] == "registry_only"
@@ -353,8 +368,6 @@ def test_registry_loader_demotes_stage2_non_executable_values() -> None:
     assert target_lag_block.current_status["custom_target_lags"] == "registry_only"
     assert target_lag_selection.current_status["ic_select"] == "registry_only"
     assert x_lag_feature_block.current_status["cv_selected_x_lags"] == "registry_only"
-    assert factor_feature_block.current_status["pca_factor_lags"] == "registry_only"
-    assert factor_feature_block.current_status["supervised_factors"] == "registry_only"
 
 
 

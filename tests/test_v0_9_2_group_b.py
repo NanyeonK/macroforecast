@@ -147,7 +147,7 @@ def test_target_transformer_gate_uses_layer2_feature_runtime_not_legacy_bridge()
 
     assert _feature_runtime_builder(recipe) == "raw_feature_panel"
     assert set(predictions["target_transformer"]) == {"identity_target_runtime_gate"}
-    assert set(predictions["model_target_scale"]) == {"transformed"}
+    assert set(predictions["model_target_scale"]) == {"custom_transformer_scale"}
 
 
 def test_target_lag_block_lag_order_matches_legacy_max_ar_lag():

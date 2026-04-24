@@ -4,9 +4,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .preprocessing.feature_blocks import (
+    FeatureBlockCallable,
+    FeatureBlockCallableResult,
+    validate_feature_block_callable_result,
+)
+
 CustomModelFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
 CustomPreprocessorFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
 TargetTransformerFactory = Callable[[], Any]
+CustomFeatureBlockFunction = FeatureBlockCallable
 
 
 @dataclass(frozen=True)
@@ -33,9 +40,18 @@ class TargetTransformerSpec:
     evaluation_scale: str = "raw"
 
 
+@dataclass(frozen=True)
+class CustomFeatureBlockSpec:
+    name: str
+    function: CustomFeatureBlockFunction
+    block_kind: str
+    description: str | None = None
+
+
 _CUSTOM_MODELS: dict[str, CustomModelSpec] = {}
 _CUSTOM_PREPROCESSORS: dict[str, CustomPreprocessorSpec] = {}
 _TARGET_TRANSFORMERS: dict[str, TargetTransformerSpec] = {}
+_CUSTOM_FEATURE_BLOCKS: dict[tuple[str, str], CustomFeatureBlockSpec] = {}
 
 
 def _validate_name(name: str, *, kind: str) -> str:
@@ -202,6 +218,77 @@ def target_transformer(name: str, transformer: Any | None = None, **kwargs):
     return register_target_transformer(name, transformer=transformer, **kwargs)
 
 
+def _validate_feature_block_kind(block_kind: str) -> str:
+    kind = str(block_kind).strip()
+    if kind not in {"temporal", "rotation", "factor"}:
+        raise ValueError("custom feature block kind must be one of: temporal, rotation, factor")
+    return kind
+
+
+def register_feature_block(
+    name: str,
+    function: CustomFeatureBlockFunction | None = None,
+    *,
+    block_kind: str = "temporal",
+    description: str | None = None,
+):
+    """Register a user-defined Layer 2 feature-block callable.
+
+    The callable receives a :class:`FeatureBlockCallableContext` and must return
+    a :class:`FeatureBlockCallableResult`. Runtime validates stable names and
+    leakage metadata before appending the returned train/pred feature frames.
+    """
+
+    block_name = _validate_name(name, kind="feature block")
+    kind = _validate_feature_block_kind(block_kind)
+
+    def _decorator(fn: CustomFeatureBlockFunction) -> CustomFeatureBlockFunction:
+        if not callable(fn):
+            raise TypeError("custom feature block function must be callable")
+        _CUSTOM_FEATURE_BLOCKS[(kind, block_name)] = CustomFeatureBlockSpec(
+            name=block_name,
+            function=fn,
+            block_kind=kind,
+            description=description,
+        )
+        return fn
+
+    if function is not None:
+        return _decorator(function)
+    return _decorator
+
+
+def custom_feature_block(name: str, function: CustomFeatureBlockFunction | None = None, **kwargs):
+    """Decorator alias for :func:`register_feature_block`."""
+    return register_feature_block(name, function=function, **kwargs)
+
+
+def is_custom_feature_block(name: str, *, block_kind: str | None = None) -> bool:
+    block_name = str(name)
+    if block_kind is not None:
+        return (_validate_feature_block_kind(block_kind), block_name) in _CUSTOM_FEATURE_BLOCKS
+    return any(registered_name == block_name for _, registered_name in _CUSTOM_FEATURE_BLOCKS)
+
+
+def get_custom_feature_block(name: str, *, block_kind: str) -> CustomFeatureBlockSpec:
+    kind = _validate_feature_block_kind(block_kind)
+    try:
+        return _CUSTOM_FEATURE_BLOCKS[(kind, str(name))]
+    except KeyError as exc:
+        raise KeyError(f"custom {kind} feature block {name!r} is not registered") from exc
+
+
+def list_custom_feature_blocks(*, block_kind: str | None = None) -> tuple[str, ...]:
+    if block_kind is None:
+        return tuple(sorted(name for _, name in _CUSTOM_FEATURE_BLOCKS))
+    kind = _validate_feature_block_kind(block_kind)
+    return tuple(sorted(name for (registered_kind, name) in _CUSTOM_FEATURE_BLOCKS if registered_kind == kind))
+
+
+def validate_custom_feature_block_result(result: FeatureBlockCallableResult) -> None:
+    validate_feature_block_callable_result(result)
+
+
 def is_custom_model(name: str) -> bool:
     return str(name) in _CUSTOM_MODELS
 
@@ -266,8 +353,14 @@ def clear_custom_target_transformers() -> None:
     _TARGET_TRANSFORMERS.clear()
 
 
+def clear_custom_feature_blocks() -> None:
+    """Clear custom feature block registry."""
+    _CUSTOM_FEATURE_BLOCKS.clear()
+
+
 def clear_custom_extensions() -> None:
     """Clear all runtime extension registries."""
     clear_custom_models()
     clear_custom_preprocessors()
     clear_custom_target_transformers()
+    clear_custom_feature_blocks()

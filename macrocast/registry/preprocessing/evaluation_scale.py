@@ -28,14 +28,14 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='transformed_scale',
-            description='contract-defined transformed-scale metrics; execution gated until scale-specific metric artifacts exist',
-            status='registry_only',
+            description='evaluate primary metrics on the transformed target scale and retain original-scale artifacts when available',
+            status='operational',
             priority='A',
         ),
         EnumRegistryEntry(
             id='both',
-            description='contract-defined dual-scale metrics; execution gated until original and transformed metric artifacts exist',
-            status='registry_only',
+            description='report original-scale primary metrics plus transformed-scale metric artifacts',
+            status='operational',
             priority='A',
         ),
     ),

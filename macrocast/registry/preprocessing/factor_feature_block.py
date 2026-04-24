@@ -24,13 +24,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="pca_factor_lags",
             description="static PCA factors plus factor lags",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
             id="supervised_factors",
             description="supervised factor block fit on the training window",
-            status="registry_only",
+            status="operational",
             priority="B",
         ),
         EnumRegistryEntry(

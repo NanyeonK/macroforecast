@@ -313,9 +313,9 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
 
     if contract.preprocess_fit_scope != "train_only":
         return False
-    if contract.inverse_transform_policy != "none":
+    if contract.inverse_transform_policy not in {"none", "target_only", "forecast_scale_only"}:
         return False
-    if contract.evaluation_scale not in {"raw_level", "original_scale"}:
+    if contract.evaluation_scale not in {"raw_level", "original_scale", "transformed_scale", "both"}:
         return False
     if contract.scaling_scope not in {"columnwise", "global_train_only"}:
         return False
@@ -327,7 +327,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.target_transform not in {"level", "difference", "log", "log_difference", "growth_rate"}:
         return False
-    if contract.target_normalization != "none":
+    if contract.target_normalization not in {"none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"}:
         return False
     if contract.target_domain != "unconstrained":
         return False

@@ -155,7 +155,7 @@ def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() 
     check_preprocess_governance(contract, preprocessing_sweep=False)
 
 
-def test_target_normalization_is_not_operational_until_window_fit_exists() -> None:
+def test_target_normalization_is_operational_with_window_fit() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -174,10 +174,11 @@ def test_target_normalization_is_not_operational_until_window_fit_exists() -> No
         target_normalization="zscore_train_only",
     )
 
-    assert is_operational_preprocess_contract(contract) is False
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract)
 
 
-def test_target_scale_contract_records_gated_normalization() -> None:
+def test_target_scale_contract_records_operational_normalization() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -200,12 +201,11 @@ def test_target_scale_contract_records_gated_normalization() -> None:
     scale = build_target_scale_contract(contract)
 
     assert scale["schema_version"] == "target_scale_contract_v1"
-    assert scale["runtime_status"] == "contract_defined_gated"
+    assert scale["runtime_status"] == "operational"
     assert scale["model_target_scale"] == "transformed_target_scale"
     assert scale["forecast_scale"] == "original_target_scale"
     assert scale["normalization_fit_scope"] == "train_only"
-    assert any("target_normalization" in blocker for blocker in scale["blockers"])
-    assert any("evaluation_scale" in blocker for blocker in scale["blockers"])
+    assert scale["blockers"] == []
 
 
 def test_custom_feature_block_contract_validation() -> None:

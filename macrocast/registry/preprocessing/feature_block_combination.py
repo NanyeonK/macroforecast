@@ -12,13 +12,13 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="replace_with_blocks",
             description="replace the base predictor panel with the selected blocks",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
             id="append_to_base_x",
             description="append selected blocks to the base predictor panel",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
@@ -30,7 +30,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="concatenate_named_blocks",
             description="concatenate all selected named blocks into Z",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(

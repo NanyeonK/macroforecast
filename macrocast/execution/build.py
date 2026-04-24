@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
+from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.svm import LinearSVR, SVR
@@ -55,6 +56,7 @@ from ..preprocessing import (
     preprocess_summary,
     preprocess_to_dict,
 )
+from ..preprocessing.feature_blocks import FeatureBlockCallableContext, validate_feature_block_callable_result
 from ..raw import load_custom_csv, load_custom_parquet, load_fred_md, load_fred_qd, load_fred_sd
 from ..raw.sd_inferred_tcodes import (
     MAP_VERSION as SD_INFERRED_TCODE_MAP_VERSION,
@@ -63,9 +65,11 @@ from ..raw.sd_inferred_tcodes import (
 )
 from ..recipes import RecipeSpec, RunSpec, build_run_spec, recipe_summary
 from ..custom import (
+    get_custom_feature_block,
     get_custom_model,
     get_custom_preprocessor,
     get_custom_target_transformer,
+    is_custom_feature_block,
     is_custom_model,
     is_custom_preprocessor,
     is_custom_target_transformer,
@@ -1203,6 +1207,12 @@ def _factor_feature_block(recipe: RecipeSpec | None) -> str | None:
     return _layer2_block_value(blocks, "factor_feature_block")
 
 
+def _feature_block_combination(recipe: RecipeSpec | None) -> str:
+    if recipe is None:
+        return "replace_with_blocks"
+    return _layer2_block_value(_layer2_feature_blocks(recipe), "feature_block_combination", "replace_with_blocks")
+
+
 def _target_lag_feature_block(recipe: RecipeSpec | None) -> str:
     block = _target_lag_feature_block_spec(recipe)
     if not block:
@@ -1466,13 +1476,11 @@ def _get_benchmark_executor(recipe: RecipeSpec):
 
 
 def _apply_target_transform_and_normalization(series: pd.Series, contract: PreprocessContract | None) -> pd.Series:
-    """Forward-only target-side transform + normalization.
+    """Apply deterministic target transforms before OOS window construction.
 
-    Applied immediately after _get_target_series returns. Metrics are computed
-    on the transformed scale — inverse-transform back to raw units is a v1.0+
-    deliverable (tracked in plans/v0_9_2_planned_completion_plan.md). Users who
-    need raw-scale metrics should stay on target_transform=level +
-    target_normalization=none.
+    Target normalization is deliberately not applied here. It is fit inside
+    each active training window by _fit_target_normalization_for_window so the
+    target-side scale path obeys the same no-leakage rule as X preprocessing.
     """
     if contract is None:
         return series
@@ -1494,23 +1502,164 @@ def _apply_target_transform_and_normalization(series: pd.Series, contract: Prepr
     elif transform not in ("level", None):
         raise ExecutionError(f"target_transform {transform!r} not executable in current runtime slice")
 
-    normalization = getattr(contract, "target_normalization", "none")
-    if normalization == "zscore_train_only":
-        mu = float(s.mean())
-        sigma = float(s.std(ddof=0))
-        if sigma <= 0:
-            return s - mu
-        s = (s - mu) / sigma
-    elif normalization == "robust_zscore":
-        med = float(s.median())
-        mad = float((s - med).abs().median())
-        if mad <= 0:
-            return s - med
-        s = (s - med) / (1.4826 * mad)
-    elif normalization not in ("none", None):
-        raise ExecutionError(f"target_normalization {normalization!r} not executable in current runtime slice")
-
     return s
+
+
+def _target_normalization_name(contract: PreprocessContract | None) -> str:
+    return str(getattr(contract, "target_normalization", "none") if contract is not None else "none")
+
+
+def _safe_scale(value: float) -> float:
+    if not math.isfinite(value) or value <= 0.0:
+        return 1.0
+    return value
+
+
+def _fit_target_normalization_for_window(
+    train: pd.Series,
+    contract: PreprocessContract | None,
+) -> tuple[pd.Series, dict[str, object]]:
+    normalization = _target_normalization_name(contract)
+    state: dict[str, object] = {
+        "normalization": normalization,
+        "fit_scope": "train_only" if normalization != "none" else "not_applicable",
+        "params": {},
+    }
+    if normalization == "none":
+        return train, state
+
+    s = train.astype(float)
+    if s.empty:
+        raise ExecutionError("target_normalization requires a non-empty training window")
+
+    if normalization == "zscore_train_only":
+        center = float(s.mean())
+        scale = _safe_scale(float(s.std(ddof=0)))
+        state["params"] = {"center": center, "scale": scale}
+        return (s - center) / scale, state
+    if normalization == "robust_zscore":
+        center = float(s.median())
+        mad = float((s - center).abs().median())
+        scale = _safe_scale(1.4826 * mad)
+        state["params"] = {"center": center, "scale": scale, "mad": mad}
+        return (s - center) / scale, state
+    if normalization == "minmax":
+        lower = float(s.min())
+        upper = float(s.max())
+        scale = _safe_scale(upper - lower)
+        state["params"] = {"lower": lower, "upper": upper, "scale": scale}
+        return (s - lower) / scale, state
+    if normalization == "unit_variance":
+        scale = _safe_scale(float(s.std(ddof=0)))
+        state["params"] = {"scale": scale}
+        return s / scale, state
+
+    raise ExecutionError(f"target_normalization {normalization!r} not executable in current runtime slice")
+
+
+def _apply_target_normalization_scalar(value: float, state: Mapping[str, object]) -> float:
+    normalization = str(state.get("normalization", "none"))
+    params = state.get("params", {})
+    if not isinstance(params, Mapping):
+        params = {}
+    if normalization == "none":
+        return float(value)
+    if normalization in {"zscore_train_only", "robust_zscore"}:
+        return (float(value) - float(params.get("center", 0.0))) / _safe_scale(float(params.get("scale", 1.0)))
+    if normalization == "minmax":
+        return (float(value) - float(params.get("lower", 0.0))) / _safe_scale(float(params.get("scale", 1.0)))
+    if normalization == "unit_variance":
+        return float(value) / _safe_scale(float(params.get("scale", 1.0)))
+    raise ExecutionError(f"target_normalization {normalization!r} not executable in current runtime slice")
+
+
+def _inverse_target_normalization_scalar(value: float, state: Mapping[str, object]) -> float:
+    normalization = str(state.get("normalization", "none"))
+    params = state.get("params", {})
+    if not isinstance(params, Mapping):
+        params = {}
+    if normalization == "none":
+        return float(value)
+    if normalization in {"zscore_train_only", "robust_zscore"}:
+        return float(value) * _safe_scale(float(params.get("scale", 1.0))) + float(params.get("center", 0.0))
+    if normalization == "minmax":
+        return float(value) * _safe_scale(float(params.get("scale", 1.0))) + float(params.get("lower", 0.0))
+    if normalization == "unit_variance":
+        return float(value) * _safe_scale(float(params.get("scale", 1.0)))
+    raise ExecutionError(f"target_normalization {normalization!r} not executable in current runtime slice")
+
+
+def _raw_target_series_for_scale(raw_frame: pd.DataFrame, target: str) -> pd.Series:
+    if target not in raw_frame.columns:
+        raise ExecutionError(f"target {target!r} not found in raw dataset columns")
+    return raw_frame[target].dropna().astype(float).copy()
+
+
+def _inverse_target_transform_scalar(
+    value: float,
+    *,
+    contract: PreprocessContract | None,
+    raw_target_series: pd.Series,
+    origin_date,
+    target_date,
+    horizon: int,
+) -> float:
+    transform = str(getattr(contract, "target_transform", "level") if contract is not None else "level")
+    v = float(value)
+    if transform == "level":
+        return v
+    if transform == "log":
+        return float(math.exp(v))
+    if transform in {"difference", "log_difference", "growth_rate"}:
+        if horizon != 1:
+            raise ExecutionError(
+                f"target_transform={transform!r} can be inverted to original scale only for horizon=1; "
+                "use evaluation_scale='transformed_scale' for multi-step transformed-target evaluation"
+            )
+        if origin_date not in raw_target_series.index:
+            raise ExecutionError(f"cannot invert target_transform={transform!r}: origin date is missing from raw target series")
+        anchor = float(raw_target_series.loc[origin_date])
+        if transform == "difference":
+            return anchor + v
+        if transform == "log_difference":
+            return anchor * float(math.exp(v))
+        return anchor * (1.0 + v)
+    raise ExecutionError(f"target_transform {transform!r} not executable in current runtime slice")
+
+
+def _target_metric_values(
+    *,
+    y_true_model_scale: float,
+    y_pred_model_scale: float,
+    benchmark_pred_model_scale: float,
+    y_true_transformed_scale: float,
+    y_pred_transformed_scale: float,
+    benchmark_pred_transformed_scale: float,
+    y_true_original_scale: float,
+    y_pred_original_scale: float,
+    benchmark_pred_original_scale: float,
+    evaluation_scale: str,
+) -> tuple[float, float, float, str]:
+    if evaluation_scale == "transformed_scale":
+        return (
+            y_true_transformed_scale,
+            y_pred_transformed_scale,
+            benchmark_pred_transformed_scale,
+            "transformed_target_scale",
+        )
+    if evaluation_scale == "model_scale":
+        return (
+            y_true_model_scale,
+            y_pred_model_scale,
+            benchmark_pred_model_scale,
+            "model_target_scale",
+        )
+    return (
+        y_true_original_scale,
+        y_pred_original_scale,
+        benchmark_pred_original_scale,
+        "original_target_scale",
+    )
 
 
 def _get_target_series(frame: pd.DataFrame, target: str, minimum_train_size: int) -> pd.Series:
@@ -1871,6 +2020,12 @@ def _dimensionality_reduction_policy_from_factor_block(value: str | None, fallba
         return "none"
     if value == "pca_static_factors":
         return fallback if fallback in {"pca", "static_factor"} else "pca"
+    if value == "pca_factor_lags":
+        return fallback if fallback in {"pca", "static_factor"} else "pca"
+    if value == "supervised_factors":
+        return "supervised_factors"
+    if value == "custom_factors":
+        return fallback if fallback in {"pca", "static_factor", "none"} else "none"
     raise ExecutionError(f"factor_feature_block {value!r} is not executable in current runtime slice")
 
 
@@ -1949,6 +2104,7 @@ def _apply_dimensionality_reduction(
     X_pred: pd.DataFrame,
     contract: PreprocessContract,
     *,
+    y_train: np.ndarray | None = None,
     feature_selection_policy: str = "none",
     feature_selection_semantics: str = "select_before_factor",
     fit_state_sink: list[dict[str, object]] | None = None,
@@ -1992,7 +2148,33 @@ def _apply_dimensionality_reduction(
                     feature_selection_policy=feature_selection_policy,
                     feature_selection_semantics=feature_selection_semantics,
                 )
+        )
+        return train_scores, pred_scores
+    if policy == "supervised_factors":
+        if y_train is None:
+            raise ExecutionError("supervised_factors requires y_train")
+        n_components = max(1, min(3, X_train.shape[0] - 1, X_train.shape[1]))
+        reducer = PLSRegression(n_components=n_components, scale=False)
+        y_arr = np.asarray(y_train, dtype=float).reshape(-1, 1)
+        train_scores = reducer.fit_transform(X_train.to_numpy(dtype=float), y_arr)[0]
+        pred_scores = reducer.transform(X_pred.to_numpy(dtype=float))
+        components = np.asarray(getattr(reducer, "x_rotations_", reducer.x_weights_), dtype=float).T
+        mean = np.asarray(
+            getattr(reducer, "_x_mean", getattr(reducer, "x_mean_", np.zeros(X_train.shape[1]))),
+            dtype=float,
+        )
+        if fit_state_sink is not None:
+            payload = _factor_fit_state_from_components(
+                policy,
+                X_train,
+                components,
+                mean,
+                feature_selection_policy=feature_selection_policy,
+                feature_selection_semantics=feature_selection_semantics,
             )
+            payload["block"] = "supervised_factors"
+            payload["supervision_target"] = "train_window_y"
+            fit_state_sink.append(payload)
         return train_scores, pred_scores
     raise ExecutionError(f"dimensionality_reduction_policy {policy!r} is not executable in current runtime slice")
 
@@ -2059,6 +2241,53 @@ def _factor_fit_state_from_pca(
     return payload
 
 
+def _append_factor_lag_block(
+    X_train: np.ndarray,
+    X_pred: np.ndarray,
+    *,
+    lag_count: int,
+    fit_state_sink: list[dict[str, object]] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    factor_train = np.asarray(X_train, dtype=float)
+    factor_pred = np.asarray(X_pred, dtype=float)
+    if factor_train.ndim != 2 or factor_pred.ndim != 2:
+        raise ExecutionError("pca_factor_lags requires 2D factor arrays")
+    lag_count = max(1, int(lag_count))
+    lagged_train_parts = []
+    lagged_pred_parts = []
+    for lag in range(1, lag_count + 1):
+        train_lag = np.zeros_like(factor_train)
+        if len(factor_train) > lag:
+            train_lag[lag:, :] = factor_train[:-lag, :]
+        lagged_train_parts.append(train_lag)
+        pred_lag = (
+            factor_train[-lag, :].reshape(1, -1)
+            if len(factor_train) >= lag
+            else np.zeros((1, factor_train.shape[1]), dtype=float)
+        )
+        lagged_pred_parts.append(pred_lag)
+    lagged_train = np.concatenate(lagged_train_parts, axis=1)
+    lagged_pred = np.concatenate(lagged_pred_parts, axis=1)
+    if fit_state_sink is not None:
+        base_names = [f"factor_{idx}" for idx in range(1, factor_train.shape[1] + 1)]
+        lag_names = [
+            f"factor_{factor_idx}_lag_{lag}"
+            for lag in range(1, lag_count + 1)
+            for factor_idx in range(1, factor_train.shape[1] + 1)
+        ]
+        for payload in reversed(fit_state_sink):
+            if str(payload.get("block", "")) == "pca_static_factors":
+                payload["block"] = "pca_factor_lags"
+                payload["factor_lag_count"] = int(lag_count)
+                payload["factor_lag_feature_names"] = lag_names
+                payload["feature_names"] = base_names + lag_names
+                break
+    return (
+        np.concatenate([factor_train, lagged_train], axis=1),
+        np.concatenate([factor_pred, lagged_pred], axis=1),
+    )
+
+
 def _apply_post_factor_feature_selection(
     X_train: np.ndarray,
     y_train: np.ndarray,
@@ -2093,7 +2322,7 @@ def _record_post_factor_selection(
     if fit_state_sink is None:
         return
     for payload in reversed(fit_state_sink):
-        if str(payload.get("block", "")) != "pca_static_factors":
+        if str(payload.get("block", "")) not in {"pca_static_factors", "pca_factor_lags", "supervised_factors"}:
             continue
         payload["feature_selection_policy"] = str(policy)
         payload["feature_selection_semantics"] = "select_after_factor"
@@ -2133,6 +2362,7 @@ def _apply_raw_panel_preprocessing(
         X_train,
         X_pred,
         contract,
+        y_train=y_train,
         feature_selection_policy=feature_selection_policy,
         feature_selection_semantics=feature_selection_semantics,
         fit_state_sink=fit_state_sink,
@@ -2267,18 +2497,177 @@ def _local_temporal_factor_features(source: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def _custom_feature_block_name(recipe: RecipeSpec, block_kind: str, axis_value: str) -> str:
+    spec = dict(getattr(recipe, "data_task_spec", {}) or {})
+    custom_blocks = spec.get("custom_feature_blocks", {})
+    if not isinstance(custom_blocks, Mapping):
+        custom_blocks = {}
+    for key in (
+        block_kind,
+        f"{block_kind}_feature_block",
+        f"custom_{block_kind}_feature_block",
+        f"custom_{block_kind}_block",
+    ):
+        value = custom_blocks.get(key)
+        if value:
+            return str(value)
+    for key in (
+        f"custom_{block_kind}_feature_block",
+        f"custom_{block_kind}_block",
+        f"{block_kind}_feature_block_callable",
+    ):
+        value = spec.get(key)
+        if value:
+            return str(value)
+    if is_custom_feature_block(axis_value, block_kind=block_kind):
+        return axis_value
+    raise ExecutionError(
+        f"{axis_value!r} requires data_task_spec['custom_{block_kind}_feature_block'] "
+        f"or data_task_spec['custom_feature_blocks']['{block_kind}']"
+    )
+
+
+def _coerce_custom_feature_frame(
+    value,
+    *,
+    index,
+    columns: Sequence[str],
+    role: str,
+) -> pd.DataFrame:
+    names = [str(name) for name in columns]
+    if isinstance(value, pd.DataFrame):
+        frame = value.copy()
+        if len(frame) != len(index):
+            raise ExecutionError(f"custom feature block {role} row count mismatch: expected {len(index)}, got {len(frame)}")
+        frame.index = index
+        if frame.shape[1] != len(names):
+            raise ExecutionError(
+                f"custom feature block {role} column count mismatch: expected {len(names)}, got {frame.shape[1]}"
+            )
+        frame.columns = names
+        return frame.astype(float)
+    arr = np.asarray(value, dtype=float)
+    if arr.ndim == 1:
+        arr = arr.reshape(-1, 1)
+    if arr.ndim != 2:
+        raise ExecutionError(f"custom feature block {role} must be 1D/2D array-like or a DataFrame")
+    if arr.shape != (len(index), len(names)):
+        raise ExecutionError(
+            f"custom feature block {role} shape mismatch: expected {(len(index), len(names))}, got {arr.shape}"
+        )
+    return pd.DataFrame(arr, index=index, columns=names)
+
+
+def _apply_custom_feature_block(
+    X_train: pd.DataFrame,
+    X_pred: pd.DataFrame,
+    *,
+    frame: pd.DataFrame,
+    predictors: Sequence[str],
+    y_train: np.ndarray,
+    recipe: RecipeSpec,
+    horizon: int,
+    pred_idx: int,
+    block_kind: str,
+    axis_value: str,
+    fit_state_sink: list[dict[str, object]] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    block_name = _custom_feature_block_name(recipe, block_kind, axis_value)
+    try:
+        block_spec = get_custom_feature_block(block_name, block_kind=block_kind)
+    except KeyError as exc:
+        raise ExecutionError(str(exc)) from exc
+    result = block_spec.function(
+        FeatureBlockCallableContext(
+            block_kind=block_kind,
+            fit_scope="train_only",
+            horizon=int(horizon),
+            forecast_origin=frame.index[pred_idx],
+            feature_namespace=f"custom_{block_kind}",
+            X_train=X_train.copy(),
+            X_pred=X_pred.copy(),
+            y_train=np.asarray(y_train, dtype=float).copy(),
+            source_frame=frame.copy(),
+            predictors=tuple(str(predictor) for predictor in predictors),
+            train_index=X_train.index,
+            pred_index=X_pred.index,
+            metadata=dict(getattr(recipe, "data_task_spec", {}) or {}),
+        )
+    )
+    try:
+        validate_feature_block_callable_result(result)
+    except Exception as exc:
+        raise ExecutionError(str(exc)) from exc
+    runtime_names = result.runtime_feature_names or result.feature_names
+    train_features = _coerce_custom_feature_frame(
+        result.train_features,
+        index=X_train.index,
+        columns=runtime_names,
+        role="train_features",
+    )
+    pred_features = _coerce_custom_feature_frame(
+        result.pred_features,
+        index=X_pred.index,
+        columns=runtime_names,
+        role="pred_features",
+    )
+    overlap = set(map(str, X_train.columns)) & set(map(str, train_features.columns))
+    if overlap:
+        raise ExecutionError(f"custom feature block returned duplicate runtime feature names: {sorted(overlap)}")
+    if fit_state_sink is not None:
+        fit_state_sink.append(
+            {
+                "block": f"custom_{block_kind}_feature_block",
+                "name": block_spec.name,
+                "block_kind": block_kind,
+                "feature_names": [str(name) for name in result.feature_names],
+                "runtime_feature_names": [str(name) for name in runtime_names],
+                "fit_state": dict(result.fit_state),
+                "leakage_metadata": dict(result.leakage_metadata),
+                "provenance": dict(result.provenance),
+            }
+        )
+    composition = str(dict(result.provenance).get("composition", "append"))
+    if composition == "replace":
+        return train_features, pred_features
+    if composition != "append":
+        raise ExecutionError("custom feature block provenance.composition must be 'append' or 'replace'")
+    return (
+        pd.concat([X_train.copy(), train_features], axis=1),
+        pd.concat([X_pred.copy(), pred_features], axis=1),
+    )
+
+
 def _apply_temporal_feature_block(
     X_train: pd.DataFrame,
     X_pred: pd.DataFrame,
     frame: pd.DataFrame,
     predictors: Sequence[str],
+    y_train: np.ndarray,
+    recipe: RecipeSpec,
     *,
+    horizon: int,
     start_idx: int,
     pred_idx: int,
     temporal_feature_block: str,
+    fit_state_sink: list[dict[str, object]] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if temporal_feature_block == "none":
         return X_train, X_pred
+    if temporal_feature_block == "custom_temporal_features":
+        return _apply_custom_feature_block(
+            X_train,
+            X_pred,
+            frame=frame,
+            predictors=predictors,
+            y_train=y_train,
+            recipe=recipe,
+            horizon=horizon,
+            pred_idx=pred_idx,
+            block_kind="temporal",
+            axis_value=temporal_feature_block,
+            fit_state_sink=fit_state_sink,
+        )
     if temporal_feature_block not in {
         "local_temporal_factors",
         "moving_average_features",
@@ -2322,20 +2711,53 @@ def _apply_rotation_feature_block(
     X_pred: pd.DataFrame,
     frame: pd.DataFrame,
     predictors: Sequence[str],
+    y_train: np.ndarray,
+    recipe: RecipeSpec,
     *,
+    horizon: int,
     start_idx: int,
     pred_idx: int,
     rotation_feature_block: str,
     marx_max_lag: int | None = None,
+    feature_block_combination: str = "replace_with_blocks",
+    fit_state_sink: list[dict[str, object]] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if rotation_feature_block == "none":
         return X_train, X_pred
+    if rotation_feature_block == "custom_rotation":
+        return _apply_custom_feature_block(
+            X_train,
+            X_pred,
+            frame=frame,
+            predictors=predictors,
+            y_train=y_train,
+            recipe=recipe,
+            horizon=horizon,
+            pred_idx=pred_idx,
+            block_kind="rotation",
+            axis_value=rotation_feature_block,
+            fit_state_sink=fit_state_sink,
+        )
     if rotation_feature_block == "marx_rotation":
         if marx_max_lag is None:
             raise ExecutionError("rotation_feature_block='marx_rotation' requires marx_max_lag")
         source = frame[list(predictors)].iloc[start_idx : pred_idx + 1].astype(float).copy()
         rotated = _build_marx_rotation_frame(source, max_lag=int(marx_max_lag))
-        return rotated.loc[X_train.index].copy(), rotated.loc[X_pred.index].copy()
+        rotated_train = rotated.loc[X_train.index].copy()
+        rotated_pred = rotated.loc[X_pred.index].copy()
+        if feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}:
+            overlap = set(map(str, X_train.columns)) & set(map(str, rotated_train.columns))
+            if overlap:
+                raise ExecutionError(f"MARX rotation produced duplicate feature names while appending: {sorted(overlap)}")
+            return (
+                pd.concat([X_train.copy(), rotated_train], axis=1),
+                pd.concat([X_pred.copy(), rotated_pred], axis=1),
+            )
+        if feature_block_combination != "replace_with_blocks":
+            raise ExecutionError(
+                f"feature_block_combination={feature_block_combination!r} is not supported with marx_rotation"
+            )
+        return rotated_train, rotated_pred
     if rotation_feature_block != "moving_average_rotation":
         raise ExecutionError(f"unsupported rotation_feature_block={rotation_feature_block!r}")
     source = frame[list(predictors)].iloc[start_idx : pred_idx + 1].astype(float).copy()
@@ -2384,11 +2806,15 @@ def _raw_panel_feature_names(
         marx_max_lag = _marx_rotation_max_lag(recipe)
         if marx_max_lag is None:
             raise ExecutionError("rotation_feature_block='marx_rotation' requires marx_max_lag")
-        names = [
+        marx_names = [
             _marx_rotation_public_feature_name(str(column), rotation_order)
             for column in base_names
             for rotation_order in range(1, int(marx_max_lag) + 1)
         ]
+        if _feature_block_combination(recipe) in {"append_to_base_x", "concatenate_named_blocks"}:
+            names.extend(marx_names)
+        else:
+            names = marx_names
     elif rotation_feature_block == "moving_average_rotation":
         for window in _MOVING_AVERAGE_ROTATION_WINDOWS:
             names.extend(_moving_average_rotation_public_feature_name(str(column), window) for column in base_names)
@@ -2411,7 +2837,7 @@ def _raw_panel_feature_names(
 
 def _factor_feature_names_from_fit_state(fit_state: Sequence[Mapping[str, object]]) -> list[str] | None:
     for payload in reversed(tuple(fit_state)):
-        if str(payload.get("block", "")) != "pca_static_factors":
+        if str(payload.get("block", "")) not in {"pca_static_factors", "pca_factor_lags", "supervised_factors"}:
             continue
         names = payload.get("feature_names")
         if isinstance(names, Sequence) and not isinstance(names, (str, bytes)):
@@ -2419,11 +2845,26 @@ def _factor_feature_names_from_fit_state(fit_state: Sequence[Mapping[str, object
     return None
 
 
+def _custom_feature_names_from_fit_state(fit_state: Sequence[Mapping[str, object]]) -> tuple[list[str], bool]:
+    names: list[str] = []
+    replaced = False
+    for payload in tuple(fit_state):
+        if not str(payload.get("block", "")).startswith("custom_"):
+            continue
+        payload_names = payload.get("feature_names")
+        if isinstance(payload_names, Sequence) and not isinstance(payload_names, (str, bytes)):
+            names.extend(str(name) for name in payload_names)
+        provenance = payload.get("provenance", {})
+        if isinstance(provenance, Mapping) and str(provenance.get("composition", "append")) == "replace":
+            replaced = True
+    return names, replaced
+
+
 def _selected_final_feature_names_from_fit_state(
     fit_state: Sequence[Mapping[str, object]],
 ) -> list[str] | None:
     for payload in reversed(tuple(fit_state)):
-        if str(payload.get("block", "")) != "pca_static_factors":
+        if str(payload.get("block", "")) not in {"pca_static_factors", "pca_factor_lags", "supervised_factors"}:
             continue
         names = payload.get("selected_final_feature_names")
         if isinstance(names, Sequence) and not isinstance(names, (str, bytes)):
@@ -2454,7 +2895,10 @@ def _raw_panel_representation_feature_names(
         return selected_names
     factor_names = _factor_feature_names_from_fit_state(fit_state)
     if factor_names is None:
-        return _raw_panel_feature_names(frame, target, recipe)
+        custom_names, custom_replaced = _custom_feature_names_from_fit_state(fit_state)
+        names = [] if custom_replaced else _raw_panel_feature_names(frame, target, recipe)
+        names.extend(name for name in custom_names if name not in names)
+        return names
     names = list(factor_names)
     if _feature_runtime_builder(recipe) == "raw_feature_panel" and _target_lag_feature_block(recipe) == "fixed_target_lags":
         lag_order = _target_lag_order_from_block(recipe, _max_ar_lag(recipe))
@@ -2463,6 +2907,8 @@ def _raw_panel_representation_feature_names(
 
 
 def _raw_panel_feature_role(name: str) -> str:
+    if name.startswith("custom_"):
+        return "custom"
     if name.startswith("factor_"):
         return "factor"
     if name.startswith("target_lag_") or name.startswith("y_lag_") or name.startswith("lag_"):
@@ -2504,6 +2950,9 @@ def _raw_panel_block_order(
             order.append("rotation")
         if _level_feature_block(recipe) != "none":
             order.append("level")
+        custom_names, _custom_replaced = _custom_feature_names_from_fit_state(fit_state)
+        if custom_names:
+            order.append("custom")
     if _feature_runtime_builder(recipe) == "raw_feature_panel" and _target_lag_feature_block(recipe) == "fixed_target_lags":
         order.append("target_lag")
     return tuple(order)
@@ -2540,7 +2989,7 @@ def _raw_panel_alignment(
         if _rotation_feature_block(recipe) == "marx_rotation":
             alignment["rotation_factor_semantics"] = "marx_then_factor"
         for payload in reversed(tuple(fit_state)):
-            if str(payload.get("block", "")) != "pca_static_factors":
+            if str(payload.get("block", "")) not in {"pca_static_factors", "pca_factor_lags", "supervised_factors"}:
                 continue
             if str(payload.get("feature_selection_semantics", "none")) != "none":
                 alignment["factor_selection_semantics"] = str(payload["feature_selection_semantics"])
@@ -2576,6 +3025,7 @@ def _build_raw_panel_representation(
         start_idx,
         origin_idx,
         contract,
+        recipe,
         predictor_family=_predictor_family(recipe),
         spec=spec,
         target_window=target_window,
@@ -2597,6 +3047,7 @@ def _build_raw_panel_representation(
             else None
         ),
         marx_max_lag=_marx_rotation_max_lag(recipe),
+        feature_block_combination=_feature_block_combination(recipe),
     )
     feature_names = tuple(_raw_panel_representation_feature_names(frame, recipe.target, recipe, fit_state))
     return Layer2Representation(
@@ -2622,6 +3073,7 @@ def _build_raw_panel_training_data(
     start_idx: int,
     origin_idx: int,
     contract: PreprocessContract,
+    recipe: RecipeSpec | None = None,
     *,
     predictor_family: str = "all_macro_vars",
     spec: dict | None = None,
@@ -2636,6 +3088,7 @@ def _build_raw_panel_training_data(
     target_lag_order: int | None = None,
     target_lag_feature_names: Sequence[str] | None = None,
     marx_max_lag: int | None = None,
+    feature_block_combination: str = "replace_with_blocks",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     predictors = _raw_panel_columns(frame, target, predictor_family=predictor_family, spec=spec)
     if origin_idx - horizon < start_idx:
@@ -2688,13 +3141,16 @@ def _build_raw_panel_training_data(
         factor_feature_block,
         fallback=str(contract.dimensionality_reduction_policy),
     )
-    if rotation_feature_block == "marx_rotation" and temporal_feature_block != "none":
+    marx_append_mode = feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}
+    if rotation_feature_block == "marx_rotation" and temporal_feature_block != "none" and not marx_append_mode:
         raise ExecutionError(
-            "rotation_feature_block='marx_rotation' cannot yet be combined with temporal_feature_block"
+            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_x' "
+            "or 'concatenate_named_blocks' when combined with temporal_feature_block"
         )
-    if rotation_feature_block == "marx_rotation" and x_lag_creation != "no_x_lags":
+    if rotation_feature_block == "marx_rotation" and x_lag_creation != "no_x_lags" and not marx_append_mode:
         raise ExecutionError(
-            "rotation_feature_block='marx_rotation' cannot yet be combined with x_lag_creation"
+            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_x' "
+            "or 'concatenate_named_blocks' when combined with x_lag_creation"
         )
     preprocessing_contract = contract
     if x_lag_creation == "fixed_x_lags":
@@ -2713,20 +3169,43 @@ def _build_raw_panel_training_data(
         X_pred,
         frame,
         predictors,
+        y_train,
+        recipe,
+        horizon=horizon,
         start_idx=start_idx,
         pred_idx=pred_idx,
         temporal_feature_block=temporal_feature_block,
+        fit_state_sink=fit_state_sink,
     )
     X_train, X_pred = _apply_rotation_feature_block(
         X_train,
         X_pred,
         frame,
         predictors,
+        y_train,
+        recipe,
+        horizon=horizon,
         start_idx=start_idx,
         pred_idx=pred_idx,
         rotation_feature_block=rotation_feature_block,
         marx_max_lag=marx_max_lag,
+        feature_block_combination=feature_block_combination,
+        fit_state_sink=fit_state_sink,
     )
+    if factor_feature_block == "custom_factors":
+        X_train, X_pred = _apply_custom_feature_block(
+            X_train,
+            X_pred,
+            frame=frame,
+            predictors=predictors,
+            y_train=y_train,
+            recipe=recipe,
+            horizon=horizon,
+            pred_idx=pred_idx,
+            block_kind="factor",
+            axis_value=factor_feature_block,
+            fit_state_sink=fit_state_sink,
+        )
     X_train, X_pred = _apply_level_feature_block(
         X_train,
         X_pred,
@@ -2752,6 +3231,15 @@ def _build_raw_panel_training_data(
         preprocessing_contract,
         fit_state_sink=fit_state_sink,
     )
+    if factor_feature_block == "pca_factor_lags":
+        training_spec = dict(getattr(recipe, "training_spec", {}) or {})
+        factor_lag_count = int(training_spec.get("factor_lag_count", training_spec.get("factor_ar_lags", 1)))
+        X_train_arr, X_pred_arr = _append_factor_lag_block(
+            X_train_arr,
+            X_pred_arr,
+            lag_count=factor_lag_count,
+            fit_state_sink=fit_state_sink,
+        )
     if target_lag_train is not None and target_lag_pred is not None:
         X_train_arr = np.concatenate([X_train_arr, target_lag_train.to_numpy(dtype=float)], axis=1)
         X_pred_arr = np.concatenate([X_pred_arr, target_lag_pred.to_numpy(dtype=float)], axis=1)
@@ -5244,7 +5732,9 @@ def _build_predictions(
         )
 
     last_tuning_payload: dict[str, object] = {}
+    raw_target_series = _raw_target_series_for_scale(raw_frame, str(target_series.name))
     aligned_frame = raw_frame.loc[target_series.index]
+    evaluation_scale = str(getattr(contract, "evaluation_scale", "raw_level"))
     rolling = recipe.stage0.fixed_design.sample_split == "rolling_window_oos"
     rolling_window_size = _rolling_window_size(recipe)
     outer_window = str(recipe.training_spec.get("outer_window", "rolling" if rolling else "expanding"))
@@ -5314,6 +5804,11 @@ def _build_predictions(
         def _compute_origin(origin_idx: int, start_idx: int, effective_origin_idx: int) -> tuple[dict[str, object], dict[str, object] | None]:
             train = target_series.iloc[start_idx : effective_origin_idx + 1]
             train_for_model = train
+            target_scale_state: dict[str, object] = {
+                "normalization": "none",
+                "fit_scope": "not_applicable",
+                "params": {},
+            }
             target_transform_context: dict[str, object] = {}
             fitted_target_transformer = None
             if target_transformer_spec is not None:
@@ -5323,17 +5818,67 @@ def _build_predictions(
                     horizon=horizon,
                     target_date=target_series.index[origin_idx + horizon],
                 )
+            else:
+                train_for_model, target_scale_state = _fit_target_normalization_for_window(train, contract)
             model_output = model_executor(train_for_model, horizon, recipe, contract, aligned_frame, effective_origin_idx, start_idx)
             tuning_payload = model_output.get("tuning_payload") or None
             y_pred_model_scale = float(model_output["y_pred"])
-            y_pred = _inverse_target_transformer_prediction(
-                fitted_target_transformer,
-                y_pred_model_scale,
-                recipe=recipe,
-                context=target_transform_context,
-            ) if target_transformer_spec is not None else y_pred_model_scale
-            benchmark_pred = float(benchmark_executor(train, horizon, recipe))
-            y_true = float(target_series.iloc[origin_idx + horizon])
+            benchmark_pred_model_scale = float(benchmark_executor(train_for_model, horizon, recipe))
+            y_true_transformed_scale = float(target_series.iloc[origin_idx + horizon])
+            y_true_model_scale = (
+                y_true_transformed_scale
+                if target_transformer_spec is not None
+                else _apply_target_normalization_scalar(y_true_transformed_scale, target_scale_state)
+            )
+            if target_transformer_spec is not None:
+                y_pred_transformed_scale = _inverse_target_transformer_prediction(
+                    fitted_target_transformer,
+                    y_pred_model_scale,
+                    recipe=recipe,
+                    context=target_transform_context,
+                )
+                benchmark_pred_transformed_scale = benchmark_pred_model_scale
+            else:
+                y_pred_transformed_scale = _inverse_target_normalization_scalar(y_pred_model_scale, target_scale_state)
+                benchmark_pred_transformed_scale = _inverse_target_normalization_scalar(
+                    benchmark_pred_model_scale,
+                    target_scale_state,
+                )
+            origin_date = target_series.index[origin_idx]
+            target_date = target_series.index[origin_idx + horizon]
+            y_true_original_scale = float(raw_target_series.loc[target_date])
+            if target_transformer_spec is not None:
+                y_pred_original_scale = y_pred_transformed_scale
+                benchmark_pred_original_scale = benchmark_pred_transformed_scale
+            else:
+                y_pred_original_scale = _inverse_target_transform_scalar(
+                    y_pred_transformed_scale,
+                    contract=contract,
+                    raw_target_series=raw_target_series,
+                    origin_date=origin_date,
+                    target_date=target_date,
+                    horizon=horizon,
+                )
+                benchmark_pred_original_scale = _inverse_target_transform_scalar(
+                    benchmark_pred_transformed_scale,
+                    contract=contract,
+                    raw_target_series=raw_target_series,
+                    origin_date=origin_date,
+                    target_date=target_date,
+                    horizon=horizon,
+                )
+            y_true, y_pred, benchmark_pred, metric_target_scale = _target_metric_values(
+                y_true_model_scale=y_true_model_scale,
+                y_pred_model_scale=y_pred_model_scale,
+                benchmark_pred_model_scale=benchmark_pred_model_scale,
+                y_true_transformed_scale=y_true_transformed_scale,
+                y_pred_transformed_scale=y_pred_transformed_scale,
+                benchmark_pred_transformed_scale=benchmark_pred_transformed_scale,
+                y_true_original_scale=y_true_original_scale,
+                y_pred_original_scale=y_pred_original_scale,
+                benchmark_pred_original_scale=benchmark_pred_original_scale,
+                evaluation_scale=evaluation_scale,
+            )
             # Level-scale values are kept for provenance; metric-scale values
             # honour horizon_target_construction (1.2.4).
             y_pred_level = y_pred
@@ -5362,10 +5907,28 @@ def _build_predictions(
                 "y_true": y_true,
                 "y_pred": y_pred,
                 "benchmark_pred": benchmark_pred,
+                "y_true_model_scale": y_true_model_scale,
                 "y_pred_model_scale": y_pred_model_scale,
+                "benchmark_pred_model_scale": benchmark_pred_model_scale,
+                "y_true_transformed_scale": y_true_transformed_scale,
+                "y_pred_transformed_scale": y_pred_transformed_scale,
+                "benchmark_pred_transformed_scale": benchmark_pred_transformed_scale,
+                "y_true_original_scale": y_true_original_scale,
+                "y_pred_original_scale": y_pred_original_scale,
+                "benchmark_pred_original_scale": benchmark_pred_original_scale,
                 "target_transformer": target_transformer_spec.name if target_transformer_spec is not None else "none",
-                "model_target_scale": "transformed" if target_transformer_spec is not None else "raw",
-                "forecast_scale": "raw",
+                "target_normalization": str(target_scale_state.get("normalization", "none")),
+                "target_normalization_fit_scope": str(target_scale_state.get("fit_scope", "not_applicable")),
+                "target_normalization_params": json.dumps(target_scale_state.get("params", {}), sort_keys=True),
+                "model_target_scale": (
+                    "custom_transformer_scale"
+                    if target_transformer_spec is not None
+                    else "normalized_target_scale"
+                    if str(target_scale_state.get("normalization", "none")) != "none"
+                    else "transformed_target_scale"
+                ),
+                "forecast_scale": metric_target_scale,
+                "evaluation_scale": evaluation_scale,
                 "target_construction_scale": _horizon_construction_scale(_horizon_construction),
                 "error": error,
                 "abs_error": abs(error),
@@ -5373,6 +5936,20 @@ def _build_predictions(
                 "benchmark_error": benchmark_error,
                 "benchmark_abs_error": abs(benchmark_error),
                 "benchmark_squared_error": benchmark_error**2,
+                "model_scale_error": y_true_model_scale - y_pred_model_scale,
+                "model_scale_benchmark_error": y_true_model_scale - benchmark_pred_model_scale,
+                "transformed_scale_error": y_true_transformed_scale - y_pred_transformed_scale,
+                "transformed_scale_benchmark_error": y_true_transformed_scale - benchmark_pred_transformed_scale,
+                "transformed_scale_squared_error": (y_true_transformed_scale - y_pred_transformed_scale) ** 2,
+                "transformed_scale_benchmark_squared_error": (
+                    y_true_transformed_scale - benchmark_pred_transformed_scale
+                ) ** 2,
+                "original_scale_error": y_true_original_scale - y_pred_original_scale,
+                "original_scale_benchmark_error": y_true_original_scale - benchmark_pred_original_scale,
+                "original_scale_squared_error": (y_true_original_scale - y_pred_original_scale) ** 2,
+                "original_scale_benchmark_squared_error": (
+                    y_true_original_scale - benchmark_pred_original_scale
+                ) ** 2,
                 "horizon_target_construction": _horizon_construction,
                 "y_true_level": y_true_level,
                 "y_pred_level": y_pred_level,
@@ -5413,6 +5990,34 @@ def _build_predictions(
     return pd.DataFrame(rows), last_tuning_payload
 
 
+def _scale_metric_summary(
+    group: pd.DataFrame,
+    *,
+    squared_error_col: str,
+    benchmark_squared_error_col: str,
+    error_col: str,
+    benchmark_error_col: str,
+) -> dict[str, float]:
+    msfe = float(group[squared_error_col].mean())
+    benchmark_msfe = float(group[benchmark_squared_error_col].mean())
+    mae = float(group[error_col].abs().mean())
+    benchmark_mae = float(group[benchmark_error_col].abs().mean())
+    rmse = float(msfe**0.5)
+    benchmark_rmse = float(benchmark_msfe**0.5)
+    return {
+        "msfe": msfe,
+        "benchmark_msfe": benchmark_msfe,
+        "relative_msfe": msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0,
+        "oos_r2": 1.0 - (msfe / benchmark_msfe if benchmark_msfe > 0 else 1.0),
+        "mae": mae,
+        "benchmark_mae": benchmark_mae,
+        "relative_mae": mae / benchmark_mae if benchmark_mae > 0 else 1.0,
+        "rmse": rmse,
+        "benchmark_rmse": benchmark_rmse,
+        "relative_rmse": rmse / benchmark_rmse if benchmark_rmse > 0 else 1.0,
+    }
+
+
 def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str, object]:
     metrics_by_horizon: dict[str, dict[str, object]] = {}
     for horizon, group in predictions.groupby("horizon", sort=True):
@@ -5445,6 +6050,38 @@ def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str,
         else:
             directional_accuracy = float("nan")
         sign_accuracy = float((np.sign(group["y_true"]) == np.sign(group["y_pred"]).astype(float)).mean())
+        scale_metrics: dict[str, object] = {
+            "primary": {
+                "scale": str(group["forecast_scale"].iloc[0]) if "forecast_scale" in group else "primary",
+                "evaluation_scale": str(group["evaluation_scale"].iloc[0]) if "evaluation_scale" in group else "raw_level",
+            }
+        }
+        if {
+            "original_scale_squared_error",
+            "original_scale_benchmark_squared_error",
+            "original_scale_error",
+            "original_scale_benchmark_error",
+        }.issubset(group.columns):
+            scale_metrics["original_target_scale"] = _scale_metric_summary(
+                group,
+                squared_error_col="original_scale_squared_error",
+                benchmark_squared_error_col="original_scale_benchmark_squared_error",
+                error_col="original_scale_error",
+                benchmark_error_col="original_scale_benchmark_error",
+            )
+        if {
+            "transformed_scale_squared_error",
+            "transformed_scale_benchmark_squared_error",
+            "transformed_scale_error",
+            "transformed_scale_benchmark_error",
+        }.issubset(group.columns):
+            scale_metrics["transformed_target_scale"] = _scale_metric_summary(
+                group,
+                squared_error_col="transformed_scale_squared_error",
+                benchmark_squared_error_col="transformed_scale_benchmark_squared_error",
+                error_col="transformed_scale_error",
+                benchmark_error_col="transformed_scale_benchmark_error",
+            )
         metrics_by_horizon[f"h{int(horizon)}"] = {
             "n_predictions": int(len(group)),
             "msfe": msfe,
@@ -5464,6 +6101,7 @@ def _compute_metrics(predictions: pd.DataFrame, recipe: RecipeSpec) -> dict[str,
             "directional_accuracy": directional_accuracy,
             "sign_accuracy": sign_accuracy,
             "selected_lag_counts": selected_lag_counts,
+            "scale_metrics": scale_metrics,
         }
 
     return {

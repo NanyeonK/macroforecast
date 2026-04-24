@@ -546,8 +546,8 @@ def test_target_transformer_runs_autoreg_path_on_raw_forecast_scale(tmp_path: Pa
 
     predictions = pd.read_csv(Path(result.artifact_dir) / "predictions.csv")
     assert set(predictions["target_transformer"]) == {"standardize_target"}
-    assert set(predictions["model_target_scale"]) == {"transformed"}
-    assert set(predictions["forecast_scale"]) == {"raw"}
+    assert set(predictions["model_target_scale"]) == {"custom_transformer_scale"}
+    assert set(predictions["forecast_scale"]) == {"original_target_scale"}
     assert "y_pred_model_scale" in predictions
 
 
@@ -599,8 +599,8 @@ def test_target_transformer_runs_raw_panel_on_raw_forecast_scale(tmp_path: Path)
     assert manifest["target_transformer"]["runtime"] == "raw_panel_v1"
     predictions = pd.read_csv(Path(result.artifact_dir) / "predictions.csv")
     assert set(predictions["target_transformer"]) == {"identity_target"}
-    assert set(predictions["model_target_scale"]) == {"transformed"}
-    assert set(predictions["forecast_scale"]) == {"raw"}
+    assert set(predictions["model_target_scale"]) == {"custom_transformer_scale"}
+    assert set(predictions["forecast_scale"]) == {"original_target_scale"}
 
 
 def test_target_transformer_compile_uses_feature_runtime_for_factor_bridge() -> None:

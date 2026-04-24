@@ -29,9 +29,11 @@ Target-side scale:
 
 - `target_transform=level`, `difference`, `log`, `log_difference`,
   `growth_rate`
-- `target_normalization=none`
-- `inverse_transform_policy=none`
-- `evaluation_scale=raw_level` / `original_scale`
+- `target_normalization=none`, `zscore_train_only`, `robust_zscore`,
+  `minmax`, `unit_variance`
+- `inverse_transform_policy=none`, `target_only`, `forecast_scale_only`
+- `evaluation_scale=raw_level` / `original_scale`, `transformed_scale`,
+  `both`
 - custom `target_transformer` under its existing raw-scale runtime gates
 
 Feature blocks:
@@ -46,43 +48,44 @@ Feature blocks:
 - `temporal_feature_block=moving_average_features`, `rolling_moments`,
   `local_temporal_factors`, `volatility_features`
 - `rotation_feature_block=moving_average_rotation`, `marx_rotation`
-- MARX basis replacement and `marx_then_factor`
+- MARX basis replacement, `marx_then_factor`, and named-block append
+  composition with fixed X lags or deterministic temporal blocks via
+  `feature_block_combination=append_to_base_x`
+- `factor_feature_block=pca_factor_lags`, `supervised_factors`
+- registered `custom_feature_block_callable_v1` temporal, rotation, and factor
+  blocks
+- `feature_block_combination=replace_with_blocks`, `append_to_base_x`,
+  `concatenate_named_blocks`
 
 ## Contract-Defined Gated
 
-Target-side scale:
+Target-side scale still gated:
 
-- `target_normalization=zscore_train_only`, `robust_zscore`, `minmax`,
-  `unit_variance`
-- `inverse_transform_policy=target_only`, `forecast_scale_only`, `custom`
-- `evaluation_scale=transformed_scale`, `both`
+- `inverse_transform_policy=custom`
 
 The compiler records `target_scale_contract_v1` in
 `layer2_representation_spec.target_representation.target_scale_contract`.
-These choices stay gated until runtime writes per-window fit state, inverse
-prediction artifacts, and transformed-scale metric artifacts.
+Built-in target normalization is now fit per training window, and prediction
+artifacts carry model, transformed, and original scale columns plus dual-scale
+metric summaries where requested.
 
-Custom feature blocks:
+Custom feature blocks without a registered callable:
 
 - `temporal_feature_block=custom_temporal_features`
 - `rotation_feature_block=custom_rotation`
 - `factor_feature_block=custom_factors`
 - `feature_block_combination=custom_combiner`
 
-The contract is `custom_feature_block_callable_v1`. A callable must return
-train/pred feature frames, public/runtime names, fit state, leakage metadata,
-and provenance. The existing `custom_preprocessor` hook is broader and does not
-replace this block-local contract.
+The contract is `custom_feature_block_callable_v1`. A registered callable is
+executable when the recipe names it through `custom_feature_blocks` or the
+block-specific field such as `custom_temporal_feature_block`. The existing
+`custom_preprocessor` hook is broader and does not replace this block-local
+contract.
 
 MARX and factor frontier:
 
-- `marx_append_to_x`
 - `factor_then_marx`
-- MARX with external X-lag append
-- MARX with temporal append
 - `maf_rotation`
-- `pca_factor_lags`
-- `supervised_factors`
 - feature selection over non-PCA factor blocks
 - feature selection after deterministic or custom append blocks
 
@@ -134,12 +137,8 @@ and failure visibility.
 
 ## Next Build Order
 
-1. Implement per-window target normalization fit/apply and inverse prediction
-   artifacts.
-2. Execute `custom_feature_block_callable_v1` for temporal, rotation, and factor
-   blocks.
-3. Add remaining MARX composition modes after each has naming and alignment
+1. Add `factor_then_marx` and MAF rotation after each has naming and alignment
    tests.
-4. Broaden factor and feature-selection composers beyond static PCA.
-5. Promote `feature_block_combination` from provenance summary to public sweep
-   axis after invalid-combination pruning is explicit.
+2. Broaden feature selection over non-PCA/custom/deterministic-append blocks.
+3. Implement `feature_block_combination=custom_combiner`.
+4. Add target-side custom inverse policies.
