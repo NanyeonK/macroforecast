@@ -1273,10 +1273,28 @@ def test_execute_recipe_supports_catboost_autoreg_model(tmp_path: Path) -> None:
 def test_execute_recipe_supports_pcr_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(model_family="pcr", feature_builder="factor_pca", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
-    recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2})
+    recipe = __import__("dataclasses").replace(
+        recipe,
+        training_spec={**recipe.training_spec, "fixed_factor_count": 4},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "factor_feature_block": {
+                    "value": "pca_static_factors",
+                    "factor_count": {
+                        "mode": "fixed",
+                        "fixed_factor_count": 2,
+                        "max_factors": 4,
+                        "selection_scope": "train_window",
+                    },
+                }
+            }
+        },
+    )
     result = execute_recipe(recipe=recipe, preprocess=_preprocess_raw_only(), output_root=tmp_path, local_raw_source=fixture)
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    fit_state = json.loads((tmp_path / result.run.artifact_subdir / "feature_representation_fit_state.json").read_text())
     assert manifest["model_spec"]["model_family"] == "pcr"
+    assert fit_state["n_components"] == 2
     assert manifest["prediction_rows"] > 0
 
 

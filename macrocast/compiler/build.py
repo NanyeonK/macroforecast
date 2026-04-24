@@ -1172,7 +1172,6 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "early_stopping": _selection_value(selection_map, "early_stopping", default="none"),
         "convergence_handling": _selection_value(selection_map, "convergence_handling", default="mark_fail"),
         "y_lag_count": legacy_y_lag_count,
-        "factor_count": _selection_value(selection_map, "factor_count", default="fixed"),
         "lookback": _selection_value(selection_map, "lookback", default="fixed_lookback"),
         "logging_level": _selection_value(selection_map, "logging_level", default="silent"),
         "checkpointing": _selection_value(selection_map, "checkpointing", default="none"),
@@ -1189,12 +1188,29 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "early_stop_trials": training_cfg.get("early_stop_trials", 3),
         "early_stop_min_delta": training_cfg.get("early_stop_min_delta", 1e-4),
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
-        "fixed_factor_count": training_cfg.get("fixed_factor_count", 3),
-        "max_factors": training_cfg.get("max_factors", 5),
         "factor_ar_lags": legacy_factor_ar_lags,
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
         "random_seed": leaf_config.get("random_seed", 42),
+    }
+
+
+def _factor_count_config(
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+    training_spec: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    training_cfg = dict(leaf_config.get("training_config", {}) or {})
+    legacy_training = dict(training_spec or {})
+    return {
+        "mode": _selection_value(
+            selection_map,
+            "factor_count",
+            default=legacy_training.get("factor_count", "fixed"),
+        ),
+        "fixed_factor_count": int(training_cfg.get("fixed_factor_count", legacy_training.get("fixed_factor_count", 3))),
+        "max_factors": int(training_cfg.get("max_factors", legacy_training.get("max_factors", 5))),
+        "selection_scope": "train_window",
     }
 
 
@@ -1591,6 +1607,7 @@ def _factor_block_from_bridge(
     feature_builder: str,
     dimred: str,
     training_spec: dict[str, Any],
+    factor_count_config: Mapping[str, Any],
     data_task_spec: dict[str, Any],
     preprocess_contract,
     explicit_block: str | None,
@@ -1653,12 +1670,12 @@ def _factor_block_from_bridge(
         },
     }
     if block == "pca_static_factors":
-        fixed_count = int(training_spec.get("fixed_factor_count", 3))
-        max_factors = int(training_spec.get("max_factors", 5))
+        fixed_count = int(factor_count_config.get("fixed_factor_count", 3))
+        max_factors = int(factor_count_config.get("max_factors", 5))
         payload.update(
             {
                 "factor_count": {
-                    "mode": training_spec.get("factor_count", "fixed"),
+                    "mode": factor_count_config.get("mode", "fixed"),
                     "fixed_factor_count": fixed_count,
                     "max_factors": max_factors,
                     "selection_scope": "train_window",
@@ -1812,6 +1829,7 @@ def _compatibility_source_payload(
     feature_builder: str,
     predictor_family: str,
     data_richness_mode: str,
+    factor_count_config: Mapping[str, Any],
     training_spec: Mapping[str, Any],
     target_lag_selection: str,
     target_lag_count: Any,
@@ -1822,7 +1840,7 @@ def _compatibility_source_payload(
         "feature_builder": feature_builder,
         "predictor_family": predictor_family,
         "data_richness_mode": data_richness_mode,
-        "factor_count": training_spec.get("factor_count", "fixed"),
+        "factor_count": factor_count_config.get("mode", "fixed"),
         "target_lag_selection": target_lag_selection,
         "target_lag_count": target_lag_count,
         "legacy_y_lag_count": legacy_y_lag_count,
@@ -1878,6 +1896,7 @@ def _layer2_representation_spec(
     training_cfg = dict(leaf_config.get("training_config", {}) or {})
     target_lag_count = training_cfg.get("target_lag_count", training_cfg.get("factor_ar_lags", training_spec.get("factor_ar_lags", 1)))
     target_lag_count_source = "target_lag_count" if "target_lag_count" in training_cfg else "factor_ar_lags"
+    factor_count_config = _factor_count_config(selection_map, leaf_config, training_spec)
     x_lag_creation = getattr(preprocess_contract, "x_lag_creation", "no_x_lags")
     dimred = getattr(preprocess_contract, "dimensionality_reduction_policy", "none")
     horizon_target_construction = data_task_spec.get("horizon_target_construction", "future_target_level_t_plus_h")
@@ -1901,6 +1920,7 @@ def _layer2_representation_spec(
         feature_builder=str(feature_builder),
         predictor_family=str(predictor_family),
         data_richness_mode=str(data_richness_mode),
+        factor_count_config=factor_count_config,
         training_spec=training_spec,
         target_lag_selection=str(target_lag_selection),
         target_lag_count=target_lag_count,
@@ -1947,6 +1967,7 @@ def _layer2_representation_spec(
                 feature_builder=str(feature_builder),
                 dimred=str(dimred),
                 training_spec=training_spec,
+                factor_count_config=factor_count_config,
                 data_task_spec=data_task_spec,
                 preprocess_contract=preprocess_contract,
                 explicit_block=explicit_factor_feature_block,

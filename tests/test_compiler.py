@@ -2424,6 +2424,9 @@ def test_layer2_explicit_factor_block_lowers_to_dimred_bridge() -> None:
     }
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "executable"
+    assert "factor_count" not in result.manifest["training_spec"]
+    assert "fixed_factor_count" not in result.manifest["training_spec"]
+    assert "max_factors" not in result.manifest["training_spec"]
     assert result.manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
     block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
     assert block["value"] == "pca_static_factors"
@@ -2728,7 +2731,9 @@ def test_compiled_manifest_records_training_config_passthrough_defaults() -> Non
     spec = compile_result.manifest["training_spec"]
     assert spec["validation_ratio"] == 0.2
     assert spec["max_trials"] == 6
-    assert spec["fixed_factor_count"] == 3
+    assert "factor_count" not in spec
+    assert "fixed_factor_count" not in spec
+    assert "max_factors" not in spec
 
 
 def test_axis_governance_table_marks_quantile_linear_and_point_median_operational() -> None:

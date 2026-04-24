@@ -131,9 +131,14 @@ The boundary is defined, but these cleanup items remain:
   `layer2_representation_spec`. Runtime readers for custom preprocessors and
   target transformers read Layer 2 metadata first, falling back to legacy
   `training_spec` only for old recipes.
-- `factor_count` and `factor_ar_lags` still remain in `training_spec` as
-  runtime compatibility debt because factor runtimes still consume those keys
-  directly.
+- The second cleanup pass moved `factor_count`, `fixed_factor_count`, and
+  `max_factors` out of newly generated `training_spec`. Factor runtimes now
+  read Layer 2 factor-block metadata first and fall back to legacy
+  `training_spec` only for old recipes.
+- `factor_ar_lags` still remains in `training_spec` as runtime compatibility
+  debt because it conflates target-lag count and factor-lag count in old
+  recipes. It should be split into Layer 2 target-lag / factor-lag metadata in
+  a follow-up pass.
 - `data_task_spec` still carries some migrated fields for compatibility, such
   as `forecast_type`, `forecast_object`, and
   `horizon_target_construction`. Compiler and docs should keep moving new

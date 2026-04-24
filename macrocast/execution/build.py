@@ -1208,6 +1208,28 @@ def _factor_feature_block(recipe: RecipeSpec | None) -> str | None:
     return _layer2_block_value(blocks, "factor_feature_block")
 
 
+def _factor_feature_block_spec(recipe: RecipeSpec | None) -> dict[str, object]:
+    if recipe is None:
+        return {}
+    blocks = _layer2_feature_blocks(recipe)
+    block = blocks.get("factor_feature_block", {})
+    return dict(block) if isinstance(block, dict) else {}
+
+
+def _factor_runtime_training_spec(recipe: RecipeSpec) -> dict[str, object]:
+    training_spec = dict(getattr(recipe, "training_spec", {}) or {})
+    factor_block = _factor_feature_block_spec(recipe)
+    factor_count = factor_block.get("factor_count", {})
+    if isinstance(factor_count, dict):
+        if "mode" in factor_count:
+            training_spec["factor_count"] = factor_count.get("mode")
+        if "fixed_factor_count" in factor_count:
+            training_spec["fixed_factor_count"] = factor_count.get("fixed_factor_count")
+        if "max_factors" in factor_count:
+            training_spec["max_factors"] = factor_count.get("max_factors")
+    return training_spec
+
+
 def _feature_block_combination(recipe: RecipeSpec | None) -> str:
     if recipe is None:
         return "replace_with_blocks"
@@ -4071,7 +4093,7 @@ def _run_pcr_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
         pd.DataFrame(representation.Z_pred, columns=representation.feature_names),
-        recipe.training_spec,
+        _factor_runtime_training_spec(recipe),
         include_ar_lags=False,
     )
     return {"y_pred": pred, "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
@@ -4085,7 +4107,7 @@ def _run_pls_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
         pd.DataFrame(representation.Z_pred, columns=representation.feature_names),
-        recipe.training_spec,
+        _factor_runtime_training_spec(recipe),
         include_ar_lags=False,
     )
     return {"y_pred": pred, "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
@@ -4099,7 +4121,7 @@ def _run_factor_augmented_linear_autoreg_executor(train: pd.Series, horizon: int
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
         pd.DataFrame(representation.Z_pred, columns=representation.feature_names),
-        recipe.training_spec,
+        _factor_runtime_training_spec(recipe),
         include_ar_lags=True,
     )
     return {"y_pred": pred, "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
@@ -4135,7 +4157,7 @@ def _run_pcr_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSp
     X_train = raw_frame[predictors].iloc[start_idx : origin_idx - horizon + 1].astype(float).copy()
     y_train = raw_frame[recipe.target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
     X_pred = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
-    pred, _tp = fit_factor_model("pcr", X_train, y_train, X_pred, recipe.training_spec, include_ar_lags=False)
+    pred, _tp = fit_factor_model("pcr", X_train, y_train, X_pred, _factor_runtime_training_spec(recipe), include_ar_lags=False)
     return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -4145,7 +4167,7 @@ def _run_pls_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSp
     X_train = raw_frame[predictors].iloc[start_idx : origin_idx - horizon + 1].astype(float).copy()
     y_train = raw_frame[recipe.target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
     X_pred = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
-    pred, _tp = fit_factor_model("pls", X_train, y_train, X_pred, recipe.training_spec, include_ar_lags=False)
+    pred, _tp = fit_factor_model("pls", X_train, y_train, X_pred, _factor_runtime_training_spec(recipe), include_ar_lags=False)
     return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -4155,7 +4177,7 @@ def _run_factor_augmented_linear_raw_panel_executor(train: pd.Series, horizon: i
     X_train = raw_frame[predictors].iloc[start_idx : origin_idx - horizon + 1].astype(float).copy()
     y_train = raw_frame[recipe.target].iloc[start_idx + horizon : origin_idx + 1].to_numpy(dtype=float)
     X_pred = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
-    pred, _tp = fit_factor_model("factor_augmented_linear", X_train, y_train, X_pred, recipe.training_spec, include_ar_lags=True)
+    pred, _tp = fit_factor_model("factor_augmented_linear", X_train, y_train, X_pred, _factor_runtime_training_spec(recipe), include_ar_lags=True)
     return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
