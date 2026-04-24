@@ -7,7 +7,6 @@ See the [user guide](../user_guide/compiler.md) for conceptual background.
 ```{eval-rst}
 .. automodule:: macrocast.compiler
    :members:
-   :imported-members:
    :show-inheritance:
    :member-order: bysource
 ```

@@ -44,15 +44,12 @@ class SweepPlanError(ValueError):
 class SweepVariant:
     """One fully-specified variant recipe derived from a parent sweep recipe.
 
-    Attributes:
-        variant_id: Stable identifier ``v-<8-hex>`` derived from the axis
-            values (same values -> same id across runs and machines).
-        axis_values: Layer-qualified axis values fixed for this variant,
-            e.g. ``{"3_training.model_family": "ridge"}``.
-        parent_recipe_id: The sweep parent recipe's ``recipe_id``.
-        variant_recipe_dict: The variant's standalone recipe dict with
-            ``sweep_axes`` merged into ``fixed_axes``; compilable by
-            ``compile_recipe_dict`` as a single-path recipe.
+    Field contract: ``variant_id`` is a stable ``v-<8-hex>`` identifier
+    derived from the axis values; ``axis_values`` stores layer-qualified
+    fixed values such as ``{"3_training.model_family": "ridge"}``;
+    ``parent_recipe_id`` preserves the parent recipe identity; and
+    ``variant_recipe_dict`` is a standalone recipe dict with ``sweep_axes``
+    merged into ``fixed_axes`` for single-path compilation.
     """
 
     variant_id: str
