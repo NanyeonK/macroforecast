@@ -97,6 +97,15 @@ def test_summary_counts_match_variants() -> None:
             artifact_dir="variants/v-2",
             error="boom",
         ),
+        VariantManifestEntry(
+            variant_id="v-3",
+            axis_values={"a": "z"},
+            status="skipped",
+            artifact_dir="variants/v-3",
+            compiler_status="blocked_by_incompatibility",
+            compiler_blocked_reasons=["blocked"],
+            layer3_capability_cell={"runtime_status": "blocked_by_incompatibility"},
+        ),
     ]
     manifest = build_study_manifest(
         study_id="sha256-test",
@@ -108,4 +117,10 @@ def test_summary_counts_match_variants() -> None:
     )
     assert manifest["summary"]["successful"] == 1
     assert manifest["summary"]["failed"] == 1
-    assert manifest["summary"]["total_variants"] == 2
+    assert manifest["summary"]["skipped"] == 1
+    assert manifest["summary"]["invalid_cells"] == 1
+    assert manifest["summary"]["runnable_variants"] == 2
+    assert manifest["summary"]["total_variants"] == 3
+    skipped = manifest["sweep_plan"]["variants"][2]
+    assert skipped["compiler_status"] == "blocked_by_incompatibility"
+    assert skipped["compiler_blocked_reasons"] == ["blocked"]

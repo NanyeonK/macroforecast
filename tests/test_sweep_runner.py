@@ -248,6 +248,33 @@ def test_skip_failed_cell_records_failure_and_continues(tmp_path: Path) -> None:
     assert result.failed_count == 1
 
 
+def test_skip_failed_cell_skips_compile_invalid_l2_l3_cells(tmp_path: Path) -> None:
+    recipe = _horse_race_recipe()
+    recipe["path"]["0_meta"]["fixed_axes"]["failure_policy"] = "skip_failed_cell"
+    recipe["path"]["3_training"]["sweep_axes"] = {
+        "model_family": ["ridge", "ar"],
+    }
+    plan = compile_sweep_plan(recipe)
+
+    result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
+
+    assert result.successful_count == 1
+    assert result.failed_count == 0
+    assert result.skipped_count == 1
+
+    manifest = json.loads(Path(result.manifest_path).read_text())
+    assert manifest["summary"]["successful"] == 1
+    assert manifest["summary"]["failed"] == 0
+    assert manifest["summary"]["skipped"] == 1
+    assert manifest["summary"]["invalid_cells"] == 1
+    skipped = next(v for v in manifest["sweep_plan"]["variants"] if v["status"] == "skipped")
+    assert skipped["compiler_status"] == "blocked_by_incompatibility"
+    assert skipped["layer3_capability_cell"]["model_family"] == "ar"
+    assert skipped["layer3_capability_cell"]["feature_runtime"] == "raw_feature_panel"
+    assert any("model_family='ar'" in reason for reason in skipped["compiler_blocked_reasons"])
+    assert (tmp_path / skipped["artifact_dir"] / "compiler_manifest.json").exists()
+
+
 def test_warn_only_emits_warning_and_continues(tmp_path: Path) -> None:
     import warnings as warnings_mod
     recipe = _horse_race_recipe()

@@ -43,6 +43,10 @@ class VariantResult:
     runtime_seconds: float
     error: str | None = None
     metrics_summary: dict[str, Any] = field(default_factory=dict)
+    compiler_status: str | None = None
+    compiler_warnings: tuple[str, ...] = ()
+    compiler_blocked_reasons: tuple[str, ...] = ()
+    layer3_capability_cell: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -55,6 +59,7 @@ class SweepResult:
     per_variant_results: tuple[VariantResult, ...]
     successful_count: int
     failed_count: int
+    skipped_count: int = 0
 
     @property
     def size(self) -> int:
@@ -141,6 +146,15 @@ _CONTINUE_ON_VARIANT_FAILURE = frozenset({
 })
 
 
+_NON_EXECUTABLE_COMPILE_STATUSES = frozenset({
+    "blocked_by_incompatibility",
+    "not_supported",
+    "ready_for_sweep_runner",
+    "ready_for_wrapper_runner",
+    "ready_for_replication_runner",
+})
+
+
 def execute_sweep(
     *,
     plan: SweepPlan,
@@ -203,11 +217,69 @@ def execute_sweep(
             compile_result = compile_recipe_dict(variant.variant_recipe_dict)
             compiled = compile_result.compiled
             if compiled.execution_status != "executable":
-                raise ExecutionError(
-                    f"variant {variant.variant_id} is not executable: "
-                    f"status={compiled.execution_status!r} "
-                    f"warnings={list(compiled.warnings)} "
-                    f"blocked={list(compiled.blocked_reasons)}"
+                runtime = time.monotonic() - t0
+                if not continue_on_failure:
+                    raise ExecutionError(
+                        f"variant {variant.variant_id} is not executable: "
+                        f"status={compiled.execution_status!r} "
+                        f"warnings={list(compiled.warnings)} "
+                        f"blocked={list(compiled.blocked_reasons)}"
+                    )
+                if failure_policy == "warn_only":
+                    warnings.warn(
+                        f"variant {variant.variant_id} skipped: "
+                        f"compile status={compiled.execution_status!r}",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                variant_output.mkdir(parents=True, exist_ok=True)
+                compile_manifest = compiled_spec_to_dict(compiled)
+                (variant_output / "compiler_manifest.json").write_text(
+                    json.dumps(compile_manifest, indent=2, ensure_ascii=False, default=str),
+                    encoding="utf-8",
+                )
+                rel_artifact = _relative_to(variant_output, output_root_path)
+                layer3_cell = (
+                    compile_manifest.get("layer3_capability_matrix", {}).get("active_cell", {})
+                    if isinstance(compile_manifest, dict)
+                    else {}
+                )
+                warning_list = list(compiled.warnings)
+                blocked_list = list(compiled.blocked_reasons)
+                error = (
+                    f"compile status={compiled.execution_status}; "
+                    f"warnings={warning_list}; blocked={blocked_list}"
+                )
+                status = (
+                    "skipped"
+                    if compiled.execution_status in _NON_EXECUTABLE_COMPILE_STATUSES
+                    else "failed"
+                )
+                return (
+                    VariantManifestEntry(
+                        variant_id=variant.variant_id,
+                        axis_values=dict(variant.axis_values),
+                        status=status,
+                        artifact_dir=rel_artifact,
+                        runtime_seconds=runtime,
+                        error=error,
+                        compiler_status=compiled.execution_status,
+                        compiler_warnings=warning_list,
+                        compiler_blocked_reasons=blocked_list,
+                        layer3_capability_cell=dict(layer3_cell),
+                    ),
+                    VariantResult(
+                        variant_id=variant.variant_id,
+                        axis_values=dict(variant.axis_values),
+                        status=status,
+                        artifact_dir=str(variant_output),
+                        runtime_seconds=runtime,
+                        error=error,
+                        compiler_status=compiled.execution_status,
+                        compiler_warnings=tuple(warning_list),
+                        compiler_blocked_reasons=tuple(blocked_list),
+                        layer3_capability_cell=dict(layer3_cell),
+                    ),
                 )
 
             default_payload: dict[str, Any] = {
@@ -331,6 +403,7 @@ def execute_sweep(
         per_variant_results=tuple(results),
         successful_count=sum(1 for r in results if r.status == "success"),
         failed_count=sum(1 for r in results if r.status == "failed"),
+        skipped_count=sum(1 for r in results if r.status == "skipped"),
     )
 
 

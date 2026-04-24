@@ -146,10 +146,10 @@ Loosen when you're running a large sweep and want a partial report rather than a
 | Value | Status | When to use | Verify |
 |---|---|---|---|
 | `fail_fast` | operational (default) | Default. Any single-recipe run; sweeps during recipe development. | No change — run aborts on first error. |
-| `skip_failed_cell` | operational | Large sweeps where the failure of one variant shouldn't stop the others. | `manifest["failed_components"]` lists the skipped cells. |
-| `skip_failed_model` | operational | Same pattern scoped to model families. | Same manifest field. |
+| `skip_failed_cell` | operational | Large sweeps where the failure of one variant shouldn't stop the others. | `study_manifest["summary"]["skipped"]` and per-variant `compiler_status` / `compiler_blocked_reasons` record compile-invalid cells. |
+| `skip_failed_model` | operational | Same pattern scoped to model families. | Failed variants remain in `study_manifest["sweep_plan"]["variants"]`. |
 | `save_partial_results` | operational | Flush artefacts before aborting — useful when you want what completed so far. | Partial `run/` directories persist. |
-| `warn_only` | operational | Never stop; emit a `RuntimeWarning` per failure. | stderr warnings + `manifest["failed_components"]`. |
+| `warn_only` | operational | Never stop; emit a `RuntimeWarning` per failure. | stderr warnings plus per-variant status in `study_manifest`. |
 
 ### Functions & features
 

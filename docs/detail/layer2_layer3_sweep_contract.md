@@ -91,7 +91,8 @@ representation payload plus training settings.
 
 The full recipe grammar already supports `sweep_axes` on Layer 2 and Layer 3.
 `compile_sweep_plan()` expands those axes into Cartesian variants. Each variant
-is then compiled and executed as a normal single-path recipe.
+is then compiled as a normal single-path recipe. Executable variants run through
+`execute_recipe`; non-executable cells are reported before execution.
 
 Free representation sweep means the following:
 
@@ -100,9 +101,13 @@ Free representation sweep means the following:
 3. The runner materializes each Layer 2 x Layer 3 cell as a separate variant.
 4. The compiler validates each cell after expansion, because some choices are
    only meaningful together.
-5. Execution writes per-cell artifacts under the variant directory.
-6. The study manifest records the axis values, execution status, metrics, and
-   block provenance for every cell.
+5. With `failure_policy=skip_failed_cell`, compile-invalid cells are marked
+   `skipped` before execution. The variant directory still receives
+   `compiler_manifest.json` for audit.
+6. Executed cells write per-cell artifacts under the variant directory.
+7. The study manifest records the axis values, execution status, metrics,
+   compiler status, Layer 3 capability cell, and block provenance for every
+   cell.
 
 For example, a full recipe may sweep:
 
@@ -123,6 +128,17 @@ path:
 The compiler should not treat this as a special "preprocessing sweep" route.
 It should treat this as a set of concrete `Z` construction recipes crossed with
 forecast-generator choices.
+
+Invalid cells are expected in broad research grids. For example, a raw-panel
+feature runtime crossed with `model_family=ar` is a Layer 2 x Layer 3
+compatibility failure, not a crash. The sweep manifest records this as:
+
+- variant `status="skipped"`;
+- `compiler_status="blocked_by_incompatibility"` or `not_supported`;
+- `compiler_blocked_reasons`;
+- `layer3_capability_cell`, copied from the compiled manifest;
+- root summary counts: `successful`, `failed`, `skipped`, `invalid_cells`, and
+  `runnable_variants`.
 
 ## Layer 2 Representation Contract
 
