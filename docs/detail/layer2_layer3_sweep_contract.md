@@ -2,6 +2,11 @@
 
 Date: 2026-04-24
 
+Detailed forward design for the next Layer 2 representation composers and
+Layer 3 forecast-generation protocols lives in
+`layer2_layer3_detailed_design.md`. This page defines the sweep contract and
+runtime audit semantics for the currently supported grid machinery.
+
 This document defines the target contract for freely sweeping research feature
 representations together with forecast generators. It is the bridge between
 Layer 2, which constructs the research representation `Z`, and Layer 3, which

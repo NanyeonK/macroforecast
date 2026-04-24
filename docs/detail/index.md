@@ -21,6 +21,7 @@ layer1_data_task_audit
 registry_axes
 layer2_feature_representation
 layer2_closure_ledger
+layer2_layer3_detailed_design
 layer2_layer3_sweep_contract
 layer2_layer3_grid_examples
 layer2_revision_plan

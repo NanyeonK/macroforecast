@@ -43,6 +43,11 @@ The current tabular runtime handoff is `Layer2Representation`, with
 `Z_train`, `y_train`, `Z_pred`, feature names, block order, block roles,
 alignment, leakage contract, fit state, and runtime provenance.
 
+Forward contracts for path-average execution, future payload families,
+sequence/tensor handoff, and raw-panel iterated forecasting are specified in
+`layer2_layer3_detailed_design.md`. Those surfaces should remain gated in the
+Layer 3 capability matrix until their executors and artifacts exist.
+
 ## Non-Ownership
 
 Layer 3 must not decide how the data or representation was built. These are

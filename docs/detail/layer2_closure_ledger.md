@@ -139,6 +139,10 @@ and failure visibility.
 This is no longer cleanup work. It is the semantic composer backlog for new
 research features.
 
+Detailed interface contracts and acceptance tests for these items are fixed in
+`layer2_layer3_detailed_design.md`. That document should be updated before a
+future item moves from `contract-defined gated` to `operational`.
+
 1. `factor_then_marx` and MAF rotation.
    These need factor-score history, rotation naming, alignment tests, and
    block-level leakage metadata before they can be opened.
