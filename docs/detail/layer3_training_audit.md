@@ -138,10 +138,12 @@ The boundary is defined, but these cleanup items remain:
 - The third cleanup pass split legacy `factor_ar_lags` into Layer 2
   `target_lag_count` and factor-block `factor_lag_count` metadata. Runtime
   readers still accept old `training_spec.factor_ar_lags` as fallback only.
-- `data_task_spec` still carries some migrated fields for compatibility, such
-  as `forecast_type`, `forecast_object`, and
-  `horizon_target_construction`. Compiler and docs should keep moving new
-  generated recipes toward the canonical owners.
+- New compiled specs now emit Layer 3 forecast/window fields in
+  `training_spec`: `forecast_type`, `forecast_object`, `min_train_size`,
+  `training_start_rule`, and `training_start_date`. Runtime readers still
+  fall back to old `data_task_spec` locations for compatibility.
+- `data_task_spec` still carries non-Layer-1 fields that belong to Layer 2 or
+  later cleanup passes, such as `horizon_target_construction`.
 - `model_family` status is still value-level in the registry. The true
   capability is a matrix over `model_family`, Layer 2 feature runtime,
   `forecast_type`, and `forecast_object`.

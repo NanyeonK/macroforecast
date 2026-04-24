@@ -1004,7 +1004,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     dataset = _first_selected_value(selection_map, "dataset", "fred_md")
     source_adapter = _selection_value(selection_map, "source_adapter", default=dataset)
     target_structure = _first_selected_value(selection_map, "target_structure", "single_target_point_forecast")
-    framework = _first_selected_value(selection_map, "framework", "expanding")
     feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
     information_set_type = _first_selected_value(selection_map, "information_set_type", "revised")
     predictor_family_default = "target_lags_only" if feature_builder == "autoreg_lagged_target" else "all_macro_vars"
@@ -1020,15 +1019,11 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "official_transform_source": _official_transform_source_payload(selection_map),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
-        "forecast_type": _selection_value(selection_map, "forecast_type", default=("iterated" if feature_builder == "autoreg_lagged_target" else "direct")),
-        "forecast_object": _selection_value(selection_map, "forecast_object", default="point_mean"),
         "horizon_target_construction": _selection_value(selection_map, "horizon_target_construction", default="future_target_level_t_plus_h"),
         "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),
         "predictor_family": _selection_value(selection_map, "predictor_family", default=predictor_family_default),
         "contemporaneous_x_rule": _selection_value(selection_map, "contemporaneous_x_rule", default="forbid_contemporaneous"),
         "deterministic_components": _selection_value(selection_map, "deterministic_components", default="none"),
-        "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
-        "training_start_date": leaf_config.get("training_start_date"),
         "sample_start_date": leaf_config.get("sample_start_date"),
         "sample_end_date": leaf_config.get("sample_end_date"),
         # 1.4 variable_universe input channels
@@ -1066,7 +1061,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "sd_tcode_map_version": leaf_config.get("sd_tcode_map_version"),
         "sd_tcode_allowed_statuses": leaf_config.get("sd_tcode_allowed_statuses"),
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
-        "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
         "structural_break_segmentation": _selection_value(selection_map, "structural_break_segmentation", default="none"),
         "missing_availability": _selection_value(selection_map, "missing_availability", default="zero_fill_before_start"),
         "raw_missing_policy": _selection_value(selection_map, "raw_missing_policy", default="preserve_raw_missing"),
@@ -1131,6 +1125,9 @@ def _target_lag_selection_value(
 def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     framework = _first_selected_value(selection_map, "framework", "expanding")
     model_family = _first_selected_value(selection_map, "model_family", "ar")
+    feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
+    feature_runtime = _feature_runtime_for_validation(selection_map, fallback_feature_builder=str(feature_builder))
+    forecast_type_default = "iterated" if feature_runtime == "autoreg_lagged_target" else "direct"
     training_cfg = dict(leaf_config.get("training_config", {}))
     custom_preprocessor = _selection_value(selection_map, "custom_preprocessor", default="none")
     if custom_preprocessor != "none":
@@ -1172,7 +1169,11 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "checkpointing": _selection_value(selection_map, "checkpointing", default="none"),
         "cache_policy": _selection_value(selection_map, "cache_policy", default="no_cache"),
         "execution_backend": _selection_value(selection_map, "execution_backend", default="local_cpu"),
+        "forecast_type": _selection_value(selection_map, "forecast_type", default=forecast_type_default),
         "forecast_object": _selection_value(selection_map, "forecast_object", default="point_mean"),
+        "min_train_size": _selection_value(selection_map, "min_train_size", default="fixed_n_obs"),
+        "training_start_rule": _selection_value(selection_map, "training_start_rule", default="earliest_possible"),
+        "training_start_date": leaf_config.get("training_start_date"),
         "quantile_level": leaf_config.get("quantile_level", 0.5),
         "validation_ratio": training_cfg.get("validation_ratio", 0.2),
         "validation_n": training_cfg.get("validation_n", 5),

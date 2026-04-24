@@ -7,7 +7,9 @@ import pytest
 
 from macrocast.execution.build import (
     _PHASE3_DEFAULTS,
+    _TRAINING_AXIS_DEFAULTS,
     _data_task_axis,
+    _training_axis,
     _phase3_axis_consumption,
     _apply_release_lag,
     _apply_missing_availability,
@@ -21,10 +23,15 @@ from macrocast.execution.build import (
 @dataclass(frozen=True)
 class _StubRecipe:
     data_task_spec: dict = field(default_factory=dict)
+    training_spec: dict = field(default_factory=dict)
 
 
 def _recipe_with(**axes) -> _StubRecipe:
     return _StubRecipe(data_task_spec=dict(axes))
+
+
+def _recipe_with_training(**axes) -> _StubRecipe:
+    return _StubRecipe(training_spec=dict(axes))
 
 
 @pytest.mark.parametrize('axis_name,default', list(_PHASE3_DEFAULTS.items()))
@@ -42,6 +49,23 @@ def test_data_task_axis_round_trip(axis_name):
 def test_phase3_axis_consumption_helper_lists_all_axes():
     consumption = _phase3_axis_consumption()
     assert set(consumption.keys()) == set(_PHASE3_DEFAULTS.keys())
+
+
+@pytest.mark.parametrize('axis_name,default', list(_TRAINING_AXIS_DEFAULTS.items()))
+def test_training_axis_defaults(axis_name, default):
+    r = _recipe_with()
+    assert _training_axis(r, axis_name) == default
+
+
+@pytest.mark.parametrize('axis_name', list(_TRAINING_AXIS_DEFAULTS.keys()))
+def test_training_axis_round_trip(axis_name):
+    r = _recipe_with_training(**{axis_name: 'sentinel_value_xyz'})
+    assert _training_axis(r, axis_name) == 'sentinel_value_xyz'
+
+
+def test_training_axis_falls_back_to_legacy_data_task_spec():
+    r = _recipe_with(min_train_size='fixed_years')
+    assert _training_axis(r, 'min_train_size') == 'fixed_years'
 
 
 def test_phase3_axis_consumption_grep_anchors_present_in_build_py():
@@ -221,8 +245,8 @@ def test_variable_universe_preselected_core_filters_when_core_present():
 
 
 def test_min_train_size_round_trip():
-    r = _recipe_with(min_train_size='fixed_years')
-    assert _data_task_axis(r, 'min_train_size') == 'fixed_years'
+    r = _recipe_with_training(min_train_size='fixed_years')
+    assert _training_axis(r, 'min_train_size') == 'fixed_years'
 
 
 def test_structural_break_segmentation_round_trip():

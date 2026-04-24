@@ -102,9 +102,12 @@ _PHASE3_DEFAULTS = {
     "raw_missing_policy": "preserve_raw_missing",
     "raw_outlier_policy": "preserve_raw_outliers",
     "variable_universe": "all_variables",
-    "min_train_size": "fixed_n_obs",
     "structural_break_segmentation": "none",
     "separation_rule": "strict_separation",
+}
+_TRAINING_AXIS_DEFAULTS = {
+    "min_train_size": "fixed_n_obs",
+    "training_start_rule": "earliest_possible",
 }
 _OFFICIAL_TRANSFORM_POLICIES = {"raw_official_frame", "dataset_tcode"}
 _OFFICIAL_TRANSFORM_SCOPES = {
@@ -118,6 +121,20 @@ _RUNTIME_TCODE_CONTRACT_POLICIES = {"tcode_only", "tcode_then_extra_preprocess"}
 
 def _data_task_axis(recipe, axis_name: str) -> str:
     return str(recipe.data_task_spec.get(axis_name, _PHASE3_DEFAULTS[axis_name]))
+
+
+def _training_value(recipe, key: str, default=None):
+    training_spec = getattr(recipe, "training_spec", {}) or {}
+    data_task_spec = getattr(recipe, "data_task_spec", {}) or {}
+    if isinstance(training_spec, Mapping) and key in training_spec:
+        return training_spec[key]
+    if isinstance(data_task_spec, Mapping) and key in data_task_spec:
+        return data_task_spec[key]
+    return default
+
+
+def _training_axis(recipe, axis_name: str) -> str:
+    return str(_training_value(recipe, axis_name, _TRAINING_AXIS_DEFAULTS[axis_name]))
 
 
 def _phase3_axis_consumption() -> dict:
@@ -1023,7 +1040,7 @@ def _minimum_train_size(recipe: RecipeSpec, *, horizon: int | None = None) -> in
     """
     benchmark_spec = _benchmark_spec(recipe)
     base = int(benchmark_spec["minimum_train_size"])
-    rule = str(recipe.data_task_spec.get("min_train_size", "fixed_n_obs"))
+    rule = _training_axis(recipe, "min_train_size")
     if rule == "fixed_n_obs":
         return base
     model_family = _model_family(recipe)
@@ -5861,12 +5878,12 @@ def _build_predictions(
     _oos_period = str(recipe.data_task_spec.get("oos_period", "all_oos_data"))
 
     # 1.3 training_start_rule=fixed_start: resolve the calendar date to an index floor
-    _training_start_rule = str(recipe.data_task_spec.get("training_start_rule", "earliest_possible"))
+    _training_start_rule = _training_axis(recipe, "training_start_rule")
     _fixed_start_idx = 0
     if _training_start_rule == "fixed_start":
-        _fixed_start_date = recipe.data_task_spec.get("training_start_date")
+        _fixed_start_date = _training_value(recipe, "training_start_date")
         if _fixed_start_date is None:
-            raise ExecutionError("training_start_rule='fixed_start' requires data_task_spec['training_start_date'] (validated at compile time)")
+            raise ExecutionError("training_start_rule='fixed_start' requires training_start_date (validated at compile time)")
         import pandas as _pd
         try:
             _ts = _pd.Timestamp(_fixed_start_date)
@@ -6456,7 +6473,7 @@ def execute_recipe(
     _release_lag = _data_task_axis(recipe, "release_lag_rule")
     _missing_avail = _data_task_axis(recipe, "missing_availability")
     _var_universe = _data_task_axis(recipe, "variable_universe")
-    _min_train_axis = _data_task_axis(recipe, "min_train_size")
+    _min_train_axis = _training_axis(recipe, "min_train_size")
     _break_seg = _data_task_axis(recipe, "structural_break_segmentation")
     _separation = _data_task_axis(recipe, "separation_rule")
     raw_result = _apply_release_lag(raw_result, _release_lag, spec=dict(recipe.data_task_spec))

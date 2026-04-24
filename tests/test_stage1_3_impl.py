@@ -111,7 +111,8 @@ def test_fixed_start_with_date_executes(tmp_path: Path) -> None:
 def test_earliest_possible_is_default_when_rule_unset() -> None:
     r = compile_recipe_dict(_recipe())
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["training_start_rule"] == "earliest_possible"
+    assert r.manifest["training_spec"]["training_start_rule"] == "earliest_possible"
+    assert "training_start_rule" not in r.manifest["data_task_spec"]
 
 
 # ---------- min_train_size ----------
@@ -124,16 +125,17 @@ def test_earliest_possible_is_default_when_rule_unset() -> None:
 def test_min_train_size_rules_compile(rule: str) -> None:
     r = compile_recipe_dict(_recipe(min_train_size=rule))
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["min_train_size"] == rule
+    assert r.manifest["training_spec"]["min_train_size"] == rule
+    assert "min_train_size" not in r.manifest["data_task_spec"]
 
 
 def test_min_train_size_axis_propagates_to_manifest() -> None:
-    """Every min_train_size rule must land in the compiled data_task_spec so the
-    execution-time dispatch can read it back."""
+    """Every min_train_size rule must land in training_spec for runtime dispatch."""
     for rule in ["fixed_n_obs", "fixed_years", "model_specific_min_train",
                  "target_specific_min_train", "horizon_specific_min_train"]:
         r = compile_recipe_dict(_recipe(min_train_size=rule))
-        assert r.manifest["data_task_spec"]["min_train_size"] == rule
+        assert r.manifest["training_spec"]["min_train_size"] == rule
+        assert "min_train_size" not in r.manifest["data_task_spec"]
 
 
 # ---------- oos_period regime filter ----------

@@ -51,9 +51,9 @@ otherwise repair the source panel before official transforms are applied.
 The following axes were moved out of Layer 1 ownership:
 
 - to Layer 2: `horizon_target_construction`, `deterministic_components`,
-  `structural_break_segmentation`
+  `predictor_family`, `structural_break_segmentation`
 - to Layer 3: `benchmark_family`, `forecast_type`, `forecast_object`,
-  `predictor_family`, `min_train_size`, `training_start_rule`
+  `min_train_size`, `training_start_rule`
 - to Layer 4: `oos_period`
 - to Layer 6: `overlap_handling`
 
@@ -94,10 +94,15 @@ The following axes were moved out of Layer 1 ownership:
 - `forecast_object=point_median` and `forecast_object=quantile` now require `model_family=quantile_linear`.
 - `model_family=quantile_linear` still requires `forecast_object` in `{point_median, quantile}`.
 - This closes the previous silent failure mode where a non-quantile model could compile a `quantile` manifest but emit a point-mean forecast.
+- New compiled specs write `forecast_type` and `forecast_object` under
+  `training_spec`, not `data_task_spec`.
 
 ### 1.3 Horizon & Evaluation Window
 
 - Existing runtime closure stands: min-train rules, fixed training start, OOS regime filtering, and HAC overlap guards all have concrete execution or compiler blocks.
+- New compiled specs write `min_train_size`, `training_start_rule`, and
+  `training_start_date` under `training_spec`; execution keeps old
+  `data_task_spec` fallback for compatibility.
 - No Layer 1 change was needed in this pass.
 
 ### 1.4 Benchmark & Predictor Universe

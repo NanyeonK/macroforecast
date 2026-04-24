@@ -39,7 +39,7 @@ describes the registry layer after migration.
 | `y_lag_count` | 3_training | split in provenance | AR model-order selection remains Layer 3 for now; fixed target-lag feature construction is recorded with Layer 2 `target_lag_selection` / `target_lag_block` provenance and now executes through the explicit target-lag block path when available. |
 | `factor_ar_lags` leaf/training config | 3_training config | legacy compatibility alias | New compiled specs split it into Layer 2 `target_lag_count` and factor-block `factor_lag_count`; runtime still accepts the legacy key for old recipes. |
 | Layer 2 fields still emitted in `training_spec` | 3_training-shaped compatibility payload | 2_preprocessing / compatibility aliases | Cleanup passes moved `data_richness_mode`, `target_lag_selection`, `target_lag_count`, `custom_preprocessor`, `target_transformer`, `factor_count`, `fixed_factor_count`, `max_factors`, and `factor_ar_lags` meanings into `layer2_representation_spec` for newly compiled specs. |
-| Layer 3 fields still mirrored in `data_task_spec` | 1_data_task-shaped compatibility payload | 3_training | `forecast_type` and `forecast_object` are forecast-generator choices; generated recipes should keep them in Layer 3 while compiled specs may mirror them for old runtime paths. |
+| Layer 3 fields still mirrored in `data_task_spec` | 1_data_task-shaped compatibility payload | 3_training | Done for new compiled specs: `forecast_type`, `forecast_object`, `min_train_size`, and `training_start_rule` now emit in `training_spec`; runtime keeps `data_task_spec` fallback for old recipes. |
 
 ## Feature-Block Grammar Introduced
 

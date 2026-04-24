@@ -79,13 +79,15 @@ def _recipe(*, feature_builder: str = "autoreg_lagged_target", model_family: str
 
 def test_forecast_type_default_is_iterated_for_autoreg() -> None:
     r = compile_recipe_dict(_recipe())
-    assert r.manifest["data_task_spec"]["forecast_type"] == "iterated"
+    assert r.manifest["training_spec"]["forecast_type"] == "iterated"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
     assert r.compiled.execution_status == "executable"
 
 
 def test_forecast_type_default_is_direct_for_raw_panel() -> None:
     r = compile_recipe_dict(_recipe(feature_builder="raw_feature_panel", model_family="ridge"))
-    assert r.manifest["data_task_spec"]["forecast_type"] == "direct"
+    assert r.manifest["training_spec"]["forecast_type"] == "direct"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
     assert r.compiled.execution_status == "executable"
 
 
@@ -99,7 +101,8 @@ def test_forecast_type_iterated_autoreg_executes(tmp_path: Path) -> None:
         local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["data_task_spec"]["forecast_type"] == "iterated"
+    assert manifest["training_spec"]["forecast_type"] == "iterated"
+    assert "forecast_type" not in manifest["data_task_spec"]
 
 
 def test_forecast_type_iterated_raw_panel_blocked() -> None:
@@ -131,7 +134,8 @@ def test_forecast_type_direct_raw_panel_executes() -> None:
         forecast_type="direct",
     ))
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["forecast_type"] == "direct"
+    assert r.manifest["training_spec"]["forecast_type"] == "direct"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
 
 
 def test_forecast_object_quantile_with_quantile_linear_executes(tmp_path: Path) -> None:
@@ -150,7 +154,8 @@ def test_forecast_object_quantile_with_quantile_linear_executes(tmp_path: Path) 
         local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["data_task_spec"]["forecast_object"] == "quantile"
+    assert manifest["training_spec"]["forecast_object"] == "quantile"
+    assert "forecast_object" not in manifest["data_task_spec"]
 
 
 def test_forecast_object_point_median_still_allowed_with_quantile_linear() -> None:
