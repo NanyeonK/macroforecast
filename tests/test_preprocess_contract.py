@@ -11,6 +11,13 @@ from macrocast import (
     preprocess_summary,
     preprocess_to_dict,
 )
+from macrocast.preprocessing import (
+    CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+    FeatureBlockCallableResult,
+    build_target_scale_contract,
+    custom_feature_block_contract_metadata,
+    validate_feature_block_callable_result,
+)
 
 
 def _raw_only_contract() -> PreprocessContract:
@@ -168,6 +175,65 @@ def test_target_normalization_is_not_operational_until_window_fit_exists() -> No
     )
 
     assert is_operational_preprocess_contract(contract) is False
+
+
+def test_target_scale_contract_records_gated_normalization() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="target_only",
+        evaluation_scale="both",
+        target_transform="log",
+        target_normalization="zscore_train_only",
+    )
+
+    scale = build_target_scale_contract(contract)
+
+    assert scale["schema_version"] == "target_scale_contract_v1"
+    assert scale["runtime_status"] == "contract_defined_gated"
+    assert scale["model_target_scale"] == "transformed_target_scale"
+    assert scale["forecast_scale"] == "original_target_scale"
+    assert scale["normalization_fit_scope"] == "train_only"
+    assert any("target_normalization" in blocker for blocker in scale["blockers"])
+    assert any("evaluation_scale" in blocker for blocker in scale["blockers"])
+
+
+def test_custom_feature_block_contract_validation() -> None:
+    metadata = custom_feature_block_contract_metadata(block_kind="temporal")
+    assert metadata["schema_version"] == CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION
+    assert metadata["block_kind"] == "temporal"
+    assert "feature_names" in metadata["required_fields"]
+
+    result = FeatureBlockCallableResult(
+        train_features=object(),
+        pred_features=object(),
+        feature_names=("custom_ma",),
+        runtime_feature_names=("custom__ma",),
+        fit_state={"window": 3},
+        leakage_metadata={"lookahead": "forbidden"},
+        provenance={"source": "test"},
+    )
+    validate_feature_block_callable_result(result)
+
+
+def test_custom_feature_block_contract_requires_leakage_metadata() -> None:
+    result = FeatureBlockCallableResult(
+        train_features=object(),
+        pred_features=object(),
+        feature_names=("custom_ma",),
+    )
+    with pytest.raises(PreprocessValidationError, match="lookahead"):
+        validate_feature_block_callable_result(result)
 
 
 def test_preprocess_governance_rejects_dual_axis_sweep() -> None:

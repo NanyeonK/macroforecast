@@ -235,7 +235,9 @@ The current runtime opens the first and third modes:
   then fit `pca_static_factors` on that rotated basis. Target lags may still
   be concatenated after factor scores through the existing target-lag path.
 
-`marx_append_to_x` and `factor_then_marx` remain gated.
+`marx_append_to_x` and `factor_then_marx` remain gated, but the compiler now
+records them as explicit MARX composition modes rather than leaving them as
+implicit unsupported combinations.
 
 ### Custom Blocks
 
@@ -339,7 +341,8 @@ Before a Layer 2 x Layer 3 combination is marked operational, tests must cover:
 4. Add feature-name and block-role artifacts for every `Z` column.
 5. Add full recipe examples for Layer 2 x Layer 3 grids.
 6. Add broader factor/selection composition semantics beyond static PCA.
-7. Add remaining MARX composition modes beyond `marx_then_factor`.
+7. Execute remaining MARX composition modes beyond `marx_then_factor`; they are
+   already represented as gated composer modes in Layer 2 metadata.
 8. Add custom block callable contracts.
 9. Expose a safe simple-API representation sweep after the full-route contract
    is stable.

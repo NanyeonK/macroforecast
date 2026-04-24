@@ -6,6 +6,15 @@ from .build import (
     preprocess_to_dict,
 )
 from .errors import PreprocessContractError, PreprocessValidationError
+from .feature_blocks import (
+    CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+    FeatureBlockCallableContext,
+    FeatureBlockCallableResult,
+    custom_feature_block_contract_metadata,
+    custom_feature_block_required_fields,
+    validate_feature_block_callable_result,
+)
+from .target_scale import TARGET_SCALE_CONTRACT_VERSION, build_target_scale_contract
 from .types import (
     AdditionalPreprocessing,
     DimensionalityReductionPolicy,
@@ -39,8 +48,16 @@ __all__ = [
     "is_operational_preprocess_contract",
     "preprocess_summary",
     "preprocess_to_dict",
+    "build_target_scale_contract",
     "PreprocessContractError",
     "PreprocessValidationError",
+    "CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION",
+    "TARGET_SCALE_CONTRACT_VERSION",
+    "FeatureBlockCallableContext",
+    "FeatureBlockCallableResult",
+    "custom_feature_block_contract_metadata",
+    "custom_feature_block_required_fields",
+    "validate_feature_block_callable_result",
     "PreprocessContract",
     "TargetTransformPolicy",
     "XTransformPolicy",

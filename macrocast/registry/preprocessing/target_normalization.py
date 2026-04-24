@@ -17,13 +17,13 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='zscore_train_only',
-            description='zscore train only',
+            description='contract-defined train-window z-score normalization; execution gated until per-window fit state is written',
             status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(
             id='robust_zscore',
-            description='robust zscore',
+            description='contract-defined robust train-window z-score normalization; execution gated until per-window fit state is written',
             status='registry_only',
             priority='A',
         ),

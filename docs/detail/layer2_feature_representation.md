@@ -134,17 +134,17 @@ Operational support is currently narrow:
   `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, or
   volatility `{predictor}_vol3` features. These deterministic append blocks can
   compose with fixed predictor lags and `moving_average_rotation` in raw-panel
-  runtimes; factor bridges remain gated until the explicit block composer
-  defines append-to-factors vs factor-of-augmented-panel semantics. Local temporal
+  runtimes; supported static PCA factor composition is open through explicit
+  composers, while non-PCA or factor-of-augmented-panel semantics remain
+  gated. Local temporal
   factors are deterministic row-wise cross-sectional summaries of the active
   predictor panel, smoothed over the trailing 3 feature rows; they are not
   learned PCA/static factors.
-- `temporal_feature_block=custom_temporal_features` remains registry-only. It
-  is not the same contract as `custom_preprocessor`: the existing custom
-  preprocessor is a broad matrix hook and does not guarantee block-local
-  feature names, fit-state provenance, or leakage metadata. Operational custom
-  temporal blocks need a callable contract that returns train/pred temporal
-  feature frames plus names and provenance before they can enter `Z`.
+- `temporal_feature_block=custom_temporal_features` remains registry-only but
+  now has an explicit `custom_feature_block_callable_v1` contract. It is not
+  the same contract as `custom_preprocessor`: the existing custom preprocessor
+  is a broad matrix hook and does not guarantee block-local feature names,
+  fit-state provenance, or leakage metadata.
 - `rotation_feature_block=none`, `moving_average_rotation`, and `marx_rotation`
   are operational for raw-panel feature runtimes. `none` records explicit
   no-rotation provenance. `moving_average_rotation` appends deterministic
@@ -159,8 +159,7 @@ Operational support is currently narrow:
 - Advanced rotation values are explicit boundaries, not aliases for the generic
   primitive. `maf_rotation` remains registry-only until factor-score fit/apply
   state can compose with rotation blocks. `custom_rotation` remains registry-only
-  until a block-local callable contract returns train/pred rotation feature
-  frames, stable names, fit-state provenance, and leakage metadata.
+  under the `custom_feature_block_callable_v1` contract.
 - The MARX composer is defined by `lag_polynomial_rotation_contract_v1`. Its
   naming contract is
   `{predictor}_marx_ma_lag1_to_lag{p}` for public feature names and
@@ -172,8 +171,9 @@ Operational support is currently narrow:
   start. Source lag columns must not be appended a second time when the MARX
   basis is active. The current composer now supports raw-panel MARX basis
   replacement itself and `marx_then_factor` with static PCA factors. External
-  X-lag append, temporal append, MAF/custom rotation, and other MARX
-  composition modes remain gated.
+  X-lag append, temporal append, `marx_append_to_x`, `factor_then_marx`,
+  MAF/custom rotation, and other MARX composition modes remain explicitly
+  gated.
 - Feature selection is now operational for two explicit static-factor composer
   semantics when `factor_feature_block=pca_static_factors` (or the equivalent
   `dimensionality_reduction_policy` bridge) is active:
@@ -183,6 +183,24 @@ Operational support is currently narrow:
   appends target lags in the final `Z`, and then selects among the composed
   final columns. Broader factor/selection composition beyond static PCA still
   needs an explicit composer contract.
+
+## Target Scale Contract
+
+Layer 2 records `target_scale_contract_v1` for every recipe. The contract
+separates:
+
+- model target scale;
+- forecast output scale;
+- evaluation scale;
+- inverse-transform policy;
+- target-normalization fit scope.
+
+The currently executable path is original/raw-scale evaluation with
+`target_normalization=none` and `inverse_transform_policy=none`, plus the
+existing constrained custom `target_transformer` runtime. Non-trivial target
+normalization, inverse prediction transforms, transformed-scale evaluation, and
+dual-scale evaluation are contract-defined but gated until runtime writes
+per-window fit state and scale-specific metric artifacts.
 
 ## Target Representation Grammar
 
@@ -276,10 +294,11 @@ slices:
 
 Remaining work is semantic feature-composer work, not bridge cleanup: broader
 factor/selection composition beyond static PCA, MARX with additional
-X-lag/temporal/factor composition, MAF/custom rotations, custom callable
-contracts, target-side normalization/evaluation-scale expansion, and public
-sweep governance.
+X-lag/temporal/factor composition, MAF/custom rotations, executable custom
+callables, target-side normalization/evaluation-scale execution, and public
+sweep promotion for composer axes.
 
 The detailed target contract for freely sweeping Layer 2 representations with
 Layer 3 forecast generators is documented in
 `layer2_layer3_sweep_contract.md`.
+The current closed/open status is tracked in `layer2_closure_ledger.md`.

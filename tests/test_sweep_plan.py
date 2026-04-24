@@ -64,6 +64,9 @@ def test_two_axis_sweep_cartesian_count() -> None:
         for v in plan.variants
     }
     assert len(seen) == 6
+    assert plan.governance["schema_version"] == "sweep_governance_v1"
+    assert plan.governance["expansion_policy"] == "cartesian_expand_all_then_compile_each_variant"
+    assert plan.governance["variant_count"] == 6
 
 
 def test_variant_id_is_stable_across_calls() -> None:
@@ -222,6 +225,27 @@ def test_nested_sweep_combines_with_regular_sweep_cartesian() -> None:
         "3_training.model_family",
         "3_training.hp_space_style",
     }
+
+
+def test_layer2_representation_sweep_governance_records_variant_gate_policy() -> None:
+    recipe = _base_recipe()
+    recipe["path"]["2_preprocessing"]["fixed_axes"] = {}
+    recipe["path"]["2_preprocessing"]["sweep_axes"] = {
+        "factor_feature_block": ["none", "pca_static_factors", "custom_factors"],
+        "feature_selection_semantics": ["select_before_factor", "select_after_factor"],
+    }
+
+    plan = compile_sweep_plan(recipe)
+
+    assert plan.size == 18
+    governance = plan.governance
+    assert governance["invalid_combination_policy"] == "materialize_then_gate_at_variant_compile_or_execute"
+    assert governance["co_sweeps_model_and_layer2"] is True
+    assert set(governance["layer2_representation_axes"]) == {
+        "2_preprocessing.factor_feature_block",
+        "2_preprocessing.feature_selection_semantics",
+    }
+    assert governance["model_axes"] == ["3_training.model_family"]
 
 
 def test_nested_sweep_parent_cannot_duplicate_fixed_or_sweep() -> None:

@@ -14,10 +14,26 @@ import copy
 import hashlib
 import itertools
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 DEFAULT_MAX_VARIANTS = 1000
+_LAYER2_REPRESENTATION_SWEEP_AXES = {
+    "target_transform",
+    "target_normalization",
+    "horizon_target_construction",
+    "target_lag_block",
+    "target_lag_selection",
+    "x_lag_feature_block",
+    "factor_feature_block",
+    "feature_selection_policy",
+    "feature_selection_semantics",
+    "level_feature_block",
+    "temporal_feature_block",
+    "rotation_feature_block",
+    "feature_block_combination",
+    "feature_block_set",
+}
 
 
 class SweepPlanError(ValueError):
@@ -54,6 +70,7 @@ class SweepPlan:
     parent_recipe_dict: dict[str, Any]
     axes_swept: tuple[str, ...]
     variants: tuple[SweepVariant, ...]
+    governance: dict[str, Any] = field(default_factory=dict)
 
     @property
     def size(self) -> int:
@@ -216,6 +233,38 @@ def _materialise_variant(
     return variant
 
 
+def _sweep_governance(
+    axes_swept: tuple[str, ...],
+    *,
+    max_variants: int | None,
+    total_variants: int,
+) -> dict[str, Any]:
+    layer2_axes = tuple(axis for axis in axes_swept if axis.startswith("2_preprocessing."))
+    layer2_representation_axes = tuple(
+        axis
+        for axis in layer2_axes
+        if axis.rsplit(".", 1)[-1] in _LAYER2_REPRESENTATION_SWEEP_AXES
+    )
+    model_axes = tuple(axis for axis in axes_swept if axis.endswith(".model_family"))
+    return {
+        "schema_version": "sweep_governance_v1",
+        "expansion_policy": "cartesian_expand_all_then_compile_each_variant",
+        "invalid_combination_policy": "materialize_then_gate_at_variant_compile_or_execute",
+        "axes_swept": list(axes_swept),
+        "layer2_axes": list(layer2_axes),
+        "layer2_representation_axes": list(layer2_representation_axes),
+        "model_axes": list(model_axes),
+        "co_sweeps_model_and_layer2": bool(model_axes and layer2_representation_axes),
+        "max_variants": max_variants,
+        "variant_count": total_variants,
+        "public_api_note": (
+            "The sweep planner may expand all requested Layer 2 representation combinations; "
+            "public callers should still surface per-variant compile status because some "
+            "combinations are intentionally gated by Layer 2/3 runtime contracts."
+        ),
+    }
+
+
 def compile_sweep_plan(
     recipe_dict: dict[str, Any],
     *,
@@ -328,6 +377,11 @@ def compile_sweep_plan(
         parent_recipe_dict=copy.deepcopy(recipe_dict),
         axes_swept=axes_swept,
         variants=tuple(variants),
+        governance=_sweep_governance(
+            axes_swept,
+            max_variants=max_variants,
+            total_variants=total,
+        ),
     )
 
 

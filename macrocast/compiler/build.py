@@ -18,8 +18,11 @@ from ..execution.lag_polynomial_rotation import (
     build_marx_rotation_contract as _build_marx_rotation_contract,
 )
 from ..preprocessing import (
+    CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     build_preprocess_contract,
+    build_target_scale_contract,
     check_preprocess_governance,
+    custom_feature_block_contract_metadata,
     is_operational_preprocess_contract,
     preprocess_to_dict,
 )
@@ -90,6 +93,15 @@ _PATH_AVERAGE_LAYER3_GATE = (
     "path-average target construction has Layer 2 protocol metadata but requires "
     "Layer 3 multi-step fit/aggregation runtime"
 )
+_MARX_COMPOSITION_MODES = {
+    "operational": ["replace_lag_polynomial_basis", "marx_then_factor"],
+    "gated": [
+        "marx_append_to_x",
+        "factor_then_marx",
+        "marx_with_external_x_lag_append",
+        "marx_with_temporal_append",
+    ],
+}
 _TARGET_LAG_BLOCK_TO_SELECTION = {
     "none": "none",
     "fixed_target_lags": "fixed",
@@ -1404,6 +1416,7 @@ def _rotation_block_from_selection(
             "basis_policy": contract["basis_policy"],
             "duplicate_base_policy": contract["duplicate_base_policy"],
             "initial_lag_fill_policy": contract["initial_lag_fill_policy"],
+            "composition_modes": _MARX_COMPOSITION_MODES,
             "runtime_bridge": {"raw_panel_rotation_features": "marx_rotation"},
             "scope_note": "MARX is a preset over lag-polynomial rotation; it replaces the X lag-polynomial basis rather than appending generic moving-average rotation features",
         }
@@ -1427,7 +1440,8 @@ def _rotation_block_from_selection(
             "source_axis": "rotation_feature_block",
             "source_value": "custom_rotation",
             "runtime_status": "registry_only",
-            "required_runtime_contract": "block_local_rotation_callable",
+            "required_runtime_contract": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+            "callable_contract": custom_feature_block_contract_metadata(block_kind="rotation"),
             "required_semantics": [
                 "return train and prediction rotation feature frames",
                 "return stable public and runtime feature names",
@@ -1496,6 +1510,21 @@ def _temporal_block_from_selection(selection_map: dict[str, AxisSelection]) -> d
             },
             "runtime_bridge": {"raw_panel_temporal_features": bridge},
         }
+    if block == "custom_temporal_features":
+        return {
+            "value": "custom_temporal_features",
+            "source_axis": "temporal_feature_block",
+            "source_value": "custom_temporal_features",
+            "runtime_status": "registry_only",
+            "required_runtime_contract": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+            "callable_contract": custom_feature_block_contract_metadata(block_kind="temporal"),
+            "required_semantics": [
+                "return train and prediction temporal feature frames",
+                "return stable public and runtime feature names",
+                "return fit-state provenance and leakage metadata",
+            ],
+            "scope_note": "custom_temporal_features is a block-local callable contract; custom_preprocessor is a broader matrix hook",
+        }
     if explicit_block is not None:
         return {
             "value": block,
@@ -1534,6 +1563,11 @@ def _factor_block_from_bridge(
         "feature_selection_interaction": {
             "feature_selection_policy": getattr(preprocess_contract, "feature_selection_policy", "none"),
             "supported_semantics": ["select_before_factor", "select_after_factor"],
+            "gated_semantics": [
+                "select_after_deterministic_augmentations",
+                "select_after_custom_blocks",
+                "selection_over_non_pca_factor_blocks",
+            ],
             "active_semantic": (
                 getattr(preprocess_contract, "feature_selection_semantics", "select_before_factor")
                 if block == "pca_static_factors" and getattr(preprocess_contract, "feature_selection_policy", "none") != "none"
@@ -1547,6 +1581,7 @@ def _factor_block_from_bridge(
         },
         "rotation_interaction": {
             "rotation_feature_block": rotation_feature_block,
+            "composition_modes": _MARX_COMPOSITION_MODES if rotation_feature_block == "marx_rotation" else {"operational": [], "gated": []},
             "supported_semantics": (
                 ["marx_then_factor"]
                 if block == "pca_static_factors" and rotation_feature_block == "marx_rotation"
@@ -1587,9 +1622,25 @@ def _factor_block_from_bridge(
             }
         )
     if block in {"pca_factor_lags", "supervised_factors", "custom_factors"}:
-        payload["note"] = (
-            "factor_feature_block is representable, but this value does not yet "
-            "have a dedicated runtime path"
+        required_contract = {
+            "pca_factor_lags": "factor_lag_block_composer_v1",
+            "supervised_factors": "supervised_factor_block_contract_v1",
+            "custom_factors": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+        }[block]
+        payload.update(
+            {
+                "runtime_status": "registry_only",
+                "required_runtime_contract": required_contract,
+                "callable_contract": (
+                    custom_feature_block_contract_metadata(block_kind="factor")
+                    if block == "custom_factors"
+                    else {}
+                ),
+                "note": (
+                    "factor_feature_block is representable, but this value does not yet "
+                    "have a dedicated train-window fit/apply runtime path"
+                ),
+            }
         )
     return payload
 
@@ -1637,6 +1688,11 @@ def _feature_block_combination_from_bridge(feature_builder: str, x_lag_creation:
             "feature_builder": feature_builder,
             "x_lag_creation": x_lag_creation,
         },
+        "sweep_axis_status": "provenance_only_until_explicit_composer_axis",
+        "governance_note": (
+            "feature_block_combination summarizes the effective composer today; "
+            "it becomes a public sweep axis only after invalid-combination pruning is explicit"
+        ),
     }
 
 
@@ -1793,6 +1849,10 @@ def _layer2_representation_spec(
             "target_transformer": training_spec.get("target_transformer", "none"),
             "inverse_transform_policy": getattr(preprocess_contract, "inverse_transform_policy", "none"),
             "evaluation_scale": getattr(preprocess_contract, "evaluation_scale", "raw_level"),
+            "target_scale_contract": build_target_scale_contract(
+                preprocess_contract,
+                target_transformer=str(training_spec.get("target_transformer", "none")),
+            ),
         },
         "feature_blocks": {
             "feature_block_set": _feature_block_set_from_bridge(str(feature_builder), str(data_richness_mode)),

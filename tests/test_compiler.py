@@ -1739,7 +1739,7 @@ def test_layer2_explicit_moving_average_rotation_lowers_to_raw_panel_bridge() ->
         ),
         (
             "custom_rotation",
-            "block_local_rotation_callable",
+            "custom_feature_block_callable_v1",
             "custom_preprocessor hook is not enough",
         ),
     ],
@@ -1769,6 +1769,9 @@ def test_layer2_advanced_rotation_blocks_record_registry_only_boundary(
     assert block["required_runtime_contract"] == required_contract
     assert scope_phrase in block["scope_note"]
     assert "runtime_bridge" not in block
+    if rotation_block == "custom_rotation":
+        assert block["callable_contract"]["schema_version"] == "custom_feature_block_callable_v1"
+        assert block["callable_contract"]["block_kind"] == "rotation"
 
 
 def test_layer2_explicit_marx_rotation_requires_lag_order() -> None:
@@ -1802,6 +1805,8 @@ def test_layer2_explicit_marx_rotation_lowers_to_raw_panel_bridge() -> None:
     assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
     assert block["basis_policy"] == "replace_lag_polynomial_basis"
     assert block["initial_lag_fill_policy"] == "zero_fill_before_start"
+    assert block["composition_modes"]["operational"] == ["replace_lag_polynomial_basis", "marx_then_factor"]
+    assert "marx_append_to_x" in block["composition_modes"]["gated"]
     assert block["alignment"]["lookahead"] == "forbidden"
     assert "replaces the X lag-polynomial basis" in block["scope_note"]
     composer = block["composer_contract"]
@@ -1861,6 +1866,7 @@ def test_layer2_explicit_marx_rotation_supports_static_factor_composition(tmp_pa
     assert rotation_interaction["rotation_feature_block"] == "marx_rotation"
     assert rotation_interaction["supported_semantics"] == ["marx_then_factor"]
     assert rotation_interaction["active_semantic"] == "marx_then_factor"
+    assert "factor_then_marx" in rotation_interaction["composition_modes"]["gated"]
 
     execution = run_compiled_recipe(
         result.compiled,
@@ -1897,6 +1903,22 @@ def test_layer2_explicit_marx_rotation_rejects_temporal_composition() -> None:
     )
     assert result.compiled.execution_status == "not_supported"
     assert any("cannot yet be combined with temporal_feature_block" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_custom_temporal_block_records_callable_contract() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="custom_temporal_features",
+            rotation_feature_block="none",
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["temporal_feature_block"]
+    assert block["value"] == "custom_temporal_features"
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == "custom_feature_block_callable_v1"
+    assert block["callable_contract"]["block_kind"] == "temporal"
+    assert "custom_preprocessor is a broader matrix hook" in block["scope_note"]
 
 
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
@@ -2421,6 +2443,56 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
     assert interaction["feature_selection_policy"] == "lasso_select"
     assert interaction["active_semantic"] == "select_after_factor"
     assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
+    assert "selection_over_non_pca_factor_blocks" in interaction["gated_semantics"]
+
+
+def test_layer2_target_representation_records_scale_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "x_missing_policy": "mean_impute",
+            "scaling_policy": "standard",
+            "target_transform": "log",
+            "target_normalization": "zscore_train_only",
+            "inverse_transform_policy": "target_only",
+            "evaluation_scale": "both",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    target_rep = result.manifest["layer2_representation_spec"]["target_representation"]
+    scale = target_rep["target_scale_contract"]
+    assert target_rep["target_transform"] == "log"
+    assert target_rep["target_normalization"] == "zscore_train_only"
+    assert scale["schema_version"] == "target_scale_contract_v1"
+    assert scale["runtime_status"] == "contract_defined_gated"
+    assert scale["model_target_scale"] == "transformed_target_scale"
+    assert scale["forecast_scale"] == "original_target_scale"
+
+
+def test_layer2_custom_factor_block_records_callable_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["factor_feature_block"] = "custom_factors"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert block["value"] == "custom_factors"
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == "custom_feature_block_callable_v1"
+    assert block["callable_contract"]["block_kind"] == "factor"
 
 
 def test_compile_recipe_accepts_stage3_training_axes() -> None:
