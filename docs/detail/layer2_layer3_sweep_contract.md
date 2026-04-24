@@ -350,9 +350,9 @@ Before a Layer 2 x Layer 3 combination is marked operational, tests must cover:
 2. Continue removing Layer 2 compatibility fields from new `training_spec`
    generation while preserving legacy aliases for old recipes and manifests.
    The first passes moved target-lag provenance, custom hook selections, and
-   factor-count configuration into `layer2_representation_spec`.
-   `factor_ar_lags` remains until old target-lag and factor-lag meanings are
-   split into explicit Layer 2 metadata.
+   factor-count configuration into `layer2_representation_spec`. The latest
+   pass split legacy `factor_ar_lags` into explicit Layer 2 `target_lag_count`
+   and factor-block `factor_lag_count` metadata for new compiled specs.
 3. Add a capability matrix for `model_family x feature_runtime x forecast_type
    x forecast_object`.
 4. Add full recipe examples for Layer 2 x Layer 3 grids.

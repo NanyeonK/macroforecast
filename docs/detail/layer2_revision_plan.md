@@ -149,8 +149,9 @@ Changes:
 - introduce target-language config names for Layer 2 target-lag features, such
   as `target_lag_count`, `target_lag_max`, and `target_lag_selection`;
 - split `factor_ar_lags` into:
-  - Layer 2 factor/target-lag feature dimensions, such as `factor_lag_count`
-    or block-level lag config;
+  - Layer 2 target-lag feature depth, recorded as `target_lag_count`;
+  - Layer 2 factor-lag feature depth, recorded as `factor_lag_count` on the
+    factor feature block;
   - Layer 3 model-order config when the lag is an estimator behavior;
 - keep alias handling for existing recipes;
 - update docs and examples so new prose never uses `y` for public package
@@ -442,7 +443,7 @@ For feature-block patches, also test:
 | Terminology cleanup | done | `target` is canonical; legacy `y_*` artifacts remain compatible. |
 | Feature-block grammar | done | Explicit blocks now drive the first raw-panel/autoregressive runtime dispatch decision. |
 | Compile-time provenance | done | Compiled and runtime manifests record `layer2_representation_spec`; runtime matrices are unchanged. |
-| Compatibility name cleanup | done, provenance-only | Added `target_lag_selection` and `target_lag_count` provenance while keeping legacy `y_lag_count` / `factor_ar_lags` accepted. |
+| Compatibility name cleanup | done | Added `target_lag_selection`, `target_lag_count`, and `factor_lag_count` metadata while keeping legacy `y_lag_count` / `factor_ar_lags` accepted for old recipes. New compiled specs no longer emit `factor_ar_lags` in `training_spec`. |
 | Direct target constructions | done | Direct average growth/difference/log-growth values compile and execute with construction-scale metrics plus level-scale preservation columns. |
 | Path-average target constructions | done, protocol-only | Layer 2 stepwise target protocol is recorded; execution remains gated until Layer 3 multi-step fit/aggregation lands. |
 | Explicit target/X lag blocks | done for fixed blocks | Fixed target-lag and fixed X-lag matrix composition now read `target_lag_block` / `x_lag_feature_block` before old bridge fields; fixed target-plus-X composition is executable in raw-panel direct runtimes. |

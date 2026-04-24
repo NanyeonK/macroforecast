@@ -135,10 +135,9 @@ The boundary is defined, but these cleanup items remain:
   `max_factors` out of newly generated `training_spec`. Factor runtimes now
   read Layer 2 factor-block metadata first and fall back to legacy
   `training_spec` only for old recipes.
-- `factor_ar_lags` still remains in `training_spec` as runtime compatibility
-  debt because it conflates target-lag count and factor-lag count in old
-  recipes. It should be split into Layer 2 target-lag / factor-lag metadata in
-  a follow-up pass.
+- The third cleanup pass split legacy `factor_ar_lags` into Layer 2
+  `target_lag_count` and factor-block `factor_lag_count` metadata. Runtime
+  readers still accept old `training_spec.factor_ar_lags` as fallback only.
 - `data_task_spec` still carries some migrated fields for compatibility, such
   as `forecast_type`, `forecast_object`, and
   `horizon_target_construction`. Compiler and docs should keep moving new

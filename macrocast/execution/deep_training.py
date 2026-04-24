@@ -349,6 +349,10 @@ def resolve_factor_count(X_train: np.ndarray, y_train: np.ndarray, training_spec
     return max(1, min(3, max_k))
 
 
+def _target_lag_order(training_spec: dict[str, Any]) -> int:
+    return int(training_spec.get("target_lag_count", training_spec.get("factor_ar_lags", 1)))
+
+
 def build_factor_panel(
     X_train_df: pd.DataFrame,
     y_train: np.ndarray,
@@ -366,7 +370,7 @@ def build_factor_panel(
     if fit_state_sink is not None:
         source_names = [str(col) for col in X_train_df.columns]
         feature_names = [f"factor_{idx}" for idx in range(1, int(n_components) + 1)]
-        lag_order = int(training_spec.get("factor_ar_lags", 1))
+        lag_order = _target_lag_order(training_spec)
         target_lag_feature_names = [f"target_lag_{idx}" for idx in range(1, lag_order + 1)] if include_ar_lags else []
         fit_state_sink.append(
             {
@@ -391,7 +395,7 @@ def build_factor_panel(
         )
     if not include_ar_lags:
         return F_train, F_pred
-    lag_order = int(training_spec.get("factor_ar_lags", 1))
+    lag_order = _target_lag_order(training_spec)
     if len(y_train) <= lag_order:
         raise ValueError("insufficient target history for factors_plus_AR")
     y_lags = []
@@ -413,7 +417,7 @@ def fit_factor_model(
     training_spec: dict[str, Any],
     include_ar_lags: bool = False,
 ) -> tuple[float, dict[str, Any]]:
-    lag_order = int(training_spec.get("factor_ar_lags", 1))
+    lag_order = _target_lag_order(training_spec)
     fit_state: list[dict[str, Any]] = []
     if model_family == "pcr":
         X_train, X_pred = build_factor_panel(

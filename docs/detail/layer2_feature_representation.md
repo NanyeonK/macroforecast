@@ -96,7 +96,8 @@ Operational support is currently narrow:
 - `target_lag_block=none` and `fixed_target_lags` are operational. Fixed
   target-lag matrix composition reads `target_lag_block` directly; legacy
   `target_lag_selection`, `y_lag_count`, and `factor_ar_lags` remain accepted
-  as fallback/provenance fields.
+  as fallback fields for old recipes. New compiled specs write
+  `target_lag_count` in `layer2_representation_spec.target_lag_config`.
 - `target_lag_selection=none` and `fixed` are operational Layer 2 names; IC,
   CV, horizon-specific, and custom lag selection remain registry-only.
 - `x_lag_feature_block=none` and `fixed_x_lags` are operational. Fixed X-lag
@@ -277,6 +278,8 @@ manifest key remains as a compatibility alias for existing downstream readers.
 
 - target-lag feature construction next to factor blocks is recorded as
   `target_lag_count` in Layer 2 provenance;
+- factor-lag feature construction is recorded as `factor_lag_count` on the
+  factor feature block;
 - model-specific lag-order selection belongs to Layer 3.
 
 `dimensionality_reduction_policy` and `factor_feature_block` are related but

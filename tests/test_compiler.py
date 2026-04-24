@@ -1393,7 +1393,7 @@ def test_layer2_target_lag_selection_axis_records_target_language_provenance() -
     spec = result.manifest["layer2_representation_spec"]
     assert "target_lag_selection" not in result.manifest["training_spec"]
     assert "target_lag_count" not in result.manifest["training_spec"]
-    assert result.manifest["training_spec"]["factor_ar_lags"] == 2
+    assert "factor_ar_lags" not in result.manifest["training_spec"]
     assert spec["target_lag_config"] == {
         "selection": "fixed",
         "selection_source_axis": "target_lag_selection",
@@ -1897,6 +1897,7 @@ def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
         temporal_feature_block="none",
         rotation_feature_block="none",
     )
+    recipe["path"]["1_data_task"]["leaf_config"]["training_config"] = {"factor_lag_count": 2}
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
             "factor_feature_block": "pca_factor_lags",
@@ -1910,6 +1911,11 @@ def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "executable"
+    factor_block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert factor_block["factor_lag_count"] == 2
+    assert factor_block["factor_lag_count_source"] == "factor_lag_count"
+    assert factor_block["runtime_block"]["factor_lag_count"] == 2
+    assert "factor_ar_lags" not in result.manifest["training_spec"]
     execution = run_compiled_recipe(
         result.compiled,
         output_root=tmp_path,
@@ -1917,7 +1923,7 @@ def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
     )
     fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
     assert fit_state["block"] == "pca_factor_lags"
-    assert fit_state["factor_lag_count"] >= 1
+    assert fit_state["factor_lag_count"] == 2
     assert any(name.startswith("factor_1_lag_") for name in fit_state["factor_lag_feature_names"])
 
 

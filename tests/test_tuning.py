@@ -98,7 +98,7 @@ def test_fit_with_optional_tuning_supports_adaptivelasso_and_boosting() -> None:
         assert isinstance(payload["best_hp"], dict)
 
 
-def test_build_factor_panel_respects_factor_ar_lags_gt_one() -> None:
+def test_build_factor_panel_respects_target_lag_count_gt_one() -> None:
     X_train = __import__("pandas").DataFrame(np.arange(60, dtype=float).reshape(12, 5))
     X_pred = __import__("pandas").DataFrame(np.arange(5, dtype=float).reshape(1, 5))
     y = np.arange(12, dtype=float)
@@ -106,7 +106,7 @@ def test_build_factor_panel_respects_factor_ar_lags_gt_one() -> None:
         X_train,
         y,
         X_pred,
-        {"fixed_factor_count": 2, "factor_count": "fixed", "factor_ar_lags": 2},
+        {"fixed_factor_count": 2, "factor_count": "fixed", "target_lag_count": 2},
         include_ar_lags=True,
     )
     assert X_aug.shape[0] == len(y) - 2

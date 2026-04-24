@@ -626,7 +626,8 @@ def _benchmark_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         _target_lag_block_value(selection_map) == "fixed_target_lags"
         and "max_ar_lag" not in benchmark_config
     ):
-        benchmark_config["max_ar_lag"] = int(training_cfg.get("target_lag_count", training_cfg.get("factor_ar_lags", 1)))
+        target_lag_count, _source = _target_lag_count_config(leaf_config)
+        benchmark_config["max_ar_lag"] = int(target_lag_count)
     if benchmark_family == "custom_benchmark":
         plugin_path = benchmark_config.get("plugin_path")
         callable_name = benchmark_config.get("callable_name")
@@ -1146,13 +1147,7 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         selection_map,
         legacy_y_lag_count=str(legacy_y_lag_count),
     )
-    if "target_lag_count" in training_cfg and "factor_ar_lags" in training_cfg:
-        if int(training_cfg["target_lag_count"]) != int(training_cfg["factor_ar_lags"]):
-            raise CompileValidationError(
-                "training_config.target_lag_count and legacy training_config.factor_ar_lags "
-                "must match when both are supplied"
-            )
-    legacy_factor_ar_lags = training_cfg.get("factor_ar_lags", training_cfg.get("target_lag_count", 1))
+    _validate_legacy_factor_ar_lags(training_cfg)
     return {
         "outer_window": _selection_value(selection_map, "outer_window", default=framework),
         "refit_policy": _selection_value(selection_map, "refit_policy", default="refit_every_step"),
@@ -1188,11 +1183,63 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "early_stop_trials": training_cfg.get("early_stop_trials", 3),
         "early_stop_min_delta": training_cfg.get("early_stop_min_delta", 1e-4),
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
-        "factor_ar_lags": legacy_factor_ar_lags,
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
         "random_seed": leaf_config.get("random_seed", 42),
     }
+
+
+def _validate_legacy_factor_ar_lags(training_cfg: Mapping[str, Any]) -> None:
+    if "target_lag_count" in training_cfg and "factor_ar_lags" in training_cfg:
+        if int(training_cfg["target_lag_count"]) != int(training_cfg["factor_ar_lags"]):
+            raise CompileValidationError(
+                "training_config.factor_ar_lags is a legacy target-lag alias; "
+                "use training_config.factor_lag_count for factor lag features when it differs "
+                "from training_config.target_lag_count"
+            )
+
+
+def _lag_count_from_training_config(
+    leaf_config: Mapping[str, Any],
+    training_spec: Mapping[str, Any] | None,
+    *,
+    primary_key: str,
+    legacy_key: str = "factor_ar_lags",
+) -> tuple[Any, str]:
+    training_cfg = dict(leaf_config.get("training_config", {}) or {})
+    legacy_training = dict(training_spec or {})
+    _validate_legacy_factor_ar_lags(training_cfg)
+    if primary_key in training_cfg:
+        return training_cfg[primary_key], primary_key
+    if legacy_key in training_cfg:
+        return training_cfg[legacy_key], f"legacy_{legacy_key}"
+    if primary_key in legacy_training:
+        return legacy_training[primary_key], f"legacy_training_spec.{primary_key}"
+    if legacy_key in legacy_training:
+        return legacy_training[legacy_key], f"legacy_training_spec.{legacy_key}"
+    return 1, "default"
+
+
+def _target_lag_count_config(
+    leaf_config: Mapping[str, Any],
+    training_spec: Mapping[str, Any] | None = None,
+) -> tuple[Any, str]:
+    return _lag_count_from_training_config(
+        leaf_config,
+        training_spec,
+        primary_key="target_lag_count",
+    )
+
+
+def _factor_lag_count_config(
+    leaf_config: Mapping[str, Any],
+    training_spec: Mapping[str, Any] | None = None,
+) -> tuple[Any, str]:
+    return _lag_count_from_training_config(
+        leaf_config,
+        training_spec,
+        primary_key="factor_lag_count",
+    )
 
 
 def _factor_count_config(
@@ -1239,7 +1286,6 @@ def _target_lag_block_from_selection(
         "target_lag_selection": selection,
         "runtime_bridge": {
             "target_lag_count": lag_count,
-            "legacy_factor_ar_lags": lag_count,
         },
     }
     try:
@@ -1606,8 +1652,9 @@ def _factor_block_from_bridge(
     *,
     feature_builder: str,
     dimred: str,
-    training_spec: dict[str, Any],
     factor_count_config: Mapping[str, Any],
+    factor_lag_count: Any,
+    factor_lag_count_source: str,
     data_task_spec: dict[str, Any],
     preprocess_contract,
     explicit_block: str | None,
@@ -1629,7 +1676,16 @@ def _factor_block_from_bridge(
         "runtime_block": (
             {"matrix_composition": "pca_static_factors", "default_dimensionality_reduction_policy": "pca"}
             if block == "pca_static_factors"
-            else {}
+            else (
+                {
+                    "matrix_composition": "pca_factor_lags",
+                    "default_dimensionality_reduction_policy": "pca",
+                    "factor_lag_count": int(factor_lag_count),
+                    "factor_lag_count_source": factor_lag_count_source,
+                }
+                if block == "pca_factor_lags"
+                else {}
+            )
         ),
         "feature_selection_interaction": {
             "feature_selection_policy": getattr(preprocess_contract, "feature_selection_policy", "none"),
@@ -1707,6 +1763,14 @@ def _factor_block_from_bridge(
                 "runtime_status": "operational" if (custom_registered or builtin_operational) else "registry_only",
                 "required_runtime_contract": required_contract,
                 "custom_feature_block": str(custom_name) if custom_name else None,
+                **(
+                    {
+                        "factor_lag_count": int(factor_lag_count),
+                        "factor_lag_count_source": factor_lag_count_source,
+                    }
+                    if block == "pca_factor_lags"
+                    else {}
+                ),
                 "runtime_bridge": (
                     {"custom_feature_block": str(custom_name), "block_kind": "factor"}
                     if custom_registered
@@ -1830,9 +1894,9 @@ def _compatibility_source_payload(
     predictor_family: str,
     data_richness_mode: str,
     factor_count_config: Mapping[str, Any],
-    training_spec: Mapping[str, Any],
     target_lag_selection: str,
     target_lag_count: Any,
+    factor_lag_count: Any,
     legacy_y_lag_count: Any,
 ) -> dict[str, Any]:
     return {
@@ -1843,8 +1907,8 @@ def _compatibility_source_payload(
         "factor_count": factor_count_config.get("mode", "fixed"),
         "target_lag_selection": target_lag_selection,
         "target_lag_count": target_lag_count,
+        "factor_lag_count": factor_lag_count,
         "legacy_y_lag_count": legacy_y_lag_count,
-        "legacy_factor_ar_lags": training_spec.get("factor_ar_lags", 1),
         "legacy_manifest_alias": "source_bridge",
     }
 
@@ -1893,9 +1957,8 @@ def _layer2_representation_spec(
     else:
         target_lag_selection_source_axis = "y_lag_count"
         target_lag_selection_source_value = y_lag_count
-    training_cfg = dict(leaf_config.get("training_config", {}) or {})
-    target_lag_count = training_cfg.get("target_lag_count", training_cfg.get("factor_ar_lags", training_spec.get("factor_ar_lags", 1)))
-    target_lag_count_source = "target_lag_count" if "target_lag_count" in training_cfg else "factor_ar_lags"
+    target_lag_count, target_lag_count_source = _target_lag_count_config(leaf_config, training_spec)
+    factor_lag_count, factor_lag_count_source = _factor_lag_count_config(leaf_config, training_spec)
     factor_count_config = _factor_count_config(selection_map, leaf_config, training_spec)
     x_lag_creation = getattr(preprocess_contract, "x_lag_creation", "no_x_lags")
     dimred = getattr(preprocess_contract, "dimensionality_reduction_policy", "none")
@@ -1921,9 +1984,9 @@ def _layer2_representation_spec(
         predictor_family=str(predictor_family),
         data_richness_mode=str(data_richness_mode),
         factor_count_config=factor_count_config,
-        training_spec=training_spec,
         target_lag_selection=str(target_lag_selection),
         target_lag_count=target_lag_count,
+        factor_lag_count=factor_lag_count,
         legacy_y_lag_count=y_lag_count,
     )
     return {
@@ -1966,8 +2029,9 @@ def _layer2_representation_spec(
             "factor_feature_block": _factor_block_from_bridge(
                 feature_builder=str(feature_builder),
                 dimred=str(dimred),
-                training_spec=training_spec,
                 factor_count_config=factor_count_config,
+                factor_lag_count=factor_lag_count,
+                factor_lag_count_source=factor_lag_count_source,
                 data_task_spec=data_task_spec,
                 preprocess_contract=preprocess_contract,
                 explicit_block=explicit_factor_feature_block,
@@ -2002,7 +2066,7 @@ def _layer2_representation_spec(
         },
         "compatibility_notes": [
             "Feature-block specs drive executor-family dispatch, fixed target-lag matrix composition, fixed X-lag matrix composition, PCA static-factor matrix composition, and fixed target-lag concatenation with raw-panel/factor-panel direct Z.",
-            "Legacy y_lag_count and factor_ar_lags remain accepted; target_lag_selection and target_lag_count are the target-language provenance names.",
+            "Legacy y_lag_count remains accepted for target-lag selection; legacy factor_ar_lags remains accepted as a target-lag-count fallback. Use factor_lag_count for factor-lag feature depth.",
         ],
     }
 

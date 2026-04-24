@@ -1115,6 +1115,16 @@ def _layer2_feature_blocks(recipe: RecipeSpec | None) -> dict[str, object]:
     return dict(blocks or {}) if isinstance(blocks, dict) else {}
 
 
+def _layer2_target_lag_config(recipe: RecipeSpec | None) -> dict[str, object]:
+    if recipe is None:
+        return {}
+    spec = getattr(recipe, "layer2_representation_spec", {}) or {}
+    if not isinstance(spec, dict):
+        return {}
+    config = spec.get("target_lag_config", {})
+    return dict(config) if isinstance(config, dict) else {}
+
+
 def _layer2_block_value(blocks: Mapping[str, object], block_name: str, default: str = "none") -> str:
     block = blocks.get(block_name, {})
     if isinstance(block, dict):
@@ -1218,6 +1228,9 @@ def _factor_feature_block_spec(recipe: RecipeSpec | None) -> dict[str, object]:
 
 def _factor_runtime_training_spec(recipe: RecipeSpec) -> dict[str, object]:
     training_spec = dict(getattr(recipe, "training_spec", {}) or {})
+    target_lag_config = _layer2_target_lag_config(recipe)
+    if "count" in target_lag_config:
+        training_spec["target_lag_count"] = target_lag_config.get("count")
     factor_block = _factor_feature_block_spec(recipe)
     factor_count = factor_block.get("factor_count", {})
     if isinstance(factor_count, dict):
@@ -1227,6 +1240,11 @@ def _factor_runtime_training_spec(recipe: RecipeSpec) -> dict[str, object]:
             training_spec["fixed_factor_count"] = factor_count.get("fixed_factor_count")
         if "max_factors" in factor_count:
             training_spec["max_factors"] = factor_count.get("max_factors")
+    runtime_block = factor_block.get("runtime_block", {})
+    if isinstance(runtime_block, dict) and "factor_lag_count" in runtime_block:
+        training_spec["factor_lag_count"] = runtime_block.get("factor_lag_count")
+    elif "factor_lag_count" in factor_block:
+        training_spec["factor_lag_count"] = factor_block.get("factor_lag_count")
     return training_spec
 
 
@@ -3284,7 +3302,7 @@ def _build_raw_panel_training_data(
         fit_state_sink=fit_state_sink,
     )
     if factor_feature_block == "pca_factor_lags":
-        training_spec = dict(getattr(recipe, "training_spec", {}) or {})
+        training_spec = _factor_runtime_training_spec(recipe)
         factor_lag_count = int(training_spec.get("factor_lag_count", training_spec.get("factor_ar_lags", 1)))
         X_train_arr, X_pred_arr = _append_factor_lag_block(
             X_train_arr,

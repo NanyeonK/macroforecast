@@ -37,8 +37,8 @@ describes the registry layer after migration.
 | `tcode_policy` values beyond official transform | 2_preprocessing | 2_preprocessing | Keep extra/custom transform pipelines in Layer 2. |
 | `preprocess_order=tcode_only` | 2_preprocessing | compatibility bridge | Official-only order is represented by Layer 1 `official_transform_policy=dataset_tcode`; extra orders remain Layer 2. |
 | `y_lag_count` | 3_training | split in provenance | AR model-order selection remains Layer 3 for now; fixed target-lag feature construction is recorded with Layer 2 `target_lag_selection` / `target_lag_block` provenance and now executes through the explicit target-lag block path when available. |
-| `factor_ar_lags` leaf/training config | 3_training config | split in provenance | Legacy runtime key remains accepted; target-lag feature count next to factor blocks is recorded as Layer 2 `target_lag_count` provenance. |
-| Layer 2 fields still emitted in `training_spec` | 3_training-shaped compatibility payload | 2_preprocessing / compatibility aliases | Cleanup passes moved `data_richness_mode`, `target_lag_selection`, `target_lag_count`, `custom_preprocessor`, `target_transformer`, `factor_count`, `fixed_factor_count`, and `max_factors` into `layer2_representation_spec` for newly compiled specs. `factor_ar_lags` remains in `training_spec` until target-lag and factor-lag runtime consumers are split. |
+| `factor_ar_lags` leaf/training config | 3_training config | legacy compatibility alias | New compiled specs split it into Layer 2 `target_lag_count` and factor-block `factor_lag_count`; runtime still accepts the legacy key for old recipes. |
+| Layer 2 fields still emitted in `training_spec` | 3_training-shaped compatibility payload | 2_preprocessing / compatibility aliases | Cleanup passes moved `data_richness_mode`, `target_lag_selection`, `target_lag_count`, `custom_preprocessor`, `target_transformer`, `factor_count`, `fixed_factor_count`, `max_factors`, and `factor_ar_lags` meanings into `layer2_representation_spec` for newly compiled specs. |
 | Layer 3 fields still mirrored in `data_task_spec` | 1_data_task-shaped compatibility payload | 3_training | `forecast_type` and `forecast_object` are forecast-generator choices; generated recipes should keep them in Layer 3 while compiled specs may mirror them for old runtime paths. |
 
 ## Feature-Block Grammar Introduced
@@ -94,7 +94,6 @@ tests.
   Layer 3 boundary explicit. The first implementation pass now writes
   target-lag and custom-hook Layer 2 choices into
   `layer2_representation_spec`; old `training_spec` readers remain as
-  compatibility fallbacks. Factor-count runtime migration is now also
-  Layer 2 metadata-first. Remaining implementation debt is splitting
-  `factor_ar_lags` into target-lag / factor-lag metadata and adding the
-  Layer 3 capability matrix.
+  compatibility fallbacks. Factor-count and factor-lag runtime migration are
+  now also Layer 2 metadata-first. Remaining implementation debt is adding the
+  Layer 3 capability matrix and cleaning the `data_task_spec` mirrors.
