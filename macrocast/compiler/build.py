@@ -2144,6 +2144,7 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
         "dimension": "forecast_object",
         "runtime_status": "not_supported_yet",
         "owner_layer": "3_training",
+        "payload_contract": "direction_forecast_payload_v1",
         "requires": [
             "directional forecast payload contract",
             "direction-specific evaluation contract",
@@ -2154,6 +2155,7 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
         "dimension": "forecast_object",
         "runtime_status": "not_supported_yet",
         "owner_layer": "3_training",
+        "payload_contract": "interval_forecast_payload_v1",
         "requires": [
             "lower/upper forecast payload contract",
             "interval coverage and width evaluation contract",
@@ -2164,6 +2166,7 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
         "dimension": "forecast_object",
         "runtime_status": "not_supported_yet",
         "owner_layer": "3_training",
+        "payload_contract": "density_forecast_payload_v1",
         "requires": [
             "predictive density payload contract",
             "density scoring and calibration evaluation contract",
@@ -2174,6 +2177,8 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
         "dimension": "feature_runtime",
         "runtime_status": "not_supported_yet",
         "owner_layer": "2_preprocessing",
+        "upstream_contract": "sequence_representation_contract_v1",
+        "payload_contract": "sequence_forecast_payload_v1",
         "requires": [
             "Layer 2 sequence/tensor representation handoff",
             "Layer 3 sequence forecast payload coercion",
@@ -2184,6 +2189,8 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
         "dimension": "forecast_type x feature_runtime",
         "runtime_status": "blocked_by_incompatibility",
         "owner_layer": "3_training",
+        "scenario_contract": "exogenous_x_path_contract_v1",
+        "payload_contract": "multi_step_raw_panel_payload_v1",
         "requires": [
             "exogenous-X path or scenario contract",
             "multi-step raw-panel forecast generation contract",
@@ -2213,7 +2220,7 @@ def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[s
     )
     return {
         "schema_version": "layer3_capability_matrix_v1",
-        "schema_revision": 2,
+        "schema_revision": 3,
         "dimensions": ["model_family", "feature_runtime", "forecast_type", "forecast_object"],
         "status_catalog": dict(_LAYER3_CAPABILITY_STATUS_CATALOG),
         "future_cells": [dict(cell) for cell in _LAYER3_FUTURE_CAPABILITY_CELLS],

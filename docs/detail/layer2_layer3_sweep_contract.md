@@ -322,10 +322,19 @@ recipe. Full sweep runners should use the same matrix to report or prune
 invalid Layer 2 x Layer 3 cells.
 
 The matrix also carries a status catalog and reserved future cells. These do
-not open new recipe values. They document future support targets such as
-direction, interval, density, sequence/tensor runtimes, and raw-panel iterated
-forecasting with exogenous-X paths. Current recipes still reject dropped values
-until the corresponding runtime contract is implemented.
+not open new recipe values. They document future support targets and name the
+contract that must exist before each cell can become operational:
+
+| Future cell | Required contract |
+|---|---|
+| `forecast_object.direction` | `direction_forecast_payload_v1` |
+| `forecast_object.interval` | `interval_forecast_payload_v1` |
+| `forecast_object.density` | `density_forecast_payload_v1` |
+| `feature_runtime.sequence_tensor` | `sequence_representation_contract_v1` upstream, then `sequence_forecast_payload_v1` |
+| `forecast_type.raw_panel_iterated` | `exogenous_x_path_contract_v1` plus `multi_step_raw_panel_payload_v1` |
+
+Current recipes still reject dropped values until the corresponding runtime
+contract is implemented.
 
 ## Current Operational Sweep Surface
 

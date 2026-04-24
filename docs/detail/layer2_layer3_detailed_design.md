@@ -488,6 +488,17 @@ Acceptance:
 - Layer 3 capability matrix gates unsupported payload families;
 - artifacts preserve payload type, scale, and scoring metadata.
 
+The current `layer3_capability_matrix_v1` schema revision names the future
+contracts without opening them:
+
+| Cell | Contract |
+|---|---|
+| `forecast_object.direction` | `direction_forecast_payload_v1` |
+| `forecast_object.interval` | `interval_forecast_payload_v1` |
+| `forecast_object.density` | `density_forecast_payload_v1` |
+| `feature_runtime.sequence_tensor` | `sequence_representation_contract_v1` and `sequence_forecast_payload_v1` |
+| `forecast_type.raw_panel_iterated` | `exogenous_x_path_contract_v1` and `multi_step_raw_panel_payload_v1` |
+
 ### Phase 6: Sequence/Tensor Representation Handoff
 
 Reason: this opens a new representation family. It should not be mixed into

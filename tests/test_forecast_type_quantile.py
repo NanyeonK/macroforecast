@@ -117,12 +117,16 @@ def test_layer3_capability_matrix_records_future_status_catalog() -> None:
     matrix = r.manifest["layer3_capability_matrix"]
 
     assert matrix["schema_version"] == "layer3_capability_matrix_v1"
-    assert matrix["schema_revision"] == 2
+    assert matrix["schema_revision"] == 3
     assert "not_supported_yet" in matrix["status_catalog"]
     future_cells = {cell["cell_id"]: cell for cell in matrix["future_cells"]}
     assert future_cells["forecast_object.interval"]["runtime_status"] == "not_supported_yet"
+    assert future_cells["forecast_object.interval"]["payload_contract"] == "interval_forecast_payload_v1"
     assert future_cells["forecast_object.density"]["dimension"] == "forecast_object"
+    assert future_cells["forecast_object.density"]["payload_contract"] == "density_forecast_payload_v1"
     assert future_cells["feature_runtime.sequence_tensor"]["owner_layer"] == "2_preprocessing"
+    assert future_cells["feature_runtime.sequence_tensor"]["upstream_contract"] == "sequence_representation_contract_v1"
+    assert future_cells["forecast_type.raw_panel_iterated"]["scenario_contract"] == "exogenous_x_path_contract_v1"
     assert matrix["rules"]["forecast_object"]["interval"]["runtime_status"] == "not_supported_yet"
 
 

@@ -143,7 +143,11 @@ The docs and runtime now mostly follow this split:
 - The same matrix includes a status catalog and reserved future cells for
   direction, interval, density, sequence/tensor runtimes, and raw-panel
   iterated forecasting. These are documentation of future contracts, not
-  accepted recipe values.
+  accepted recipe values. The cells now name the required contracts:
+  `direction_forecast_payload_v1`, `interval_forecast_payload_v1`,
+  `density_forecast_payload_v1`, `sequence_representation_contract_v1`,
+  `sequence_forecast_payload_v1`, `exogenous_x_path_contract_v1`, and
+  `multi_step_raw_panel_payload_v1`.
 
 ## Current Layer 3 Axes
 
