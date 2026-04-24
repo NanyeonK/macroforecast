@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import shutil
 import zipfile
 from pathlib import Path
 from urllib.request import urlopen
 
-from ..cache import get_raw_file_path
+from ..cache import atomic_copy_to_cache, atomic_write_bytes_to_cache, get_raw_file_path
 from ..errors import RawDownloadError, RawParseError
 from ..manager import build_raw_artifact_record, normalize_version_request
 from ..manifest import append_raw_manifest_entry
@@ -26,8 +25,8 @@ def _extract_vintage_from_zip(zip_path: Path, vintage: str, target: Path) -> Non
                 break
         if match is None:
             raise RawDownloadError(f"vintage {vintage!r} not found in historical zip {zip_path}")
-        with zf.open(match) as src, open(target, "wb") as dst:
-            dst.write(src.read())
+        with zf.open(match) as src:
+            atomic_write_bytes_to_cache(src.read(), target)
 
 
 def load_fred_md(
@@ -47,14 +46,14 @@ def load_fred_md(
     if not cache_hit:
         try:
             if local_source is not None:
-                shutil.copy(Path(local_source), target)
+                atomic_copy_to_cache(Path(local_source), target)
                 source_url = str(local_source)
             elif local_zip_source is not None:
                 _extract_vintage_from_zip(Path(local_zip_source), request.vintage, target)
                 source_url = str(local_zip_source)
             else:
-                with urlopen(source_url) as src, open(target, "wb") as dst:
-                    dst.write(src.read())
+                with urlopen(source_url) as src:
+                    atomic_write_bytes_to_cache(src.read(), target)
         except Exception as exc:
             raise RawDownloadError(f"failed to obtain FRED-MD raw file for request={request}") from exc
 
