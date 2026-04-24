@@ -12,6 +12,7 @@ from macrocast import (
     build_design_frame,
     clear_custom_extensions,
     custom_feature_block,
+    custom_model,
     execute_recipe,
 )
 from macrocast.preprocessing import FeatureBlockCallableResult
@@ -493,6 +494,79 @@ def test_execute_recipe_runs_registered_custom_temporal_feature_block(tmp_path: 
     assert fit_state["block"] == "custom_temporal_feature_block"
     assert fit_state["name"] == "temporal_spread"
     assert fit_state["feature_names"] == ["custom_spread"]
+    clear_custom_extensions()
+
+
+def test_execute_recipe_runs_custom_l2_block_with_custom_l3_model(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "custom_l2_custom_l3"},
+        )
+
+    @custom_model("mean_plus_spread")
+    def _mean_plus_spread(X_train, y_train, X_test, context):
+        assert context["contract_version"] == "custom_model_v1"
+        assert context["feature_runtime_builder"] == "raw_feature_panel"
+        assert context["feature_dispatch_source"] == "layer2_feature_blocks"
+        assert "temporal" in context["block_order"]
+        assert "custom" in context["block_order"]
+        assert "custom_spread" in context["feature_names"]
+        assert X_train.shape[1] == len(context["feature_names"])
+        assert X_test.shape == (1, X_train.shape[1])
+        return float(y_train.mean())
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="mean_plus_spread",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+
+    assert manifest["prediction_rows"] > 0
+    assert manifest["model_spec"]["model_family"] == "mean_plus_spread"
+    assert manifest["model_spec"]["custom_model"] is True
+    assert manifest["forecast_engine"] == "custom_model:mean_plus_spread:raw_feature_panel_v0"
+    assert fit_state["block"] == "custom_temporal_feature_block"
+    assert fit_state["name"] == "temporal_spread"
+    assert fit_state["feature_names"] == ["custom_spread"]
+    assert len(predictions) > 0
     clear_custom_extensions()
 
 

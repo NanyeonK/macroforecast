@@ -65,6 +65,7 @@ from ..raw.sd_inferred_tcodes import (
 )
 from ..recipes import RecipeSpec, RunSpec, build_run_spec, recipe_summary
 from ..custom import (
+    CUSTOM_MODEL_CONTRACT_VERSION,
     get_custom_feature_block,
     get_custom_model,
     get_custom_preprocessor,
@@ -3597,6 +3598,28 @@ def _as_scalar_prediction(value, *, model_name: str) -> float:
     return float(flat[0])
 
 
+def _custom_model_tuning_payload(
+    representation: Layer2Representation,
+    *,
+    model_name: str,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "custom_model": model_name,
+        "custom_model_contract": CUSTOM_MODEL_CONTRACT_VERSION,
+        "feature_runtime_builder": representation.feature_runtime_builder,
+        "legacy_feature_builder": representation.legacy_feature_builder,
+        "feature_dispatch_source": representation.feature_dispatch_source,
+        "feature_names": list(representation.feature_names),
+        "layer2_block_order": list(representation.block_order),
+        "layer2_block_roles": dict(representation.block_roles),
+        "layer2_alignment": dict(representation.alignment),
+        "layer2_leakage_contract": representation.leakage_contract,
+    }
+    if representation.latest_fit_state is not None:
+        payload["feature_representation_fit_state"] = representation.latest_fit_state
+    return payload
+
+
 def _run_custom_autoreg_executor(
     train: pd.Series,
     horizon: int,
@@ -3622,7 +3645,7 @@ def _run_custom_autoreg_executor(
             "recursive_step": step,
             "feature_names": list(representation.feature_names),
             "train_index": list(train.index),
-            "contract_version": "custom_model_v1",
+            "contract_version": CUSTOM_MODEL_CONTRACT_VERSION,
         }
         context.update(representation.runtime_context(mode="custom_model"))
         if _custom_preprocessor_spec(recipe) is not None:
@@ -3642,7 +3665,7 @@ def _run_custom_autoreg_executor(
         "y_pred": float(history[-1]),
         "selected_lag": lag_order,
         "selected_bic": math.nan,
-        "tuning_payload": {},
+        "tuning_payload": _custom_model_tuning_payload(representation, model_name=model_name),
     }
 
 
@@ -3875,11 +3898,16 @@ def _run_custom_raw_panel_executor(
         "target": recipe.target,
         "horizon": int(horizon),
         "feature_names": list(representation.feature_names),
-        "contract_version": "custom_model_v1",
+        "contract_version": CUSTOM_MODEL_CONTRACT_VERSION,
     }
     context.update(representation.runtime_context(mode="custom_model"))
     pred = _as_scalar_prediction(spec.function(X_train, y_train, X_pred, context), model_name=model_name)
-    return {"y_pred": pred, "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": {}}
+    return {
+        "y_pred": pred,
+        "selected_lag": 0,
+        "selected_bic": math.nan,
+        "tuning_payload": _custom_model_tuning_payload(representation, model_name=model_name),
+    }
 
 
 def _run_ols_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:

@@ -5,10 +5,16 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from .preprocessing.feature_blocks import (
+    CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     FeatureBlockCallable,
     FeatureBlockCallableResult,
+    custom_feature_block_contract_metadata,
     validate_feature_block_callable_result,
 )
+
+CUSTOM_MODEL_CONTRACT_VERSION = "custom_model_v1"
+CUSTOM_PREPROCESSOR_CONTRACT_VERSION = "custom_preprocessor_v1"
+TARGET_TRANSFORMER_CONTRACT_VERSION = "target_transformer_v1"
 
 CustomModelFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
 CustomPreprocessorFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
@@ -52,6 +58,85 @@ _CUSTOM_MODELS: dict[str, CustomModelSpec] = {}
 _CUSTOM_PREPROCESSORS: dict[str, CustomPreprocessorSpec] = {}
 _TARGET_TRANSFORMERS: dict[str, TargetTransformerSpec] = {}
 _CUSTOM_FEATURE_BLOCKS: dict[tuple[str, str], CustomFeatureBlockSpec] = {}
+
+
+def custom_model_contract_metadata() -> dict[str, Any]:
+    return {
+        "contract_version": CUSTOM_MODEL_CONTRACT_VERSION,
+        "layer": 3,
+        "callable": "fn(X_train, y_train, X_test, context) -> scalar",
+        "input_shape": {
+            "X_train": "n_train x n_features",
+            "y_train": "n_train",
+            "X_test": "1 x n_features",
+        },
+        "return_shape": "scalar or one-element array/sequence",
+        "context_fields": (
+            "model_name",
+            "target",
+            "horizon",
+            "feature_names",
+            "feature_builder",
+            "feature_runtime_builder",
+            "legacy_feature_builder",
+            "feature_dispatch_source",
+            "block_order",
+            "block_roles",
+            "alignment",
+            "leakage_contract",
+            "mode",
+            "contract_version",
+        ),
+        "leakage_rule": "consume only Layer 2 train/pred matrices supplied by runtime",
+    }
+
+
+def custom_preprocessor_contract_metadata() -> dict[str, Any]:
+    return {
+        "contract_version": CUSTOM_PREPROCESSOR_CONTRACT_VERSION,
+        "layer": 2,
+        "callable": "fn(X_train, y_train, X_test, context) -> (X_train, X_test)",
+        "scope": "matrix post-processing after Layer 2 representation construction",
+        "target_rule": "y_train is read-only; target-scale transforms use target_transformer",
+        "context_fields": (
+            "feature_names",
+            "feature_builder",
+            "feature_runtime_builder",
+            "legacy_feature_builder",
+            "feature_dispatch_source",
+            "block_order",
+            "block_roles",
+            "alignment",
+            "leakage_contract",
+            "mode",
+        ),
+    }
+
+
+def target_transformer_contract_metadata() -> dict[str, Any]:
+    return {
+        "contract_version": TARGET_TRANSFORMER_CONTRACT_VERSION,
+        "layer": 2,
+        "callable": (
+            "fit(target_train, context); transform(target, context); "
+            "inverse_transform_prediction(target_pred, context)"
+        ),
+        "scale_rule": "final forecasts and evaluation metrics must be on raw target scale",
+    }
+
+
+def custom_method_extension_contracts() -> dict[str, Any]:
+    return {
+        "layer2_feature_block": {
+            "contract_version": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+            "temporal": custom_feature_block_contract_metadata("temporal"),
+            "rotation": custom_feature_block_contract_metadata("rotation"),
+            "factor": custom_feature_block_contract_metadata("factor"),
+        },
+        "layer2_matrix_preprocessor": custom_preprocessor_contract_metadata(),
+        "layer2_target_transformer": target_transformer_contract_metadata(),
+        "layer3_model": custom_model_contract_metadata(),
+    }
 
 
 def _validate_name(name: str, *, kind: str) -> str:

@@ -25,13 +25,19 @@ from .compiler import (
 from .defaults import DEFAULT_PROFILE, DEFAULT_PROFILE_NAME, build_default_recipe_dict
 from .experiment import Experiment, ExperimentRunResult, ExperimentSweepResult, forecast
 from .custom import (
+    CUSTOM_MODEL_CONTRACT_VERSION,
+    CUSTOM_PREPROCESSOR_CONTRACT_VERSION,
+    TARGET_TRANSFORMER_CONTRACT_VERSION,
     clear_custom_extensions,
     clear_custom_feature_blocks,
     clear_custom_models,
     clear_custom_preprocessors,
     clear_custom_target_transformers,
     custom_feature_block,
+    custom_method_extension_contracts,
+    custom_model_contract_metadata,
     custom_model,
+    custom_preprocessor_contract_metadata,
     custom_preprocessor,
     get_custom_feature_block,
     get_custom_model,
@@ -50,6 +56,7 @@ from .custom import (
     register_model,
     register_target_transformer,
     target_transformer,
+    target_transformer_contract_metadata,
 )
 from .execution import (
     ExecutionError,
@@ -177,8 +184,15 @@ __all__ = [
     "DEFAULT_PROFILE_NAME",
     "build_default_recipe_dict",
     "custom_feature_block",
+    "custom_method_extension_contracts",
+    "custom_model_contract_metadata",
     "custom_preprocessor",
+    "custom_preprocessor_contract_metadata",
     "target_transformer",
+    "target_transformer_contract_metadata",
+    "CUSTOM_MODEL_CONTRACT_VERSION",
+    "CUSTOM_PREPROCESSOR_CONTRACT_VERSION",
+    "TARGET_TRANSFORMER_CONTRACT_VERSION",
     "custom_model",
     "register_feature_block",
     "register_preprocessor",
