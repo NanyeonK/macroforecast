@@ -11,6 +11,7 @@ Implemented runtime extension points:
 
 ```python
 mc.custom_feature_block(name, block_kind="temporal" | "rotation" | "factor")
+mc.custom_feature_combiner(name)
 mc.custom_preprocessor(name)
 mc.target_transformer(name)
 mc.custom_model(name)
@@ -73,6 +74,49 @@ Return rules:
 Custom feature blocks can be selected through Layer 2 feature-block axes, for
 example `temporal_feature_block=custom_temporal_features` plus
 `custom_temporal_feature_block=<registered name>`.
+
+## Layer 2: Custom Feature Combiners
+
+Feature combiners are broader than feature blocks. Use a combiner when the
+research method changes how already-built blocks become final `Z`: nonlinear
+interactions across blocks, supervised block weighting, residualized block
+composition, or a custom low-dimensional representation built from multiple
+blocks.
+
+Minimum contract:
+
+```python
+@mc.custom_feature_combiner("my_combiner")
+def my_combiner(context):
+    train = context.blocks_train["candidate_z"]
+    pred = context.blocks_pred["candidate_z"]
+    ...
+    return FeatureCombinerCallableResult(
+        Z_train=Z_train,
+        Z_pred=Z_pred,
+        feature_names=("custom_feature",),
+        block_roles={"custom_feature": "custom"},
+        fit_state={...},
+        leakage_metadata={"lookahead": "forbidden"},
+        provenance={...},
+    )
+```
+
+Select it with `feature_block_combination=custom_combiner` plus
+`custom_feature_combiner=<registered name>` in the Layer 1 leaf config or
+`custom_feature_blocks.combiner=<registered name>`.
+
+## Layer 2: Final-Z Selection After Custom Blocks
+
+`feature_selection_semantics=select_after_custom_blocks` applies an operational
+feature-selection policy after custom blocks or a custom combiner have produced
+final `Z` candidates. The runtime records `custom_final_z_selection_v1` with
+candidate names, selected names, dropped names, policy, fit state, and leakage
+metadata.
+
+Use this when custom representation columns should participate in the same
+selection sweep as built-in columns. The selector still fits only inside the
+current training window.
 
 ## Layer 2: Matrix Preprocessors
 

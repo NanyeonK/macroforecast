@@ -13,10 +13,16 @@ from macrocast import (
 )
 from macrocast.preprocessing import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+    CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
+    CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,
     FeatureBlockCallableResult,
+    FeatureCombinerCallableResult,
     build_target_scale_contract,
     custom_feature_block_contract_metadata,
+    custom_feature_combiner_contract_metadata,
+    custom_final_z_selection_contract_metadata,
     validate_feature_block_callable_result,
+    validate_feature_combiner_callable_result,
 )
 
 
@@ -224,6 +230,29 @@ def test_custom_feature_block_contract_validation() -> None:
         provenance={"source": "test"},
     )
     validate_feature_block_callable_result(result)
+
+
+def test_custom_feature_combiner_contract_validation() -> None:
+    metadata = custom_feature_combiner_contract_metadata()
+    assert metadata["schema_version"] == CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION
+    assert "Z_train" in metadata["required_fields"]
+
+    result = FeatureCombinerCallableResult(
+        Z_train=[[1.0], [2.0]],
+        Z_pred=[[3.0]],
+        feature_names=("custom_combo",),
+        block_roles={"custom_combo": "custom"},
+        fit_state={"alpha": 1.0},
+        leakage_metadata={"lookahead": "forbidden"},
+        provenance={"test": "combiner"},
+    )
+    validate_feature_combiner_callable_result(result)
+
+
+def test_custom_final_z_selection_contract_metadata() -> None:
+    metadata = custom_final_z_selection_contract_metadata()
+    assert metadata["schema_version"] == CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION
+    assert "selected_feature_names" in metadata["required_fields"]
 
 
 def test_custom_feature_block_contract_requires_leakage_metadata() -> None:

@@ -69,18 +69,28 @@ Built-in target normalization is now fit per training window, and prediction
 artifacts carry model, transformed, and original scale columns plus dual-scale
 metric summaries where requested.
 
-Custom feature blocks without a registered callable:
+Custom feature methods without a registered callable:
 
 - `temporal_feature_block=custom_temporal_features`
 - `rotation_feature_block=custom_rotation`
 - `factor_feature_block=custom_factors`
 - `feature_block_combination=custom_combiner`
 
-The contract is `custom_feature_block_callable_v1`. A registered callable is
-executable when the recipe names it through `custom_feature_blocks` or the
-block-specific field such as `custom_temporal_feature_block`. The existing
-`custom_preprocessor` hook is broader and does not replace this block-local
-contract.
+Block-local values use `custom_feature_block_callable_v1`. A registered
+callable is executable when the recipe names it through `custom_feature_blocks`
+or the block-specific field such as `custom_temporal_feature_block`.
+`feature_block_combination=custom_combiner` uses
+`custom_feature_combiner_v1` and is executable when the recipe names a
+registered `custom_feature_combiner`. The existing `custom_preprocessor` hook
+is broader and does not replace these Layer 2 representation contracts.
+
+Custom-block final-`Z` selection:
+
+- `feature_selection_semantics=select_after_custom_blocks`
+
+This records `custom_final_z_selection_v1` and is executable when an
+operational feature-selection policy is applied after registered custom blocks
+or a registered custom combiner.
 
 MARX and factor frontier:
 
@@ -146,19 +156,13 @@ future item moves from `contract-defined gated` to `operational`.
 1. `factor_then_marx` and MAF rotation.
    These need factor-score history, rotation naming, alignment tests, and
    block-level leakage metadata before they can be opened.
-2. Custom-block final-`Z` selection.
-   Built-in final-`Z` selection is open for the supported static-factor slice,
-   but user-created columns need selection provenance over custom feature names.
-3. `feature_block_combination=custom_combiner`.
-   This needs a callable contract for arbitrary block composition, stable
-   feature naming, and clear ownership of leakage metadata.
-4. Target-side `inverse_transform_policy=custom`.
+2. Target-side `inverse_transform_policy=custom`.
    This needs a callable inverse contract plus metric-scale and artifact
    guarantees.
-5. Path-average target execution.
+3. Path-average target execution.
    Layer 2 protocol metadata exists; Layer 3 still needs multi-step fit,
    prediction, and aggregation artifacts.
-6. Sequence/tensor representation handoff.
+4. Sequence/tensor representation handoff.
    Current tabular `Layer2Representation` is closed for supported raw-panel,
    factor, custom-block, and target-lag runtimes. Sequence/tensor models need a
    separate handoff contract before they should enter full grids.

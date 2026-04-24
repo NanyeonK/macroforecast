@@ -186,6 +186,7 @@ FeatureGrouping = Literal[
 FeatureSelectionSemantics = Literal[
     "select_before_factor",
     "select_after_factor",
+    "select_after_custom_blocks",
 ]
 
 RecipeMode = Literal[

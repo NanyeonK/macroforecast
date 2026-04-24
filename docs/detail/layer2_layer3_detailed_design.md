@@ -153,11 +153,11 @@ This is already the right unit for adding individual Layer 2 methods.
 
 ### Custom Combiner
 
-`feature_block_combination=custom_combiner` is the next broader Layer 2
-extension. It is not a block. It owns how already-built blocks are combined
-into final `Z`.
+`feature_block_combination=custom_combiner` is the broader Layer 2 extension.
+It is not a block. It owns how already-built blocks are combined into final
+`Z`.
 
-Proposed contract: `custom_feature_combiner_v1`.
+Operational contract: `custom_feature_combiner_v1`.
 
 Inputs:
 
@@ -200,9 +200,9 @@ placing feature construction inside Layer 3 models.
 ### Final-Z Selection After Custom Blocks
 
 Current built-in final-`Z` selection is open for the supported static-factor
-slice. The missing part is selection over user-created columns.
+slice and for registered custom block/combiner outputs.
 
-Proposed contract: `custom_final_z_selection_v1`.
+Operational contract: `custom_final_z_selection_v1`.
 
 Required behavior:
 
@@ -216,9 +216,9 @@ Required behavior:
 - selected/dropped custom feature names remain traceable to the source custom
   block or custom combiner.
 
-This should be implemented before public full-grid exposure of custom blocks,
-because researchers will expect custom representation columns to participate in
-the same selection sweeps as built-ins.
+Use `feature_selection_semantics=select_after_custom_blocks` when custom
+representation columns should participate in the same selection sweeps as
+built-ins.
 
 ### Factor-To-Rotation Composers
 
@@ -424,6 +424,9 @@ Simple route:
 ## Recommended Implementation Order
 
 ### Phase 1: Custom Combiner And Custom Final-Z Selection
+
+Status: operational for registered custom combiners and operational built-in
+feature-selection policies over registered custom block/combiner outputs.
 
 Reason: this directly supports method researchers who want to add a Layer 2
 representation and compare it with built-ins under the same Layer 3 models.

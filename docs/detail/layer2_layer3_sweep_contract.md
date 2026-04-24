@@ -396,7 +396,7 @@ Before a Layer 2 x Layer 3 combination is marked operational, tests must cover:
    contracts are implemented.
 4. Add full recipe examples for Layer 2 x Layer 3 grids.
 5. Execute remaining semantic composer contracts:
-   `factor_then_marx`, MAF rotation, custom combiners, custom-block final-`Z`
-   selection, and custom inverse policies.
+   `factor_then_marx`, MAF rotation, custom inverse policies, and the
+   sequence/tensor representation handoff.
 6. Expose safe simple-API representation sweeps only after the full-route
    naming, result-summary, and invalid-cell reporting contracts are stable.

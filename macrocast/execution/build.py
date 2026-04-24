@@ -62,7 +62,14 @@ from ..preprocessing import (
     preprocess_summary,
     preprocess_to_dict,
 )
-from ..preprocessing.feature_blocks import FeatureBlockCallableContext, validate_feature_block_callable_result
+from ..preprocessing.feature_blocks import (
+    CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
+    CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,
+    FeatureBlockCallableContext,
+    FeatureCombinerCallableContext,
+    validate_feature_block_callable_result,
+    validate_feature_combiner_callable_result,
+)
 from ..raw import load_custom_csv, load_custom_parquet, load_fred_md, load_fred_qd, load_fred_sd
 from ..raw.sd_inferred_tcodes import (
     MAP_VERSION as SD_INFERRED_TCODE_MAP_VERSION,
@@ -73,6 +80,7 @@ from ..recipes import RecipeSpec, RunSpec, build_run_spec, recipe_summary
 from ..custom import (
     CUSTOM_MODEL_CONTRACT_VERSION,
     get_custom_feature_block,
+    get_custom_feature_combiner,
     get_custom_model,
     get_custom_preprocessor,
     get_custom_target_transformer,
@@ -2484,9 +2492,14 @@ def _apply_raw_panel_preprocessing(
     X_train, X_pred = _apply_additional_preprocessing(X_train, X_pred, contract)
     X_train, X_pred = _apply_scaling_policy(X_train, X_pred, contract)
     if not (
-        contract.dimensionality_reduction_policy != "none"
-        and feature_selection_policy != "none"
-        and feature_selection_semantics == "select_after_factor"
+        feature_selection_policy != "none"
+        and (
+            (
+                contract.dimensionality_reduction_policy != "none"
+                and feature_selection_semantics == "select_after_factor"
+            )
+            or feature_selection_semantics == "select_after_custom_blocks"
+        )
     ):
         X_train, X_pred = _apply_feature_selection_policy(
             X_train,
@@ -2797,6 +2810,168 @@ def _apply_custom_feature_block(
     )
 
 
+def _custom_feature_combiner_name(recipe: RecipeSpec) -> str:
+    spec = dict(getattr(recipe, "data_task_spec", {}) or {})
+    custom_blocks = spec.get("custom_feature_blocks", {})
+    if not isinstance(custom_blocks, Mapping):
+        custom_blocks = {}
+    for key in ("combiner", "feature_combiner", "custom_combiner", "custom_feature_combiner"):
+        value = custom_blocks.get(key)
+        if value:
+            return str(value)
+    for key in ("custom_feature_combiner", "custom_combiner", "custom_feature_block_combiner"):
+        value = spec.get(key)
+        if value:
+            return str(value)
+    raise ExecutionError(
+        "feature_block_combination='custom_combiner' requires "
+        "data_task_spec['custom_feature_combiner'] or data_task_spec['custom_feature_blocks']['combiner']"
+    )
+
+
+def _candidate_block_frames(
+    train_frame: pd.DataFrame,
+    pred_frame: pd.DataFrame,
+    feature_names: Sequence[str],
+) -> tuple[dict[str, pd.DataFrame], dict[str, pd.DataFrame], dict[str, str]]:
+    names = [str(name) for name in feature_names]
+    train_public = train_frame.copy()
+    pred_public = pred_frame.copy()
+    train_public.columns = names
+    pred_public.columns = names
+    block_roles = {name: _raw_panel_feature_role(name) for name in names}
+    blocks_train: dict[str, pd.DataFrame] = {"candidate_z": train_public}
+    blocks_pred: dict[str, pd.DataFrame] = {"candidate_z": pred_public}
+    for role in dict.fromkeys(block_roles.values()):
+        role_names = [name for name in names if block_roles[name] == role]
+        if not role_names:
+            continue
+        blocks_train[role] = train_public[role_names].copy()
+        blocks_pred[role] = pred_public[role_names].copy()
+    return blocks_train, blocks_pred, block_roles
+
+
+def _apply_custom_feature_combiner(
+    X_train_arr: np.ndarray,
+    X_pred_arr: np.ndarray,
+    y_train: np.ndarray,
+    *,
+    candidate_feature_names: Sequence[str],
+    train_index,
+    pred_index,
+    recipe: RecipeSpec,
+    horizon: int,
+    fit_state_sink: list[dict[str, object]] | None = None,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    combiner_name = _custom_feature_combiner_name(recipe)
+    try:
+        combiner_spec = get_custom_feature_combiner(combiner_name)
+    except KeyError as exc:
+        raise ExecutionError(str(exc)) from exc
+    candidate_names = [str(name) for name in candidate_feature_names]
+    train_frame = pd.DataFrame(np.asarray(X_train_arr, dtype=float), index=train_index, columns=candidate_names)
+    pred_frame = pd.DataFrame(np.asarray(X_pred_arr, dtype=float), index=pred_index, columns=candidate_names)
+    blocks_train, blocks_pred, block_roles = _candidate_block_frames(train_frame, pred_frame, candidate_names)
+    result = combiner_spec.function(
+        FeatureCombinerCallableContext(
+            blocks_train=blocks_train,
+            blocks_pred=blocks_pred,
+            y_train=np.asarray(y_train, dtype=float).copy(),
+            feature_names=tuple(candidate_names),
+            block_roles=block_roles,
+            fit_scope="train_only",
+            horizon=int(horizon),
+            forecast_origin=pred_frame.index[0] if len(pred_frame.index) else None,
+            train_index=train_frame.index,
+            pred_index=pred_frame.index,
+            metadata=dict(getattr(recipe, "data_task_spec", {}) or {}),
+        )
+    )
+    try:
+        validate_feature_combiner_callable_result(result)
+    except Exception as exc:
+        raise ExecutionError(str(exc)) from exc
+    feature_names = [str(name) for name in result.feature_names]
+    combined_train = _coerce_custom_feature_frame(
+        result.Z_train,
+        index=train_index,
+        columns=feature_names,
+        role="Z_train",
+    )
+    combined_pred = _coerce_custom_feature_frame(
+        result.Z_pred,
+        index=pred_index,
+        columns=feature_names,
+        role="Z_pred",
+    )
+    roles = {
+        str(name): str(result.block_roles.get(name, _raw_panel_feature_role(str(name))))
+        for name in feature_names
+    }
+    if fit_state_sink is not None:
+        fit_state_sink.append(
+            {
+                "block": "custom_feature_combiner",
+                "name": combiner_spec.name,
+                "contract_version": CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
+                "candidate_feature_names": candidate_names,
+                "feature_names": feature_names,
+                "block_roles": roles,
+                "fit_state": dict(result.fit_state),
+                "leakage_metadata": dict(result.leakage_metadata),
+                "provenance": dict(result.provenance),
+            }
+        )
+    return (
+        combined_train.to_numpy(dtype=float),
+        combined_pred.to_numpy(dtype=float),
+        feature_names,
+    )
+
+
+def _apply_custom_final_z_selection(
+    X_train_arr: np.ndarray,
+    y_train: np.ndarray,
+    X_pred_arr: np.ndarray,
+    *,
+    candidate_feature_names: Sequence[str],
+    policy: str,
+    fit_state_sink: list[dict[str, object]] | None = None,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    train_df = pd.DataFrame(np.asarray(X_train_arr, dtype=float), columns=[str(name) for name in candidate_feature_names])
+    pred_df = pd.DataFrame(np.asarray(X_pred_arr, dtype=float), columns=[str(name) for name in candidate_feature_names])
+    selected_train, selected_pred = _apply_feature_selection_policy(
+        train_df,
+        y_train,
+        pred_df,
+        policy=policy,
+    )
+    selected_names = [str(name) for name in selected_train.columns]
+    candidate_names = [str(name) for name in candidate_feature_names]
+    dropped_names = [name for name in candidate_names if name not in set(selected_names)]
+    if fit_state_sink is not None:
+        fit_state_sink.append(
+            {
+                "block": "custom_final_z_selection",
+                "contract_version": CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,
+                "feature_selection_policy": str(policy),
+                "candidate_feature_names": candidate_names,
+                "selected_feature_names": selected_names,
+                "selected_final_feature_names": selected_names,
+                "selected_final_feature_count": int(len(selected_names)),
+                "dropped_feature_names": dropped_names,
+                "block_roles": {name: _raw_panel_feature_role(name) for name in selected_names},
+                "fit_state": {"selected_feature_count": int(len(selected_names))},
+                "leakage_metadata": {"lookahead": "forbidden"},
+            }
+        )
+    return (
+        selected_train.to_numpy(dtype=float),
+        selected_pred.to_numpy(dtype=float),
+        selected_names,
+    )
+
+
 def _apply_temporal_feature_block(
     X_train: pd.DataFrame,
     X_pred: pd.DataFrame,
@@ -3019,15 +3194,75 @@ def _custom_feature_names_from_fit_state(fit_state: Sequence[Mapping[str, object
     return names, replaced
 
 
+def _public_feature_names_from_runtime_columns(
+    columns: Sequence[object],
+    fit_state: Sequence[Mapping[str, object]],
+) -> list[str]:
+    custom_name_map: dict[str, str] = {}
+    for payload in tuple(fit_state):
+        if not str(payload.get("block", "")).startswith("custom_"):
+            continue
+        public_names = payload.get("feature_names")
+        runtime_names = payload.get("runtime_feature_names")
+        if (
+            isinstance(public_names, Sequence)
+            and not isinstance(public_names, (str, bytes))
+            and isinstance(runtime_names, Sequence)
+            and not isinstance(runtime_names, (str, bytes))
+        ):
+            custom_name_map.update(
+                {str(runtime): str(public) for runtime, public in zip(runtime_names, public_names)}
+            )
+    names: list[str] = []
+    for column in columns:
+        name = str(column)
+        if name in custom_name_map:
+            names.append(custom_name_map[name])
+        elif name == _TARGET_LEVEL_ADD_BACK_COLUMN:
+            names.append(_TARGET_LEVEL_ADD_BACK_FEATURE_NAME)
+        elif name == _LOCAL_TEMPORAL_FACTOR_MEAN_COLUMN:
+            names.append(_LOCAL_TEMPORAL_FACTOR_MEAN_FEATURE_NAME)
+        elif name == _LOCAL_TEMPORAL_FACTOR_DISPERSION_COLUMN:
+            names.append(_LOCAL_TEMPORAL_FACTOR_DISPERSION_FEATURE_NAME)
+        elif "__lag" in name:
+            left, right = name.split("__lag", 1)
+            names.append(f"{left}_lag_{right}")
+        elif "__" in name:
+            names.append(name.replace("__", "_", 1))
+        else:
+            names.append(name)
+    return names
+
+
 def _selected_final_feature_names_from_fit_state(
     fit_state: Sequence[Mapping[str, object]],
 ) -> list[str] | None:
     for payload in reversed(tuple(fit_state)):
+        if str(payload.get("block", "")) == "custom_final_z_selection":
+            names = payload.get("selected_final_feature_names") or payload.get("selected_feature_names")
+            if isinstance(names, Sequence) and not isinstance(names, (str, bytes)):
+                return [str(name) for name in names]
+        if str(payload.get("block", "")) == "custom_feature_combiner":
+            names = payload.get("feature_names")
+            if isinstance(names, Sequence) and not isinstance(names, (str, bytes)):
+                return [str(name) for name in names]
         if str(payload.get("block", "")) not in {"pca_static_factors", "pca_factor_lags", "supervised_factors"}:
             continue
         names = payload.get("selected_final_feature_names")
         if isinstance(names, Sequence) and not isinstance(names, (str, bytes)):
             return [str(name) for name in names]
+    return None
+
+
+def _block_roles_from_fit_state(
+    fit_state: Sequence[Mapping[str, object]],
+) -> dict[str, str] | None:
+    for payload in reversed(tuple(fit_state)):
+        if str(payload.get("block", "")) not in {"custom_final_z_selection", "custom_feature_combiner"}:
+            continue
+        roles = payload.get("block_roles")
+        if isinstance(roles, Mapping):
+            return {str(name): str(role) for name, role in roles.items()}
     return None
 
 
@@ -3072,6 +3307,8 @@ def _raw_panel_representation_feature_names(
 def _raw_panel_feature_role(name: str) -> str:
     if name.startswith("custom_"):
         return "custom"
+    if name.startswith("_dc_") or name.startswith("_sb_"):
+        return "deterministic"
     if name.startswith("factor_"):
         return "factor"
     if name.startswith("target_lag_") or name.startswith("y_lag_") or name.startswith("lag_"):
@@ -3216,13 +3453,22 @@ def _build_raw_panel_representation(
         feature_block_combination=_feature_block_combination(recipe),
     )
     feature_names = tuple(_raw_panel_representation_feature_names(frame, recipe.target, recipe, fit_state))
+    fit_state_block_roles = _block_roles_from_fit_state(fit_state)
+    block_roles = fit_state_block_roles or {
+        name: _raw_panel_feature_role(name) for name in feature_names
+    }
+    block_order = (
+        tuple(dict.fromkeys(block_roles.get(name, _raw_panel_feature_role(name)) for name in feature_names))
+        if fit_state_block_roles is not None
+        else _raw_panel_block_order(recipe, fit_state)
+    )
     return Layer2Representation(
         Z_train=np.asarray(X_train, dtype=float),
         y_train=np.asarray(y_train, dtype=float),
         Z_pred=np.asarray(X_pred, dtype=float),
         feature_names=feature_names,
-        block_order=_raw_panel_block_order(recipe, fit_state),
-        block_roles={name: _raw_panel_feature_role(name) for name in feature_names},
+        block_order=block_order,
+        block_roles=block_roles,
         fit_state=tuple(dict(payload) for payload in fit_state),
         alignment=_raw_panel_alignment(recipe, spec=spec, fit_state=fit_state),
         leakage_contract=_raw_panel_leakage_contract(spec),
@@ -3466,6 +3712,62 @@ def _build_raw_panel_training_data(
             )
         except ValueError as exc:
             raise ExecutionError(str(exc)) from exc
+    def _candidate_feature_names_for_current_matrix() -> list[str]:
+        factor_names = _factor_feature_names_from_fit_state(tuple(fit_state_sink or ()))
+        if factor_names is None:
+            names = _public_feature_names_from_runtime_columns(
+                list(X_train.columns),
+                tuple(fit_state_sink or ()),
+            )
+        else:
+            names = list(factor_names)
+        if target_lag_train is not None and target_lag_pred is not None:
+            if feature_block_combination == "append_to_target_lags":
+                names = target_lag_names_for_selection + names
+            else:
+                names.extend(target_lag_names_for_selection)
+        names.extend(deterministic_feature_names)
+        if len(names) != int(np.asarray(X_train_arr).shape[1]):
+            raise ExecutionError(
+                "Layer 2 candidate feature name count does not match final Z width: "
+                f"{len(names)} names for {int(np.asarray(X_train_arr).shape[1])} columns"
+            )
+        return names
+
+    if feature_block_combination == "custom_combiner":
+        candidate_feature_names = _candidate_feature_names_for_current_matrix()
+        X_train_arr, X_pred_arr, custom_combined_feature_names = _apply_custom_feature_combiner(
+            X_train_arr,
+            X_pred_arr,
+            y_train,
+            candidate_feature_names=candidate_feature_names,
+            train_index=X_train.index,
+            pred_index=X_pred.index,
+            recipe=recipe,
+            horizon=horizon,
+            fit_state_sink=fit_state_sink,
+        )
+        if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_blocks":
+            X_train_arr, X_pred_arr, _selected_custom_names = _apply_custom_final_z_selection(
+                X_train_arr,
+                y_train,
+                X_pred_arr,
+                candidate_feature_names=custom_combined_feature_names,
+                policy=feature_selection_policy,
+                fit_state_sink=fit_state_sink,
+            )
+        return X_train_arr, y_train, X_pred_arr
+
+    if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_blocks":
+        candidate_feature_names = _candidate_feature_names_for_current_matrix()
+        X_train_arr, X_pred_arr, _selected_custom_names = _apply_custom_final_z_selection(
+            X_train_arr,
+            y_train,
+            X_pred_arr,
+            candidate_feature_names=candidate_feature_names,
+            policy=feature_selection_policy,
+            fit_state_sink=fit_state_sink,
+        )
     if feature_selection_policy != "none" and feature_selection_semantics == "select_after_factor":
         candidate_feature_names = _factor_feature_names_from_fit_state(tuple(fit_state_sink or ()))
         if candidate_feature_names is None:

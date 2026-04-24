@@ -12,12 +12,13 @@ from macrocast import (
     build_design_frame,
     clear_custom_extensions,
     custom_feature_block,
+    custom_feature_combiner,
     custom_model,
     execute_recipe,
     ExecutionError,
     ForecastPayload,
 )
-from macrocast.preprocessing import FeatureBlockCallableResult
+from macrocast.preprocessing import FeatureBlockCallableResult, FeatureCombinerCallableResult
 from macrocast.execution.build import _coerce_forecast_payload
 
 
@@ -596,6 +597,139 @@ def test_execute_recipe_runs_custom_l2_block_with_custom_l3_model(tmp_path: Path
     assert fit_state["name"] == "temporal_spread"
     assert fit_state["feature_names"] == ["custom_spread"]
     assert len(predictions) > 0
+    clear_custom_extensions()
+
+
+def test_execute_recipe_runs_registered_custom_feature_combiner(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_combiner("sum_first_two")
+    def _sum_first_two(context):
+        train = context.blocks_train["candidate_z"].iloc[:, :2].sum(axis=1).to_frame("custom_combo")
+        pred = context.blocks_pred["candidate_z"].iloc[:, :2].sum(axis=1).to_frame("custom_combo")
+        return FeatureCombinerCallableResult(
+            Z_train=train,
+            Z_pred=pred,
+            feature_names=("custom_combo",),
+            block_roles={"custom_combo": "custom"},
+            fit_state={"source_feature_names": list(context.feature_names[:2])},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"test": "sum_first_two"},
+        )
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_feature_combiner": "sum_first_two"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "none"},
+                "feature_block_combination": {"value": "custom_combiner"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert fit_state["block"] == "custom_feature_combiner"
+    assert fit_state["name"] == "sum_first_two"
+    assert fit_state["contract_version"] == "custom_feature_combiner_v1"
+    assert fit_state["feature_names"] == ["custom_combo"]
+    clear_custom_extensions()
+
+
+def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "select_after_custom"},
+        )
+
+    preprocess = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="none",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="none",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="correlation_filter",
+        feature_selection_semantics="select_after_custom_blocks",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=preprocess,
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_custom_blocks"
+    assert fit_state["block"] == "custom_final_z_selection"
+    assert fit_state["contract_version"] == "custom_final_z_selection_v1"
+    assert "custom_spread" in fit_state["candidate_feature_names"]
+    assert fit_state["selected_final_feature_count"] > 0
     clear_custom_extensions()
 
 

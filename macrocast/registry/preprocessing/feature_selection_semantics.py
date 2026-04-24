@@ -21,6 +21,12 @@ AXIS_DEFINITION = AxisDefinition(
             status="operational",
             priority="A",
         ),
+        EnumRegistryEntry(
+            id="select_after_custom_blocks",
+            description="select among final Z columns after custom blocks or a custom combiner",
+            status="operational",
+            priority="B",
+        ),
     ),
     compatible_with={},
     incompatible_with={},

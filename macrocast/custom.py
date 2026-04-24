@@ -6,10 +6,16 @@ from typing import Any, Callable
 
 from .preprocessing.feature_blocks import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+    CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
     FeatureBlockCallable,
     FeatureBlockCallableResult,
+    FeatureCombinerCallable,
+    FeatureCombinerCallableResult,
     custom_feature_block_contract_metadata,
+    custom_feature_combiner_contract_metadata,
+    custom_final_z_selection_contract_metadata,
     validate_feature_block_callable_result,
+    validate_feature_combiner_callable_result,
 )
 
 CUSTOM_MODEL_CONTRACT_VERSION = "custom_model_v1"
@@ -20,6 +26,7 @@ CustomModelFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
 CustomPreprocessorFunction = Callable[[Any, Any, Any, dict[str, Any]], Any]
 TargetTransformerFactory = Callable[[], Any]
 CustomFeatureBlockFunction = FeatureBlockCallable
+CustomFeatureCombinerFunction = FeatureCombinerCallable
 
 
 @dataclass(frozen=True)
@@ -54,10 +61,18 @@ class CustomFeatureBlockSpec:
     description: str | None = None
 
 
+@dataclass(frozen=True)
+class CustomFeatureCombinerSpec:
+    name: str
+    function: CustomFeatureCombinerFunction
+    description: str | None = None
+
+
 _CUSTOM_MODELS: dict[str, CustomModelSpec] = {}
 _CUSTOM_PREPROCESSORS: dict[str, CustomPreprocessorSpec] = {}
 _TARGET_TRANSFORMERS: dict[str, TargetTransformerSpec] = {}
 _CUSTOM_FEATURE_BLOCKS: dict[tuple[str, str], CustomFeatureBlockSpec] = {}
+_CUSTOM_FEATURE_COMBINERS: dict[str, CustomFeatureCombinerSpec] = {}
 
 
 def custom_model_contract_metadata() -> dict[str, Any]:
@@ -129,10 +144,15 @@ def custom_method_extension_contracts() -> dict[str, Any]:
     return {
         "layer2_feature_block": {
             "contract_version": CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
-            "temporal": custom_feature_block_contract_metadata("temporal"),
-            "rotation": custom_feature_block_contract_metadata("rotation"),
-            "factor": custom_feature_block_contract_metadata("factor"),
+            "temporal": custom_feature_block_contract_metadata(block_kind="temporal"),
+            "rotation": custom_feature_block_contract_metadata(block_kind="rotation"),
+            "factor": custom_feature_block_contract_metadata(block_kind="factor"),
         },
+        "layer2_feature_combiner": {
+            "contract_version": CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
+            "contract": custom_feature_combiner_contract_metadata(),
+        },
+        "layer2_final_z_selection": custom_final_z_selection_contract_metadata(),
         "layer2_matrix_preprocessor": custom_preprocessor_contract_metadata(),
         "layer2_target_transformer": target_transformer_contract_metadata(),
         "layer3_model": custom_model_contract_metadata(),
@@ -348,6 +368,42 @@ def custom_feature_block(name: str, function: CustomFeatureBlockFunction | None 
     return register_feature_block(name, function=function, **kwargs)
 
 
+def register_feature_combiner(
+    name: str,
+    function: CustomFeatureCombinerFunction | None = None,
+    *,
+    description: str | None = None,
+):
+    """Register a user-defined Layer 2 feature-block combiner.
+
+    The callable receives a :class:`FeatureCombinerCallableContext` and must
+    return a :class:`FeatureCombinerCallableResult`. Runtime validates the
+    final train/pred matrices, stable feature names, and leakage metadata
+    before handing the resulting ``Z`` to Layer 3.
+    """
+
+    combiner_name = _validate_name(name, kind="feature combiner")
+
+    def _decorator(fn: CustomFeatureCombinerFunction) -> CustomFeatureCombinerFunction:
+        if not callable(fn):
+            raise TypeError("custom feature combiner function must be callable")
+        _CUSTOM_FEATURE_COMBINERS[combiner_name] = CustomFeatureCombinerSpec(
+            name=combiner_name,
+            function=fn,
+            description=description,
+        )
+        return fn
+
+    if function is not None:
+        return _decorator(function)
+    return _decorator
+
+
+def custom_feature_combiner(name: str, function: CustomFeatureCombinerFunction | None = None, **kwargs):
+    """Decorator alias for :func:`register_feature_combiner`."""
+    return register_feature_combiner(name, function=function, **kwargs)
+
+
 def is_custom_feature_block(name: str, *, block_kind: str | None = None) -> bool:
     block_name = str(name)
     if block_kind is not None:
@@ -372,6 +428,25 @@ def list_custom_feature_blocks(*, block_kind: str | None = None) -> tuple[str, .
 
 def validate_custom_feature_block_result(result: FeatureBlockCallableResult) -> None:
     validate_feature_block_callable_result(result)
+
+
+def is_custom_feature_combiner(name: str) -> bool:
+    return str(name) in _CUSTOM_FEATURE_COMBINERS
+
+
+def get_custom_feature_combiner(name: str) -> CustomFeatureCombinerSpec:
+    try:
+        return _CUSTOM_FEATURE_COMBINERS[str(name)]
+    except KeyError as exc:
+        raise KeyError(f"custom feature combiner {name!r} is not registered") from exc
+
+
+def list_custom_feature_combiners() -> tuple[str, ...]:
+    return tuple(sorted(_CUSTOM_FEATURE_COMBINERS))
+
+
+def validate_custom_feature_combiner_result(result: FeatureCombinerCallableResult) -> None:
+    validate_feature_combiner_callable_result(result)
 
 
 def is_custom_model(name: str) -> bool:
@@ -443,9 +518,15 @@ def clear_custom_feature_blocks() -> None:
     _CUSTOM_FEATURE_BLOCKS.clear()
 
 
+def clear_custom_feature_combiners() -> None:
+    """Clear custom feature combiner registry."""
+    _CUSTOM_FEATURE_COMBINERS.clear()
+
+
 def clear_custom_extensions() -> None:
     """Clear all runtime extension registries."""
     clear_custom_models()
     clear_custom_preprocessors()
     clear_custom_target_transformers()
     clear_custom_feature_blocks()
+    clear_custom_feature_combiners()

@@ -84,6 +84,7 @@ _FEATURE_SELECTION = {
 _FEATURE_SELECTION_SEMANTICS = {
     "select_before_factor",
     "select_after_factor",
+    "select_after_custom_blocks",
 }
 _ORDER = {
     "none",

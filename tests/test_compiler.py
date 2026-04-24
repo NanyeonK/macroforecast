@@ -12,6 +12,7 @@ from macrocast import (
     compile_recipe_dict,
     compile_recipe_yaml,
     custom_feature_block,
+    custom_feature_combiner,
     get_canonical_layer_order,
     run_compiled_recipe,
 )
@@ -2212,6 +2213,68 @@ def test_layer2_registered_custom_temporal_block_is_executable() -> None:
     assert block["custom_feature_block"] == "temporal_spread"
     assert block["runtime_bridge"] == {"custom_feature_block": "temporal_spread", "block_kind": "temporal"}
     clear_custom_extensions()
+
+
+def test_layer2_custom_combiner_records_callable_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "custom_combiner"
+    assert combination["runtime_status"] == "registry_only"
+    assert combination["required_runtime_contract"] == "custom_feature_combiner_v1"
+    assert combination["callable_contract"]["schema_version"] == "custom_feature_combiner_v1"
+
+
+def test_layer2_registered_custom_combiner_is_executable() -> None:
+    clear_custom_extensions()
+
+    @custom_feature_combiner("sum_two")
+    def _sum_two(context):
+        raise AssertionError("compile should not execute custom combiners")
+
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["custom_feature_combiner"] = "sum_two"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["runtime_status"] == "operational"
+    assert combination["custom_feature_combiner"] == "sum_two"
+    assert combination["runtime_bridge"] == {"custom_feature_combiner": "sum_two"}
+    clear_custom_extensions()
+
+
+def test_layer2_select_after_custom_blocks_requires_custom_surface() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "feature_selection_policy": "correlation_filter",
+            "feature_selection_semantics": "select_after_custom_blocks",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    assert any("select_after_custom_blocks" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:

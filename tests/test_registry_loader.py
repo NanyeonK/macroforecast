@@ -318,6 +318,7 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
     assert feature_selection.current_status["lasso_select"] == "operational"
     assert feature_selection_semantics.current_status["select_before_factor"] == "operational"
     assert feature_selection_semantics.current_status["select_after_factor"] == "operational"
+    assert feature_selection_semantics.current_status["select_after_custom_blocks"] == "operational"
     assert tcode_policy.current_status["tcode_then_extra_preprocess"] == "operational"
     assert preprocess_order.current_status["tcode_then_extra"] == "operational"
     target_construction = get_axis_registry_entry("horizon_target_construction")

@@ -23,6 +23,8 @@ from ..preprocessing import (
     build_target_scale_contract,
     check_preprocess_governance,
     custom_feature_block_contract_metadata,
+    custom_feature_combiner_contract_metadata,
+    custom_final_z_selection_contract_metadata,
     is_operational_preprocess_contract,
     preprocess_to_dict,
 )
@@ -35,6 +37,7 @@ from ..custom import (
     get_custom_target_transformer,
     get_custom_preprocessor,
     is_custom_feature_block,
+    is_custom_feature_combiner,
     is_custom_model,
     is_custom_preprocessor,
     is_custom_target_transformer,
@@ -442,6 +445,31 @@ def _custom_feature_block_axis_is_registered(selection: AxisSelection, leaf_conf
         return False
     block_name = _custom_feature_block_name_from_leaf(leaf_config, block_kind)
     return bool(block_name and is_custom_feature_block(block_name, block_kind=block_kind))
+
+
+def _custom_feature_combiner_name_from_leaf(leaf_config: dict[str, Any]) -> str | None:
+    custom_blocks = leaf_config.get("custom_feature_blocks") or {}
+    if not isinstance(custom_blocks, dict):
+        custom_blocks = {}
+    for key in ("combiner", "feature_combiner", "custom_combiner", "custom_feature_combiner"):
+        value = custom_blocks.get(key)
+        if value:
+            return str(value)
+    value = (
+        leaf_config.get("custom_feature_combiner")
+        or leaf_config.get("custom_combiner")
+        or leaf_config.get("custom_feature_block_combiner")
+    )
+    return str(value) if value else None
+
+
+def _custom_feature_combiner_axis_is_registered(selection: AxisSelection, leaf_config: dict[str, Any]) -> bool:
+    if selection.axis_name != "feature_block_combination" or len(selection.selected_values) != 1:
+        return False
+    if selection.selected_values[0] != "custom_combiner":
+        return False
+    combiner_name = _custom_feature_combiner_name_from_leaf(leaf_config)
+    return bool(combiner_name and is_custom_feature_combiner(combiner_name))
 
 
 def _target_structure(selection_map: dict[str, AxisSelection], default: str = "single_target_point_forecast") -> str:
@@ -1106,6 +1134,13 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "custom_temporal_feature_block": leaf_config.get("custom_temporal_feature_block") or custom_blocks.get("temporal"),
         "custom_rotation_feature_block": leaf_config.get("custom_rotation_feature_block") or custom_blocks.get("rotation"),
         "custom_factor_feature_block": leaf_config.get("custom_factor_feature_block") or custom_blocks.get("factor"),
+        "custom_feature_combiner": (
+            leaf_config.get("custom_feature_combiner")
+            or leaf_config.get("custom_combiner")
+            or leaf_config.get("custom_feature_block_combiner")
+            or custom_blocks.get("combiner")
+            or custom_blocks.get("feature_combiner")
+        ),
         # 1.4 benchmark_family input channels
         "benchmark_suite": leaf_config.get("benchmark_suite"),
         "paper_forecast_series": leaf_config.get("paper_forecast_series"),
@@ -1887,6 +1922,7 @@ def _feature_block_combination_from_bridge(
     x_lag_creation: str,
     *,
     explicit_value: str | None = None,
+    data_task_spec: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if explicit_value is not None:
         value = explicit_value
@@ -1898,7 +1934,14 @@ def _feature_block_combination_from_bridge(
         value = "replace_with_blocks"
     else:
         value = "concatenate_named_blocks"
-    return {
+    operational_values = {
+        "replace_with_blocks",
+        "append_to_base_x",
+        "append_to_target_lags",
+        "concatenate_named_blocks",
+    }
+    runtime_status = "operational" if value in operational_values else "registry_only"
+    payload: dict[str, Any] = {
         "value": value,
         "source_axes": ["feature_builder", "x_lag_creation"],
         "source_values": {
@@ -1906,13 +1949,34 @@ def _feature_block_combination_from_bridge(
             "x_lag_creation": x_lag_creation,
         },
         "explicit_axis_value": explicit_value,
-        "runtime_status": "operational" if value in {"replace_with_blocks", "append_to_base_x", "append_to_target_lags", "concatenate_named_blocks"} else "registry_only",
+        "runtime_status": runtime_status,
         "sweep_axis_status": "public_axis_with_runtime_pruning",
         "governance_note": (
             "feature_block_combination summarizes the effective composer today; "
             "invalid compositions are rejected by compiler/runtime compatibility gates"
         ),
     }
+    if value == "custom_combiner":
+        spec = dict(data_task_spec or {})
+        custom_name = spec.get("custom_feature_combiner")
+        registered = bool(custom_name and is_custom_feature_combiner(str(custom_name)))
+        payload.update(
+            {
+                "runtime_status": "operational" if registered else "registry_only",
+                "required_runtime_contract": "custom_feature_combiner_v1",
+                "custom_feature_combiner": str(custom_name) if custom_name else None,
+                "callable_contract": custom_feature_combiner_contract_metadata(),
+                "required_semantics": [
+                    "receive named train and prediction block frames",
+                    "return final Z_train/Z_pred with stable public feature names",
+                    "return block roles, fit-state provenance, and leakage metadata",
+                ],
+                "scope_note": "custom_combiner owns final Layer 2 block composition before Layer 3 consumes Z",
+            }
+        )
+        if registered:
+            payload["runtime_bridge"] = {"custom_feature_combiner": str(custom_name)}
+    return payload
 
 
 def _deterministic_block_from_selection(
@@ -2324,6 +2388,7 @@ def _layer2_representation_spec(
                     if "feature_block_combination" in selection_map
                     else None
                 ),
+                data_task_spec=data_task_spec,
             ),
         },
         "frame_conditioning": {
@@ -2335,6 +2400,17 @@ def _layer2_representation_spec(
             "additional_preprocessing": getattr(preprocess_contract, "additional_preprocessing", "none"),
             "dimensionality_reduction_policy": dimred,
             "feature_selection_policy": getattr(preprocess_contract, "feature_selection_policy", "none"),
+            "feature_selection_semantics": getattr(
+                preprocess_contract,
+                "feature_selection_semantics",
+                "select_before_factor",
+            ),
+            "custom_final_z_selection_contract": (
+                custom_final_z_selection_contract_metadata()
+                if getattr(preprocess_contract, "feature_selection_semantics", "select_before_factor")
+                == "select_after_custom_blocks"
+                else {}
+            ),
             "feature_grouping": getattr(preprocess_contract, "feature_grouping", "none"),
             "custom_preprocessor": custom_preprocessor,
             "preprocess_order": getattr(preprocess_contract, "preprocess_order", "none"),
@@ -2522,6 +2598,8 @@ def _execution_status(
             if status in {"registry_only", "planned", "external_plugin", "not_supported_yet"}:
                 if _custom_feature_block_axis_is_registered(selection, leaf_config):
                     continue
+                if _custom_feature_combiner_axis_is_registered(selection, leaf_config):
+                    continue
                 not_supported.append(
                     f"axis {selection.axis_name} value {value} is not supported by the current runtime (status={status})"
                 )
@@ -2629,6 +2707,21 @@ def _execution_status(
         rotation_block_active = rotation_feature_block in {"moving_average_rotation", "marx_rotation", "custom_rotation"}
         feature_block_combination = _selection_value(selection_map, "feature_block_combination", default="replace_with_blocks")
         marx_append_mode = feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}
+        custom_combiner_name = _custom_feature_combiner_name_from_leaf(leaf_config)
+        custom_combiner_registered = bool(
+            custom_combiner_name and is_custom_feature_combiner(custom_combiner_name)
+        )
+        if feature_block_combination == "custom_combiner":
+            if feature_runtime != "raw_feature_panel":
+                not_supported.append(
+                    "feature_block_combination='custom_combiner' is currently executable only with "
+                    "raw-panel Layer 2 tabular feature runtimes"
+                )
+            if not custom_combiner_registered:
+                not_supported.append(
+                    "feature_block_combination='custom_combiner' requires a registered "
+                    "leaf_config.custom_feature_combiner callable"
+                )
         if temporal_block_active and feature_runtime != "raw_feature_panel":
             not_supported.append(
                 f"temporal_feature_block={temporal_feature_block!r} is currently executable only with "
@@ -2673,6 +2766,18 @@ def _execution_status(
         factor_bridge_active = feature_builder in _FACTOR_BRIDGE_BUILDERS or dimred in _FACTOR_DIMRED_BRIDGES
         operational_factor_blocks = {"pca_static_factors", "pca_factor_lags", "supervised_factors"}
         factor_block_active = explicit_factor_block in operational_factor_blocks or (explicit_factor_block is None and factor_bridge_active)
+        registered_custom_factor = (
+            explicit_factor_block == "custom_factors"
+            and _custom_feature_block_axis_is_registered(selection_map["factor_feature_block"], leaf_config)
+            if "factor_feature_block" in selection_map
+            else False
+        )
+        custom_block_active = (
+            temporal_feature_block == "custom_temporal_features"
+            or rotation_feature_block == "custom_rotation"
+            or explicit_factor_block == "custom_factors"
+            or feature_block_combination == "custom_combiner"
+        )
         deterministic_components = _selection_value(selection_map, "deterministic_components", default="none")
         structural_break_segmentation = _selection_value(selection_map, "structural_break_segmentation", default="none")
         if temporal_block_active and (factor_block_active or dimred != "none"):
@@ -2691,10 +2796,33 @@ def _execution_status(
                 "factor_feature_block='none' conflicts with an active factor compatibility bridge "
                 f"(legacy feature builder={feature_builder!r}, dimensionality_reduction_policy={dimred!r})"
             )
-        if feature_selection != "none" and explicit_factor_block not in {None, "none", *operational_factor_blocks}:
+        if (
+            feature_selection != "none"
+            and explicit_factor_block not in {None, "none", *operational_factor_blocks}
+            and feature_selection_semantics != "select_after_custom_blocks"
+        ):
             not_supported.append(
                 "feature_selection_policy is operational with factor blocks only for "
                 "built-in executable factor_feature_block values; custom factor selection remains gated"
+            )
+        if (
+            feature_selection != "none"
+            and feature_selection_semantics == "select_after_custom_blocks"
+            and not custom_block_active
+        ):
+            not_supported.append(
+                "feature_selection_semantics='select_after_custom_blocks' requires a custom feature block "
+                "or feature_block_combination='custom_combiner'"
+            )
+        if (
+            feature_selection != "none"
+            and feature_selection_semantics == "select_after_custom_blocks"
+            and explicit_factor_block == "custom_factors"
+            and not registered_custom_factor
+        ):
+            not_supported.append(
+                "feature_selection_semantics='select_after_custom_blocks' with custom_factors requires "
+                "a registered custom factor feature block"
             )
         if feature_selection != "none" and feature_selection_semantics == "select_after_factor" and not factor_block_active:
             not_supported.append(

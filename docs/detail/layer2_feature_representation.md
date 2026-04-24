@@ -182,12 +182,17 @@ Operational support is currently narrow:
   basis-replacement mode is active. The current composer supports raw-panel MARX
   basis replacement, `marx_then_factor` with static PCA factors, and named-block
   append to base `X` for fixed X-lag or deterministic temporal compositions.
-  `factor_then_marx`, MAF rotation, unregistered custom rotation, and custom
-  combiners remain explicitly gated.
+  `factor_then_marx`, MAF rotation, and unregistered custom rotation remain
+  explicitly gated.
 - `feature_block_combination=append_to_target_lags` is operational for supported
   raw-panel direct `Z` paths. Target lag columns become the anchor block, and
   selected factor/raw-panel blocks are concatenated after them with stable
   feature-name order.
+- `feature_block_combination=custom_combiner` is executable when the recipe
+  supplies a registered `custom_feature_combiner`. The combiner receives named
+  train/pred block frames plus the final candidate `Z`, then returns final
+  `Z_train`, `Z_pred`, stable public feature names, block roles, fit state,
+  provenance, and leakage metadata under `custom_feature_combiner_v1`.
 - Feature selection is now operational for two explicit built-in factor composer
   semantics when `factor_feature_block=pca_static_factors`,
   `pca_factor_lags`, or `supervised_factors` (or the equivalent static-factor
@@ -197,7 +202,8 @@ Operational support is currently narrow:
   `select_after_factor` first estimates the static factor block, optionally
   appends target lags and deterministic/break columns in the final `Z`, and
   then selects among the composed final columns. Custom-block final-`Z`
-  selection still needs an explicit composer contract.
+  selection is operational through `select_after_custom_blocks`, which records
+  `custom_final_z_selection_v1` candidate, selected, and dropped feature names.
 
 ## Target Scale Contract
 
