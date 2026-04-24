@@ -96,12 +96,15 @@ _PATH_AVERAGE_LAYER3_GATE = (
     "Layer 3 multi-step fit/aggregation runtime"
 )
 _MARX_COMPOSITION_MODES = {
-    "operational": ["replace_lag_polynomial_basis", "marx_then_factor"],
-    "gated": [
+    "operational": [
+        "replace_lag_polynomial_basis",
         "marx_append_to_x",
-        "factor_then_marx",
+        "marx_then_factor",
         "marx_with_external_x_lag_append",
         "marx_with_temporal_append",
+    ],
+    "gated": [
+        "factor_then_marx",
     ],
 }
 _TARGET_LAG_BLOCK_TO_SELECTION = {
@@ -1604,6 +1607,7 @@ def _factor_block_from_bridge(
 ) -> dict[str, Any]:
     inferred = "pca_static_factors" if feature_builder in _FACTOR_BRIDGE_BUILDERS else _DIMRED_TO_FACTOR_FEATURE_BLOCK.get(dimred, "custom_factors")
     block = explicit_block or inferred
+    builtin_factor_blocks = {"pca_static_factors", "pca_factor_lags", "supervised_factors"}
     runtime_bridge: dict[str, Any] = {}
     if feature_builder in _FACTOR_BRIDGE_BUILDERS:
         runtime_bridge["feature_builder"] = feature_builder
@@ -1623,19 +1627,18 @@ def _factor_block_from_bridge(
             "feature_selection_policy": getattr(preprocess_contract, "feature_selection_policy", "none"),
             "supported_semantics": ["select_before_factor", "select_after_factor"],
             "gated_semantics": [
-                "select_after_deterministic_augmentations",
                 "select_after_custom_blocks",
-                "selection_over_non_pca_factor_blocks",
             ],
             "active_semantic": (
                 getattr(preprocess_contract, "feature_selection_semantics", "select_before_factor")
-                if block == "pca_static_factors" and getattr(preprocess_contract, "feature_selection_policy", "none") != "none"
+                if block in builtin_factor_blocks and getattr(preprocess_contract, "feature_selection_policy", "none") != "none"
                 else "none"
             ),
             "rule": (
-                "when feature_selection_policy is active with pca_static_factors, the runtime supports "
+                "when feature_selection_policy is active with an executable built-in factor block, the runtime supports "
                 "select_before_factor (select raw predictor X, then fit factors) and "
-                "select_after_factor (fit factors, then select among final Z columns)"
+                "select_after_factor (fit factors, optionally append target lags and deterministic columns, "
+                "then select among final Z columns)"
             ),
         },
         "rotation_interaction": {
@@ -1768,7 +1771,7 @@ def _feature_block_combination_from_bridge(
             "x_lag_creation": x_lag_creation,
         },
         "explicit_axis_value": explicit_value,
-        "runtime_status": "operational" if value in {"replace_with_blocks", "append_to_base_x", "concatenate_named_blocks"} else "registry_only",
+        "runtime_status": "operational" if value in {"replace_with_blocks", "append_to_base_x", "append_to_target_lags", "concatenate_named_blocks"} else "registry_only",
         "sweep_axis_status": "public_axis_with_runtime_pruning",
         "governance_note": (
             "feature_block_combination summarizes the effective composer today; "
@@ -2308,7 +2311,8 @@ def _execution_status(
         )
         explicit_factor_block = _factor_feature_block_value(selection_map)
         factor_bridge_active = feature_builder in _FACTOR_BRIDGE_BUILDERS or dimred in _FACTOR_DIMRED_BRIDGES
-        factor_block_active = explicit_factor_block == "pca_static_factors" or (explicit_factor_block is None and factor_bridge_active)
+        operational_factor_blocks = {"pca_static_factors", "pca_factor_lags", "supervised_factors"}
+        factor_block_active = explicit_factor_block in operational_factor_blocks or (explicit_factor_block is None and factor_bridge_active)
         deterministic_components = _selection_value(selection_map, "deterministic_components", default="none")
         structural_break_segmentation = _selection_value(selection_map, "structural_break_segmentation", default="none")
         if temporal_block_active and (factor_block_active or dimred != "none"):
@@ -2327,33 +2331,15 @@ def _execution_status(
                 "factor_feature_block='none' conflicts with an active factor compatibility bridge "
                 f"(legacy feature builder={feature_builder!r}, dimensionality_reduction_policy={dimred!r})"
             )
-        if feature_selection != "none" and explicit_factor_block not in {None, "none", "pca_static_factors"}:
+        if feature_selection != "none" and explicit_factor_block not in {None, "none", *operational_factor_blocks}:
             not_supported.append(
                 "feature_selection_policy is operational with factor blocks only for "
-                "factor_feature_block='pca_static_factors'; other factor composers remain gated"
+                "built-in executable factor_feature_block values; custom factor selection remains gated"
             )
         if feature_selection != "none" and feature_selection_semantics == "select_after_factor" and not factor_block_active:
             not_supported.append(
                 "feature_selection_semantics='select_after_factor' requires "
-                "factor_feature_block='pca_static_factors' or an equivalent pca/static_factor bridge"
-            )
-        if (
-            feature_selection != "none"
-            and feature_selection_semantics == "select_after_factor"
-            and deterministic_components != "none"
-        ):
-            not_supported.append(
-                "feature_selection_semantics='select_after_factor' cannot yet be combined with "
-                "deterministic_components because those columns are appended after post-factor selection"
-            )
-        if (
-            feature_selection != "none"
-            and feature_selection_semantics == "select_after_factor"
-            and structural_break_segmentation != "none"
-        ):
-            not_supported.append(
-                "feature_selection_semantics='select_after_factor' cannot yet be combined with "
-                "structural_break_segmentation because break dummies are appended after post-factor selection"
+                "an executable factor_feature_block or an equivalent pca/static_factor bridge"
             )
 
     target_transformer = _selection_value(selection_map, "target_transformer", default="none")

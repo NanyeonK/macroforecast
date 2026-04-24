@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id="append_to_target_lags",
             description="append selected blocks to the target lag block",
-            status="registry_only",
+            status="operational",
             priority="A",
         ),
         EnumRegistryEntry(

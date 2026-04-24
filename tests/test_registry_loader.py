@@ -292,6 +292,7 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["temporal_feature_block"].current_status["custom_temporal_features"] == "registry_only"
     assert registry["feature_block_combination"].current_status["replace_with_blocks"] == "operational"
     assert registry["feature_block_combination"].current_status["append_to_base_x"] == "operational"
+    assert registry["feature_block_combination"].current_status["append_to_target_lags"] == "operational"
     assert registry["feature_block_combination"].current_status["concatenate_named_blocks"] == "operational"
     assert registry["feature_block_combination"].current_status["custom_combiner"] == "registry_only"
     assert registry["target_lag_selection"].current_status["ic_select"] == "registry_only"

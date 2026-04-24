@@ -162,7 +162,8 @@ Operational support is currently narrow:
   final `Z` by default. It now also supports `marx_then_factor`, where static
   PCA factors are fit on the MARX basis before any target-lag append, plus
   append composition with fixed X lags or deterministic temporal blocks via
-  `feature_block_combination=append_to_base_x`.
+  `feature_block_combination=append_to_base_x` /
+  `concatenate_named_blocks`.
 - Advanced rotation values are explicit boundaries, not aliases for the generic
   primitive. `maf_rotation` remains registry-only until factor-score fit/apply
   state can compose with rotation blocks. `custom_rotation` remains registry-only
@@ -181,15 +182,20 @@ Operational support is currently narrow:
   append to base `X` for fixed X-lag or deterministic temporal compositions.
   `factor_then_marx`, MAF rotation, unregistered custom rotation, and custom
   combiners remain explicitly gated.
-- Feature selection is now operational for two explicit static-factor composer
-  semantics when `factor_feature_block=pca_static_factors` (or the equivalent
-  `dimensionality_reduction_policy` bridge) is active:
+- `feature_block_combination=append_to_target_lags` is operational for supported
+  raw-panel direct `Z` paths. Target lag columns become the anchor block, and
+  selected factor/raw-panel blocks are concatenated after them with stable
+  feature-name order.
+- Feature selection is now operational for two explicit built-in factor composer
+  semantics when `factor_feature_block=pca_static_factors`,
+  `pca_factor_lags`, or `supervised_factors` (or the equivalent static-factor
+  bridge) is active:
   `select_before_factor` first selects raw predictor columns within each train
   window and then estimates the static factor block on the selected panel;
   `select_after_factor` first estimates the static factor block, optionally
-  appends target lags in the final `Z`, and then selects among the composed
-  final columns. Broader factor/selection composition beyond static PCA still
-  needs an explicit composer contract.
+  appends target lags and deterministic/break columns in the final `Z`, and
+  then selects among the composed final columns. Custom-block final-`Z`
+  selection still needs an explicit composer contract.
 
 ## Target Scale Contract
 
@@ -305,7 +311,7 @@ slices:
 
 Remaining work is semantic feature-composer work, not bridge cleanup:
 `factor_then_marx`, MAF rotation, custom combiners, feature selection over
-non-PCA/custom/deterministic append blocks, and custom target inverse policies.
+custom append blocks, and custom target inverse policies.
 
 The detailed target contract for freely sweeping Layer 2 representations with
 Layer 3 forecast generators is documented in

@@ -50,12 +50,12 @@ Feature blocks:
 - `rotation_feature_block=moving_average_rotation`, `marx_rotation`
 - MARX basis replacement, `marx_then_factor`, and named-block append
   composition with fixed X lags or deterministic temporal blocks via
-  `feature_block_combination=append_to_base_x`
+  `feature_block_combination=append_to_base_x` / `concatenate_named_blocks`
 - `factor_feature_block=pca_factor_lags`, `supervised_factors`
 - registered `custom_feature_block_callable_v1` temporal, rotation, and factor
   blocks
 - `feature_block_combination=replace_with_blocks`, `append_to_base_x`,
-  `concatenate_named_blocks`
+  `append_to_target_lags`, `concatenate_named_blocks`
 
 ## Contract-Defined Gated
 
@@ -86,8 +86,7 @@ MARX and factor frontier:
 
 - `factor_then_marx`
 - `maf_rotation`
-- feature selection over non-PCA factor blocks
-- feature selection after deterministic or custom append blocks
+- feature selection after custom append blocks
 
 These are represented as explicit gated composer modes, not silent aliases.
 
@@ -137,8 +136,8 @@ and failure visibility.
 
 ## Next Build Order
 
-1. Add `factor_then_marx` and MAF rotation after each has naming and alignment
-   tests.
-2. Broaden feature selection over non-PCA/custom/deterministic-append blocks.
+1. Add `factor_then_marx` and MAF rotation after each has factor-score history,
+   naming, and alignment tests.
+2. Broaden feature selection over custom append blocks.
 3. Implement `feature_block_combination=custom_combiner`.
 4. Add target-side custom inverse policies.

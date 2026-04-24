@@ -963,6 +963,27 @@ def test_execute_recipe_supports_select_after_factor_path(tmp_path: Path) -> Non
     assert manifest["prediction_rows"] > 0
 
 
+def test_execute_recipe_supports_select_after_factor_with_deterministic_append(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    recipe.data_task_spec["deterministic_components"] = "linear_trend"
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_pca_lasso_select_after_factor_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_factor"
+    assert manifest["data_task_spec"]["deterministic_components"] == "linear_trend"
+    assert fit_state["feature_selection_semantics"] == "select_after_factor"
+    assert "_dc_trend" in fit_state["post_factor_candidate_feature_names"]
+    assert set(fit_state["selected_final_feature_names"]).issubset(set(fit_state["post_factor_candidate_feature_names"]))
+    assert manifest["prediction_rows"] > 0
+
+
 
 def test_execute_recipe_supports_ols_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")

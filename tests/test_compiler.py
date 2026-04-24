@@ -1807,8 +1807,14 @@ def test_layer2_explicit_marx_rotation_lowers_to_raw_panel_bridge() -> None:
     assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
     assert block["basis_policy"] == "replace_lag_polynomial_basis"
     assert block["initial_lag_fill_policy"] == "zero_fill_before_start"
-    assert block["composition_modes"]["operational"] == ["replace_lag_polynomial_basis", "marx_then_factor"]
-    assert "marx_append_to_x" in block["composition_modes"]["gated"]
+    assert block["composition_modes"]["operational"] == [
+        "replace_lag_polynomial_basis",
+        "marx_append_to_x",
+        "marx_then_factor",
+        "marx_with_external_x_lag_append",
+        "marx_with_temporal_append",
+    ]
+    assert block["composition_modes"]["gated"] == ["factor_then_marx"]
     assert block["alignment"]["lookahead"] == "forbidden"
     assert "replaces the X lag-polynomial basis" in block["scope_note"]
     composer = block["composer_contract"]
@@ -1999,6 +2005,40 @@ def test_layer2_marx_rotation_can_append_with_fixed_x_lags(tmp_path: Path) -> No
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_layer2_append_to_target_lags_combination_is_executable(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["training_config"] = {"target_lag_count": 2}
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_static_factors",
+            "target_lag_block": "fixed_target_lags",
+            "feature_block_combination": "append_to_target_lags",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+            "dimensionality_reduction_policy": "pca",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "append_to_target_lags"
+    assert combination["runtime_status"] == "operational"
     execution = run_compiled_recipe(
         result.compiled,
         output_root=tmp_path,
@@ -2569,7 +2609,35 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
     assert interaction["feature_selection_policy"] == "lasso_select"
     assert interaction["active_semantic"] == "select_after_factor"
     assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
-    assert "selection_over_non_pca_factor_blocks" in interaction["gated_semantics"]
+    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
+
+
+@pytest.mark.parametrize("factor_block", ["pca_factor_lags", "supervised_factors"])
+def test_layer2_non_pca_factor_blocks_accept_selection_semantics(factor_block: str) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": factor_block,
+            "feature_selection_policy": "lasso_select",
+            "feature_selection_semantics": "select_after_factor",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    interaction = block["feature_selection_interaction"]
+    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["active_semantic"] == "select_after_factor"
+    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
 
 
 def test_layer2_target_representation_records_scale_contract() -> None:

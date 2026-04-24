@@ -198,10 +198,10 @@ reserves the second:
 The current runtime opens both semantics for
 `factor_feature_block=pca_static_factors` and the equivalent
 `dimensionality_reduction_policy` bridge. `select_before_factor` performs
-selection on the raw X-side panel before PCA. `select_after_factor` performs
-selection on the final composed `Z` after PCA and any appended target-lag
-block, but it currently excludes post-composer deterministic augmentations such
-as deterministic components and structural-break segmentation.
+selection on the raw X-side panel before factor extraction.
+`select_after_factor` performs selection on the final composed `Z` after an
+executable built-in factor block plus any appended target-lag,
+deterministic-component, or structural-break columns.
 
 ### Level Blocks
 
@@ -228,16 +228,19 @@ distinguish:
 - `marx_then_factor`;
 - `factor_then_marx`.
 
-The current runtime opens the first and third modes:
+The current runtime opens the first, second, and third modes:
 
 - `marx_replace_x_basis`: raw-panel `Z` is the MARX basis itself;
+- `marx_append_to_x`: MARX features are concatenated as named blocks with base
+  X, fixed X lags, or deterministic temporal blocks when
+  `feature_block_combination=append_to_base_x` or
+  `concatenate_named_blocks`;
 - `marx_then_factor`: replace the X lag-polynomial basis with MARX features,
   then fit `pca_static_factors` on that rotated basis. Target lags may still
   be concatenated after factor scores through the existing target-lag path.
 
-`marx_append_to_x` and `factor_then_marx` remain gated, but the compiler now
-records them as explicit MARX composition modes rather than leaving them as
-implicit unsupported combinations.
+`factor_then_marx` remains gated until the runtime has an explicit factor-score
+history contract for applying lag-polynomial rotations after factor extraction.
 
 ### Custom Blocks
 
@@ -297,10 +300,13 @@ This patch opens the first previously gated composition class:
 
 - fixed target lags plus raw-panel X blocks;
 - fixed target lags plus fixed X lags;
-- fixed target lags plus PCA static-factor blocks, where target lags are
-  concatenated after the factor block rather than entering PCA.
-- raw predictor feature selection followed by PCA static factors
+- fixed target lags plus factor blocks, where target lags are concatenated
+  before or after the selected block depending on `feature_block_combination`.
+- raw predictor feature selection followed by built-in factor blocks
   (`select_before_factor`) in supported raw-panel runtimes.
+- built-in factor blocks followed by final-`Z` feature selection
+  (`select_after_factor`), including appended target lags and deterministic
+  columns.
 - MARX basis replacement followed by static PCA factors
   (`marx_then_factor`) in supported raw-panel runtimes.
 
@@ -310,8 +316,8 @@ These are the next semantic composer tasks:
 
 | Area | Why gated |
 |---|---|
-| Broader factor plus feature selection | Static PCA supports `select_before_factor` and `select_after_factor`. Non-PCA factor composers and richer factor/selection algebra still need explicit contracts. |
-| MARX plus X-lag/temporal append modes | Need append versus replacement semantics and stable feature naming. |
+| Broader factor plus feature selection | Built-in factor blocks support `select_before_factor` and `select_after_factor`. Custom-block final-`Z` selection still needs explicit contracts. |
+| MARX plus X-lag/temporal append modes | Open for named-block append / concatenate. |
 | MAF rotation | Need factor-to-rotation composer and leakage metadata. |
 | Custom temporal/rotation blocks | Need block-local callable contract. |
 | Target normalization and inverse/evaluation scale | Need recursive fit/inverse state and metric-scale contract. |

@@ -2383,6 +2383,28 @@ _LOCAL_TEMPORAL_FACTOR_MEAN_FEATURE_NAME = "local_temporal_factor_mean3"
 _LOCAL_TEMPORAL_FACTOR_DISPERSION_FEATURE_NAME = "local_temporal_factor_dispersion3"
 
 
+def _deterministic_feature_names(
+    component: str | None,
+    *,
+    break_dates: Sequence[str] | None = None,
+    structural_break: bool = False,
+) -> list[str]:
+    if component in {None, "none"}:
+        return []
+    if component == "constant_only":
+        return ["_dc_const"]
+    if component == "linear_trend":
+        return ["_dc_trend"]
+    if component == "monthly_seasonal":
+        return [f"_dc_month_{month:02d}" for month in range(1, 12)]
+    if component == "quarterly_seasonal":
+        return [f"_dc_q{quarter}" for quarter in range(1, 4)]
+    if component == "break_dummies":
+        prefix = "_sb_break" if structural_break else "_dc_break"
+        return [f"{prefix}_{idx}" for idx in range(1, len(tuple(break_dates or ())) + 1)]
+    return []
+
+
 def _x_level_feature_name(column: str) -> str:
     return f"{column}__{_X_LEVEL_ADD_BACK_SUFFIX}"
 
@@ -2902,7 +2924,11 @@ def _raw_panel_representation_feature_names(
     names = list(factor_names)
     if _feature_runtime_builder(recipe) == "raw_feature_panel" and _target_lag_feature_block(recipe) == "fixed_target_lags":
         lag_order = _target_lag_order_from_block(recipe, _max_ar_lag(recipe))
-        names.extend(_target_lag_feature_names(recipe, lag_order, default_prefix="target_lag"))
+        target_lag_names = _target_lag_feature_names(recipe, lag_order, default_prefix="target_lag")
+        if _feature_block_combination(recipe) == "append_to_target_lags":
+            names = list(target_lag_names) + names
+        else:
+            names.extend(target_lag_names)
     return names
 
 
@@ -2954,7 +2980,10 @@ def _raw_panel_block_order(
         if custom_names:
             order.append("custom")
     if _feature_runtime_builder(recipe) == "raw_feature_panel" and _target_lag_feature_block(recipe) == "fixed_target_lags":
-        order.append("target_lag")
+        if _feature_block_combination(recipe) == "append_to_target_lags":
+            order.insert(0, "target_lag")
+        else:
+            order.append("target_lag")
     return tuple(order)
 
 
@@ -3240,9 +3269,21 @@ def _build_raw_panel_training_data(
             lag_count=factor_lag_count,
             fit_state_sink=fit_state_sink,
         )
+    target_lag_names_for_selection: list[str] = []
     if target_lag_train is not None and target_lag_pred is not None:
-        X_train_arr = np.concatenate([X_train_arr, target_lag_train.to_numpy(dtype=float)], axis=1)
-        X_pred_arr = np.concatenate([X_pred_arr, target_lag_pred.to_numpy(dtype=float)], axis=1)
+        if target_lag_feature_names is not None:
+            target_lag_names_for_selection = [str(name) for name in target_lag_feature_names]
+        else:
+            target_lag_names_for_selection = [
+                str(name).replace("__target_lag", "target_lag_")
+                for name in target_lag_train.columns
+            ]
+        if feature_block_combination == "append_to_target_lags":
+            X_train_arr = np.concatenate([target_lag_train.to_numpy(dtype=float), X_train_arr], axis=1)
+            X_pred_arr = np.concatenate([target_lag_pred.to_numpy(dtype=float), X_pred_arr], axis=1)
+        else:
+            X_train_arr = np.concatenate([X_train_arr, target_lag_train.to_numpy(dtype=float)], axis=1)
+            X_pred_arr = np.concatenate([X_pred_arr, target_lag_pred.to_numpy(dtype=float)], axis=1)
 
     # 1.4.5 deterministic_components augmentation (applied after preprocessing)
     det_component = None
@@ -3253,46 +3294,11 @@ def _build_raw_panel_training_data(
     sb_dates = _resolve_structural_break_dates(spec)
     feature_selection_policy = str(preprocessing_contract.feature_selection_policy)
     feature_selection_semantics = _feature_selection_semantics(preprocessing_contract)
-    if feature_selection_policy != "none" and feature_selection_semantics == "select_after_factor":
-        if det_component and det_component != "none":
-            raise ExecutionError(
-                "feature_selection_semantics='select_after_factor' cannot yet be combined "
-                "with deterministic_components"
-            )
-        if sb_dates:
-            raise ExecutionError(
-                "feature_selection_semantics='select_after_factor' cannot yet be combined "
-                "with structural_break_segmentation"
-            )
-        candidate_feature_names = _factor_feature_names_from_fit_state(tuple(fit_state_sink or ()))
-        if candidate_feature_names is None:
-            raise ExecutionError(
-                "feature_selection_semantics='select_after_factor' requires "
-                "factor_feature_block='pca_static_factors' or an equivalent pca/static_factor bridge"
-            )
-        candidate_feature_names = list(candidate_feature_names)
-        if target_lag_train is not None and target_lag_pred is not None:
-            if target_lag_feature_names is not None:
-                candidate_feature_names.extend(str(name) for name in target_lag_feature_names)
-            else:
-                candidate_feature_names.extend(
-                    str(name).replace("__target_lag", "target_lag_")
-                    for name in target_lag_train.columns
-                )
-        X_train_arr, X_pred_arr, selected_feature_names = _apply_post_factor_feature_selection(
-            X_train_arr,
-            y_train,
-            X_pred_arr,
-            candidate_feature_names,
-            policy=feature_selection_policy,
-        )
-        _record_post_factor_selection(
-            fit_state_sink,
-            candidate_feature_names=candidate_feature_names,
-            selected_feature_names=selected_feature_names,
-            policy=feature_selection_policy,
-        )
+    deterministic_feature_names: list[str] = []
     if det_component and det_component != "none":
+        deterministic_feature_names.extend(
+            _deterministic_feature_names(str(det_component), break_dates=break_dates)
+        )
         try:
             X_train_arr = _augment_deterministic_array(
                 X_train_arr, det_component,
@@ -3309,6 +3315,9 @@ def _build_raw_panel_training_data(
     # path from 1.4 deterministic_components with dates resolved from the axis
     # value (pre_post_crisis / pre_post_covid presets or user_break_dates).
     if sb_dates:
+        deterministic_feature_names.extend(
+            _deterministic_feature_names("break_dummies", break_dates=sb_dates, structural_break=True)
+        )
         try:
             X_train_arr = _augment_deterministic_array(
                 X_train_arr, "break_dummies",
@@ -3320,6 +3329,33 @@ def _build_raw_panel_training_data(
             )
         except ValueError as exc:
             raise ExecutionError(str(exc)) from exc
+    if feature_selection_policy != "none" and feature_selection_semantics == "select_after_factor":
+        candidate_feature_names = _factor_feature_names_from_fit_state(tuple(fit_state_sink or ()))
+        if candidate_feature_names is None:
+            raise ExecutionError(
+                "feature_selection_semantics='select_after_factor' requires "
+                "an executable factor_feature_block or an equivalent pca/static_factor bridge"
+            )
+        candidate_feature_names = list(candidate_feature_names)
+        if target_lag_train is not None and target_lag_pred is not None:
+            if feature_block_combination == "append_to_target_lags":
+                candidate_feature_names = target_lag_names_for_selection + candidate_feature_names
+            else:
+                candidate_feature_names.extend(target_lag_names_for_selection)
+        candidate_feature_names.extend(deterministic_feature_names)
+        X_train_arr, X_pred_arr, selected_feature_names = _apply_post_factor_feature_selection(
+            X_train_arr,
+            y_train,
+            X_pred_arr,
+            candidate_feature_names,
+            policy=feature_selection_policy,
+        )
+        _record_post_factor_selection(
+            fit_state_sink,
+            candidate_feature_names=candidate_feature_names,
+            selected_feature_names=selected_feature_names,
+            policy=feature_selection_policy,
+        )
     return X_train_arr, y_train, X_pred_arr
 
 
