@@ -5643,7 +5643,27 @@ def _stat_test_spec(provenance_payload: dict | None) -> dict[str, object]:
 
 def _evaluation_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
-    return dict(compiler.get("evaluation_spec", {"primary_metric": "msfe", "regime_definition": "none", "regime_use": "eval_only", "regime_metrics": "all_main_metrics_by_regime"}))
+    return dict(compiler.get("evaluation_spec", {
+        "primary_metric": "msfe",
+        "point_metrics": "MSFE",
+        "relative_metrics": "relative_MSFE",
+        "direction_metrics": "directional_accuracy",
+        "density_metrics": "pinball_loss",
+        "economic_metrics": "utility_gain",
+        "benchmark_window": "expanding",
+        "benchmark_scope": "same_for_all",
+        "agg_time": "full_oos_average",
+        "agg_horizon": "equal_weight",
+        "agg_target": "report_separately_only",
+        "ranking": "mean_metric_rank",
+        "report_style": "tidy_dataframe",
+        "regime_definition": "none",
+        "regime_use": "eval_only",
+        "regime_metrics": "all_main_metrics_by_regime",
+        "decomposition_target": "preprocessing_effect",
+        "decomposition_order": "marginal_effect_only",
+        "oos_period": "all_oos_data",
+    }))
 
 
 def _importance_spec(provenance_payload: dict | None) -> dict[str, object]:
@@ -7066,6 +7086,7 @@ def _build_predictions(
     contract: PreprocessContract,
     *,
     compute_mode: str = "serial",
+    evaluation_spec: Mapping[str, object] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
     minimum_train_size = _minimum_train_size(recipe)
     benchmark_family = _benchmark_family(recipe)
@@ -7166,7 +7187,12 @@ def _build_predictions(
             raise ExecutionError("raw-panel iterated forecasting currently requires dimensionality_reduction_policy='none'")
         if str(getattr(contract, "feature_selection_policy", "none")) != "none":
             raise ExecutionError("raw-panel iterated forecasting currently requires feature_selection_policy='none'")
-    _oos_period = str(recipe.data_task_spec.get("oos_period", "all_oos_data"))
+    _oos_period = str(
+        (evaluation_spec or {}).get(
+            "oos_period",
+            recipe.data_task_spec.get("oos_period", "all_oos_data"),
+        )
+    )
 
     # 1.3 training_start_rule=fixed_start: resolve the calendar date to an index floor
     _training_start_rule = _training_axis(recipe, "training_start_rule")
@@ -8084,7 +8110,14 @@ def execute_recipe(
         target_recipe = _recipe_for_target(recipe, target)
         target_series_local = _get_target_series(raw_result.data, target, _minimum_train_size(target_recipe))
         target_series_local = _apply_target_transform_and_normalization(target_series_local, preprocess)
-        frame, tp = _build_predictions(raw_result.data, target_series_local, target_recipe, preprocess, compute_mode=compute_mode)
+        frame, tp = _build_predictions(
+            raw_result.data,
+            target_series_local,
+            target_recipe,
+            preprocess,
+            compute_mode=compute_mode,
+            evaluation_spec=evaluation_spec,
+        )
         path_step_frame = frame.attrs.pop("path_average_steps", None)
         raw_panel_iterated_step_frame = frame.attrs.pop("raw_panel_iterated_steps", None)
         return target, target_series_local, frame, tp, path_step_frame, raw_panel_iterated_step_frame

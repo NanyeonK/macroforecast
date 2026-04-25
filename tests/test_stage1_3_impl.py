@@ -36,10 +36,12 @@ def _recipe(
         axes_1["training_start_rule"] = training_start_rule
     if min_train_size is not None:
         axes_1["min_train_size"] = min_train_size
-    if oos_period is not None:
-        axes_1["oos_period"] = oos_period
     if overlap_handling is not None:
         axes_1["overlap_handling"] = overlap_handling
+
+    axes_4 = {"primary_metric": "msfe"}
+    if oos_period is not None:
+        axes_4["oos_period"] = oos_period
 
     leaf = {"target": "INDPRO", "horizons": [1]}
     if training_start_date is not None:
@@ -72,7 +74,7 @@ def _recipe(
                 "feature_builder": "autoreg_lagged_target",
                 "model_family": "ar",
             }},
-            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "4_evaluation": {"fixed_axes": axes_4},
             "5_output_provenance": {"leaf_config": {
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5},
@@ -153,6 +155,7 @@ def test_recession_only_oos_compiles_and_filters_unit() -> None:
     from macrocast.execution.nber import filter_origins_by_regime
     r = compile_recipe_dict(_recipe(oos_period="recession_only_oos"))
     assert r.compiled.execution_status == "executable"
+    assert r.manifest["evaluation_spec"]["oos_period"] == "recession_only_oos"
     # Unit: synthetic origins across recession and expansion dates
     idx = pd.to_datetime(["2000-01-01", "2008-09-01", "2015-06-01", "2020-03-01"])
     idx = pd.DatetimeIndex(idx)
@@ -169,6 +172,7 @@ def test_expansion_only_oos_compiles_and_filters_unit() -> None:
     from macrocast.execution.nber import filter_origins_by_regime
     r = compile_recipe_dict(_recipe(oos_period="expansion_only_oos"))
     assert r.compiled.execution_status == "executable"
+    assert r.manifest["evaluation_spec"]["oos_period"] == "expansion_only_oos"
     idx = pd.DatetimeIndex(pd.to_datetime(["2000-01-01", "2008-09-01", "2015-06-01", "2020-03-01"]))
     plan = [(i, 0, i) for i in range(len(idx))]
     kept = filter_origins_by_regime(plan, index=idx, regime="expansion_only_oos")
@@ -180,6 +184,7 @@ def test_expansion_only_oos_compiles_and_filters_unit() -> None:
 
 def test_all_oos_data_is_default_no_filter(tmp_path: Path) -> None:
     r = compile_recipe_dict(_recipe())
+    assert r.manifest["evaluation_spec"]["oos_period"] == "all_oos_data"
     assert r.manifest["data_task_spec"]["oos_period"] == "all_oos_data"
     execution = run_compiled_recipe(
         r.compiled,
@@ -191,6 +196,15 @@ def test_all_oos_data_is_default_no_filter(tmp_path: Path) -> None:
     # With no filter, both recession and expansion origins can appear in a long sample.
     # The fixture is short so we just assert non-empty and that the default runs.
     assert len(origins) > 0
+
+
+def test_legacy_layer1_oos_period_still_compiles_as_compatibility_alias() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"]["oos_period"] = "recession_only_oos"
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["evaluation_spec"]["oos_period"] == "recession_only_oos"
+    assert r.manifest["data_task_spec"]["oos_period"] == "recession_only_oos"
 
 
 # ---------- overlap_handling HAC gate ----------

@@ -1,6 +1,6 @@
 # Horizon & Evaluation Window (1.3)
 
-Declares **which observations count as training data, which count as OOS, and how OOS rows are filtered or aggregated**. Four axes in v1.0 — all values operational.
+Declares **which observations count as training data, which count as OOS, and how OOS rows are filtered or aggregated**. This page is the historical 1.3 user-guide entry; canonical ownership is split across later layers. `oos_period` is now a Layer 4 evaluation axis, with the old Layer 1 placement accepted only as a compatibility alias.
 
 | Section | axis | Role |
 |---|---|---|
@@ -132,7 +132,7 @@ path:
 ```yaml
 # Giacomini-White-style recession-only evaluation
 path:
-  1_data_task:
+  4_evaluation:
     fixed_axes:
       oos_period: recession_only_oos
 ```
@@ -185,10 +185,10 @@ path:
 
 ## Horizon & Evaluation Window (1.3) takeaways
 
-- Every value in every 1.3 axis is operational in v1.0. Zero `registry_only` entries remain.
+- Every value in every 1.3 axis listed here is operational in v1.0. `oos_period` is operational through the Layer 4 `evaluation_spec`.
 - `min_train_size` exposes the five rules already implemented in `raw.windowing`, now live in the main execution path.
 - `training_start_rule = fixed_start` unlocks calendar-exact replication of published paper samples via `leaf_config.training_start_date`.
-- `oos_period` delivers NBER regime conditioning without any recipe-side date bookkeeping.
+- `oos_period` delivers NBER regime conditioning without recipe-side date bookkeeping. Use `path.4_evaluation.fixed_axes.oos_period`; the compiler still accepts the old Layer 1 placement as a compatibility alias.
 - `overlap_handling = evaluate_with_hac` wires the HAC requirement into compile-time validation rather than leaving it implicit in stat-test choice.
 
 Next group: 1.4 Benchmark & predictor universe (coming).

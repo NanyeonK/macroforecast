@@ -184,8 +184,12 @@ Owns scoring and reporting of forecasts:
 - aggregation over time, horizon, and target
 - ranking and report style
 - regime-specific evaluation subsets
+- `oos_period`, because recession/expansion-only OOS selection is an evaluation
+  subset filter over already-built forecast origins
 
 Layer 4 should not fit models, transform predictors/target, or run statistical tests.
+During migration, `data_task_spec.oos_period` remains a compatibility mirror,
+but `evaluation_spec.oos_period` is the canonical runtime input.
 
 ## Layer 5: Artifacts
 

@@ -1159,6 +1159,9 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "sd_tcode_policy": leaf_config.get("sd_tcode_policy", "none"),
         "sd_tcode_map_version": leaf_config.get("sd_tcode_map_version"),
         "sd_tcode_allowed_statuses": leaf_config.get("sd_tcode_allowed_statuses"),
+        # Compatibility mirror: `oos_period` is a Layer 4 evaluation axis.
+        # Keep it in data_task_spec for older runtime/readers until the
+        # migration window closes, but treat evaluation_spec as canonical.
         "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "missing_availability": _selection_value(selection_map, "missing_availability", default="zero_fill_before_start"),
         "raw_missing_policy": _selection_value(selection_map, "raw_missing_policy", default="preserve_raw_missing"),
@@ -2731,6 +2734,7 @@ def _evaluation_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[
         "regime_metrics": _selection_value(selection_map, "regime_metrics", default="all_main_metrics_by_regime"),
         "decomposition_target": _selection_value(selection_map, "decomposition_target", default="preprocessing_effect"),
         "decomposition_order": _selection_value(selection_map, "decomposition_order", default="marginal_effect_only"),
+        "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
         "regime_start": leaf_config.get("regime_start"),
         "regime_end": leaf_config.get("regime_end"),
     }

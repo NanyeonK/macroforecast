@@ -144,5 +144,5 @@ When tuning is enabled (via `search_algorithm` in the recipe), this contains the
 
 **See also:**
 - [Quickstart](quickstart.md) — run your first study
-- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — axes that shape metric inputs (horizon, oos_period, overlap_handling).
+- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — data axes that shape metric inputs. `oos_period` is now a Layer 4 evaluation axis, with old data-layer placement kept as a compatibility alias.
 - [Stages Reference](stages_reference.md) — cheat sheet with every operational value.

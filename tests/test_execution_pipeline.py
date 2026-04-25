@@ -19,6 +19,7 @@ from macrocast import (
     ForecastPayload,
 )
 from macrocast.preprocessing import FeatureBlockCallableResult, FeatureCombinerCallableResult
+import macrocast.execution.build as execution_build
 from macrocast.execution.build import _coerce_forecast_payload
 
 
@@ -639,6 +640,35 @@ def test_execute_recipe_stage4_metrics_include_relative_and_direction_fields(tmp
     assert "benchmark_win_rate" in h1
     assert "directional_accuracy" in h1
     assert "sign_accuracy" in h1
+
+
+def test_execute_recipe_reads_oos_period_from_evaluation_spec(tmp_path: Path, monkeypatch) -> None:
+    seen: list[str] = []
+
+    def _capture_filter(origin_plan, *, index, regime):
+        seen.append(regime)
+        return origin_plan
+
+    monkeypatch.setattr(execution_build, "_filter_origins_by_regime", _capture_filter)
+    execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+        provenance_payload={
+            "compiler": {
+                "evaluation_spec": {
+                    "primary_metric": "msfe",
+                    "oos_period": "recession_only_oos",
+                    "regime_definition": "none",
+                    "regime_use": "eval_only",
+                    "regime_metrics": "all_main_metrics_by_regime",
+                }
+            }
+        },
+    )
+
+    assert seen == ["recession_only_oos", "recession_only_oos"]
 
 
 def test_execute_recipe_writes_regime_summary_for_nber_slice(tmp_path: Path) -> None:

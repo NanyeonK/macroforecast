@@ -3130,6 +3130,7 @@ def test_compiled_manifest_records_stage4_evaluation_defaults() -> None:
     assert spec["relative_metrics"] == "relative_MSFE"
     assert spec["direction_metrics"] == "directional_accuracy"
     assert spec["regime_definition"] == "none"
+    assert spec["oos_period"] == "all_oos_data"
 
 
 def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
