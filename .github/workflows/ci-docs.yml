@@ -31,6 +31,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
+      - name: Check navigator app data is current
+        run: |
+          macrocast-navigate export-ui-data --output docs/_extra/navigator_app/assets/navigator_ui_data.json --check
+
       - name: Build Sphinx HTML (fail on warning)
         run: |
           sphinx-build -W -b html docs docs/_build/html

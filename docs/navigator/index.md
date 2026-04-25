@@ -2,6 +2,12 @@
 
 The navigator is the primary documentation surface for choosing a macrocast study path. It is built for packages where the number of valid combinations is large enough that API documentation alone becomes misleading.
 
+Open the interactive app:
+
+```{raw} html
+<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p>
+```
+
 The navigator answers these questions before execution:
 
 - which options are selectable at the current node;

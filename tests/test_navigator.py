@@ -7,7 +7,9 @@ import yaml
 from macrocast.navigator import (
     build_navigation_view,
     get_replication_entry,
+    navigator_ui_data,
     replication_recipe_yaml,
+    write_navigator_ui_data,
     write_replication_recipe,
 )
 from macrocast.navigator.cli import main as navigator_main
@@ -118,3 +120,25 @@ def test_navigator_cli_writes_replication_yaml(tmp_path: Path):
     assert rc == 0
     payload = yaml.safe_load(out.read_text())
     assert payload["path"]["3_training"]["fixed_axes"]["model_family"] == "ridge"
+
+
+def test_navigator_ui_data_export_roundtrip(tmp_path: Path):
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+
+    assert payload["schema_version"] == "navigator_ui_data_v1"
+    assert payload["samples"][0]["view"]["schema_version"] == "navigator_view_v1"
+    assert "model_family" in payload["axis_catalog"]
+    assert payload["replications"]
+
+    out = write_navigator_ui_data(tmp_path / "navigator_ui_data.json", sample_paths=("examples/recipes/model-benchmark.yaml",))
+    assert out.exists()
+    assert write_navigator_ui_data(out, sample_paths=("examples/recipes/model-benchmark.yaml",), check=True) == out
+
+
+def test_navigator_cli_checks_ui_data(tmp_path: Path):
+    out = tmp_path / "navigator_ui_data.json"
+
+    assert navigator_main(["export-ui-data", "--output", str(out)]) == 0
+    assert navigator_main(["export-ui-data", "--output", str(out), "--check"]) == 0
+    out.write_text("{}\n", encoding="utf-8")
+    assert navigator_main(["export-ui-data", "--output", str(out), "--check"]) == 1

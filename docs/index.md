@@ -13,6 +13,7 @@ The docs should be read in that order. The API reference is not the entry point 
 
 | You want to... | Start with |
 |---|---|
+| use the interactive tree UI | [Open Navigator App](navigator_app/index.html) |
 | choose a path and see disabled branches | [Navigator Docs](navigator/index.md) |
 | inspect why a recipe can or cannot run | [Path Resolver](navigator/path_resolver.md) |
 | map choices such as model, feature representation, forecast object, and importance method | [Compatibility Engine](navigator/compatibility_engine.md) |

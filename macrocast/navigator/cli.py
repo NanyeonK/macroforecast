@@ -7,6 +7,7 @@ from typing import Any
 
 from .core import build_navigation_view_from_yaml
 from .replications import get_replication_entry, list_replication_entries, write_replication_recipe
+from .ui_data import write_navigator_ui_data
 
 
 def _print_json(payload: Any) -> None:
@@ -75,6 +76,16 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_export_ui_data(args: argparse.Namespace) -> int:
+    try:
+        out = write_navigator_ui_data(args.output, check=args.check)
+    except ValueError as exc:
+        _print_json({"status": "stale", "error": str(exc), "output": args.output})
+        return 1
+    _print_json({"status": "ok", "output": str(out), "check": bool(args.check)})
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="macrocast-navigate",
@@ -101,6 +112,15 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--output-root", default="results/macrocast")
     run.add_argument("--local-raw-source")
     run.set_defaults(func=_cmd_run)
+
+    export_ui_data = sub.add_parser("export-ui-data", help="Write deterministic JSON consumed by the static navigator app.")
+    export_ui_data.add_argument(
+        "--output",
+        default="docs/_extra/navigator_app/assets/navigator_ui_data.json",
+        help="Output JSON path.",
+    )
+    export_ui_data.add_argument("--check", action="store_true", help="Fail if the existing JSON is stale.")
+    export_ui_data.set_defaults(func=_cmd_export_ui_data)
     return parser
 
 

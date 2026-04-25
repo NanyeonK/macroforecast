@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>macrocast Navigator</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">macrocast navigator</p>
+        <h1>Decision Tree Navigator</h1>
+      </div>
+      <div class="top-actions">
+        <a href="../index.html">Docs</a>
+        <a href="../navigator/index.html">Navigator Guide</a>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls" aria-label="Navigator controls">
+        <label for="sample-select">Recipe path</label>
+        <select id="sample-select"></select>
+
+        <label for="axis-search">Filter axes</label>
+        <input id="axis-search" type="search" placeholder="model, tcode, forecast..." />
+
+        <div class="segmented" role="group" aria-label="Layer filter">
+          <button type="button" data-layer="all" class="active">All</button>
+          <button type="button" data-layer="0_meta">L0</button>
+          <button type="button" data-layer="1_data_task">L1</button>
+          <button type="button" data-layer="2_preprocessing">L2</button>
+          <button type="button" data-layer="3_training">L3</button>
+          <button type="button" data-layer="downstream">L4-7</button>
+        </div>
+
+        <div class="summary-grid">
+          <div>
+            <span class="metric-label">Status</span>
+            <strong id="execution-status">-</strong>
+          </div>
+          <div>
+            <span class="metric-label">Blocked</span>
+            <strong id="blocked-count">0</strong>
+          </div>
+          <div>
+            <span class="metric-label">Disabled</span>
+            <strong id="disabled-count">0</strong>
+          </div>
+        </div>
+
+        <div id="axis-list" class="axis-list"></div>
+      </section>
+
+      <section class="panel main-panel" aria-label="Axis options">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" id="axis-layer">Layer</p>
+            <h2 id="axis-title">Axis</h2>
+          </div>
+          <span id="axis-selected" class="pill">selected: -</span>
+        </div>
+        <div id="option-list" class="option-list"></div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>Compatibility</h2>
+          </div>
+          <div id="compatibility-view"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>Replication Library</h2>
+          </div>
+          <div id="replication-list" class="replication-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>YAML Preview</h2>
+            <button id="copy-yaml" type="button">Copy</button>
+          </div>
+          <pre id="yaml-preview" class="code-block"></pre>
+        </section>
+      </aside>
+    </main>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>
