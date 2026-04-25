@@ -32,6 +32,7 @@ def _recipe(
     forecast_object: str | None = None,
     target_lag_block: str | None = None,
     exogenous_x_path_policy: str | None = None,
+    scheduled_known_future_x_columns: list[str] | None = None,
 ) -> dict:
     axes_1 = {
         "dataset": "fred_md",
@@ -72,6 +73,8 @@ def _recipe(
     data_leaf = {"target": "INDPRO", "horizons": [1]}
     if exogenous_x_path_policy is not None:
         data_leaf["exogenous_x_path_policy"] = exogenous_x_path_policy
+    if scheduled_known_future_x_columns is not None:
+        data_leaf["scheduled_known_future_x_columns"] = scheduled_known_future_x_columns
 
     return {
         "recipe_id": "ft-q-test",
@@ -186,7 +189,7 @@ def test_layer3_capability_matrix_records_future_status_catalog() -> None:
         "unavailable",
     ]
     assert "step_predictions" in raw_iterated_requirements["multi_step_raw_panel_payload_v1"]["required_fields"]
-    assert "hold_last_observed and observed_future_x are operational" in future_cells[
+    assert "hold_last_observed, observed_future_x, and scheduled_known_future_x are operational" in future_cells[
         "forecast_type.raw_panel_iterated"
     ]["opening_rule"]
     assert matrix["rules"]["forecast_type"]["raw_feature_panel"]["conditional_operational"]["iterated"][
@@ -253,6 +256,40 @@ def test_forecast_type_iterated_raw_panel_observed_future_x_compiles() -> None:
     assert r.manifest["data_task_spec"]["exogenous_x_path_policy"] == "observed_future_x"
     assert r.manifest["training_spec"]["forecast_type"] == "iterated"
     assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
+
+
+def test_forecast_type_iterated_raw_panel_scheduled_known_future_x_compiles() -> None:
+    r = compile_recipe_dict(
+        _recipe(
+            feature_builder="raw_feature_panel",
+            model_family="ridge",
+            forecast_type="iterated",
+            target_lag_block="fixed_target_lags",
+            exogenous_x_path_policy="scheduled_known_future_x",
+            scheduled_known_future_x_columns=["CPIAUCSL"],
+        )
+    )
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["data_task_spec"]["exogenous_x_path_policy"] == "scheduled_known_future_x"
+    assert r.manifest["data_task_spec"]["scheduled_known_future_x_columns"] == ["CPIAUCSL"]
+    assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
+
+
+def test_forecast_type_iterated_raw_panel_scheduled_known_future_x_requires_columns() -> None:
+    r = compile_recipe_dict(
+        _recipe(
+            feature_builder="raw_feature_panel",
+            model_family="ridge",
+            forecast_type="iterated",
+            target_lag_block="fixed_target_lags",
+            exogenous_x_path_policy="scheduled_known_future_x",
+        )
+    )
+    assert r.compiled.execution_status == "blocked_by_incompatibility"
+    assert any(
+        "requires leaf_config.scheduled_known_future_x_columns" in r_msg
+        for r_msg in r.manifest.get("blocked_reasons", [])
+    )
 
 
 def test_forecast_type_iterated_raw_panel_custom_model_compiles() -> None:

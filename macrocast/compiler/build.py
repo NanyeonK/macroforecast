@@ -1168,6 +1168,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "data_vintage": leaf_config.get("data_vintage"),
         "exogenous_x_path_policy": leaf_config.get("exogenous_x_path_policy")
         or leaf_config.get("future_x_path_policy"),
+        "scheduled_known_future_x_columns": leaf_config.get("scheduled_known_future_x_columns")
+        or leaf_config.get("known_future_x_columns"),
     }
 
 
@@ -2113,6 +2115,7 @@ def _layer3_capability_rejections(
     horizon_target_construction: str = "future_target_level_t_plus_h",
     exogenous_x_path_policy: str = "unavailable",
     target_lag_block: str | None = None,
+    scheduled_known_future_x_columns: Sequence[Any] | None = None,
 ) -> tuple[str, ...]:
     blocked: list[str] = []
     if model_family == "ar" and feature_runtime == "raw_feature_panel":
@@ -2139,10 +2142,20 @@ def _layer3_capability_rejections(
                 "forecast_type='iterated' for raw-panel feature runtime currently supports scalar tabular "
                 "generators only, not factor/deep generator families"
             )
-        if str(exogenous_x_path_policy) not in {"hold_last_observed", "observed_future_x"}:
+        if str(exogenous_x_path_policy) not in {
+            "hold_last_observed",
+            "observed_future_x",
+            "scheduled_known_future_x",
+        }:
             blocked.append(
                 "forecast_type='iterated' for raw-panel feature runtime requires "
-                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x'}"
+                "leaf_config.exogenous_x_path_policy in "
+                "{'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x'}"
+            )
+        if str(exogenous_x_path_policy) == "scheduled_known_future_x" and not scheduled_known_future_x_columns:
+            blocked.append(
+                "forecast_type='iterated' with exogenous_x_path_policy='scheduled_known_future_x' "
+                "requires leaf_config.scheduled_known_future_x_columns"
             )
         if str(target_lag_block or "none") != "fixed_target_lags":
             blocked.append(
@@ -2322,9 +2335,9 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
                 "multi_step_raw_panel_payload_v1"
             ],
         },
-        "opening_rule": "hold_last_observed and observed_future_x are operational; scheduled and recursively forecast future-X paths remain gated",
+        "opening_rule": "hold_last_observed, observed_future_x, and scheduled_known_future_x are operational; recursively forecast future-X paths remain gated",
         "requires": [
-            "explicit hold_last_observed or observed_future_x exogenous-X scenario",
+            "explicit hold_last_observed, observed_future_x, or scheduled_known_future_x exogenous-X scenario",
             "fixed target-lag recursive history",
             "multi-step raw-panel forecast payload artifacts",
         ],
@@ -2366,6 +2379,8 @@ def _layer3_capability_matrix(
             or "unavailable"
         ),
         target_lag_block=_selection_value(selection_map, "target_lag_block", default="none"),
+        scheduled_known_future_x_columns=leaf_config.get("scheduled_known_future_x_columns")
+        or leaf_config.get("known_future_x_columns"),
     )
     return {
         "schema_version": "layer3_capability_matrix_v1",
@@ -2408,7 +2423,7 @@ def _layer3_capability_matrix(
                     "conditional_operational": {
                         "iterated": {
                             "requires": [
-                                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x'}",
+                                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x'}",
                                 "target_lag_block='fixed_target_lags'",
                                 "forecast_object='point_mean'",
                             ],
@@ -2920,6 +2935,8 @@ def _execution_status(
                 or "unavailable"
             ),
             target_lag_block=_selection_value(selection_map, "target_lag_block", default="none"),
+            scheduled_known_future_x_columns=leaf_config.get("scheduled_known_future_x_columns")
+            or leaf_config.get("known_future_x_columns"),
         )
     )
     if feature_runtime == "raw_feature_panel" and forecast_type == "iterated" and not blocked:

@@ -1566,6 +1566,7 @@ _PAYLOAD_CONTRACT_BY_FORECAST_OBJECT = {
 _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH = {
     "hold_last_observed": "raw_panel_iterated_hold_last_observed_v1",
     "observed_future_x": "raw_panel_iterated_observed_future_x_v1",
+    "scheduled_known_future_x": "raw_panel_iterated_scheduled_known_future_x_v1",
 }
 _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION = "multi_step_raw_panel_payload_v1"
 
@@ -1600,6 +1601,20 @@ def _exogenous_x_path_policy(recipe: RecipeSpec) -> str:
         )
         or "unavailable"
     )
+
+
+def _scheduled_known_future_x_columns(recipe: RecipeSpec) -> tuple[str, ...]:
+    values = (
+        recipe.data_task_spec.get("scheduled_known_future_x_columns")
+        or recipe.data_task_spec.get("known_future_x_columns")
+        or recipe.training_spec.get("scheduled_known_future_x_columns")
+        or ()
+    )
+    if isinstance(values, str):
+        return (values,)
+    if isinstance(values, Sequence):
+        return tuple(str(value) for value in values)
+    return ()
 
 
 def _forecast_payload_contract_for_recipe(recipe: RecipeSpec) -> str:
@@ -4783,6 +4798,18 @@ def _run_raw_panel_iterated_executor(
         predictor_family=_predictor_family(recipe),
         spec=_layer2_runtime_spec(recipe),
     )
+    scheduled_columns = _scheduled_known_future_x_columns(recipe)
+    if x_path_policy == "scheduled_known_future_x":
+        if not scheduled_columns:
+            raise ExecutionError(
+                "raw-panel iterated scheduled_known_future_x requires scheduled_known_future_x_columns"
+            )
+        missing_scheduled = [col for col in scheduled_columns if col not in predictors]
+        if missing_scheduled:
+            raise ExecutionError(
+                "raw-panel iterated scheduled_known_future_x columns are not active predictors: "
+                f"{missing_scheduled}"
+            )
     lag_order = _target_lag_order_from_block(recipe, _max_ar_lag(recipe))
     if lag_order < 1:
         raise ExecutionError("raw-panel iterated forecasting requires positive target lag order")
@@ -4839,11 +4866,17 @@ def _run_raw_panel_iterated_executor(
         x_source_idx = origin_idx if x_path_policy == "hold_last_observed" else origin_idx + step - 1
         if x_source_idx >= len(raw_frame):
             raise ExecutionError(
-                "raw-panel iterated observed_future_x requires observed X through "
+                f"raw-panel iterated {x_path_policy} requires X through "
                 f"step={step}, but index {x_source_idx} is unavailable"
             )
         x_source_date = raw_frame.index[x_source_idx]
-        X_pred_df = raw_frame[predictors].iloc[[x_source_idx]].astype(float).copy()
+        if x_path_policy == "scheduled_known_future_x":
+            X_pred_df = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
+            X_pred_future = raw_frame[list(scheduled_columns)].iloc[[x_source_idx]].astype(float)
+            for col in scheduled_columns:
+                X_pred_df[str(col)] = float(X_pred_future[str(col)].iloc[0])
+        else:
+            X_pred_df = raw_frame[predictors].iloc[[x_source_idx]].astype(float).copy()
         for name, value in zip(target_lag_names, lag_values):
             X_pred_df[str(name)] = float(value)
         X_pred = X_pred_df[feature_names].to_numpy(dtype=float)
@@ -4858,6 +4891,7 @@ def _run_raw_panel_iterated_executor(
                 "raw_panel_iterated_step": int(step),
                 "x_path_policy": x_path_policy,
                 "x_source_date": x_source_date.strftime("%Y-%m-%d"),
+                "scheduled_known_future_x_columns": list(scheduled_columns),
                 "raw_panel_iterated_runtime_contract": runtime_contract,
                 "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
                 "feature_names": list(representation_for_step.feature_names),
@@ -4885,6 +4919,7 @@ def _run_raw_panel_iterated_executor(
                 "x_path_policy": x_path_policy,
                 "x_origin_date": origin_date.strftime("%Y-%m-%d"),
                 "x_source_date": x_source_date.strftime("%Y-%m-%d"),
+                "scheduled_known_future_x_columns": json.dumps(list(scheduled_columns), sort_keys=True),
                 "step_prediction": float(y_pred_step),
                 "recursive_target_history_tail": json.dumps(lag_values, sort_keys=True),
                 "runtime_contract": runtime_contract,
@@ -4902,6 +4937,7 @@ def _run_raw_panel_iterated_executor(
             "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
             "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
             "exogenous_x_path_policy": x_path_policy,
+            "scheduled_known_future_x_columns": list(scheduled_columns),
             "raw_panel_iterated_steps": step_rows,
             "raw_panel_iterated_step_predictions": step_predictions,
         }
@@ -8076,6 +8112,10 @@ def execute_recipe(
         )
         manifest["exogenous_x_path_contract"] = "exogenous_x_path_contract_v1"
         manifest["exogenous_x_path_policy"] = _exogenous_x_path_policy(recipe)
+        if _exogenous_x_path_policy(recipe) == "scheduled_known_future_x":
+            manifest["scheduled_known_future_x_columns"] = list(
+                _scheduled_known_future_x_columns(recipe)
+            )
         if export_format in ('parquet', 'all'):
             raw_panel_iterated_steps.to_parquet(run_dir / 'raw_panel_iterated_steps.parquet')
     payload_records = _payload_artifact_records(predictions)

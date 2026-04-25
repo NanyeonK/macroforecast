@@ -56,6 +56,10 @@ Operational slices:
 - `observed_future_x`: oracle or ex-post analysis path that uses observed
   future X rows for recursive transitions and marks that future information in
   provenance.
+- `scheduled_known_future_x`: partial future-X path that uses future rows only
+  for configured scheduled-known predictor columns and holds all other
+  predictors at the origin-available X row. The configuration must list the
+  known-future columns explicitly.
 
 Built-in scalar tabular generators and registered `custom_model_v1` models can
 consume these slices; the custom model receives the same

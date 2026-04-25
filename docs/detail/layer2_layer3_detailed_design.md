@@ -356,7 +356,7 @@ more than the current tabular `Z_pred`.
 Operational narrow slice:
 
 - `exogenous_x_path_contract_v1.path_kind` in `{'hold_last_observed',
-  'observed_future_x'}`;
+  'observed_future_x', 'scheduled_known_future_x'}`;
 - `target_lag_block='fixed_target_lags'`;
 - `forecast_object='point_mean'`;
 - built-in scalar tabular model generators or registered custom models using
@@ -368,22 +368,26 @@ Still-gated dependency:
 
 - `exogenous_x_path_contract_v1`;
 - `multi_step_raw_panel_payload_v1`;
-- scheduled or recursively forecast future-X paths;
+- recursively forecast future-X paths;
 - non-point forecast payloads;
 - transformed/normalized target scale composition.
 
 The operational path kinds are
-`exogenous_x_path_contract_v1.path_kind='hold_last_observed'` and
-`path_kind='observed_future_x'`. `hold_last_observed` is explicitly a scenario
-assumption, not knowledge of future X. `observed_future_x` is an oracle or
-ex-post path and must be marked as future information. Both paths should write
-a step trace, the future-X path reference, recursive target-history updates,
-and a final horizon prediction under
+`exogenous_x_path_contract_v1.path_kind='hold_last_observed'`,
+`path_kind='observed_future_x'`, and
+`path_kind='scheduled_known_future_x'`. `hold_last_observed` is explicitly a
+scenario assumption, not knowledge of future X. `observed_future_x` is an
+oracle or ex-post path and must be marked as future information.
+`scheduled_known_future_x` is a partial future-X path: only configured
+known-future predictor columns use future rows, while all other predictors stay
+at the origin row. These paths should write a step trace, the future-X path
+reference, recursive target-history updates, configured scheduled-known
+columns when applicable, and a final horizon prediction under
 `multi_step_raw_panel_payload_v1`.
 
 Broader raw-panel iterated cells remain blocked by the Layer 3 capability
-matrix until scheduled or recursively forecast future-X path kinds have
-explicit availability, release-lag, origin-alignment, and artifact tests.
+matrix until recursively forecast future-X path kinds have explicit
+availability, release-lag, origin-alignment, and artifact tests.
 
 ### Sequence/Tensor Forecast Generators
 
