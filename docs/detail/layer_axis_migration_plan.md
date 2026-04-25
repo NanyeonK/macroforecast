@@ -10,7 +10,7 @@ describes the registry layer after migration.
 
 | Axis | Old owner | Canonical owner | Reason |
 |---|---|---|---|
-| `benchmark_family` | 1_data_task | 3_training | Benchmarks generate forecasts; they are model/baseline choices. |
+| `benchmark_family` | 1_data_task | 3_training compatibility axis | Benchmarks generate forecasts. Canonically this is baseline generator role assignment, not a separate model species. |
 | `forecast_type` | 1_data_task | 3_training | Direct vs iterated is forecast-generation logic. |
 | `forecast_object` | 1_data_task | 3_training | Mean/median/quantile is model output contract. |
 | `predictor_family` | 1_data_task / 3_training | 2_preprocessing | Predictor family chooses the feature representation before model fitting. |
@@ -33,6 +33,9 @@ describes the registry layer after migration.
 
 | Axis / concept | Current owner | Target owner | Note |
 |---|---|---|---|
+| `model_family` terminology | 3_training compatibility axis | 3_training `forecast_generator_family` concept | Keep the public axis for recipe/API compatibility. Docs should describe it as the candidate forecast generator family. |
+| `benchmark_family` terminology | 3_training compatibility axis | 3_training baseline generator role assignment | Keep the public axis for recipe/API compatibility. Docs should describe it as forecast-generator role assignment, not a separate family type. |
+| broad runtime discipline wording | split across 0/1/3 | explicit split | Layer 0 owns run control; Layer 1 owns data timing/information-set discipline; Layer 3 owns estimator training discipline only. |
 | legacy official t-code bridge fields | 2_preprocessing | compatibility bridge | Keep accepting `target_transform_policy`, `x_transform_policy`, `tcode_policy=tcode_only`, `tcode_application_scope`, and `preprocess_order=tcode_only` while generated recipes move to Layer 1 official-transform axes. |
 | `tcode_policy` values beyond official transform | 2_preprocessing | 2_preprocessing | Keep extra/custom transform pipelines in Layer 2. |
 | `preprocess_order=tcode_only` | 2_preprocessing | compatibility bridge | Official-only order is represented by Layer 1 `official_transform_policy=dataset_tcode`; extra orders remain Layer 2. |

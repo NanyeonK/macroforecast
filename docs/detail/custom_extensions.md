@@ -191,9 +191,10 @@ The model context includes `model_name`, `target`, `horizon`, `feature_names`,
 `feature_dispatch_source`, `block_order`, `block_roles`, `alignment`,
 `leakage_contract`, and `mode`.
 
-Registered custom model names are accepted as `model_family` values in the
-current Python process and can be compared with built-in models through the
-normal execution and experiment APIs.
+Registered custom model names are accepted through the current `model_family`
+compatibility axis. Canonically, they are custom forecast generator families
+and can be compared with built-in generators through the normal execution and
+experiment APIs.
 
 ## Fair Comparison Checklist
 

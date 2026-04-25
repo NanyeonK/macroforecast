@@ -107,17 +107,35 @@ accepted as a decomposition-plan alias.
 
 Owns all choices that generate forecasts:
 
-- model family
-- registered custom model
-- benchmark family
+- forecast generator family, currently exposed as compatibility axis `model_family`
+- registered custom forecast generator/model
+- baseline generator role assignment, currently exposed as compatibility axis
+  `benchmark_family`
 - direct vs iterated forecast generation
 - forecast object, including mean/median/quantile
 - training window, refit policy, min train size, training start rule
 - model lag counts and horizon modelization
 - validation split, hyperparameter search, tuning objective, budget
-- model seed, early stopping, convergence, cache, checkpointing, execution backend
+- estimator seed use, early stopping, and convergence handling
 
-Benchmarks belong here because they produce forecasts.
+Canonical cleanup:
+
+- `model_family` remains the public compatibility axis, but its canonical
+  meaning is forecast generator family.
+- `benchmark_family` remains the public compatibility axis, but its canonical
+  meaning is baseline generator role assignment.
+- benchmarks belong here because they produce forecasts; they are forecast
+  generators assigned the benchmark/baseline role, not a separate model species.
+- Layer 3 owns estimator seed use, early stopping, and convergence handling,
+  but not all runtime discipline.
+
+Runtime discipline is split by layer:
+
+| Discipline | Owner |
+|---|---|
+| Experiment execution control: failure policy, compute mode, reproducibility mode, broad cache/checkpoint policy | Layer 0 |
+| Data timing: vintage, release lag, contemporaneous information, and availability | Layer 1 |
+| Estimator training behavior: validation split, tuning, early stopping, convergence, model-specific seed use | Layer 3 |
 
 Layer 3 consumes `Z_train`/`Z_pred` from Layer 2 and fits/predicts with a model
 or benchmark. Its canonical contract is:

@@ -51,14 +51,22 @@ Layer 2 owns the transformation from Layer 1 outputs to model inputs:
 
 Layer 3 owns forecast generation:
 
-- model family;
-- benchmark family;
+- forecast generator family, currently exposed as compatibility axis
+  `model_family`;
+- baseline generator role assignment, currently exposed as compatibility axis
+  `benchmark_family`;
 - direct versus iterated forecast generation;
 - forecast object;
 - training window and refit protocol;
 - validation and hyperparameter search;
 - model-order selection when the order is estimator behavior;
-- convergence, seed, cache, checkpointing, and execution backend.
+- estimator training discipline: convergence, early stopping, and
+  model-specific seed use under the Layer 0 reproducibility policy.
+
+Layer 0 owns broad run control such as failure policy, compute mode,
+reproducibility mode, and broad cache/checkpoint policy. Layer 1 owns data
+timing discipline such as vintage, release lag, contemporaneous information,
+and availability.
 
 Layer 3 must not decide which feature blocks exist. It consumes the Layer 2
 representation payload plus training settings.
@@ -129,6 +137,11 @@ path:
     sweep_axes:
       model_family: [ridge, lasso, randomforest]
 ```
+
+`model_family` is the current recipe spelling for the candidate
+`forecast_generator_family`. `benchmark_family` is the current recipe spelling
+for the baseline generator role assignment. They are kept as compatibility
+axes while the canonical docs use forecast-generator language.
 
 The compiler should not treat this as a special "preprocessing sweep" route.
 It should treat this as a set of concrete `Z` construction recipes crossed with
@@ -302,7 +315,7 @@ models fit.
 The consumer contract is:
 
 ```text
-fit(model_family, representation, training_spec) -> y_pred
+fit(forecast_generator_family, representation, training_spec) -> y_pred
 ```
 
 Layer 3 should not branch on `feature_builder`, `x_lag_feature_block`,
@@ -320,6 +333,16 @@ runtime support table over `model_family`, resolved Layer 2 `feature_runtime`,
 `forecast_type`, and `forecast_object`, plus an `active_cell` for the current
 recipe. Full sweep runners should use the same matrix to report or prune
 invalid Layer 2 x Layer 3 cells.
+
+The current manifest keys remain compatibility names. Their canonical meaning
+is:
+
+| Compatibility key | Canonical meaning |
+|---|---|
+| `model_family` | `forecast_generator_family` |
+| `benchmark_family` | baseline generator role assignment |
+| `feature_runtime` | `representation_runtime` |
+| `forecast_type` | `forecast_protocol` |
 
 The matrix also carries a status catalog and payload contract names. Direction,
 interval, and density forecast objects are operational as typed wrappers over

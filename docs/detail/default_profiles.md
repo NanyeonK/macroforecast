@@ -34,6 +34,11 @@ This default still writes legacy-compatible
 Layer 2 block/runtime provenance. New full recipes may use explicit feature
 blocks directly.
 
+The profile also keeps the current Layer 3 compatibility names:
+`model_family=ar` means candidate forecast generator family `ar`, and
+`benchmark_family=zero_change` means the `zero_change` generator is assigned
+the benchmark/baseline role.
+
 Frequency resolution:
 
 - `fred_md` means monthly.

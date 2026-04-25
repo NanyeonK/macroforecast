@@ -2215,8 +2215,20 @@ def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[s
     )
     return {
         "schema_version": "layer3_capability_matrix_v1",
-        "schema_revision": 4,
+        "schema_revision": 5,
         "dimensions": ["model_family", "feature_runtime", "forecast_type", "forecast_object"],
+        "canonical_dimensions": [
+            "forecast_generator_family",
+            "representation_runtime",
+            "forecast_protocol",
+            "forecast_object",
+        ],
+        "dimension_aliases": {
+            "model_family": "forecast_generator_family",
+            "benchmark_family": "baseline_forecast_generator_role",
+            "feature_runtime": "representation_runtime",
+            "forecast_type": "forecast_protocol",
+        },
         "status_catalog": dict(_LAYER3_CAPABILITY_STATUS_CATALOG),
         "future_cells": [dict(cell) for cell in _LAYER3_FUTURE_CAPABILITY_CELLS],
         "rules": {
@@ -2277,6 +2289,15 @@ def _layer3_capability_matrix(selection_map: dict[str, AxisSelection]) -> dict[s
             "feature_builder": feature_builder,
             "feature_runtime": feature_runtime,
             "forecast_type": forecast_type,
+            "forecast_object": forecast_object,
+            "payload_contract": _LAYER3_PAYLOAD_CONTRACTS.get(forecast_object, "forecast_payload_v1"),
+            "runtime_status": "blocked_by_incompatibility" if blocked else "operational",
+            "blocked_reasons": list(blocked),
+        },
+        "canonical_active_cell": {
+            "forecast_generator_family": model_family,
+            "representation_runtime": feature_runtime,
+            "forecast_protocol": forecast_type,
             "forecast_object": forecast_object,
             "payload_contract": _LAYER3_PAYLOAD_CONTRACTS.get(forecast_object, "forecast_payload_v1"),
             "runtime_status": "blocked_by_incompatibility" if blocked else "operational",

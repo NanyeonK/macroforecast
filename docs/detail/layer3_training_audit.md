@@ -12,8 +12,10 @@ target construction, official data treatment, or researcher preprocessing.
 Layer 3 owns choices that determine how forecasts are generated after Layer 2
 has produced `Z_train`, `y_train`, and `Z_pred`:
 
-- model family and registered custom model;
-- benchmark family and benchmark plugin execution;
+- forecast generator family, currently exposed through the compatibility axis
+  `model_family`, and registered custom forecast generators;
+- baseline assignment for forecast generators, currently exposed through the
+  compatibility axis `benchmark_family`, plus benchmark plugin execution;
 - direct versus iterated forecast generation;
 - forecast object, such as point mean, point median, or quantile;
 - training window, minimum training size, training-start rule, refit policy,
@@ -21,8 +23,15 @@ has produced `Z_train`, `y_train`, and `Z_pred`:
 - model-order choices that are estimator behavior, such as AR BIC lag
   selection;
 - validation split, hyperparameter search, tuning objective, and tuning budget;
-- model seed, early stopping, convergence handling, cache, checkpointing, and
-  execution backend.
+- estimator seed use, early stopping, and convergence handling.
+
+Layer 3 does not own all runtime discipline. Runtime discipline is split:
+
+| Discipline | Owner | Layer 3 role |
+|---|---|---|
+| Experiment execution control: failure policy, compute mode, reproducibility mode, broad cache/checkpoint policy | Layer 0 | follow the selected study policy |
+| Data timing: vintage, release lag, contemporaneous information, and availability | Layer 1 | consume and validate the provided information set |
+| Estimator training discipline: validation split, tuning, early stopping, convergence, model-specific seed use | Layer 3 | own and report estimator behavior |
 
 Layer 3's canonical consumer contract is:
 
@@ -116,12 +125,23 @@ Layer 2 owns feature selection because it changes `Z`. Layer 3 owns
 hyperparameter search because it chooses estimator settings conditional on the
 given `Z`.
 
-### Benchmarks
+### Forecast Generators And Benchmarks
 
-Benchmarks are Layer 3 because they generate forecasts. The official data frame
-and feature representation are still supplied by Layers 1 and 2. Benchmark
-scope and benchmark-window scoring details are evaluated later, but benchmark
-forecast generation belongs here.
+Benchmarks are Layer 3 because they generate forecasts, but they should not be
+treated as a separate species from models. The canonical concept is one
+forecast-generator registry with comparison roles:
+
+| Concept | Current compatibility axis | Canonical meaning |
+|---|---|---|
+| Candidate generator | `model_family` | Forecast generator being evaluated as the candidate method. |
+| Baseline generator | `benchmark_family` | Forecast generator assigned the benchmark/baseline role. |
+
+An AR generator, historical mean, random walk, ridge model, or registered
+custom generator can be a candidate or a baseline depending on the comparison
+design. The current `model_family` and `benchmark_family` names remain accepted
+for recipe compatibility, but docs should describe them as generator family and
+generator role assignment. The official data frame and feature representation
+are still supplied by Layers 1 and 2.
 
 ## Current Design State
 
@@ -157,8 +177,12 @@ The docs and runtime now mostly follow this split:
   as raw-panel `Z` with `model_family='ar'`, raw-panel iterated forecasting,
   and quantile forecast objects with non-quantile models.
 - New compiled manifests include `layer3_capability_matrix`, which records the
-  active `model_family x feature_runtime x forecast_type x forecast_object`
-  cell and the same blocking reasons used by the compiler gate.
+  active compatibility cell
+  `model_family x feature_runtime x forecast_type x forecast_object`. The
+  canonical interpretation is
+  `forecast_generator_family x representation_runtime x forecast_protocol x forecast_object`.
+  The old names remain manifest compatibility names; the matrix also records
+  `canonical_dimensions`, `dimension_aliases`, and `canonical_active_cell`.
 - The same matrix includes a status catalog, active payload contract names, and
   reserved future cells for sequence/tensor runtimes and raw-panel iterated
   forecasting. The canonical status, producer, consumer, and validation backlog
@@ -168,11 +192,12 @@ The docs and runtime now mostly follow this split:
 
 | Group | Axes |
 |---|---|
-| Forecast generator | `model_family`, `benchmark_family`, `forecast_type`, `forecast_object`, `horizon_modelization` |
+| Forecast generator | `model_family` as compatibility alias for `forecast_generator_family`; `benchmark_family` as compatibility alias for baseline generator role; `forecast_type`, `forecast_object`, `horizon_modelization` |
 | Training window | `min_train_size`, `training_start_rule`, `outer_window`, `refit_policy`, `lookback` |
 | Model order | `y_lag_count` for AR/model-order selection; fixed target-lag feature construction is Layer 2 provenance |
 | Validation/search | `validation_size_rule`, `validation_location`, `embargo_gap`, `split_family`, `shuffle_rule`, `alignment_fairness`, `search_algorithm`, `tuning_objective`, `tuning_budget`, `hp_space_style` |
-| Runtime discipline | `seed_policy`, `early_stopping`, `convergence_handling`, `logging_level`, `checkpointing`, `cache_policy`, `execution_backend` |
+| Estimator training discipline | `early_stopping`, `convergence_handling`, model-specific seed use constrained by Layer 0 `reproducibility_mode` |
+| Execution/runtime control consumed from Layer 0 | `seed_policy`, `logging_level`, `checkpointing`, `cache_policy`, `execution_backend` when these are broad run-control choices rather than estimator-specific choices |
 
 ## Compatibility Debt
 
@@ -201,12 +226,17 @@ The boundary is defined, but these cleanup items remain:
   `contemporaneous_x_rule`, `deterministic_components`, and
   `structural_break_segmentation`. Runtime readers still fall back to old
   `data_task_spec` locations for compatibility.
-- `model_family` status is still value-level in the registry, but runtime
-  support is now represented in `layer3_capability_matrix`. The current matrix
-  covers the operational tabular cells: target-lag-only iterated point models,
-  raw-panel direct point models, quantile-linear median/quantile outputs, and
-  direction/interval/density payload-family wrappers over scalar point
-  generators.
+- `model_family` is still the public compatibility axis for candidate forecast
+  generators, but the canonical concept is `forecast_generator_family`.
+  Runtime support is represented in `layer3_capability_matrix`. The current
+  matrix covers the operational tabular cells: target-lag-only iterated point
+  generators, raw-panel direct point generators, quantile-linear
+  median/quantile outputs, and direction/interval/density payload-family
+  wrappers over scalar point generators.
+- `benchmark_family` is still the public compatibility axis for baseline
+  generators. Canonically, this is forecast-generator role assignment rather
+  than a separate Layer 3 family. The current runtime still has a separate
+  benchmark executor path for compatibility.
 - Built-in model executors still have separate autoreg/raw-panel wrappers, but
   supported sklearn, custom, and factor-model paths now attach
   `Layer2Representation` metadata to their tuning payloads. Sequence/tensor
@@ -221,7 +251,8 @@ grids, invalid-cell pruning, and detailed per-cell provenance.
 The simple API remains narrower:
 
 - default single run;
-- model comparison over `model_family`;
+- forecast-generator comparison over the current `model_family` compatibility
+  axis;
 - fixed custom model;
 - fixed custom preprocessor or target transformer where runtime support exists.
 

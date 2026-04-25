@@ -101,6 +101,15 @@ def test_forecast_type_default_is_direct_for_raw_panel() -> None:
         "runtime_status": "operational",
         "blocked_reasons": [],
     }
+    assert matrix["canonical_active_cell"] == {
+        "forecast_generator_family": "ridge",
+        "representation_runtime": "raw_feature_panel",
+        "forecast_protocol": "direct",
+        "forecast_object": "point_mean",
+        "payload_contract": "forecast_payload_v1",
+        "runtime_status": "operational",
+        "blocked_reasons": [],
+    }
 
 
 def test_layer3_capability_matrix_records_model_runtime_block() -> None:
@@ -118,7 +127,17 @@ def test_layer3_capability_matrix_records_future_status_catalog() -> None:
     matrix = r.manifest["layer3_capability_matrix"]
 
     assert matrix["schema_version"] == "layer3_capability_matrix_v1"
-    assert matrix["schema_revision"] == 4
+    assert matrix["schema_revision"] == 5
+    assert matrix["canonical_dimensions"] == [
+        "forecast_generator_family",
+        "representation_runtime",
+        "forecast_protocol",
+        "forecast_object",
+    ]
+    assert matrix["dimension_aliases"]["model_family"] == "forecast_generator_family"
+    assert matrix["dimension_aliases"]["benchmark_family"] == "baseline_forecast_generator_role"
+    assert matrix["dimension_aliases"]["feature_runtime"] == "representation_runtime"
+    assert matrix["dimension_aliases"]["forecast_type"] == "forecast_protocol"
     assert "not_supported_yet" in matrix["status_catalog"]
     future_cells = {cell["cell_id"]: cell for cell in matrix["future_cells"]}
     assert "forecast_object.interval" not in future_cells

@@ -51,8 +51,8 @@ The following axes were moved out of Layer 1 ownership:
 
 - to Layer 2: `horizon_target_construction`, `deterministic_components`,
   `predictor_family`, `structural_break_segmentation`
-- to Layer 3: `benchmark_family`, `forecast_type`, `forecast_object`,
-  `min_train_size`, `training_start_rule`
+- to Layer 3: `benchmark_family` as baseline generator role assignment,
+  `forecast_type`, `forecast_object`, `min_train_size`, `training_start_rule`
 - to Layer 4: `oos_period`
 - to Layer 6: `overlap_handling`
 
@@ -105,7 +105,7 @@ The following axes were moved out of Layer 1 ownership:
 - New compiled specs write `horizon_target_construction` under
   `layer2_representation_spec.target_representation`, not `data_task_spec`.
 
-### 1.4 Benchmark & Predictor Universe
+### 1.4 Baseline Generator & Predictor Universe
 
 Kept values that require extra user inputs are now compile-time contracts:
 
@@ -125,6 +125,11 @@ Kept values that require extra user inputs are now compile-time contracts:
 - New compiled specs write `deterministic_components` and
   `structural_break_segmentation` under
   `layer2_representation_spec.feature_blocks.deterministic_feature_block`.
+
+Layer 1 does not own benchmark selection. The old audit group keeps the
+historical contract checks visible, but `benchmark_family` now belongs to Layer
+3 as baseline generator role assignment. It remains in this section only to
+record the compile-time input contracts discovered during the Layer 1 audit.
 
 ### 1.5 Data Handling Policies
 

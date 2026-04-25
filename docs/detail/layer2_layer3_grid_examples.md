@@ -22,12 +22,17 @@ Layer 2 grid axes change the representation `Z`:
 
 Layer 3 grid axes change forecast generation after `Z` exists:
 
-- `model_family`
-- `benchmark_family`
+- `model_family`, the current compatibility spelling for candidate
+  `forecast_generator_family`
+- `benchmark_family`, the current compatibility spelling for baseline
+  generator role assignment
 - `forecast_type`
 - `forecast_object`
 - training-window and refit axes
 - validation and tuning axes
+
+Benchmarks are not a separate model species in the canonical design. They are
+forecast generators assigned the benchmark/baseline role for the comparison.
 
 Do not sweep Layer 2 representation axes under Layer 3. In the current runtime,
 `feature_builder` is still required as a fixed compatibility bridge for some
@@ -43,7 +48,8 @@ It sweeps:
 
 - Layer 2 `target_lag_block`: no target lags vs fixed target lags;
 - Layer 2 `x_lag_feature_block`: no X lags vs fixed X lags;
-- Layer 3 `model_family`: ridge, lasso, and AR.
+- Layer 3 candidate forecast generator family, currently spelled
+  `model_family`: ridge, lasso, and AR.
 
 The recipe intentionally keeps `failure_policy=skip_failed_cell`. This is the
 right policy for broad research grids because invalid cells are often expected.
