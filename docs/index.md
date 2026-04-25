@@ -11,6 +11,7 @@ Most experiments should not require users to understand every internal axis. Def
 | Track | Use it when |
 |-------|-------------|
 | [Simple Docs](simple/index.md) | You want to run forecasts, compare models, sweep a few choices, or add a custom method without learning the internal recipe system. |
+| [Decision Tree Navigator](detail/decision_tree_navigator.md) | You want a constraint-aware path resolver, disabled-branch reasons, and replication YAML generation. |
 | [Detailed Docs](detail/index.md) | You want to understand defaults, recipe layers, registry axes, execution internals, artifacts, and reproducibility. |
 | [API Reference](api/index.md) | You need function signatures and class documentation. |
 
