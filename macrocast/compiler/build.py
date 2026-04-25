@@ -2139,10 +2139,10 @@ def _layer3_capability_rejections(
                 "forecast_type='iterated' for raw-panel feature runtime currently supports scalar tabular "
                 "generators only, not factor/deep generator families"
             )
-        if str(exogenous_x_path_policy) != "hold_last_observed":
+        if str(exogenous_x_path_policy) not in {"hold_last_observed", "observed_future_x"}:
             blocked.append(
                 "forecast_type='iterated' for raw-panel feature runtime requires "
-                "leaf_config.exogenous_x_path_policy='hold_last_observed' in the first operational slice"
+                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x'}"
             )
         if str(target_lag_block or "none") != "fixed_target_lags":
             blocked.append(
@@ -2322,9 +2322,9 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
                 "multi_step_raw_panel_payload_v1"
             ],
         },
-        "opening_rule": "hold_last_observed is operational; observed, scheduled, and recursively forecast future-X paths remain gated",
+        "opening_rule": "hold_last_observed and observed_future_x are operational; scheduled and recursively forecast future-X paths remain gated",
         "requires": [
-            "explicit hold_last_observed exogenous-X scenario",
+            "explicit hold_last_observed or observed_future_x exogenous-X scenario",
             "fixed target-lag recursive history",
             "multi-step raw-panel forecast payload artifacts",
         ],
@@ -2408,11 +2408,11 @@ def _layer3_capability_matrix(
                     "conditional_operational": {
                         "iterated": {
                             "requires": [
-                                "leaf_config.exogenous_x_path_policy='hold_last_observed'",
+                                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x'}",
                                 "target_lag_block='fixed_target_lags'",
                                 "forecast_object='point_mean'",
                             ],
-                            "runtime_contract": "raw_panel_iterated_hold_last_observed_v1",
+                            "runtime_contract": "raw_panel_iterated_future_x_path_v1",
                             "payload_contract": "multi_step_raw_panel_payload_v1",
                         }
                     },
@@ -2925,39 +2925,39 @@ def _execution_status(
     if feature_runtime == "raw_feature_panel" and forecast_type == "iterated" and not blocked:
         if str(getattr(preprocess_contract, "target_transform", "level")) != "level":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires target_transform_policy='raw_level'"
+                "raw-panel iterated operational future-X paths currently require target_transform_policy='raw_level'"
             )
         if str(getattr(preprocess_contract, "target_normalization", "none")) != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires target_normalization='none'"
+                "raw-panel iterated operational future-X paths currently require target_normalization='none'"
             )
         if _selection_value(selection_map, "target_transformer", default="none") != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently does not support custom target_transformer"
+                "raw-panel iterated operational future-X paths currently does not support custom target_transformer"
             )
         if str(getattr(preprocess_contract, "tcode_policy", "raw_only")) != "raw_only":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires tcode_policy='raw_only'"
+                "raw-panel iterated operational future-X paths currently require tcode_policy='raw_only'"
             )
         if str(getattr(preprocess_contract, "x_transform", "level")) != "level":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires x_transform_policy='raw_level'"
+                "raw-panel iterated operational future-X paths currently require x_transform_policy='raw_level'"
             )
         if str(getattr(preprocess_contract, "preprocess_order", "none")) != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires preprocess_order='none'"
+                "raw-panel iterated operational future-X paths currently require preprocess_order='none'"
             )
         if str(getattr(preprocess_contract, "scaling_policy", "none")) != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires scaling_policy='none'"
+                "raw-panel iterated operational future-X paths currently require scaling_policy='none'"
             )
         if str(getattr(preprocess_contract, "dimensionality_reduction_policy", "none")) != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires dimensionality_reduction_policy='none'"
+                "raw-panel iterated operational future-X paths currently require dimensionality_reduction_policy='none'"
             )
         if str(getattr(preprocess_contract, "feature_selection_policy", "none")) != "none":
             not_supported.append(
-                "raw-panel iterated hold_last_observed currently requires feature_selection_policy='none'"
+                "raw-panel iterated operational future-X paths currently require feature_selection_policy='none'"
             )
     if forecast_object in {"interval", "density"}:
         if str(getattr(preprocess_contract, "target_transform", "level")) != "level":

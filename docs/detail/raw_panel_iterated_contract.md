@@ -49,12 +49,17 @@ Required fields:
 - `release_lag_policy`;
 - `no_lookahead_evidence`.
 
-The first operational slice is `hold_last_observed`. It is deterministic
-and honest: it records the scenario assumption instead of silently using future
-observed X. Built-in scalar tabular generators and registered
-`custom_model_v1` models can consume this slice; the custom model receives the
-same raw-X-plus-recursive-target-lag representation context at each recursive
-step.
+Operational slices:
+
+- `hold_last_observed`: deterministic scenario assumption that repeats the
+  origin-available X row at every recursive step.
+- `observed_future_x`: oracle or ex-post analysis path that uses observed
+  future X rows for recursive transitions and marks that future information in
+  provenance.
+
+Built-in scalar tabular generators and registered `custom_model_v1` models can
+consume these slices; the custom model receives the same
+raw-X-plus-recursive-target-lag representation context at each recursive step.
 
 ## Multi-Step Payload Contract
 

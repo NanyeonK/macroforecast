@@ -355,7 +355,8 @@ more than the current tabular `Z_pred`.
 
 Operational narrow slice:
 
-- `exogenous_x_path_contract_v1.path_kind='hold_last_observed'`;
+- `exogenous_x_path_contract_v1.path_kind` in `{'hold_last_observed',
+  'observed_future_x'}`;
 - `target_lag_block='fixed_target_lags'`;
 - `forecast_object='point_mean'`;
 - built-in scalar tabular model generators or registered custom models using
@@ -367,20 +368,22 @@ Still-gated dependency:
 
 - `exogenous_x_path_contract_v1`;
 - `multi_step_raw_panel_payload_v1`;
-- observed, scheduled, or recursively forecast future-X paths;
+- scheduled or recursively forecast future-X paths;
 - non-point forecast payloads;
 - transformed/normalized target scale composition.
 
-The first operational slice is
-`exogenous_x_path_contract_v1.path_kind='hold_last_observed'`. That slice is
-explicitly a scenario assumption, not knowledge of future X. It should write a
-step trace, the assumed future-X path reference, recursive target-history
-updates, and a final horizon prediction under
+The operational path kinds are
+`exogenous_x_path_contract_v1.path_kind='hold_last_observed'` and
+`path_kind='observed_future_x'`. `hold_last_observed` is explicitly a scenario
+assumption, not knowledge of future X. `observed_future_x` is an oracle or
+ex-post path and must be marked as future information. Both paths should write
+a step trace, the future-X path reference, recursive target-history updates,
+and a final horizon prediction under
 `multi_step_raw_panel_payload_v1`.
 
 Broader raw-panel iterated cells remain blocked by the Layer 3 capability
-matrix until their future-X path kind has explicit availability, release-lag,
-origin-alignment, and artifact tests.
+matrix until scheduled or recursively forecast future-X path kinds have
+explicit availability, release-lag, origin-alignment, and artifact tests.
 
 ### Sequence/Tensor Forecast Generators
 

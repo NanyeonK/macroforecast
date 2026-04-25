@@ -39,7 +39,7 @@ test.
 | `Layer2Representation` tabular handoff | Layer 2 | `consumed` | supported Layer 2 tabular builders | Layer 3 tabular generators | `operational` | Contains `Z_train`, `y_train`, `Z_pred`, feature names, block order/roles, fit state, alignment, leakage contract, and runtime provenance. Current Layer 3 capability matrix is built around this handoff. |
 | `forecast_payload_v1` | Layer 3 | `owned` | scalar forecast generators | execution artifact writer and evaluation | `operational` | Public scalar payload with `y_pred`, `selected_lag`, `selected_bic`, `tuning_payload`, and `contract_version`. Legacy executor dictionaries are coerced into this shape. |
 | `sequence_representation_contract_v1` | Layer 2 | `future_dependency` | future sequence/tensor representation builders | future Layer 3 sequence/tensor generators | `gated_named` | Required before sequence/tensor models enter full grids. Must define sample/origin axis, lookback axis, channel names, target/path alignment, fit state, leakage metadata, and missing/release-lag handling. |
-| `exogenous_x_path_contract_v1` | Layer 1/2 boundary plus Layer 3 scenario setup | `future_dependency` | future scenario or future-X provider | raw-panel iterated forecast generators | `operational_narrow` | `hold_last_observed` is operational as an explicit deterministic scenario. Observed future X, scheduled known future X, recursively forecast X, unavailable X, and vintage/release-lag variants remain gated until they have path-specific tests. |
+| `exogenous_x_path_contract_v1` | Layer 1/2 boundary plus Layer 3 scenario setup | `future_dependency` | future scenario or future-X provider | raw-panel iterated forecast generators | `operational_narrow` | `hold_last_observed` and `observed_future_x` are operational explicit path kinds. `observed_future_x` is an oracle/ex-post path and must be marked in provenance. Scheduled known future X, recursively forecast X, unavailable X, and vintage/release-lag variants remain gated until they have path-specific tests. |
 
 ## Future Contract Shape Requirements
 
@@ -102,10 +102,12 @@ Allowed path kinds are:
 - `recursive_x_model`;
 - `unavailable`.
 
-The first operational raw-panel iterated slice uses
-`path_kind='hold_last_observed'` because it is explicit, deterministic, and
-does not imply unavailable future-X knowledge. Later slices can add observed
-future X, scheduled known future X, or recursively forecast X.
+The first operational raw-panel iterated slices use
+`path_kind='hold_last_observed'` and `path_kind='observed_future_x'`.
+`hold_last_observed` is an explicit deterministic scenario. `observed_future_x`
+is an oracle or ex-post analysis path and must not be presented as real-time
+available information. Later slices can add scheduled known future X or
+recursively forecast X.
 
 `multi_step_raw_panel_payload_v1` is the Layer 3 artifact payload produced by
 the iterated generator. It must define:
@@ -153,7 +155,7 @@ Required gates before opening:
 | `path_average_target_protocol_v1` | Layer 2 | `consumed` | path-average target construction | Layer 3 path-average stepwise executor | `operational` | Layer 2 defines step targets and aggregation semantics; Layer 3 executes stepwise fits and writes path artifacts. |
 | `path_average_stepwise_execution_v1` | Layer 3 | `owned` | path-average executor | artifact writer and evaluation | `operational` | Executes one supported scalar generator per step `1..h`, aggregates equal-weight path-average predictions, and writes `path_average_steps.csv`. |
 | Sequence/tensor generator contract | Layer 3 | `owned` | future sequence/tensor executors | artifact writer and evaluation | `future_design` | Depends on `sequence_representation_contract_v1` and `sequence_forecast_payload_v1`. Must define accepted tensor family, training backend metadata, seed/early-stopping/convergence state, and payload shape. |
-| Raw-panel iterated execution contract | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for explicit `hold_last_observed` future-X scenario plus fixed target-lag recursive target-history updates. Built-in scalar tabular generators and registered `custom_model_v1` adapters can consume this slice. Broader future-X path kinds remain gated. |
+| Raw-panel iterated execution contract | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for explicit `hold_last_observed` and oracle/ex-post `observed_future_x` paths plus fixed target-lag recursive target-history updates. Built-in scalar tabular generators and registered `custom_model_v1` adapters can consume these slices. Scheduled and recursively forecast future-X path kinds remain gated. |
 
 ## Forecast Payload And Artifact Contracts
 
@@ -163,7 +165,7 @@ Required gates before opening:
 | `interval_forecast_payload_v1` | Layer 3 | `owned` | scalar payload wrapper | `predictions.csv`, `forecast_payloads.jsonl`, metrics | `operational_narrow` | Builds symmetric Gaussian train-std intervals around scalar forecasts. This is a baseline interval wrapper, not a model-specific interval estimator. |
 | `density_forecast_payload_v1` | Layer 3 | `owned` | scalar payload wrapper | `predictions.csv`, `forecast_payloads.jsonl`, metrics | `operational_narrow` | Builds Gaussian train-std density payloads and log-score columns around scalar forecasts. This is a baseline density wrapper, not a full distributional model. |
 | `sequence_forecast_payload_v1` | Layer 3 | `owned` | future sequence/tensor generators | artifact writer and evaluation | `gated_named` | Must define path/vector payload shape, step-level versus horizon-level rows, metric aggregation, and JSONL schema. |
-| `multi_step_raw_panel_payload_v1` | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for `hold_last_observed` raw-panel iterated point forecasts. It distinguishes step predictions, final horizon predictions, recursive target-history state, assumed future-X path, and path-level metrics. |
+| `multi_step_raw_panel_payload_v1` | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for `hold_last_observed` and `observed_future_x` raw-panel iterated point forecasts. It distinguishes step predictions, final horizon predictions, recursive target-history state, assumed or observed future-X path, and path-level metrics. |
 | Prediction row schema | Layer 5/evaluation boundary | `consumed` | execution artifact writer | evaluation, studies, downstream users | `legacy_implicit` | Existing `predictions.csv` is operational but not centrally versioned. Payload-family columns should not be added without updating this ledger or a future artifact schema page. |
 | `forecast_payloads.jsonl` schema | Layer 5/evaluation boundary | `consumed` | execution artifact writer | downstream payload consumers | `operational` | Stores typed payload objects for scalar point, direction, interval, and density families. Future sequence/raw-panel payloads must extend this schema explicitly. |
 

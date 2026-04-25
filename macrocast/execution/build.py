@@ -1563,8 +1563,15 @@ _PAYLOAD_CONTRACT_BY_FORECAST_OBJECT = {
     "density": DENSITY_FORECAST_PAYLOAD_CONTRACT_VERSION,
 }
 
-_RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION = "raw_panel_iterated_hold_last_observed_v1"
+_RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH = {
+    "hold_last_observed": "raw_panel_iterated_hold_last_observed_v1",
+    "observed_future_x": "raw_panel_iterated_observed_future_x_v1",
+}
 _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION = "multi_step_raw_panel_payload_v1"
+
+
+def _raw_panel_iterated_runtime_contract(x_path_policy: str) -> str:
+    return _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH[str(x_path_policy)]
 
 
 def _forecast_object(recipe: RecipeSpec) -> str:
@@ -4742,7 +4749,7 @@ def _predict_fitted_scalar(model, X_pred: np.ndarray, *, model_family: str) -> f
     return float(model.predict(X_pred)[0])
 
 
-def _run_raw_panel_iterated_hold_last_executor(
+def _run_raw_panel_iterated_executor(
     train: pd.Series,
     horizon: int,
     recipe: RecipeSpec,
@@ -4752,10 +4759,13 @@ def _run_raw_panel_iterated_hold_last_executor(
     start_idx: int = 0,
 ) -> dict[str, object]:
     assert raw_frame is not None and origin_idx is not None
-    if _exogenous_x_path_policy(recipe) != "hold_last_observed":
+    x_path_policy = _exogenous_x_path_policy(recipe)
+    if x_path_policy not in _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH:
         raise ExecutionError(
-            "raw-panel iterated forecasting requires exogenous_x_path_policy='hold_last_observed'"
+            "raw-panel iterated forecasting requires exogenous_x_path_policy in "
+            f"{sorted(_RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH)}"
         )
+    runtime_contract = _raw_panel_iterated_runtime_contract(x_path_policy)
     if _target_lag_feature_block(recipe) != "fixed_target_lags":
         raise ExecutionError(
             "raw-panel iterated forecasting requires target_lag_block='fixed_target_lags'"
@@ -4805,7 +4815,7 @@ def _run_raw_panel_iterated_hold_last_executor(
                 "representation_runtime": "raw_feature_panel",
                 "forecast_protocol": "iterated",
                 "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
-                "exogenous_x_path_policy": "hold_last_observed",
+                "exogenous_x_path_policy": x_path_policy,
                 "target_lag_timing": "recursive_target_history_updated_each_step",
             },
             leakage_contract="forecast_origin_only_with_explicit_future_x_assumption",
@@ -4822,12 +4832,18 @@ def _run_raw_panel_iterated_hold_last_executor(
         tuning_payload = {}
     history = [float(value) for value in train.to_numpy(dtype=float)]
     origin_date = raw_frame.index[origin_idx]
-    x_origin = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
     step_rows: list[dict[str, object]] = []
     step_predictions: list[float] = []
     for step in range(1, int(horizon) + 1):
         lag_values = [history[-lag] if len(history) >= lag else 0.0 for lag in range(1, lag_order + 1)]
-        X_pred_df = x_origin.copy()
+        x_source_idx = origin_idx if x_path_policy == "hold_last_observed" else origin_idx + step - 1
+        if x_source_idx >= len(raw_frame):
+            raise ExecutionError(
+                "raw-panel iterated observed_future_x requires observed X through "
+                f"step={step}, but index {x_source_idx} is unavailable"
+            )
+        x_source_date = raw_frame.index[x_source_idx]
+        X_pred_df = raw_frame[predictors].iloc[[x_source_idx]].astype(float).copy()
         for name, value in zip(target_lag_names, lag_values):
             X_pred_df[str(name)] = float(value)
         X_pred = X_pred_df[feature_names].to_numpy(dtype=float)
@@ -4840,8 +4856,9 @@ def _run_raw_panel_iterated_hold_last_executor(
                 "forecast_type": "iterated",
                 "recursive_step": int(step),
                 "raw_panel_iterated_step": int(step),
-                "x_path_policy": "hold_last_observed",
-                "raw_panel_iterated_runtime_contract": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
+                "x_path_policy": x_path_policy,
+                "x_source_date": x_source_date.strftime("%Y-%m-%d"),
+                "raw_panel_iterated_runtime_contract": runtime_contract,
                 "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
                 "feature_names": list(representation_for_step.feature_names),
                 "train_index": list(X_train_df.index),
@@ -4865,11 +4882,12 @@ def _run_raw_panel_iterated_hold_last_executor(
                 "horizon": int(horizon),
                 "step": int(step),
                 "origin_date": origin_date.strftime("%Y-%m-%d"),
-                "x_path_policy": "hold_last_observed",
+                "x_path_policy": x_path_policy,
                 "x_origin_date": origin_date.strftime("%Y-%m-%d"),
+                "x_source_date": x_source_date.strftime("%Y-%m-%d"),
                 "step_prediction": float(y_pred_step),
                 "recursive_target_history_tail": json.dumps(lag_values, sort_keys=True),
-                "runtime_contract": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
+                "runtime_contract": runtime_contract,
                 "payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
             }
         )
@@ -4880,10 +4898,10 @@ def _run_raw_panel_iterated_hold_last_executor(
         tuning_payload = _merge_layer2_representation_payload(tuning_payload, representation)
     tuning_payload.update(
         {
-            "raw_panel_iterated_runtime_contract": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
+            "raw_panel_iterated_runtime_contract": runtime_contract,
             "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
             "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
-            "exogenous_x_path_policy": "hold_last_observed",
+            "exogenous_x_path_policy": x_path_policy,
             "raw_panel_iterated_steps": step_rows,
             "raw_panel_iterated_step_predictions": step_predictions,
         }
@@ -6950,9 +6968,10 @@ def _build_predictions(
             "path-average target construction currently requires target_normalization='none'"
         )
     if raw_panel_iterated_runtime:
-        if _exogenous_x_path_policy(recipe) != "hold_last_observed":
+        if _exogenous_x_path_policy(recipe) not in _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH:
             raise ExecutionError(
-                "raw-panel iterated forecasting requires exogenous_x_path_policy='hold_last_observed'"
+                "raw-panel iterated forecasting requires exogenous_x_path_policy in "
+                f"{sorted(_RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH)}"
             )
         if _target_lag_feature_block(recipe) != "fixed_target_lags":
             raise ExecutionError(
@@ -7233,7 +7252,7 @@ def _build_predictions(
             target_transform_context: dict[str, object] = {}
             fitted_target_transformer = None
             if raw_panel_iterated_runtime:
-                model_mapping = _run_raw_panel_iterated_hold_last_executor(
+                model_mapping = _run_raw_panel_iterated_executor(
                     train_for_model,
                     horizon,
                     recipe,
@@ -7424,9 +7443,13 @@ def _build_predictions(
                         "forecast_type": "iterated",
                         "forecast_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
                         "payload_family": "raw_panel_iterated",
-                        "raw_panel_iterated_runtime": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
+                        "raw_panel_iterated_runtime": str(
+                            tuning_payload.get("raw_panel_iterated_runtime_contract", "")
+                            if tuning_payload
+                            else ""
+                        ),
                         "raw_panel_iterated_step_count": int(horizon),
-                        "raw_panel_iterated_x_path_policy": "hold_last_observed",
+                        "raw_panel_iterated_x_path_policy": _exogenous_x_path_policy(recipe),
                     }
                 )
             return row, tuning_payload, [], raw_panel_iterated_steps
@@ -8048,9 +8071,11 @@ def execute_recipe(
     if raw_panel_iterated_steps is not None:
         raw_panel_iterated_steps.to_csv(run_dir / 'raw_panel_iterated_steps.csv', index=False)
         manifest["raw_panel_iterated_steps_file"] = "raw_panel_iterated_steps.csv"
-        manifest["raw_panel_iterated_runtime_contract"] = _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION
+        manifest["raw_panel_iterated_runtime_contract"] = _raw_panel_iterated_runtime_contract(
+            _exogenous_x_path_policy(recipe)
+        )
         manifest["exogenous_x_path_contract"] = "exogenous_x_path_contract_v1"
-        manifest["exogenous_x_path_policy"] = "hold_last_observed"
+        manifest["exogenous_x_path_policy"] = _exogenous_x_path_policy(recipe)
         if export_format in ('parquet', 'all'):
             raw_panel_iterated_steps.to_parquet(run_dir / 'raw_panel_iterated_steps.parquet')
     payload_records = _payload_artifact_records(predictions)

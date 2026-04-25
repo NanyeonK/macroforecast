@@ -186,10 +186,12 @@ def test_layer3_capability_matrix_records_future_status_catalog() -> None:
         "unavailable",
     ]
     assert "step_predictions" in raw_iterated_requirements["multi_step_raw_panel_payload_v1"]["required_fields"]
-    assert "hold_last_observed is operational" in future_cells["forecast_type.raw_panel_iterated"]["opening_rule"]
+    assert "hold_last_observed and observed_future_x are operational" in future_cells[
+        "forecast_type.raw_panel_iterated"
+    ]["opening_rule"]
     assert matrix["rules"]["forecast_type"]["raw_feature_panel"]["conditional_operational"]["iterated"][
         "runtime_contract"
-    ] == "raw_panel_iterated_hold_last_observed_v1"
+    ] == "raw_panel_iterated_future_x_path_v1"
 
 
 def test_forecast_type_iterated_autoreg_executes(tmp_path: Path) -> None:
@@ -214,7 +216,7 @@ def test_forecast_type_iterated_raw_panel_blocked() -> None:
     ))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
-        "requires leaf_config.exogenous_x_path_policy='hold_last_observed'" in r_msg
+        "requires leaf_config.exogenous_x_path_policy in" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )
     assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "blocked_by_incompatibility"
@@ -233,6 +235,22 @@ def test_forecast_type_iterated_raw_panel_hold_last_observed_compiles() -> None:
     )
     assert r.compiled.execution_status == "executable"
     assert r.manifest["data_task_spec"]["exogenous_x_path_policy"] == "hold_last_observed"
+    assert r.manifest["training_spec"]["forecast_type"] == "iterated"
+    assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
+
+
+def test_forecast_type_iterated_raw_panel_observed_future_x_compiles() -> None:
+    r = compile_recipe_dict(
+        _recipe(
+            feature_builder="raw_feature_panel",
+            model_family="ridge",
+            forecast_type="iterated",
+            target_lag_block="fixed_target_lags",
+            exogenous_x_path_policy="observed_future_x",
+        )
+    )
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["data_task_spec"]["exogenous_x_path_policy"] == "observed_future_x"
     assert r.manifest["training_spec"]["forecast_type"] == "iterated"
     assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
 

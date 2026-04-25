@@ -252,8 +252,53 @@ def test_execute_recipe_runs_raw_panel_iterated_hold_last_observed(tmp_path: Pat
     assert predictions["payload_family"].eq("raw_panel_iterated").all()
     assert predictions["raw_panel_iterated_x_path_policy"].eq("hold_last_observed").all()
     assert steps["payload_contract"].eq("multi_step_raw_panel_payload_v1").all()
+    assert steps["x_path_policy"].eq("hold_last_observed").all()
+    assert steps["x_source_date"].eq(steps["origin_date"]).all()
     assert int(steps["step"].max()) == max(recipe.horizons)
     assert payloads
+
+
+def test_execute_recipe_runs_raw_panel_iterated_observed_future_x(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        forecast_type="iterated",
+        exogenous_x_path_policy="observed_future_x",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "mixed_blocks"},
+                "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "none"},
+            }
+        },
+    )
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+    steps = __import__("pandas").read_csv(run_dir / "raw_panel_iterated_steps.csv")
+
+    assert manifest["forecast_type"] == "iterated"
+    assert manifest["raw_panel_iterated_runtime_contract"] == "raw_panel_iterated_observed_future_x_v1"
+    assert manifest["exogenous_x_path_policy"] == "observed_future_x"
+    assert predictions["raw_panel_iterated_x_path_policy"].eq("observed_future_x").all()
+    assert predictions["raw_panel_iterated_runtime"].eq("raw_panel_iterated_observed_future_x_v1").all()
+    assert steps["x_path_policy"].eq("observed_future_x").all()
+    assert steps.loc[steps["step"] == 1, "x_source_date"].eq(steps.loc[steps["step"] == 1, "origin_date"]).all()
+    assert steps.loc[steps["step"] > 1, "x_source_date"].ne(steps.loc[steps["step"] > 1, "origin_date"]).any()
+    assert int(steps["step"].max()) == max(recipe.horizons)
 
 
 def test_execute_recipe_runs_custom_raw_panel_iterated_hold_last_observed(tmp_path: Path) -> None:
