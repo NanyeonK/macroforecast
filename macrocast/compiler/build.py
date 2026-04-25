@@ -1170,6 +1170,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         or leaf_config.get("future_x_path_policy"),
         "scheduled_known_future_x_columns": leaf_config.get("scheduled_known_future_x_columns")
         or leaf_config.get("known_future_x_columns"),
+        "recursive_x_model_family": leaf_config.get("recursive_x_model_family")
+        or leaf_config.get("future_x_model_family"),
     }
 
 
@@ -2116,6 +2118,7 @@ def _layer3_capability_rejections(
     exogenous_x_path_policy: str = "unavailable",
     target_lag_block: str | None = None,
     scheduled_known_future_x_columns: Sequence[Any] | None = None,
+    recursive_x_model_family: str | None = None,
 ) -> tuple[str, ...]:
     blocked: list[str] = []
     if model_family == "ar" and feature_runtime == "raw_feature_panel":
@@ -2146,16 +2149,23 @@ def _layer3_capability_rejections(
             "hold_last_observed",
             "observed_future_x",
             "scheduled_known_future_x",
+            "recursive_x_model",
         }:
             blocked.append(
                 "forecast_type='iterated' for raw-panel feature runtime requires "
                 "leaf_config.exogenous_x_path_policy in "
-                "{'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x'}"
+                "{'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x', "
+                "'recursive_x_model'}"
             )
         if str(exogenous_x_path_policy) == "scheduled_known_future_x" and not scheduled_known_future_x_columns:
             blocked.append(
                 "forecast_type='iterated' with exogenous_x_path_policy='scheduled_known_future_x' "
                 "requires leaf_config.scheduled_known_future_x_columns"
+            )
+        if str(exogenous_x_path_policy) == "recursive_x_model" and str(recursive_x_model_family or "") != "ar1":
+            blocked.append(
+                "forecast_type='iterated' with exogenous_x_path_policy='recursive_x_model' "
+                "requires leaf_config.recursive_x_model_family='ar1'"
             )
         if str(target_lag_block or "none") != "fixed_target_lags":
             blocked.append(
@@ -2335,9 +2345,9 @@ _LAYER3_FUTURE_CAPABILITY_CELLS = (
                 "multi_step_raw_panel_payload_v1"
             ],
         },
-        "opening_rule": "hold_last_observed, observed_future_x, and scheduled_known_future_x are operational; recursively forecast future-X paths remain gated",
+        "opening_rule": "hold_last_observed, observed_future_x, scheduled_known_future_x, and recursive_x_model(ar1) are operational; broader recursively forecast future-X paths remain gated",
         "requires": [
-            "explicit hold_last_observed, observed_future_x, or scheduled_known_future_x exogenous-X scenario",
+            "explicit hold_last_observed, observed_future_x, scheduled_known_future_x, or recursive_x_model(ar1) exogenous-X scenario",
             "fixed target-lag recursive history",
             "multi-step raw-panel forecast payload artifacts",
         ],
@@ -2381,6 +2391,8 @@ def _layer3_capability_matrix(
         target_lag_block=_selection_value(selection_map, "target_lag_block", default="none"),
         scheduled_known_future_x_columns=leaf_config.get("scheduled_known_future_x_columns")
         or leaf_config.get("known_future_x_columns"),
+        recursive_x_model_family=leaf_config.get("recursive_x_model_family")
+        or leaf_config.get("future_x_model_family"),
     )
     return {
         "schema_version": "layer3_capability_matrix_v1",
@@ -2423,7 +2435,7 @@ def _layer3_capability_matrix(
                     "conditional_operational": {
                         "iterated": {
                             "requires": [
-                                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x'}",
+                                "leaf_config.exogenous_x_path_policy in {'hold_last_observed', 'observed_future_x', 'scheduled_known_future_x', 'recursive_x_model'}",
                                 "target_lag_block='fixed_target_lags'",
                                 "forecast_object='point_mean'",
                             ],
@@ -2937,6 +2949,8 @@ def _execution_status(
             target_lag_block=_selection_value(selection_map, "target_lag_block", default="none"),
             scheduled_known_future_x_columns=leaf_config.get("scheduled_known_future_x_columns")
             or leaf_config.get("known_future_x_columns"),
+            recursive_x_model_family=leaf_config.get("recursive_x_model_family")
+            or leaf_config.get("future_x_model_family"),
         )
     )
     if feature_runtime == "raw_feature_panel" and forecast_type == "iterated" and not blocked:

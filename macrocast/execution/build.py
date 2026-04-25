@@ -1567,6 +1567,7 @@ _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_BY_X_PATH = {
     "hold_last_observed": "raw_panel_iterated_hold_last_observed_v1",
     "observed_future_x": "raw_panel_iterated_observed_future_x_v1",
     "scheduled_known_future_x": "raw_panel_iterated_scheduled_known_future_x_v1",
+    "recursive_x_model": "raw_panel_iterated_recursive_x_model_ar1_v1",
 }
 _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION = "multi_step_raw_panel_payload_v1"
 
@@ -1615,6 +1616,66 @@ def _scheduled_known_future_x_columns(recipe: RecipeSpec) -> tuple[str, ...]:
     if isinstance(values, Sequence):
         return tuple(str(value) for value in values)
     return ()
+
+
+def _recursive_x_model_family(recipe: RecipeSpec) -> str | None:
+    value = (
+        recipe.data_task_spec.get("recursive_x_model_family")
+        or recipe.data_task_spec.get("future_x_model_family")
+        or recipe.training_spec.get("recursive_x_model_family")
+    )
+    return str(value) if value is not None else None
+
+
+def _fit_recursive_x_ar1_state(
+    raw_frame: pd.DataFrame,
+    predictors: Sequence[str],
+    *,
+    start_idx: int,
+    origin_idx: int,
+) -> tuple[dict[str, tuple[float, float]], dict[str, float], tuple[str, ...]]:
+    history = raw_frame[list(predictors)].iloc[start_idx : origin_idx + 1].astype(float)
+    params: dict[str, tuple[float, float]] = {}
+    current: dict[str, float] = {}
+    fallback_columns: list[str] = []
+    for col in predictors:
+        name = str(col)
+        series = pd.to_numeric(history[name], errors="coerce").dropna()
+        if series.empty:
+            raise ExecutionError(
+                f"raw-panel iterated recursive_x_model has no origin-available X history for {name!r}"
+            )
+        last_value = float(series.iloc[-1])
+        current[name] = last_value
+        intercept = last_value
+        slope = 0.0
+        if len(series) >= 3:
+            x_prev = series.iloc[:-1].to_numpy(dtype=float)
+            x_next = series.iloc[1:].to_numpy(dtype=float)
+            mask = np.isfinite(x_prev) & np.isfinite(x_next)
+            if int(mask.sum()) >= 2 and float(np.nanstd(x_prev[mask])) > 0.0:
+                slope_candidate, intercept_candidate = np.polyfit(x_prev[mask], x_next[mask], 1)
+                if np.isfinite(slope_candidate) and np.isfinite(intercept_candidate):
+                    slope = float(slope_candidate)
+                    intercept = float(intercept_candidate)
+        if slope == 0.0 and intercept == last_value:
+            fallback_columns.append(name)
+        params[name] = (intercept, slope)
+    return params, current, tuple(fallback_columns)
+
+
+def _forecast_recursive_x_ar1_next(
+    current: Mapping[str, float],
+    params: Mapping[str, tuple[float, float]],
+) -> dict[str, float]:
+    next_values: dict[str, float] = {}
+    for name, current_value in current.items():
+        intercept, slope = params[name]
+        predicted = intercept + slope * current_value
+        if not np.isfinite(predicted):
+            predicted = current_value
+        next_values[str(name)] = float(predicted)
+    return next_values
 
 
 def _forecast_payload_contract_for_recipe(recipe: RecipeSpec) -> str:
@@ -4810,6 +4871,11 @@ def _run_raw_panel_iterated_executor(
                 "raw-panel iterated scheduled_known_future_x columns are not active predictors: "
                 f"{missing_scheduled}"
             )
+    recursive_x_model_family = _recursive_x_model_family(recipe)
+    if x_path_policy == "recursive_x_model" and recursive_x_model_family != "ar1":
+        raise ExecutionError(
+            "raw-panel iterated recursive_x_model requires recursive_x_model_family='ar1'"
+        )
     lag_order = _target_lag_order_from_block(recipe, _max_ar_lag(recipe))
     if lag_order < 1:
         raise ExecutionError("raw-panel iterated forecasting requires positive target lag order")
@@ -4857,6 +4923,16 @@ def _run_raw_panel_iterated_executor(
     else:
         model = None
         tuning_payload = {}
+    recursive_x_params: dict[str, tuple[float, float]] = {}
+    recursive_x_current: dict[str, float] = {}
+    recursive_x_fallback_columns: tuple[str, ...] = ()
+    if x_path_policy == "recursive_x_model":
+        recursive_x_params, recursive_x_current, recursive_x_fallback_columns = _fit_recursive_x_ar1_state(
+            raw_frame,
+            tuple(str(name) for name in predictors),
+            start_idx=start_idx,
+            origin_idx=origin_idx,
+        )
     history = [float(value) for value in train.to_numpy(dtype=float)]
     origin_date = raw_frame.index[origin_idx]
     step_rows: list[dict[str, object]] = []
@@ -4875,6 +4951,16 @@ def _run_raw_panel_iterated_executor(
             X_pred_future = raw_frame[list(scheduled_columns)].iloc[[x_source_idx]].astype(float)
             for col in scheduled_columns:
                 X_pred_df[str(col)] = float(X_pred_future[str(col)].iloc[0])
+        elif x_path_policy == "recursive_x_model":
+            if step > 1:
+                recursive_x_current = _forecast_recursive_x_ar1_next(
+                    recursive_x_current,
+                    recursive_x_params,
+                )
+            X_pred_df = pd.DataFrame(
+                [{str(col): float(recursive_x_current[str(col)]) for col in predictors}],
+                index=[x_source_date],
+            )
         else:
             X_pred_df = raw_frame[predictors].iloc[[x_source_idx]].astype(float).copy()
         for name, value in zip(target_lag_names, lag_values):
@@ -4892,6 +4978,8 @@ def _run_raw_panel_iterated_executor(
                 "x_path_policy": x_path_policy,
                 "x_source_date": x_source_date.strftime("%Y-%m-%d"),
                 "scheduled_known_future_x_columns": list(scheduled_columns),
+                "recursive_x_model_family": recursive_x_model_family,
+                "recursive_x_model_fallback_columns": list(recursive_x_fallback_columns),
                 "raw_panel_iterated_runtime_contract": runtime_contract,
                 "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
                 "feature_names": list(representation_for_step.feature_names),
@@ -4920,6 +5008,11 @@ def _run_raw_panel_iterated_executor(
                 "x_origin_date": origin_date.strftime("%Y-%m-%d"),
                 "x_source_date": x_source_date.strftime("%Y-%m-%d"),
                 "scheduled_known_future_x_columns": json.dumps(list(scheduled_columns), sort_keys=True),
+                "recursive_x_model_family": recursive_x_model_family or "",
+                "recursive_x_model_fallback_columns": json.dumps(
+                    list(recursive_x_fallback_columns),
+                    sort_keys=True,
+                ),
                 "step_prediction": float(y_pred_step),
                 "recursive_target_history_tail": json.dumps(lag_values, sort_keys=True),
                 "runtime_contract": runtime_contract,
@@ -4938,6 +5031,8 @@ def _run_raw_panel_iterated_executor(
             "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
             "exogenous_x_path_policy": x_path_policy,
             "scheduled_known_future_x_columns": list(scheduled_columns),
+            "recursive_x_model_family": recursive_x_model_family,
+            "recursive_x_model_fallback_columns": list(recursive_x_fallback_columns),
             "raw_panel_iterated_steps": step_rows,
             "raw_panel_iterated_step_predictions": step_predictions,
         }
@@ -8115,6 +8210,11 @@ def execute_recipe(
         if _exogenous_x_path_policy(recipe) == "scheduled_known_future_x":
             manifest["scheduled_known_future_x_columns"] = list(
                 _scheduled_known_future_x_columns(recipe)
+            )
+        if _exogenous_x_path_policy(recipe) == "recursive_x_model":
+            manifest["recursive_x_model_family"] = _recursive_x_model_family(recipe)
+            manifest["recursive_x_model_fallback_columns"] = list(
+                _last_tp.get("recursive_x_model_fallback_columns", [])
             )
         if export_format in ('parquet', 'all'):
             raw_panel_iterated_steps.to_parquet(run_dir / 'raw_panel_iterated_steps.parquet')

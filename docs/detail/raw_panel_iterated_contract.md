@@ -60,6 +60,10 @@ Operational slices:
   for configured scheduled-known predictor columns and holds all other
   predictors at the origin-available X row. The configuration must list the
   known-future columns explicitly.
+- `recursive_x_model`: generated future-X path. The first operational family is
+  `recursive_x_model_family='ar1'`, which fits each predictor on
+  origin-available own history, uses the origin X row for step 1, and
+  recursively forecasts later-step X without consuming observed future X.
 
 Built-in scalar tabular generators and registered `custom_model_v1` models can
 consume these slices; the custom model receives the same
