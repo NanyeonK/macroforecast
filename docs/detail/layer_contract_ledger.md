@@ -38,7 +38,7 @@ test.
 | Layer 1 official frame handoff | Layer 1 | `outside_layer3` | raw/source adapters and official transform stage | Layer 2 representation builders | `legacy_implicit` | Covers official frame, target identity, horizons, information-set provenance, raw missing/outlier policy, and official transform/T-code reports. Should become an explicit schema before broader vintage/release-lag work. |
 | `Layer2Representation` tabular handoff | Layer 2 | `consumed` | supported Layer 2 tabular builders | Layer 3 tabular generators | `operational` | Contains `Z_train`, `y_train`, `Z_pred`, feature names, block order/roles, fit state, alignment, leakage contract, and runtime provenance. Current Layer 3 capability matrix is built around this handoff. |
 | `forecast_payload_v1` | Layer 3 | `owned` | scalar forecast generators | execution artifact writer and evaluation | `operational` | Public scalar payload with `y_pred`, `selected_lag`, `selected_bic`, `tuning_payload`, and `contract_version`. Legacy executor dictionaries are coerced into this shape. |
-| `sequence_representation_contract_v1` | Layer 2 | `future_dependency` | future sequence/tensor representation builders | future Layer 3 sequence/tensor generators | `gated_named` | Required before sequence/tensor models enter full grids. Must define sample/origin axis, lookback axis, channel names, target/path alignment, fit state, leakage metadata, and missing/release-lag handling. |
+| `sequence_representation_contract_v1` | Layer 2 | `future_dependency` | current univariate sequence adapter; future sequence/tensor representation builders | current deep autoreg generators; future Layer 3 sequence/tensor generators | `operational_narrow` | Operational for the current univariate target-history LSTM/GRU/TCN autoreg path: it records sample/window axis, lookback axis, channel names, target alignment, and leakage metadata. Full multivariate `sequence_tensor` Layer 2 handoff remains gated before sequence/tensor models enter full grids. |
 | `exogenous_x_path_contract_v1` | Layer 1/2 boundary plus Layer 3 scenario setup | `future_dependency` | future scenario or future-X provider | raw-panel iterated forecast generators | `operational_narrow` | `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, and `recursive_x_model` with `recursive_x_model_family='ar1'` are operational explicit path kinds. `observed_future_x` is an oracle/ex-post path and must be marked in provenance. `scheduled_known_future_x` replaces only configured known-future predictor columns from future rows while holding other predictors at the origin row. The `ar1` recursive-X slice forecasts each predictor from origin-available own history and does not consume observed future X. Unavailable X, other recursive-X families, and broader vintage/release-lag variants remain gated until they have path-specific tests. |
 
 ## Future Contract Shape Requirements
@@ -50,8 +50,10 @@ operational.
 
 ### Sequence/Tensor Handoff
 
-`sequence_representation_contract_v1` is produced by Layer 2 and consumed by
-future sequence/tensor Layer 3 generators. It must define:
+`sequence_representation_contract_v1` is now produced by the current
+univariate sequence adapter for deep autoregressive target-history models. A
+broader Layer 2 producer is still required before multivariate
+`sequence_tensor` feature runtimes enter full grids. The contract must define:
 
 - `origin_index`;
 - `sample_axis`;
@@ -62,7 +64,8 @@ future sequence/tensor Layer 3 generators. It must define:
 - `leakage_metadata`;
 - `missing_release_lag_handling`.
 
-Required gates before opening:
+The current univariate slice has runtime acceptance coverage. Required gates
+before opening the broader multivariate Layer 2 handoff:
 
 - sample/origin alignment test;
 - lookback no-future-leakage test;
@@ -159,7 +162,7 @@ Required gates before opening:
 | Direct tabular generator protocol | Layer 3 | `owned` | tabular point/quantile generators | execution artifact writer | `legacy_implicit` | Operational for current scalar direct forecasts. Should become an explicit generator protocol if more generator families are added. |
 | `path_average_target_protocol_v1` | Layer 2 | `consumed` | path-average target construction | Layer 3 path-average stepwise executor | `operational` | Layer 2 defines step targets and aggregation semantics; Layer 3 executes stepwise fits and writes path artifacts. |
 | `path_average_stepwise_execution_v1` | Layer 3 | `owned` | path-average executor | artifact writer and evaluation | `operational` | Executes one supported scalar generator per step `1..h`, aggregates equal-weight path-average predictions, and writes `path_average_steps.csv`. |
-| Sequence/tensor generator contract | Layer 3 | `owned` | future sequence/tensor executors | artifact writer and evaluation | `future_design` | Depends on `sequence_representation_contract_v1` and `sequence_forecast_payload_v1`. Must define accepted tensor family, training backend metadata, seed/early-stopping/convergence state, and payload shape. |
+| Sequence/tensor generator contract | Layer 3 | `owned` | current deep autoreg executors; future sequence/tensor executors | artifact writer and evaluation | `operational_narrow` | Current LSTM/GRU/TCN autoreg executors consume the univariate `sequence_representation_contract_v1` and record training backend, seed, lookback, channel, and alignment metadata in the scalar point payload. Full `sequence_forecast_payload_v1` for vector/path outputs remains gated. |
 | Raw-panel iterated execution contract | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for explicit `hold_last_observed`, oracle/ex-post `observed_future_x`, configured `scheduled_known_future_x`, and `recursive_x_model` with `recursive_x_model_family='ar1'` paths plus fixed target-lag recursive target-history updates. Built-in scalar tabular generators and registered `custom_model_v1` adapters can consume these slices. Other recursively forecast future-X families remain gated. |
 
 ## Forecast Payload And Artifact Contracts
@@ -194,8 +197,9 @@ Highest-priority contract cleanup:
    release-lag, or mixed-source work.
 2. Decide whether the tabular `Layer2Representation` handoff needs an exported
    schema/version constant before public extension APIs expand further.
-3. Define `sequence_representation_contract_v1` before opening sequence/tensor
-   models in full grids.
+3. Extend `sequence_representation_contract_v1` from the current univariate
+   deep-autoreg slice to a Layer 2 multivariate `sequence_tensor` handoff
+   before opening sequence/tensor models in full grids.
 4. Define `exogenous_x_path_contract_v1` and `multi_step_raw_panel_payload_v1`
    before opening raw-panel iterated forecasting.
 5. Version the prediction row schema if payload families continue expanding.

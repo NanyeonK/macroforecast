@@ -396,8 +396,10 @@ availability, release-lag, origin-alignment, and artifact tests.
 
 ### Sequence/Tensor Forecast Generators
 
-Sequence/tensor models belong in Layer 3 only after Layer 2 has emitted a
-sequence/tensor representation family.
+The current LSTM/GRU/TCN autoregressive target-history path now uses a narrow
+univariate `sequence_representation_contract_v1` produced by the execution
+sequence adapter. Full multivariate sequence/tensor models still belong in
+Layer 3 only after Layer 2 has emitted a sequence/tensor representation family.
 
 Layer 3 responsibilities:
 
@@ -405,14 +407,19 @@ Layer 3 responsibilities:
 - fit sequence/tensor estimators;
 - return the appropriate forecast payload family;
 - record training backend, seed, early stopping, and convergence metadata.
+- for the current univariate deep-autoreg slice, record lookback, channel,
+  window/target alignment, and leakage metadata in the scalar payload
+  provenance.
 
 Layer 2 responsibilities:
 
 - define windows, channels, lookback, scaling, and leakage metadata;
 - keep target construction and sequence alignment out of the model closure.
 
-Sequence/tensor runtime should be a separate capability matrix feature runtime,
-not a hidden extension of the current raw-panel tabular cell.
+Full multivariate sequence/tensor runtime should be a separate capability
+matrix feature runtime, not a hidden extension of the current raw-panel tabular
+cell. The current univariate deep-autoreg sequence contract does not open
+`feature_runtime=sequence_tensor`.
 
 ## Sweep Semantics
 

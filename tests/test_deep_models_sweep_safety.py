@@ -63,6 +63,10 @@ def _run_with_variant(family: str, variant_id: str, series: pd.Series) -> float:
     finally:
         reset_context(token)
     assert set(out.keys()) >= {"y_pred", "selected_lag", "selected_bic", "tuning_payload"}
+    tuning_payload = out["tuning_payload"]
+    assert tuning_payload["sequence_representation_contract"] == "sequence_representation_contract_v1"
+    assert tuning_payload["sequence_generator_family"] == family
+    assert tuning_payload["sequence_shape"][1:] == [12, 1]
     return float(out["y_pred"])
 
 

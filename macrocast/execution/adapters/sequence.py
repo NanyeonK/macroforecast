@@ -11,7 +11,44 @@ Phase 10 deliverable.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import Any
+
 import numpy as np
+
+SEQUENCE_REPRESENTATION_CONTRACT_VERSION = "sequence_representation_contract_v1"
+
+
+@dataclass(frozen=True)
+class SequenceRepresentation:
+    """Auditable sequence/tensor representation consumed by deep executors."""
+
+    X_seq: np.ndarray
+    y_seq: np.ndarray
+    lookback: int
+    horizon: int
+    channel_names: tuple[str, ...]
+    target_positions: tuple[int, ...]
+    window_start_positions: tuple[int, ...]
+    representation_family: str = "univariate_autoreg_target"
+    leakage_contract: str = "forecast_origin_only"
+    alignment: dict[str, Any] = field(default_factory=dict)
+    contract_version: str = SEQUENCE_REPRESENTATION_CONTRACT_VERSION
+
+    def runtime_context(self) -> dict[str, Any]:
+        return {
+            "sequence_representation_contract": self.contract_version,
+            "sequence_representation_family": self.representation_family,
+            "sequence_shape": list(self.X_seq.shape),
+            "target_shape": list(self.y_seq.shape),
+            "lookback": int(self.lookback),
+            "horizon": int(self.horizon),
+            "channel_names": list(self.channel_names),
+            "target_positions": list(self.target_positions),
+            "window_start_positions": list(self.window_start_positions),
+            "alignment": dict(self.alignment),
+            "leakage_contract": self.leakage_contract,
+        }
 
 
 def reshape_for_sequence(
@@ -75,4 +112,39 @@ def reshape_for_sequence(
     return X_seq, y_seq
 
 
-__all__ = ["reshape_for_sequence"]
+def build_univariate_sequence_representation(
+    *,
+    series: np.ndarray,
+    lookback: int,
+    horizon: int,
+    channel_name: str = "target",
+) -> SequenceRepresentation:
+    """Build the first operational sequence representation contract slice."""
+    X_seq, y_seq = reshape_for_sequence(series=series, lookback=lookback, horizon=horizon)
+    n_windows = len(y_seq)
+    target_positions = tuple(i + lookback + horizon - 1 for i in range(n_windows))
+    window_start_positions = tuple(range(n_windows))
+    return SequenceRepresentation(
+        X_seq=X_seq,
+        y_seq=y_seq,
+        lookback=int(lookback),
+        horizon=int(horizon),
+        channel_names=(str(channel_name),),
+        target_positions=target_positions,
+        window_start_positions=window_start_positions,
+        alignment={
+            "sample_axis": "window",
+            "lookback_axis": "time",
+            "channel_axis": "feature",
+            "target_alignment": "window_end_plus_horizon_minus_one",
+            "origin_available_history": True,
+        },
+    )
+
+
+__all__ = [
+    "SEQUENCE_REPRESENTATION_CONTRACT_VERSION",
+    "SequenceRepresentation",
+    "build_univariate_sequence_representation",
+    "reshape_for_sequence",
+]

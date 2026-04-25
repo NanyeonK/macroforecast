@@ -4773,7 +4773,7 @@ def _run_deep_autoreg_executor(model_family: str, train: pd.Series, horizon: int
     from .models.deep._import_guard import require_torch
     require_torch(model_family)
     from .models.deep._base import DeepModelConfig
-    from .adapters.sequence import reshape_for_sequence
+    from .adapters.sequence import build_univariate_sequence_representation
 
     cfg = DeepModelConfig(seed=current_seed(model_family=model_family))
     series = train.to_numpy(dtype=float)
@@ -4782,7 +4782,14 @@ def _run_deep_autoreg_executor(model_family: str, train: pd.Series, horizon: int
             f"model_family {model_family!r} requires at least lookback+1={cfg.lookback + 1} "
             f"training observations, got {len(series)}"
         )
-    X_seq, y_seq = reshape_for_sequence(series=series, lookback=cfg.lookback, horizon=1)
+    sequence_representation = build_univariate_sequence_representation(
+        series=series,
+        lookback=cfg.lookback,
+        horizon=1,
+        channel_name=str(train.name or "target"),
+    )
+    X_seq = sequence_representation.X_seq
+    y_seq = sequence_representation.y_seq
 
     if model_family == "lstm":
         from .models.deep.lstm import LSTMModel as ModelCls
@@ -4803,7 +4810,11 @@ def _run_deep_autoreg_executor(model_family: str, train: pd.Series, horizon: int
         "y_pred": float(y_pred),
         "selected_lag": cfg.lookback,
         "selected_bic": math.nan,
-        "tuning_payload": {},
+        "tuning_payload": {
+            **sequence_representation.runtime_context(),
+            "sequence_generator_family": model_family,
+            "sequence_prediction_protocol": "iterated_one_step_autoreg",
+        },
     }
 
 

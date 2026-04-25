@@ -7,7 +7,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from macrocast.execution.adapters.sequence import reshape_for_sequence
+from macrocast.execution.adapters.sequence import (
+    SEQUENCE_REPRESENTATION_CONTRACT_VERSION,
+    build_univariate_sequence_representation,
+    reshape_for_sequence,
+)
 
 
 def test_shapes_horizon_1():
@@ -70,3 +74,24 @@ def test_rejects_nonpositive_horizon():
     series = np.arange(20, dtype=float)
     with pytest.raises(ValueError, match="horizon"):
         reshape_for_sequence(series=series, lookback=12, horizon=0)
+
+
+def test_univariate_sequence_representation_contract_context():
+    series = np.arange(20, dtype=float)
+    representation = build_univariate_sequence_representation(
+        series=series,
+        lookback=12,
+        horizon=3,
+        channel_name="INDPRO",
+    )
+    assert representation.contract_version == SEQUENCE_REPRESENTATION_CONTRACT_VERSION
+    assert representation.X_seq.shape == (6, 12, 1)
+    assert representation.y_seq.shape == (6,)
+    assert representation.channel_names == ("INDPRO",)
+    assert representation.target_positions[0] == 14
+    assert representation.target_positions[-1] == 19
+    context = representation.runtime_context()
+    assert context["sequence_representation_contract"] == "sequence_representation_contract_v1"
+    assert context["sequence_shape"] == [6, 12, 1]
+    assert context["channel_names"] == ["INDPRO"]
+    assert context["alignment"]["target_alignment"] == "window_end_plus_horizon_minus_one"
