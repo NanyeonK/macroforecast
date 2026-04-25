@@ -4788,7 +4788,38 @@ def _run_raw_panel_iterated_hold_last_executor(
     X_train_df = pd.concat([X_base, target_lag_train], axis=1)
     feature_names = [str(name) for name in X_train_df.columns]
     X_train = X_train_df.to_numpy(dtype=float)
-    model, tuning_payload = fit_with_optional_tuning(model_family, X_train, y_train, recipe.training_spec)
+    block_roles = {
+        **{str(name): "base_x" for name in predictors},
+        **{str(name): "target_lag" for name in target_lag_names},
+    }
+
+    def _iterated_representation(Z_pred: np.ndarray) -> Layer2Representation:
+        return Layer2Representation(
+            Z_train=X_train,
+            y_train=y_train,
+            Z_pred=Z_pred,
+            feature_names=tuple(feature_names),
+            block_order=("base_x", "target_lag"),
+            block_roles=block_roles,
+            alignment={
+                "representation_runtime": "raw_feature_panel",
+                "forecast_protocol": "iterated",
+                "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
+                "exogenous_x_path_policy": "hold_last_observed",
+                "target_lag_timing": "recursive_target_history_updated_each_step",
+            },
+            leakage_contract="forecast_origin_only_with_explicit_future_x_assumption",
+            feature_builder=_feature_runtime_builder(recipe),
+            feature_runtime_builder=_feature_runtime_builder(recipe),
+            legacy_feature_builder=_feature_builder(recipe),
+        )
+
+    custom_model_spec = get_custom_model(model_family) if is_custom_model(model_family) else None
+    if custom_model_spec is None:
+        model, tuning_payload = fit_with_optional_tuning(model_family, X_train, y_train, recipe.training_spec)
+    else:
+        model = None
+        tuning_payload = {}
     history = [float(value) for value in train.to_numpy(dtype=float)]
     origin_date = raw_frame.index[origin_idx]
     x_origin = raw_frame[predictors].iloc[[origin_idx]].astype(float).copy()
@@ -4800,7 +4831,31 @@ def _run_raw_panel_iterated_hold_last_executor(
         for name, value in zip(target_lag_names, lag_values):
             X_pred_df[str(name)] = float(value)
         X_pred = X_pred_df[feature_names].to_numpy(dtype=float)
-        y_pred_step = _predict_fitted_scalar(model, X_pred, model_family=model_family)
+        if custom_model_spec is not None:
+            representation_for_step = _iterated_representation(X_pred)
+            context = {
+                "model_name": model_family,
+                "target": recipe.target,
+                "horizon": int(horizon),
+                "forecast_type": "iterated",
+                "recursive_step": int(step),
+                "raw_panel_iterated_step": int(step),
+                "x_path_policy": "hold_last_observed",
+                "raw_panel_iterated_runtime_contract": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
+                "raw_panel_iterated_payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
+                "feature_names": list(representation_for_step.feature_names),
+                "train_index": list(X_train_df.index),
+                "target_train_index": list(train.index[1:]),
+                "contract_version": CUSTOM_MODEL_CONTRACT_VERSION,
+            }
+            context.update(representation_for_step.runtime_context(mode="custom_model"))
+            y_pred_step = _as_scalar_prediction(
+                custom_model_spec.function(X_train, y_train, X_pred, context),
+                model_name=model_family,
+            )
+        else:
+            assert model is not None
+            y_pred_step = _predict_fitted_scalar(model, X_pred, model_family=model_family)
         history.append(y_pred_step)
         step_predictions.append(y_pred_step)
         step_rows.append(
@@ -4818,29 +4873,11 @@ def _run_raw_panel_iterated_hold_last_executor(
                 "payload_contract": _RAW_PANEL_ITERATED_PAYLOAD_CONTRACT_VERSION,
             }
         )
-    representation = Layer2Representation(
-        Z_train=X_train,
-        y_train=y_train,
-        Z_pred=X_pred,
-        feature_names=tuple(feature_names),
-        block_order=("base_x", "target_lag"),
-        block_roles={
-            **{str(name): "base_x" for name in predictors},
-            **{str(name): "target_lag" for name in target_lag_names},
-        },
-        alignment={
-            "representation_runtime": "raw_feature_panel",
-            "forecast_protocol": "iterated",
-            "exogenous_x_path_contract": "exogenous_x_path_contract_v1",
-            "exogenous_x_path_policy": "hold_last_observed",
-            "target_lag_timing": "recursive_target_history_updated_each_step",
-        },
-        leakage_contract="forecast_origin_only_with_explicit_future_x_assumption",
-        feature_builder=_feature_runtime_builder(recipe),
-        feature_runtime_builder=_feature_runtime_builder(recipe),
-        legacy_feature_builder=_feature_builder(recipe),
-    )
-    tuning_payload = _merge_layer2_representation_payload(tuning_payload, representation)
+    representation = _iterated_representation(X_pred)
+    if custom_model_spec is not None:
+        tuning_payload = _custom_model_tuning_payload(representation, model_name=model_family)
+    else:
+        tuning_payload = _merge_layer2_representation_payload(tuning_payload, representation)
     tuning_payload.update(
         {
             "raw_panel_iterated_runtime_contract": _RAW_PANEL_ITERATED_RUNTIME_CONTRACT_VERSION,
@@ -6916,11 +6953,6 @@ def _build_predictions(
         if _exogenous_x_path_policy(recipe) != "hold_last_observed":
             raise ExecutionError(
                 "raw-panel iterated forecasting requires exogenous_x_path_policy='hold_last_observed'"
-            )
-        if is_custom_model(model_family):
-            raise ExecutionError(
-                "raw-panel iterated forecasting does not yet support registered custom models; "
-                "requires a custom raw-panel iterated model contract"
             )
         if _target_lag_feature_block(recipe) != "fixed_target_lags":
             raise ExecutionError(

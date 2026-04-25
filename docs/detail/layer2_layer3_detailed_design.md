@@ -358,7 +358,8 @@ Operational narrow slice:
 - `exogenous_x_path_contract_v1.path_kind='hold_last_observed'`;
 - `target_lag_block='fixed_target_lags'`;
 - `forecast_object='point_mean'`;
-- built-in scalar tabular model generators;
+- built-in scalar tabular model generators or registered custom models using
+  `custom_model_v1`;
 - raw-level target and X, no target normalization, no custom target
   transformer, and no extra Layer 2 preprocessing.
 
@@ -367,7 +368,6 @@ Still-gated dependency:
 - `exogenous_x_path_contract_v1`;
 - `multi_step_raw_panel_payload_v1`;
 - observed, scheduled, or recursively forecast future-X paths;
-- custom raw-panel iterated model adapter contracts;
 - non-point forecast payloads;
 - transformed/normalized target scale composition.
 

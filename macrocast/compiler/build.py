@@ -2134,11 +2134,6 @@ def _layer3_capability_rejections(
             "sequence_representation_contract_v1"
         )
     if feature_runtime == "raw_feature_panel" and forecast_type == "iterated":
-        if is_custom_model(str(model_family)):
-            blocked.append(
-                "forecast_type='iterated' for raw-panel feature runtime does not yet support "
-                "registered custom models; requires a custom raw-panel iterated model contract"
-            )
         if model_family in {"pcr", "pls", "factor_augmented_linear", "lstm", "gru", "tcn"}:
             blocked.append(
                 "forecast_type='iterated' for raw-panel feature runtime currently supports scalar tabular "

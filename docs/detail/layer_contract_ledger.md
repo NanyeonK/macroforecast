@@ -148,12 +148,12 @@ Required gates before opening:
 
 | Contract | Owner | Layer 3 view | Producer | Consumer | Status | Notes |
 |---|---|---|---|---|---|---|
-| `custom_model_v1` | Layer 3 | `owned` | registered custom model adapter | Layer 3 execution loop | `operational` | Custom models receive tabular Layer 2 representation context, training spec, seed context, and representation provenance. |
+| `custom_model_v1` | Layer 3 | `owned` | registered custom model adapter | Layer 3 execution loop | `operational` | Custom models receive tabular Layer 2 representation context, training spec, seed context, and representation provenance. Operational for direct tabular paths, target-lag recursive paths, and the raw-panel iterated `hold_last_observed` narrow slice. |
 | Direct tabular generator protocol | Layer 3 | `owned` | tabular point/quantile generators | execution artifact writer | `legacy_implicit` | Operational for current scalar direct forecasts. Should become an explicit generator protocol if more generator families are added. |
 | `path_average_target_protocol_v1` | Layer 2 | `consumed` | path-average target construction | Layer 3 path-average stepwise executor | `operational` | Layer 2 defines step targets and aggregation semantics; Layer 3 executes stepwise fits and writes path artifacts. |
 | `path_average_stepwise_execution_v1` | Layer 3 | `owned` | path-average executor | artifact writer and evaluation | `operational` | Executes one supported scalar generator per step `1..h`, aggregates equal-weight path-average predictions, and writes `path_average_steps.csv`. |
 | Sequence/tensor generator contract | Layer 3 | `owned` | future sequence/tensor executors | artifact writer and evaluation | `future_design` | Depends on `sequence_representation_contract_v1` and `sequence_forecast_payload_v1`. Must define accepted tensor family, training backend metadata, seed/early-stopping/convergence state, and payload shape. |
-| Raw-panel iterated execution contract | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for explicit `hold_last_observed` future-X scenario plus fixed target-lag recursive target-history updates. Broader future-X path kinds remain gated. |
+| Raw-panel iterated execution contract | Layer 3 | `owned` | raw-panel iterated generators | artifact writer and evaluation | `operational_narrow` | Operational for explicit `hold_last_observed` future-X scenario plus fixed target-lag recursive target-history updates. Built-in scalar tabular generators and registered `custom_model_v1` adapters can consume this slice. Broader future-X path kinds remain gated. |
 
 ## Forecast Payload And Artifact Contracts
 

@@ -51,7 +51,10 @@ Required fields:
 
 The first operational slice is `hold_last_observed`. It is deterministic
 and honest: it records the scenario assumption instead of silently using future
-observed X.
+observed X. Built-in scalar tabular generators and registered
+`custom_model_v1` models can consume this slice; the custom model receives the
+same raw-X-plus-recursive-target-lag representation context at each recursive
+step.
 
 ## Multi-Step Payload Contract
 

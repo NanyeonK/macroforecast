@@ -256,6 +256,66 @@ def test_execute_recipe_runs_raw_panel_iterated_hold_last_observed(tmp_path: Pat
     assert payloads
 
 
+def test_execute_recipe_runs_custom_raw_panel_iterated_hold_last_observed(tmp_path: Path) -> None:
+    clear_custom_extensions()
+    calls: list[int] = []
+
+    @custom_model("iterated_raw_panel_custom")
+    def _iterated_raw_panel_custom(X_train, y_train, X_test, context):
+        assert context["contract_version"] == "custom_model_v1"
+        assert context["feature_runtime_builder"] == "raw_feature_panel"
+        assert context["forecast_type"] == "iterated"
+        assert context["x_path_policy"] == "hold_last_observed"
+        assert context["raw_panel_iterated_runtime_contract"] == "raw_panel_iterated_hold_last_observed_v1"
+        assert context["raw_panel_iterated_payload_contract"] == "multi_step_raw_panel_payload_v1"
+        assert context["block_order"] == ["base_x", "target_lag"]
+        assert context["alignment"]["target_lag_timing"] == "recursive_target_history_updated_each_step"
+        assert X_test.shape == (1, X_train.shape[1])
+        calls.append(int(context["raw_panel_iterated_step"]))
+        return float(y_train[-1])
+
+    try:
+        fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+        recipe = _recipe(
+            model_family="iterated_raw_panel_custom",
+            feature_builder="raw_feature_panel",
+            forecast_type="iterated",
+            exogenous_x_path_policy="hold_last_observed",
+            benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+            layer2_representation_spec={
+                "feature_blocks": {
+                    "feature_block_set": {"value": "mixed_blocks"},
+                    "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
+                    "x_lag_feature_block": {"value": "none"},
+                    "factor_feature_block": {"value": "none"},
+                    "level_feature_block": {"value": "none"},
+                    "rotation_feature_block": {"value": "none"},
+                    "temporal_feature_block": {"value": "none"},
+                }
+            },
+        )
+        result = execute_recipe(
+            recipe=recipe,
+            preprocess=_preprocess_raw_only(),
+            output_root=tmp_path,
+            local_raw_source=fixture,
+        )
+
+        run_dir = tmp_path / result.run.artifact_subdir
+        manifest = json.loads((run_dir / "manifest.json").read_text())
+        steps = __import__("pandas").read_csv(run_dir / "raw_panel_iterated_steps.csv")
+
+        assert manifest["model_spec"]["custom_model"] is True
+        assert manifest["forecast_type"] == "iterated"
+        assert manifest["forecast_payload_family"] == "raw_panel_iterated"
+        assert manifest["raw_panel_iterated_runtime_contract"] == "raw_panel_iterated_hold_last_observed_v1"
+        assert steps["payload_contract"].eq("multi_step_raw_panel_payload_v1").all()
+        assert calls
+        assert max(calls) == max(recipe.horizons)
+    finally:
+        clear_custom_extensions()
+
+
 def test_execute_recipe_writes_minimal_importance_artifact_for_randomforest(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(

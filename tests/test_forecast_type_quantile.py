@@ -237,28 +237,26 @@ def test_forecast_type_iterated_raw_panel_hold_last_observed_compiles() -> None:
     assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
 
 
-def test_forecast_type_iterated_raw_panel_custom_model_requires_adapter_contract() -> None:
+def test_forecast_type_iterated_raw_panel_custom_model_compiles() -> None:
     clear_custom_extensions()
 
-    @custom_model("iterated_custom_gate")
-    def _iterated_custom_gate(X_train, y_train, X_test, context):
+    @custom_model("iterated_custom_model")
+    def _iterated_custom_model(X_train, y_train, X_test, context):
         return float(y_train[-1])
 
     try:
         r = compile_recipe_dict(
             _recipe(
                 feature_builder="raw_feature_panel",
-                model_family="iterated_custom_gate",
+                model_family="iterated_custom_model",
                 forecast_type="iterated",
                 target_lag_block="fixed_target_lags",
                 exogenous_x_path_policy="hold_last_observed",
             )
         )
-        assert r.compiled.execution_status == "blocked_by_incompatibility"
-        assert any(
-            "does not yet support registered custom models" in r_msg
-            for r_msg in r.manifest.get("blocked_reasons", [])
-        )
+        assert r.compiled.execution_status == "executable"
+        assert r.manifest["model_spec"]["model_family"] == "iterated_custom_model"
+        assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "operational"
     finally:
         clear_custom_extensions()
 
