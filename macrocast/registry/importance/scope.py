@@ -10,7 +10,7 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(id="global", description="global importance summary", status="operational", priority="A"),
         EnumRegistryEntry(id="local", description="single-prediction local explanation", status="operational", priority="A"),
-        EnumRegistryEntry(id="both", description="global and local outputs", status="operational", priority="A"),
+        EnumRegistryEntry(id="both", description="global and local outputs", status="registry_only", priority="B"),
     ),
     compatible_with={},
     incompatible_with={},

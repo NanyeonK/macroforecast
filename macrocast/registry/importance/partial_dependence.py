@@ -8,6 +8,7 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type="enum",
     default_policy="fixed",
     entries=(
+        EnumRegistryEntry(id="none", description="no dependence-profile explanation selected", status="operational", priority="A"),
         EnumRegistryEntry(id="pdp", description="partial dependence", status="operational", priority="A"),
         EnumRegistryEntry(id="ice", description="individual conditional expectation", status="operational", priority="A"),
         EnumRegistryEntry(id="ale", description="accumulated local effects", status="operational", priority="A"),

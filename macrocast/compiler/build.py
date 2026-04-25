@@ -22,6 +22,13 @@ from ..execution.stat_tests.dispatch import (
     active_stat_test_axes,
     canonicalize_stat_test_spec,
 )
+from ..execution.importance_dispatch import (
+    DEFAULT_IMPORTANCE_SPEC,
+    IMPORTANCE_AXIS_NAMES,
+    IMPORTANCE_META_AXIS_NAMES,
+    active_importance_methods,
+    canonicalize_importance_spec,
+)
 from ..preprocessing import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     build_preprocess_contract,
@@ -169,6 +176,12 @@ _HAC_COMPATIBLE_STAT_TESTS = {
     "spa",
     "mcs",
 }
+_TREE_IMPORTANCE_METHODS = {"tree_shap"}
+_LINEAR_IMPORTANCE_METHODS = {"linear_shap"}
+_RAW_PANEL_ONLY_IMPORTANCE_METHODS = {"minimal_importance"}
+_TREE_IMPORTANCE_MODELS = {"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"}
+_LINEAR_IMPORTANCE_MODELS = {"ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber", "adaptivelasso"}
+_LOCAL_IMPORTANCE_METHODS = {"kernel_shap", "lime", "feature_ablation"}
 
 
 def load_recipe_yaml(path: str | Path) -> dict[str, Any]:
@@ -3046,6 +3059,36 @@ def _execution_status(
                 f"(one of {sorted(_HAC_COMPATIBLE_STAT_TESTS)}); got {bad}"
             )
 
+    # Layer 7 importance compatibility and split-axis contract.
+    _importance_spec_value = _importance_spec(selection_map)
+    _importance_methods = set(active_importance_methods(_importance_spec_value))
+    if _importance_methods:
+        if feature_runtime not in {"raw_feature_panel", "autoreg_lagged_target"}:
+            not_supported.append(
+                "Layer 7 importance artifacts currently require raw-panel or target-lag tabular feature runtimes"
+            )
+        if _RAW_PANEL_ONLY_IMPORTANCE_METHODS & _importance_methods and feature_runtime != "raw_feature_panel":
+            not_supported.append(
+                "minimal_importance currently requires feature_runtime='raw_feature_panel'"
+            )
+        if _TREE_IMPORTANCE_METHODS & _importance_methods and model_family is not None and model_family not in _TREE_IMPORTANCE_MODELS:
+            not_supported.append(
+                "tree_shap requires a tree model_family "
+                f"(one of {sorted(_TREE_IMPORTANCE_MODELS)}); got {model_family!r}"
+            )
+        if _LINEAR_IMPORTANCE_METHODS & _importance_methods and model_family is not None and model_family not in _LINEAR_IMPORTANCE_MODELS:
+            not_supported.append(
+                "linear_shap requires a linear model_family "
+                f"(one of {sorted(_LINEAR_IMPORTANCE_MODELS)}); got {model_family!r}"
+            )
+        if model_family == "quantile_linear":
+            not_supported.append("Layer 7 importance artifacts do not yet support model_family='quantile_linear'")
+        importance_scope = _importance_spec_value["importance_scope"]
+        if importance_scope == "global" and _importance_methods <= _LOCAL_IMPORTANCE_METHODS:
+            not_supported.append("local-only Layer 7 importance methods require importance_scope='local'")
+        if importance_scope == "local" and not (_importance_methods & _LOCAL_IMPORTANCE_METHODS):
+            not_supported.append("global-only Layer 7 importance methods require importance_scope='global'")
+
     if feature_runtime is not None:
         predictor_family = _selection_value(selection_map, "predictor_family", default=("target_lags_only" if feature_runtime == "autoreg_lagged_target" else "all_macro_vars"))
         if predictor_family == "target_lags_only" and feature_runtime != "autoreg_lagged_target":
@@ -3530,6 +3573,16 @@ def _stat_test_spec(selection_map: dict[str, AxisSelection]) -> dict[str, str]:
     return canonicalize_stat_test_spec(raw)
 
 
+def _importance_spec(selection_map: dict[str, AxisSelection]) -> dict[str, str]:
+    raw = {
+        "importance_method": _selection_value(selection_map, "importance_method", default="none"),
+    }
+    for axis in IMPORTANCE_AXIS_NAMES + IMPORTANCE_META_AXIS_NAMES:
+        if axis in selection_map:
+            raw[axis] = _selection_value(selection_map, axis, default=DEFAULT_IMPORTANCE_SPEC[axis])
+    return canonicalize_importance_spec(raw)
+
+
 def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
     selection_map = {selection.axis_name: selection for selection in compiled.axis_selections}
     return {
@@ -3557,9 +3610,7 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "layer3_capability_matrix": _layer3_capability_matrix(selection_map, compiled.leaf_config),
         "evaluation_spec": _evaluation_spec(selection_map, compiled.leaf_config),
         "stat_test_spec": _stat_test_spec(selection_map),
-        "importance_spec": {
-            "importance_method": _selection_value(selection_map, "importance_method"),
-        },
+        "importance_spec": _importance_spec(selection_map),
         "output_spec": _output_spec(selection_map),
         "preprocess_contract": preprocess_to_dict(compiled.preprocess_contract),
         "axis_selections": [

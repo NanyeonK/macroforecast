@@ -8,6 +8,7 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type="enum",
     default_policy="fixed",
     entries=(
+        EnumRegistryEntry(id="none", description="no SHAP family selected", status="operational", priority="A"),
         EnumRegistryEntry(id="tree_shap", description="TreeSHAP", status="operational", priority="A"),
         EnumRegistryEntry(id="kernel_shap", description="KernelSHAP", status="operational", priority="A"),
         EnumRegistryEntry(id="linear_shap", description="LinearSHAP", status="operational", priority="A"),

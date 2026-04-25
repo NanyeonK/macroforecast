@@ -9,8 +9,8 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(id="ranked_table", description="ranked tabular output", status="operational", priority="A"),
-        EnumRegistryEntry(id="curve_bundle", description="curve / profile bundle", status="operational", priority="A"),
-        EnumRegistryEntry(id="nested_report", description="nested JSON report", status="operational", priority="A"),
+        EnumRegistryEntry(id="curve_bundle", description="curve / profile bundle", status="registry_only", priority="B"),
+        EnumRegistryEntry(id="nested_report", description="nested JSON report", status="registry_only", priority="B"),
     ),
     compatible_with={},
     incompatible_with={},

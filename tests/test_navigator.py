@@ -115,6 +115,8 @@ def test_navigation_tree_populates_downstream_defaults():
     assert _axis(view, "test_scope")["selected"] == "per_target"
     assert _axis(view, "overlap_handling")["selected"] == "allow_overlap"
     assert _axis(view, "importance_method")["selected"] == "none"
+    assert _axis(view, "importance_scope")["selected"] == "global"
+    assert _axis(view, "importance_temporal")["selected"] == "static_snapshot"
     assert _option(_axis(view, "export_format"), "parquet")["canonical_path_effect"].endswith(
         "fixed_axes.export_format = 'parquet'"
     )
@@ -134,6 +136,17 @@ def test_navigator_ui_data_tree_includes_output_layer():
 def test_navigation_disables_tree_shap_for_non_tree_model():
     recipe = _recipe()
     recipe["path"]["7_importance"]["fixed_axes"]["importance_method"] = "tree_shap"
+    view = build_navigation_view(recipe)
+
+    model_axis = _axis(view, "model_family")
+    assert _option(model_axis, "ridge")["enabled"] is False
+    assert "tree_shap" in _option(model_axis, "ridge")["disabled_reason"]
+    assert _option(model_axis, "randomforest")["enabled"] is True
+
+
+def test_navigation_disables_split_tree_shap_for_non_tree_model():
+    recipe = _recipe()
+    recipe["path"]["7_importance"]["fixed_axes"]["importance_shap"] = "tree_shap"
     view = build_navigation_view(recipe)
 
     model_axis = _axis(view, "model_family")

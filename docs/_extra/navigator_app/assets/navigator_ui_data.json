@@ -1237,8 +1237,8 @@
       "compatible_with": {},
       "current_status": {
         "mean_abs": "operational",
-        "mean_signed": "operational",
-        "top_k": "operational"
+        "mean_signed": "registry_only",
+        "top_k": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1253,7 +1253,7 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "coefficient_path": "operational",
+        "coefficient_path": "registry_only",
         "none": "operational"
       },
       "default_policy": "fixed",
@@ -1262,6 +1262,7 @@
     },
     "importance_grouped": {
       "allowed_values": [
+        "none",
         "grouped_permutation",
         "variable_root_groups"
       ],
@@ -1270,7 +1271,8 @@
       "compatible_with": {},
       "current_status": {
         "grouped_permutation": "operational",
-        "variable_root_groups": "operational"
+        "none": "operational",
+        "variable_root_groups": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1278,6 +1280,7 @@
     },
     "importance_local_surrogate": {
       "allowed_values": [
+        "none",
         "lime",
         "feature_ablation"
       ],
@@ -1286,7 +1289,8 @@
       "compatible_with": {},
       "current_status": {
         "feature_ablation": "operational",
-        "lime": "operational"
+        "lime": "operational",
+        "none": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1332,6 +1336,7 @@
     },
     "importance_model_agnostic": {
       "allowed_values": [
+        "none",
         "kernel_shap",
         "permutation_importance",
         "feature_ablation"
@@ -1342,6 +1347,7 @@
       "current_status": {
         "feature_ablation": "operational",
         "kernel_shap": "operational",
+        "none": "operational",
         "permutation_importance": "operational"
       },
       "default_policy": "fixed",
@@ -1350,6 +1356,8 @@
     },
     "importance_model_native": {
       "allowed_values": [
+        "none",
+        "minimal_importance",
         "tree_shap",
         "linear_shap",
         "feature_gain"
@@ -1358,8 +1366,10 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "feature_gain": "operational",
+        "feature_gain": "registry_only",
         "linear_shap": "operational",
+        "minimal_importance": "operational",
+        "none": "operational",
         "tree_shap": "operational"
       },
       "default_policy": "fixed",
@@ -1376,8 +1386,8 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "curve_bundle": "operational",
-        "nested_report": "operational",
+        "curve_bundle": "registry_only",
+        "nested_report": "registry_only",
         "ranked_table": "operational"
       },
       "default_policy": "fixed",
@@ -1386,6 +1396,7 @@
     },
     "importance_partial_dependence": {
       "allowed_values": [
+        "none",
         "pdp",
         "ice",
         "ale"
@@ -1396,6 +1407,7 @@
       "current_status": {
         "ale": "operational",
         "ice": "operational",
+        "none": "operational",
         "pdp": "operational"
       },
       "default_policy": "fixed",
@@ -1412,7 +1424,7 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "both": "operational",
+        "both": "registry_only",
         "global": "operational",
         "local": "operational"
       },
@@ -1422,6 +1434,7 @@
     },
     "importance_shap": {
       "allowed_values": [
+        "none",
         "tree_shap",
         "kernel_shap",
         "linear_shap"
@@ -1432,6 +1445,7 @@
       "current_status": {
         "kernel_shap": "operational",
         "linear_shap": "operational",
+        "none": "operational",
         "tree_shap": "operational"
       },
       "default_policy": "fixed",
@@ -1440,6 +1454,7 @@
     },
     "importance_stability": {
       "allowed_values": [
+        "none",
         "importance_stability",
         "bootstrap_rank_stability",
         "seed_stability"
@@ -1448,9 +1463,10 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "bootstrap_rank_stability": "operational",
+        "bootstrap_rank_stability": "registry_only",
         "importance_stability": "operational",
-        "seed_stability": "operational"
+        "none": "operational",
+        "seed_stability": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1466,9 +1482,9 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "rolling_path": "operational",
+        "rolling_path": "registry_only",
         "static_snapshot": "operational",
-        "time_average": "operational"
+        "time_average": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3458,7 +3474,19 @@
               1,
               3
             ],
+            "importance_aggregation": "mean_abs",
+            "importance_gradient_path": "none",
+            "importance_grouped": "none",
+            "importance_local_surrogate": "none",
             "importance_method": "none",
+            "importance_model_agnostic": "none",
+            "importance_model_native": "none",
+            "importance_output_style": "ranked_table",
+            "importance_partial_dependence": "none",
+            "importance_scope": "global",
+            "importance_shap": "none",
+            "importance_stability": "none",
+            "importance_temporal": "static_snapshot",
             "information_set_type": "revised",
             "inverse_transform_policy": "none",
             "manifest_mode": "full",
@@ -8201,20 +8229,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'local'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
                 "status": "operational",
                 "value": "local"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'both'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "both"
               }
             ],
-            "selected": null
+            "selected": "global"
           },
           {
             "axis": "importance_model_native",
@@ -8222,9 +8250,23 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'minimal_importance'",
+                "disabled_reason": "minimal_importance currently requires a raw-panel feature builder",
+                "enabled": false,
+                "status": "operational",
+                "value": "minimal_importance"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -8237,19 +8279,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'feature_gain'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "feature_gain"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_model_agnostic",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'kernel_shap'",
                 "disabled_reason": null,
@@ -8272,7 +8321,7 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_shap",
@@ -8280,9 +8329,16 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -8301,13 +8357,20 @@
                 "value": "linear_shap"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_local_surrogate",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'lime'",
                 "disabled_reason": null,
@@ -8323,13 +8386,20 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_partial_dependence",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'pdp'",
                 "disabled_reason": null,
@@ -8352,13 +8422,20 @@
                 "value": "ale"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_grouped",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'grouped_permutation'",
                 "disabled_reason": null,
@@ -8368,19 +8445,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'variable_root_groups'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "variable_root_groups"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_stability",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'importance_stability'",
                 "disabled_reason": null,
@@ -8390,20 +8474,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'bootstrap_rank_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "bootstrap_rank_stability"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'seed_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "seed_stability"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_aggregation",
@@ -8419,20 +8503,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'mean_signed'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "mean_signed"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'top_k'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "top_k"
               }
             ],
-            "selected": null
+            "selected": "mean_abs"
           },
           {
             "axis": "importance_output_style",
@@ -8448,20 +8532,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'curve_bundle'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "curve_bundle"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'nested_report'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "nested_report"
               }
             ],
-            "selected": null
+            "selected": "ranked_table"
           },
           {
             "axis": "importance_temporal",
@@ -8477,20 +8561,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'time_average'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "time_average"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'rolling_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "rolling_path"
               }
             ],
-            "selected": null
+            "selected": "static_snapshot"
           },
           {
             "axis": "importance_gradient_path",
@@ -8506,13 +8590,13 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_gradient_path = 'coefficient_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "coefficient_path"
               }
             ],
-            "selected": null
+            "selected": "none"
           }
         ]
       }
@@ -8742,7 +8826,19 @@
             "horizons": [
               1
             ],
+            "importance_aggregation": "mean_abs",
+            "importance_gradient_path": "none",
+            "importance_grouped": "none",
+            "importance_local_surrogate": "none",
             "importance_method": "none",
+            "importance_model_agnostic": "none",
+            "importance_model_native": "none",
+            "importance_output_style": "ranked_table",
+            "importance_partial_dependence": "none",
+            "importance_scope": "global",
+            "importance_shap": "none",
+            "importance_stability": "none",
+            "importance_temporal": "static_snapshot",
             "information_set_type": "revised",
             "inverse_transform_policy": "none",
             "manifest_mode": "full",
@@ -13501,20 +13597,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'local'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
                 "status": "operational",
                 "value": "local"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'both'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "both"
               }
             ],
-            "selected": null
+            "selected": "global"
           },
           {
             "axis": "importance_model_native",
@@ -13522,9 +13618,23 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'minimal_importance'",
+                "disabled_reason": "minimal_importance currently requires a raw-panel feature builder",
+                "enabled": false,
+                "status": "operational",
+                "value": "minimal_importance"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -13537,19 +13647,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'feature_gain'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "feature_gain"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_model_agnostic",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'kernel_shap'",
                 "disabled_reason": null,
@@ -13572,7 +13689,7 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_shap",
@@ -13580,9 +13697,16 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -13601,13 +13725,20 @@
                 "value": "linear_shap"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_local_surrogate",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'lime'",
                 "disabled_reason": null,
@@ -13623,13 +13754,20 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_partial_dependence",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'pdp'",
                 "disabled_reason": null,
@@ -13652,13 +13790,20 @@
                 "value": "ale"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_grouped",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'grouped_permutation'",
                 "disabled_reason": null,
@@ -13668,19 +13813,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'variable_root_groups'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "variable_root_groups"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_stability",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'importance_stability'",
                 "disabled_reason": null,
@@ -13690,20 +13842,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'bootstrap_rank_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "bootstrap_rank_stability"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'seed_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "seed_stability"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_aggregation",
@@ -13719,20 +13871,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'mean_signed'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "mean_signed"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'top_k'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "top_k"
               }
             ],
-            "selected": null
+            "selected": "mean_abs"
           },
           {
             "axis": "importance_output_style",
@@ -13748,20 +13900,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'curve_bundle'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "curve_bundle"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'nested_report'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "nested_report"
               }
             ],
-            "selected": null
+            "selected": "ranked_table"
           },
           {
             "axis": "importance_temporal",
@@ -13777,20 +13929,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'time_average'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "time_average"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'rolling_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "rolling_path"
               }
             ],
-            "selected": null
+            "selected": "static_snapshot"
           },
           {
             "axis": "importance_gradient_path",
@@ -13806,13 +13958,13 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_gradient_path = 'coefficient_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "coefficient_path"
               }
             ],
-            "selected": null
+            "selected": "none"
           }
         ]
       }
@@ -14098,7 +14250,19 @@
               6,
               12
             ],
+            "importance_aggregation": "mean_abs",
+            "importance_gradient_path": "none",
+            "importance_grouped": "none",
+            "importance_local_surrogate": "none",
             "importance_method": "none",
+            "importance_model_agnostic": "none",
+            "importance_model_native": "none",
+            "importance_output_style": "ranked_table",
+            "importance_partial_dependence": "none",
+            "importance_scope": "global",
+            "importance_shap": "none",
+            "importance_stability": "none",
+            "importance_temporal": "static_snapshot",
             "information_set_type": "revised",
             "inverse_transform_policy": "target_only",
             "level_feature_block": "none",
@@ -18917,20 +19081,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'local'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
                 "status": "operational",
                 "value": "local"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_scope = 'both'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "both"
               }
             ],
-            "selected": null
+            "selected": "global"
           },
           {
             "axis": "importance_model_native",
@@ -18938,9 +19102,23 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'minimal_importance'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "minimal_importance"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -18953,19 +19131,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_native = 'feature_gain'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "feature_gain"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_model_agnostic",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_model_agnostic = 'kernel_shap'",
                 "disabled_reason": null,
@@ -18988,7 +19173,7 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_shap",
@@ -18996,9 +19181,16 @@
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
               {
-                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_shap = 'tree_shap'",
+                "disabled_reason": "tree_shap requires a tree model",
+                "enabled": false,
                 "status": "operational",
                 "value": "tree_shap"
               },
@@ -19017,13 +19209,20 @@
                 "value": "linear_shap"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_local_surrogate",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_local_surrogate = 'lime'",
                 "disabled_reason": null,
@@ -19039,13 +19238,20 @@
                 "value": "feature_ablation"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_partial_dependence",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_partial_dependence = 'pdp'",
                 "disabled_reason": null,
@@ -19068,13 +19274,20 @@
                 "value": "ale"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_grouped",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'grouped_permutation'",
                 "disabled_reason": null,
@@ -19084,19 +19297,26 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_grouped = 'variable_root_groups'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "variable_root_groups"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_stability",
             "layer": "7_importance",
             "layer_label": "Layer 7: interpretation and importance",
             "options": [
+              {
+                "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'importance_stability'",
                 "disabled_reason": null,
@@ -19106,20 +19326,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'bootstrap_rank_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "bootstrap_rank_stability"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_stability = 'seed_stability'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "seed_stability"
               }
             ],
-            "selected": null
+            "selected": "none"
           },
           {
             "axis": "importance_aggregation",
@@ -19135,20 +19355,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'mean_signed'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "mean_signed"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_aggregation = 'top_k'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "top_k"
               }
             ],
-            "selected": null
+            "selected": "mean_abs"
           },
           {
             "axis": "importance_output_style",
@@ -19164,20 +19384,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'curve_bundle'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "curve_bundle"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_output_style = 'nested_report'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "nested_report"
               }
             ],
-            "selected": null
+            "selected": "ranked_table"
           },
           {
             "axis": "importance_temporal",
@@ -19193,20 +19413,20 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'time_average'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "time_average"
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_temporal = 'rolling_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "rolling_path"
               }
             ],
-            "selected": null
+            "selected": "static_snapshot"
           },
           {
             "axis": "importance_gradient_path",
@@ -19222,13 +19442,13 @@
               },
               {
                 "canonical_path_effect": "path.7_importance.fixed_axes.importance_gradient_path = 'coefficient_path'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "Layer 7 detail axes are active only when an importance family is selected",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "coefficient_path"
               }
             ],
-            "selected": null
+            "selected": "none"
           }
         ]
       }

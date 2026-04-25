@@ -186,7 +186,10 @@ def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Pat
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
     assert manifest["importance_spec"]["importance_method"] == "minimal_importance"
+    assert manifest["importance_spec"]["importance_model_native"] == "minimal_importance"
+    assert manifest["importance_contract"] == "layer7_importance_split_v1"
     assert manifest["importance_file"] == "importance_minimal.json"
+    assert manifest["importance_files"] == {"importance_model_native": "importance_minimal.json"}
 
 
 def test_compile_minimal_importance_recipe_is_executable_for_randomforest(tmp_path: Path) -> None:
@@ -222,7 +225,69 @@ def test_compile_minimal_importance_recipe_is_executable_for_randomforest(tmp_pa
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
     assert manifest["importance_spec"]["importance_method"] == "minimal_importance"
+    assert manifest["importance_spec"]["importance_model_native"] == "minimal_importance"
+    assert manifest["importance_contract"] == "layer7_importance_split_v1"
     assert manifest["importance_file"] == "importance_minimal.json"
+
+
+def test_compile_stage7_split_importance_axis_is_manifested() -> None:
+    recipe = {
+        "recipe_id": "importance-split-tree-shap",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "randomforest"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_shap": "tree_shap"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.manifest["importance_spec"]["importance_method"] == "none"
+    assert compile_result.manifest["importance_spec"]["importance_shap"] == "tree_shap"
+    assert compile_result.manifest["importance_spec"]["importance_scope"] == "global"
+
+
+def test_compile_stage7_blocks_incompatible_split_importance_axis() -> None:
+    recipe = {
+        "recipe_id": "importance-split-tree-shap-ridge",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
+                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
+                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_shap": "tree_shap"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "not_supported"
+    assert any("tree_shap requires a tree model_family" in item for item in compile_result.compiled.warnings)
 
 
 def test_axis_governance_table_marks_minimal_importance_operational() -> None:
@@ -261,8 +326,9 @@ def test_compile_recipe_rejects_incompatible_preprocessing_without_silent_fallba
         },
     }
     compile_result = compile_recipe_dict(bad_recipe)
-    assert compile_result.compiled.execution_status == "executable"
-    with __import__("pytest").raises(Exception):
+    assert compile_result.compiled.execution_status == "not_supported"
+    assert any("minimal_importance currently requires" in item for item in compile_result.compiled.warnings)
+    with __import__("pytest").raises(CompileValidationError):
         run_compiled_recipe(
             compile_result.compiled,
             output_root=Path("/tmp/macrocast-importance-ar"),
@@ -3243,6 +3309,9 @@ def test_compile_stage6_split_stat_test_manifest() -> None:
 def test_compile_stage7_importance_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     assert compile_result.manifest["importance_spec"]["importance_method"] == "none"
+    assert compile_result.manifest["importance_spec"]["importance_scope"] == "global"
+    assert compile_result.manifest["importance_spec"]["importance_output_style"] == "ranked_table"
+    assert compile_result.manifest["importance_spec"]["importance_temporal"] == "static_snapshot"
 
 
 def test_multi_target_derives_shared_design_experiment_unit() -> None:

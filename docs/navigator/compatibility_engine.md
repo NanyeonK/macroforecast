@@ -8,6 +8,10 @@ The Compatibility Engine is the constraint-aware view over the registry and comp
 |---|---|
 | `importance_method=tree_shap` | Keeps tree generators: `randomforest`, `extratrees`, `gbm`, `xgboost`, `lightgbm`, `catboost`. Non-tree models are disabled. |
 | `importance_method=linear_shap` | Keeps linear estimators such as `ridge`, `lasso`, `elasticnet`, `bayesianridge`, `huber`, `adaptivelasso`, and `quantile_linear`. |
+| `importance_shap=tree_shap` | Same tree-model restriction as the legacy single `importance_method` route. |
+| `importance_shap=linear_shap` | Same linear-estimator restriction as the legacy single `importance_method` route. |
+| `importance_model_native=minimal_importance` | Requires the current raw-panel importance runtime. |
+| Layer 7 detail axes | `importance_scope`, `importance_aggregation`, `importance_output_style`, `importance_temporal`, and `importance_gradient_path` stay on operational defaults unless an importance family is active. |
 | `forecast_object=quantile` | Keeps `model_family=quantile_linear` as the operational generator. Downstream quantile metrics/tests should be preferred where available. |
 | `forecast_object=direction` | Recommends direction tests such as `pesaran_timmermann` and `binomial_hit`. |
 | `forecast_object=interval` or `density` | Recommends density/interval calibration tests on the `density_interval` axis. |
@@ -29,6 +33,11 @@ Examples:
 
 ```text
 importance_method=tree_shap
+model_family=ridge -> disabled: tree_shap requires a tree model
+```
+
+```text
+importance_shap=tree_shap
 model_family=ridge -> disabled: tree_shap requires a tree model
 ```
 

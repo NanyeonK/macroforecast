@@ -9,7 +9,7 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(id="none", description="no gradient-path summary", status="operational", priority="A"),
-        EnumRegistryEntry(id="coefficient_path", description="coefficient / contribution path summary", status="operational", priority="B"),
+        EnumRegistryEntry(id="coefficient_path", description="coefficient / contribution path summary", status="registry_only", priority="B"),
     ),
     compatible_with={},
     incompatible_with={},

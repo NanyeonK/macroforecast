@@ -70,6 +70,13 @@ from .lag_polynomial_rotation import (
     build_marx_rotation_frame as _build_marx_rotation_frame,
     marx_rotation_public_feature_name as _marx_rotation_public_feature_name,
 )
+from .importance_dispatch import (
+    IMPORTANCE_CONTRACT_VERSION,
+    IMPORTANCE_FILE_NAMES,
+    active_importance_axes,
+    active_importance_methods,
+    canonicalize_importance_spec,
+)
 from .stat_tests.dispatch import active_stat_test_axes, canonicalize_stat_test_spec
 from ..raw.windowing import WindowSpec as _WindowSpec, _resolve_min_train_obs as _resolve_min_train_obs
 from .nber import filter_origins_by_regime as _filter_origins_by_regime
@@ -5669,7 +5676,7 @@ def _evaluation_spec(provenance_payload: dict | None) -> dict[str, object]:
 
 def _importance_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
-    return dict(compiler.get("importance_spec", {"importance_method": "none"}))
+    return canonicalize_importance_spec(compiler.get("importance_spec", {"importance_method": "none"}))
 
 
 def _failure_policy_spec(provenance_payload: dict | None) -> dict[str, object]:
@@ -8512,7 +8519,7 @@ def execute_recipe(
         evaluation_report_text = _evaluation_summary_latex(evaluation_summary)
     if recipe.targets and _has_active_stat_tests(stat_test_spec):
         raise ExecutionError("multi-target point-forecast slice does not yet support statistical-test artifacts")
-    if recipe.targets and importance_spec.get("importance_method") != "none":
+    if recipe.targets and active_importance_methods(importance_spec):
         raise ExecutionError("multi-target point-forecast slice does not yet support importance artifacts")
 
     manifest = {
@@ -8541,6 +8548,7 @@ def execute_recipe(
         "stat_test_spec": stat_test_spec,
         "stat_test_contract": _STAT_TEST_CONTRACT_VERSION,
         "importance_spec": importance_spec,
+        "importance_contract": IMPORTANCE_CONTRACT_VERSION,
         "reproducibility_spec": reproducibility_spec,
         "reproducibility_applied": _reproducibility_applied,
         "failure_policy_spec": failure_policy_spec,
@@ -8811,27 +8819,48 @@ def execute_recipe(
                 manifest["stat_test_files"] = per_test_files
     elif _has_active_stat_tests(stat_test_spec):
         manifest["stat_tests_skipped_by_saved_objects"] = saved_objects
-    importance_method = str(importance_spec.get("importance_method", "none"))
     importance_dispatch = {
-        "minimal_importance": (lambda: _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess), "importance_minimal.json"),
-        "tree_shap": (lambda: _compute_tree_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_tree_shap.json"),
-        "kernel_shap": (lambda: _compute_kernel_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_kernel_shap.json"),
-        "linear_shap": (lambda: _compute_linear_shap_importance(raw_result.data, target_series, recipe, preprocess), "importance_linear_shap.json"),
-        "permutation_importance": (lambda: _compute_permutation_importance_artifact(raw_result.data, target_series, recipe, preprocess), "importance_permutation_importance.json"),
-        "lime": (lambda: _compute_lime_artifact(raw_result.data, target_series, recipe, preprocess), "importance_lime.json"),
-        "feature_ablation": (lambda: _compute_feature_ablation_artifact(raw_result.data, target_series, recipe, preprocess), "importance_feature_ablation.json"),
-        "pdp": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="pdp"), "importance_pdp.json"),
-        "ice": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ice"), "importance_ice.json"),
-        "ale": (lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ale"), "importance_ale.json"),
-        "grouped_permutation": (lambda: _compute_grouped_permutation_artifact(raw_result.data, target_series, recipe, preprocess), "importance_grouped_permutation.json"),
-        "importance_stability": (lambda: _compute_importance_stability_artifact(raw_result.data, target_series, recipe, preprocess), "importance_stability.json"),
+        "minimal_importance": lambda: _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess),
+        "tree_shap": lambda: _compute_tree_shap_importance(raw_result.data, target_series, recipe, preprocess),
+        "kernel_shap": lambda: _compute_kernel_shap_importance(raw_result.data, target_series, recipe, preprocess),
+        "linear_shap": lambda: _compute_linear_shap_importance(raw_result.data, target_series, recipe, preprocess),
+        "permutation_importance": lambda: _compute_permutation_importance_artifact(raw_result.data, target_series, recipe, preprocess),
+        "lime": lambda: _compute_lime_artifact(raw_result.data, target_series, recipe, preprocess),
+        "feature_ablation": lambda: _compute_feature_ablation_artifact(raw_result.data, target_series, recipe, preprocess),
+        "pdp": lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="pdp"),
+        "ice": lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ice"),
+        "ale": lambda: _compute_profile_artifact(raw_result.data, target_series, recipe, preprocess, mode="ale"),
+        "grouped_permutation": lambda: _compute_grouped_permutation_artifact(raw_result.data, target_series, recipe, preprocess),
+        "importance_stability": lambda: _compute_importance_stability_artifact(raw_result.data, target_series, recipe, preprocess),
     }
-    if write_full_bundle and importance_method != "none":
+    active_importance = active_importance_axes(importance_spec)
+    if write_full_bundle and active_importance:
         try:
-            importance_payload, importance_file = importance_dispatch[importance_method][0](), importance_dispatch[importance_method][1]
-            _write_json(run_dir / importance_file, importance_payload)
-            _record_artifact(importance_file, artifact_type="importance", layer="7_importance", file_format="json")
-            manifest["importance_file"] = importance_file
+            importance_payloads: dict[str, object] = {}
+            importance_files: dict[str, str] = {}
+            for axis_name, method in active_importance.items():
+                importance_payload = importance_dispatch[method]()
+                importance_payload["importance_axis"] = axis_name
+                importance_payload["importance_contract"] = IMPORTANCE_CONTRACT_VERSION
+                importance_payload["importance_scope"] = importance_spec["importance_scope"]
+                importance_payload["importance_aggregation"] = importance_spec["importance_aggregation"]
+                importance_payload["importance_output_style"] = importance_spec["importance_output_style"]
+                importance_payload["importance_temporal"] = importance_spec["importance_temporal"]
+                importance_file = IMPORTANCE_FILE_NAMES[method]
+                _write_json(run_dir / importance_file, importance_payload)
+                _record_artifact(importance_file, artifact_type="importance", layer="7_importance", file_format="json")
+                importance_payloads[axis_name] = importance_payload
+                importance_files[axis_name] = importance_file
+            aggregate_file = "importance_artifacts.json"
+            aggregate_payload = {
+                "importance_contract": IMPORTANCE_CONTRACT_VERSION,
+                "importance_spec": importance_spec,
+                "artifacts": importance_payloads,
+            }
+            _write_json(run_dir / aggregate_file, aggregate_payload)
+            _record_artifact(aggregate_file, artifact_type="importance", layer="7_importance", file_format="json")
+            manifest["importance_file"] = next(iter(importance_files.values())) if len(importance_files) == 1 else aggregate_file
+            manifest["importance_files"] = importance_files
         except Exception as exc:
             if failure_policy in {"save_partial_results", "warn_only"}:
                 failed_components.append({"stage": "importance_artifact", "target": None, "error": str(exc)})
@@ -8839,7 +8868,7 @@ def execute_recipe(
                     warnings.warn(f"importance_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
             else:
                 raise
-    elif importance_method != "none":
+    elif active_importance:
         manifest["importance_skipped_by_saved_objects"] = saved_objects
     manifest["partial_run"] = bool(failed_components)
     if failed_components:

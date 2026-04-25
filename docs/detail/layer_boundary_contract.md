@@ -248,13 +248,33 @@ pairwise, regime-specific, and subsample orchestration are named but not open.
 
 Owns interpretation after forecasts and metrics exist:
 
-- importance method
-- native/model-agnostic importance
-- SHAP
-- partial dependence
-- local surrogate
-- grouped/temporal/stability importance
-- importance output style
+- canonical split-axis importance spec
+- legacy single `importance_method` routing
+- model-native coefficient / impurity importance
+- model-agnostic permutation and ablation families
+- SHAP families
+- partial-dependence profile families
+- local-surrogate families
+- grouped and stability families
+- importance scope, aggregation, output style, temporal snapshot, and
+  gradient-path gates
+
+Runtime manifests include `importance_spec` under
+`layer7_importance_split_v1`. The canonical family axes are
+`importance_model_native`, `importance_model_agnostic`, `importance_shap`,
+`importance_local_surrogate`, `importance_partial_dependence`,
+`importance_grouped`, and `importance_stability`. The legacy
+`importance_method` field remains accepted as a compatibility alias and is
+routed into the matching split axis.
+
+Layer 7 writes `importance_artifacts.json` when at least one importance-family
+axis is active and `saved_objects=full_bundle`. Per-method sidecars such as
+`importance_tree_shap.json` and `importance_minimal.json` remain compatibility
+files for existing readers. `importance_scope=global`,
+`importance_aggregation=mean_abs`, `importance_output_style=ranked_table`, and
+`importance_temporal=static_snapshot` are the current operational defaults;
+time paths, both-scope orchestration, alternative aggregation reductions, and
+gradient-path reports are named but not open.
 
 ## Compatibility
 

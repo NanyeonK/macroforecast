@@ -26,10 +26,6 @@ METADATA_FLIPS = (
     ("data_richness_mode", "factor_plus_lags"),
     ("data_richness_mode", "selected_sparse_X"),
     ("y_lag_count", "cv_select"),
-    # importance
-    ("importance_temporal", "time_average"),
-    ("importance_temporal", "rolling_path"),
-    ("importance_gradient_path", "coefficient_path"),
     # data_task rules
 )
 
@@ -49,6 +45,17 @@ def test_test_scope_metadata_statuses_match_layer6_runtime_contract():
     assert statuses["full_grid_pairwise"] == "future"
     assert statuses["regime_specific_tests"] == "future"
     assert statuses["subsample_tests"] == "future"
+
+
+def test_layer7_detail_axis_metadata_statuses_match_runtime_contract():
+    defs = _discover_axis_definitions()
+    temporal = {entry.id: entry.status for entry in defs["importance_temporal"].entries}
+    gradient = {entry.id: entry.status for entry in defs["importance_gradient_path"].entries}
+    assert temporal["static_snapshot"] == "operational"
+    assert temporal["time_average"] == "registry_only"
+    assert temporal["rolling_path"] == "registry_only"
+    assert gradient["none"] == "operational"
+    assert gradient["coefficient_path"] == "registry_only"
 
 
 def _preds(n=40, seed=1):

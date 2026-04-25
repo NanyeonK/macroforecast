@@ -2130,8 +2130,13 @@ def test_execute_recipe_stage7_importance_methods(tmp_path: Path) -> None:
         run_dir = out_root / result.run.artifact_subdir
         manifest = json.loads((run_dir / "manifest.json").read_text())
         payload = json.loads((run_dir / filename).read_text())
+        aggregate = json.loads((run_dir / "importance_artifacts.json").read_text())
+        assert manifest["importance_contract"] == "layer7_importance_split_v1"
         assert manifest["importance_file"] == filename
+        assert filename in manifest["importance_files"].values()
+        assert aggregate["importance_contract"] == "layer7_importance_split_v1"
         assert payload["importance_method"] == method
+        assert payload["importance_contract"] == "layer7_importance_split_v1"
         assert payload["feature_runtime_builder"] == "raw_feature_panel"
         assert payload["legacy_feature_builder"] == "raw_feature_panel"
         assert payload["feature_dispatch_source"] == "layer2_feature_blocks"

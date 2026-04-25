@@ -6,6 +6,7 @@ from typing import Any, Iterable
 import yaml
 
 from .compiler import CompileValidationError, compile_recipe_dict, compile_recipe_yaml, load_recipe_yaml
+from .execution.importance_dispatch import IMPORTANCE_FILE_NAMES, active_importance_methods
 from .registry import get_axis_registry_entry
 from .registry.stage0.experiment_unit import derive_experiment_unit_default, experiment_unit_options_for_wizard
 
@@ -549,7 +550,8 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
     tree_context = dict(compile_manifest.get("tree_context", {}))
     leaf_config = dict(tree_context.get("leaf_config", compile_manifest.get("leaf_config", {})))
     stat_test = dict(compile_manifest.get("stat_test_spec", {})).get("stat_test", "none")
-    importance_method = dict(compile_manifest.get("importance_spec", {})).get("importance_method", "none")
+    importance_spec = dict(compile_manifest.get("importance_spec", {}))
+    importance_methods = active_importance_methods(importance_spec)
     expected_artifacts = [
         "manifest.json",
         "summary.txt",
@@ -578,22 +580,9 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
         expected_artifacts.append("stat_test_binomial_hit.json")
     if stat_test == "diagnostics_full":
         expected_artifacts.append("stat_test_diagnostics_bundle.json")
-    if importance_method != "none":
-        importance_files = {
-            "minimal_importance": "importance_minimal.json",
-            "tree_shap": "importance_tree_shap.json",
-            "kernel_shap": "importance_kernel_shap.json",
-            "linear_shap": "importance_linear_shap.json",
-            "permutation_importance": "importance_permutation_importance.json",
-            "lime": "importance_lime.json",
-            "feature_ablation": "importance_feature_ablation.json",
-            "pdp": "importance_pdp.json",
-            "ice": "importance_ice.json",
-            "ale": "importance_ale.json",
-            "grouped_permutation": "importance_grouped_permutation.json",
-            "importance_stability": "importance_stability.json",
-        }
-        expected_artifacts.append(importance_files.get(importance_method, f"importance_{importance_method}.json"))
+    if importance_methods:
+        expected_artifacts.append("importance_artifacts.json")
+        expected_artifacts.extend(IMPORTANCE_FILE_NAMES.get(method, f"importance_{method}.json") for method in importance_methods)
     return {
         "recipe_id": compile_manifest["recipe_id"],
         "run_id": compile_manifest["run_spec"]["run_id"],

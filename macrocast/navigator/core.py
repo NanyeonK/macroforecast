@@ -6,6 +6,13 @@ from typing import Any
 
 import yaml
 
+from ..execution.importance_dispatch import (
+    DEFAULT_IMPORTANCE_SPEC,
+    IMPORTANCE_AXIS_NAMES,
+    IMPORTANCE_META_AXIS_NAMES,
+    active_importance_methods,
+    canonicalize_importance_spec,
+)
 from ..registry import get_axis_registry
 
 NAVIGATOR_SCHEMA_VERSION = "navigator_view_v1"
@@ -179,6 +186,18 @@ _DEFAULT_SELECTIONS = {
     "dependence_correction": "none",
     "overlap_handling": "allow_overlap",
     "importance_method": "none",
+    "importance_scope": "global",
+    "importance_model_native": "none",
+    "importance_model_agnostic": "none",
+    "importance_shap": "none",
+    "importance_local_surrogate": "none",
+    "importance_partial_dependence": "none",
+    "importance_grouped": "none",
+    "importance_stability": "none",
+    "importance_aggregation": "mean_abs",
+    "importance_output_style": "ranked_table",
+    "importance_temporal": "static_snapshot",
+    "importance_gradient_path": "none",
 }
 
 _VIRTUAL_AXES = {
@@ -223,6 +242,9 @@ _DENSITY_INTERVAL_STATS = frozenset(
         "interval_coverage",
     }
 )
+_IMPORTANCE_SPLIT_AXES = frozenset(IMPORTANCE_AXIS_NAMES)
+_IMPORTANCE_META_AXES = frozenset(IMPORTANCE_META_AXIS_NAMES)
+_LOCAL_IMPORTANCE_METHODS = frozenset({"kernel_shap", "lime", "feature_ablation"})
 _STAT_TEST_SPLIT_AXES = (
     "equal_predictive",
     "nested",
@@ -367,6 +389,20 @@ def _selected_stat_tests(
     return {axis: value for axis, value in values.items() if value != "none"}
 
 
+def _selected_importance_methods(
+    selected: Mapping[str, Any],
+    *,
+    override_axis: str | None = None,
+    override_value: str | None = None,
+) -> tuple[str, ...]:
+    raw = {key: selected.get(key, value) for key, value in DEFAULT_IMPORTANCE_SPEC.items()}
+    if override_axis == "importance_method":
+        raw = {axis: ("none" if axis in _IMPORTANCE_SPLIT_AXES else value) for axis, value in raw.items()}
+    if override_axis in raw and override_value is not None:
+        raw[str(override_axis)] = override_value
+    return active_importance_methods(canonicalize_importance_spec(raw))
+
+
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
@@ -374,6 +410,7 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
     forecast_object = str(selected.get("forecast_object", "point_mean"))
     x_path = str(selected.get("exogenous_x_path_policy", "unavailable"))
     importance = str(selected.get("importance_method", "none"))
+    importance_methods = set(_selected_importance_methods(selected))
 
     if axis_name == "feature_builder":
         if model in _DEEP_SEQUENCE_MODELS:
@@ -389,9 +426,9 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "raw-panel feature builders cannot feed the AR-BIC target-lag generator"
         if feature_builder == "sequence_tensor" and value not in _DEEP_SEQUENCE_MODELS:
             return "sequence_tensor is reserved for sequence/tensor generators"
-        if importance == "tree_shap" and value not in _TREE_MODELS:
+        if (importance == "tree_shap" or "tree_shap" in importance_methods) and value not in _TREE_MODELS:
             return "importance_method=tree_shap requires a tree model"
-        if importance == "linear_shap" and value not in _LINEAR_MODELS:
+        if (importance == "linear_shap" or "linear_shap" in importance_methods) and value not in _LINEAR_MODELS:
             return "importance_method=linear_shap requires a linear estimator"
         if forecast_object == "quantile" and value != "quantile_linear":
             return "forecast_object=quantile currently requires model_family=quantile_linear"
@@ -401,10 +438,29 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         if value in {"interval", "density"} and str(selected.get("target_normalization", "none")) != "none":
             return "interval/density payload wrappers currently require target_normalization=none"
     if axis_name == "importance_method":
-        if value == "tree_shap" and model and model not in _TREE_MODELS:
+        methods = _selected_importance_methods(selected, override_axis=axis_name, override_value=value)
+        if "tree_shap" in methods and model and model not in _TREE_MODELS:
             return "tree_shap requires a tree model"
-        if value == "linear_shap" and model and model not in _LINEAR_MODELS:
+        if "linear_shap" in methods and model and model not in _LINEAR_MODELS:
             return "linear_shap requires a linear estimator"
+    if axis_name in _IMPORTANCE_SPLIT_AXES:
+        methods = _selected_importance_methods(selected, override_axis=axis_name, override_value=value)
+        if "tree_shap" in methods and model and model not in _TREE_MODELS:
+            return "tree_shap requires a tree model"
+        if "linear_shap" in methods and model and model not in _LINEAR_MODELS:
+            return "linear_shap requires a linear estimator"
+        if "minimal_importance" in methods and feature_builder not in _RAW_PANEL_BUILDERS:
+            return "minimal_importance currently requires a raw-panel feature builder"
+    if axis_name in _IMPORTANCE_META_AXES:
+        methods = _selected_importance_methods(selected)
+        default_value = DEFAULT_IMPORTANCE_SPEC[axis_name]
+        if not methods and value != default_value:
+            return "Layer 7 detail axes are active only when an importance family is selected"
+        if axis_name == "importance_scope":
+            if value == "global" and methods and set(methods) <= set(_LOCAL_IMPORTANCE_METHODS):
+                return "local-only importance methods require importance_scope=local"
+            if value == "local" and methods and not (set(methods) & set(_LOCAL_IMPORTANCE_METHODS)):
+                return "global-only importance methods require importance_scope=global"
     if axis_name == "exogenous_x_path_policy":
         if forecast_type != "iterated" and value != "unavailable":
             return "future-X path policies apply only when forecast_type=iterated"
@@ -505,7 +561,7 @@ def compatibility_view(recipe: Mapping[str, Any]) -> dict[str, Any]:
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
     forecast_object = str(selected.get("forecast_object", "point_mean"))
-    importance = str(selected.get("importance_method", "none"))
+    importance_methods = set(_selected_importance_methods(selected))
     forecast_type = str(selected.get("forecast_type", "direct"))
 
     if model in _DEEP_SEQUENCE_MODELS:
@@ -515,9 +571,11 @@ def compatibility_view(recipe: Mapping[str, Any]) -> dict[str, Any]:
                 "effect": "keep current univariate target-history sequence/autoreg path; full sequence_tensor remains gated",
             }
         )
-    if importance == "tree_shap":
+    if importance_methods:
+        active_rules.append({"rule": "layer7_importance_split_contract", "effect": "split importance-family axes materialize Layer 7 artifacts"})
+    if "tree_shap" in importance_methods:
         active_rules.append({"rule": "tree_shap_requires_tree_model", "effect": "model_family restricted to tree generators"})
-    if importance == "linear_shap":
+    if "linear_shap" in importance_methods:
         active_rules.append({"rule": "linear_shap_requires_linear_model", "effect": "model_family restricted to linear estimators"})
     if forecast_object == "quantile":
         active_rules.append({"rule": "quantile_requires_quantile_generator", "effect": "model_family=quantile_linear"})

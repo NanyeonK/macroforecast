@@ -29,6 +29,14 @@ materialized. The run manifest records
 `stat_test_contract=layer6_stat_test_split_v1` and the resolved
 `stat_test_spec`.
 
+Layer 7 writes importance artifacts only for `saved_objects=full_bundle` and
+only when at least one split importance-family axis is active. The aggregate
+file is `importance_artifacts.json`; per-method compatibility sidecars such as
+`importance_minimal.json`, `importance_tree_shap.json`, and
+`importance_permutation_importance.json` are written for active methods. The run
+manifest records `importance_contract=layer7_importance_split_v1`, the resolved
+`importance_spec`, `importance_file`, and `importance_files`.
+
 ## Output Spec
 
 | Axis | Operational values | Effect |

@@ -9,8 +9,8 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(id="mean_abs", description="mean absolute contribution", status="operational", priority="A"),
-        EnumRegistryEntry(id="mean_signed", description="mean signed contribution", status="operational", priority="A"),
-        EnumRegistryEntry(id="top_k", description="top-k ranked summary", status="operational", priority="A"),
+        EnumRegistryEntry(id="mean_signed", description="mean signed contribution", status="registry_only", priority="B"),
+        EnumRegistryEntry(id="top_k", description="top-k ranked summary", status="registry_only", priority="B"),
     ),
     compatible_with={},
     incompatible_with={},

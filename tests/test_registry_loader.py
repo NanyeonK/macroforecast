@@ -471,5 +471,9 @@ def test_registry_loader_discovers_stage7_importance_axes() -> None:
     }
     assert expected.issubset(registry)
     assert registry["importance_method"].current_status["tree_shap"] == "operational"
+    assert registry["importance_model_native"].current_status["none"] == "operational"
+    assert registry["importance_shap"].current_status["none"] == "operational"
     assert registry["importance_grouped"].current_status["grouped_permutation"] == "operational"
+    assert registry["importance_grouped"].current_status["variable_root_groups"] == "registry_only"
     assert registry["importance_stability"].current_status["importance_stability"] == "operational"
+    assert registry["importance_stability"].current_status["seed_stability"] == "registry_only"

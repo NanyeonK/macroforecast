@@ -8,6 +8,7 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type="enum",
     default_policy="fixed",
     entries=(
+        EnumRegistryEntry(id="none", description="no local-surrogate explanation selected", status="operational", priority="A"),
         EnumRegistryEntry(id="lime", description="LIME-style local surrogate", status="operational", priority="A"),
         EnumRegistryEntry(id="feature_ablation", description="feature-ablation local explanation", status="operational", priority="A"),
     ),
