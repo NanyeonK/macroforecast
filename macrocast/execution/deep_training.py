@@ -5,19 +5,39 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from catboost import CatBoostRegressor
-from lightgbm import LGBMRegressor
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import BayesianRidge, ElasticNet, HuberRegressor, Lasso, LinearRegression, QuantileRegressor, Ridge
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import LinearSVR, SVR
-from xgboost import XGBRegressor
+
+try:
+    from xgboost import XGBRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    XGBRegressor = None
+
+try:
+    from lightgbm import LGBMRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    LGBMRegressor = None
+
+try:
+    from catboost import CatBoostRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    CatBoostRegressor = None
 
 from ..tuning import HPDistribution, TuningSpec, run_tuning
 from ..tuning.hp_spaces import MODEL_HP_SPACES
 from .seed_policy import current_seed
+
+
+def _optional_estimator_cls(cls, *, package: str, extra: str):
+    if cls is None:
+        raise RuntimeError(
+            f"{package} is required for this model_family; install macrocast[{extra}] or macrocast[all]."
+        )
+    return cls
 
 
 class ComponentwiseBoostingRegressor:
@@ -158,7 +178,8 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             random_state=current_seed(model_family="gbm"),
         )
     if model_family == "xgboost":
-        return XGBRegressor(
+        estimator_cls = _optional_estimator_cls(XGBRegressor, package="xgboost", extra="xgboost")
+        return estimator_cls(
             n_estimators=int(hp.get("n_estimators", 100)),
             max_depth=int(hp.get("max_depth", 3)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
@@ -166,7 +187,8 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             verbosity=0,
         )
     if model_family == "lightgbm":
-        return LGBMRegressor(
+        estimator_cls = _optional_estimator_cls(LGBMRegressor, package="lightgbm", extra="lightgbm")
+        return estimator_cls(
             n_estimators=int(hp.get("n_estimators", 100)),
             num_leaves=int(hp.get("num_leaves", 31)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
@@ -174,7 +196,8 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             verbosity=-1,
         )
     if model_family == "catboost":
-        return CatBoostRegressor(
+        estimator_cls = _optional_estimator_cls(CatBoostRegressor, package="catboost", extra="catboost")
+        return estimator_cls(
             iterations=int(hp.get("iterations", 100)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
             depth=int(hp.get("depth", 4)),

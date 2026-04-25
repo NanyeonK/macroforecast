@@ -4,7 +4,6 @@ from .budget import TuningBudget
 from .hp_spaces import MODEL_HP_SPACES
 from .search.grid import grid_search
 from .search.random import random_search
-from .search.bayesian import bayesian_optimization
 from .search.genetic import genetic_algorithm
 from .types import TuningResult, TuningSpec
 from .validation.scorer import get_scorer
@@ -86,6 +85,8 @@ def run_tuning(model_family: str, model_factory, X_train: np.ndarray, y_train: n
     if algo == "random_search":
         return random_search(eval_fn, hp_space, budget, random_state=tuning_spec.seed or 42)
     if algo == "bayesian_optimization":
+        from .search.bayesian import bayesian_optimization
+
         return bayesian_optimization(eval_fn, hp_space, budget, random_state=tuning_spec.seed or 42)
     if algo == "genetic_algorithm":
         return genetic_algorithm(eval_fn, hp_space, budget, random_state=tuning_spec.seed or 42)

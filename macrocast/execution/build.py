@@ -23,12 +23,33 @@ from sklearn.svm import LinearSVR, SVR
 from sklearn.linear_model import BayesianRidge, ElasticNet, HuberRegressor, Lasso, LinearRegression, Ridge
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
-from xgboost import XGBRegressor
-from lightgbm import LGBMRegressor
-from catboost import CatBoostRegressor
 from statsmodels.tsa.ar_model import AutoReg
 
 from .errors import ExecutionError
+
+try:
+    from xgboost import XGBRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    XGBRegressor = None
+
+try:
+    from lightgbm import LGBMRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    LGBMRegressor = None
+
+try:
+    from catboost import CatBoostRegressor
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    CatBoostRegressor = None
+
+
+def _optional_estimator_cls(cls, *, package: str, extra: str):
+    if cls is None:
+        raise ExecutionError(
+            f"{package} is required for this model_family; install macrocast[{extra}] or macrocast[all]."
+        )
+    return cls
+
 from .seed_policy import (
     ReproducibilityContext,
     current_seed,
@@ -4746,19 +4767,22 @@ def _run_gbm_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
 
 
 def _run_xgboost_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "xgboost", XGBRegressor(n_estimators=100, max_depth=3, learning_rate=0.05, subsample=1.0, colsample_bytree=1.0, random_state=current_seed(model_family="xgboost"), verbosity=0))
+    estimator_cls = _optional_estimator_cls(XGBRegressor, package="xgboost", extra="xgboost")
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "xgboost", estimator_cls(n_estimators=100, max_depth=3, learning_rate=0.05, subsample=1.0, colsample_bytree=1.0, random_state=current_seed(model_family="xgboost"), verbosity=0))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_lightgbm_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "lightgbm", LGBMRegressor(n_estimators=100, learning_rate=0.05, random_state=current_seed(model_family="lightgbm"), verbosity=-1))
+    estimator_cls = _optional_estimator_cls(LGBMRegressor, package="lightgbm", extra="lightgbm")
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "lightgbm", estimator_cls(n_estimators=100, learning_rate=0.05, random_state=current_seed(model_family="lightgbm"), verbosity=-1))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_catboost_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "catboost", CatBoostRegressor(iterations=100, learning_rate=0.05, depth=4, verbose=False, random_seed=current_seed(model_family="catboost")))
+    estimator_cls = _optional_estimator_cls(CatBoostRegressor, package="catboost", extra="catboost")
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "catboost", estimator_cls(iterations=100, learning_rate=0.05, depth=4, verbose=False, random_seed=current_seed(model_family="catboost")))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
@@ -5208,19 +5232,22 @@ def _run_gbm_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSp
 
 def _run_xgboost_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "xgboost", XGBRegressor(n_estimators=100, max_depth=3, learning_rate=0.05, subsample=1.0, colsample_bytree=1.0, random_state=current_seed(model_family="xgboost"), verbosity=0), target_window=train)
+    estimator_cls = _optional_estimator_cls(XGBRegressor, package="xgboost", extra="xgboost")
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "xgboost", estimator_cls(n_estimators=100, max_depth=3, learning_rate=0.05, subsample=1.0, colsample_bytree=1.0, random_state=current_seed(model_family="xgboost"), verbosity=0), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_lightgbm_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "lightgbm", LGBMRegressor(n_estimators=100, learning_rate=0.05, random_state=current_seed(model_family="lightgbm"), verbosity=-1), target_window=train)
+    estimator_cls = _optional_estimator_cls(LGBMRegressor, package="lightgbm", extra="lightgbm")
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "lightgbm", estimator_cls(n_estimators=100, learning_rate=0.05, random_state=current_seed(model_family="lightgbm"), verbosity=-1), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
 def _run_catboost_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "catboost", CatBoostRegressor(iterations=100, learning_rate=0.05, depth=4, verbose=False, random_seed=current_seed(model_family="catboost")), target_window=train)
+    estimator_cls = _optional_estimator_cls(CatBoostRegressor, package="catboost", extra="catboost")
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "catboost", estimator_cls(iterations=100, learning_rate=0.05, depth=4, verbose=False, random_seed=current_seed(model_family="catboost")), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 

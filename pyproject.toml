@@ -37,6 +37,9 @@ docs = [
 all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet,deep]"]
 dev = ["pytest>=8.0", "macrocast[all]"]
 
+[project.scripts]
+macrocast-navigate = "macrocast.navigator.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["macrocast*"]
 
