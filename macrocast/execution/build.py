@@ -5704,6 +5704,39 @@ def _output_spec(provenance_payload: dict | None) -> dict[str, object]:
     return dict(compiler.get('output_spec', {'export_format': 'json', 'saved_objects': 'full_bundle', 'provenance_fields': 'full', 'artifact_granularity': 'aggregated'}))
 
 
+_OUTPUT_ARTIFACT_CONTRACT_VERSION = "layer5_output_artifact_manifest_v1"
+_SUPPORTED_SAVED_OBJECTS = {"predictions_only", "predictions_and_metrics", "full_bundle"}
+_SUPPORTED_ARTIFACT_GRANULARITY = {"aggregated"}
+
+
+def _validate_output_spec(output_spec: Mapping[str, object]) -> tuple[str, str, str, str]:
+    export_format = str(output_spec.get("export_format", "json"))
+    saved_objects = str(output_spec.get("saved_objects", "full_bundle"))
+    provenance_fields = str(output_spec.get("provenance_fields", "full"))
+    artifact_granularity = str(output_spec.get("artifact_granularity", "aggregated"))
+    if saved_objects not in _SUPPORTED_SAVED_OBJECTS:
+        raise ExecutionError(
+            f"saved_objects={saved_objects!r} is not operational in the current Layer 5 runtime; "
+            f"supported values are {sorted(_SUPPORTED_SAVED_OBJECTS)}"
+        )
+    if artifact_granularity not in _SUPPORTED_ARTIFACT_GRANULARITY:
+        raise ExecutionError(
+            f"artifact_granularity={artifact_granularity!r} is not operational in the current Layer 5 runtime; "
+            "only aggregated artifacts are currently materialized"
+        )
+    return export_format, saved_objects, provenance_fields, artifact_granularity
+
+
+def _artifact_record(path: str, *, artifact_type: str, layer: str, file_format: str | None = None) -> dict[str, object]:
+    suffix = Path(path).suffix.lstrip(".")
+    return {
+        "path": path,
+        "artifact_type": artifact_type,
+        "layer": layer,
+        "format": file_format or suffix or "text",
+    }
+
+
 def _get_git_commit() -> str:
     import subprocess
     try:
@@ -8332,6 +8365,15 @@ def execute_recipe(
     failure_policy_spec = _failure_policy_spec(provenance_payload)
     compute_mode_spec = _compute_mode_spec(provenance_payload)
     output_spec = _output_spec(provenance_payload)
+    export_format, saved_objects, provenance_fields, artifact_granularity = _validate_output_spec(output_spec)
+    write_predictions = saved_objects in {"predictions_only", "predictions_and_metrics", "full_bundle"}
+    write_metrics = saved_objects in {"predictions_and_metrics", "full_bundle"}
+    write_full_bundle = saved_objects == "full_bundle"
+    artifact_records: list[dict[str, object]] = []
+
+    def _record_artifact(filename: str, *, artifact_type: str, layer: str, file_format: str | None = None) -> None:
+        artifact_records.append(_artifact_record(filename, artifact_type=artifact_type, layer=layer, file_format=file_format))
+
     failure_policy = str(failure_policy_spec.get("failure_policy", "fail_fast"))
     compute_mode = str(compute_mode_spec.get("compute_mode", "serial"))
     variant_id = (provenance_payload or {}).get("variant_id")
@@ -8502,15 +8544,18 @@ def execute_recipe(
         "prediction_rows": int(len(predictions)),
         "path_average_step_rows": int(len(path_average_steps)) if path_average_steps is not None else 0,
         "raw_panel_iterated_step_rows": int(len(raw_panel_iterated_steps)) if raw_panel_iterated_steps is not None else 0,
-        "metrics_file": "metrics.json",
-        "comparison_file": "comparison_summary.json",
-        "evaluation_summary_file": "evaluation_summary.json",
-        "evaluation_report_file": evaluation_report_file,
+        "metrics_file": None,
+        "comparison_file": None,
+        "evaluation_summary_file": None,
+        "evaluation_report_file": None,
         "evaluation_summary_contract": _EVALUATION_SUMMARY_CONTRACT_VERSION,
-        "regime_file": "regime_summary.json" if evaluation_spec.get("regime_definition", "none") != "none" else None,
+        "regime_file": None,
         "successful_targets": successful_targets,
         "partial_run": bool(failed_components),
         "output_spec": output_spec,
+        "output_artifact_contract": _OUTPUT_ARTIFACT_CONTRACT_VERSION,
+        "saved_objects_effective": saved_objects,
+        "artifact_granularity_effective": artifact_granularity,
     }
     if provenance_payload:
         manifest.update(provenance_payload)
@@ -8534,12 +8579,15 @@ def execute_recipe(
     )
     if forecast_payload_contract:
         manifest["base_forecast_payload_contract"] = forecast_payload_contract
-    if feature_fit_state:
+    if feature_fit_state and write_full_bundle:
         _write_json(run_dir / "feature_representation_fit_state.json", feature_fit_state)
+        _record_artifact(
+            "feature_representation_fit_state.json",
+            artifact_type="feature_representation_fit_state",
+            layer="2_preprocessing",
+            file_format="json",
+        )
         manifest["feature_representation_fit_state_file"] = "feature_representation_fit_state.json"
-    if failed_components:
-        manifest["failure_log_file"] = "failures.json"
-        _write_json(run_dir / "failures.json", failed_components)
     tree_context = manifest.get("tree_context", {})
     summary_lines = [
         recipe_summary(recipe),
@@ -8549,12 +8597,10 @@ def execute_recipe(
     if tree_context:
         summary_lines.append(_tree_context_summary(tree_context))
     (run_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
-    export_format = str(output_spec.get('export_format', 'json'))
-    saved_objects = str(output_spec.get('saved_objects', 'full_bundle'))
-    provenance_fields = str(output_spec.get('provenance_fields', 'full'))
+    _record_artifact("summary.txt", artifact_type="run_summary", layer="5_output_provenance", file_format="txt")
 
     # Provenance injection based on provenance_fields level
-    if provenance_fields in ('minimal', 'standard', 'full'):
+    if provenance_fields in ('standard', 'full'):
         manifest['git_commit'] = _get_git_commit()
         manifest['package_version'] = _get_package_version()
     if provenance_fields == 'full':
@@ -8562,22 +8608,55 @@ def execute_recipe(
         tc = manifest.get('tree_context', {})
         manifest['tree_context'] = tc
 
-    # Write data_preview (always CSV, optionally parquet)
-    raw_result.data.head(20).to_csv(run_dir / 'data_preview.csv')
-    if export_format in ('parquet', 'all'):
-        raw_result.data.head(20).to_parquet(run_dir / 'data_preview.parquet')
+    # Write data preview only for the full bundle. Predictions remain the stable baseline artifact.
+    if write_full_bundle:
+        raw_result.data.head(20).to_csv(run_dir / 'data_preview.csv')
+        _record_artifact("data_preview.csv", artifact_type="data_preview", layer="5_output_provenance", file_format="csv")
+        if export_format in ('parquet', 'all'):
+            raw_result.data.head(20).to_parquet(run_dir / 'data_preview.parquet')
+            _record_artifact(
+                "data_preview.parquet",
+                artifact_type="data_preview",
+                layer="5_output_provenance",
+                file_format="parquet",
+            )
 
-    # Write predictions (always CSV, optionally parquet)
-    predictions.to_csv(run_dir / 'predictions.csv', index=False)
-    if export_format in ('parquet', 'all'):
+    if write_predictions:
+        predictions.to_csv(run_dir / 'predictions.csv', index=False)
+        _record_artifact("predictions.csv", artifact_type="predictions", layer="5_output_provenance", file_format="csv")
+    if write_predictions and export_format in ('parquet', 'all'):
         predictions.to_parquet(run_dir / 'predictions.parquet')
-    if path_average_steps is not None:
+        _record_artifact(
+            "predictions.parquet",
+            artifact_type="predictions",
+            layer="5_output_provenance",
+            file_format="parquet",
+        )
+    if write_predictions and path_average_steps is not None:
         path_average_steps.to_csv(run_dir / 'path_average_steps.csv', index=False)
+        _record_artifact(
+            "path_average_steps.csv",
+            artifact_type="path_average_steps",
+            layer="3_training",
+            file_format="csv",
+        )
         manifest["path_average_steps_file"] = "path_average_steps.csv"
         if export_format in ('parquet', 'all'):
             path_average_steps.to_parquet(run_dir / 'path_average_steps.parquet')
-    if raw_panel_iterated_steps is not None:
+            _record_artifact(
+                "path_average_steps.parquet",
+                artifact_type="path_average_steps",
+                layer="3_training",
+                file_format="parquet",
+            )
+    if write_predictions and raw_panel_iterated_steps is not None:
         raw_panel_iterated_steps.to_csv(run_dir / 'raw_panel_iterated_steps.csv', index=False)
+        _record_artifact(
+            "raw_panel_iterated_steps.csv",
+            artifact_type="raw_panel_iterated_steps",
+            layer="3_training",
+            file_format="csv",
+        )
         manifest["raw_panel_iterated_steps_file"] = "raw_panel_iterated_steps.csv"
         manifest["raw_panel_iterated_runtime_contract"] = _raw_panel_iterated_runtime_contract(
             _exogenous_x_path_policy(recipe)
@@ -8595,27 +8674,55 @@ def execute_recipe(
             )
         if export_format in ('parquet', 'all'):
             raw_panel_iterated_steps.to_parquet(run_dir / 'raw_panel_iterated_steps.parquet')
+            _record_artifact(
+                "raw_panel_iterated_steps.parquet",
+                artifact_type="raw_panel_iterated_steps",
+                layer="3_training",
+                file_format="parquet",
+            )
     payload_records = _payload_artifact_records(predictions)
-    if payload_records:
+    if write_predictions and payload_records:
         _write_jsonl(run_dir / "forecast_payloads.jsonl", payload_records)
+        _record_artifact("forecast_payloads.jsonl", artifact_type="forecast_payloads", layer="3_training", file_format="jsonl")
         manifest["forecast_payloads_file"] = "forecast_payloads.jsonl"
 
     # Write structured metrics/comparison/regime based on export_format
     metrics_files = {}
     comparison_files = {}
-    if export_format in ('json', 'json+csv', 'all'):
+    if write_metrics and export_format in ('json', 'json+csv', 'all'):
         _write_json(run_dir / 'metrics.json', metrics)
         _write_json(run_dir / 'comparison_summary.json', comparison_summary)
+        _record_artifact("metrics.json", artifact_type="metrics", layer="4_evaluation", file_format="json")
+        _record_artifact(
+            "comparison_summary.json",
+            artifact_type="comparison_summary",
+            layer="4_evaluation",
+            file_format="json",
+        )
         metrics_files['json'] = 'metrics.json'
         comparison_files['json'] = 'comparison_summary.json'
-    if export_format in ('csv', 'json+csv', 'all'):
+    if write_metrics and export_format in ('csv', 'json+csv', 'all'):
         _write_csv(run_dir / 'metrics.csv', [metrics])
         _write_csv(run_dir / 'comparison_summary.csv', [comparison_summary])
+        _record_artifact("metrics.csv", artifact_type="metrics", layer="4_evaluation", file_format="csv")
+        _record_artifact(
+            "comparison_summary.csv",
+            artifact_type="comparison_summary",
+            layer="4_evaluation",
+            file_format="csv",
+        )
         metrics_files['csv'] = 'metrics.csv'
         comparison_files['csv'] = 'comparison_summary.csv'
-    if export_format in ('parquet', 'all'):
+    if write_metrics and export_format in ('parquet', 'all'):
         _write_parquet(run_dir / 'metrics.parquet', metrics)
         _write_parquet(run_dir / 'comparison_summary.parquet', comparison_summary)
+        _record_artifact("metrics.parquet", artifact_type="metrics", layer="4_evaluation", file_format="parquet")
+        _record_artifact(
+            "comparison_summary.parquet",
+            artifact_type="comparison_summary",
+            layer="4_evaluation",
+            file_format="parquet",
+        )
         metrics_files['parquet'] = 'metrics.parquet'
         comparison_files['parquet'] = 'comparison_summary.parquet'
     if metrics_files:
@@ -8624,57 +8731,80 @@ def execute_recipe(
     if comparison_files:
         manifest['comparison_files'] = comparison_files
         manifest['comparison_file'] = comparison_files.get('json') or comparison_files.get('csv') or comparison_files.get('parquet')
-    _write_json(run_dir / "evaluation_summary.json", evaluation_summary)
-    if evaluation_report_file is not None and evaluation_report_text is not None:
+    if write_metrics:
+        _write_json(run_dir / "evaluation_summary.json", evaluation_summary)
+        _record_artifact(
+            "evaluation_summary.json",
+            artifact_type="evaluation_summary",
+            layer="4_evaluation",
+            file_format="json",
+        )
+        manifest["evaluation_summary_file"] = "evaluation_summary.json"
+    if write_metrics and evaluation_report_file is not None and evaluation_report_text is not None:
         (run_dir / evaluation_report_file).write_text(evaluation_report_text, encoding="utf-8")
-    if evaluation_spec.get('regime_definition', 'none') != 'none':
+        _record_artifact(evaluation_report_file, artifact_type="evaluation_report", layer="4_evaluation")
+        manifest["evaluation_report_file"] = evaluation_report_file
+    if write_metrics and evaluation_spec.get('regime_definition', 'none') != 'none':
         regime_summary = _compute_regime_summary(predictions, recipe, evaluation_spec)
         regime_files = {}
         if export_format in ('json', 'json+csv', 'all'):
             _write_json(run_dir / 'regime_summary.json', regime_summary)
+            _record_artifact("regime_summary.json", artifact_type="regime_summary", layer="4_evaluation", file_format="json")
             regime_files['json'] = 'regime_summary.json'
         if export_format in ('csv', 'json+csv', 'all'):
             _write_csv(run_dir / 'regime_summary.csv', [regime_summary])
+            _record_artifact("regime_summary.csv", artifact_type="regime_summary", layer="4_evaluation", file_format="csv")
             regime_files['csv'] = 'regime_summary.csv'
         if export_format in ('parquet', 'all'):
             _write_parquet(run_dir / 'regime_summary.parquet', regime_summary)
+            _record_artifact(
+                "regime_summary.parquet",
+                artifact_type="regime_summary",
+                layer="4_evaluation",
+                file_format="parquet",
+            )
             regime_files['parquet'] = 'regime_summary.parquet'
         manifest['regime_files'] = regime_files
         manifest['regime_file'] = regime_files.get('json') or regime_files.get('csv') or regime_files.get('parquet')
     stat_test_name = str(stat_test_spec.get("stat_test", "none"))
     dependence_correction = _dependence_correction(stat_test_spec)
-    from macrocast.execution.stat_tests import dispatch_stat_tests
-    try:
-        stat_results = dispatch_stat_tests(
-            predictions=predictions,
-            stat_test_spec=stat_test_spec,
-            dependence_correction=dependence_correction,
-        )
-    except Exception as exc:
-        if failure_policy in {"save_partial_results", "warn_only"}:
-            failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
-            if failure_policy == "warn_only":
-                warnings.warn(f"stat_test_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
-            stat_results = {}
-        else:
-            raise
-    if stat_results:
-        _write_json(run_dir / "stat_tests.json", stat_results)
-        manifest["stat_tests"] = stat_results
-        per_test_files = {}
-        for axis_key, axis_payload in stat_results.items():
-            test_value = axis_payload.get("stat_test")
-            if not test_value or "error" in axis_payload or axis_key == "test_scope":
-                continue
-            per_file = f"stat_test_{test_value}.json"
-            _write_json(run_dir / per_file, axis_payload)
-            per_test_files[axis_key] = per_file
-        if len(per_test_files) == 1:
-            manifest["stat_test_file"] = next(iter(per_test_files.values()))
-        else:
-            manifest["stat_test_file"] = "stat_tests.json"
-        if per_test_files:
-            manifest["stat_test_files"] = per_test_files
+    if write_full_bundle:
+        from macrocast.execution.stat_tests import dispatch_stat_tests
+        try:
+            stat_results = dispatch_stat_tests(
+                predictions=predictions,
+                stat_test_spec=stat_test_spec,
+                dependence_correction=dependence_correction,
+            )
+        except Exception as exc:
+            if failure_policy in {"save_partial_results", "warn_only"}:
+                failed_components.append({"stage": "stat_test_artifact", "target": None, "error": str(exc)})
+                if failure_policy == "warn_only":
+                    warnings.warn(f"stat_test_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
+                stat_results = {}
+            else:
+                raise
+        if stat_results:
+            _write_json(run_dir / "stat_tests.json", stat_results)
+            _record_artifact("stat_tests.json", artifact_type="stat_tests", layer="6_stat_tests", file_format="json")
+            manifest["stat_tests"] = stat_results
+            per_test_files = {}
+            for axis_key, axis_payload in stat_results.items():
+                test_value = axis_payload.get("stat_test")
+                if not test_value or "error" in axis_payload or axis_key == "test_scope":
+                    continue
+                per_file = f"stat_test_{test_value}.json"
+                _write_json(run_dir / per_file, axis_payload)
+                _record_artifact(per_file, artifact_type="stat_test", layer="6_stat_tests", file_format="json")
+                per_test_files[axis_key] = per_file
+            if len(per_test_files) == 1:
+                manifest["stat_test_file"] = next(iter(per_test_files.values()))
+            else:
+                manifest["stat_test_file"] = "stat_tests.json"
+            if per_test_files:
+                manifest["stat_test_files"] = per_test_files
+    elif stat_test_name != "none":
+        manifest["stat_tests_skipped_by_saved_objects"] = saved_objects
     importance_method = str(importance_spec.get("importance_method", "none"))
     importance_dispatch = {
         "minimal_importance": (lambda: _compute_minimal_importance(raw_result.data, target_series, recipe, preprocess), "importance_minimal.json"),
@@ -8690,10 +8820,11 @@ def execute_recipe(
         "grouped_permutation": (lambda: _compute_grouped_permutation_artifact(raw_result.data, target_series, recipe, preprocess), "importance_grouped_permutation.json"),
         "importance_stability": (lambda: _compute_importance_stability_artifact(raw_result.data, target_series, recipe, preprocess), "importance_stability.json"),
     }
-    if importance_method != "none":
+    if write_full_bundle and importance_method != "none":
         try:
             importance_payload, importance_file = importance_dispatch[importance_method][0](), importance_dispatch[importance_method][1]
             _write_json(run_dir / importance_file, importance_payload)
+            _record_artifact(importance_file, artifact_type="importance", layer="7_importance", file_format="json")
             manifest["importance_file"] = importance_file
         except Exception as exc:
             if failure_policy in {"save_partial_results", "warn_only"}:
@@ -8702,23 +8833,47 @@ def execute_recipe(
                     warnings.warn(f"importance_artifact failure: {exc}", RuntimeWarning, stacklevel=2)
             else:
                 raise
+    elif importance_method != "none":
+        manifest["importance_skipped_by_saved_objects"] = saved_objects
     manifest["partial_run"] = bool(failed_components)
     if failed_components:
         manifest["failure_log_file"] = "failures.json"
         _write_json(run_dir / "failures.json", failed_components)
-    # Write tuning result artifact
-    tuning_result = {
-        "tuning_enabled": bool(_last_tp),
-        "model_family": _model_spec(recipe).get("executor_name", ""),
-        "best_hp": _last_tp.get("best_hp", {}),
-        "best_score": _last_tp.get("best_score", None),
-        "total_trials": _last_tp.get("total_trials", 0),
-        "total_time_seconds": _last_tp.get("total_time_seconds", 0.0),
-        "search_algorithm": _last_tp.get("search_algorithm", "none"),
+        _record_artifact("failures.json", artifact_type="failure_log", layer="0_meta", file_format="json")
+    if write_full_bundle:
+        tuning_result = {
+            "tuning_enabled": bool(_last_tp),
+            "model_family": _model_spec(recipe).get("executor_name", ""),
+            "best_hp": _last_tp.get("best_hp", {}),
+            "best_score": _last_tp.get("best_score", None),
+            "total_trials": _last_tp.get("total_trials", 0),
+            "total_time_seconds": _last_tp.get("total_time_seconds", 0.0),
+            "search_algorithm": _last_tp.get("search_algorithm", "none"),
+        }
+        _write_json(run_dir / "tuning_result.json", tuning_result)
+        _record_artifact("tuning_result.json", artifact_type="tuning_result", layer="3_training", file_format="json")
+        manifest["tuning_result_file"] = "tuning_result.json"
+        manifest["tuning_result"] = tuning_result
+    else:
+        manifest["tuning_result_file"] = None
+    manifest["artifact_manifest_file"] = "artifact_manifest.json"
+    _record_artifact("manifest.json", artifact_type="run_manifest", layer="5_output_provenance", file_format="json")
+    _record_artifact(
+        "artifact_manifest.json",
+        artifact_type="artifact_manifest",
+        layer="5_output_provenance",
+        file_format="json",
+    )
+    artifact_manifest = {
+        "contract_version": _OUTPUT_ARTIFACT_CONTRACT_VERSION,
+        "output_spec": dict(output_spec),
+        "saved_objects_effective": saved_objects,
+        "artifact_granularity_effective": artifact_granularity,
+        "artifact_count": len(artifact_records),
+        "artifacts": artifact_records,
     }
-    _write_json(run_dir / "tuning_result.json", tuning_result)
-    manifest["tuning_result_file"] = "tuning_result.json"
-    manifest["tuning_result"] = tuning_result
+    _write_json(run_dir / "artifact_manifest.json", artifact_manifest)
+    manifest["artifact_count"] = len(artifact_records)
     _write_json(run_dir / "manifest.json", manifest)
 
     reset_context(_seed_token)

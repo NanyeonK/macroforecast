@@ -17,7 +17,54 @@ choices, and metric-family availability. If `report_style=markdown_table`, the
 run also writes `evaluation_report.md`; if `report_style=latex_table`, it writes
 `evaluation_report.tex`.
 
-This page should eventually document:
+Layer 5 writes `artifact_manifest.json` for every run. It is the stable
+inventory of files that were actually materialized under the selected
+`output_spec`.
+
+## Output Spec
+
+| Axis | Operational values | Effect |
+|---|---|---|
+| `export_format` | `json`, `csv`, `parquet`, `json+csv`, `all` | Controls structured metric/comparison sidecar formats. `predictions.csv` and `manifest.json` remain stable baseline files. |
+| `saved_objects` | `predictions_only`, `predictions_and_metrics`, `full_bundle` | Controls the minimum object family saved by runtime. |
+| `provenance_fields` | `none`, `minimal`, `standard`, `full` | Controls extra provenance fields such as package version, git commit, and config hash. |
+| `artifact_granularity` | `aggregated` | Writes one aggregated run directory. Per-target/per-horizon/hierarchical layouts are registry-only or future. |
+
+`saved_objects=predictions_only` writes the required manifest files, run
+summary, prediction table, and forecast payload files when present.
+`saved_objects=predictions_and_metrics` adds metrics, comparison, Layer 4
+evaluation summary, optional evaluation report, and regime summaries.
+`saved_objects=full_bundle` additionally writes data preview, feature fit-state,
+tuning, statistical-test, and importance artifacts when available.
+
+`artifact_manifest.json` uses `layer5_output_artifact_manifest_v1`:
+
+```json
+{
+  "contract_version": "layer5_output_artifact_manifest_v1",
+  "output_spec": {
+    "export_format": "json",
+    "saved_objects": "full_bundle",
+    "provenance_fields": "full",
+    "artifact_granularity": "aggregated"
+  },
+  "artifact_count": 6,
+  "artifacts": [
+    {
+      "path": "predictions.csv",
+      "artifact_type": "predictions",
+      "layer": "5_output_provenance",
+      "format": "csv"
+    }
+  ]
+}
+```
+
+The manifest records `artifact_manifest_file`, `output_artifact_contract`,
+`saved_objects_effective`, `artifact_granularity_effective`, and
+`artifact_count`.
+
+This page should continue expanding:
 
 - output directory layout
 - forecasts artifact

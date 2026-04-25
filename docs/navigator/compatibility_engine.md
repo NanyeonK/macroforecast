@@ -14,6 +14,9 @@ The Compatibility Engine is the constraint-aware view over the registry and comp
 | `model_family in {lstm, gru, tcn}` | Current runtime uses the univariate target-history sequence route. Full multivariate `feature_runtime=sequence_tensor` remains gated until the Layer 2 sequence representation handoff is opened. |
 | `forecast_type=iterated` with raw-panel features | Requires an explicit `exogenous_x_path_policy`: `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, or `recursive_x_model` with `recursive_x_model_family=ar1`. |
 | `export_format=parquet` or `all` | Adds sidecar artifact files; the CSV prediction table remains the stable baseline artifact. |
+| `saved_objects=predictions_only` | Saves manifest, run summary, predictions, and forecast payload files only; Layer 4 metrics/reports and Layer 6/7 artifacts are not materialized. |
+| `saved_objects=predictions_and_metrics` | Adds Layer 4 metrics, comparison, and evaluation-summary artifacts but skips full-bundle data/model/tuning/inference/importance sidecars. |
+| `artifact_granularity != aggregated` | Disabled in the current runtime because per-target/per-horizon/hierarchical result-object readers are not implemented. |
 | `regime_definition != none` | Treats regime handling as post-forecast evaluation filtering unless a future training-time regime gate is opened. |
 | `direction` statistical tests | Enabled for `forecast_object=direction`; otherwise direction tests stay inactive. |
 | HAC/bootstrap dependence correction | Attached to HAC/bootstrap-compatible test choices. Split Layer 6 axes are visible now; runtime harmonization is handled in the Layer 6 cleanup slice. |

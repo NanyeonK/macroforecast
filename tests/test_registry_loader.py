@@ -425,7 +425,16 @@ def test_registry_loader_discovers_stage5_output_axes() -> None:
     expected = {"saved_objects", "provenance_fields", "export_format", "artifact_granularity"}
     assert expected.issubset(registry)
     assert registry["saved_objects"].layer == "5_output_provenance"
+    assert registry["saved_objects"].current_status["full_bundle"] == "operational"
+    assert registry["saved_objects"].current_status["predictions_and_metrics"] == "operational"
+    assert registry["saved_objects"].current_status["predictions_only"] == "operational"
+    assert registry["saved_objects"].current_status["none"] == "registry_only"
+    assert registry["saved_objects"].current_status["models_only"] == "future"
+    assert registry["saved_objects"].current_status["data_only"] == "future"
     assert registry["artifact_granularity"].current_status["aggregated"] == "operational"
+    assert registry["artifact_granularity"].current_status["per_target"] == "registry_only"
+    assert registry["artifact_granularity"].current_status["per_target_horizon"] == "future"
+    assert registry["artifact_granularity"].current_status["hierarchical"] == "future"
     assert registry["export_format"].current_status["parquet"] == "operational"
 
 

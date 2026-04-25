@@ -1857,8 +1857,50 @@ def test_execute_recipe_json_csv_export_writes_sidecar_files(tmp_path: Path) -> 
     assert manifest["output_spec"]["export_format"] == "json+csv"
     assert manifest["metrics_file"] == "metrics.json"
     assert manifest["metrics_files"]["csv"] == "metrics.csv"
+    artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
+    assert manifest["artifact_manifest_file"] == "artifact_manifest.json"
+    assert manifest["output_artifact_contract"] == "layer5_output_artifact_manifest_v1"
+    assert artifact_manifest["contract_version"] == "layer5_output_artifact_manifest_v1"
+    assert any(row["path"] == "metrics.csv" for row in artifact_manifest["artifacts"])
     assert (run_dir / "metrics.csv").exists()
     assert (run_dir / "comparison_summary.csv").exists()
+
+
+def test_execute_recipe_predictions_only_saved_objects_writes_minimal_prediction_bundle(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+        provenance_payload={
+            "compiler": {
+                "output_spec": {
+                    "export_format": "json",
+                    "saved_objects": "predictions_only",
+                    "provenance_fields": "standard",
+                    "artifact_granularity": "aggregated",
+                },
+                "importance_spec": {"importance_method": "none"},
+                "stat_test_spec": {"stat_test": "none"},
+            }
+        },
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
+    artifact_paths = {row["path"] for row in artifact_manifest["artifacts"]}
+
+    assert manifest["saved_objects_effective"] == "predictions_only"
+    assert manifest["metrics_file"] is None
+    assert manifest["evaluation_summary_file"] is None
+    assert "predictions.csv" in artifact_paths
+    assert "metrics.json" not in artifact_paths
+    assert not (run_dir / "metrics.json").exists()
+    assert not (run_dir / "evaluation_summary.json").exists()
+    assert not (run_dir / "data_preview.csv").exists()
+    assert not (run_dir / "tuning_result.json").exists()
 
 
 def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) -> None:
@@ -1885,10 +1927,39 @@ def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) 
 
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
+    artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
+    artifact_paths = {row["path"] for row in artifact_manifest["artifacts"]}
     assert manifest["metrics_file"] == "metrics.parquet"
     assert (run_dir / "metrics.parquet").exists()
     assert (run_dir / "comparison_summary.parquet").exists()
     assert (run_dir / "predictions.parquet").exists()
+    assert "metrics.parquet" in artifact_paths
+    assert "comparison_summary.parquet" in artifact_paths
+    assert "evaluation_summary.json" in artifact_paths
+    assert not (run_dir / "data_preview.csv").exists()
+    assert not (run_dir / "tuning_result.json").exists()
+
+
+def test_execute_recipe_rejects_unimplemented_artifact_granularity(tmp_path: Path) -> None:
+    with __import__("pytest").raises(ExecutionError, match="artifact_granularity='per_target'"):
+        execute_recipe(
+            recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+            preprocess=_preprocess_raw_only(),
+            output_root=tmp_path,
+            local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+            provenance_payload={
+                "compiler": {
+                    "output_spec": {
+                        "export_format": "json",
+                        "saved_objects": "full_bundle",
+                        "provenance_fields": "full",
+                        "artifact_granularity": "per_target",
+                    },
+                    "importance_spec": {"importance_method": "none"},
+                    "stat_test_spec": {"stat_test": "none"},
+                }
+            },
+        )
 
 
 

@@ -207,6 +207,14 @@ Owns what gets saved:
 - provenance field depth
 - artifact granularity
 
+Runtime output must include `artifact_manifest.json`. It is the Layer 5
+inventory contract for files that were actually materialized. The current
+runtime supports aggregated run-directory artifacts only. Operational
+`saved_objects` values are `predictions_only`, `predictions_and_metrics`, and
+`full_bundle`; no-save, model-only, data-only, per-target, per-target-horizon,
+and hierarchical layouts remain non-operational until dedicated serializers and
+result-object readers exist.
+
 ## Layer 6: Inference
 
 Owns statistical inference over forecast errors:

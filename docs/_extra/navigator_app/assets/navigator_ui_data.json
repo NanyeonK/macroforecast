@@ -118,9 +118,9 @@
       "compatible_with": {},
       "current_status": {
         "aggregated": "operational",
-        "hierarchical": "operational",
-        "per_target": "operational",
-        "per_target_horizon": "operational"
+        "hierarchical": "future",
+        "per_target": "registry_only",
+        "per_target_horizon": "future"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2329,10 +2329,10 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "data_only": "operational",
+        "data_only": "future",
         "full_bundle": "operational",
-        "models_only": "operational",
-        "none": "operational",
+        "models_only": "future",
+        "none": "registry_only",
         "predictions_and_metrics": "operational",
         "predictions_only": "operational"
       },
@@ -7322,9 +7322,9 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "none"
               },
               {
@@ -7350,16 +7350,16 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'models_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "models_only"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'data_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "data_only"
               }
             ],
@@ -7408,16 +7408,16 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "per_target"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target_horizon'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "per_target_horizon"
               },
               {
@@ -7429,9 +7429,9 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'hierarchical'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "hierarchical"
               }
             ],
@@ -12620,9 +12620,9 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "none"
               },
               {
@@ -12648,16 +12648,16 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'models_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "models_only"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'data_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "data_only"
               }
             ],
@@ -12706,16 +12706,16 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "per_target"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target_horizon'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "per_target_horizon"
               },
               {
@@ -12727,9 +12727,9 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'hierarchical'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "hierarchical"
               }
             ],
@@ -18036,9 +18036,9 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "none"
               },
               {
@@ -18064,16 +18064,16 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'models_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "models_only"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.saved_objects = 'data_only'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "data_only"
               }
             ],
@@ -18122,16 +18122,16 @@
             "options": [
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
+                "enabled": false,
+                "status": "registry_only",
                 "value": "per_target"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'per_target_horizon'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "per_target_horizon"
               },
               {
@@ -18143,9 +18143,9 @@
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.artifact_granularity = 'hierarchical'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
+                "disabled_reason": "future design value; runtime contract is not open",
+                "enabled": false,
+                "status": "future",
                 "value": "hierarchical"
               }
             ],
