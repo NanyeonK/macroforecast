@@ -97,7 +97,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 1. **No state-selection axis** — loader-only selection. Recipe-level state filtering is v1.1.
 2. **No variable-selection axis for FRED-SD** — `variable_universe` values do not map to FRED-SD sheet names.
 3. **Mixed frequency not reconciled** — user is responsible for picking same-frequency subsets or using missing-value imputation.
-4. **No T-code row** — preprocessing that relies on FRED-MD / FRED-QD T-codes via `tcode_policy: apply_tcodes` is a no-op for FRED-SD.
+4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
 5. **`support_tier = provisional`** — expect rougher edges than FRED-MD / FRED-QD; pin a vintage for any study intended to be replicable.
 
 ## See also

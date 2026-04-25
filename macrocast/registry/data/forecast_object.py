@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='forecast_object',
-    layer='1_data_task',
+    layer='3_training',
     axis_type='enum',
     default_policy='fixed',
     entries=(
@@ -24,6 +24,24 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='quantile',
             description='quantile',
+            status='operational',
+            priority='B',
+        ),
+        EnumRegistryEntry(
+            id='direction',
+            description='directional forecast payload derived from the selected scalar generator',
+            status='operational',
+            priority='B',
+        ),
+        EnumRegistryEntry(
+            id='interval',
+            description='symmetric interval forecast payload around the selected scalar generator',
+            status='operational',
+            priority='B',
+        ),
+        EnumRegistryEntry(
+            id='density',
+            description='Gaussian density forecast payload around the selected scalar generator',
             status='operational',
             priority='B',
         ),

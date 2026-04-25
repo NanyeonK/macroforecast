@@ -2,7 +2,7 @@
 
 The caller provides the CSV path via ``leaf_config.custom_data_path``;
 the compiler validates that the path is set when
-``dataset_source == "custom_csv"``. The ``dataset`` axis still declares
+``source_adapter == "custom_csv"``. The ``dataset`` axis still declares
 the schema (``fred_md`` / ``fred_qd`` / ``fred_sd``) so downstream code
 treats the panel identically to the canonical FRED loader output.
 

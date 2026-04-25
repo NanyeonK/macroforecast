@@ -1,40 +1,66 @@
 # macrocast
 
-> Given a standardized macro dataset adapter and a fixed forecasting recipe, compare forecasting tools under identical information set, sample split, benchmark, and evaluation protocol.
+> Build reproducible macroeconomic forecasting experiments with defaults you can trust and sweeps only where you care.
 
-macrocast is a research-oriented forecasting package with **opinionated defaults** and **auditable choice points**. Most studies don't need to touch 90% of the axes — the defaults match the empirical-macro baseline. When you *do* want to deviate, there's exactly one place that documents each choice, and the choice lands in `manifest.json` so you can verify it at the artifact level.
+macrocast is a research-oriented forecasting package for economists and macro-finance researchers. The user-facing unit is an `Experiment`: one workspace that can run a default forecast, compare models, sweep selected choices, and include custom methods under the same evaluation framework.
 
-## What is complete (v0.9.4)
+Most experiments should not require users to understand every internal axis. Defaults handle the standard empirical-macro path. When a researcher cares about a choice, that choice becomes explicit, sweepable, and recorded in the output manifest.
 
-- **Stage 0 — Design** (6 axes, 31 operational values). Recipe grammar: runner dispatch, sweep shape, reproducibility, compute.
-- **Stage 1 — Data** (20 axes, 73 operational values). Dataset + task + forecast object + time windows + benchmark + predictors + break policy.
+## Documentation Tracks
 
-Stages 2 through 7 (preprocessing, training, evaluation, provenance, stat tests, importance) are still in active development and are deliberately **not** exposed in the user-facing docs until their per-axis walk lands.
+| Track | Use it when |
+|-------|-------------|
+| [Simple Docs](simple/index.md) | You want to run forecasts, compare models, sweep a few choices, or add a custom method without learning the internal recipe system. |
+| [Detailed Docs](detail/index.md) | You want to understand defaults, recipe layers, registry axes, execution internals, artifacts, and reproducibility. |
+| [API Reference](api/index.md) | You need function signatures and class documentation. |
 
-## Documentation
+## MVP API
 
-| Section | Description |
-|---------|-------------|
-| [Installation](install.md) | Install macrocast and optional dependencies |
-| [Getting Started](getting_started/index.md) | Quickstart + Stages Reference cheat sheet |
-| [User Guide — Design (Stage 0)](user_guide/design.md) | Six axes that decide study shape |
-| [User Guide — Data (Stage 1)](user_guide/data/index.md) | Twenty axes that decide data, task, and evaluation window |
-| [API Reference](api/index.md) | Function signatures and class documentation |
-| [Docs Conventions](CONVENTIONS.md) | Rules that every docs page follows |
+The public MVP API is designed around this shape:
+
+```python
+import macrocast as mc
+
+result = mc.forecast(
+    dataset="fred_md",
+    target="INDPRO",
+    start="1980-01",
+    end="2019-12",
+    horizons=[1, 3, 6],
+)
+```
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_md",
+        target="INDPRO",
+        horizons=[1, 3, 6],
+        start="1980-01",
+        end="2019-12",
+    )
+    .compare_models(["ar", "ridge", "lasso"])
+    .sweep({"scaling": ["none", "standard"]})
+)
+
+result = exp.run()
+```
 
 ## Core design principles
 
-1. **One recipe = one fully specified study.** No hidden defaults, no implicit preprocessing.
-2. **Defaults match empirical-macro baseline.** Most users don't read docs until they want to deviate.
-3. **Single source of truth per axis.** Each axis is documented on exactly one page.
-4. **Docs and code stay in sync.** Every value cites the exact dispatch function.
-5. **Verify through the manifest.** `manifest.json` records every resolved axis value.
+1. **One experiment can start simple.** A default forecast should run with only dataset, target, horizons, and an explicit sample period.
+2. **Defaults are explicit.** The default profile must be named, versioned, and written to the manifest.
+3. **Only cared-about choices become sweeps.** Users should not configure every axis to compare one decision.
+4. **Custom methods are first-class.** User-defined preprocessing, models, benchmarks, and metrics must run beside built-ins.
+5. **Advanced detail remains auditable.** Every simple experiment can lower to recipes, runs, artifacts, and manifests.
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
 install
+simple/index
+detail/index
 getting_started/index
 user_guide/index
 api/index

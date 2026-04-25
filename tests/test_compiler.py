@@ -3,14 +3,154 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from macrocast import (
     CompileValidationError,
     axis_governance_table,
+    clear_custom_extensions,
     compile_recipe_dict,
     compile_recipe_yaml,
+    custom_feature_block,
+    custom_feature_combiner,
     get_canonical_layer_order,
     run_compiled_recipe,
 )
+
+
+def _layer2_level_block_recipe(
+    *,
+    feature_builder: str = "raw_feature_panel",
+    model_family: str = "ridge",
+    level_feature_block: str = "target_level_addback",
+    contemporaneous_x_rule: str | None = None,
+    selected_level_addback_columns: list[str] | None = None,
+    level_growth_pair_columns: list[str] | None = None,
+) -> dict:
+    data_axes = {
+        "dataset": "fred_md",
+        "information_set_type": "revised",
+        "target_structure": "single_target_point_forecast",
+    }
+    if contemporaneous_x_rule is not None:
+        data_axes["contemporaneous_x_rule"] = contemporaneous_x_rule
+    leaf_config = {
+        "target": "INDPRO",
+        "horizons": [1],
+    }
+    if selected_level_addback_columns is not None:
+        leaf_config["selected_level_addback_columns"] = selected_level_addback_columns
+    if level_growth_pair_columns is not None:
+        leaf_config["level_growth_pair_columns"] = level_growth_pair_columns
+    return {
+        "recipe_id": f"l2-level-block-{feature_builder}",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": data_axes,
+                "leaf_config": leaf_config,
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "level_feature_block": level_feature_block,
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": feature_builder,
+                    "model_family": model_family,
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+
+
+def _layer2_temporal_block_recipe(
+    *,
+    feature_builder: str = "raw_feature_panel",
+    model_family: str = "ridge",
+    temporal_feature_block: str = "moving_average_features",
+    rotation_feature_block: str | None = None,
+    x_lag_feature_block: str | None = None,
+    marx_max_lag: int | None = None,
+) -> dict:
+    preprocessing_axes = {
+        "target_transform_policy": "raw_level",
+        "x_transform_policy": "raw_level",
+        "tcode_policy": "raw_only",
+        "target_missing_policy": "none",
+        "x_missing_policy": "none",
+        "target_outlier_policy": "none",
+        "x_outlier_policy": "none",
+        "scaling_policy": "none",
+        "dimensionality_reduction_policy": "none",
+        "feature_selection_policy": "none",
+        "preprocess_order": "none",
+        "preprocess_fit_scope": "not_applicable",
+        "inverse_transform_policy": "none",
+        "evaluation_scale": "raw_level",
+        "temporal_feature_block": temporal_feature_block,
+    }
+    if rotation_feature_block is not None:
+        preprocessing_axes["rotation_feature_block"] = rotation_feature_block
+    if x_lag_feature_block is not None:
+        preprocessing_axes["tcode_policy"] = "extra_preprocess_without_tcode"
+        preprocessing_axes["preprocess_order"] = "extra_only"
+        preprocessing_axes["preprocess_fit_scope"] = "train_only"
+        preprocessing_axes["x_lag_feature_block"] = x_lag_feature_block
+    leaf_config = {
+        "target": "INDPRO",
+        "horizons": [1],
+    }
+    if marx_max_lag is not None:
+        leaf_config["marx_max_lag"] = marx_max_lag
+    return {
+        "recipe_id": f"l2-temporal-block-{feature_builder}",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": leaf_config,
+            },
+            "2_preprocessing": {"fixed_axes": preprocessing_axes},
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": feature_builder,
+                    "model_family": model_family,
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
 
 
 def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Path) -> None:
@@ -315,6 +455,54 @@ def test_compile_robust_scaling_recipe_is_executable(tmp_path: Path) -> None:
     assert manifest["preprocess_contract"]["scaling_policy"] == "robust"
 
 
+def test_compile_dataset_tcode_then_train_only_extra_is_executable(tmp_path: Path) -> None:
+    recipe = {
+        "recipe_id": "dataset-tcode-then-extra-ridge",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                    "official_transform_policy": "dataset_tcode",
+                    "official_transform_scope": "apply_tcode_to_both",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {"fixed_axes": {
+                "target_missing_policy": "none", "x_missing_policy": "mean_impute", "target_outlier_policy": "none", "x_outlier_policy": "winsorize",
+                "scaling_policy": "standard", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
+                "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
+                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none",
+            }},
+            "3_training": {"fixed_axes": {
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"
+            }},
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    compile_result = compile_recipe_dict(recipe)
+    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.manifest["data_task_spec"]["official_transform_policy"] == "dataset_tcode"
+    contract = compile_result.manifest["preprocess_contract"]
+    assert contract["tcode_policy"] == "tcode_then_extra_preprocess"
+    assert contract["preprocess_order"] == "tcode_then_extra"
+    assert contract["representation_policy"] == "tcode_only"
+
+    execution = run_compiled_recipe(
+        compile_result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_raw_panel_missing.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["preprocess_contract"]["x_missing_policy"] == "mean_impute"
+    assert manifest["preprocess_contract"]["scaling_policy"] == "standard"
+
+
 def test_compile_lasso_minimal_importance_recipe_is_executable(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "importance-lasso-rolling",
@@ -406,7 +594,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
         },
     }
     compile_result = compile_recipe_dict(recipe)
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "not_supported"
     handoff = compile_result.manifest["wrapper_handoff"]
     tree_context = compile_result.manifest["tree_context"]
     assert handoff["wrapper_family"] == "benchmark_suite"
@@ -509,7 +697,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     tree_context = compile_result.manifest["tree_context"]
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "ready_for_sweep_runner"
     assert tree_context["research_design"] == "controlled_variation"
     assert tree_context["route_owner"] == "single_run"
     assert tree_context["fixed_design"]["dataset_adapter"] == "fred_md"
@@ -525,7 +713,7 @@ def test_axis_governance_table_includes_experiment_unit_axis() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["experiment_unit"]["current_status"]["single_target_model_grid"] == "operational"
-    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "operational"
+    assert by_name["experiment_unit"]["current_status"]["benchmark_suite"] == "registry_only"
 
 
 def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
@@ -599,7 +787,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     assert any("fixed-policy axis 'feature_builder' placed in sweep_axes" in warning for warning in compile_result.manifest["warnings"])
-    assert compile_result.compiled.execution_status == "representable_but_not_executable"
+    assert compile_result.compiled.execution_status == "ready_for_sweep_runner"
 
 
 
@@ -940,9 +1128,21 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
 def test_compiled_manifest_records_stage1_data_task_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     spec = compile_result.manifest["data_task_spec"]
-    assert spec["dataset_source"] == "fred_md"
+    assert spec["source_adapter"] == "fred_md"
+    assert "dataset_source" not in spec
+    assert spec["target_structure"] == "single_target_point_forecast"
+    assert "task" not in spec
     assert spec["information_set_type"] == "revised"
-    assert spec["forecast_type"] == "iterated"  # dynamic default for autoreg_lagged_target
+    assert "forecast_type" not in spec
+    assert "horizon_target_construction" not in spec
+    assert "predictor_family" not in spec
+    assert "contemporaneous_x_rule" not in spec
+    assert "deterministic_components" not in spec
+    assert "structural_break_segmentation" not in spec
+    assert compile_result.manifest["training_spec"]["forecast_type"] == "iterated"  # dynamic default for autoreg_lagged_target
+    layer2 = compile_result.manifest["layer2_representation_spec"]
+    assert layer2["target_representation"]["horizon_target_construction"] == "future_target_level_t_plus_h"
+    assert layer2["input_panel"]["predictor_family"] == "target_lags_only"
 
 
 
@@ -950,7 +1150,6 @@ def test_compile_recipe_records_stage2_preprocess_governance_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     contract = compile_result.manifest["preprocess_contract"]
     assert contract["representation_policy"] == "raw_only"
-    assert contract["preprocessing_axis_role"] == "fixed_preprocessing"
     assert contract["tcode_application_scope"] == "apply_tcode_to_none"
 
 
@@ -968,9 +1167,9 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
                 "target_missing_policy": "none", "x_missing_policy": "mean_impute", "target_outlier_policy": "none", "x_outlier_policy": "winsorize",
                 "scaling_policy": "minmax", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_order": "extra_only", "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
-                "representation_policy": "raw_only", "preprocessing_axis_role": "fixed_preprocessing", "tcode_application_scope": "apply_tcode_to_none",
+                "representation_policy": "raw_only", "tcode_application_scope": "apply_tcode_to_none",
                 "target_transform": "level", "target_normalization": "none", "target_domain": "unconstrained", "scaling_scope": "columnwise",
-                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none", "recipe_mode": "fixed_recipe"
+                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none",
             }},
             "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -992,6 +1191,1841 @@ def test_compiled_manifest_records_stage3_training_defaults() -> None:
     assert spec["outer_window"] == "expanding"
     assert spec["refit_policy"] == "refit_every_step"
     assert spec["horizon_modelization"] == "separate_model_per_h"
+
+
+def test_compiled_manifest_records_layer2_representation_provenance() -> None:
+    compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
+    spec = compile_result.manifest["layer2_representation_spec"]
+    assert spec["schema_version"] == "layer2_representation_v1"
+    assert spec["runtime_effect"] == "provenance_plus_runtime_block_dispatch"
+    assert spec["compatibility_source"]["source_kind"] == "legacy_bridge"
+    assert spec["compatibility_source"]["legacy_manifest_alias"] == "source_bridge"
+    assert spec["compatibility_source"]["feature_builder"] == "autoreg_lagged_target"
+    assert spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"
+    assert spec["source_bridge"]["data_richness_mode"] == "target_lags_only"
+    assert spec["source_bridge"]["target_lag_selection"] == "ic_select"
+    assert spec["source_bridge"]["legacy_y_lag_count"] == "IC_select"
+    assert spec["target_lag_config"]["selection"] == "ic_select"
+    assert spec["target_lag_config"]["selection_source_axis"] == "y_lag_count"
+    assert spec["target_representation"]["horizon_target_construction"] == "future_target_level_t_plus_h"
+    assert spec["feature_blocks"]["feature_block_set"]["value"] == "target_lags_only"
+    assert spec["feature_blocks"]["target_lag_block"]["value"] == "ic_selected_target_lags"
+    assert spec["feature_blocks"]["x_lag_feature_block"]["value"] == "none"
+    assert (
+        "Feature-block specs drive executor-family dispatch, fixed target-lag matrix composition, "
+        "fixed X-lag matrix composition, PCA static-factor matrix composition, "
+        "and fixed target-lag concatenation with raw-panel/factor-panel direct Z."
+    ) == spec["compatibility_notes"][0]
+    assert compile_result.compiled.recipe_spec.layer2_representation_spec == spec
+
+
+def test_layer2_path_average_protocol_records_layer3_runtime() -> None:
+    recipe = {
+        "recipe_id": "l2-path-average-protocol",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                    "horizon_target_construction": "path_average_log_growth_1_to_h",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "autoreg_lagged_target",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    target_repr = result.manifest["layer2_representation_spec"]["target_representation"]
+    assert target_repr["horizon_target_construction"] == "path_average_log_growth_1_to_h"
+    assert target_repr["target_construction_scale"] == "path_average_log_growth"
+    protocol = target_repr["path_average_protocol"]
+    assert protocol["runtime_effect"] == "layer3_stepwise_execution"
+    assert protocol["formula_owner"] == "2_preprocessing"
+    assert protocol["execution_owner"] == "3_training"
+    assert protocol["layer3_runtime"] == "operational"
+    assert protocol["layer3_runtime_contract"] == "path_average_stepwise_execution_v1"
+    assert "1" in protocol["protocols_by_horizon"]
+    assert protocol["protocols_by_horizon"]["3"]["step_count"] == 3
+    assert len(protocol["protocols_by_horizon"]["3"]["stepwise_target_specs"]) == 3
+
+
+def test_layer2_path_average_gates_non_raw_target_scale() -> None:
+    recipe = {
+        "recipe_id": "l2-path-average-target-scale-gate",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                    "horizon_target_construction": "path_average_difference_1_to_h",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [2]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_normalization": "zscore_train_only",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "autoreg_lagged_target",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "not_supported"
+    assert any("target_normalization='none'" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -> None:
+    def _recipe(feature_builder: str, model_family: str, **axes: str) -> dict:
+        preprocessing_axes = {
+            "target_transform_policy": "raw_level",
+            "x_transform_policy": "raw_level",
+            "tcode_policy": "raw_only",
+            "target_missing_policy": "none",
+            "x_missing_policy": "none",
+            "target_outlier_policy": "none",
+            "x_outlier_policy": "none",
+            "scaling_policy": "none",
+            "dimensionality_reduction_policy": "none",
+            "feature_selection_policy": "none",
+            "preprocess_order": "none",
+            "preprocess_fit_scope": "not_applicable",
+            "inverse_transform_policy": "none",
+            "evaluation_scale": "raw_level",
+        }
+        training_axes = {
+            "framework": "expanding",
+            "benchmark_family": "zero_change",
+            "feature_builder": feature_builder,
+            "model_family": model_family,
+        }
+        for key, value in axes.items():
+            if key in preprocessing_axes:
+                preprocessing_axes[key] = value
+            else:
+                training_axes[key] = value
+        return {
+            "recipe_id": f"l2-provenance-{feature_builder}",
+            "path": {
+                "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+                "1_data_task": {
+                    "fixed_axes": {
+                        "dataset": "fred_md",
+                        "information_set_type": "revised",
+                        "target_structure": "single_target_point_forecast",
+                    },
+                    "leaf_config": {"target": "INDPRO", "horizons": [1]},
+                },
+                "2_preprocessing": {"fixed_axes": preprocessing_axes},
+                "3_training": {"fixed_axes": training_axes},
+                "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+                "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+                "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+                "7_importance": {"fixed_axes": {"importance_method": "none"}},
+            },
+        }
+
+    cases = [
+        ("autoreg_lagged_target", "ar", {}, "target_lags_only", "ic_selected_target_lags", "none"),
+        ("raw_feature_panel", "ridge", {}, "high_dimensional_x", "none", "none"),
+        ("raw_X_only", "ridge", {"data_richness_mode": "selected_sparse_X"}, "selected_sparse_x", "none", "none"),
+        ("factor_pca", "pcr", {}, "factor_blocks_only", "none", "pca_static_factors"),
+        ("factors_plus_AR", "factor_augmented_linear", {}, "factors_plus_target_lags", "fixed_target_lags", "pca_static_factors"),
+    ]
+    for feature_builder, model_family, axes, block_set, target_lag_block, factor_block in cases:
+        result = compile_recipe_dict(_recipe(feature_builder, model_family, **axes))
+        spec = result.manifest["layer2_representation_spec"]
+        assert spec["compatibility_source"]["source_kind"] == "legacy_bridge"
+        assert spec["compatibility_source"]["legacy_manifest_alias"] == "source_bridge"
+        assert spec["compatibility_source"]["feature_builder"] == feature_builder
+        assert spec["source_bridge"]["feature_builder"] == feature_builder
+        assert spec["feature_blocks"]["feature_block_set"]["value"] == block_set
+        assert spec["feature_blocks"]["target_lag_block"]["value"] == target_lag_block
+        assert spec["feature_blocks"]["factor_feature_block"]["value"] == factor_block
+
+
+def test_layer2_target_lag_selection_axis_records_target_language_provenance() -> None:
+    recipe = {
+        "recipe_id": "l2-target-lag-selection",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_selection": "fixed",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "factors_plus_AR",
+                    "model_family": "factor_augmented_linear",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    spec = result.manifest["layer2_representation_spec"]
+    assert "target_lag_selection" not in result.manifest["training_spec"]
+    assert "target_lag_count" not in result.manifest["training_spec"]
+    assert "factor_ar_lags" not in result.manifest["training_spec"]
+    assert spec["target_lag_config"] == {
+        "selection": "fixed",
+        "selection_source_axis": "target_lag_selection",
+        "selection_source_value": "fixed",
+        "count": 2,
+        "count_source": "target_lag_count",
+    }
+    assert spec["feature_blocks"]["target_lag_block"]["value"] == "fixed_target_lags"
+
+
+def test_layer2_explicit_target_lag_block_lowers_to_ar_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-explicit-target-lag-block",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_block": "fixed_target_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "autoreg_lagged_target",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "no_x_lags"
+    assert "target_lag_selection" not in result.manifest["training_spec"]
+    assert "target_lag_count" not in result.manifest["training_spec"]
+    assert result.manifest["layer2_representation_spec"]["target_lag_config"]["selection"] == "fixed"
+    assert result.manifest["layer2_representation_spec"]["target_lag_config"]["count"] == 2
+    assert result.manifest["benchmark_spec"]["max_ar_lag"] == 2
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["target_lag_block"]["source_axis"] == "target_lag_block"
+    assert blocks["target_lag_block"]["feature_names"] == ["target_lag_1", "target_lag_2"]
+    assert blocks["target_lag_block"]["runtime_block"] == {
+        "matrix_composition": "fixed_target_lags",
+        "lag_count": 2,
+    }
+    assert blocks["target_lag_block"]["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_target_lag_block_can_omit_feature_builder_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-target-lag-no-feature-builder-bridge",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_block": "fixed_target_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["model_spec"]["feature_builder"] == "autoreg_lagged_target"
+    assert result.manifest["layer2_representation_spec"]["feature_blocks"]["target_lag_block"]["value"] == "fixed_target_lags"
+
+
+def test_layer2_explicit_raw_block_can_omit_feature_builder_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-raw-block-no-feature-builder-bridge",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "x_lag_feature_block": "fixed_x_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "rolling",
+                    "benchmark_family": "zero_change",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["model_spec"]["feature_builder"] == "raw_feature_panel"
+    assert result.manifest["layer2_representation_spec"]["feature_blocks"]["x_lag_feature_block"]["value"] == "fixed_x_lags"
+
+
+def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-explicit-x-lag-block",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "x_lag_feature_block": "fixed_x_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "fixed_x_lags"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["x_lag_feature_block"]["source_axis"] == "x_lag_feature_block"
+    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_x_lags"}
+    assert blocks["x_lag_feature_block"]["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_level_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(_layer2_level_block_recipe())
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "target_level_addback"
+    assert block["source_axis"] == "level_feature_block"
+    assert block["feature_names"] == ["target_level_origin"]
+    assert block["runtime_feature_name"] == "__target_level_origin"
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "target_level_addback"}
+    assert block["alignment"] == {
+        "train_row_t_uses": "target_t",
+        "prediction_origin_uses": "target_origin",
+        "lookahead": "forbidden",
+    }
+
+
+def test_layer2_explicit_x_level_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(_layer2_level_block_recipe(level_feature_block="x_level_addback"))
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "x_level_addback"
+    assert block["source_axis"] == "level_feature_block"
+    assert block["feature_name_pattern"] == "{predictor}_level"
+    assert block["runtime_feature_name_pattern"] == "{predictor}__level"
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "x_level_addback"}
+    assert block["alignment"] == {
+        "train_row_t_uses": "H_{t}",
+        "prediction_origin_uses": "H_{origin}",
+        "lookahead": "forbidden",
+    }
+
+
+def test_layer2_explicit_selected_level_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(
+            level_feature_block="selected_level_addbacks",
+            selected_level_addback_columns=["RPI", "UNRATE"],
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "selected_level_addbacks"
+    assert block["selected_columns"] == ["RPI", "UNRATE"]
+    assert block["feature_names"] == ["RPI_level", "UNRATE_level"]
+    assert block["runtime_feature_names"] == ["RPI__level", "UNRATE__level"]
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "selected_level_addbacks"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_selected_level_block_requires_columns() -> None:
+    recipe = _layer2_level_block_recipe(level_feature_block="selected_level_addbacks")
+    with pytest.raises(CompileValidationError, match="selected_level_addback_columns"):
+        compile_recipe_dict(recipe)
+
+
+def test_layer2_explicit_level_growth_pairs_lower_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(
+            level_feature_block="level_growth_pairs",
+            level_growth_pair_columns=["RPI", "UNRATE"],
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["level_feature_block"]
+    assert block["value"] == "level_growth_pairs"
+    assert block["pair_columns"] == ["RPI", "UNRATE"]
+    assert block["transformed_feature_names"] == ["RPI", "UNRATE"]
+    assert block["level_feature_names"] == ["RPI_level", "UNRATE_level"]
+    assert block["runtime_level_feature_names"] == ["RPI__level", "UNRATE__level"]
+    assert block["runtime_bridge"] == {"raw_panel_level_addback": "level_growth_pairs"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_level_growth_pairs_require_columns() -> None:
+    recipe = _layer2_level_block_recipe(level_feature_block="level_growth_pairs")
+    with pytest.raises(CompileValidationError, match="level_growth_pair_columns"):
+        compile_recipe_dict(recipe)
+
+
+def test_layer2_explicit_level_block_requires_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
+    )
+    assert result.compiled.execution_status == "blocked_by_incompatibility"
+    assert any("raw_feature_panel is not compatible with model_family='ar'" in reason for reason in result.compiled.blocked_reasons)
+
+
+def test_layer2_explicit_level_block_rejects_contemporaneous_oracle_alignment() -> None:
+    result = compile_recipe_dict(
+        _layer2_level_block_recipe(contemporaneous_x_rule="allow_contemporaneous")
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any("requires contemporaneous_x_rule='forbid_contemporaneous'" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_explicit_temporal_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(_layer2_temporal_block_recipe())
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["temporal_feature_block"]
+    assert block["value"] == "moving_average_features"
+    assert block["source_axis"] == "temporal_feature_block"
+    assert block["window"] == 3
+    assert block["feature_name_pattern"] == "{predictor}_ma3"
+    assert block["runtime_feature_name_pattern"] == "{predictor}__ma3"
+    assert block["runtime_bridge"] == {"raw_panel_temporal_features": "moving_average_features"}
+    assert block["alignment"] == {
+        "train_row_t_uses": "X_{t}, X_{t-1}, X_{t-2}",
+        "prediction_origin_uses": "X_{origin}, X_{origin-1}, X_{origin-2}",
+        "lookahead": "forbidden",
+    }
+
+
+def test_layer2_explicit_volatility_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(temporal_feature_block="volatility_features")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["temporal_feature_block"]
+    assert block["value"] == "volatility_features"
+    assert block["source_axis"] == "temporal_feature_block"
+    assert block["window"] == 3
+    assert block["feature_name_pattern"] == "{predictor}_vol3"
+    assert block["runtime_feature_name_pattern"] == "{predictor}__vol3"
+    assert block["runtime_bridge"] == {"raw_panel_temporal_features": "volatility_features"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_rolling_moments_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(temporal_feature_block="rolling_moments")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["temporal_feature_block"]
+    assert block["value"] == "rolling_moments"
+    assert block["source_axis"] == "temporal_feature_block"
+    assert block["window"] == 3
+    assert block["moments"] == ["mean", "variance"]
+    assert block["feature_name_patterns"] == ["{predictor}_mean3", "{predictor}_var3"]
+    assert block["runtime_feature_name_patterns"] == ["{predictor}__mean3", "{predictor}__var3"]
+    assert block["runtime_bridge"] == {"raw_panel_temporal_features": "rolling_moments"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_local_temporal_factor_block_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(temporal_feature_block="local_temporal_factors")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["temporal_feature_block"]
+    assert block["value"] == "local_temporal_factors"
+    assert block["source_axis"] == "temporal_feature_block"
+    assert block["window"] == 3
+    assert block["factor_construction"] == "deterministic cross-sectional summaries with trailing time smoothing"
+    assert block["feature_names"] == ["local_temporal_factor_mean3", "local_temporal_factor_dispersion3"]
+    assert block["runtime_feature_names"] == ["__local_temporal_factor_mean3", "__local_temporal_factor_dispersion3"]
+    assert block["runtime_bridge"] == {"raw_panel_temporal_features": "local_temporal_factors"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_rotation_none_records_no_rotation_block() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="none",
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["rotation_feature_block"] == {
+        "value": "none",
+        "source_axis": "rotation_feature_block",
+        "source_value": "none",
+    }
+
+
+def test_layer2_explicit_moving_average_rotation_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="moving_average_rotation",
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    block = blocks["rotation_feature_block"]
+    assert block["value"] == "moving_average_rotation"
+    assert block["source_axis"] == "rotation_feature_block"
+    assert block["windows"] == [3, 6]
+    assert block["feature_name_patterns"] == ["{predictor}_rotma3", "{predictor}_rotma6"]
+    assert block["runtime_feature_name_patterns"] == ["{predictor}__rotma3", "{predictor}__rotma6"]
+    assert block["runtime_bridge"] == {"raw_panel_rotation_features": "moving_average_rotation"}
+    assert block["alignment"]["lookahead"] == "forbidden"
+    assert "MARX uses lag-polynomial basis replacement" in block["scope_note"]
+
+
+@pytest.mark.parametrize(
+    ("rotation_block", "required_contract", "scope_phrase"),
+    [
+        (
+            "custom_rotation",
+            "custom_feature_block_callable_v1",
+            "custom_preprocessor hook is not enough",
+        ),
+    ],
+)
+def test_layer2_advanced_rotation_blocks_record_registry_only_boundary(
+    rotation_block: str,
+    required_contract: str,
+    scope_phrase: str,
+) -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block=rotation_block,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any(
+        f"axis rotation_feature_block value {rotation_block} is not supported" in warning
+        and "status=registry_only" in warning
+        for warning in result.compiled.warnings
+    )
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == rotation_block
+    assert block["source_axis"] == "rotation_feature_block"
+    assert block["source_value"] == rotation_block
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == required_contract
+    assert scope_phrase in block["scope_note"]
+    assert "runtime_bridge" not in block
+    assert block["callable_contract"]["schema_version"] == "custom_feature_block_callable_v1"
+    assert block["callable_contract"]["block_kind"] == "rotation"
+
+
+def test_layer2_maf_rotation_requires_factor_scores() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="maf_rotation",
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any(
+        "rotation_feature_block='maf_rotation' requires factor_feature_block='pca_static_factors'"
+        in warning
+        for warning in result.compiled.warnings
+    )
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == "maf_rotation"
+    assert block["runtime_status"] == "operational"
+    assert block["required_runtime_contract"] == "factor_score_rotation_contract_v1"
+    assert block["composition_modes"]["operational"] == ["factor_then_maf"]
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_explicit_marx_rotation_requires_lag_order() -> None:
+    with pytest.raises(CompileValidationError, match="marx_max_lag"):
+        compile_recipe_dict(
+            _layer2_temporal_block_recipe(
+                temporal_feature_block="none",
+                rotation_feature_block="marx_rotation",
+            )
+        )
+
+
+def test_layer2_explicit_marx_rotation_lowers_to_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "executable"
+    assert result.manifest["data_task_spec"]["marx_max_lag"] == 3
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == "marx_rotation"
+    assert block["source_axis"] == "rotation_feature_block"
+    assert block["runtime_status"] == "operational"
+    assert block["max_lag"] == 3
+    assert block["rotation_orders"] == [1, 2, 3]
+    assert block["feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
+    assert block["runtime_feature_name_pattern"] == "{predictor}__marx_ma_lag1_to_lag{p}"
+    assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
+    assert block["basis_policy"] == "replace_lag_polynomial_basis"
+    assert block["initial_lag_fill_policy"] == "zero_fill_before_start"
+    assert block["composition_modes"]["operational"] == [
+        "replace_lag_polynomial_basis",
+        "marx_append_to_x",
+        "marx_then_factor",
+        "factor_then_marx",
+        "marx_with_external_x_lag_append",
+        "marx_with_temporal_append",
+    ]
+    assert block["composition_modes"]["gated"] == []
+    assert block["alignment"]["lookahead"] == "forbidden"
+    assert "replaces the X lag-polynomial basis" in block["scope_note"]
+    composer = block["composer_contract"]
+    assert composer["schema_version"] == "lag_polynomial_rotation_contract_v1"
+    assert composer["runtime_status"] == "operational"
+    assert composer["runtime_builder"] == "build_marx_rotation_frame"
+    assert composer["max_lag"] == 3
+    assert composer["rotation_orders"] == [1, 2, 3]
+    assert composer["source_feature_name_pattern"] == "{predictor}_lag_{k}"
+    assert composer["rotated_feature_name_pattern"] == "{predictor}_marx_ma_lag1_to_lag{p}"
+    assert composer["basis_policy"] == "replace_lag_polynomial_basis"
+
+
+def test_layer2_explicit_marx_rotation_runs_raw_panel_bridge(tmp_path: Path) -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    block = manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]
+    assert block["value"] == "marx_rotation"
+    assert block["max_lag"] == 3
+    assert block["runtime_bridge"] == {"raw_panel_rotation_features": "marx_rotation"}
+
+
+def test_layer2_explicit_marx_rotation_supports_static_factor_composition(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="marx_rotation",
+        marx_max_lag=3,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_static_factors",
+            "dimensionality_reduction_policy": "pca",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    factor_block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    rotation_interaction = factor_block["rotation_interaction"]
+    assert rotation_interaction["rotation_feature_block"] == "marx_rotation"
+    assert rotation_interaction["supported_semantics"] == ["marx_then_factor", "factor_then_marx"]
+    assert rotation_interaction["active_semantic"] == "marx_then_factor"
+    assert "factor_then_marx" in rotation_interaction["composition_modes"]["operational"]
+
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["layer2_representation_spec"]["feature_blocks"]["rotation_feature_block"]["value"] == "marx_rotation"
+    assert fit_state["block"] == "pca_static_factors"
+    assert all("__marx_ma_lag1_to_lag" in name for name in fit_state["source_feature_names"])
+
+
+def test_layer2_factor_then_marx_runs_factor_score_rotation(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="marx_rotation",
+        marx_max_lag=3,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_static_factors",
+            "factor_rotation_order": "factor_then_rotation",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["factor_rotation_order"]["value"] == "factor_then_rotation"
+    rotation_interaction = blocks["factor_feature_block"]["rotation_interaction"]
+    assert rotation_interaction["active_semantic"] == "factor_then_marx"
+    assert rotation_interaction["factor_rotation_order"] == "factor_then_rotation"
+
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]["rotation_interaction"]["active_semantic"] == "factor_then_marx"
+    assert fit_state["block"] == "factor_then_marx"
+    assert fit_state["runtime_policy"] == "factor_then_marx"
+    assert fit_state["factor_score_history_contract"]["lookahead"] == "forbidden"
+    assert all("_marx_ma_lag1_to_lag" in name for name in fit_state["feature_names"])
+
+
+def test_layer2_maf_rotation_runs_factor_score_rotation(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="maf_rotation",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_static_factors",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["factor_rotation_order"]["value"] == "factor_then_rotation"
+    assert blocks["factor_feature_block"]["rotation_interaction"]["active_semantic"] == "factor_then_maf"
+
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+
+    assert fit_state["block"] == "maf_rotation"
+    assert fit_state["runtime_policy"] == "factor_then_maf"
+    assert fit_state["factor_score_history_contract"]["lookahead"] == "forbidden"
+    assert all("_maf_ma" in name for name in fit_state["feature_names"])
+
+
+def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["training_config"] = {"factor_lag_count": 2}
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_factor_lags",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    factor_block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert factor_block["factor_lag_count"] == 2
+    assert factor_block["factor_lag_count_source"] == "factor_lag_count"
+    assert factor_block["runtime_block"]["factor_lag_count"] == 2
+    assert "factor_ar_lags" not in result.manifest["training_spec"]
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+    assert fit_state["block"] == "pca_factor_lags"
+    assert fit_state["factor_lag_count"] == 2
+    assert any(name.startswith("factor_1_lag_") for name in fit_state["factor_lag_feature_names"])
+
+
+def test_layer2_supervised_factors_run_as_factor_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "supervised_factors",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    fit_state = json.loads((Path(execution.artifact_dir) / "feature_representation_fit_state.json").read_text())
+    assert fit_state["block"] == "supervised_factors"
+    assert fit_state["supervision_target"] == "train_window_y"
+
+
+def test_layer2_explicit_marx_rotation_rejects_x_lag_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="none",
+            rotation_feature_block="marx_rotation",
+            x_lag_feature_block="fixed_x_lags",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any("cannot yet be combined with x_lag_feature_block" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_explicit_marx_rotation_rejects_temporal_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            rotation_feature_block="marx_rotation",
+            marx_max_lag=3,
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    assert any("cannot yet be combined with temporal_feature_block" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_marx_rotation_can_append_with_temporal_block(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="moving_average_features",
+        rotation_feature_block="marx_rotation",
+        marx_max_lag=2,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "append_to_base_x"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_layer2_marx_rotation_can_append_with_fixed_x_lags(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="marx_rotation",
+        x_lag_feature_block="fixed_x_lags",
+        marx_max_lag=2,
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_layer2_append_to_target_lags_combination_is_executable(tmp_path: Path) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["training_config"] = {"target_lag_count": 2}
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": "pca_static_factors",
+            "target_lag_block": "fixed_target_lags",
+            "feature_block_combination": "append_to_target_lags",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+            "dimensionality_reduction_policy": "pca",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "append_to_target_lags"
+    assert combination["runtime_status"] == "operational"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_layer2_custom_temporal_block_records_callable_contract() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            temporal_feature_block="custom_temporal_features",
+            rotation_feature_block="none",
+        )
+    )
+    assert result.compiled.execution_status == "not_supported"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["temporal_feature_block"]
+    assert block["value"] == "custom_temporal_features"
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == "custom_feature_block_callable_v1"
+    assert block["callable_contract"]["block_kind"] == "temporal"
+    assert "custom_preprocessor is a broader matrix hook" in block["scope_note"]
+
+
+def test_layer2_registered_custom_temporal_block_is_executable() -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        raise AssertionError("compile should not execute custom feature blocks")
+
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="custom_temporal_features",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["custom_temporal_feature_block"] = "temporal_spread"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["temporal_feature_block"]
+    assert block["runtime_status"] == "operational"
+    assert block["custom_feature_block"] == "temporal_spread"
+    assert block["runtime_bridge"] == {"custom_feature_block": "temporal_spread", "block_kind": "temporal"}
+    clear_custom_extensions()
+
+
+def test_layer2_custom_combiner_records_callable_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["value"] == "custom_combiner"
+    assert combination["runtime_status"] == "registry_only"
+    assert combination["required_runtime_contract"] == "custom_feature_combiner_v1"
+    assert combination["callable_contract"]["schema_version"] == "custom_feature_combiner_v1"
+
+
+def test_layer2_registered_custom_combiner_is_executable() -> None:
+    clear_custom_extensions()
+
+    @custom_feature_combiner("sum_two")
+    def _sum_two(context):
+        raise AssertionError("compile should not execute custom combiners")
+
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["custom_feature_combiner"] = "sum_two"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
+    assert combination["runtime_status"] == "operational"
+    assert combination["custom_feature_combiner"] == "sum_two"
+    assert combination["runtime_bridge"] == {"custom_feature_combiner": "sum_two"}
+    clear_custom_extensions()
+
+
+def test_layer2_select_after_custom_blocks_requires_custom_surface() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "feature_selection_policy": "correlation_filter",
+            "feature_selection_semantics": "select_after_custom_blocks",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    assert any("select_after_custom_blocks" in warning for warning in result.compiled.warnings)
+
+
+def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(
+            feature_builder="autoreg_lagged_target",
+            model_family="ar",
+            temporal_feature_block="none",
+            rotation_feature_block="moving_average_rotation",
+        )
+    )
+    assert result.compiled.execution_status == "blocked_by_incompatibility"
+    assert any("raw_feature_panel is not compatible with model_family='ar'" in reason for reason in result.compiled.blocked_reasons)
+
+
+def test_layer2_explicit_moving_average_rotation_allows_temporal_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(rotation_feature_block="moving_average_rotation")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["temporal_feature_block"]["value"] == "moving_average_features"
+    assert blocks["rotation_feature_block"]["value"] == "moving_average_rotation"
+    assert blocks["temporal_feature_block"]["runtime_bridge"] == {
+        "raw_panel_temporal_features": "moving_average_features"
+    }
+    assert blocks["rotation_feature_block"]["runtime_bridge"] == {
+        "raw_panel_rotation_features": "moving_average_rotation"
+    }
+
+
+def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
+    )
+    assert result.compiled.execution_status == "blocked_by_incompatibility"
+    assert any("raw_feature_panel is not compatible with model_family='ar'" in reason for reason in result.compiled.blocked_reasons)
+
+
+def test_layer2_explicit_temporal_block_allows_fixed_x_lag_composition() -> None:
+    result = compile_recipe_dict(
+        _layer2_temporal_block_recipe(x_lag_feature_block="fixed_x_lags")
+    )
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["x_lag_feature_block"]["value"] == "fixed_x_lags"
+    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_x_lags"}
+    assert blocks["temporal_feature_block"]["value"] == "moving_average_features"
+    assert blocks["temporal_feature_block"]["runtime_bridge"] == {
+        "raw_panel_temporal_features": "moving_average_features"
+    }
+
+
+def test_layer2_explicit_target_and_x_lag_blocks_execute_with_raw_panel_composer(tmp_path) -> None:
+    recipe = {
+        "recipe_id": "l2-explicit-lag-block-composition",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_block": "fixed_target_lags",
+                    "x_lag_feature_block": "fixed_x_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["target_lag_block"]["value"] == "fixed_target_lags"
+    assert blocks["x_lag_feature_block"]["value"] == "fixed_x_lags"
+    assert blocks["target_lag_block"]["alignment"]["train_row_t_uses"] == "target_{origin_t-k+1}"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source="tests/fixtures/fred_md_ar_sample.csv",
+    )
+    assert (Path(execution.artifact_dir) / "predictions.csv").exists()
+
+
+def test_layer2_explicit_target_lag_and_static_factor_blocks_execute(tmp_path) -> None:
+    recipe = {
+        "recipe_id": "l2-target-lag-factor-composition",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"target_lag_count": 2},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "em_impute",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "standard",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_block": "fixed_target_lags",
+                    "factor_feature_block": "pca_static_factors",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
+    assert blocks["target_lag_block"]["value"] == "fixed_target_lags"
+    assert blocks["factor_feature_block"]["value"] == "pca_static_factors"
+    execution = run_compiled_recipe(
+        result.compiled,
+        output_root=tmp_path,
+        local_raw_source="tests/fixtures/fred_md_ar_sample.csv",
+    )
+    assert (Path(execution.artifact_dir) / "tuning_result.json").exists()
+
+
+def test_layer2_explicit_x_lag_block_rejects_conflicting_legacy_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-x-lag-conflict",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "x_lag_feature_block": "fixed_x_lags",
+                    "x_lag_creation": "no_x_lags",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    with pytest.raises(CompileValidationError, match="x_lag_feature_block conflicts"):
+        compile_recipe_dict(recipe)
+
+
+def test_layer2_explicit_target_lag_block_rejects_conflicting_selection() -> None:
+    recipe = {
+        "recipe_id": "l2-target-lag-conflict",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "target_lag_block": "fixed_target_lags",
+                    "target_lag_selection": "ic_select",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "autoreg_lagged_target",
+                    "model_family": "ar",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    with pytest.raises(CompileValidationError, match="target_lag_block conflicts"):
+        compile_recipe_dict(recipe)
+
+
+def test_layer2_explicit_factor_block_lowers_to_dimred_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-explicit-factor-block",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "training_config": {"fixed_factor_count": 2, "max_factors": 4},
+                },
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "mean_impute",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "standard",
+                    "dimensionality_reduction_policy": "pca",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "factor_feature_block": "pca_static_factors",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                    "factor_count": "fixed",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    assert "factor_count" not in result.manifest["training_spec"]
+    assert "fixed_factor_count" not in result.manifest["training_spec"]
+    assert "max_factors" not in result.manifest["training_spec"]
+    assert result.manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert block["value"] == "pca_static_factors"
+    assert block["source_axis"] == "factor_feature_block"
+    assert block["runtime_bridge"] == {"dimensionality_reduction_policy": "pca"}
+    assert block["runtime_block"] == {
+        "matrix_composition": "pca_static_factors",
+        "default_dimensionality_reduction_policy": "pca",
+    }
+    assert block["factor_count"] == {
+        "mode": "fixed",
+        "fixed_factor_count": 2,
+        "max_factors": 4,
+        "selection_scope": "train_window",
+    }
+    assert block["feature_names"] == ["factor_1", "factor_2"]
+    assert block["loadings_artifact"] == "feature_representation_fit_state.json"
+    assert block["alignment"]["lookahead"] == "forbidden"
+
+
+def test_layer2_factor_block_lowers_without_dimred_bridge() -> None:
+    recipe = {
+        "recipe_id": "l2-factor-block-missing-bridge",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "raw_only",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "none",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "none",
+                    "dimensionality_reduction_policy": "none",
+                    "feature_selection_policy": "none",
+                    "preprocess_order": "none",
+                    "preprocess_fit_scope": "not_applicable",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "factor_feature_block": "pca_static_factors",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    assert not any("factor_feature_block='pca_static_factors' requires" in warning for warning in result.compiled.warnings)
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert block["value"] == "pca_static_factors"
+    assert block["runtime_bridge"] == {}
+    assert block["runtime_block"] == {
+        "matrix_composition": "pca_static_factors",
+        "default_dimensionality_reduction_policy": "pca",
+    }
+
+
+def test_layer2_factor_block_accepts_select_before_factor_mix() -> None:
+    recipe = {
+        "recipe_id": "l2-factor-block-selection-mix",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "mean_impute",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "standard",
+                    "dimensionality_reduction_policy": "pca",
+                    "feature_selection_policy": "lasso_select",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "factor_feature_block": "pca_static_factors",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    interaction = block["feature_selection_interaction"]
+    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["active_semantic"] == "select_before_factor"
+    assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
+
+
+def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
+    recipe = {
+        "recipe_id": "l2-factor-block-selection-mix-after-factor",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {
+                "fixed_axes": {
+                    "target_transform_policy": "raw_level",
+                    "x_transform_policy": "raw_level",
+                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "target_missing_policy": "none",
+                    "x_missing_policy": "mean_impute",
+                    "target_outlier_policy": "none",
+                    "x_outlier_policy": "none",
+                    "scaling_policy": "standard",
+                    "dimensionality_reduction_policy": "pca",
+                    "feature_selection_policy": "lasso_select",
+                    "feature_selection_semantics": "select_after_factor",
+                    "preprocess_order": "extra_only",
+                    "preprocess_fit_scope": "train_only",
+                    "inverse_transform_policy": "none",
+                    "evaluation_scale": "raw_level",
+                    "factor_feature_block": "pca_static_factors",
+                }
+            },
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "feature_builder": "raw_feature_panel",
+                    "model_family": "ridge",
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+    result = compile_recipe_dict(recipe)
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    interaction = block["feature_selection_interaction"]
+    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["active_semantic"] == "select_after_factor"
+    assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
+    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
+
+
+@pytest.mark.parametrize("factor_block", ["pca_factor_lags", "supervised_factors"])
+def test_layer2_non_pca_factor_blocks_accept_selection_semantics(factor_block: str) -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "factor_feature_block": factor_block,
+            "feature_selection_policy": "lasso_select",
+            "feature_selection_semantics": "select_after_factor",
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "scaling_policy": "standard",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    interaction = block["feature_selection_interaction"]
+    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["active_semantic"] == "select_after_factor"
+    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
+
+
+def test_layer2_target_representation_records_scale_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"].update(
+        {
+            "tcode_policy": "extra_preprocess_without_tcode",
+            "preprocess_order": "extra_only",
+            "preprocess_fit_scope": "train_only",
+            "x_missing_policy": "mean_impute",
+            "scaling_policy": "standard",
+            "target_transform": "log",
+            "target_normalization": "zscore_train_only",
+            "inverse_transform_policy": "target_only",
+            "evaluation_scale": "both",
+        }
+    )
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "executable"
+    target_rep = result.manifest["layer2_representation_spec"]["target_representation"]
+    scale = target_rep["target_scale_contract"]
+    assert target_rep["target_transform"] == "log"
+    assert target_rep["target_normalization"] == "zscore_train_only"
+    assert scale["schema_version"] == "target_scale_contract_v1"
+    assert scale["runtime_status"] == "operational"
+    assert scale["model_target_scale"] == "transformed_target_scale"
+    assert scale["forecast_scale"] == "original_target_scale"
+    assert scale["blockers"] == []
+
+
+def test_layer2_custom_factor_block_records_callable_contract() -> None:
+    recipe = _layer2_temporal_block_recipe(
+        temporal_feature_block="none",
+        rotation_feature_block="none",
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["factor_feature_block"] = "custom_factors"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.compiled.execution_status == "not_supported"
+    block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
+    assert block["value"] == "custom_factors"
+    assert block["runtime_status"] == "registry_only"
+    assert block["required_runtime_contract"] == "custom_feature_block_callable_v1"
+    assert block["callable_contract"]["block_kind"] == "factor"
 
 
 def test_compile_recipe_accepts_stage3_training_axes() -> None:
@@ -1030,7 +3064,9 @@ def test_compiled_manifest_records_training_config_passthrough_defaults() -> Non
     spec = compile_result.manifest["training_spec"]
     assert spec["validation_ratio"] == 0.2
     assert spec["max_trials"] == 6
-    assert spec["fixed_factor_count"] == 3
+    assert "factor_count" not in spec
+    assert "fixed_factor_count" not in spec
+    assert "max_factors" not in spec
 
 
 def test_axis_governance_table_marks_quantile_linear_and_point_median_operational() -> None:
@@ -1209,11 +3245,10 @@ def test_wizard_options_single_target_returns_operational_only() -> None:
         research_design="single_path_benchmark",
         task="single_target_point_forecast",
     )
-    # all three single-target operational values should be present
+    # unsupported full-sweep wrapper routes are not offered by the wizard.
     assert set(options) == {
         "single_target_single_model",
         "single_target_model_grid",
-        "single_target_full_sweep",
     }
 
 
@@ -1264,26 +3299,26 @@ def test_study_mode_controlled_variation_compiles_executable() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_study_mode_replication_override_compiles_executable_after_cleanup() -> None:
-    """After 0.6 cleanup, replication_override no longer triggers the
-    wrapper-route warning; execute_replication is the dedicated runner."""
+def test_study_mode_replication_override_requires_replication_runner() -> None:
+    """replication_override is a replication handoff, not a direct recipe run."""
     recipe = _study_mode_recipe_base()
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
     r = compile_recipe_dict(recipe)
-    assert r.compiled.execution_status == "executable"
+    assert r.compiled.execution_status == "ready_for_replication_runner"
+    assert r.manifest["tree_context"]["route_owner"] == "replication"
+    assert r.manifest["tree_context"]["route_contract"] == "replication_handoff"
 
 
-def test_study_mode_orchestrated_bundle_is_still_representable_not_executable() -> None:
-    """orchestrated_bundle stays on the wrapper-warning path until the
-    Phase 8 PaperReadyBundle consumer lands. Requires wrapper_family +
-    bundle_label in leaf_config (wrapper_handoff contract)."""
+def test_study_mode_orchestrated_bundle_without_runner_contract_is_not_supported() -> None:
+    """orchestrated_bundle stays in the grammar, but unsupported wrapper
+    families must not be reported as runnable."""
     recipe = _study_mode_recipe_base()
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "orchestrated_bundle"
     recipe["path"]["5_output_provenance"]["leaf_config"]["wrapper_family"] = "benchmark_suite"
     recipe["path"]["5_output_provenance"]["leaf_config"]["bundle_label"] = "bundle-test"
     r = compile_recipe_dict(recipe)
-    assert r.compiled.execution_status == "representable_but_not_executable"
+    assert r.compiled.execution_status == "not_supported"
     assert any(
-        "orchestrated_bundle" in w and "wrapper/orchestrator route" in w
+        "benchmark_suite" in w and "no executable wrapper runner contract" in w
         for w in r.manifest.get("warnings", [])
     )

@@ -41,6 +41,59 @@ def test_build_stage0_frame_single_path_benchmark() -> None:
     check_design_completeness(stage0)
 
 
+def test_build_stage0_frame_single_fixed_model_and_feature_is_one_tool_surface() -> None:
+    stage0 = build_design_frame(
+        research_design="single_path_benchmark",
+        fixed_design=FixedDesign(
+            dataset_adapter="fred_md",
+            information_set="revised_monthly",
+            sample_split="expanding_window_oos",
+            benchmark="ar_bic",
+            evaluation_protocol="point_forecast_core",
+            forecast_task="single_target_point_forecast",
+        ),
+        comparison_contract=ComparisonContract(
+            information_set_policy="identical",
+            sample_split_policy="identical",
+            benchmark_policy="identical",
+            evaluation_policy="identical",
+        ),
+        varying_design=VaryingDesign(model_families=("ar",), feature_recipes=("autoreg_lagged_target",), horizons=("h1",)),
+    )
+
+    assert stage0.design_shape == "one_fixed_env_one_tool_surface"
+    assert stage0.execution_posture == "single_run_recipe"
+    assert stage0.experiment_unit == "single_target_single_model"
+
+
+def test_build_stage0_frame_multiple_feature_recipes_is_controlled_variation() -> None:
+    stage0 = build_design_frame(
+        research_design="single_path_benchmark",
+        fixed_design=FixedDesign(
+            dataset_adapter="fred_md",
+            information_set="revised_monthly",
+            sample_split="expanding_window_oos",
+            benchmark="ar_bic",
+            evaluation_protocol="point_forecast_core",
+            forecast_task="single_target_point_forecast",
+        ),
+        comparison_contract=ComparisonContract(
+            information_set_policy="identical",
+            sample_split_policy="identical",
+            benchmark_policy="identical",
+            evaluation_policy="identical",
+        ),
+        varying_design=VaryingDesign(
+            model_families=("ridge",),
+            feature_recipes=("autoreg_lagged_target", "raw_feature_panel"),
+            horizons=("h1",),
+        ),
+    )
+
+    assert stage0.design_shape == "one_fixed_env_controlled_axis_variation"
+    assert stage0.execution_posture == "single_run_with_internal_sweep"
+
+
 def test_build_stage0_frame_bundle_route() -> None:
     stage0 = build_design_frame(
         research_design="orchestrated_bundle",

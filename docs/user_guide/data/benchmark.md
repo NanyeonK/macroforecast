@@ -15,7 +15,7 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 - `variable_universe.feature_selection_dynamic_subset` — CV-in-training feature selection loop; deferred to v1.1 tuning-engine extension.
 - `deterministic_components.trend_and_quadratic` — redundant with `linear_trend` + a future `leaf_config.trend_order` channel.
 
-`target_family` (the old 1.4.1 axis) was dropped in PR #32 — subsumed by `task`.
+`target_family` (the old 1.4.1 axis) was dropped in PR #32 — subsumed by `target_structure`.
 **At a glance (defaults):**
 - `benchmark_family` — no default; you always pick one (most studies start with `historical_mean` or `ar_bic`).
 - `predictor_family` — feature-builder dynamic default. autoreg_lagged_target → `target_lags_only`; raw_feature_panel → `all_macro_vars`. You rarely set it.
@@ -29,7 +29,7 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 ## 1.4.1 `benchmark_family`
 
-**Selects the reference forecast for relative metrics.** All 11 kept values are operational in v1.0 (2 formerly were metadata-only fallbacks; they are now real implementations).
+**Selects the reference forecast for relative metrics.** All 12 kept values are operational in v1.0. Values that require user-supplied inputs are validated at compile time.
 
 ### Value catalog
 
@@ -52,8 +52,9 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 - `macrocast.execution.build._run_benchmark_executor` dispatches by `benchmark_family` value.
 - `factor_model`: z-scored leading-factor regression; falls back to `historical_mean` for training windows < 6 rows.
-- `multi_benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi).
-- `paper_specific_benchmark` / `survey_forecast`: look up the forecast at `train.index[-1] + horizon` months (monthly freq); fall back to the most recent trailing value on miss.
+- `multi_benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi). Missing or unsupported members raise `CompileValidationError`.
+- `paper_specific_benchmark` / `survey_forecast`: look up the forecast at `train.index[-1] + horizon` months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.
+- `expert_benchmark`: programmatic only; requires `leaf_config.benchmark_config.expert_callable`.
 
 ### Recipe usage
 
@@ -89,6 +90,7 @@ path:
 
 - `macrocast.execution.build._raw_panel_columns(frame, target, predictor_family, spec)` dispatches on the rule.
 - Target column is always excluded from the predictor set.
+- Compile guards: `handpicked_set` requires `leaf_config.handpicked_columns`; `category_based` requires `leaf_config.predictor_category_columns` and `leaf_config.predictor_category`.
 
 ### Dropped values
 
@@ -131,6 +133,7 @@ path:
 - `macrocast.execution.build._apply_variable_universe(raw_result, rule, spec, target)` is called during dataset loading in `execute_recipe`.
 - Target and date columns are always preserved after filtering.
 - Runtime discovery (stability / correlation) is out of scope — users supply the subset.
+- Compile guards: `handpicked_set` requires `leaf_config.variable_universe_columns`; `category_subset` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`; `target_specific_subset` requires `leaf_config.target_specific_columns` entries for the current target(s).
 
 ### Dropped values
 
@@ -183,7 +186,7 @@ path:
 - Module: `macrocast.execution.deterministic` — `augment_frame(df, component, *, index=None, break_dates=None)` + `augment_array(X, component, *, index, break_dates=None)`.
 - Wired into `_build_raw_panel_training_data` after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.
 - `monthly_seasonal` / `quarterly_seasonal` require a `DatetimeIndex`.
-- `break_dummies` raises `ExecutionError` if `leaf_config.break_dates` is missing or empty.
+- Compile guard: `break_dummies` requires non-empty `leaf_config.break_dates`.
 
 ### Dropped values
 

@@ -1,4 +1,4 @@
-"""v0.9.2 Group A batch 1: y-domain transform + normalization (forward-only).
+"""v0.9.2 Group A batch 1: y-domain transform + train-window normalization.
 
 Metrics are computed on the transformed scale (inverse-transform-to-raw-units
 is deferred to v1.0+). This batch covers the 6 target-side axes flipped in
@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.execution.build import _apply_target_transform_and_normalization
+from macrocast.execution.build import (
+    _apply_target_transform_and_normalization,
+    _fit_target_normalization_for_window,
+)
 from macrocast.preprocessing.build import PreprocessContract
 
 
@@ -73,18 +76,20 @@ def test_target_transform_log_rejects_nonpositive():
         _apply_target_transform_and_normalization(s, _contract(target_transform="log"))
 
 
-def test_target_normalization_zscore_applied():
+def test_target_normalization_zscore_fit_on_train_window():
     s = _series()
-    out = _apply_target_transform_and_normalization(s, _contract(target_normalization="zscore_train_only"))
+    out, state = _fit_target_normalization_for_window(s, _contract(target_normalization="zscore_train_only"))
     assert abs(out.mean()) < 1e-10
     assert abs(float(out.std(ddof=0)) - 1.0) < 1e-10
+    assert state["fit_scope"] == "train_only"
 
 
-def test_target_normalization_robust_zscore_applied():
+def test_target_normalization_robust_zscore_fit_on_train_window():
     s = _series()
-    out = _apply_target_transform_and_normalization(s, _contract(target_normalization="robust_zscore"))
+    out, state = _fit_target_normalization_for_window(s, _contract(target_normalization="robust_zscore"))
     # Median centred; MAD-scaled — median of out ≈ 0
     assert abs(out.median()) < 1e-10
+    assert state["fit_scope"] == "train_only"
 
 
 def test_level_default_is_identity():
@@ -93,7 +98,7 @@ def test_level_default_is_identity():
     pd.testing.assert_series_equal(out, s.astype(float))
 
 
-def test_registry_promotions_are_operational():
+def test_target_transform_registry_statuses_are_operational():
     from macrocast.registry.build import _discover_axis_definitions
 
     defs = _discover_axis_definitions()

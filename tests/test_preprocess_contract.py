@@ -11,6 +11,19 @@ from macrocast import (
     preprocess_summary,
     preprocess_to_dict,
 )
+from macrocast.preprocessing import (
+    CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
+    CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
+    CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,
+    FeatureBlockCallableResult,
+    FeatureCombinerCallableResult,
+    build_target_scale_contract,
+    custom_feature_block_contract_metadata,
+    custom_feature_combiner_contract_metadata,
+    custom_final_z_selection_contract_metadata,
+    validate_feature_block_callable_result,
+    validate_feature_combiner_callable_result,
+)
 
 
 def _raw_only_contract() -> PreprocessContract:
@@ -99,7 +112,7 @@ def test_build_preprocess_contract_train_only_raw_panel_robust_is_operational() 
     check_preprocess_governance(contract, preprocessing_sweep=False)
 
 
-def test_build_preprocess_contract_tcode_then_extra_is_representable() -> None:
+def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="tcode_transformed",
         x_transform_policy="dataset_tcode_transformed",
@@ -116,13 +129,140 @@ def test_build_preprocess_contract_tcode_then_extra_is_representable() -> None:
         inverse_transform_policy="target_only",
         evaluation_scale="raw_level",
         representation_policy="tcode_only",
-        preprocessing_axis_role="swept_preprocessing",
         tcode_application_scope="apply_tcode_to_both",
     )
 
     assert contract.preprocess_order == "tcode_then_extra"
     assert is_operational_preprocess_contract(contract) is False
     check_preprocess_governance(contract, preprocessing_sweep=True)
+
+
+def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="tcode_transformed",
+        x_transform_policy="dataset_tcode_transformed",
+        tcode_policy="tcode_then_extra_preprocess",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="winsorize",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="tcode_then_extra",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        representation_policy="tcode_only",
+        tcode_application_scope="apply_tcode_to_both",
+    )
+
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract, preprocessing_sweep=False)
+
+
+def test_target_normalization_is_operational_with_window_fit() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        target_normalization="zscore_train_only",
+    )
+
+    assert is_operational_preprocess_contract(contract) is True
+    check_preprocess_governance(contract)
+
+
+def test_target_scale_contract_records_operational_normalization() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="target_only",
+        evaluation_scale="both",
+        target_transform="log",
+        target_normalization="zscore_train_only",
+    )
+
+    scale = build_target_scale_contract(contract)
+
+    assert scale["schema_version"] == "target_scale_contract_v1"
+    assert scale["runtime_status"] == "operational"
+    assert scale["model_target_scale"] == "transformed_target_scale"
+    assert scale["forecast_scale"] == "original_target_scale"
+    assert scale["normalization_fit_scope"] == "train_only"
+    assert scale["blockers"] == []
+
+
+def test_custom_feature_block_contract_validation() -> None:
+    metadata = custom_feature_block_contract_metadata(block_kind="temporal")
+    assert metadata["schema_version"] == CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION
+    assert metadata["block_kind"] == "temporal"
+    assert "feature_names" in metadata["required_fields"]
+
+    result = FeatureBlockCallableResult(
+        train_features=object(),
+        pred_features=object(),
+        feature_names=("custom_ma",),
+        runtime_feature_names=("custom__ma",),
+        fit_state={"window": 3},
+        leakage_metadata={"lookahead": "forbidden"},
+        provenance={"source": "test"},
+    )
+    validate_feature_block_callable_result(result)
+
+
+def test_custom_feature_combiner_contract_validation() -> None:
+    metadata = custom_feature_combiner_contract_metadata()
+    assert metadata["schema_version"] == CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION
+    assert "Z_train" in metadata["required_fields"]
+
+    result = FeatureCombinerCallableResult(
+        Z_train=[[1.0], [2.0]],
+        Z_pred=[[3.0]],
+        feature_names=("custom_combo",),
+        block_roles={"custom_combo": "custom"},
+        fit_state={"alpha": 1.0},
+        leakage_metadata={"lookahead": "forbidden"},
+        provenance={"test": "combiner"},
+    )
+    validate_feature_combiner_callable_result(result)
+
+
+def test_custom_final_z_selection_contract_metadata() -> None:
+    metadata = custom_final_z_selection_contract_metadata()
+    assert metadata["schema_version"] == CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION
+    assert "selected_feature_names" in metadata["required_fields"]
+
+
+def test_custom_feature_block_contract_requires_leakage_metadata() -> None:
+    result = FeatureBlockCallableResult(
+        train_features=object(),
+        pred_features=object(),
+        feature_names=("custom_ma",),
+    )
+    with pytest.raises(PreprocessValidationError, match="lookahead"):
+        validate_feature_block_callable_result(result)
 
 
 def test_preprocess_governance_rejects_dual_axis_sweep() -> None:
@@ -190,9 +330,7 @@ def test_build_preprocess_contract_supports_stage2_governance_defaults() -> None
     contract = _raw_only_contract()
     payload = preprocess_to_dict(contract)
     assert payload["representation_policy"] == "raw_only"
-    assert payload["preprocessing_axis_role"] == "fixed_preprocessing"
     assert payload["tcode_application_scope"] == "apply_tcode_to_none"
-    assert payload["recipe_mode"] == "fixed_recipe"
 
 
 def test_build_preprocess_contract_mean_impute_minmax_is_operational() -> None:
@@ -237,29 +375,7 @@ def test_build_preprocess_contract_pca_path_is_operational() -> None:
     check_preprocess_governance(contract)
 
 
-def test_build_preprocess_contract_rejects_fixed_preprocessing_sweep_role() -> None:
-    contract = build_preprocess_contract(
-        target_transform_policy="raw_level",
-        x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
-        target_missing_policy="none",
-        x_missing_policy="mean_impute",
-        target_outlier_policy="none",
-        x_outlier_policy="none",
-        scaling_policy="standard",
-        dimensionality_reduction_policy="none",
-        feature_selection_policy="none",
-        preprocess_order="extra_only",
-        preprocess_fit_scope="train_only",
-        inverse_transform_policy="none",
-        evaluation_scale="raw_level",
-        preprocessing_axis_role="fixed_preprocessing",
-    )
-    with pytest.raises(PreprocessValidationError):
-        check_preprocess_governance(contract, preprocessing_sweep=True, model_sweep=False)
-
-
-def test_build_preprocess_contract_rejects_combined_dimred_and_feature_selection() -> None:
+def test_build_preprocess_contract_accepts_combined_dimred_and_feature_selection() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -276,4 +392,26 @@ def test_build_preprocess_contract_rejects_combined_dimred_and_feature_selection
         inverse_transform_policy="none",
         evaluation_scale="raw_level",
     )
-    assert is_operational_preprocess_contract(contract) is False
+    assert is_operational_preprocess_contract(contract) is True
+
+
+def test_build_preprocess_contract_accepts_select_after_factor_semantics() -> None:
+    contract = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="lasso_select",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        feature_selection_semantics="select_after_factor",
+    )
+    assert contract.feature_selection_semantics == "select_after_factor"
+    assert is_operational_preprocess_contract(contract) is True

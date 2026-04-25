@@ -10,7 +10,7 @@ v1.0 semantics:
 - `forecast_type=direct`   + feature_builder=raw_feature_panel       : executable.
 
 - `forecast_object=quantile` + `model_family=quantile_linear`         : executable (quantile level via training_spec.hp.quantile, default 0.5).
-- `forecast_object=quantile` + any other model_family                 : falls outside the compat guard but the existing executor still emits a point-mean forecast — registry_only behaviour for non-quantile_linear models is explicitly out of scope.
+- `forecast_object in {point_median, quantile}` + any other model_family: blocked_by_incompatibility.
 """
 from __future__ import annotations
 
@@ -79,14 +79,75 @@ def _recipe(*, feature_builder: str = "autoreg_lagged_target", model_family: str
 
 def test_forecast_type_default_is_iterated_for_autoreg() -> None:
     r = compile_recipe_dict(_recipe())
-    assert r.manifest["data_task_spec"]["forecast_type"] == "iterated"
+    assert r.manifest["training_spec"]["forecast_type"] == "iterated"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
     assert r.compiled.execution_status == "executable"
 
 
 def test_forecast_type_default_is_direct_for_raw_panel() -> None:
     r = compile_recipe_dict(_recipe(feature_builder="raw_feature_panel", model_family="ridge"))
-    assert r.manifest["data_task_spec"]["forecast_type"] == "direct"
+    assert r.manifest["training_spec"]["forecast_type"] == "direct"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
     assert r.compiled.execution_status == "executable"
+    matrix = r.manifest["layer3_capability_matrix"]
+    assert matrix["schema_version"] == "layer3_capability_matrix_v1"
+    assert matrix["active_cell"] == {
+        "model_family": "ridge",
+        "feature_builder": "raw_feature_panel",
+        "feature_runtime": "raw_feature_panel",
+        "forecast_type": "direct",
+        "forecast_object": "point_mean",
+        "payload_contract": "forecast_payload_v1",
+        "runtime_status": "operational",
+        "blocked_reasons": [],
+    }
+    assert matrix["canonical_active_cell"] == {
+        "forecast_generator_family": "ridge",
+        "representation_runtime": "raw_feature_panel",
+        "forecast_protocol": "direct",
+        "forecast_object": "point_mean",
+        "payload_contract": "forecast_payload_v1",
+        "runtime_status": "operational",
+        "blocked_reasons": [],
+    }
+
+
+def test_layer3_capability_matrix_records_model_runtime_block() -> None:
+    r = compile_recipe_dict(_recipe(feature_builder="raw_feature_panel", model_family="ar"))
+    assert r.compiled.execution_status == "blocked_by_incompatibility"
+    cell = r.manifest["layer3_capability_matrix"]["active_cell"]
+    assert cell["model_family"] == "ar"
+    assert cell["feature_runtime"] == "raw_feature_panel"
+    assert cell["runtime_status"] == "blocked_by_incompatibility"
+    assert cell["blocked_reasons"] == r.manifest["blocked_reasons"]
+
+
+def test_layer3_capability_matrix_records_future_status_catalog() -> None:
+    r = compile_recipe_dict(_recipe(feature_builder="raw_feature_panel", model_family="ridge"))
+    matrix = r.manifest["layer3_capability_matrix"]
+
+    assert matrix["schema_version"] == "layer3_capability_matrix_v1"
+    assert matrix["schema_revision"] == 5
+    assert matrix["canonical_dimensions"] == [
+        "forecast_generator_family",
+        "representation_runtime",
+        "forecast_protocol",
+        "forecast_object",
+    ]
+    assert matrix["dimension_aliases"]["model_family"] == "forecast_generator_family"
+    assert matrix["dimension_aliases"]["benchmark_family"] == "baseline_forecast_generator_role"
+    assert matrix["dimension_aliases"]["feature_runtime"] == "representation_runtime"
+    assert matrix["dimension_aliases"]["forecast_type"] == "forecast_protocol"
+    assert "not_supported_yet" in matrix["status_catalog"]
+    future_cells = {cell["cell_id"]: cell for cell in matrix["future_cells"]}
+    assert "forecast_object.interval" not in future_cells
+    assert matrix["rules"]["forecast_object"]["direction"]["payload_contract"] == "direction_forecast_payload_v1"
+    assert matrix["rules"]["forecast_object"]["interval"]["runtime_status"] == "operational"
+    assert matrix["rules"]["forecast_object"]["interval"]["payload_contract"] == "interval_forecast_payload_v1"
+    assert matrix["rules"]["forecast_object"]["density"]["payload_contract"] == "density_forecast_payload_v1"
+    assert future_cells["feature_runtime.sequence_tensor"]["owner_layer"] == "2_preprocessing"
+    assert future_cells["feature_runtime.sequence_tensor"]["upstream_contract"] == "sequence_representation_contract_v1"
+    assert future_cells["forecast_type.raw_panel_iterated"]["scenario_contract"] == "exogenous_x_path_contract_v1"
 
 
 def test_forecast_type_iterated_autoreg_executes(tmp_path: Path) -> None:
@@ -99,7 +160,8 @@ def test_forecast_type_iterated_autoreg_executes(tmp_path: Path) -> None:
         local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["data_task_spec"]["forecast_type"] == "iterated"
+    assert manifest["training_spec"]["forecast_type"] == "iterated"
+    assert "forecast_type" not in manifest["data_task_spec"]
 
 
 def test_forecast_type_iterated_raw_panel_blocked() -> None:
@@ -110,16 +172,18 @@ def test_forecast_type_iterated_raw_panel_blocked() -> None:
     ))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
-        "forecast_type='iterated' is not implemented for feature_builder='raw_feature_panel'" in r_msg
+        "forecast_type='iterated' is not implemented for the raw-panel feature runtime" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )
+    assert r.manifest["layer3_capability_matrix"]["active_cell"]["runtime_status"] == "blocked_by_incompatibility"
+    assert r.manifest["layer3_capability_matrix"]["active_cell"]["blocked_reasons"] == r.manifest["blocked_reasons"]
 
 
 def test_forecast_type_direct_autoreg_blocked() -> None:
     r = compile_recipe_dict(_recipe(forecast_type="direct"))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
-        "forecast_type='direct' is not implemented for feature_builder='autoreg_lagged_target'" in r_msg
+        "forecast_type='direct' is not implemented for the target-lag-only feature runtime" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )
 
@@ -131,7 +195,8 @@ def test_forecast_type_direct_raw_panel_executes() -> None:
         forecast_type="direct",
     ))
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["forecast_type"] == "direct"
+    assert r.manifest["training_spec"]["forecast_type"] == "direct"
+    assert "forecast_type" not in r.manifest["data_task_spec"]
 
 
 def test_forecast_object_quantile_with_quantile_linear_executes(tmp_path: Path) -> None:
@@ -150,7 +215,8 @@ def test_forecast_object_quantile_with_quantile_linear_executes(tmp_path: Path) 
         local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["data_task_spec"]["forecast_object"] == "quantile"
+    assert manifest["training_spec"]["forecast_object"] == "quantile"
+    assert "forecast_object" not in manifest["data_task_spec"]
 
 
 def test_forecast_object_point_median_still_allowed_with_quantile_linear() -> None:
@@ -170,5 +236,58 @@ def test_forecast_object_point_mean_rejected_with_quantile_linear() -> None:
     assert r.compiled.execution_status == "blocked_by_incompatibility"
     assert any(
         "quantile_linear" in r_msg and "point_median" in r_msg
+        for r_msg in r.manifest.get("blocked_reasons", [])
+    )
+
+
+@pytest.mark.parametrize(
+    ("forecast_object", "contract", "payload_column"),
+    [
+        ("direction", "direction_forecast_payload_v1", "direction_hit"),
+        ("interval", "interval_forecast_payload_v1", "interval_covered"),
+        ("density", "density_forecast_payload_v1", "density_log_score"),
+    ],
+)
+def test_forecast_payload_family_executes(
+    tmp_path: Path,
+    forecast_object: str,
+    contract: str,
+    payload_column: str,
+) -> None:
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        forecast_object=forecast_object,
+    )
+    r = compile_recipe_dict(recipe)
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["layer3_capability_matrix"]["active_cell"]["payload_contract"] == contract
+    execution = run_compiled_recipe(
+        r.compiled,
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+    )
+    artifact_dir = Path(execution.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    predictions = __import__("pandas").read_csv(artifact_dir / "predictions.csv")
+    metrics = json.loads((artifact_dir / "metrics.json").read_text())
+
+    assert manifest["forecast_object"] == forecast_object
+    assert manifest["forecast_payload_contract"] == contract
+    assert manifest["forecast_payloads_file"] == "forecast_payloads.jsonl"
+    assert payload_column in predictions.columns
+    assert predictions["forecast_payload_contract"].eq(contract).all()
+    assert metrics["metrics_by_horizon"]["h1"]["payload_metrics"]["payload_family"] == forecast_object
+
+
+@pytest.mark.parametrize("forecast_object", ["point_median", "quantile"])
+def test_forecast_object_distributional_values_require_quantile_linear(forecast_object: str) -> None:
+    r = compile_recipe_dict(_recipe(
+        model_family="ar",
+        forecast_object=forecast_object,
+    ))
+    assert r.compiled.execution_status == "blocked_by_incompatibility"
+    assert any(
+        forecast_object in r_msg and "quantile_linear" in r_msg
         for r_msg in r.manifest.get("blocked_reasons", [])
     )

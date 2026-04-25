@@ -33,7 +33,6 @@ execute_sweep(
     plan: SweepPlan,
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
-    fail_fast: bool = False,
     research_design: str = "controlled_variation",
     extra_provenance: dict | None = None,
 ) -> SweepResult
@@ -41,6 +40,13 @@ execute_sweep(
 
 Executes every variant under `output_root`, sharing a FRED cache and
 writing a Schema v1 `study_manifest.json` at the root.
+
+Failure behavior is controlled by the parent recipe's Layer 0
+`failure_policy`. With `skip_failed_cell`, compile-invalid variants are not
+executed. They are recorded as `status="skipped"`, their variant directory
+contains `compiler_manifest.json`, and the root manifest records
+`compiler_status`, `compiler_blocked_reasons`, and
+`layer3_capability_cell`.
 
 ## Dataclasses
 
@@ -69,6 +75,7 @@ writing a Schema v1 `study_manifest.json` at the root.
 - `per_variant_results: tuple[VariantResult, ...]`
 - `successful_count: int`
 - `failed_count: int`
+- `skipped_count: int`
 - `size: int`
 
 ### VariantResult
@@ -78,6 +85,10 @@ writing a Schema v1 `study_manifest.json` at the root.
 - `status: str` — `success | failed | skipped`
 - `artifact_dir: str | None`
 - `runtime_seconds: float`
+- `compiler_status: str | None`
+- `compiler_warnings: tuple[str, ...]`
+- `compiler_blocked_reasons: tuple[str, ...]`
+- `layer3_capability_cell: dict[str, Any]`
 - `error: str | None`
 - `metrics_summary: dict`
 

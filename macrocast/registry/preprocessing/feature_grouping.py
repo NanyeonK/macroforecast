@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='fred_category_group',
             description='fred category group',
-            status="operational",
+            status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(
@@ -30,7 +30,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='lag_group',
             description='lag group',
-            status="operational",
+            status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(
@@ -42,4 +42,5 @@ AXIS_DEFINITION = AxisDefinition(
     ),
     compatible_with={},
     incompatible_with={},
+    component="feature_representation",
 )

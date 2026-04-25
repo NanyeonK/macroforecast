@@ -53,6 +53,10 @@ class VariantManifestEntry:
     seed_used: int | None = None
     runtime_seconds: float | None = None
     error: str | None = None
+    compiler_status: str | None = None
+    compiler_warnings: list[str] = field(default_factory=list)
+    compiler_blocked_reasons: list[str] = field(default_factory=list)
+    layer3_capability_cell: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -68,6 +72,14 @@ class VariantManifestEntry:
             payload["runtime_seconds"] = float(self.runtime_seconds)
         if self.error is not None:
             payload["error"] = str(self.error)
+        if self.compiler_status is not None:
+            payload["compiler_status"] = str(self.compiler_status)
+        if self.compiler_warnings:
+            payload["compiler_warnings"] = list(self.compiler_warnings)
+        if self.compiler_blocked_reasons:
+            payload["compiler_blocked_reasons"] = list(self.compiler_blocked_reasons)
+        if self.layer3_capability_cell:
+            payload["layer3_capability_cell"] = dict(self.layer3_capability_cell)
         return payload
 
 
@@ -91,6 +103,15 @@ def build_study_manifest(
     """Produce a Schema-v1 study manifest dict ready for JSON write."""
 
     variant_list = [v.to_dict() for v in variants]
+    successful = sum(1 for v in variant_list if v["status"] == "success")
+    failed = sum(1 for v in variant_list if v["status"] == "failed")
+    skipped = sum(1 for v in variant_list if v["status"] == "skipped")
+    invalid_cells = sum(
+        1
+        for v in variant_list
+        if v["status"] == "skipped"
+        and v.get("compiler_status") in {"blocked_by_incompatibility", "not_supported"}
+    )
     manifest: dict[str, Any] = {
         "schema_version": STUDY_MANIFEST_SCHEMA_VERSION,
         "study_id": study_id,
@@ -104,9 +125,16 @@ def build_study_manifest(
         },
         "summary": {
             "total_variants": len(variant_list),
-            "successful": sum(1 for v in variant_list if v["status"] == "success"),
-            "failed": sum(1 for v in variant_list if v["status"] == "failed"),
-            "skipped": sum(1 for v in variant_list if v["status"] == "skipped"),
+            "successful": successful,
+            "failed": failed,
+            "skipped": skipped,
+            "invalid_cells": invalid_cells,
+            "runnable_variants": successful + failed,
+            "variants_by_status": {
+                "success": successful,
+                "failed": failed,
+                "skipped": skipped,
+            },
         },
     }
     if package_version is not None:

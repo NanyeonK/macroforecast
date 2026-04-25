@@ -7,7 +7,7 @@ path:
     fixed_axes:
       dataset: fred_md
       info_set: revised
-      task: single_target_point_forecast
+      target_structure: single_target_point_forecast
     leaf_config:
       target: INDPRO
       horizons: [1]

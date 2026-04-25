@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import shutil
+import tempfile
 from pathlib import Path
 
 from .types import RawVersionRequest
@@ -33,3 +36,39 @@ def get_raw_file_path(
         path = root / request.dataset / "vintages" / f"{request.vintage}.{suffix}"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def atomic_copy_to_cache(source: str | Path, target: str | Path) -> None:
+    """Copy ``source`` to ``target`` without exposing partial cache files."""
+    target_path = Path(target)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{target_path.name}.",
+        suffix=".tmp",
+        dir=target_path.parent,
+    )
+    tmp_path = Path(tmp_name)
+    os.close(fd)
+    try:
+        shutil.copyfile(source, tmp_path)
+        os.replace(tmp_path, target_path)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def atomic_write_bytes_to_cache(content: bytes, target: str | Path) -> None:
+    """Write bytes to ``target`` without exposing partial cache files."""
+    target_path = Path(target)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{target_path.name}.",
+        suffix=".tmp",
+        dir=target_path.parent,
+    )
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(content)
+        os.replace(tmp_path, target_path)
+    finally:
+        tmp_path.unlink(missing_ok=True)

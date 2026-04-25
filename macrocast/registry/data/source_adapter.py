@@ -4,7 +4,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 
 AXIS_DEFINITION = AxisDefinition(
-    axis_name='dataset_source',
+    axis_name='source_adapter',
     layer='1_data_task',
     axis_type='enum',
     default_policy='fixed',

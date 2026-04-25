@@ -72,13 +72,15 @@ def _recipe(**data_task_axes) -> dict:
 def test_contemporaneous_x_forbid_default_compiles() -> None:
     r = compile_recipe_dict(_recipe())
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["contemporaneous_x_rule"] == "forbid_contemporaneous"
+    assert r.manifest["layer2_representation_spec"]["input_panel"]["contemporaneous_x_rule"] == "forbid_contemporaneous"
+    assert "contemporaneous_x_rule" not in r.manifest["data_task_spec"]
 
 
 def test_contemporaneous_x_allow_compiles() -> None:
     r = compile_recipe_dict(_recipe(contemporaneous_x_rule="allow_contemporaneous"))
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["contemporaneous_x_rule"] == "allow_contemporaneous"
+    assert r.manifest["layer2_representation_spec"]["input_panel"]["contemporaneous_x_rule"] == "allow_contemporaneous"
+    assert "contemporaneous_x_rule" not in r.manifest["data_task_spec"]
 
 
 # ---------- release_lag_rule ----------
@@ -99,9 +101,11 @@ def test_release_lag_fixed_lag_all_series_executes() -> None:
 
 # ---------- missing_availability ----------
 
-def test_missing_availability_complete_case_default_compiles() -> None:
+def test_missing_availability_zero_fill_default_compiles() -> None:
     r = compile_recipe_dict(_recipe())
-    assert r.manifest["data_task_spec"]["missing_availability"] == "complete_case_only"
+    assert r.manifest["data_task_spec"]["missing_availability"] == "zero_fill_before_start"
+    assert r.manifest["data_task_spec"]["raw_missing_policy"] == "preserve_raw_missing"
+    assert r.manifest["data_task_spec"]["raw_outlier_policy"] == "preserve_raw_outliers"
 
 
 def test_missing_availability_available_case_compiles() -> None:
@@ -109,10 +113,7 @@ def test_missing_availability_available_case_compiles() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_missing_availability_x_impute_only_requires_strategy() -> None:
-    # Compile is executable; runtime guard fires when the execution path calls
-    # _apply_missing_availability without the strategy. Here we confirm the
-    # axis value is accepted at compile time.
+def test_missing_availability_x_impute_only_compiles_with_strategy() -> None:
     r = compile_recipe_dict(_recipe(
         missing_availability="x_impute_only",
         _leaf={"x_imputation": "ffill"},
@@ -121,13 +122,33 @@ def test_missing_availability_x_impute_only_requires_strategy() -> None:
     assert r.manifest["data_task_spec"]["x_imputation"] == "ffill"
 
 
+def test_raw_missing_policy_x_impute_raw_compiles_with_strategy() -> None:
+    r = compile_recipe_dict(_recipe(
+        raw_missing_policy="x_impute_raw",
+        _leaf={"raw_x_imputation": "ffill"},
+    ))
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["data_task_spec"]["raw_x_imputation"] == "ffill"
+
+
+def test_raw_outlier_policy_compiles_with_optional_column_subset() -> None:
+    r = compile_recipe_dict(_recipe(
+        raw_outlier_policy="winsorize_raw",
+        _leaf={"raw_outlier_columns": ["INDPRO"]},
+    ))
+    assert r.compiled.execution_status == "executable"
+    assert r.manifest["data_task_spec"]["raw_outlier_columns"] == ["INDPRO"]
+
+
 # ---------- structural_break_segmentation ----------
 
 @pytest.mark.parametrize("value", ["pre_post_crisis", "pre_post_covid"])
 def test_structural_break_presets_compile(value: str) -> None:
     r = compile_recipe_dict(_recipe(structural_break_segmentation=value))
     assert r.compiled.execution_status == "executable"
-    assert r.manifest["data_task_spec"]["structural_break_segmentation"] == value
+    block = r.manifest["layer2_representation_spec"]["feature_blocks"]["deterministic_feature_block"]
+    assert block["structural_break_segmentation"] == value
+    assert "structural_break_segmentation" not in r.manifest["data_task_spec"]
 
 
 

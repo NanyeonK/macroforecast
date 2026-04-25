@@ -21,7 +21,7 @@ macrocast lets you run a complete forecasting study from a YAML recipe. Most rec
 
 - **Recipe** — a YAML file that fully specifies one forecasting study. Data + preprocessing + model + benchmark + metrics, in one place.
 - **Stage 0 (Design)** — the study grammar. Decides runner, sweep shape, reproducibility. Six axes. Mostly auto-derived. [Deep dive](../user_guide/design.md).
-- **Stage 1 (Data)** — everything about the dataset, task, evaluation window, benchmark, predictors, and data-handling policies. Twenty axes. Most have sensible defaults. [Deep dive](../user_guide/data/index.md).
+- **Stage 1 (Data)** — everything about the dataset, target structure, evaluation window, benchmark, predictors, and data-handling policies. Twenty axes. Most have sensible defaults. [Deep dive](../user_guide/data/index.md).
 - **Compiler** — validates your recipe and decides if it can execute in the current runtime.
 - **Execution** — runs the forecast, writes predictions + metrics + a complete `manifest.json` that records every resolved choice.
 

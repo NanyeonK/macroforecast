@@ -1,8 +1,9 @@
 """Horse-race sweep plan compiler.
 
-Expands a recipe dict's ``sweep_axes`` entries (across layers) into a
-Cartesian product of concrete single-path variant recipe dicts. Each
-variant is fully-specified and compilable through ``compile_recipe_dict``.
+Expands a recipe dict's ``sweep_axes`` and ``leaf_sweep_axes`` entries
+(across layers) into a Cartesian product of concrete single-path variant
+recipe dicts. Each variant is fully-specified and compilable through
+``compile_recipe_dict``.
 
 Part of Phase 1 (horse-race sweep executor - IDENTITY UNLOCK).
 See plans/phases/phase_01_sweep_executor.md section 4.1.
@@ -14,10 +15,27 @@ import copy
 import hashlib
 import itertools
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 DEFAULT_MAX_VARIANTS = 1000
+_LEAF_CONFIG_PREFIX = "leaf_config."
+_LAYER2_REPRESENTATION_SWEEP_AXES = {
+    "target_transform",
+    "target_normalization",
+    "horizon_target_construction",
+    "target_lag_block",
+    "target_lag_selection",
+    "x_lag_feature_block",
+    "factor_feature_block",
+    "feature_selection_policy",
+    "feature_selection_semantics",
+    "level_feature_block",
+    "temporal_feature_block",
+    "rotation_feature_block",
+    "feature_block_combination",
+    "feature_block_set",
+}
 
 
 class SweepPlanError(ValueError):
@@ -28,19 +46,18 @@ class SweepPlanError(ValueError):
 class SweepVariant:
     """One fully-specified variant recipe derived from a parent sweep recipe.
 
-    Attributes:
-        variant_id: Stable identifier ``v-<8-hex>`` derived from the axis
-            values (same values -> same id across runs and machines).
-        axis_values: Layer-qualified axis values fixed for this variant,
-            e.g. ``{"3_training.model_family": "ridge"}``.
-        parent_recipe_id: The sweep parent recipe's ``recipe_id``.
-        variant_recipe_dict: The variant's standalone recipe dict with
-            ``sweep_axes`` merged into ``fixed_axes``; compilable by
-            ``compile_recipe_dict`` as a single-path recipe.
+    Field contract: ``variant_id`` is a stable ``v-<8-hex>`` identifier
+    derived from the axis values; ``axis_values`` stores layer-qualified
+    fixed values such as ``{"3_training.model_family": "ridge"}`` or
+    leaf config values such as
+    ``{"2_preprocessing.leaf_config.custom_feature_combiner": "my_combo"}``;
+    ``parent_recipe_id`` preserves the parent recipe identity; and
+    ``variant_recipe_dict`` is a standalone recipe dict with ``sweep_axes``
+    merged into ``fixed_axes`` for single-path compilation.
     """
 
     variant_id: str
-    axis_values: dict[str, str]
+    axis_values: dict[str, Any]
     parent_recipe_id: str
     variant_recipe_dict: dict[str, Any]
 
@@ -54,6 +71,7 @@ class SweepPlan:
     parent_recipe_dict: dict[str, Any]
     axes_swept: tuple[str, ...]
     variants: tuple[SweepVariant, ...]
+    governance: dict[str, Any] = field(default_factory=dict)
 
     @property
     def size(self) -> int:
@@ -64,7 +82,7 @@ def _canonical_json(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
-def _variant_id(axis_values: dict[str, str]) -> str:
+def _variant_id(axis_values: dict[str, Any]) -> str:
     digest = hashlib.sha256(_canonical_json(axis_values).encode("utf-8")).hexdigest()
     return f"v-{digest[:8]}"
 
@@ -72,7 +90,7 @@ def _variant_id(axis_values: dict[str, str]) -> str:
 def _study_id(
     parent_recipe_id: str,
     axes_swept: tuple[str, ...],
-    variant_axis_values: list[dict[str, str]],
+    variant_axis_values: list[dict[str, Any]],
 ) -> str:
     payload = {
         "parent_recipe_id": parent_recipe_id,
@@ -88,6 +106,28 @@ def _layer_keys(recipe_dict: dict[str, Any]) -> list[str]:
     if not isinstance(path, dict):
         raise SweepPlanError("recipe dict missing 'path' object")
     return sorted(path.keys())
+
+
+def _is_leaf_config_axis(axis_name: str) -> bool:
+    return str(axis_name).startswith(_LEAF_CONFIG_PREFIX)
+
+
+def _leaf_axis_name(key: str) -> str:
+    key = str(key)
+    if _is_leaf_config_axis(key):
+        return key
+    if not key:
+        raise SweepPlanError("leaf_sweep_axes keys must be non-empty")
+    return f"{_LEAF_CONFIG_PREFIX}{key}"
+
+
+def _leaf_config_key(axis_name: str) -> str:
+    if not _is_leaf_config_axis(axis_name):
+        raise SweepPlanError(f"{axis_name!r} is not a leaf_config axis")
+    key = str(axis_name)[len(_LEAF_CONFIG_PREFIX):]
+    if not key:
+        raise SweepPlanError("leaf_config sweep axis must name a concrete leaf key")
+    return key
 
 
 def _collect_sweep_axes(
@@ -111,6 +151,11 @@ def _collect_sweep_axes(
                 f"{type(fixed_axes).__name__}"
             )
         for axis_name, values in sorted(sweep_axes.items()):
+            if _is_leaf_config_axis(axis_name):
+                raise SweepPlanError(
+                    f"layer '{layer}': use leaf_sweep_axes for leaf_config key "
+                    f"{axis_name!r}, not sweep_axes"
+                )
             if axis_name in fixed_axes:
                 raise SweepPlanError(
                     f"layer '{layer}': axis '{axis_name}' appears in both "
@@ -120,6 +165,43 @@ def _collect_sweep_axes(
                 raise SweepPlanError(
                     f"layer '{layer}': sweep_axes['{axis_name}'] must be a "
                     f"non-empty list of values"
+                )
+            triples.append((layer, axis_name, list(values)))
+    return triples
+
+
+def _collect_leaf_sweep_axes(
+    recipe_dict: dict[str, Any],
+) -> list[tuple[str, str, list[Any]]]:
+    triples: list[tuple[str, str, list[Any]]] = []
+    for layer in _layer_keys(recipe_dict):
+        layer_block = recipe_dict["path"][layer]
+        if not isinstance(layer_block, dict):
+            continue
+        leaf_sweep_axes = layer_block.get("leaf_sweep_axes") or {}
+        if not isinstance(leaf_sweep_axes, dict):
+            raise SweepPlanError(
+                f"layer '{layer}': leaf_sweep_axes must be a mapping, got "
+                f"{type(leaf_sweep_axes).__name__}"
+            )
+        leaf_config = layer_block.get("leaf_config") or {}
+        if not isinstance(leaf_config, dict):
+            raise SweepPlanError(
+                f"layer '{layer}': leaf_config must be a mapping, got "
+                f"{type(leaf_config).__name__}"
+            )
+        for raw_key, values in sorted(leaf_sweep_axes.items()):
+            axis_name = _leaf_axis_name(str(raw_key))
+            leaf_key = _leaf_config_key(axis_name)
+            if leaf_key in leaf_config:
+                raise SweepPlanError(
+                    f"layer '{layer}': leaf_config key '{leaf_key}' appears in both "
+                    "leaf_config and leaf_sweep_axes - pick one"
+                )
+            if not isinstance(values, (list, tuple)) or len(values) == 0:
+                raise SweepPlanError(
+                    f"layer '{layer}': leaf_sweep_axes['{raw_key}'] must be a "
+                    "non-empty list of values"
                 )
             triples.append((layer, axis_name, list(values)))
     return triples
@@ -162,13 +244,40 @@ def _collect_nested_sweep_groups(
                 )
             variant_list: list[dict[tuple[str, str], Any]] = []
             for parent_value, child_spec in sorted(children.items()):
-                if not isinstance(child_spec, dict) or len(child_spec) != 1:
+                if not isinstance(child_spec, dict):
                     raise SweepPlanError(
                         f"layer '{layer}': nested_sweep "
                         f"'{parent_axis}.{parent_value}' child_spec must be "
-                        "a single-key mapping {child_axis: [values]}"
+                        "a mapping {child_axis: [values]} or an empty mapping"
+                    )
+                if not child_spec:
+                    variant_list.append({(layer, parent_axis): parent_value})
+                    continue
+                if len(child_spec) != 1:
+                    raise SweepPlanError(
+                        f"layer '{layer}': nested_sweep "
+                        f"'{parent_axis}.{parent_value}' child_spec must be "
+                        "empty or a single-key mapping {child_axis: [values]}"
                     )
                 child_axis, child_values = next(iter(child_spec.items()))
+                if _is_leaf_config_axis(child_axis):
+                    leaf_config = layer_block.get("leaf_config") or {}
+                    if not isinstance(leaf_config, dict):
+                        raise SweepPlanError(
+                            f"layer '{layer}': leaf_config must be a mapping, got "
+                            f"{type(leaf_config).__name__}"
+                        )
+                    leaf_key = _leaf_config_key(child_axis)
+                    if leaf_key in leaf_config:
+                        raise SweepPlanError(
+                            f"layer '{layer}': nested_sweep child leaf_config key "
+                            f"'{leaf_key}' also appears in leaf_config"
+                        )
+                elif child_axis in fixed_axes or child_axis in sweep_axes:
+                    raise SweepPlanError(
+                        f"layer '{layer}': nested_sweep child axis '{child_axis}' "
+                        "also appears in fixed_axes or sweep_axes"
+                    )
                 if not isinstance(child_values, (list, tuple)) or not child_values:
                     raise SweepPlanError(
                         f"layer '{layer}': nested_sweep "
@@ -197,6 +306,23 @@ def _materialise_variant(
 
     for (layer, axis_name), value in picks.items():
         layer_block = variant["path"][layer]
+        if _is_leaf_config_axis(axis_name):
+            leaf_key = _leaf_config_key(axis_name)
+            leaf_config = dict(layer_block.get("leaf_config") or {})
+            leaf_config[leaf_key] = value
+            layer_block["leaf_config"] = leaf_config
+            leaf_sweep_axes = layer_block.get("leaf_sweep_axes") or {}
+            if leaf_sweep_axes:
+                new_leaf_sweep_axes = {
+                    k: v
+                    for k, v in leaf_sweep_axes.items()
+                    if _leaf_axis_name(str(k)) != axis_name
+                }
+                if new_leaf_sweep_axes:
+                    layer_block["leaf_sweep_axes"] = new_leaf_sweep_axes
+                else:
+                    layer_block.pop("leaf_sweep_axes", None)
+            continue
         sweep_axes = layer_block.get("sweep_axes") or {}
         if axis_name in sweep_axes:
             new_sweep_axes = {k: v for k, v in sweep_axes.items() if k != axis_name}
@@ -212,8 +338,60 @@ def _materialise_variant(
     for layer_block in variant.get("path", {}).values():
         if isinstance(layer_block, dict):
             layer_block.pop("nested_sweep_axes", None)
+            layer_block.pop("leaf_sweep_axes", None)
 
     return variant
+
+
+def _sweep_governance(
+    axes_swept: tuple[str, ...],
+    *,
+    max_variants: int | None,
+    total_variants: int,
+) -> dict[str, Any]:
+    layer2_axes = tuple(axis for axis in axes_swept if axis.startswith("2_preprocessing."))
+    layer2_representation_axes = tuple(
+        axis
+        for axis in layer2_axes
+        if axis.rsplit(".", 1)[-1] in _LAYER2_REPRESENTATION_SWEEP_AXES
+    )
+    model_axes = tuple(axis for axis in axes_swept if axis.endswith(".model_family"))
+    leaf_config_axes = tuple(axis for axis in axes_swept if f".{_LEAF_CONFIG_PREFIX}" in axis)
+    method_extension_axes = tuple(
+        axis
+        for axis in axes_swept
+        if any(
+            token in axis
+            for token in (
+                "custom_feature",
+                "custom_temporal",
+                "custom_rotation",
+                "custom_factor",
+                "custom_preprocessor",
+                "target_transformer",
+                "model_family",
+            )
+        )
+    )
+    return {
+        "schema_version": "sweep_governance_v1",
+        "expansion_policy": "cartesian_expand_all_then_compile_each_variant",
+        "invalid_combination_policy": "materialize_then_gate_at_variant_compile_or_execute",
+        "axes_swept": list(axes_swept),
+        "layer2_axes": list(layer2_axes),
+        "layer2_representation_axes": list(layer2_representation_axes),
+        "model_axes": list(model_axes),
+        "leaf_config_axes": list(leaf_config_axes),
+        "method_extension_axes": list(method_extension_axes),
+        "co_sweeps_model_and_layer2": bool(model_axes and layer2_representation_axes),
+        "max_variants": max_variants,
+        "variant_count": total_variants,
+        "public_api_note": (
+            "The sweep planner may expand all requested Layer 2 representation combinations; "
+            "public callers should still surface per-variant compile status because some "
+            "combinations are intentionally gated by Layer 2/3 runtime contracts."
+        ),
+    }
 
 
 def compile_sweep_plan(
@@ -225,7 +403,10 @@ def compile_sweep_plan(
 
     Args:
         recipe_dict: Parent recipe dict containing one or more
-            ``path.<layer>.sweep_axes`` entries.
+            ``path.<layer>.sweep_axes``, ``leaf_sweep_axes``, or
+            ``nested_sweep_axes`` entries. ``leaf_sweep_axes`` materialize
+            variant-specific ``leaf_config`` keys and are intended for
+            method-extension names/configs such as custom Layer 2 blocks.
         max_variants: Upper bound on generated variants, default 1000. Pass
             ``None`` to disable (not recommended for user-supplied recipes).
 
@@ -235,21 +416,21 @@ def compile_sweep_plan(
         recipe.
 
     Raises:
-        SweepPlanError: if the recipe dict has no sweep_axes, if a sweep
-            axis duplicates a fixed axis on the same layer, or if the
-            Cartesian size exceeds ``max_variants``.
+        SweepPlanError: if the recipe dict has no sweep axes, if a sweep
+            axis duplicates a fixed axis or leaf key on the same layer, or if
+            the Cartesian size exceeds ``max_variants``.
     """
 
     if not isinstance(recipe_dict, dict):
         raise SweepPlanError("recipe_dict must be a mapping")
     parent_recipe_id = recipe_dict.get("recipe_id", "recipe")
 
-    sweep_triples = _collect_sweep_axes(recipe_dict)
+    sweep_triples = _collect_sweep_axes(recipe_dict) + _collect_leaf_sweep_axes(recipe_dict)
     nested_groups = _collect_nested_sweep_groups(recipe_dict)
     if not sweep_triples and not nested_groups:
         raise SweepPlanError(
-            "recipe dict has no sweep_axes or nested_sweep_axes - use "
-            "compile_recipe_dict for single-path recipes"
+            "recipe dict has no sweep_axes, leaf_sweep_axes, or "
+            "nested_sweep_axes - use compile_recipe_dict for single-path recipes"
         )
 
     axes_swept_parts: list[str] = [f"{layer}.{axis}" for layer, axis, _ in sweep_triples]
@@ -276,7 +457,7 @@ def compile_sweep_plan(
         )
 
     variants: list[SweepVariant] = []
-    variant_axis_values: list[dict[str, str]] = []
+    variant_axis_values: list[dict[str, Any]] = []
     seen_variant_ids: set[str] = set()
 
     sweep_combos_iter = (
@@ -292,7 +473,7 @@ def compile_sweep_plan(
     for sweep_combo in sweep_combos_iter:
         for nested_combo in nested_combos_list:
             picks: dict[tuple[str, str], Any] = {}
-            axis_values: dict[str, str] = {}
+            axis_values: dict[str, Any] = {}
             for (layer, axis_name, _values), value in zip(sweep_triples, sweep_combo):
                 picks[(layer, axis_name)] = value
                 axis_values[f"{layer}.{axis_name}"] = value
@@ -328,6 +509,11 @@ def compile_sweep_plan(
         parent_recipe_dict=copy.deepcopy(recipe_dict),
         axes_swept=axes_swept,
         variants=tuple(variants),
+        governance=_sweep_governance(
+            axes_swept,
+            max_variants=max_variants,
+            total_variants=total,
+        ),
     )
 
 

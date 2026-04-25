@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
+from macrocast.raw.cache import atomic_copy_to_cache
 from macrocast.raw import load_fred_md, load_fred_qd, parse_fred_csv
 from macrocast.raw.errors import RawDownloadError, RawVersionFormatError
 
@@ -57,3 +59,17 @@ def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:
 def test_load_fred_qd_wraps_download_failure(tmp_path: Path) -> None:
     with pytest.raises(RawDownloadError):
         load_fred_qd(vintage="2020-01", cache_root=tmp_path)
+
+
+def test_atomic_cache_copy_supports_concurrent_writers(tmp_path: Path) -> None:
+    source = tmp_path / "source.csv"
+    target = tmp_path / "cache" / "raw.csv"
+    source.write_text("sasdate,INDPRO\nTransform:,5\n1/1/2000,100\n")
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(atomic_copy_to_cache, source, target) for _ in range(16)]
+        for future in futures:
+            future.result()
+
+    assert target.read_text() == source.read_text()
+    assert not list(target.parent.glob("*.tmp"))

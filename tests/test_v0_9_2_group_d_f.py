@@ -17,6 +17,7 @@ METADATA_FLIPS = (
     ("agg_time", "regime_subsample_average"),
     ("agg_time", "pre_post_break_average"),
     ("decomposition_target", "preprocessing_effect"),
+    ("decomposition_target", "feature_representation_effect"),
     ("decomposition_target", "feature_builder_effect"),
     ("decomposition_target", "benchmark_effect"),
     # training + meta

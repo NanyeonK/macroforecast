@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='factor_count',
-    layer='3_training',
+    layer='2_preprocessing',
     axis_type='enum',
     default_policy='fixed',
     entries=(
@@ -42,4 +42,5 @@ AXIS_DEFINITION = AxisDefinition(
     ),
     compatible_with={},
     incompatible_with={},
+    component="feature_representation",
 )

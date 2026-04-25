@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from macrocast import (
@@ -9,8 +10,16 @@ from macrocast import (
     build_recipe_spec,
     build_run_spec,
     build_design_frame,
+    clear_custom_extensions,
+    custom_feature_block,
+    custom_feature_combiner,
+    custom_model,
     execute_recipe,
+    ExecutionError,
+    ForecastPayload,
 )
+from macrocast.preprocessing import FeatureBlockCallableResult, FeatureCombinerCallableResult
+from macrocast.execution.build import _coerce_forecast_payload
 
 
 def _stage0(
@@ -111,6 +120,26 @@ def _preprocess_train_only_robust():
     )
 
 
+def _preprocess_target_zscore_both_scales():
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="none",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="target_only",
+        evaluation_scale="both",
+        target_normalization="zscore_train_only",
+    )
+
+
 def test_build_execution_spec_with_importance_context() -> None:
     recipe = _recipe()
     run = build_run_spec(recipe)
@@ -121,6 +150,31 @@ def test_build_execution_spec_with_importance_context() -> None:
     assert execution.recipe.recipe_id == "fred_md_rolling_ridge_raw_feature_panel"
     assert execution.run.run_id == run.run_id
     assert execution.recipe.stage0.fixed_design.sample_split == "rolling_window_oos"
+
+
+def test_forecast_payload_contract_coerces_executor_mapping() -> None:
+    payload = _coerce_forecast_payload(
+        {
+            "y_pred": "1.25",
+            "selected_lag": "2",
+            "selected_bic": "3.5",
+            "tuning_payload": {"source": "unit"},
+        },
+        executor_name="unit_executor",
+    )
+
+    assert isinstance(payload, ForecastPayload)
+    assert payload.y_pred == 1.25
+    assert payload.selected_lag == 2
+    assert payload.selected_bic == 3.5
+    assert payload.tuning_payload["source"] == "unit"
+    assert payload.tuning_payload["forecast_payload_contract"] == "forecast_payload_v1"
+    assert payload.to_dict()["contract_version"] == "forecast_payload_v1"
+
+
+def test_forecast_payload_contract_rejects_missing_fields() -> None:
+    with __import__("pytest").raises(ExecutionError, match="missing required fields"):
+        _coerce_forecast_payload({"y_pred": 1.0, "selected_lag": 1}, executor_name="bad_executor")
 
 
 def test_execute_recipe_writes_minimal_importance_artifact_for_ridge(tmp_path: Path) -> None:
@@ -141,6 +195,7 @@ def test_execute_recipe_writes_minimal_importance_artifact_for_ridge(tmp_path: P
     importance = json.loads((run_dir / "importance_minimal.json").read_text())
 
     assert manifest["importance_spec"]["importance_method"] == "minimal_importance"
+    assert manifest["forecast_payload_contract"] == "forecast_payload_v1"
     assert manifest["importance_file"] == "importance_minimal.json"
     assert importance["importance_method"] == "minimal_importance"
     assert importance["model_family"] == "ridge"
@@ -390,6 +445,292 @@ def test_execute_recipe_runs_robust_scaling_preprocess_path(tmp_path: Path) -> N
     assert manifest["preprocess_contract"]["x_missing_policy"] == "em_impute"
     assert (run_dir / "predictions.csv").exists()
     assert (run_dir / "comparison_summary.json").exists()
+
+
+def test_execute_recipe_runs_target_normalization_with_dual_scale_artifacts(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(model_family="ridge", feature_builder="raw_feature_panel", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_target_zscore_both_scales(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+
+    assert manifest["preprocess_contract"]["target_normalization"] == "zscore_train_only"
+    assert manifest["preprocess_contract"]["evaluation_scale"] == "both"
+    assert set(predictions["target_normalization"]) == {"zscore_train_only"}
+    assert "y_pred_model_scale" in predictions
+    assert "y_pred_transformed_scale" in predictions
+    assert "y_pred_original_scale" in predictions
+    assert metrics["metrics_by_horizon"]["h1"]["scale_metrics"]["original_target_scale"]["msfe"] >= 0.0
+    assert metrics["metrics_by_horizon"]["h1"]["scale_metrics"]["transformed_target_scale"]["msfe"] >= 0.0
+
+
+def test_execute_recipe_runs_registered_custom_temporal_feature_block(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "temporal_spread"},
+        )
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert fit_state["block"] == "custom_temporal_feature_block"
+    assert fit_state["name"] == "temporal_spread"
+    assert fit_state["feature_names"] == ["custom_spread"]
+    clear_custom_extensions()
+
+
+def test_execute_recipe_runs_custom_l2_block_with_custom_l3_model(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "custom_l2_custom_l3"},
+        )
+
+    @custom_model("mean_plus_spread")
+    def _mean_plus_spread(X_train, y_train, X_test, context):
+        assert context["contract_version"] == "custom_model_v1"
+        assert context["feature_runtime_builder"] == "raw_feature_panel"
+        assert context["feature_dispatch_source"] == "layer2_feature_blocks"
+        assert "temporal" in context["block_order"]
+        assert "custom" in context["block_order"]
+        assert "custom_spread" in context["feature_names"]
+        assert X_train.shape[1] == len(context["feature_names"])
+        assert X_test.shape == (1, X_train.shape[1])
+        return float(y_train.mean())
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="mean_plus_spread",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+
+    assert manifest["prediction_rows"] > 0
+    assert manifest["model_spec"]["model_family"] == "mean_plus_spread"
+    assert manifest["model_spec"]["custom_model"] is True
+    assert manifest["forecast_engine"] == "custom_model:mean_plus_spread:raw_feature_panel_v0"
+    assert fit_state["block"] == "custom_temporal_feature_block"
+    assert fit_state["name"] == "temporal_spread"
+    assert fit_state["feature_names"] == ["custom_spread"]
+    assert len(predictions) > 0
+    clear_custom_extensions()
+
+
+def test_execute_recipe_runs_registered_custom_feature_combiner(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_combiner("sum_first_two")
+    def _sum_first_two(context):
+        train = context.blocks_train["candidate_z"].iloc[:, :2].sum(axis=1).to_frame("custom_combo")
+        pred = context.blocks_pred["candidate_z"].iloc[:, :2].sum(axis=1).to_frame("custom_combo")
+        return FeatureCombinerCallableResult(
+            Z_train=train,
+            Z_pred=pred,
+            feature_names=("custom_combo",),
+            block_roles={"custom_combo": "custom"},
+            fit_state={"source_feature_names": list(context.feature_names[:2])},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"test": "sum_first_two"},
+        )
+
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_feature_combiner": "sum_first_two"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "none"},
+                "feature_block_combination": {"value": "custom_combiner"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert fit_state["block"] == "custom_feature_combiner"
+    assert fit_state["name"] == "sum_first_two"
+    assert fit_state["contract_version"] == "custom_feature_combiner_v1"
+    assert fit_state["feature_names"] == ["custom_combo"]
+    clear_custom_extensions()
+
+
+def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> None:
+    clear_custom_extensions()
+
+    @custom_feature_block("temporal_spread", block_kind="temporal")
+    def _temporal_spread(context):
+        train = context.X_train.max(axis=1) - context.X_train.min(axis=1)
+        pred = context.X_pred.max(axis=1) - context.X_pred.min(axis=1)
+        return FeatureBlockCallableResult(
+            train_features=train.to_frame("custom__spread"),
+            pred_features=pred.to_frame("custom__spread"),
+            feature_names=("custom_spread",),
+            runtime_feature_names=("custom__spread",),
+            fit_state={"source_columns": list(context.X_train.columns)},
+            leakage_metadata={"lookahead": "forbidden"},
+            provenance={"composition": "append", "test": "select_after_custom"},
+        )
+
+    preprocess = build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="none",
+        target_outlier_policy="none",
+        x_outlier_policy="none",
+        scaling_policy="none",
+        dimensionality_reduction_policy="none",
+        feature_selection_policy="correlation_filter",
+        feature_selection_semantics="select_after_custom_blocks",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        model_family="ridge",
+        feature_builder="raw_feature_panel",
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+    )
+    recipe = replace(
+        recipe,
+        data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "feature_block_set": {"value": "custom_blocks"},
+                "x_lag_feature_block": {"value": "none"},
+                "factor_feature_block": {"value": "none"},
+                "level_feature_block": {"value": "none"},
+                "rotation_feature_block": {"value": "none"},
+                "temporal_feature_block": {"value": "custom_temporal_features"},
+            }
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=preprocess,
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+
+    assert manifest["prediction_rows"] > 0
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_custom_blocks"
+    assert fit_state["block"] == "custom_final_z_selection"
+    assert fit_state["contract_version"] == "custom_final_z_selection_v1"
+    assert "custom_spread" in fit_state["candidate_feature_names"]
+    assert fit_state["selected_final_feature_count"] > 0
+    clear_custom_extensions()
 
 
 def test_execute_recipe_writes_minimal_importance_artifact_for_lasso(tmp_path: Path) -> None:
@@ -729,6 +1070,45 @@ def _preprocess_lasso_select_contract() -> PreprocessContract:
     )
 
 
+def _preprocess_pca_lasso_select_contract() -> PreprocessContract:
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="zscore_clip",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="lasso_select",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+    )
+
+
+def _preprocess_pca_lasso_select_after_factor_contract() -> PreprocessContract:
+    return build_preprocess_contract(
+        target_transform_policy="raw_level",
+        x_transform_policy="raw_level",
+        tcode_policy="extra_preprocess_without_tcode",
+        target_missing_policy="none",
+        x_missing_policy="mean_impute",
+        target_outlier_policy="none",
+        x_outlier_policy="zscore_clip",
+        scaling_policy="standard",
+        dimensionality_reduction_policy="pca",
+        feature_selection_policy="lasso_select",
+        preprocess_order="extra_only",
+        preprocess_fit_scope="train_only",
+        inverse_transform_policy="none",
+        evaluation_scale="raw_level",
+        feature_selection_semantics="select_after_factor",
+    )
+
+
 def test_execute_recipe_supports_mean_impute_minmax_winsor_path(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
@@ -755,6 +1135,12 @@ def test_execute_recipe_supports_pca_preprocessing_path(tmp_path: Path) -> None:
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
     assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
+    assert manifest["feature_representation_fit_state_file"] == "feature_representation_fit_state.json"
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    assert fit_state["block"] == "pca_static_factors"
+    assert fit_state["runtime_policy"] == "pca"
+    assert fit_state["feature_names"] == [f"factor_{idx}" for idx in range(1, fit_state["n_components"] + 1)]
+    assert set(fit_state["loadings"]) == set(fit_state["feature_names"])
     assert manifest["prediction_rows"] > 0
 
 
@@ -769,6 +1155,69 @@ def test_execute_recipe_supports_lasso_feature_selection_path(tmp_path: Path) ->
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
     assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_select_before_factor_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_pca_lasso_select_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert fit_state["block"] == "pca_static_factors"
+    assert fit_state["feature_selection_policy"] == "lasso_select"
+    assert fit_state["feature_selection_semantics"] == "select_before_factor"
+    assert fit_state["selected_source_feature_count"] == len(fit_state["selected_source_feature_names"])
+    assert set(fit_state["selected_source_feature_names"]) == set(fit_state["loadings"][fit_state["feature_names"][0]].keys())
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_select_after_factor_path(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_pca_lasso_select_after_factor_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_factor"
+    assert fit_state["block"] == "pca_static_factors"
+    assert fit_state["feature_selection_semantics"] == "select_after_factor"
+    assert fit_state["selected_final_feature_count"] == len(fit_state["selected_final_feature_names"])
+    assert set(fit_state["selected_final_feature_names"]).issubset(set(fit_state["post_factor_candidate_feature_names"]))
+    assert manifest["prediction_rows"] > 0
+
+
+def test_execute_recipe_supports_select_after_factor_with_deterministic_append(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    recipe.data_task_spec["deterministic_components"] = "linear_trend"
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_pca_lasso_select_after_factor_contract(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_factor"
+    assert manifest["data_task_spec"]["deterministic_components"] == "linear_trend"
+    assert fit_state["feature_selection_semantics"] == "select_after_factor"
+    assert "_dc_trend" in fit_state["post_factor_candidate_feature_names"]
+    assert set(fit_state["selected_final_feature_names"]).issubset(set(fit_state["post_factor_candidate_feature_names"]))
     assert manifest["prediction_rows"] > 0
 
 
@@ -987,10 +1436,28 @@ def test_execute_recipe_supports_catboost_autoreg_model(tmp_path: Path) -> None:
 def test_execute_recipe_supports_pcr_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(model_family="pcr", feature_builder="factor_pca", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
-    recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2})
+    recipe = __import__("dataclasses").replace(
+        recipe,
+        training_spec={**recipe.training_spec, "fixed_factor_count": 4},
+        layer2_representation_spec={
+            "feature_blocks": {
+                "factor_feature_block": {
+                    "value": "pca_static_factors",
+                    "factor_count": {
+                        "mode": "fixed",
+                        "fixed_factor_count": 2,
+                        "max_factors": 4,
+                        "selection_scope": "train_window",
+                    },
+                }
+            }
+        },
+    )
     result = execute_recipe(recipe=recipe, preprocess=_preprocess_raw_only(), output_root=tmp_path, local_raw_source=fixture)
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    fit_state = json.loads((tmp_path / result.run.artifact_subdir / "feature_representation_fit_state.json").read_text())
     assert manifest["model_spec"]["model_family"] == "pcr"
+    assert fit_state["n_components"] == 2
     assert manifest["prediction_rows"] > 0
 
 
@@ -1007,7 +1474,7 @@ def test_execute_recipe_supports_pls_raw_panel_model(tmp_path: Path) -> None:
 def test_execute_recipe_supports_factor_augmented_linear_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(model_family="factor_augmented_linear", feature_builder="factors_plus_AR", benchmark_config={"minimum_train_size": 7, "rolling_window_size": 7})
-    recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2, "factor_ar_lags": 2})
+    recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2, "target_lag_count": 2})
     result = execute_recipe(recipe=recipe, preprocess=_preprocess_raw_only(), output_root=tmp_path, local_raw_source=fixture)
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
     assert manifest["model_spec"]["model_family"] == "factor_augmented_linear"
@@ -1213,6 +1680,9 @@ def test_execute_recipe_stage7_importance_methods(tmp_path: Path) -> None:
         payload = json.loads((run_dir / filename).read_text())
         assert manifest["importance_file"] == filename
         assert payload["importance_method"] == method
+        assert payload["feature_runtime_builder"] == "raw_feature_panel"
+        assert payload["legacy_feature_builder"] == "raw_feature_panel"
+        assert payload["feature_dispatch_source"] == "layer2_feature_blocks"
 
 
 

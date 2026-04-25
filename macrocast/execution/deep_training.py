@@ -349,12 +349,17 @@ def resolve_factor_count(X_train: np.ndarray, y_train: np.ndarray, training_spec
     return max(1, min(3, max_k))
 
 
+def _target_lag_order(training_spec: dict[str, Any]) -> int:
+    return int(training_spec.get("target_lag_count", training_spec.get("factor_ar_lags", 1)))
+
+
 def build_factor_panel(
     X_train_df: pd.DataFrame,
     y_train: np.ndarray,
     X_pred_df: pd.DataFrame,
     training_spec: dict[str, Any],
     include_ar_lags: bool = False,
+    fit_state_sink: list[dict[str, Any]] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     X_train = X_train_df.to_numpy(dtype=float)
     X_pred = X_pred_df.to_numpy(dtype=float)
@@ -362,9 +367,35 @@ def build_factor_panel(
     pca = PCA(n_components=n_components)
     F_train = pca.fit_transform(X_train)
     F_pred = pca.transform(X_pred)
+    if fit_state_sink is not None:
+        source_names = [str(col) for col in X_train_df.columns]
+        feature_names = [f"factor_{idx}" for idx in range(1, int(n_components) + 1)]
+        lag_order = _target_lag_order(training_spec)
+        target_lag_feature_names = [f"target_lag_{idx}" for idx in range(1, lag_order + 1)] if include_ar_lags else []
+        fit_state_sink.append(
+            {
+                "block": "pca_static_factors",
+                "runtime_policy": "factor_model",
+                "n_components": int(n_components),
+                "factor_count_mode": training_spec.get("factor_count", "fixed"),
+                "feature_names": feature_names + target_lag_feature_names,
+                "factor_feature_names": feature_names,
+                "target_lag_feature_names": target_lag_feature_names,
+                "source_feature_names": source_names,
+                "train_window_rows": int(X_train_df.shape[0]),
+                "train_window_columns": int(X_train_df.shape[1]),
+                "center_mean": [float(x) for x in np.asarray(pca.mean_, dtype=float).reshape(-1)],
+                "explained_variance_ratio": [float(x) for x in np.asarray(pca.explained_variance_ratio_, dtype=float)],
+                "loadings": {
+                    feature: {source: float(value) for source, value in zip(source_names, row)}
+                    for feature, row in zip(feature_names, np.asarray(pca.components_, dtype=float))
+                },
+                "include_target_lags": bool(include_ar_lags),
+            }
+        )
     if not include_ar_lags:
         return F_train, F_pred
-    lag_order = int(training_spec.get("factor_ar_lags", 1))
+    lag_order = _target_lag_order(training_spec)
     if len(y_train) <= lag_order:
         raise ValueError("insufficient target history for factors_plus_AR")
     y_lags = []
@@ -386,7 +417,8 @@ def fit_factor_model(
     training_spec: dict[str, Any],
     include_ar_lags: bool = False,
 ) -> tuple[float, dict[str, Any]]:
-    lag_order = int(training_spec.get("factor_ar_lags", 1))
+    lag_order = _target_lag_order(training_spec)
+    fit_state: list[dict[str, Any]] = []
     if model_family == "pcr":
         X_train, X_pred = build_factor_panel(
             X_train_df,
@@ -394,21 +426,31 @@ def fit_factor_model(
             X_pred_df,
             {**training_spec, "factor_count": training_spec.get("factor_count", "fixed")},
             include_ar_lags=False,
+            fit_state_sink=fit_state,
         )
         model, tuning = fit_with_optional_tuning("ols", X_train, y_train, training_spec)
-        return float(model.predict(X_pred)[0]), {"tuning": tuning}
+        payload: dict[str, Any] = {"tuning": tuning}
+        if fit_state:
+            payload["feature_representation_fit_state"] = fit_state[-1]
+        return float(model.predict(X_pred)[0]), payload
     if model_family == "pls":
         n_components = resolve_factor_count(X_train_df.to_numpy(dtype=float), y_train, training_spec)
         model = PLSRegression(n_components=n_components)
         model.fit(X_train_df.to_numpy(dtype=float), y_train)
         return float(model.predict(X_pred_df.to_numpy(dtype=float))[0]), {"n_components": n_components}
     if model_family == "factor_augmented_linear":
-        X_train, X_pred = build_factor_panel(X_train_df, y_train, X_pred_df, training_spec, include_ar_lags=True)
+        X_train, X_pred = build_factor_panel(X_train_df, y_train, X_pred_df, training_spec, include_ar_lags=True, fit_state_sink=fit_state)
         model, tuning = fit_with_optional_tuning("ols", X_train, y_train[lag_order:], training_spec)
-        return float(model.predict(X_pred)[0]), {"tuning": tuning}
-    X_train, X_pred = build_factor_panel(X_train_df, y_train, X_pred_df, training_spec, include_ar_lags=include_ar_lags)
+        payload = {"tuning": tuning}
+        if fit_state:
+            payload["feature_representation_fit_state"] = fit_state[-1]
+        return float(model.predict(X_pred)[0]), payload
+    X_train, X_pred = build_factor_panel(X_train_df, y_train, X_pred_df, training_spec, include_ar_lags=include_ar_lags, fit_state_sink=fit_state)
     y_used = y_train[lag_order:] if include_ar_lags else y_train
     base_family = "ols" if model_family == "factor_pca" else model_family
     model, tuning = fit_with_optional_tuning(base_family, X_train, y_used, training_spec)
     pred = model.predict(X_pred)
-    return float(pred[0]), {"tuning": tuning}
+    payload = {"tuning": tuning}
+    if fit_state:
+        payload["feature_representation_fit_state"] = fit_state[-1]
+    return float(pred[0]), payload

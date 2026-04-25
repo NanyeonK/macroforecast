@@ -43,7 +43,7 @@ recipe = {
             "fixed_axes": {
                 "dataset": "fred_md",
                 "information_set_type": "revised",
-                "task": "single_target_point_forecast",
+                "target_structure": "single_target_point_forecast",
                 "benchmark_family": "ar_bic",
                 "evaluation_scale": "raw_level",
             },
@@ -68,7 +68,6 @@ recipe = {
                 "preprocess_fit_scope": "not_applicable",
                 "inverse_transform_policy": "none",
                 "representation_policy": "raw_only",
-                "preprocessing_axis_role": "fixed_preprocessing",
                 "tcode_application_scope": "apply_tcode_to_none",
                 "target_transform": "level",
                 "target_normalization": "none",
@@ -77,7 +76,6 @@ recipe = {
                 "additional_preprocessing": "none",
                 "x_lag_creation": "no_x_lags",
                 "feature_grouping": "none",
-                "recipe_mode": "fixed_recipe",
             },
         },
         "3_training": {

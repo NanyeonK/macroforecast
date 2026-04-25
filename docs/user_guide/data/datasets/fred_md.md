@@ -45,11 +45,16 @@ The first row of `current.csv` encodes the recommended stationarity transform fo
 | 6 | Second difference of logs $\\Delta^2 \\log x_t$ |
 | 7 | First difference of percent change $\\Delta (x_t / x_{t-1} - 1)$ |
 
-In macrocast these codes flow into Layer 2 preprocessing via the `tcode_policy` axis:
+In macrocast these codes are part of the Layer 1 official-frame decision:
 
-- `tcode_policy: raw_only` → ignore T-codes, keep raw levels (default).
-- `tcode_policy: apply_tcodes` → apply the CSV's per-series transform before downstream preprocessing.
-- `tcode_policy: custom_override` → user-supplied per-series override.
+- `official_transform_policy: raw_official_frame` with
+  `official_transform_scope: apply_tcode_to_none` → ignore T-codes and keep raw
+  levels.
+- `official_transform_policy: dataset_tcode` with
+  `official_transform_scope: apply_tcode_to_both` → apply the CSV's per-series
+  transform before Layer 2 researcher preprocessing.
+- Legacy `tcode_policy` bridge fields are still accepted for old recipes, but
+  new recipes should express official transforms through the Layer 1 axes.
 
 ## Changes from the 2015–2016 working paper to current
 
@@ -67,16 +72,16 @@ The authoritative change log is maintained by the St. Louis Fed in the appendix 
 - **Download is cached** at `~/.cache/macrocast/raw/` (override with `cache_root` on the loader). The cache key is `(dataset, vintage, source_url)`.
 - **No data redistribution** — the package never bundles the CSV. Network access or a user-provided `local_source` path is required on first load.
 - **Parsing**: `parse_fred_csv` at `macrocast/raw/shared_csv.py` separates the T-code header row from the observation rows and returns both (T-codes surface only if Layer 2 preprocessing consumes them).
-- **Schema conformance**: FRED-MD's column naming follows FRED series IDs (`INDPRO`, `CPIAUCSL`, …). Any user-side CSV used with `dataset_source: custom_csv` must match the same schema (date index + numeric columns named with FRED IDs) for the downstream pipeline to align.
+- **Schema conformance**: FRED-MD's column naming follows FRED series IDs (`INDPRO`, `CPIAUCSL`, …). Any user-side CSV used with `source_adapter: custom_csv` must match the same schema (date index + numeric columns named with FRED IDs) for the downstream pipeline to align.
 
 ## Known limitations in macrocast v1.0
 
 - **No variable-level metadata surface** — the package does not expose each FRED ID's description / units / source URL. Users who want that enrichment should query FRED's REST API directly.
-- **No automated T-code validation** — if St. Louis Fed changes a T-code in a new vintage, `tcode_policy: apply_tcodes` will use the new code silently. For strict reproducibility pin the vintage.
+- **No automated T-code validation** — if St. Louis Fed changes a T-code in a new vintage, `official_transform_policy: dataset_tcode` will use the new code silently. For strict reproducibility pin the vintage.
 - **`data_vintage` required** for `information_set_type=real_time_vintage`; bare `fred_md` assumes `information_set_type=revised` (latest available revision).
 
 ## See also
 
 - [FRED-QD](fred_qd.md) — sister quarterly database.
 - [FRED-SD](fred_sd.md) — state-level real-time database.
-- [Source & Frame (1.1)](../source.md) — how `dataset`, `dataset_source`, `frequency`, `information_set_type` interact at recipe compile time.
+- [Source & Frame (1.1)](../source.md) — how `dataset`, `source_adapter`, `frequency`, `information_set_type` interact at recipe compile time.

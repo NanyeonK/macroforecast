@@ -1,13 +1,13 @@
 # Design (Stage 0)
 
-Stage 0 decides **the shape of the study**: which runner fires, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. Six axes, 31 operational values. Every axis ships a default that matches the most common research flow — most researchers leave all six alone and never read this page.
+Stage 0 decides **the shape of the study**: which runner fires, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. Six axes cover 38 allowed values; the simple default path uses only the small operational subset needed for a single run or model comparison. Every axis ships a default that matches the most common research flow — most researchers leave all six alone and never read this page.
 
 **At a glance (defaults):**
 - `research_design = single_path_benchmark` — one recipe, one forecast.
-- `experiment_unit` is derived from `task` + sweep shape (auto-picked; never needs to be set).
+- `experiment_unit` is derived from `target_structure` + sweep shape (auto-picked; never needs to be set).
 - `axis_type = fixed` per axis — set to `sweep` only on the axis you are varying.
 - `failure_policy = fail_fast` — stop on the first error.
-- `reproducibility_mode = best_effort` — Python + numpy seeded; torch optional.
+- `reproducibility_mode = seeded_reproducible` — Python + numpy seeded; torch optional.
 - `compute_mode = serial` — no parallelism.
 
 Deviate when you explicitly want multiple variants, different runners, looser error handling, stricter determinism, or compute speedups.
@@ -26,12 +26,12 @@ Deviate when you explicitly want multiple variants, different runners, looser er
 |---|---|---|---|
 | `single_path_benchmark` | operational (default) | Default. Any study that compares the chosen model against a benchmark on one dataset/target combination. | `manifest["research_design"] == "single_path_benchmark"` |
 | `controlled_variation` | operational | Horse-race studies — one axis sweeps across values, everything else held fixed. | One `study_manifest.json` per sweep plan; one `run/` directory per variant. |
-| `orchestrated_bundle` | operational (compile-only) | Placeholder for Phase 8 `PaperReadyBundle`; currently emits `wrapper_handoff` at compile time without running. | `manifest["wrapper_handoff"]` populated; `execution_status == "representable_but_not_executable"`. |
+| `orchestrated_bundle` | operational as a routing shape | Use only with an experiment unit that has a concrete runner contract. Unsupported wrapper families compile as `not_supported`. | `execution_status` is `ready_for_wrapper_runner` for supported wrappers, otherwise `not_supported`. |
 | `replication_override` | operational | Re-running an existing recipe and asserting byte-identical output. | `execute_replication()` returns `ReplicationResult`; identical forecast + manifest hashes. |
 
 ### Functions & features
 
-- Runner dispatch: `macrocast.compiler.build` resolves `research_design` + `task` → `experiment_unit` via `derive_experiment_unit_default`.
+- Runner dispatch: `macrocast.compiler.build` resolves `research_design` + `target_structure` → `experiment_unit` via `derive_experiment_unit_default`.
 - Artifacts: `single_path_benchmark` → `execute_recipe()`; `controlled_variation` → `execute_sweep()`; `replication_override` → `execute_replication()`.
 
 ### Recipe usage
@@ -53,9 +53,9 @@ path:
 
 **Selection question**: Which runner owns this recipe?
 
-**Default**: Auto-derived from `task` and sweep shape — you never need to set this explicitly.
+**Default**: Auto-derived from `target_structure` and sweep shape — you never need to set this explicitly.
 
-The compiler calls `derive_experiment_unit_default(research_design, task, model_axis_mode, feature_axis_mode, wrapper_family)` and picks one of the operational values below. Set it explicitly only when your recipe must declare a specific runner (e.g. for replication provenance).
+The compiler calls `derive_experiment_unit_default(research_design, target_structure, model_axis_mode, feature_axis_mode, wrapper_family)` and picks one of the operational values below. Set it explicitly only when your recipe must declare a specific runner (e.g. for replication provenance).
 
 ### Value catalog
 
@@ -63,32 +63,34 @@ The compiler calls `derive_experiment_unit_default(research_design, task, model_
 |---|---|---|---|
 | `single_target_single_model` | operational (default for single-target, no sweeps) | Default auto-derivation. | `manifest["experiment_unit"] == "single_target_single_model"` |
 | `single_target_model_grid` | operational | Auto-picked when `model_family` sweeps. | manifest records the derived value. |
-| `single_target_full_sweep` | operational | Auto-picked when `model_family` and `feature_builder` both sweep. | manifest records it. |
+| `single_target_full_sweep` | registry_only | Grammar retained for future wrapper/orchestrator work; not exposed as runnable. | `execution_status == "not_supported"`. |
 | `multi_target_separate_runs` | operational | Multi-target recipe, each target runs independently via `execute_separate_runs`. | N `run/` directories; `separate_runs_manifest.json`. |
 | `multi_target_shared_design` | operational (default for multi-target) | Multi-target with shared preprocessing / benchmarks (default auto-derivation). | Single run directory; `predictions.csv` contains all targets. |
 | `replication_recipe` | operational | Auto-derived when `research_design=replication_override`. | `ReplicationResult` artefact. |
-| `benchmark_suite` | operational (compile-only) | Used with `research_design=orchestrated_bundle`; handed off to a wrapper in Phase 8. | `wrapper_handoff["wrapper_family"] == "benchmark_suite"`. |
-| `ablation_study` | operational | `execute_ablation()` — baseline + per-axis revert variants. | `ablation_report.json`. |
+| `benchmark_suite` | registry_only | Reserved for a future PaperReadyBundle/runtime contract. | `execution_status == "not_supported"`. |
+| `ablation_study` | registry_only | Standalone `AblationSpec` runner exists, but compiled-recipe wrapper handoff is not wired. | `execution_status == "not_supported"`. |
 
 ### Compatibility guards
 
-- `experiment_unit.requires_multi_target == True` (e.g. `multi_target_separate_runs`, `multi_target_shared_design`) requires `task = multi_target_point_forecast`; else `blocked_by_incompatibility`.
-- `experiment_unit.requires_multi_target == False` with `task = multi_target_point_forecast` is also blocked.
+- `experiment_unit.requires_multi_target == True` (e.g. `multi_target_separate_runs`, `multi_target_shared_design`) requires `target_structure = multi_target_point_forecast`; else `blocked_by_incompatibility`.
+- `experiment_unit.requires_multi_target == False` with `target_structure = multi_target_point_forecast` is also blocked.
 
 ### Functions & features
 
 - Auto-derivation: `macrocast.design.derive.derive_experiment_unit_default`.
-- Runners: `execute_recipe`, `execute_separate_runs` (`macrocast.studies.multi_target`), `execute_ablation` (`macrocast.studies.ablation`), `execute_replication` (`macrocast.studies.replication`).
+- Runners: `execute_recipe`, `execute_sweep`, `execute_separate_runs` (`macrocast.studies.multi_target`), `execute_replication` (`macrocast.studies.replication`). `execute_ablation` is standalone until a compiled-recipe contract is added.
 
 ### Recipe usage
 
 ```yaml
-# Ablation study: revert each axis one at a time against the baseline.
+# Controlled model comparison: variants are executed by execute_sweep().
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
-      experiment_unit: ablation_study
+      research_design: controlled_variation
+  3_training:
+    sweep_axes:
+      model_family: [ar, ridge, lasso]
 ```
 
 ---
@@ -144,10 +146,10 @@ Loosen when you're running a large sweep and want a partial report rather than a
 | Value | Status | When to use | Verify |
 |---|---|---|---|
 | `fail_fast` | operational (default) | Default. Any single-recipe run; sweeps during recipe development. | No change — run aborts on first error. |
-| `skip_failed_cell` | operational | Large sweeps where the failure of one variant shouldn't stop the others. | `manifest["failed_components"]` lists the skipped cells. |
-| `skip_failed_model` | operational | Same pattern scoped to model families. | Same manifest field. |
+| `skip_failed_cell` | operational | Large sweeps where the failure of one variant shouldn't stop the others. | `study_manifest["summary"]["skipped"]` and per-variant `compiler_status` / `compiler_blocked_reasons` record compile-invalid cells. |
+| `skip_failed_model` | operational | Same pattern scoped to model families. | Failed variants remain in `study_manifest["sweep_plan"]["variants"]`. |
 | `save_partial_results` | operational | Flush artefacts before aborting — useful when you want what completed so far. | Partial `run/` directories persist. |
-| `warn_only` | operational | Never stop; emit a `RuntimeWarning` per failure. | stderr warnings + `manifest["failed_components"]`. |
+| `warn_only` | operational | Never stop; emit a `RuntimeWarning` per failure. | stderr warnings plus per-variant status in `study_manifest`. |
 
 ### Functions & features
 
@@ -173,7 +175,7 @@ path:
 
 **Selection question**: How hard do you want to pin the stochastic components?
 
-**Default**: `best_effort` — Python `random`, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism.
+**Default**: `seeded_reproducible` — Python `random`, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism.
 
 Escalate when you need bit-identical reruns (paper replication) or when you don't care at all (exploratory drafting).
 
@@ -181,8 +183,8 @@ Escalate when you need bit-identical reruns (paper replication) or when you don'
 
 | Value | Status | When to use | Verify |
 |---|---|---|---|
-| `best_effort` | operational (default) | Default. Day-to-day work where minor numerical drift is tolerable. | `manifest["reproducibility_applied"]["mode"] == "best_effort"`. |
-| `seeded_reproducible` | operational | You want the same result across reruns on the same machine. | `torch.backends.cudnn.deterministic == True`; manifest records the applied config. |
+| `seeded_reproducible` | operational (default) | You want the same result across reruns on the same machine without strict deterministic-library flags. | `manifest["reproducibility_applied"]["mode"] == "seeded_reproducible"`. |
+| `best_effort` | operational | Same seed application as `seeded_reproducible`, but labeled as non-strict for CI/regression interpretation. | `manifest["reproducibility_applied"]["mode"] == "best_effort"`. |
 | `strict_reproducible` | operational | Paper replication — bit-identical across machines. | `torch.use_deterministic_algorithms(True)`; `CUBLAS_WORKSPACE_CONFIG=:4096:8`; `RuntimeWarning` if `PYTHONHASHSEED` is unset. |
 | `exploratory` | operational | Research drafting — don't seed at all. | manifest records `exploratory`; no seeds applied. |
 
@@ -248,7 +250,7 @@ path:
 
 ## Design (Stage 0) takeaways
 
-- Six axes, 31 operational values, every axis defaults to "don't think about it." Researchers who don't need sweeps, parallelism, or strict reproducibility write Stage 0 by omission.
+- Six axes, 38 allowed values, and the simple default path keeps the operational surface narrow. Researchers who don't need sweeps, parallelism, or strict reproducibility write Stage 0 by omission.
 - Runner dispatch flows `research_design` → `experiment_unit`. The second is auto-derived; the first is the user-facing lever for "what kind of study is this?"
 - `failure_policy` + `reproducibility_mode` + `compute_mode` are three independent dials. Pick per-run, don't carry them over from copy-pasted templates.
 - Every resolved value lands in `manifest.json` — when a run does something unexpected, read the manifest before anything else.

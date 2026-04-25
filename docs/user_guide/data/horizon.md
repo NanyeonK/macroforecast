@@ -13,7 +13,7 @@ Declares **which observations count as training data, which count as OOS, and ho
 
 - `horizon_list` was dropped (1.3 cleanup) — redundant with `leaf_config.horizons` which already specifies the horizons list directly.
 - `warmup_rule` was dropped (1.3 cleanup) — abstract axis with no concrete v1.0 dispatch semantic.
-- `own_target_lags` was dropped (1.3 cleanup) — redundant with `feature_builder` (autoreg_lagged_target includes y-lags, raw_feature_panel does not).
+- `own_target_lags` was dropped (1.3 cleanup) — redundant with `feature_builder` (autoreg_lagged_target includes target lags, raw_feature_panel does not).
 **At a glance (defaults):**
 - `min_train_size = fixed_n_obs` — your recipe's `benchmark_config.minimum_train_size` is the observation count.
 - `training_start_rule = earliest_possible` — training starts at the first feasible row. Override only for paper-replication (calendar-exact) start dates.

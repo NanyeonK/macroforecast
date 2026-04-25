@@ -16,6 +16,21 @@ _NEW_AXES = {
         'layer': '1_data_task',
         'expected': {
             'complete_case_only', 'available_case', 'x_impute_only',
+            'zero_fill_before_start',
+        },
+    },
+    'raw_missing_policy': {
+        'layer': '1_data_task',
+        'expected': {
+            'preserve_raw_missing', 'zero_fill_leading_x_before_tcode',
+            'x_impute_raw', 'drop_rows_with_raw_missing',
+        },
+    },
+    'raw_outlier_policy': {
+        'layer': '1_data_task',
+        'expected': {
+            'preserve_raw_outliers', 'winsorize_raw', 'iqr_clip_raw',
+            'mad_clip_raw', 'zscore_clip_raw', 'raw_outlier_to_missing',
         },
     },
     'variable_universe': {
@@ -74,5 +89,4 @@ def test_structural_break_segmentation_values_match_plan():
     # v1.0 1.5 cleanup trimmed 2 future values (break_test_detected, rolling_break_adaptive).
     expected = {"none", "pre_post_crisis", "pre_post_covid"}
     assert set(get_axis_registry()['structural_break_segmentation'].allowed_values) == expected
-
-
+    assert get_axis_registry()['structural_break_segmentation'].layer == "2_preprocessing"

@@ -12,7 +12,6 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(id='none', description='none', status='operational', priority="A"),
         EnumRegistryEntry(id='pca', description='pca', status='operational', priority="A"),
         EnumRegistryEntry(id='static_factor', description='static factor', status='operational', priority="A"),
-        EnumRegistryEntry(id='ipca', description='ipca', status="operational", priority="A"),
         EnumRegistryEntry(id='custom', description='custom', status='external_plugin', priority="A"),
     ),
     compatible_with={},

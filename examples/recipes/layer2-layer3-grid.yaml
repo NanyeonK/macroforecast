@@ -1,0 +1,66 @@
+recipe_id: layer2-layer3-grid
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+      failure_policy: skip_failed_cell
+      compute_mode: serial
+      reproducibility_mode: seeded_reproducible
+    leaf_config:
+      random_seed: 42
+  1_data_task:
+    fixed_axes:
+      dataset: fred_md
+      information_set_type: revised
+      target_structure: single_target_point_forecast
+    leaf_config:
+      target: INDPRO
+      horizons: [1]
+  2_preprocessing:
+    fixed_axes:
+      target_transform_policy: raw_level
+      x_transform_policy: raw_level
+      tcode_policy: extra_preprocess_without_tcode
+      target_missing_policy: none
+      x_missing_policy: mean_impute
+      target_outlier_policy: none
+      x_outlier_policy: none
+      scaling_policy: standard
+      dimensionality_reduction_policy: none
+      feature_selection_policy: none
+      preprocess_order: extra_only
+      preprocess_fit_scope: train_only
+      inverse_transform_policy: none
+      evaluation_scale: raw_level
+    leaf_config:
+      training_config:
+        target_lag_count: 2
+    sweep_axes:
+      target_lag_block: [none, fixed_target_lags]
+      x_lag_feature_block: [none, fixed_x_lags]
+  3_training:
+    fixed_axes:
+      framework: rolling
+      benchmark_family: zero_change
+      feature_builder: raw_feature_panel
+    leaf_config:
+      benchmark_config:
+        minimum_train_size: 5
+        rolling_window_size: 5
+    sweep_axes:
+      model_family: [ridge, lasso, ar]
+  4_evaluation:
+    fixed_axes:
+      primary_metric: msfe
+  5_output_provenance:
+    fixed_axes:
+      export_format: json
+      saved_objects: full_bundle
+      provenance_fields: full
+      artifact_granularity: aggregated
+  6_stat_tests:
+    fixed_axes:
+      stat_test: none
+  7_importance:
+    fixed_axes:
+      importance_method: none

@@ -13,7 +13,7 @@ from __future__ import annotations
 COMPONENT_NAMES: tuple[str, ...] = (
     "benchmark",
     "cv_scheme",
-    "feature_builder",
+    "feature_representation",
     "importance",
     "loss",
     "nonlinearity",
@@ -22,10 +22,25 @@ COMPONENT_NAMES: tuple[str, ...] = (
 )
 
 COMPONENT_NAMES_SET = frozenset(COMPONENT_NAMES)
+COMPONENT_ALIASES = {
+    "feature_builder": "feature_representation",
+}
+
+
+def normalize_component(name: str | None) -> str | None:
+    if name is None:
+        return None
+    return COMPONENT_ALIASES.get(name, name)
 
 
 def is_valid_component(name: str | None) -> bool:
-    return name is None or name in COMPONENT_NAMES_SET
+    return normalize_component(name) in COMPONENT_NAMES_SET if name is not None else True
 
 
-__all__ = ["COMPONENT_NAMES", "COMPONENT_NAMES_SET", "is_valid_component"]
+__all__ = [
+    "COMPONENT_ALIASES",
+    "COMPONENT_NAMES",
+    "COMPONENT_NAMES_SET",
+    "is_valid_component",
+    "normalize_component",
+]

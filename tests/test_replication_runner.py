@@ -126,18 +126,17 @@ def test_replication_no_overrides_no_source_artifact(tmp_path: Path) -> None:
     assert diff["override_diff_entries"] == []
 
 
-def test_replication_override_mode_compiles_executable(tmp_path: Path) -> None:
-    """After 0.6 cleanup, a source recipe marked with
-    research_design=replication_override compiles as executable (no
-    representable_but_not_executable warning). execute_replication can
-    process it directly, and the replay runs end-to-end."""
+def test_replication_override_mode_compiles_as_replication_handoff(tmp_path: Path) -> None:
+    """replication_override is represented for execute_replication, not direct execution."""
     from macrocast.compiler.build import compile_recipe_dict
 
     src_recipe = _baseline_recipe()
     src_recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "replication_override"
 
     compile_result = compile_recipe_dict(src_recipe)
-    assert compile_result.compiled.execution_status == "executable"
+    assert compile_result.compiled.execution_status == "ready_for_replication_runner"
+    assert compile_result.manifest["tree_context"]["route_owner"] == "replication"
+    assert compile_result.manifest["tree_context"]["route_contract"] == "replication_handoff"
     # No research_design wrapper-route warning in the manifest.
     manifest_warnings = compile_result.manifest.get("warnings", [])
     assert not any(

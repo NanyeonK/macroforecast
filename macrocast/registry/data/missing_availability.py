@@ -27,6 +27,12 @@ AXIS_DEFINITION = AxisDefinition(
             status='operational',
             priority='A',
         ),
+        EnumRegistryEntry(
+            id='zero_fill_before_start',
+            description='fill predictor leading missing values with zero and report availability gaps',
+            status='operational',
+            priority='A',
+        ),
     ),
     compatible_with={},
     incompatible_with={},

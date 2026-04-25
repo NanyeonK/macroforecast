@@ -375,11 +375,11 @@ Plus B-tier: housing, energy, labor, regional, panel_macro, text_macro, mixed_do
 
 ---
 
-## Issue 2-2: Expand dataset_source to full planned set [DONE]
+## Issue 2-2: Expand source_adapter to full planned set [DONE]
 pri:high | size:M | deps: 0-4
 
 ### File
-`macrocast/registry/data/dataset_source.py`
+`macrocast/registry/data/source_adapter.py`
 
 ### What
 Expand from 3 values to full set. A-tier additions:

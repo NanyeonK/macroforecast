@@ -28,12 +28,11 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
                 "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable",
                 "inverse_transform_policy": "none", "representation_policy": "raw_only",
-                "preprocessing_axis_role": "fixed_preprocessing",
                 "tcode_application_scope": "apply_tcode_to_none",
                 "target_transform": "level", "target_normalization": "none",
                 "target_domain": "unconstrained", "scaling_scope": "columnwise",
                 "additional_preprocessing": "none", "x_lag_creation": "no_x_lags",
-                "feature_grouping": "none", "recipe_mode": "fixed_recipe",
+                "feature_grouping": "none",
             }},
             "3_training": {
                 "fixed_axes": {"framework": "expanding", "feature_builder": "autoreg_lagged_target"},

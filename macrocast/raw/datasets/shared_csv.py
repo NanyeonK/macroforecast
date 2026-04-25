@@ -11,17 +11,40 @@ def parse_fred_csv(filepath: str | Path) -> tuple[pd.DataFrame, dict[str, int]]:
     if raw.shape[0] < 3 or raw.shape[1] < 2:
         raise ValueError(f"file does not look like a FRED CSV: {path}")
 
-    first_cell = str(raw.iloc[0, 0]).strip().lower()
-    second_cell = str(raw.iloc[1, 0]).strip().lower()
+    header_idx: int | None = None
+    tcodes_idx: int | None = None
+    for idx, value in raw.iloc[:, 0].items():
+        label = str(value).strip().lower()
+        if label == "nan":
+            label = ""
+        if label in {"sasdate", "sasqdate"} and header_idx is None:
+            header_idx = int(idx)
+        elif label in {"transform", "transform:"} and tcodes_idx is None:
+            tcodes_idx = int(idx)
+        if header_idx is not None and tcodes_idx is not None:
+            break
 
-    if first_cell in {"sasdate", "sasqdate"} or second_cell == "transform:":
-        header_row = raw.iloc[0].tolist()
-        tcodes_row = raw.iloc[1].tolist()
-        data_start = 2
-    else:
-        tcodes_row = raw.iloc[0].tolist()
-        header_row = raw.iloc[1].tolist()
-        data_start = 2
+    if header_idx is None:
+        # Historical/current FRED-MD fixtures put t-codes in row 0 and the
+        # sasdate/sasqdate header in row 1.
+        fallback_header = str(raw.iloc[1, 0]).strip().lower()
+        if fallback_header in {"sasdate", "sasqdate"}:
+            header_idx = 1
+            tcodes_idx = 0
+        else:
+            raise ValueError(f"missing sasdate/sasqdate header row in {path}")
+    elif tcodes_idx is None:
+        # Older MD/QD files use an unlabeled row immediately before or after
+        # the header. Newer QD files include an intervening factors row, so
+        # prefer explicit labels when present and use this only as a fallback.
+        if header_idx > 0:
+            tcodes_idx = header_idx - 1
+        else:
+            tcodes_idx = header_idx + 1
+
+    header_row = raw.iloc[header_idx].tolist()
+    tcodes_row = raw.iloc[tcodes_idx].tolist()
+    data_start = max(header_idx, tcodes_idx) + 1
 
     columns = [str(x).strip() for x in header_row]
     if not columns or columns[0].lower() not in {"sasdate", "sasqdate"}:

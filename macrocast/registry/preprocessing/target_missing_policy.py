@@ -24,7 +24,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='em_impute',
             description='em impute',
-            status='operational',
+            status='registry_only',
             priority="A",
         ),
         EnumRegistryEntry(

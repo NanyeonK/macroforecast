@@ -21,7 +21,7 @@ def derive_design_shape(
 
     n_models = len(varying_design.model_families)
     n_control_axes = sum(
-        bool(values)
+        len(tuple(values)) > 1
         for values in (
             varying_design.feature_recipes,
             varying_design.preprocess_variants,
@@ -87,6 +87,6 @@ def derive_experiment_unit(
         # execute_recipe's multi-target path (single aggregated output). See
         # docs/user_guide/design.md 0.3.
         return "multi_target_shared_design"
-    if research_design == "controlled_variation":
+    if execution_posture == "single_run_with_internal_sweep" or research_design == "controlled_variation":
         return "single_target_model_grid"
     return "single_target_single_model"

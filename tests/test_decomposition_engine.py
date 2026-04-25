@@ -94,6 +94,43 @@ def test_empty_components_is_clean_noop(tmp_path: Path):
     assert len(df) == 0
 
 
+def test_legacy_feature_builder_component_alias_normalizes_to_feature_representation(tmp_path: Path):
+    variants = []
+    for feature, value in [("autoreg_lagged_target", 1.0), ("raw_feature_panel", 3.0)]:
+        variants.append(
+            {
+                "variant_id": f"v-{feature}",
+                "axis_values": {"2_preprocessing.feature_builder": feature},
+                "status": "success",
+                "artifact_dir": "",
+                "metrics_summary": {"metrics_by_horizon": {"h1": {"msfe": value}}},
+            }
+        )
+    manifest = {
+        "schema_version": "1.0",
+        "study_id": "feature-representation-alias",
+        "research_design": "controlled_variation",
+        "parent_recipe_id": "p",
+        "parent_recipe_dict": {},
+        "axes_swept": ["2_preprocessing.feature_builder"],
+        "variants": variants,
+    }
+    path = tmp_path / "study_manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = run_decomposition(
+        DecompositionPlan(
+            study_manifest_path=str(path),
+            components_to_decompose=("feature_builder",),
+        ),
+        output_dir=tmp_path,
+    )
+
+    assert result.plan.components_to_decompose == ("feature_representation",)
+    assert result.per_component_shares["feature_representation"] > 0.0
+    assert result.per_axis_rows[0]["component"] == "feature_representation"
+
+
 def test_parquet_schema_columns_match(tmp_path: Path):
     manifest = _synthetic_manifest(tmp_path, scaling_variance=1.0, model_variance=0.5, noise=0.01)
     plan = DecompositionPlan(

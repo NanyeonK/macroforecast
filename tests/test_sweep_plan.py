@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 
 import pytest
+import yaml
 
+from macrocast.compiler import compile_recipe_dict
 from macrocast.compiler.sweep_plan import (
     DEFAULT_MAX_VARIANTS,
     SweepPlan,
@@ -64,6 +67,28 @@ def test_two_axis_sweep_cartesian_count() -> None:
         for v in plan.variants
     }
     assert len(seen) == 6
+    assert plan.governance["schema_version"] == "sweep_governance_v1"
+    assert plan.governance["expansion_policy"] == "cartesian_expand_all_then_compile_each_variant"
+    assert plan.governance["variant_count"] == 6
+
+
+def test_layer2_layer3_grid_example_expands_and_compiles_cells() -> None:
+    recipe = yaml.safe_load(Path("examples/recipes/layer2-layer3-grid.yaml").read_text())
+
+    plan = compile_sweep_plan(recipe)
+
+    assert plan.size == 12
+    assert set(plan.axes_swept) == {
+        "2_preprocessing.target_lag_block",
+        "2_preprocessing.x_lag_feature_block",
+        "3_training.model_family",
+    }
+    compiled = [compile_recipe_dict(variant.variant_recipe_dict).compiled for variant in plan.variants]
+    statuses = {status: sum(item.execution_status == status for item in compiled) for status in {item.execution_status for item in compiled}}
+    assert statuses["executable"] == 8
+    assert statuses["blocked_by_incompatibility"] == 4
+    blocked = [item for item in compiled if item.execution_status == "blocked_by_incompatibility"]
+    assert all("model_family='ar'" in " ".join(item.blocked_reasons) for item in blocked)
 
 
 def test_variant_id_is_stable_across_calls() -> None:
@@ -224,6 +249,120 @@ def test_nested_sweep_combines_with_regular_sweep_cartesian() -> None:
     }
 
 
+def test_leaf_sweep_axes_materialize_leaf_config_values() -> None:
+    recipe = _base_recipe()
+    recipe["path"]["3_training"].pop("sweep_axes")
+    recipe["path"]["2_preprocessing"]["leaf_sweep_axes"] = {
+        "custom_feature_combiner": ["sum_first_two", "spread_factor"],
+    }
+
+    plan = compile_sweep_plan(recipe)
+
+    assert plan.size == 2
+    assert plan.axes_swept == ("2_preprocessing.leaf_config.custom_feature_combiner",)
+    assert plan.governance["leaf_config_axes"] == [
+        "2_preprocessing.leaf_config.custom_feature_combiner",
+    ]
+    assert plan.governance["method_extension_axes"] == [
+        "2_preprocessing.leaf_config.custom_feature_combiner",
+    ]
+    values = {
+        variant.axis_values["2_preprocessing.leaf_config.custom_feature_combiner"]
+        for variant in plan.variants
+    }
+    assert values == {"sum_first_two", "spread_factor"}
+    for variant in plan.variants:
+        preprocessing = variant.variant_recipe_dict["path"]["2_preprocessing"]
+        assert "leaf_sweep_axes" not in preprocessing
+        assert "leaf_config.custom_feature_combiner" not in preprocessing["fixed_axes"]
+        assert preprocessing["leaf_config"]["custom_feature_combiner"] in values
+
+
+def test_leaf_sweep_axes_reject_duplicate_fixed_leaf_config() -> None:
+    recipe = _base_recipe()
+    recipe["path"]["3_training"].pop("sweep_axes")
+    recipe["path"]["2_preprocessing"]["leaf_config"] = {
+        "custom_feature_combiner": "fixed_combo",
+    }
+    recipe["path"]["2_preprocessing"]["leaf_sweep_axes"] = {
+        "custom_feature_combiner": ["swept_combo"],
+    }
+
+    with pytest.raises(SweepPlanError, match="appears in both leaf_config and leaf_sweep_axes"):
+        compile_sweep_plan(recipe)
+
+
+def test_nested_sweep_can_bind_leaf_config_only_to_custom_parent() -> None:
+    recipe = _base_recipe()
+    recipe["path"]["3_training"].pop("sweep_axes")
+    recipe["path"]["2_preprocessing"]["nested_sweep_axes"] = {
+        "temporal_feature_block": {
+            "moving_average_features": {},
+            "custom_temporal_features": {
+                "leaf_config.custom_temporal_feature_block": [
+                    "temporal_spread",
+                    "temporal_slope",
+                ],
+            },
+        },
+    }
+
+    plan = compile_sweep_plan(recipe)
+
+    assert plan.size == 3
+    assert set(plan.axes_swept) == {
+        "2_preprocessing.temporal_feature_block",
+        "2_preprocessing.leaf_config.custom_temporal_feature_block",
+    }
+    builtin = [
+        variant
+        for variant in plan.variants
+        if variant.axis_values["2_preprocessing.temporal_feature_block"] == "moving_average_features"
+    ]
+    assert len(builtin) == 1
+    assert "2_preprocessing.leaf_config.custom_temporal_feature_block" not in builtin[0].axis_values
+    builtin_leaf = builtin[0].variant_recipe_dict["path"]["2_preprocessing"].get("leaf_config", {})
+    assert "custom_temporal_feature_block" not in builtin_leaf
+
+    custom_values = {
+        variant.axis_values["2_preprocessing.leaf_config.custom_temporal_feature_block"]
+        for variant in plan.variants
+        if variant.axis_values["2_preprocessing.temporal_feature_block"] == "custom_temporal_features"
+    }
+    assert custom_values == {"temporal_spread", "temporal_slope"}
+    for variant in plan.variants:
+        preprocessing = variant.variant_recipe_dict["path"]["2_preprocessing"]
+        assert "nested_sweep_axes" not in preprocessing
+        fixed_axes = preprocessing["fixed_axes"]
+        assert fixed_axes["temporal_feature_block"] in {
+            "moving_average_features",
+            "custom_temporal_features",
+        }
+        if fixed_axes["temporal_feature_block"] == "custom_temporal_features":
+            assert preprocessing["leaf_config"]["custom_temporal_feature_block"] in custom_values
+
+
+def test_layer2_representation_sweep_governance_records_variant_gate_policy() -> None:
+    recipe = _base_recipe()
+    recipe["path"]["2_preprocessing"]["fixed_axes"] = {}
+    recipe["path"]["2_preprocessing"]["sweep_axes"] = {
+        "factor_feature_block": ["none", "pca_static_factors", "custom_factors"],
+        "feature_selection_semantics": ["select_before_factor", "select_after_factor"],
+    }
+
+    plan = compile_sweep_plan(recipe)
+
+    assert plan.size == 18
+    governance = plan.governance
+    assert governance["invalid_combination_policy"] == "materialize_then_gate_at_variant_compile_or_execute"
+    assert governance["co_sweeps_model_and_layer2"] is True
+    assert set(governance["layer2_representation_axes"]) == {
+        "2_preprocessing.factor_feature_block",
+        "2_preprocessing.feature_selection_semantics",
+    }
+    assert governance["model_axes"] == ["3_training.model_family"]
+
+
 def test_nested_sweep_parent_cannot_duplicate_fixed_or_sweep() -> None:
     recipe = _nested_recipe()
     recipe["path"]["3_training"]["fixed_axes"]["model_family"] = "ridge"
@@ -259,5 +398,5 @@ def test_nested_sweep_alone_without_regular_sweep_is_allowed() -> None:
 def test_no_sweep_and_no_nested_raises_sweep_plan_error() -> None:
     recipe = _nested_recipe()
     recipe["path"]["3_training"].pop("nested_sweep_axes")
-    with pytest.raises(SweepPlanError, match="no sweep_axes or nested_sweep_axes"):
+    with pytest.raises(SweepPlanError, match="no sweep_axes, leaf_sweep_axes, or nested_sweep_axes"):
         compile_sweep_plan(recipe)

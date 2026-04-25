@@ -1,13 +1,15 @@
 # Data Handling Policies (1.5)
 
-Declares **how the raw panel is prepared before it reaches the model** — release-lag shifts, missing-data treatment, structural-break handling, and contemporaneous-X rules. Four axes in v1.0 — every value operational.
+Declares **how the raw panel is prepared before it reaches the model** — official-frame availability, raw-source missing/outlier treatment before T-codes, release-lag shifts, structural-break handling, and contemporaneous-X rules. Six axes in v1.0 — every value operational.
 
 | Section | axis | Role |
 |---|---|---|
 | 1.5.1 | [`missing_availability`](#151-missing_availability) | What to do when predictor / target rows contain NaN |
-| 1.5.2 | [`release_lag_rule`](#152-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
-| 1.5.3 | [`structural_break_segmentation`](#153-structural_break_segmentation) | Break-dummy augmentation of X around NBER crises / user-supplied break dates |
-| 1.5.4 | [`contemporaneous_x_rule`](#154-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
+| 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before official transforms/T-codes |
+| 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before official transforms/T-codes |
+| 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
+| 1.5.5 | [`structural_break_segmentation`](#155-structural_break_segmentation) | Break-dummy augmentation of X around NBER crises / user-supplied break dates |
+| 1.5.6 | [`contemporaneous_x_rule`](#156-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
 
 **Note on dropped axes:**
 
@@ -18,33 +20,38 @@ Declares **how the raw panel is prepared before it reaches the model** — relea
 - `vintage_policy` — non-default values require real-time-vintage data infrastructure (v1.1 FRED-SD).
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
 **At a glance (defaults):**
-- `missing_availability = complete_case_only` — no panel-level filter; downstream executors handle NaNs per their own policy. Switch to `available_case` / `x_impute_only` only when a specific missing-data treatment matters.
+- `missing_availability = zero_fill_before_start` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `complete_case_only`, `available_case`, or `x_impute_only` only when a specific missing-data treatment matters.
+- `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
+- `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before official transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
 - `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
 - `structural_break_segmentation = none` — no break dummies. Switch to `pre_post_crisis` / `pre_post_covid` to add a single NBER-dated break dummy.
 - `contemporaneous_x_rule = forbid_contemporaneous` — realistic real-time constraint. Switch to `allow_contemporaneous` only for oracle / data-leak benchmarks.
 
-**Most research runs leave all four at the default.**
+**Most research runs leave all six at the default.**
 
 
 ---
 
 ## 1.5.1 `missing_availability`
 
-**Selects how NaN rows are handled before training.** Three operational values.
+**Selects how NaN rows are handled before training.** Four operational values.
 
 ### Value catalog
 
 | Value | Status | What it does |
 |---|---|---|
-| `complete_case_only` | operational | Default. No panel-level filter; downstream executors handle NaNs per their own policy. |
+| `zero_fill_before_start` | operational | Default. Within the selected sample period, predictor leading missing values are filled with 0. Fully missing predictors are also filled with 0 and warned. Target leading missing dates are reported; target mid-sample missing blocks execution. |
+| `complete_case_only` | operational | No panel-level filter; downstream executors handle NaNs per their own policy. |
 | `available_case` | operational | Drop rows where any non-date column has NaN before training. Aggressive but legitimate on short fixture windows. |
-| `x_impute_only` | operational | Impute predictor (non-target) columns using `leaf_config.x_imputation` ∈ {`mean`, `median`, `ffill`, `bfill`}. Target column retains NaNs so the OOS loop still sees missingness in y. |
+| `x_impute_only` | operational | Impute predictor (non-target) columns using `leaf_config.x_imputation` ∈ {`mean`, `median`, `ffill`, `bfill`}. Target column retains NaNs so the OOS loop still sees target missingness. |
 
 ### Functions & features
 
-- Module: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
-- Called during dataset loading in `execute_recipe` before preprocessing runs.
-- `x_impute_only` without `leaf_config.x_imputation` raises `ExecutionError` at runtime.
+- Sample-period availability path: `macrocast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_before_start` and records `data_reports["availability"]`.
+- General missing policy path: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
+- Called during dataset loading in `execute_recipe` after official transforms
+  have produced the selected frame and before researcher preprocessing runs.
+- Compile guard: `x_impute_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
 
 ### Dropped values
 
@@ -53,7 +60,7 @@ Declares **how the raw panel is prepared before it reaches the model** — relea
 ### Recipe usage
 
 ```yaml
-# Forward-fill X columns, keep y NaNs visible
+# Forward-fill predictor columns, keep target NaNs visible
 path:
   1_data_task:
     fixed_axes:
@@ -64,7 +71,77 @@ path:
 
 ---
 
-## 1.5.2 `release_lag_rule`
+## 1.5.2 `raw_missing_policy`
+
+**Selects raw-source missing treatment before official transforms/T-codes.** Four operational values.
+
+### Value catalog
+
+| Value | Status | What it does |
+|---|---|---|
+| `preserve_raw_missing` | operational | Default. Leave raw-source missing values untouched before official transforms/T-codes. |
+| `zero_fill_leading_x_before_tcode` | operational | Within the selected sample period, fill predictor leading missing values with 0 before official transforms/T-codes. |
+| `x_impute_raw` | operational | Impute raw predictor columns before official transforms/T-codes using `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}. |
+| `drop_rows_with_raw_missing` | operational | Drop rows with any raw-source missing value before official transforms/T-codes. Aggressive; use only for explicit full-mode designs. |
+
+### Functions & features
+
+- Runtime path: `macrocast.execution.build._apply_raw_missing_policy(raw_result, rule, *, target, spec)`.
+- Called before `macrocast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
+- Compile guard: `x_impute_raw` without valid `leaf_config.raw_x_imputation` raises `CompileValidationError`.
+- Provenance: runtime records `data_reports["raw_missing"]` with `before_official_transform: true`.
+
+### Recipe usage
+
+```yaml
+# Clean raw predictors before official FRED T-codes are applied
+path:
+  1_data_task:
+    fixed_axes:
+      raw_missing_policy: x_impute_raw
+    leaf_config:
+      raw_x_imputation: ffill
+```
+
+---
+
+## 1.5.3 `raw_outlier_policy`
+
+**Selects raw-source outlier treatment before official transforms/T-codes.** Six operational values.
+
+### Value catalog
+
+| Value | Status | What it does |
+|---|---|---|
+| `preserve_raw_outliers` | operational | Default. Leave raw-source outliers untouched before official transforms/T-codes. |
+| `winsorize_raw` | operational | Clip raw numeric columns at the 1st and 99th percentiles. |
+| `iqr_clip_raw` | operational | Clip raw numeric columns by 1.5 IQR fences. |
+| `mad_clip_raw` | operational | Clip raw numeric columns by 3 MAD fences. |
+| `zscore_clip_raw` | operational | Clip raw numeric columns by 3 standard deviations. |
+| `raw_outlier_to_missing` | operational | Convert values outside the 1st and 99th percentiles to missing before official transforms/T-codes. |
+
+### Functions & features
+
+- Runtime path: `macrocast.execution.build._apply_raw_outlier_policy(raw_result, rule, *, spec)`.
+- Called before `macrocast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
+- Optional column subset: `leaf_config.raw_outlier_columns`. If omitted, all raw numeric non-date columns are eligible.
+- Provenance: runtime records `data_reports["raw_outliers"]` with `before_official_transform: true`.
+
+### Recipe usage
+
+```yaml
+# Clip selected raw columns before official FRED T-codes are applied
+path:
+  1_data_task:
+    fixed_axes:
+      raw_outlier_policy: iqr_clip_raw
+    leaf_config:
+      raw_outlier_columns: [INDPRO, RPI]
+```
+
+---
+
+## 1.5.4 `release_lag_rule`
 
 **Selects publication-lag policy for predictor shifts.** Three operational values.
 
@@ -79,7 +156,7 @@ path:
 ### Functions & features
 
 - Module: `macrocast.execution.build._apply_release_lag(raw_result, rule, *, spec)`.
-- `series_specific_lag` without the dict (or with empty dict) raises `ExecutionError` at runtime.
+- Compile guard: `series_specific_lag` without a non-empty `leaf_config.release_lag_per_series` dict raises `CompileValidationError`.
 
 ### Dropped values
 
@@ -102,7 +179,7 @@ path:
 
 ---
 
-## 1.5.3 `structural_break_segmentation`
+## 1.5.5 `structural_break_segmentation`
 
 **Selects break-dummy augmentation of the X panel.** Four operational values.
 
@@ -139,7 +216,7 @@ path:
 
 ---
 
-## 1.5.4 `contemporaneous_x_rule`
+## 1.5.6 `contemporaneous_x_rule`
 
 **Selects whether X observed at the target date may enter the model.** Two operational values.
 
@@ -152,8 +229,8 @@ path:
 
 ### Functions & features
 
-- Wired inside `macrocast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with `y`.
-- Applies to raw-panel recipes only (autoreg_lagged_target uses y-lags, so the axis is irrelevant there).
+- Wired inside `macrocast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with the target.
+- Applies to raw-panel recipes only (autoreg_lagged_target uses target lags, so the axis is irrelevant there).
 
 ### Recipe usage
 
@@ -174,8 +251,9 @@ path:
 ## Data Handling Policies (1.5) takeaways
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
-- All non-default behaviours read their inputs from `leaf_config` (release_lag_per_series, x_imputation, break_dates), propagated into `data_task_spec` at compile time.
+- All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`, `break_dates`) and are propagated into `data_task_spec`.
+- `raw_missing_policy` and `raw_outlier_policy` run before official transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the official frame exists.
 - `structural_break_segmentation` reuses the 1.4 `deterministic_components.break_dummies` augmentation path — the axis just supplies the break-date list.
-- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other three act on the raw panel before preprocessing.
+- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or official frame before researcher preprocessing.
 
 Layer 1 per-axis walk complete — 1.1 through 1.5 are all fully honest & operational.

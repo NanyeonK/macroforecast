@@ -97,8 +97,8 @@ Stays `planned`. Tracked in `plans/v0_92_and_v1_1_catalog.md` (follow-up doc aft
 
 - `density_interval` × 7 + `cpa_instability` × 3 + `test_scope` × 4 — probabilistic forecast output infra.
 - `structural_break_segmentation` × 3 + `oos_period` × 2 + `regime_task` × 2 — regime-conditional evaluation.
-- `vintage_policy:rolling_vintage` + `dataset_source` × 3 + `multi_target_architecture` × 2 — real-time / multi-target orchestration.
-- `feature_grouping` × 2, `dimensionality_reduction_policy:ipca`, `cv_selected_x_lags`, etc.
+- `vintage_policy:rolling_vintage` + `source_adapter` × 3 + `multi_target_architecture` × 2 — real-time / multi-target orchestration.
+- `feature_grouping` × 2, `cv_selected_x_lags`, and other non-core macro-forecasting preprocessing extensions.
 - `experiment_unit` × 2 + `study_mode` × (remaining) — wrapper orchestration.
 - `agg_time` × 3 + `decomposition_target` × 3 — aggregation / decomposition v2.
 

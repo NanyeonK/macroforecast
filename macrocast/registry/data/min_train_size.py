@@ -5,7 +5,7 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 AXIS_DEFINITION = AxisDefinition(
     axis_name='min_train_size',
-    layer='1_data_task',
+    layer='3_training',
     axis_type='enum',
     default_policy='fixed',
     entries=(

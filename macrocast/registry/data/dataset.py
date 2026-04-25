@@ -27,6 +27,18 @@ AXIS_DEFINITION = AxisDefinition(
             status='operational',
             priority="A",
         ),
+        EnumRegistryEntry(
+            id='fred_md+fred_sd',
+            description='fred md with optional fred sd state predictors, monthly frequency',
+            status='operational',
+            priority="A",
+        ),
+        EnumRegistryEntry(
+            id='fred_qd+fred_sd',
+            description='fred qd with optional fred sd state predictors, quarterly frequency',
+            status='operational',
+            priority="A",
+        ),
     ),
     compatible_with={},
     incompatible_with={},

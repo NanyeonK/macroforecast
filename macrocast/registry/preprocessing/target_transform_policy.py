@@ -18,7 +18,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='tcode_transformed',
             description='tcode transformed',
-            status='registry_only',
+            status='operational',
             priority="A",
         ),
         EnumRegistryEntry(

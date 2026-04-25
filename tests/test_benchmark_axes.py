@@ -13,8 +13,8 @@ def _by_id(definition):
     return out
 
 
-def test_benchmark_family_layer_is_data_task():
-    assert BF.layer == "1_data_task"
+def test_benchmark_family_layer_is_training():
+    assert BF.layer == "3_training"
 
 
 def test_benchmark_window_layer_is_evaluation():

@@ -86,7 +86,6 @@ DimensionalityReductionPolicy = Literal[
     "none",
     "pca",
     "static_factor",
-    "ipca",
     "custom",
 ]
 
@@ -184,6 +183,12 @@ FeatureGrouping = Literal[
     "factor_group",
 ]
 
+FeatureSelectionSemantics = Literal[
+    "select_before_factor",
+    "select_after_factor",
+    "select_after_custom_blocks",
+]
+
 RecipeMode = Literal[
     "fixed_recipe",
     "recipe_grid",
@@ -209,8 +214,8 @@ class PreprocessContract:
     preprocess_fit_scope: str
     inverse_transform_policy: str
     evaluation_scale: str
+    feature_selection_semantics: str = "select_before_factor"
     representation_policy: str = "raw_only"
-    preprocessing_axis_role: str = "fixed_preprocessing"
     tcode_application_scope: str = "apply_tcode_to_none"
     target_transform: str = "level"
     target_normalization: str = "none"
@@ -219,4 +224,3 @@ class PreprocessContract:
     additional_preprocessing: str = "none"
     x_lag_creation: str = "no_x_lags"
     feature_grouping: str = "none"
-    recipe_mode: str = "fixed_recipe"

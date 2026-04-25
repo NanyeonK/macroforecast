@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from urllib.request import urlopen
 
-from ..cache import get_raw_file_path
+from ..cache import atomic_copy_to_cache, atomic_write_bytes_to_cache, get_raw_file_path
 from ..errors import RawDownloadError
 from ..manager import build_raw_artifact_record, normalize_version_request
 from ..manifest import append_raw_manifest_entry
@@ -31,16 +30,16 @@ def load_fred_qd(
     if not cache_hit:
         try:
             if local_source is not None:
-                shutil.copy(Path(local_source), target)
+                atomic_copy_to_cache(Path(local_source), target)
                 source_url = str(local_source)
             else:
-                with urlopen(source_url) as src, open(target, "wb") as dst:
-                    dst.write(src.read())
+                with urlopen(source_url) as src:
+                    atomic_write_bytes_to_cache(src.read(), target)
         except Exception as exc:
             raise RawDownloadError(f"failed to obtain FRED-QD raw file for request={request}") from exc
 
     try:
-        df, _ = parse_fred_csv(target)
+        df, tcodes = parse_fred_csv(target)
     except Exception as exc:
         raise RawDownloadError(f"downloaded content for FRED-QD request={request} was not a valid CSV") from exc
 
@@ -60,6 +59,6 @@ def load_fred_qd(
         data_through=df.index[-1].strftime("%Y-%m") if len(df) else None,
         support_tier="stable",
     )
-    result = RawLoadResult(data=df, dataset_metadata=metadata, artifact=artifact)
+    result = RawLoadResult(data=df, dataset_metadata=metadata, artifact=artifact, transform_codes=tcodes)
     append_raw_manifest_entry(result, cache_root=cache_root)
     return result

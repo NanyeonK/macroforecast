@@ -18,19 +18,19 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(
             id='shared_transform_then_split',
             description='fit on combined X then split (intentional leak for replication)',
-            status='operational',
+            status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(
             id='X_only_transform',
-            description='transform X only, leave y untouched',
-            status='operational',
+            description='transform predictors only, leave target untouched',
+            status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(
             id='target_only_transform',
-            description='transform y only, leave X untouched',
-            status='operational',
+            description='transform target only, leave predictors untouched',
+            status='registry_only',
             priority='A',
         ),
         EnumRegistryEntry(

@@ -26,11 +26,6 @@ _REPRESENTATION_POLICY = {
     "tcode_only",
     "custom_transform_only",
 }
-_AXIS_ROLE = {
-    "fixed_preprocessing",
-    "swept_preprocessing",
-    "ablation_preprocessing",
-}
 _TCODE_APPLICATION_SCOPE = {
     "apply_tcode_to_target",
     "apply_tcode_to_X",
@@ -77,7 +72,6 @@ _DIMRED = {
     "none",
     "pca",
     "static_factor",
-    "ipca",
     "custom",
 }
 _FEATURE_SELECTION = {
@@ -86,6 +80,11 @@ _FEATURE_SELECTION = {
     "lasso_select",
     "mutual_information_screen",
     "custom",
+}
+_FEATURE_SELECTION_SEMANTICS = {
+    "select_before_factor",
+    "select_after_factor",
+    "select_after_custom_blocks",
 }
 _ORDER = {
     "none",
@@ -162,13 +161,6 @@ _FEATURE_GROUPING = {
     "lag_group",
     "factor_group",
 }
-_RECIPE_MODE = {
-    "fixed_recipe",
-    "recipe_grid",
-    "recipe_ablation",
-    "paper_exact_recipe",
-    "model_specific_recipe",
-}
 
 
 def build_preprocess_contract(
@@ -187,8 +179,8 @@ def build_preprocess_contract(
     preprocess_fit_scope: str,
     inverse_transform_policy: str,
     evaluation_scale: str,
+    feature_selection_semantics: str = "select_before_factor",
     representation_policy: str = "raw_only",
-    preprocessing_axis_role: str = "fixed_preprocessing",
     tcode_application_scope: str = "apply_tcode_to_none",
     target_transform: str = "level",
     target_normalization: str = "none",
@@ -197,7 +189,6 @@ def build_preprocess_contract(
     additional_preprocessing: str = "none",
     x_lag_creation: str = "no_x_lags",
     feature_grouping: str = "none",
-    recipe_mode: str = "fixed_recipe",
 ) -> PreprocessContract:
     allowed_map = {
         "target_transform_policy": _TARGET,
@@ -210,12 +201,12 @@ def build_preprocess_contract(
         "scaling_policy": _SCALING,
         "dimensionality_reduction_policy": _DIMRED,
         "feature_selection_policy": _FEATURE_SELECTION,
+        "feature_selection_semantics": _FEATURE_SELECTION_SEMANTICS,
         "preprocess_order": _ORDER,
         "preprocess_fit_scope": _FIT_SCOPE,
         "inverse_transform_policy": _INVERSE,
         "evaluation_scale": _EVAL_SCALE,
         "representation_policy": _REPRESENTATION_POLICY,
-        "preprocessing_axis_role": _AXIS_ROLE,
         "tcode_application_scope": _TCODE_APPLICATION_SCOPE,
         "target_transform": _TARGET_TRANSFORM,
         "target_normalization": _TARGET_NORMALIZATION,
@@ -224,7 +215,6 @@ def build_preprocess_contract(
         "additional_preprocessing": _ADDITIONAL,
         "x_lag_creation": _X_LAG,
         "feature_grouping": _FEATURE_GROUPING,
-        "recipe_mode": _RECIPE_MODE,
     }
     selected = {
         "target_transform_policy": target_transform_policy,
@@ -237,12 +227,12 @@ def build_preprocess_contract(
         "scaling_policy": scaling_policy,
         "dimensionality_reduction_policy": dimensionality_reduction_policy,
         "feature_selection_policy": feature_selection_policy,
+        "feature_selection_semantics": feature_selection_semantics,
         "preprocess_order": preprocess_order,
         "preprocess_fit_scope": preprocess_fit_scope,
         "inverse_transform_policy": inverse_transform_policy,
         "evaluation_scale": evaluation_scale,
         "representation_policy": representation_policy,
-        "preprocessing_axis_role": preprocessing_axis_role,
         "tcode_application_scope": tcode_application_scope,
         "target_transform": target_transform,
         "target_normalization": target_normalization,
@@ -251,7 +241,6 @@ def build_preprocess_contract(
         "additional_preprocessing": additional_preprocessing,
         "x_lag_creation": x_lag_creation,
         "feature_grouping": feature_grouping,
-        "recipe_mode": recipe_mode,
     }
     for field_name, value in selected.items():
         if value not in allowed_map[field_name]:
@@ -261,16 +250,17 @@ def build_preprocess_contract(
 
 def _has_extra_preprocessing(contract: PreprocessContract) -> bool:
     return any(
-        value != "none"
-        for value in (
-            contract.target_missing_policy,
-            contract.x_missing_policy,
-            contract.target_outlier_policy,
-            contract.x_outlier_policy,
-            contract.scaling_policy,
-            contract.dimensionality_reduction_policy,
-            contract.feature_selection_policy,
-            contract.additional_preprocessing,
+        value != neutral
+        for value, neutral in (
+            (contract.target_missing_policy, "none"),
+            (contract.x_missing_policy, "none"),
+            (contract.target_outlier_policy, "none"),
+            (contract.x_outlier_policy, "none"),
+            (contract.scaling_policy, "none"),
+            (contract.dimensionality_reduction_policy, "none"),
+            (contract.feature_selection_policy, "none"),
+            (contract.additional_preprocessing, "none"),
+            (contract.x_lag_creation, "no_x_lags"),
         )
     )
 
@@ -294,21 +284,39 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.target_outlier_policy != "none":
         return False
-    if contract.representation_policy != "raw_only":
+    if not _has_extra_preprocessing(contract):
         return False
-    if contract.preprocessing_axis_role != "fixed_preprocessing":
+
+    if contract.tcode_policy == "extra_preprocess_without_tcode":
+        if contract.representation_policy != "raw_only":
+            return False
+        if contract.tcode_application_scope != "apply_tcode_to_none":
+            return False
+        if contract.preprocess_order != "extra_only":
+            return False
+        if contract.target_transform_policy != "raw_level" or contract.x_transform_policy != "raw_level":
+            return False
+    elif contract.tcode_policy == "tcode_then_extra_preprocess":
+        if contract.representation_policy != "tcode_only":
+            return False
+        if contract.tcode_application_scope == "apply_tcode_to_none":
+            return False
+        if contract.preprocess_order != "tcode_then_extra":
+            return False
+        target_expected = contract.tcode_application_scope in {"apply_tcode_to_target", "apply_tcode_to_both"}
+        x_expected = contract.tcode_application_scope in {"apply_tcode_to_X", "apply_tcode_to_both"}
+        if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+            return False
+        if x_expected != (contract.x_transform_policy == "dataset_tcode_transformed"):
+            return False
+    else:
         return False
-    if contract.tcode_application_scope != "apply_tcode_to_none":
-        return False
-    if contract.tcode_policy != "extra_preprocess_without_tcode":
-        return False
-    if contract.preprocess_order != "extra_only":
-        return False
+
     if contract.preprocess_fit_scope != "train_only":
         return False
-    if contract.inverse_transform_policy != "none":
+    if contract.inverse_transform_policy not in {"none", "target_only", "forecast_scale_only"}:
         return False
-    if contract.evaluation_scale not in {"raw_level", "original_scale"}:
+    if contract.evaluation_scale not in {"raw_level", "original_scale", "transformed_scale", "both"}:
         return False
     if contract.scaling_scope not in {"columnwise", "global_train_only"}:
         return False
@@ -318,11 +326,9 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.feature_grouping != "none":
         return False
-    if contract.recipe_mode != "fixed_recipe":
-        return False
     if contract.target_transform not in {"level", "difference", "log", "log_difference", "growth_rate"}:
         return False
-    if contract.target_normalization not in {"none", "zscore_train_only", "robust_zscore"}:
+    if contract.target_normalization not in {"none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"}:
         return False
     if contract.target_domain != "unconstrained":
         return False
@@ -336,7 +342,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.feature_selection_policy not in allowed_feature_selection:
         return False
-    if contract.dimensionality_reduction_policy != "none" and contract.feature_selection_policy != "none":
+    if getattr(contract, "feature_selection_semantics", "select_before_factor") not in _FEATURE_SELECTION_SEMANTICS:
         return False
     return True
 
@@ -362,7 +368,34 @@ def is_operational_preprocess_contract(contract: PreprocessContract) -> bool:
     # Normalize evaluation_scale: original_scale and raw_level are aliases for back-compat (Phase 3 rename).
     eval_norm = "raw_level" if contract.evaluation_scale in {"raw_level", "original_scale"} else contract.evaluation_scale
     contract_norm = _replace(contract, evaluation_scale=eval_norm)
-    return contract_norm == raw_only or _supported_train_only_extra(contract)
+    raw_only_norm = _replace(raw_only, evaluation_scale=eval_norm)
+    return contract_norm == raw_only_norm or _is_official_tcode_only_contract(contract_norm) or _supported_train_only_extra(contract)
+
+
+def _is_official_tcode_only_contract(contract: PreprocessContract) -> bool:
+    if contract.tcode_policy != "tcode_only":
+        return False
+    if contract.preprocess_order != "tcode_only":
+        return False
+    if contract.representation_policy != "tcode_only":
+        return False
+    if contract.tcode_application_scope == "apply_tcode_to_none":
+        return False
+    if _has_extra_preprocessing(contract):
+        return False
+    if contract.preprocess_fit_scope != "not_applicable":
+        return False
+    if contract.inverse_transform_policy != "none":
+        return False
+    if contract.evaluation_scale not in {"raw_level", "original_scale"}:
+        return False
+    target_expected = contract.tcode_application_scope in {"apply_tcode_to_target", "apply_tcode_to_both"}
+    x_expected = contract.tcode_application_scope in {"apply_tcode_to_X", "apply_tcode_to_both"}
+    if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+        return False
+    if x_expected != (contract.x_transform_policy == "dataset_tcode_transformed"):
+        return False
+    return True
 
 
 def check_preprocess_governance(
@@ -373,9 +406,6 @@ def check_preprocess_governance(
 ) -> None:
     extra_present = _has_extra_preprocessing(contract)
 
-    if contract.preprocessing_axis_role == "fixed_preprocessing" and preprocessing_sweep:
-        raise PreprocessValidationError("fixed_preprocessing cannot be placed in preprocessing sweep")
-
     if contract.representation_policy == "raw_only":
         if contract.tcode_application_scope != "apply_tcode_to_none":
             raise PreprocessValidationError("raw_only representation requires tcode_application_scope='apply_tcode_to_none'")
@@ -385,10 +415,14 @@ def check_preprocess_governance(
             raise PreprocessValidationError("raw_only representation cannot pair with tcode_only ordering")
 
     if contract.representation_policy == "tcode_only":
-        if contract.tcode_application_scope != "apply_tcode_to_both":
-            raise PreprocessValidationError("tcode_only representation currently requires tcode_application_scope='apply_tcode_to_both'")
-        if contract.target_transform_policy != "tcode_transformed" or contract.x_transform_policy != "dataset_tcode_transformed":
-            raise PreprocessValidationError("tcode_only representation requires tcode-transformed target and x representation")
+        if contract.tcode_application_scope == "apply_tcode_to_none":
+            raise PreprocessValidationError("tcode_only representation requires a non-empty official transform scope")
+        target_expected = contract.tcode_application_scope in {"apply_tcode_to_target", "apply_tcode_to_both"}
+        x_expected = contract.tcode_application_scope in {"apply_tcode_to_X", "apply_tcode_to_both"}
+        if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+            raise PreprocessValidationError("tcode_only representation target policy must match tcode_application_scope")
+        if x_expected != (contract.x_transform_policy == "dataset_tcode_transformed"):
+            raise PreprocessValidationError("tcode_only representation x policy must match tcode_application_scope")
         if contract.tcode_policy not in {"tcode_only", "tcode_then_extra_preprocess", "extra_then_tcode"}:
             raise PreprocessValidationError("tcode_only representation requires explicit tcode ordering semantics")
 
@@ -405,10 +439,8 @@ def check_preprocess_governance(
             raise PreprocessValidationError("raw_only cannot carry extra preprocessing")
 
     if contract.tcode_policy == "tcode_only":
-        if contract.target_transform_policy != "tcode_transformed":
-            raise PreprocessValidationError("tcode_only requires target_transform_policy='tcode_transformed'")
-        if contract.x_transform_policy != "dataset_tcode_transformed":
-            raise PreprocessValidationError("tcode_only requires x_transform_policy='dataset_tcode_transformed'")
+        if contract.target_transform_policy == "raw_level" and contract.x_transform_policy == "raw_level":
+            raise PreprocessValidationError("tcode_only requires at least one tcode-transformed side")
         if contract.preprocess_order != "tcode_only":
             raise PreprocessValidationError("tcode_only requires preprocess_order='tcode_only'")
         if extra_present:
@@ -458,8 +490,6 @@ def check_preprocess_governance(
         raise PreprocessValidationError("current runtime slice does not support x_lag_creation beyond no_x_lags / fixed_x_lags")
     if contract.feature_grouping != "none":
         raise PreprocessValidationError("current runtime slice does not support feature_grouping beyond none")
-    if contract.recipe_mode != "fixed_recipe" and not preprocessing_sweep:
-        raise PreprocessValidationError("non-fixed recipe_mode requires preprocessing sweep context")
 
 
 def preprocess_to_dict(contract: PreprocessContract) -> dict[str, str]:
@@ -474,12 +504,12 @@ def preprocess_to_dict(contract: PreprocessContract) -> dict[str, str]:
         "scaling_policy": contract.scaling_policy,
         "dimensionality_reduction_policy": contract.dimensionality_reduction_policy,
         "feature_selection_policy": contract.feature_selection_policy,
+        "feature_selection_semantics": contract.feature_selection_semantics,
         "preprocess_order": contract.preprocess_order,
         "preprocess_fit_scope": contract.preprocess_fit_scope,
         "inverse_transform_policy": contract.inverse_transform_policy,
         "evaluation_scale": contract.evaluation_scale,
         "representation_policy": contract.representation_policy,
-        "preprocessing_axis_role": contract.preprocessing_axis_role,
         "tcode_application_scope": contract.tcode_application_scope,
         "target_transform": contract.target_transform,
         "target_normalization": contract.target_normalization,
@@ -488,7 +518,6 @@ def preprocess_to_dict(contract: PreprocessContract) -> dict[str, str]:
         "additional_preprocessing": contract.additional_preprocessing,
         "x_lag_creation": contract.x_lag_creation,
         "feature_grouping": contract.feature_grouping,
-        "recipe_mode": contract.recipe_mode,
     }
 
 

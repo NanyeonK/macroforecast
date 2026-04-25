@@ -17,14 +17,14 @@ AXIS_DEFINITION = AxisDefinition(
         ),
         EnumRegistryEntry(
             id='target_only',
-            description='target only',
-            status='registry_only',
+            description='contract-defined inverse transform of target-side predictions before evaluation',
+            status='operational',
             priority="A",
         ),
         EnumRegistryEntry(
             id='forecast_scale_only',
-            description='forecast scale only',
-            status='registry_only',
+            description='contract-defined inverse transform for forecast output scale only',
+            status='operational',
             priority="A",
         ),
         EnumRegistryEntry(

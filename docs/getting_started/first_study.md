@@ -30,7 +30,6 @@ For a data-rich panel like FRED-MD, we need to handle missing values and scale p
 
 - `x_missing_policy`: `em_impute` (EM algorithm, train-only fit)
 - `scaling_policy`: `standard` (zero mean, unit variance, train-only fit)
-- `preprocessing_axis_role`: `fixed_preprocessing` (same preprocessing for both models)
 
 ## Step 4: Write the YAML recipe
 
@@ -47,7 +46,7 @@ path:
     fixed_axes:
       dataset: fred_md
       information_set_type: revised
-      task: single_target_point_forecast
+      target_structure: single_target_point_forecast
       benchmark_family: ar_bic
       evaluation_scale: raw_level
     leaf_config:
@@ -70,7 +69,6 @@ path:
       preprocess_fit_scope: train_only
       inverse_transform_policy: none
       representation_policy: raw_only
-      preprocessing_axis_role: fixed_preprocessing
       tcode_application_scope: apply_tcode_to_none
       target_transform: level
       target_normalization: none
@@ -79,7 +77,6 @@ path:
       additional_preprocessing: none
       x_lag_creation: no_x_lags
       feature_grouping: none
-      recipe_mode: fixed_recipe
 
   3_training:
     fixed_axes:
@@ -169,5 +166,5 @@ for feat in sorted(imp["feature_importances"], key=lambda x: -abs(x["importance"
 
 - [Understanding Output](understanding_output.md) — every artifact explained
 - [User Guide: Design (Stage 0)](../user_guide/design.md) — six axes that decide study shape.
-- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — twenty axes for data, task, evaluation window.
+- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — twenty axes for data, target structure, evaluation window.
 - [Stages Reference](stages_reference.md) — cheat sheet with every operational value.

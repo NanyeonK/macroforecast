@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -21,7 +21,7 @@ from typing import Any
 import numpy as np
 
 from .attribution import one_way_anova
-from .components import COMPONENT_NAMES
+from .components import COMPONENT_NAMES, normalize_component
 from .schema import DECOMPOSITION_RESULT_SCHEMA_VERSION, expected_columns
 
 
@@ -53,6 +53,11 @@ def run_decomposition(
             f"attribution_method={plan.attribution_method!r} not supported in v0.9; "
             "ANOVA baseline only (Shapley deferred to v1.1)."
         )
+
+    components_to_decompose = tuple(
+        dict.fromkeys(str(normalize_component(c)) for c in plan.components_to_decompose)
+    )
+    plan = replace(plan, components_to_decompose=components_to_decompose)
 
     for c in plan.components_to_decompose:
         if c not in COMPONENT_NAMES:
@@ -184,12 +189,11 @@ def _build_observations(*, manifest: dict, primary_metric: str) -> list[dict[str
 
 
 def _axis_component_index() -> dict[str, str | None]:
-    from ..registry.base import AxisDefinition
     from ..registry.build import _discover_axis_definitions
     
 
     definitions = list(_discover_axis_definitions().values())
-    return {d.axis_name: d.component for d in definitions}
+    return {d.axis_name: normalize_component(d.component) for d in definitions}
 
 
 def _write_parquet(*, rows: list[dict[str, Any]], path: Path) -> None:

@@ -20,11 +20,6 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     ("failure_policy", "skip_failed_cell"),
     # 1_data_task metadata
     ("information_set_type", "pseudo_oos_revised"),
-    # 2_preprocessing metadata
-    ("preprocessing_axis_role", "swept_preprocessing"),
-    ("preprocessing_axis_role", "ablation_preprocessing"),
-    ("recipe_mode", "recipe_grid"),
-    ("recipe_mode", "recipe_ablation"),
     # 3_training
     ("logging_level", "debug"),
     ("cache_policy", "feature_cache"),

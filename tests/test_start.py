@@ -16,14 +16,14 @@ def test_macrocast_single_run_executable_route_preview() -> None:
     assert "comparison_summary.json" in out["manifest_preview"]["expected_artifacts"]
 
 
-def test_macrocast_single_run_planned_single_run_extension_blocks_run_manifest() -> None:
+def test_macrocast_single_run_sweep_runner_route_blocks_run_manifest() -> None:
     out = macrocast_single_run(yaml_path="examples/recipes/feature-builder-comparison.yaml")
     assert out["route_preview"]["route_owner"] == "single_run"
-    assert out["route_preview"]["wizard_status"] == "planned_single_run_extension"
-    assert out["compile_preview"]["execution_status"] == "representable_but_not_executable"
+    assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
+    assert out["compile_preview"]["execution_status"] == "ready_for_sweep_runner"
     assert out["tree_context"]["sweep_axes"]["feature_builder"] == ["autoreg_lagged_target", "raw_feature_panel"]
     assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
-    assert "downstream internal sweep branching is not implemented yet" in out["blocked_preview_reason"]
+    assert "execute_sweep" in out["blocked_preview_reason"]
 
 
 def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) -> None:
@@ -32,7 +32,7 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "orchestrated_bundle"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "task": "single_target_point_forecast"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "target_structure": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -55,11 +55,12 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
 
     out = macrocast_single_run(yaml_path=str(path))
     assert out["route_preview"]["route_owner"] == "wrapper"
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
+    assert out["route_preview"]["wizard_status"] == "wrapper_not_supported"
+    assert out["compile_preview"]["execution_status"] == "not_supported"
     assert out["compile_preview"]["wrapper_handoff"]["wrapper_family"] == "benchmark_suite"
     assert out["tree_context"]["route_owner"] == "wrapper"
     assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
-    assert "wrapper-owned" in out["blocked_preview_reason"]
+    assert "no executable wrapper runner contract" in out["blocked_preview_reason"]
 
 
 
@@ -71,27 +72,23 @@ def test_macrocast_single_run_interactive_first_step(monkeypatch, tmp_path: Path
     assert out["yaml_path"].endswith("wizard.yaml")
     assert out["completed_choices"][0]["key"] == "research_design"
     assert out["completed_choices"][0]["value"] == "single_path_benchmark"
-    assert out["current_choice"]["key"] == "task"
+    assert out["current_choice"]["key"] == "target_structure"
     assert out["route_preview"]["route_owner"] == "single_run"
 
 
-def test_macrocast_single_run_interactive_wrapper_stops_early(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "wrapper.yaml"), "3"])
+def test_macrocast_single_run_interactive_drops_unsupported_wrapper_choice(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "wrapper.yaml")])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_single_run(max_steps=1)
-    assert out["completed_choices"][0]["value"] == "orchestrated_bundle"
-    assert out["route_preview"]["route_owner"] == "wrapper"
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
-    assert "Wrapper-owned route chosen" in out["stop_reason"]
-    payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
-    assert payload["path"]["0_meta"]["fixed_axes"]["research_design"] == "orchestrated_bundle"
+    out = macrocast_single_run(max_steps=0)
+    assert out["current_choice"]["key"] == "research_design"
+    assert "orchestrated_bundle" not in out["current_choice"]["options"]
 
 
 def test_macrocast_single_run_interactive_task_switches_next_choice(monkeypatch, tmp_path: Path) -> None:
     answers = iter([str(tmp_path / "multi.yaml"), "", "2"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=2)
-    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "task"]
+    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "target_structure"]
     assert out["completed_choices"][1]["value"] == "multi_target_point_forecast"
     assert out["current_choice"]["key"] == "experiment_unit"
 
@@ -101,7 +98,7 @@ def test_macrocast_single_run_interactive_framework_follows_target(monkeypatch, 
     answers = iter([str(tmp_path / "framework.yaml"), "", "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=4)
-    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "task", "experiment_unit", "target"]
+    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "target_structure", "experiment_unit", "target"]
     assert out["current_choice"]["key"] == "framework"
 
 
@@ -109,7 +106,7 @@ def test_macrocast_single_run_interactive_custom_benchmark_requests_plugin_field
     answers = iter([str(tmp_path / "custom.yaml"), "", "", "", "", "", "4"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=6)
-    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "task", "experiment_unit", "target", "framework", "benchmark_family"]
+    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "target_structure", "experiment_unit", "target", "framework", "benchmark_family"]
     assert out["completed_choices"][-1]["value"] == "custom_benchmark"
     assert out["current_choice"]["key"] == "benchmark_plugin_path"
 
@@ -118,7 +115,7 @@ def test_macrocast_single_run_interactive_tcode_switch_normalizes_preprocess(mon
     answers = iter([
         str(tmp_path / "preprocess.yaml"),
         "",  # research_design
-        "",  # task
+        "",  # target_structure
         "",  # experiment_unit
         "",  # target
         "",  # framework
@@ -220,19 +217,16 @@ def test_macrocast_single_run_model_grid_route_message(monkeypatch, tmp_path: Pa
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "model_grid"}
     assert payload["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge", "lasso", "randomforest"]
-    assert out["route_preview"]["wizard_status"] == "planned_single_run_extension"
-    assert "model grid" in out["route_preview"]["message"]
+    assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
+    assert "Model grid" in out["route_preview"]["message"]
 
 
-def test_macrocast_single_run_full_sweep_route_message(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", "", "", "3"])
+def test_macrocast_single_run_drops_full_sweep_choice(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_single_run(max_steps=13)
-    payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
-    assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "full_sweep"}
-    assert payload["path"]["3_training"]["sweep_axes"]["feature_builder"] == ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"]
-    assert out["route_preview"]["wizard_status"] == "wrapper_required"
-    assert out["route_preview"]["route_owner"] == "wrapper"
+    out = macrocast_single_run(max_steps=11)
+    assert out["current_choice"]["key"] == "model_path_mode"
+    assert "full_sweep" not in out["current_choice"]["options"]
 
 
 
@@ -240,5 +234,5 @@ def test_macrocast_single_run_interactive_experiment_unit_follows_task(monkeypat
     answers = iter([str(tmp_path / "experiment-unit.yaml"), "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=2)
-    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "task"]
+    assert [item["key"] for item in out["completed_choices"]] == ["research_design", "target_structure"]
     assert out["current_choice"]["key"] == "experiment_unit"
