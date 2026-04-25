@@ -30,6 +30,9 @@ Layer 3's canonical consumer contract is:
 fit_predict(forecast_generator, layer2_representation, training_spec) -> forecast_payload
 ```
 
+Named contract statuses are centralized in `layer_contract_ledger.md`. This
+audit uses those names only to explain the Layer 3 boundary.
+
 The scalar runtime forecast payload contract is `forecast_payload_v1`:
 
 | Field | Meaning |
@@ -55,7 +58,7 @@ generator:
 These wrappers make payload type, artifact columns, and manifest contracts
 explicit without pretending that they are model-specific distributional
 estimators. Sequence/tensor handoff and raw-panel iterated forecasting remain
-gated until their upstream representation/scenario contracts exist.
+gated until their producer handoff and scenario contracts exist.
 Path-average point forecast execution is operational through the stepwise
 Layer 3 protocol.
 
@@ -156,12 +159,10 @@ The docs and runtime now mostly follow this split:
 - New compiled manifests include `layer3_capability_matrix`, which records the
   active `model_family x feature_runtime x forecast_type x forecast_object`
   cell and the same blocking reasons used by the compiler gate.
-- The same matrix includes a status catalog, payload contract names for
-  direction/interval/density, and reserved future cells for sequence/tensor
-  runtimes and raw-panel iterated forecasting. These future cells name the
-  remaining required contracts: `sequence_representation_contract_v1`,
-  `sequence_forecast_payload_v1`, `exogenous_x_path_contract_v1`, and
-  `multi_step_raw_panel_payload_v1`.
+- The same matrix includes a status catalog, active payload contract names, and
+  reserved future cells for sequence/tensor runtimes and raw-panel iterated
+  forecasting. The canonical status, producer, consumer, and validation backlog
+  for these contracts lives in `layer_contract_ledger.md`.
 
 ## Current Layer 3 Axes
 

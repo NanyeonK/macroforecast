@@ -67,6 +67,10 @@ The current runtime contract is tabular:
 Layer 1 official frame -> Layer 2 Layer2Representation -> Layer 3 ForecastPayload
 ```
 
+`layer_contract_ledger.md` is the canonical status ledger for named contracts.
+This design page explains why each contract exists and how phases compose; it
+should not duplicate the full producer/consumer/status table.
+
 Layer 2 emits `Layer2Representation` with:
 
 | Field | Meaning |
@@ -293,7 +297,7 @@ given; Layer 2/evaluation converts scale.
 `ForecastPayload` v1 is scalar and point-oriented. Additional forecast objects
 use typed payload-family wrappers rather than overloading `y_pred`.
 
-Proposed payload family:
+Current payload family:
 
 | Payload | Status | Fields |
 |---|---|---|
@@ -307,7 +311,8 @@ The current direction/interval/density wrappers consume the existing scalar
 generator and write explicit payload columns plus `forecast_payloads.jsonl`.
 They are baseline payload contracts, not model-specific distributional
 estimators. Sequence/tensor and raw-panel iterated payloads remain gated until
-their upstream contracts exist.
+their producer handoff and scenario contracts exist. The canonical payload
+contract status table lives in `layer_contract_ledger.md`.
 
 ### Path-Average Execution
 
@@ -489,23 +494,14 @@ Acceptance:
 
 - payload classes or tagged payload schemas exist;
 - Layer 3 capability matrix records payload contract per active cell;
-- artifacts preserve payload type, scale, and scoring metadata.
+- artifacts preserve payload type, scale, and scoring metadata;
+- `layer_contract_ledger.md` records owner, producer, consumer, status,
+  validators, and remaining gates for each payload contract.
 
-The current `layer3_capability_matrix_v1` schema revision opens these payload
-contracts:
-
-| Cell | Contract |
-|---|---|
-| `forecast_object.direction` | `direction_forecast_payload_v1` |
-| `forecast_object.interval` | `interval_forecast_payload_v1` |
-| `forecast_object.density` | `density_forecast_payload_v1` |
-
-The remaining future contracts stay gated:
-
-| Future cell | Contract |
-|---|---|
-| `feature_runtime.sequence_tensor` | `sequence_representation_contract_v1` and `sequence_forecast_payload_v1` |
-| `forecast_type.raw_panel_iterated` | `exogenous_x_path_contract_v1` and `multi_step_raw_panel_payload_v1` |
+The current `layer3_capability_matrix_v1` schema revision opens
+`direction_forecast_payload_v1`, `interval_forecast_payload_v1`, and
+`density_forecast_payload_v1`. Sequence/tensor and raw-panel iterated payloads
+remain gated in the ledger until their handoff/scenario contracts are defined.
 
 ### Phase 6: Sequence/Tensor Representation Handoff
 

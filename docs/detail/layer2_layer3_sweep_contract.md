@@ -323,21 +323,12 @@ invalid Layer 2 x Layer 3 cells.
 
 The matrix also carries a status catalog and payload contract names. Direction,
 interval, and density forecast objects are operational as typed wrappers over
-the scalar generator:
+the scalar generator. Reserved future cells document support targets that
+remain closed until their contracts exist.
 
-| Operational cell | Payload contract |
-|---|---|
-| `forecast_object.direction` | `direction_forecast_payload_v1` |
-| `forecast_object.interval` | `interval_forecast_payload_v1` |
-| `forecast_object.density` | `density_forecast_payload_v1` |
-
-Reserved future cells document support targets that remain closed until their
-contracts exist:
-
-| Future cell | Required contract |
-|---|---|
-| `feature_runtime.sequence_tensor` | `sequence_representation_contract_v1` upstream, then `sequence_forecast_payload_v1` |
-| `forecast_type.raw_panel_iterated` | `exogenous_x_path_contract_v1` plus `multi_step_raw_panel_payload_v1` |
+The canonical list of operational and gated contracts now lives in
+`layer_contract_ledger.md`. This sweep contract should reference that ledger
+rather than carrying a second contract-status table.
 
 Current recipes still reject dropped values until the corresponding runtime
 contract is implemented.
@@ -382,9 +373,9 @@ These are the next semantic composer tasks:
 
 | Area | Why gated |
 |---|---|
-| Broader factor plus feature selection | Built-in factor blocks support `select_before_factor` and `select_after_factor`. Custom-block final-`Z` selection still needs explicit contracts. |
-| Custom combiners | Need a contract for arbitrary final-block composition and stable feature naming. |
-| Custom-block final-`Z` selection | Need explicit selection provenance over user-created columns. |
+| Broader factor plus feature selection | Built-in factor blocks support `select_before_factor` and `select_after_factor`. Broader custom factor/selection slices must satisfy the Layer 2 method-extension contracts in `layer_contract_ledger.md`. |
+| Custom combiners | Operational for registered `custom_feature_combiner_v1` slices; broader combiner families need explicit names, fit-state provenance, and invalid-cell tests. |
+| Custom-block final-`Z` selection | Operational for registered supported slices through `custom_final_z_selection_v1`; broader selector families need explicit provenance over user-created columns. |
 | Custom inverse policies | Need extension contracts beyond built-in target-scale and target-transformer policies. |
 | Iterated raw-panel forecasting | Need exogenous-X forecasting or scenario path contract. |
 

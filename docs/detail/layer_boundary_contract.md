@@ -5,6 +5,11 @@ Date: 2026-04-22
 This document is the canonical boundary contract for the recipe layers after the
 Layer 1/2 cleanup decision.
 
+For named runtime and extension schemas, use
+`layer_contract_ledger.md` as the canonical status ledger. This page owns the
+layer-role split; the ledger owns contract status, producer, consumer,
+validation, and backlog.
+
 ## Layer 0: Study Design
 
 Owns study grammar and execution shape:
@@ -125,6 +130,11 @@ fit_predict(forecast_generator, Layer2Representation, training_spec) -> forecast
 optional `tuning_payload`. The runtime coerces legacy executor dictionaries into
 this contract and records `forecast_payload_contract=forecast_payload_v1` in
 forecast metadata when available.
+
+Typed scalar payload families are also Layer 3 contracts. Direction, interval,
+and density currently wrap supported scalar point generators and emit explicit
+payload artifacts. Their detailed producer/consumer/status definitions live in
+`layer_contract_ledger.md`.
 
 Layer 3 may validate that a selected forecast generator can consume the Layer 2
 handoff, but it must not decide how `Z` was built. The following remain Layer 2
