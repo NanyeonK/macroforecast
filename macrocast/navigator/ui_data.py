@@ -14,6 +14,7 @@ from .core import (
     _VIRTUAL_AXES,
     build_navigation_view,
     load_recipe,
+    navigator_state_engine_spec,
 )
 from .replications import REPLICATION_LIBRARY_VERSION, list_replication_entries
 
@@ -94,6 +95,7 @@ def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dic
         "layer_labels": dict(_LAYER_LABELS),
         "tree_axes": {layer: list(axes) for layer, axes in _TREE_AXES.items()},
         "axis_catalog": axis_catalog(),
+        "state_engine": navigator_state_engine_spec(),
         "samples": [_read_sample(path, root) for path in paths],
         "replications": list_replication_entries(),
     }

@@ -19455,6 +19455,316 @@
     }
   ],
   "schema_version": "navigator_ui_data_v1",
+  "state_engine": {
+    "default_selections": {
+      "agg_horizon": "equal_weight",
+      "agg_target": "report_separately_only",
+      "agg_time": "full_oos_average",
+      "artifact_granularity": "aggregated",
+      "benchmark_scope": "same_for_all",
+      "benchmark_window": "expanding",
+      "cpa_instability": "none",
+      "decomposition_order": "marginal_effect_only",
+      "decomposition_target": "preprocessing_effect",
+      "density_interval": "none",
+      "density_metrics": "pinball_loss",
+      "dependence_correction": "none",
+      "direction": "none",
+      "direction_metrics": "directional_accuracy",
+      "equal_predictive": "none",
+      "exogenous_x_path_policy": "unavailable",
+      "export_format": "json",
+      "forecast_object": "point_mean",
+      "forecast_type": "direct",
+      "importance_aggregation": "mean_abs",
+      "importance_gradient_path": "none",
+      "importance_grouped": "none",
+      "importance_local_surrogate": "none",
+      "importance_method": "none",
+      "importance_model_agnostic": "none",
+      "importance_model_native": "none",
+      "importance_output_style": "ranked_table",
+      "importance_partial_dependence": "none",
+      "importance_scope": "global",
+      "importance_shap": "none",
+      "importance_stability": "none",
+      "importance_temporal": "static_snapshot",
+      "multiple_model": "none",
+      "nested": "none",
+      "oos_period": "all_oos_data",
+      "overlap_handling": "allow_overlap",
+      "point_metrics": "MSFE",
+      "primary_metric": "msfe",
+      "provenance_fields": "full",
+      "ranking": "mean_metric_rank",
+      "recursive_x_model_family": "none",
+      "regime_definition": "none",
+      "regime_metrics": "all_main_metrics_by_regime",
+      "regime_use": "eval_only",
+      "relative_metrics": "relative_MSFE",
+      "report_style": "tidy_dataframe",
+      "residual_diagnostics": "none",
+      "saved_objects": "full_bundle",
+      "stat_test": "none",
+      "test_scope": "per_target"
+    },
+    "forecast_object_rules": {
+      "density_interval_stats": [
+        "PIT_uniformity",
+        "berkowitz",
+        "christoffersen_conditional",
+        "christoffersen_independence",
+        "christoffersen_unconditional",
+        "interval_coverage",
+        "kupiec",
+        "none"
+      ],
+      "direction_stats": [
+        "binomial_hit",
+        "none",
+        "pesaran_timmermann"
+      ],
+      "quantile_model": "quantile_linear",
+      "quantile_stats": [
+        "dm",
+        "dm_hln",
+        "dm_modified",
+        "none"
+      ]
+    },
+    "importance": {
+      "default_spec": {
+        "importance_aggregation": "mean_abs",
+        "importance_gradient_path": "none",
+        "importance_grouped": "none",
+        "importance_local_surrogate": "none",
+        "importance_method": "none",
+        "importance_model_agnostic": "none",
+        "importance_model_native": "none",
+        "importance_output_style": "ranked_table",
+        "importance_partial_dependence": "none",
+        "importance_scope": "global",
+        "importance_shap": "none",
+        "importance_stability": "none",
+        "importance_temporal": "static_snapshot"
+      },
+      "legacy_to_axis": {
+        "ale": {
+          "axis": "importance_partial_dependence",
+          "value": "ale"
+        },
+        "feature_ablation": {
+          "axis": "importance_local_surrogate",
+          "value": "feature_ablation"
+        },
+        "grouped_permutation": {
+          "axis": "importance_grouped",
+          "value": "grouped_permutation"
+        },
+        "ice": {
+          "axis": "importance_partial_dependence",
+          "value": "ice"
+        },
+        "importance_stability": {
+          "axis": "importance_stability",
+          "value": "importance_stability"
+        },
+        "kernel_shap": {
+          "axis": "importance_shap",
+          "value": "kernel_shap"
+        },
+        "lime": {
+          "axis": "importance_local_surrogate",
+          "value": "lime"
+        },
+        "linear_shap": {
+          "axis": "importance_shap",
+          "value": "linear_shap"
+        },
+        "minimal_importance": {
+          "axis": "importance_model_native",
+          "value": "minimal_importance"
+        },
+        "pdp": {
+          "axis": "importance_partial_dependence",
+          "value": "pdp"
+        },
+        "permutation_importance": {
+          "axis": "importance_model_agnostic",
+          "value": "permutation_importance"
+        },
+        "tree_shap": {
+          "axis": "importance_shap",
+          "value": "tree_shap"
+        }
+      },
+      "local_methods": [
+        "feature_ablation",
+        "kernel_shap",
+        "lime"
+      ],
+      "meta_axes": [
+        "importance_scope",
+        "importance_aggregation",
+        "importance_output_style",
+        "importance_temporal",
+        "importance_gradient_path"
+      ],
+      "split_axes": [
+        "importance_model_native",
+        "importance_model_agnostic",
+        "importance_shap",
+        "importance_local_surrogate",
+        "importance_partial_dependence",
+        "importance_grouped",
+        "importance_stability"
+      ]
+    },
+    "model_groups": {
+      "autoreg_builders": [
+        "autoreg_lagged_target"
+      ],
+      "deep_sequence_models": [
+        "gru",
+        "lstm",
+        "tcn"
+      ],
+      "linear_models": [
+        "adaptivelasso",
+        "ar",
+        "bayesianridge",
+        "elasticnet",
+        "huber",
+        "lasso",
+        "ols",
+        "quantile_linear",
+        "ridge"
+      ],
+      "raw_panel_builders": [
+        "raw_X_only",
+        "raw_feature_panel"
+      ],
+      "tree_models": [
+        "catboost",
+        "extratrees",
+        "gbm",
+        "lightgbm",
+        "randomforest",
+        "xgboost"
+      ]
+    },
+    "schema_version": "navigator_state_engine_v1",
+    "stat_tests": {
+      "hac_compatible": [
+        "cpa",
+        "cw",
+        "dm_hln",
+        "dm_modified",
+        "enc_new",
+        "mcs",
+        "mse_t",
+        "spa"
+      ],
+      "legacy_to_split": {
+        "arch_lm": {
+          "axis": "residual_diagnostics",
+          "value": "arch_lm"
+        },
+        "bias_test": {
+          "axis": "residual_diagnostics",
+          "value": "bias_test"
+        },
+        "binomial_hit": {
+          "axis": "direction",
+          "value": "binomial_hit"
+        },
+        "cpa": {
+          "axis": "cpa_instability",
+          "value": "cpa"
+        },
+        "cw": {
+          "axis": "nested",
+          "value": "cw"
+        },
+        "diagnostics_full": {
+          "axis": "residual_diagnostics",
+          "value": "diagnostics_full"
+        },
+        "dm": {
+          "axis": "equal_predictive",
+          "value": "dm"
+        },
+        "dm_hln": {
+          "axis": "equal_predictive",
+          "value": "dm_hln"
+        },
+        "dm_modified": {
+          "axis": "equal_predictive",
+          "value": "dm_modified"
+        },
+        "enc_new": {
+          "axis": "nested",
+          "value": "enc_new"
+        },
+        "ljung_box": {
+          "axis": "residual_diagnostics",
+          "value": "ljung_box"
+        },
+        "mcs": {
+          "axis": "multiple_model",
+          "value": "mcs"
+        },
+        "mincer_zarnowitz": {
+          "axis": "residual_diagnostics",
+          "value": "mincer_zarnowitz"
+        },
+        "mse_f": {
+          "axis": "nested",
+          "value": "mse_f"
+        },
+        "mse_t": {
+          "axis": "nested",
+          "value": "mse_t"
+        },
+        "pesaran_timmermann": {
+          "axis": "direction",
+          "value": "pesaran_timmermann"
+        },
+        "reality_check": {
+          "axis": "multiple_model",
+          "value": "reality_check"
+        },
+        "rolling_dm": {
+          "axis": "cpa_instability",
+          "value": "rolling_dm"
+        },
+        "rossi": {
+          "axis": "cpa_instability",
+          "value": "rossi"
+        },
+        "spa": {
+          "axis": "multiple_model",
+          "value": "spa"
+        }
+      },
+      "split_axes": [
+        "equal_predictive",
+        "nested",
+        "cpa_instability",
+        "multiple_model",
+        "density_interval",
+        "direction",
+        "residual_diagnostics"
+      ]
+    },
+    "status_disabled_reasons": {
+      "external_plugin": "requires a registered external plugin/callable",
+      "future": "future design value; runtime contract is not open",
+      "gated_named": "named contract exists, but runtime is gated",
+      "not_supported_yet": "named contract exists, but runtime is gated",
+      "registry_only": "registered in the grammar, but no current runtime cell is open"
+    }
+  },
   "tree_axes": {
     "0_meta": [
       "research_design",

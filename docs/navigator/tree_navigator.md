@@ -39,6 +39,19 @@ recipe = load_recipe("examples/recipes/model-benchmark.yaml")
 view = build_navigation_view(recipe)
 ```
 
+## Interactive App
+
+The static Navigator App ships the exported `navigator_state_engine_v1` payload. This lets the browser update the current path without a Python process:
+
+- clicking an enabled option changes the current axis selection;
+- disabled options remain visible with the reason they are unavailable;
+- compatibility messages are recomputed from the active browser path;
+- YAML preview is regenerated from the selected path and changed axes;
+- `browser_preview` means the edited path is internally compatible in the browser;
+- `browser_blocked` means the current browser path contains a selected value that violates an active rule.
+
+The browser state engine is an exploration surface. `compile_preview` is still the snapshot from the exported sample recipe, and `macrocast-navigate resolve` remains the authoritative compiler check before running a recipe.
+
 ## Output Shape
 
 The payload has four top-level fields:

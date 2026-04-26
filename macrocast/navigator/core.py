@@ -10,6 +10,8 @@ from ..execution.importance_dispatch import (
     DEFAULT_IMPORTANCE_SPEC,
     IMPORTANCE_AXIS_NAMES,
     IMPORTANCE_META_AXIS_NAMES,
+    LEGACY_IMPORTANCE_METHOD_TO_AXIS,
+    LOCAL_IMPORTANCE_METHODS,
     active_importance_methods,
     canonicalize_importance_spec,
 )
@@ -513,6 +515,53 @@ def _canonical_path_effect(layer: str, axis_name: str, value: str) -> str:
     if axis_name in {"exogenous_x_path_policy", "recursive_x_model_family"}:
         return f"path.{layer}.leaf_config.{axis_name} = {value!r}"
     return f"path.{layer}.fixed_axes.{axis_name} = {value!r}"
+
+
+def navigator_state_engine_spec() -> dict[str, Any]:
+    """Serializable rule metadata for the browser-side Navigator state engine."""
+
+    return {
+        "schema_version": "navigator_state_engine_v1",
+        "default_selections": dict(_DEFAULT_SELECTIONS),
+        "status_disabled_reasons": {
+            "registry_only": "registered in the grammar, but no current runtime cell is open",
+            "future": "future design value; runtime contract is not open",
+            "external_plugin": "requires a registered external plugin/callable",
+            "gated_named": "named contract exists, but runtime is gated",
+            "not_supported_yet": "named contract exists, but runtime is gated",
+        },
+        "model_groups": {
+            "tree_models": sorted(_TREE_MODELS),
+            "linear_models": sorted(_LINEAR_MODELS),
+            "deep_sequence_models": sorted(_DEEP_SEQUENCE_MODELS),
+            "raw_panel_builders": sorted(_RAW_PANEL_BUILDERS),
+            "autoreg_builders": sorted(_AUTOREG_BUILDERS),
+        },
+        "forecast_object_rules": {
+            "quantile_model": "quantile_linear",
+            "direction_stats": sorted(_DIRECTION_STATS),
+            "density_interval_stats": sorted(_DENSITY_INTERVAL_STATS),
+            "quantile_stats": sorted(_QUANTILE_STATS),
+        },
+        "stat_tests": {
+            "split_axes": list(_STAT_TEST_SPLIT_AXES),
+            "legacy_to_split": {
+                key: {"axis": axis, "value": value}
+                for key, (axis, value) in sorted(_LEGACY_STAT_TEST_TO_SPLIT.items())
+            },
+            "hac_compatible": sorted(_HAC_COMPATIBLE_STAT_TESTS),
+        },
+        "importance": {
+            "split_axes": list(IMPORTANCE_AXIS_NAMES),
+            "meta_axes": list(IMPORTANCE_META_AXIS_NAMES),
+            "default_spec": dict(DEFAULT_IMPORTANCE_SPEC),
+            "legacy_to_axis": {
+                key: {"axis": axis, "value": value}
+                for key, (axis, value) in sorted(LEGACY_IMPORTANCE_METHOD_TO_AXIS.items())
+            },
+            "local_methods": sorted(LOCAL_IMPORTANCE_METHODS),
+        },
+    }
 
 
 def _axis_view(layer: str, axis_name: str, selected: Mapping[str, Any], registry: Mapping[str, Any]) -> dict[str, Any]:
