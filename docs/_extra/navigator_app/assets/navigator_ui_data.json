@@ -1134,6 +1134,26 @@
       "incompatible_with": {},
       "layer": "3_training"
     },
+    "fred_sd_frequency_policy": {
+      "allowed_values": [
+        "report_only",
+        "allow_mixed_frequency",
+        "reject_mixed_known_frequency",
+        "require_single_known_frequency"
+      ],
+      "axis_name": "fred_sd_frequency_policy",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "allow_mixed_frequency": "operational",
+        "reject_mixed_known_frequency": "operational",
+        "report_only": "operational",
+        "require_single_known_frequency": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
+    },
     "frequency": {
       "allowed_values": [
         "monthly",
@@ -3747,6 +3767,7 @@
             "forecast_object": "point_mean",
             "forecast_type": "direct",
             "framework": "expanding",
+            "fred_sd_frequency_policy": "report_only",
             "horizons": [
               1,
               3
@@ -4576,6 +4597,42 @@
               }
             ],
             "selected": "revised"
+          },
+          {
+            "axis": "fred_sd_frequency_policy",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "report_only"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "allow_mixed_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "reject_mixed_known_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "require_single_known_frequency"
+              }
+            ],
+            "selected": "report_only"
           },
           {
             "axis": "target_structure",
@@ -9100,6 +9157,7 @@
             "forecast_object": "point_mean",
             "forecast_type": "iterated",
             "framework": "expanding",
+            "fred_sd_frequency_policy": "report_only",
             "horizons": [
               1
             ],
@@ -9944,6 +10002,42 @@
               }
             ],
             "selected": "revised"
+          },
+          {
+            "axis": "fred_sd_frequency_policy",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "report_only"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "allow_mixed_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "reject_mixed_known_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "require_single_known_frequency"
+              }
+            ],
+            "selected": "report_only"
           },
           {
             "axis": "target_structure",
@@ -14519,6 +14613,7 @@
             "forecast_object": "point_mean",
             "forecast_type": "direct",
             "framework": "expanding",
+            "fred_sd_frequency_policy": "report_only",
             "frequency": "monthly",
             "horizon_target_construction": "future_target_level_t_plus_h",
             "horizons": [
@@ -15428,6 +15523,42 @@
               }
             ],
             "selected": "revised"
+          },
+          {
+            "axis": "fred_sd_frequency_policy",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "report_only"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "allow_mixed_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "reject_mixed_known_frequency"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "require_single_known_frequency"
+              }
+            ],
+            "selected": "report_only"
           },
           {
             "axis": "target_structure",
@@ -19753,6 +19884,7 @@
       "export_format": "json",
       "forecast_object": "point_mean",
       "forecast_type": "direct",
+      "fred_sd_frequency_policy": "report_only",
       "importance_aggregation": "mean_abs",
       "importance_gradient_path": "none",
       "importance_grouped": "none",
@@ -20055,6 +20187,7 @@
       "source_adapter",
       "frequency",
       "information_set_type",
+      "fred_sd_frequency_policy",
       "target_structure",
       "variable_universe",
       "missing_availability",

@@ -160,6 +160,30 @@ def test_fred_sd_state_and_variable_selection_compile_into_data_task_spec() -> N
     assert data_task["sd_variable_selection"] == "selected_sd_variables"
     assert data_task["sd_states"] == ["CA", "TX"]
     assert data_task["sd_variables"] == ["UR", "BPPRIVSA"]
+    assert data_task["fred_sd_frequency_policy"] == "report_only"
+
+
+def test_fred_sd_frequency_policy_requires_fred_sd_dataset() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"]["fred_sd_frequency_policy"] = "require_single_known_frequency"
+
+    with pytest.raises(CompileValidationError, match="requires a FRED-SD dataset"):
+        compile_recipe_dict(recipe)
+
+
+def test_fred_sd_frequency_policy_compiles_into_data_task_spec() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            "fred_sd_frequency_policy": "reject_mixed_known_frequency",
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    assert compiled.manifest["data_task_spec"]["fred_sd_frequency_policy"] == "reject_mixed_known_frequency"
 
 
 def test_fred_sd_selection_allows_non_sd_underscore_target_names() -> None:

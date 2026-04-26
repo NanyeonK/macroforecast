@@ -160,6 +160,7 @@ _PHASE3_DEFAULTS = {
     "raw_missing_policy": "preserve_raw_missing",
     "raw_outlier_policy": "preserve_raw_outliers",
     "variable_universe": "all_variables",
+    "fred_sd_frequency_policy": "report_only",
     "separation_rule": "strict_separation",
 }
 _TRAINING_AXIS_DEFAULTS = {
@@ -313,6 +314,13 @@ def _fred_sd_series_metadata_summary(report: Mapping[str, object] | None) -> dic
 
 
 _FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION = "fred_sd_frequency_report_v1"
+_FRED_SD_FREQUENCY_POLICY_REPORT_CONTRACT_VERSION = "fred_sd_frequency_policy_v1"
+_FRED_SD_FREQUENCY_POLICIES = {
+    "report_only",
+    "allow_mixed_frequency",
+    "reject_mixed_known_frequency",
+    "require_single_known_frequency",
+}
 
 
 def _fred_sd_frequency_status(*, known_frequency_count: int, unknown_count: int, series_count: int) -> str:
@@ -423,6 +431,71 @@ def _attach_fred_sd_frequency_report(raw_result):
     frame = data.copy()
     frame.attrs.update(getattr(data, "attrs", {}))
     _append_frame_report(frame, "fred_sd_frequency_report", report)
+    return _raw_result_with(raw_result, data=frame)
+
+
+def _fred_sd_frequency_policy_block_reason(policy: str, report: Mapping[str, object]) -> str | None:
+    known_classes = list(report.get("known_native_frequency_classes", []) or [])
+    unknown_count = int(report.get("unknown_frequency_count") or 0)
+    has_mixed_known = bool(report.get("has_mixed_known_frequencies"))
+    if policy == "reject_mixed_known_frequency" and has_mixed_known:
+        return f"multiple known native frequencies selected: {known_classes}"
+    if policy == "require_single_known_frequency":
+        if len(known_classes) != 1:
+            return f"expected exactly one known native frequency; got {known_classes}"
+        if unknown_count:
+            return f"unknown native frequency count is {unknown_count}"
+    return None
+
+
+def _apply_fred_sd_frequency_policy(raw_result, recipe: RecipeSpec, *, policy: str | None = None):
+    policy = str(policy or recipe.data_task_spec.get("fred_sd_frequency_policy", "report_only"))
+    if policy not in _FRED_SD_FREQUENCY_POLICIES:
+        raise ExecutionError(f"unsupported fred_sd_frequency_policy={policy!r}")
+    if not _dataset_has_fred_sd(recipe.raw_dataset):
+        if policy == "report_only":
+            return raw_result
+        raise ExecutionError(f"fred_sd_frequency_policy={policy!r} requires raw_dataset to include fred_sd")
+
+    report = _fred_sd_frequency_report(raw_result)
+    if report is None:
+        if policy == "report_only":
+            return raw_result
+        raise ExecutionError(
+            f"fred_sd_frequency_policy={policy!r} requires fred_sd_series_metadata_v1 "
+            "to be present in data reports"
+        )
+
+    block_reason = _fred_sd_frequency_policy_block_reason(policy, report)
+    if block_reason is not None:
+        raise ExecutionError(
+            f"fred_sd_frequency_policy={policy!r} blocked selected FRED-SD panel: {block_reason}"
+        )
+
+    data = getattr(raw_result, "data", None)
+    if not isinstance(data, pd.DataFrame):
+        return raw_result
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    _append_frame_report(
+        frame,
+        "fred_sd_frequency_policy",
+        {
+            "schema_version": _FRED_SD_FREQUENCY_POLICY_REPORT_CONTRACT_VERSION,
+            "contract_version": _FRED_SD_FREQUENCY_POLICY_REPORT_CONTRACT_VERSION,
+            "owner_layer": "1_data_task",
+            "policy": policy,
+            "decision": "allowed",
+            "source_frequency_report_contract": report.get("contract_version"),
+            "frequency_status": report.get("frequency_status"),
+            "native_frequency_counts": dict(report.get("native_frequency_counts", {}) or {}),
+            "known_native_frequency_classes": list(report.get("known_native_frequency_classes", []) or []),
+            "unknown_frequency_count": int(report.get("unknown_frequency_count") or 0),
+            "has_mixed_known_frequencies": bool(report.get("has_mixed_known_frequencies")),
+            "has_monthly_quarterly_mix": bool(report.get("has_monthly_quarterly_mix")),
+            "requires_mixed_frequency_decision": bool(report.get("requires_mixed_frequency_decision")),
+        },
+    )
     return _raw_result_with(raw_result, data=frame)
 
 
@@ -9141,6 +9214,8 @@ def execute_recipe(
         seed=int(reproducibility_spec.get("seed", 42)),
     )
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
+    _fred_sd_frequency_policy = _data_task_axis(recipe, "fred_sd_frequency_policy")
+    raw_result = _apply_fred_sd_frequency_policy(raw_result, recipe, policy=_fred_sd_frequency_policy)
     raw_result = _apply_frequency_policy(raw_result, recipe)
     raw_result = _apply_sd_inferred_tcodes(raw_result, recipe)
     _raw_missing_policy = _data_task_axis(recipe, "raw_missing_policy")

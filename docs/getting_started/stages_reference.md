@@ -15,7 +15,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 | Stage | Axes | Allowed values | What it governs |
 |---|---|---|---|
 | 0 — Design  | 6 | 38 | Recipe grammar: runner, sweep shape, reproducibility, compute |
-| 1 — Data    | 9 | 30 | Official data frame: dataset, source, frequency, information set, target structure, availability |
+| 1 — Data    | 12 | 38 | Official data frame: dataset, source, frequency, information set, target structure, FRED-SD panel policy, availability |
 
 ---
 
@@ -113,6 +113,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
 | `information_set_type` | `revised`, `pseudo_oos_revised` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
 | `target_structure` | `single_target_point_forecast`, `multi_target_point_forecast` | target cardinality; legacy `task` is accepted as an alias; Layer 0 derives `experiment_unit` from this plus sweep shape |
+| `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` | FRED-SD selected-panel native-frequency gate; strict modes consume `fred_sd_frequency_report_v1` before Layer 2 |
 | `state_selection` | `all_states`, `selected_states` | FRED-SD source-load state selector; `selected_states` reads `leaf_config.sd_states` |
 | `sd_variable_selection` | `all_sd_variables`, `selected_sd_variables` | FRED-SD source-load workbook-sheet selector; `selected_sd_variables` reads `leaf_config.sd_variables` |
 | `variable_universe` | `all_variables`, `preselected_core`, `category_subset`, `target_specific_subset`, `handpicked_set` | `_apply_variable_universe`; `handpicked_set` reads `leaf_config.variable_universe_columns`; target + date columns always preserved |

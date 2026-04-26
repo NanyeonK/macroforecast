@@ -22,6 +22,7 @@ from macrocast import (
     target_transformer,
 )
 from macrocast.execution.build import _fred_sd_frequency_report_from_metadata
+from macrocast.execution.errors import ExecutionError
 from macrocast.raw.types import RawArtifactRecord, RawDatasetMetadata, RawLoadResult
 
 FIXTURE_RAW = Path("tests/fixtures/fred_md_ar_sample.csv")
@@ -323,6 +324,7 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
 
     assert manifest["data_task_spec"]["state_selection"] == "selected_states"
     assert manifest["data_task_spec"]["sd_variable_selection"] == "selected_sd_variables"
+    assert manifest["data_task_spec"]["fred_sd_frequency_policy"] == "report_only"
     assert manifest["data_task_spec"]["sd_states"] == ["CA"]
     assert manifest["data_task_spec"]["sd_variables"] == ["UR"]
     assert "UR_CA" in preview.columns
@@ -358,6 +360,8 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
     assert frequency_report["by_sd_variable"] == {"UR": {"monthly": 1}}
     assert layer1_contract["data_reports"]["components"]["fred_sd"]["fred_sd_series_metadata"]["series_count"] == 1
     assert layer1_contract["data_reports"]["fred_sd_frequency_report"]["frequency_status"] == "single_frequency"
+    assert layer1_contract["data_reports"]["fred_sd_frequency_policy"]["policy"] == "report_only"
+    assert layer1_contract["data_reports"]["fred_sd_frequency_policy"]["decision"] == "allowed"
     assert "fred_sd_series_metadata.json" in {
         item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "fred_sd_series_metadata"
     }
@@ -391,6 +395,54 @@ def test_fred_sd_frequency_report_marks_mixed_panel() -> None:
     assert report["requires_mixed_frequency_decision"] is True
     assert report["by_state"] == {"CA": {"monthly": 1, "quarterly": 1, "unknown": 1}}
     assert report["by_sd_variable"]["NQGSP"] == {"quarterly": 1}
+
+
+def test_experiment_fred_sd_frequency_policy_lowers_to_layer1_axis() -> None:
+    recipe = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2001-12",
+            horizons=[1],
+            frequency="monthly",
+        )
+        .use_fred_sd_frequency_policy("require_single_known_frequency")
+        .to_recipe_dict()
+    )
+
+    assert (
+        recipe["path"]["1_data_task"]["fixed_axes"]["fred_sd_frequency_policy"]
+        == "require_single_known_frequency"
+    )
+
+
+def test_fred_sd_frequency_policy_blocks_mixed_native_panel(tmp_path: Path) -> None:
+    dates = pd.date_range("2000-01-01", periods=12, freq="MS")
+    source = tmp_path / "mixed_fred_sd.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(12)],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(12)],
+        }
+    ).to_csv(source, index=False)
+
+    exp = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2000-12",
+            horizons=[1],
+            frequency="monthly",
+        )
+        .use_fred_sd_selection(states=["CA"], variables=["UR", "NQGSP"])
+        .use_fred_sd_frequency_policy("require_single_known_frequency")
+    )
+
+    with pytest.raises(ExecutionError, match="fred_sd_frequency_policy='require_single_known_frequency'"):
+        exp.run(output_root=tmp_path / "runs", local_raw_source=source)
 
 
 def test_experiment_fred_sd_selection_lowers_to_layer1_axes() -> None:

@@ -1005,6 +1005,11 @@ def _validate_layer1_data_task_contract(
 
     targets = _targets_for_layer1_contract(selection_map, leaf_config)
     has_fred_sd = _dataset_has_fred_sd(dataset)
+    fred_sd_frequency_policy = _selection_value(selection_map, "fred_sd_frequency_policy", default="report_only")
+    if fred_sd_frequency_policy != "report_only" and not has_fred_sd:
+        raise CompileValidationError(
+            f"fred_sd_frequency_policy={fred_sd_frequency_policy!r} requires a FRED-SD dataset"
+        )
 
     state_selection = _selection_value(selection_map, "state_selection", default="all_states")
     if state_selection == "selected_states":
@@ -1220,6 +1225,11 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "official_transform_source": _official_transform_source_payload(selection_map),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
+        "fred_sd_frequency_policy": _selection_value(
+            selection_map,
+            "fred_sd_frequency_policy",
+            default="report_only",
+        ),
         "state_selection": _selection_value(selection_map, "state_selection", default="all_states"),
         "sd_variable_selection": _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables"),
         "sd_states": leaf_config.get("sd_states"),

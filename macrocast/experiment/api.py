@@ -138,6 +138,7 @@ class Experiment:
         benchmark_config: dict[str, Any] | None = None,
         sd_tcode_policy: str = "none",
         sd_tcode_allowed_statuses: Iterable[str] | None = None,
+        fred_sd_frequency_policy: str = "report_only",
     ) -> None:
         self.dataset = dataset
         self.target = target
@@ -156,6 +157,7 @@ class Experiment:
         self.random_seed = int(random_seed)
         self.benchmark_config = dict(benchmark_config or {})
         self.sd_tcode_policy = str(sd_tcode_policy)
+        self.fred_sd_frequency_policy = str(fred_sd_frequency_policy)
         self.sd_tcode_map_version: str | None = None
         self.sd_tcode_allowed_statuses = (
             None if sd_tcode_allowed_statuses is None else tuple(str(status) for status in sd_tcode_allowed_statuses)
@@ -252,6 +254,12 @@ class Experiment:
         self.sd_variables = _normalize_optional_selector_values(variables, name="variables")
         return self
 
+    def use_fred_sd_frequency_policy(self, policy: str) -> "Experiment":
+        """Set the Layer 1 FRED-SD native-frequency policy."""
+
+        self.fred_sd_frequency_policy = str(policy)
+        return self
+
     def sweep(self, choices: dict[str, Any]) -> "Experiment":
         """Sweep a small set of user-facing aliases.
 
@@ -312,6 +320,10 @@ class Experiment:
             if self.sd_variables is not None:
                 data_fixed["sd_variable_selection"] = "selected_sd_variables"
                 data_leaf["sd_variables"] = list(self.sd_variables)
+        if self.fred_sd_frequency_policy != "report_only":
+            recipe["path"]["1_data_task"].setdefault("fixed_axes", {})[
+                "fred_sd_frequency_policy"
+            ] = self.fred_sd_frequency_policy
         if self.sd_tcode_policy != "none":
             preprocessing_leaf = recipe["path"]["2_preprocessing"].setdefault("leaf_config", {})
             preprocessing_leaf["sd_tcode_policy"] = self.sd_tcode_policy

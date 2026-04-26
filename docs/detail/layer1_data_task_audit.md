@@ -223,6 +223,12 @@ The simple API remains narrower than the full contract:
   This report is derived from selected series metadata and records whether the
   panel is single-frequency, mixed-frequency, or partly unknown before Layer 2
   representation choices are applied.
+- `fred_sd_frequency_policy` is the current Layer 1 policy gate over that
+  report. `report_only` preserves backward-compatible execution,
+  `allow_mixed_frequency` records explicit researcher acceptance,
+  `reject_mixed_known_frequency` blocks panels with more than one known native
+  frequency, and `require_single_known_frequency` additionally blocks unknown
+  native-frequency series.
   The contract records selected states, selected SD variables, source sheets,
   per-column observed windows, and inferred native-frequency counts before
   later generic post-load column filtering.

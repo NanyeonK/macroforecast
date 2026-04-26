@@ -133,11 +133,20 @@ The report records:
 - `requires_mixed_frequency_decision`
 - frequency counts by state and by SD variable
 
-This is a report contract, not yet a coercion policy. A selected panel with both
-monthly and quarterly state series is visible in the artifacts even if the run
-uses the current coarse frequency conversion path. The next Layer 1 policy axis
-will consume this report to reject, allow, or require explicit mixed-frequency
-handling choices.
+This report feeds the Layer 1 `fred_sd_frequency_policy` axis. The default is
+`report_only`, which records the selected panel without changing execution.
+Full recipes can instead choose:
+
+- `allow_mixed_frequency`: explicitly accept mixed or unknown native
+  frequencies.
+- `reject_mixed_known_frequency`: block selected panels with more than one
+  known native frequency, such as monthly plus quarterly.
+- `require_single_known_frequency`: require exactly one known native frequency
+  and no unknown-frequency selected series.
+
+The policy runs before Layer 2 representation construction. Use the strict
+policy for same-frequency FRED-SD studies where quarterly-vs-monthly conversion
+should not be silently folded into the downstream representation.
 
 ## Changes from the 2020 working paper to current
 

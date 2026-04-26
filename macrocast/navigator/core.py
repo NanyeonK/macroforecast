@@ -43,6 +43,7 @@ _TREE_AXES = {
         "source_adapter",
         "frequency",
         "information_set_type",
+        "fred_sd_frequency_policy",
         "target_structure",
         "variable_universe",
         "missing_availability",
@@ -152,6 +153,7 @@ _TREE_AXES = {
 _DEFAULT_SELECTIONS = {
     "forecast_type": "direct",
     "forecast_object": "point_mean",
+    "fred_sd_frequency_policy": "report_only",
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
     "primary_metric": "msfe",

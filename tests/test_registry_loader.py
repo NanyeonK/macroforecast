@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 142
+EXPECTED_AXIS_COUNT = 143
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -21,6 +21,7 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "source_adapter",
         "state_selection",
         "sd_variable_selection",
+        "fred_sd_frequency_policy",
         "relative_metrics",
         "direction_metrics",
         "regime_definition",
@@ -218,6 +219,16 @@ def test_registry_loader_preserves_stage1_operational_values() -> None:
     assert sd_variable_selection.layer == "1_data_task"
     assert sd_variable_selection.current_status["all_sd_variables"] == "operational"
     assert sd_variable_selection.current_status["selected_sd_variables"] == "operational"
+
+    fred_sd_frequency_policy = get_axis_registry_entry("fred_sd_frequency_policy")
+    assert fred_sd_frequency_policy.layer == "1_data_task"
+    assert fred_sd_frequency_policy.allowed_values == (
+        "report_only",
+        "allow_mixed_frequency",
+        "reject_mixed_known_frequency",
+        "require_single_known_frequency",
+    )
+    assert fred_sd_frequency_policy.current_status["require_single_known_frequency"] == "operational"
 
 
 
