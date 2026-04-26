@@ -150,6 +150,9 @@ record the compile-time input contracts discovered during the Layer 1 audit.
   adapter, version mode, requested vintage, actual vintage, data-through,
   observed frame window, local-vs-remote source kind, artifact SHA/size/cache
   status, and component source contracts when a composite dataset is loaded.
+- The source-availability contract has deterministic coverage for local-source
+  current/vintage runs, cache-hit remote-source simulations that do not touch
+  the network, and composite component source contracts.
 - `missing_availability=zero_fill_before_start` is the default policy in the compiler and public experiment defaults.
 - `zero_fill_before_start` is sample-period aware: predictor leading missing values are zero-filled, fully missing predictors are zero-filled with warnings, predictor mid-sample missing values are reported, target leading missing values are reported, and target mid-sample missing values block execution.
 - `missing_availability=x_impute_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.

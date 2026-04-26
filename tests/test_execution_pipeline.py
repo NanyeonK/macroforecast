@@ -320,6 +320,83 @@ def test_layer1_official_frame_contract_records_local_vintage_evidence(tmp_path:
     assert manifest["layer1_official_frame_summary"]["index_end"] == contract["index_end"]
 
 
+def test_layer1_official_frame_contract_records_cached_remote_source_simulation(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    cache_root = tmp_path / "raw_cache"
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+
+    seed_result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "seed",
+        local_raw_source=fixture,
+        cache_root=cache_root,
+    )
+    cached_result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "cached",
+        cache_root=cache_root,
+    )
+
+    seed_contract = json.loads(
+        ((tmp_path / "seed") / seed_result.run.artifact_subdir / "layer1_official_frame.json").read_text()
+    )
+    cached_run_dir = (tmp_path / "cached") / cached_result.run.artifact_subdir
+    cached_contract = json.loads((cached_run_dir / "layer1_official_frame.json").read_text())
+    cached_manifest = json.loads((cached_run_dir / "manifest.json").read_text())
+    source_contract = cached_contract["source_availability_contract"]
+
+    assert seed_contract["source_availability_contract"]["source_url_kind"] == "local_path"
+    assert seed_contract["source_availability_contract"]["artifact_cache_hit"] is False
+    assert source_contract["contract_version"] == "source_availability_contract_v1"
+    assert source_contract["source_url_kind"] == "remote_url"
+    assert source_contract["uses_local_source"] is False
+    assert source_contract["uses_remote_source"] is True
+    assert source_contract["artifact_cache_hit"] is True
+    assert source_contract["version_mode"] == "current"
+    assert source_contract["data_vintage_requested"] is None
+    assert source_contract["artifact_file_sha256"] == seed_contract["raw_artifact"]["file_sha256"]
+    assert source_contract["observed_data_window"]["index_end"] == cached_contract["index_end"]
+    assert cached_manifest["layer1_official_frame_summary"]["source_url_kind"] == "remote_url"
+    assert cached_manifest["layer1_official_frame_summary"]["artifact_cache_hit"] is True
+
+
+def test_layer1_official_frame_contract_records_cached_vintage_remote_source_simulation(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    cache_root = tmp_path / "raw_cache"
+    recipe = _recipe(
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+        data_vintage="2020-01",
+    )
+
+    execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "seed",
+        local_raw_source=fixture,
+        cache_root=cache_root,
+    )
+    cached_result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path / "cached",
+        cache_root=cache_root,
+    )
+
+    cached_run_dir = (tmp_path / "cached") / cached_result.run.artifact_subdir
+    cached_contract = json.loads((cached_run_dir / "layer1_official_frame.json").read_text())
+    source_contract = cached_contract["source_availability_contract"]
+
+    assert source_contract["source_url_kind"] == "remote_url"
+    assert source_contract["uses_remote_source"] is True
+    assert source_contract["artifact_cache_hit"] is True
+    assert source_contract["version_mode"] == "vintage"
+    assert source_contract["vintage"] == "2020-01"
+    assert source_contract["data_vintage_requested"] == "2020-01"
+    assert source_contract["data_through"] == cached_contract["data_through"]
+
+
 def test_layer1_official_frame_contract_records_release_lag_report(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})

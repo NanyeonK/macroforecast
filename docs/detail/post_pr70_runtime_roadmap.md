@@ -113,3 +113,6 @@ Implemented first slice:
 - current and vintage local-source FRED-MD execution now expose source kind,
   artifact SHA/size/cache evidence, requested vintage, actual vintage, and the
   observed data window without live network dependency.
+- cache-hit current/vintage paths now simulate remote-source contract evidence
+  deterministically without touching the network;
+- composite source contracts now have deterministic component-level coverage.
