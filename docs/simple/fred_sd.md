@@ -50,6 +50,27 @@ result = mc.forecast(
 )
 ```
 
+## State And Variable Selection
+
+Use `use_fred_sd_selection()` to restrict the FRED-SD component before the
+workbook is widened into `VARIABLE_STATE` columns:
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_md+fred_sd",
+        target="INDPRO",
+        start="1985-01",
+        end="2019-12",
+        horizons=[1, 3, 6],
+    )
+    .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "BPPRIVSA"])
+)
+```
+
+This is different from `variable_universe`, which filters already-loaded
+columns.
+
 ## Inferred Transforms
 
 Use inferred SD t-codes only when you want the reviewed national-analog

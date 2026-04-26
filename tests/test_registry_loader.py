@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 140
+EXPECTED_AXIS_COUNT = 142
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -19,6 +19,8 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "model_family",
         "importance_method",
         "source_adapter",
+        "state_selection",
+        "sd_variable_selection",
         "relative_metrics",
         "direction_metrics",
         "regime_definition",
@@ -206,6 +208,16 @@ def test_registry_loader_preserves_stage1_operational_values() -> None:
     variable_universe = get_axis_registry_entry("variable_universe")
     assert variable_universe.current_status["all_variables"] == "operational"
     assert variable_universe.current_status["handpicked_set"] == "operational"
+
+    state_selection = get_axis_registry_entry("state_selection")
+    assert state_selection.layer == "1_data_task"
+    assert state_selection.current_status["all_states"] == "operational"
+    assert state_selection.current_status["selected_states"] == "operational"
+
+    sd_variable_selection = get_axis_registry_entry("sd_variable_selection")
+    assert sd_variable_selection.layer == "1_data_task"
+    assert sd_variable_selection.current_status["all_sd_variables"] == "operational"
+    assert sd_variable_selection.current_status["selected_sd_variables"] == "operational"
 
 
 

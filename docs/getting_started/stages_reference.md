@@ -113,6 +113,8 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
 | `information_set_type` | `revised`, `pseudo_oos_revised` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
 | `target_structure` | `single_target_point_forecast`, `multi_target_point_forecast` | target cardinality; legacy `task` is accepted as an alias; Layer 0 derives `experiment_unit` from this plus sweep shape |
+| `state_selection` | `all_states`, `selected_states` | FRED-SD source-load state selector; `selected_states` reads `leaf_config.sd_states` |
+| `sd_variable_selection` | `all_sd_variables`, `selected_sd_variables` | FRED-SD source-load workbook-sheet selector; `selected_sd_variables` reads `leaf_config.sd_variables` |
 | `variable_universe` | `all_variables`, `preselected_core`, `category_subset`, `target_specific_subset`, `handpicked_set` | `_apply_variable_universe`; `handpicked_set` reads `leaf_config.variable_universe_columns`; target + date columns always preserved |
 | `missing_availability` | `zero_fill_before_start`, `complete_case_only`, `available_case`, `x_impute_only` | default `zero_fill_before_start` reports/fills predictor leading gaps; `x_impute_only` requires `leaf_config.x_imputation` ∈ {mean, median, ffill, bfill} |
 | `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | `_apply_release_lag`; `series_specific_lag` requires `leaf_config.release_lag_per_series: dict[str, int]` |

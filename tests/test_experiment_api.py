@@ -296,6 +296,71 @@ def test_fred_md_sd_composite_runs_with_local_csv_sd_fixture(tmp_path: Path) -> 
     assert components["fred_sd"]["artifact_file_size_bytes"] > 0
 
 
+def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path) -> None:
+    result = (
+        Experiment(
+            dataset="fred_md+fred_sd",
+            target="INDPRO",
+            start=FIXTURE_START,
+            end=FIXTURE_END,
+            horizons=[1],
+        )
+        .use_fred_sd_selection(states=["CA"], variables=["UR"])
+        .run(
+            output_root=tmp_path,
+            local_raw_source={"fred_md": FIXTURE_RAW, "fred_sd": FIXTURE_SD_CSV},
+        )
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    layer1_contract = json.loads((artifact_dir / "layer1_official_frame.json").read_text())
+    preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
+
+    assert manifest["data_task_spec"]["state_selection"] == "selected_states"
+    assert manifest["data_task_spec"]["sd_variable_selection"] == "selected_sd_variables"
+    assert manifest["data_task_spec"]["sd_states"] == ["CA"]
+    assert manifest["data_task_spec"]["sd_variables"] == ["UR"]
+    assert "UR_CA" in preview.columns
+    assert "UR_TX" not in preview.columns
+    assert "BPPRIVSA_CA" not in preview.columns
+    assert layer1_contract["data_task_spec"]["sd_states"] == ["CA"]
+    assert layer1_contract["data_task_spec"]["sd_variables"] == ["UR"]
+
+
+def test_experiment_fred_sd_selection_lowers_to_layer1_axes() -> None:
+    recipe = (
+        Experiment(dataset="fred_sd+fred_qd", target="GDPC1", start="2000-01", end="2002-06", horizons=[1])
+        .use_fred_sd_selection(states=["CA", "TX"], variables=["UR"])
+        .to_recipe_dict()
+    )
+
+    data_task = recipe["path"]["1_data_task"]
+    assert data_task["fixed_axes"]["state_selection"] == "selected_states"
+    assert data_task["fixed_axes"]["sd_variable_selection"] == "selected_sd_variables"
+    assert data_task["leaf_config"]["sd_states"] == ["CA", "TX"]
+    assert data_task["leaf_config"]["sd_variables"] == ["UR"]
+
+
+def test_experiment_fred_sd_selection_accepts_single_string_values() -> None:
+    recipe = (
+        Experiment(dataset="fred_md+fred_sd", target="INDPRO", start="2000-01", end="2002-06", horizons=[1])
+        .use_fred_sd_selection(states="ca", variables="UR")
+        .to_recipe_dict()
+    )
+
+    data_task = recipe["path"]["1_data_task"]
+    assert data_task["leaf_config"]["sd_states"] == ["CA"]
+    assert data_task["leaf_config"]["sd_variables"] == ["UR"]
+
+
+def test_experiment_fred_sd_selection_rejects_empty_values() -> None:
+    exp = Experiment(dataset="fred_md+fred_sd", target="INDPRO", start="2000-01", end="2002-06", horizons=[1])
+
+    with pytest.raises(ValueError, match="empty values"):
+        exp.use_fred_sd_selection(states=["CA", " "])
+
+
 def test_fred_qd_with_sd_converts_monthly_state_data_to_quarterly(monkeypatch, tmp_path: Path) -> None:
     q_dates = pd.date_range("2000-01-01", periods=10, freq="QS")
     qd_frame = pd.DataFrame(

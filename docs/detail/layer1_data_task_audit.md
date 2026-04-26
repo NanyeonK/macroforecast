@@ -210,6 +210,14 @@ The simple API remains narrower than the full contract:
   predictors.
 - Default missing policy is `zero_fill_before_start`.
 - Custom model and custom preprocessor extension points remain the intended first user-facing sweep examples.
+- FRED-SD state and workbook-variable selectors are canonical Layer 1 axes:
+  `state_selection=selected_states` reads `leaf_config.sd_states`, and
+  `sd_variable_selection=selected_sd_variables` reads
+  `leaf_config.sd_variables`. These selectors run at source-load time for the
+  FRED-SD component before generic post-load `variable_universe` filtering.
+- FRED-SD `support_tier=provisional` now points to remaining mixed-frequency
+  and richer grouping controls, not missing live/vintage ingestion or missing
+  t-code policy choices.
 
 Simple docs should stay short; this audit is the detailed contract source for Layer 1.
 
@@ -217,6 +225,10 @@ Simple docs should stay short; this audit is the detailed contract source for La
 
 - Standalone FRED-SD without explicit frequency fails at compile time.
 - FRED-SD composite frequency conflicts fail at compile time.
+- FRED-SD `state_selection=selected_states` and
+  `sd_variable_selection=selected_sd_variables` require explicit
+  `leaf_config.sd_states` / `leaf_config.sd_variables`, flow into
+  `data_task_spec`, and filter the FRED-SD component at load time.
 - Distributional forecast objects with non-quantile models produce `blocked_by_incompatibility`.
 - Runtime-only missing leaf_config failures for Layer 1.4 and 1.5 are now compiler validation errors.
 - Multi-benchmark suites reject unsupported member families before execution.

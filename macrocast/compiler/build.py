@@ -204,6 +204,20 @@ _LINEAR_IMPORTANCE_MODELS = {"ols", "ridge", "lasso", "elasticnet", "bayesianrid
 _LOCAL_IMPORTANCE_METHODS = {"kernel_shap", "lime", "feature_ablation"}
 
 
+def _dataset_has_fred_sd(dataset: object) -> bool:
+    tokens = str(dataset).replace(",", "+").split("+")
+    return "fred_sd" in {token.strip().lower() for token in tokens if token.strip()}
+
+
+def _sd_target_parts(target: str) -> tuple[str, str] | None:
+    if "_" not in target:
+        return None
+    variable, state = target.rsplit("_", 1)
+    if not variable or len(state) != 2 or not state.isalpha():
+        return None
+    return variable, state.upper()
+
+
 def load_recipe_yaml(path: str | Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as fh:
         return yaml.safe_load(fh)
@@ -990,6 +1004,49 @@ def _validate_layer1_data_task_contract(
             )
 
     targets = _targets_for_layer1_contract(selection_map, leaf_config)
+    has_fred_sd = _dataset_has_fred_sd(dataset)
+
+    state_selection = _selection_value(selection_map, "state_selection", default="all_states")
+    if state_selection == "selected_states":
+        if not has_fred_sd:
+            raise CompileValidationError("state_selection='selected_states' requires a FRED-SD dataset")
+        states = _require_non_empty_sequence(
+            leaf_config,
+            "sd_states",
+            "state_selection='selected_states'",
+        )
+        state_set = {str(state).strip().upper() for state in states}
+        missing_targets = [
+            target
+            for target in targets
+            if (parts := _sd_target_parts(target)) is not None and parts[1] not in state_set
+        ]
+        if missing_targets:
+            raise CompileValidationError(
+                "state_selection='selected_states' must include target state for FRED-SD targets: "
+                f"{missing_targets}"
+            )
+
+    sd_variable_selection = _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables")
+    if sd_variable_selection == "selected_sd_variables":
+        if not has_fred_sd:
+            raise CompileValidationError("sd_variable_selection='selected_sd_variables' requires a FRED-SD dataset")
+        variables = _require_non_empty_sequence(
+            leaf_config,
+            "sd_variables",
+            "sd_variable_selection='selected_sd_variables'",
+        )
+        variable_set = {str(variable).strip() for variable in variables}
+        missing_targets = [
+            target
+            for target in targets
+            if (parts := _sd_target_parts(target)) is not None and parts[0] not in variable_set
+        ]
+        if missing_targets:
+            raise CompileValidationError(
+                "sd_variable_selection='selected_sd_variables' must include target variable for FRED-SD targets: "
+                f"{missing_targets}"
+            )
 
     variable_universe = _selection_value(selection_map, "variable_universe", default="all_variables")
     if variable_universe == "handpicked_set":
@@ -1163,6 +1220,10 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "official_transform_source": _official_transform_source_payload(selection_map),
         "frequency": _selection_value(selection_map, "frequency", default=_DATASET_DEFAULT_FREQUENCY.get(dataset, "monthly")),
         "information_set_type": information_set_type,
+        "state_selection": _selection_value(selection_map, "state_selection", default="all_states"),
+        "sd_variable_selection": _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables"),
+        "sd_states": leaf_config.get("sd_states"),
+        "sd_variables": leaf_config.get("sd_variables"),
         # Compatibility mirror: canonical owner is Layer 6 stat_test_spec.
         "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),
         "sample_start_date": leaf_config.get("sample_start_date"),

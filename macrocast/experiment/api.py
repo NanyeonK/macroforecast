@@ -47,6 +47,30 @@ def _normalize_values(values: Any) -> tuple[str, ...]:
     return normalized
 
 
+def _normalize_optional_selector_values(
+    values: Iterable[str] | str | None,
+    *,
+    name: str,
+    uppercase: bool = False,
+) -> tuple[str, ...] | None:
+    if values is None:
+        return None
+    if isinstance(values, str):
+        normalized = (values.strip(),)
+    else:
+        try:
+            normalized = tuple(str(value).strip() for value in values)
+        except TypeError as exc:
+            raise TypeError(f"{name} must be a string or iterable of strings") from exc
+    if uppercase:
+        normalized = tuple(value.upper() for value in normalized)
+    if not normalized:
+        raise ValueError(f"{name} must be non-empty when provided")
+    if any(not value for value in normalized):
+        raise ValueError(f"{name} must not contain empty values")
+    return normalized
+
+
 def _has_sweep_axes(recipe_dict: dict[str, Any]) -> bool:
     for layer_block in recipe_dict.get("path", {}).values():
         if isinstance(layer_block, dict) and layer_block.get("sweep_axes"):
@@ -139,6 +163,8 @@ class Experiment:
         self.sd_tcode_code_map: dict[str, int] | None = None
         self.sd_tcode_source: str | None = None
         self.sd_tcode_audit_uri: str | None = None
+        self.sd_states: tuple[str, ...] | None = None
+        self.sd_variables: tuple[str, ...] | None = None
         self._model_families: tuple[str, ...] = (model_family,)
         self._sweep_axes: dict[tuple[str, str], tuple[str, ...]] = {}
         self._custom_preprocessor: str | None = None
@@ -214,6 +240,18 @@ class Experiment:
         self.sd_tcode_audit_uri = audit_uri
         return self
 
+    def use_fred_sd_selection(
+        self,
+        *,
+        states: Iterable[str] | str | None = None,
+        variables: Iterable[str] | str | None = None,
+    ) -> "Experiment":
+        """Restrict the FRED-SD component to selected states and variables."""
+
+        self.sd_states = _normalize_optional_selector_values(states, name="states", uppercase=True)
+        self.sd_variables = _normalize_optional_selector_values(variables, name="variables")
+        return self
+
     def sweep(self, choices: dict[str, Any]) -> "Experiment":
         """Sweep a small set of user-facing aliases.
 
@@ -264,6 +302,16 @@ class Experiment:
             recipe["path"]["2_preprocessing"]["fixed_axes"]["custom_preprocessor"] = self._custom_preprocessor
         if self._target_transformer is not None:
             recipe["path"]["2_preprocessing"]["fixed_axes"]["target_transformer"] = self._target_transformer
+        if self.sd_states is not None or self.sd_variables is not None:
+            data_block = recipe["path"]["1_data_task"]
+            data_fixed = data_block.setdefault("fixed_axes", {})
+            data_leaf = data_block.setdefault("leaf_config", {})
+            if self.sd_states is not None:
+                data_fixed["state_selection"] = "selected_states"
+                data_leaf["sd_states"] = list(self.sd_states)
+            if self.sd_variables is not None:
+                data_fixed["sd_variable_selection"] = "selected_sd_variables"
+                data_leaf["sd_variables"] = list(self.sd_variables)
         if self.sd_tcode_policy != "none":
             preprocessing_leaf = recipe["path"]["2_preprocessing"].setdefault("leaf_config", {})
             preprocessing_leaf["sd_tcode_policy"] = self.sd_tcode_policy

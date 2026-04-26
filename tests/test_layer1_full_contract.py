@@ -112,6 +112,133 @@ def test_layer1_leaf_config_required_inputs_are_compile_time_contracts(
 
 
 @pytest.mark.parametrize(
+    ("axis", "value", "message"),
+    [
+        ("state_selection", "selected_states", "sd_states"),
+        ("sd_variable_selection", "selected_sd_variables", "sd_variables"),
+    ],
+)
+def test_fred_sd_selection_leaf_config_required_inputs_are_compile_time_contracts(
+    axis: str,
+    value: str,
+    message: str,
+) -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            axis: value,
+        }
+    )
+
+    with pytest.raises(CompileValidationError, match=message):
+        compile_recipe_dict(recipe)
+
+
+def test_fred_sd_state_and_variable_selection_compile_into_data_task_spec() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            "state_selection": "selected_states",
+            "sd_variable_selection": "selected_sd_variables",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"].update(
+        {
+            "sd_states": ["CA", "TX"],
+            "sd_variables": ["UR", "BPPRIVSA"],
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    data_task = compiled.manifest["data_task_spec"]
+    assert data_task["state_selection"] == "selected_states"
+    assert data_task["sd_variable_selection"] == "selected_sd_variables"
+    assert data_task["sd_states"] == ["CA", "TX"]
+    assert data_task["sd_variables"] == ["UR", "BPPRIVSA"]
+
+
+def test_fred_sd_selection_allows_non_sd_underscore_target_names() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            "state_selection": "selected_states",
+            "sd_variable_selection": "selected_sd_variables",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"].update(
+        {
+            "target": "CORE_CPI",
+            "sd_states": ["CA"],
+            "sd_variables": ["UR"],
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    data_task = compiled.manifest["data_task_spec"]
+    assert data_task["state_selection"] == "selected_states"
+    assert data_task["sd_variable_selection"] == "selected_sd_variables"
+
+
+def test_fred_sd_selection_rejects_excluding_fred_sd_target_state_or_variable() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_sd",
+            "frequency": "monthly",
+            "state_selection": "selected_states",
+            "sd_variable_selection": "selected_sd_variables",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"].update(
+        {
+            "target": "UR_CA",
+            "sd_states": ["TX"],
+            "sd_variables": ["UR"],
+        }
+    )
+
+    with pytest.raises(CompileValidationError, match="target state"):
+        compile_recipe_dict(recipe)
+
+    recipe["path"]["1_data_task"]["leaf_config"]["sd_states"] = ["CA"]
+    recipe["path"]["1_data_task"]["leaf_config"]["sd_variables"] = ["BPPRIVSA"]
+
+    with pytest.raises(CompileValidationError, match="target variable"):
+        compile_recipe_dict(recipe)
+
+
+def test_fred_sd_selection_compares_target_state_case_insensitively() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_sd",
+            "frequency": "monthly",
+            "state_selection": "selected_states",
+            "sd_variable_selection": "selected_sd_variables",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"].update(
+        {
+            "target": "UR_CA",
+            "sd_states": ["ca"],
+            "sd_variables": ["UR"],
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    assert compiled.manifest["data_task_spec"]["state_selection"] == "selected_states"
+
+
+@pytest.mark.parametrize(
     ("benchmark_family", "message"),
     [
         ("multi_benchmark_suite", "benchmark_suite"),

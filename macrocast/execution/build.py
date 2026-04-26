@@ -1048,14 +1048,58 @@ def _local_source_for_dataset(local_raw_source, dataset: str):
     return local_raw_source
 
 
-def _load_single_raw_dataset(dataset: str, *, vintage: str | None, cache_root: Path, local_raw_source):
+def _optional_string_list(value: object, *, uppercase: bool = False) -> list[str] | None:
+    if value is None:
+        return None
+    if isinstance(value, (str, bytes)):
+        raw_items = [str(value)]
+    elif isinstance(value, Sequence):
+        raw_items = [str(item) for item in value]
+    else:
+        raise ExecutionError("FRED-SD selector values must be strings or lists of strings")
+    items = [item.strip() for item in raw_items]
+    if uppercase:
+        items = [item.upper() for item in items]
+    if any(not item for item in items):
+        raise ExecutionError("FRED-SD selector values must not be empty")
+    return items
+
+
+def _fred_sd_selector_kwargs(spec: Mapping[str, object] | None) -> dict[str, list[str] | None]:
+    payload = dict(spec or {})
+    states = None
+    variables = None
+    if payload.get("state_selection", "all_states") == "selected_states":
+        states = _optional_string_list(payload.get("sd_states"), uppercase=True)
+        if not states:
+            raise ExecutionError("state_selection='selected_states' requires data_task_spec.sd_states")
+    if payload.get("sd_variable_selection", "all_sd_variables") == "selected_sd_variables":
+        variables = _optional_string_list(payload.get("sd_variables"))
+        if not variables:
+            raise ExecutionError("sd_variable_selection='selected_sd_variables' requires data_task_spec.sd_variables")
+    return {"states": states, "variables": variables}
+
+
+def _load_single_raw_dataset(
+    dataset: str,
+    *,
+    vintage: str | None,
+    cache_root: Path,
+    local_raw_source,
+    data_task_spec: Mapping[str, object] | None = None,
+):
     source = _local_source_for_dataset(local_raw_source, dataset)
     if dataset == "fred_md":
         return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=source)
     if dataset == "fred_qd":
         return load_fred_qd(vintage=vintage, cache_root=cache_root, local_source=source)
     if dataset == "fred_sd":
-        return load_fred_sd(vintage=vintage, cache_root=cache_root, local_source=source)
+        return load_fred_sd(
+            vintage=vintage,
+            cache_root=cache_root,
+            local_source=source,
+            **_fred_sd_selector_kwargs(data_task_spec),
+        )
     raise ExecutionError(f"unsupported raw_dataset={dataset!r}")
 
 
@@ -1156,21 +1200,47 @@ def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapp
     if parts == {"fred_md", "fred_sd"}:
         if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
             raise ExecutionError("composite FRED datasets require local_raw_source as a mapping keyed by component dataset")
+        data_task_spec = dict(recipe.data_task_spec)
         components = [
             ("fred_md", _load_single_raw_dataset("fred_md", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
-            ("fred_sd", _load_single_raw_dataset("fred_sd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+            (
+                "fred_sd",
+                _load_single_raw_dataset(
+                    "fred_sd",
+                    vintage=vintage,
+                    cache_root=cache_root,
+                    local_raw_source=local_raw_source,
+                    data_task_spec=data_task_spec,
+                ),
+            ),
         ]
         return _combine_raw_results(recipe.raw_dataset, "monthly", components)
     if parts == {"fred_qd", "fred_sd"}:
         if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
             raise ExecutionError("composite FRED datasets require local_raw_source as a mapping keyed by component dataset")
+        data_task_spec = dict(recipe.data_task_spec)
         components = [
             ("fred_qd", _load_single_raw_dataset("fred_qd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
-            ("fred_sd", _load_single_raw_dataset("fred_sd", vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)),
+            (
+                "fred_sd",
+                _load_single_raw_dataset(
+                    "fred_sd",
+                    vintage=vintage,
+                    cache_root=cache_root,
+                    local_raw_source=local_raw_source,
+                    data_task_spec=data_task_spec,
+                ),
+            ),
         ]
         return _combine_raw_results(recipe.raw_dataset, "quarterly", components)
     if len(parts) == 1:
-        return _load_single_raw_dataset(recipe.raw_dataset, vintage=vintage, cache_root=cache_root, local_raw_source=local_raw_source)
+        return _load_single_raw_dataset(
+            recipe.raw_dataset,
+            vintage=vintage,
+            cache_root=cache_root,
+            local_raw_source=local_raw_source,
+            data_task_spec=dict(recipe.data_task_spec),
+        )
     raise ExecutionError(f"unsupported raw_dataset={recipe.raw_dataset!r}")
 
 

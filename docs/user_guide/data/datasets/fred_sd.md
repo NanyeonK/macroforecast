@@ -77,11 +77,31 @@ from macrocast import load_fred_sd
 result = load_fred_sd(states=["CA", "TX", "NY", "FL"], variables=["PAYEMS"])
 ```
 
-A proper `states` leaf_config field (parallel to `target` / `targets` for variable selection) is planned for v1.1.
+Recipe/runtime selection is also available through Layer 1:
+
+```python
+import macrocast as mc
+
+exp = (
+    mc.Experiment(
+        dataset="fred_md+fred_sd",
+        target="INDPRO",
+        start="1985-01",
+        end="2019-12",
+        horizons=[1, 3, 6],
+    )
+    .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "BPPRIVSA"])
+)
+```
 
 ## Variable selection
 
-Same caveat — `variables=[...]` works at the loader level but there is no Layer 1 axis for it in v1.0. The existing `variable_universe` axis (1.4) operates on FRED-MD / FRED-QD column names; its mapping to FRED-SD sheet names is not wired.
+FRED-SD has two different variable concepts:
+
+- `sd_variable_selection` chooses workbook sheets before loading, via
+  `leaf_config.sd_variables`.
+- `variable_universe` remains the generic post-load column universe filter,
+  after columns have canonical `VARIABLE_STATE` names.
 
 ## Changes from the 2020 working paper to current
 
@@ -95,17 +115,17 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 - **Excel parsing** via `openpyxl`. Each sheet is read independently; `pd.read_excel(..., sheet_name=None)` returns `dict[str, DataFrame]` and the loader concatenates wide-form.
 - **Cache**: same mechanism as FRED-MD / FRED-QD (`~/.cache/macrocast/raw/`).
-- **support_tier = "provisional"** on the returned `RawDatasetMetadata` — signals that FRED-SD ingestion is newer than FRED-MD / FRED-QD and has edge cases still being worked out.
+- **support_tier = "provisional"** on the returned `RawDatasetMetadata` — this now reflects remaining mixed-frequency and study-design edge cases, not lack of a live/vintage loader or t-code policy surface.
 - **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. FRED-SD transformation codes are therefore a research decision, not source metadata.
 - **T-code policy choices** — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The reviewed national-analog map is opt-in via `Experiment.use_sd_inferred_tcodes()`. The empirical variable-global map is opt-in via `Experiment.use_sd_empirical_tcodes(unit="variable_global")`. State-by-series empirical codes require an explicit column map via `Experiment.use_sd_empirical_tcodes(unit="state_series", code_map={...})`. All three record `official=false` in runtime reports.
 
 ## Known limitations in macrocast v1.0
 
-1. **No state-selection axis** — loader-only selection. Recipe-level state filtering is v1.1.
-2. **No variable-selection axis for FRED-SD** — `variable_universe` values do not map to FRED-SD sheet names.
-3. **Mixed frequency not reconciled** — user is responsible for picking same-frequency subsets or using missing-value imputation.
+1. **Mixed frequency is still coarse** — monthly-to-quarterly and quarterly-to-monthly conversion are available and reported, but MIDAS/state-space mixed-frequency modeling is not implemented.
+2. **State and SD-variable selectors are explicit but simple** — `state_selection=selected_states` uses `leaf_config.sd_states`; `sd_variable_selection=selected_sd_variables` uses `leaf_config.sd_variables`. Category/group selectors are not implemented.
+3. **Generic `variable_universe` is post-load** — use `sd_variable_selection` for workbook-sheet selection and `variable_universe` for loaded `VARIABLE_STATE` columns.
 4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
-5. **`support_tier = provisional`** — expect rougher edges than FRED-MD / FRED-QD; pin a vintage for any study intended to be replicable.
+5. **`support_tier = provisional`** — keep this label until mixed-frequency controls and richer state/variable grouping recipes are first-class.
 
 ## See also
 

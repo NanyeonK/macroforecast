@@ -2406,6 +2406,22 @@
       "incompatible_with": {},
       "layer": "2_preprocessing"
     },
+    "sd_variable_selection": {
+      "allowed_values": [
+        "all_sd_variables",
+        "selected_sd_variables"
+      ],
+      "axis_name": "sd_variable_selection",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "all_sd_variables": "operational",
+        "selected_sd_variables": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
+    },
     "search_algorithm": {
       "allowed_values": [
         "grid_search",
@@ -2603,6 +2619,22 @@
       "default_policy": "fixed",
       "incompatible_with": {},
       "layer": "6_stat_tests"
+    },
+    "state_selection": {
+      "allowed_values": [
+        "all_states",
+        "selected_states"
+      ],
+      "axis_name": "state_selection",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "all_states": "operational",
+        "selected_states": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
     },
     "structural_break_segmentation": {
       "allowed_values": [
