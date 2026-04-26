@@ -272,8 +272,11 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
         "feature_block_combination",
     }
     assert all(registry[axis].layer == "2_preprocessing" for axis in block_axes)
-    assert registry["feature_block_set"].current_status["factor_blocks_only"] == "registry_only"
-    assert registry["feature_block_set"].current_status["mixed_blocks"] == "registry_only"
+    assert registry["feature_block_set"].current_status["target_lags_only"] == "operational"
+    assert registry["feature_block_set"].current_status["transformed_x"] == "operational"
+    assert registry["feature_block_set"].current_status["factor_blocks_only"] == "operational"
+    assert registry["feature_block_set"].current_status["mixed_blocks"] == "operational_narrow"
+    assert registry["feature_block_set"].current_status["legacy_feature_builder_bridge"] == "registry_only"
     assert registry["rotation_feature_block"].current_status["none"] == "operational"
     assert registry["rotation_feature_block"].current_status["moving_average_rotation"] == "operational"
     assert registry["rotation_feature_block"].current_status["marx_rotation"] == "operational"

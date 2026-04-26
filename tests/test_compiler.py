@@ -1469,6 +1469,114 @@ def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -
         assert spec["feature_blocks"]["factor_feature_block"]["value"] == factor_block
 
 
+def _explicit_feature_block_set_recipe(
+    feature_block_set: str,
+    *,
+    model_family: str = "ridge",
+    preprocessing_axes: dict[str, str] | None = None,
+) -> dict:
+    layer2_axes = {
+        "target_transform_policy": "raw_level",
+        "x_transform_policy": "raw_level",
+        "tcode_policy": "raw_only",
+        "target_missing_policy": "none",
+        "x_missing_policy": "none",
+        "target_outlier_policy": "none",
+        "x_outlier_policy": "none",
+        "scaling_policy": "none",
+        "dimensionality_reduction_policy": "none",
+        "feature_selection_policy": "none",
+        "preprocess_order": "none",
+        "preprocess_fit_scope": "not_applicable",
+        "inverse_transform_policy": "none",
+        "evaluation_scale": "raw_level",
+        "representation_policy": "raw_only",
+        "tcode_application_scope": "apply_tcode_to_none",
+        "target_transform": "level",
+        "target_normalization": "none",
+        "target_domain": "unconstrained",
+        "scaling_scope": "columnwise",
+        "additional_preprocessing": "none",
+        "x_lag_creation": "no_x_lags",
+        "feature_grouping": "none",
+        "feature_block_set": feature_block_set,
+    }
+    layer2_axes.update(preprocessing_axes or {})
+    return {
+        "recipe_id": f"explicit-feature-block-set-{feature_block_set}",
+        "path": {
+            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "1_data_task": {
+                "fixed_axes": {
+                    "dataset": "fred_md",
+                    "information_set_type": "revised",
+                    "target_structure": "single_target_point_forecast",
+                },
+                "leaf_config": {"target": "INDPRO", "horizons": [1]},
+            },
+            "2_preprocessing": {"fixed_axes": layer2_axes},
+            "3_training": {
+                "fixed_axes": {
+                    "framework": "expanding",
+                    "benchmark_family": "zero_change",
+                    "model_family": model_family,
+                }
+            },
+            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+            "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
+            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "7_importance": {"fixed_axes": {"importance_method": "none"}},
+        },
+    }
+
+
+def test_layer2_explicit_feature_block_set_survives_bridge_derivation() -> None:
+    result = compile_recipe_dict(_explicit_feature_block_set_recipe("factor_blocks_only"))
+
+    spec = result.manifest["layer2_representation_spec"]
+    block_set = spec["feature_blocks"]["feature_block_set"]
+    assert block_set["value"] == "factor_blocks_only"
+    assert block_set["source_kind"] == "explicit_axis"
+    assert block_set["runtime_status"] == "operational"
+    assert spec["feature_blocks"]["factor_feature_block"]["value"] == "pca_static_factors"
+    assert any(
+        selection["axis_name"] == "feature_builder" and selection["selection_mode"] == "derived"
+        for selection in result.manifest["axis_selections"]
+    )
+
+
+def test_layer2_feature_block_set_prunes_missing_required_sub_block() -> None:
+    result = compile_recipe_dict(_explicit_feature_block_set_recipe("transformed_x_lags"))
+
+    assert result.compiled.execution_status == "not_supported"
+    assert any(
+        "feature_block_set='transformed_x_lags' requires x_lag_feature_block='fixed_x_lags'"
+        in warning
+        for warning in result.compiled.warnings
+    )
+
+
+def test_layer2_feature_block_set_accepts_compatible_sub_blocks() -> None:
+    result = compile_recipe_dict(
+        _explicit_feature_block_set_recipe(
+            "mixed_blocks",
+            preprocessing_axes={
+                "tcode_policy": "extra_preprocess_without_tcode",
+                "preprocess_order": "extra_only",
+                "preprocess_fit_scope": "train_only",
+                "target_lag_block": "fixed_target_lags",
+                "x_lag_feature_block": "fixed_x_lags",
+                "x_lag_creation": "fixed_x_lags",
+            },
+        )
+    )
+
+    assert result.compiled.execution_status == "executable"
+    spec = result.manifest["layer2_representation_spec"]
+    assert spec["feature_blocks"]["feature_block_set"]["value"] == "mixed_blocks"
+    assert spec["feature_blocks"]["feature_block_set"]["runtime_status"] == "operational_narrow"
+
+
 def test_layer2_target_lag_selection_axis_records_target_language_provenance() -> None:
     recipe = {
         "recipe_id": "l2-target-lag-selection",

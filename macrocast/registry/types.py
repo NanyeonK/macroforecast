@@ -5,6 +5,7 @@ from typing import Literal
 
 SupportStatus = Literal[
     "operational",
+    "operational_narrow",
     "registry_only",
     "planned",
     "future",
