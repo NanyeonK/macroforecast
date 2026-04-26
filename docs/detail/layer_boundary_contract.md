@@ -40,9 +40,11 @@ Owns the official data frame before researcher-specific transformations:
 - raw eligible variable universe
 - contemporaneous information-set rule
 
-Layer 1 output is an official frame plus provenance reports. It should be enough
-to reproduce "what data were available to the study" before model-specific
-choices.
+Layer 1 output is an official frame plus provenance reports. Runtime records
+that handoff as `layer1_official_frame_v1` in `layer1_official_frame.json`,
+with a compact summary in `manifest.json` and an artifact entry in
+`artifact_manifest.json`. It should be enough to reproduce "what data were
+available to the study" before model-specific choices.
 
 In full mode, Layer 1 may clean or flag raw-source missing values and
 raw-source outliers before official transforms/T-codes. That order must be

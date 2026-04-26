@@ -19,6 +19,7 @@ from macrocast import (
     execute_recipe,
     ExecutionError,
     ForecastPayload,
+    LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
     LAYER2_REPRESENTATION_CONTRACT_VERSION,
     Layer2Representation,
     PREDICTION_ROW_SCHEMA_VERSION,
@@ -193,6 +194,50 @@ def test_execute_recipe_records_layer2_representation_contract(tmp_path: Path) -
     assert metadata["feature_runtime_builder"] == "raw_feature_panel"
     assert metadata["matrix_shapes"]["Z_train"][1] == metadata["feature_count"]
     assert tuning_result["layer2_representation_contract"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+
+
+def test_execute_recipe_records_layer1_official_frame_contract(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    contract = json.loads((run_dir / "layer1_official_frame.json").read_text())
+    artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
+
+    assert manifest["layer1_official_frame_contract"] == LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION
+    assert manifest["layer1_official_frame_file"] == "layer1_official_frame.json"
+    assert manifest["layer1_official_frame_summary"]["schema_version"] == LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION
+    assert contract["schema_version"] == LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION
+    assert contract["owner_layer"] == "1_data_task"
+    assert contract["consumer_layer"] == "2_preprocessing"
+    assert contract["raw_dataset"] == "fred_md"
+    assert contract["dataset_adapter"] == "fred_md"
+    assert contract["target"] == "INDPRO"
+    assert contract["targets"] == ["INDPRO"]
+    assert contract["horizons"] == [1, 3]
+    assert contract["target_columns_available"] == ["INDPRO"]
+    assert "INDPRO" not in contract["predictor_columns"]
+    assert contract["frame_shape"][0] > 0
+    assert contract["frame_shape"][1] == contract["column_count"] == len(contract["columns"])
+    assert contract["official_transform_policy"] == "raw_official_frame"
+    assert contract["raw_missing_policy"] == "preserve_raw_missing"
+    assert contract["raw_outlier_policy"] == "preserve_raw_outliers"
+    assert contract["missing_availability"] == "complete_case_only"
+    assert contract["release_lag_rule"] == "ignore_release_lag"
+    assert contract["variable_universe"] == "all_variables"
+    assert contract["dataset_metadata"]["dataset"] == "fred_md"
+    assert contract["raw_artifact"]["local_path"]
+    assert "layer1_official_frame.json" in {
+        item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "layer1_official_frame"
+    }
 
 
 def test_execute_recipe_records_prediction_row_schema_contract(tmp_path: Path) -> None:

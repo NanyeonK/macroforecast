@@ -8,6 +8,7 @@ Every macrocast execution writes a set of artifacts to a run directory. This gui
 runs/
   {recipe_id}__{target}__h{horizons}/
     manifest.json               # Full provenance record
+    layer1_official_frame.json  # Layer 1 official frame handoff contract
     predictions.csv             # OOS prediction table
     prediction_row_schema.json   # Versioned predictions.csv column contract
     metrics.json                # Per-horizon evaluation metrics
@@ -45,6 +46,19 @@ The core output table. Each row is one (forecast origin, target date, horizon) t
 base columns, observed columns, optional payload column groups, dtypes, payload
 families, and forecast objects. Treat it as the stable contract for consumers
 that parse `predictions.csv`.
+
+## layer1_official_frame.json
+
+Layer 1 writes this file before Layer 2 representation construction. It records
+`layer1_official_frame_v1`, the exact official frame contract used by the run:
+source metadata, target and horizon identity, frame shape/index/columns,
+information-set provenance, raw missing/outlier handling, missing-availability,
+release-lag, variable-universe choices, official transform/T-code evidence,
+data warnings, and data reports.
+
+Use this file when comparing runs that differ in data vintage, release-lag,
+raw missing/outlier handling, or official transform policy. The manifest keeps a
+compact `layer1_official_frame_summary`, while this file owns the full contract.
 
 ## metrics.json
 
@@ -144,6 +158,8 @@ The complete provenance record. Key fields:
 | `recipe_id` | Study identifier |
 | `tree_context` | Full axis selection record (fixed/sweep/conditional) |
 | `preprocess_contract` | Exact preprocessing configuration |
+| `layer1_official_frame_contract` | Versioned Layer 1 official-frame handoff |
+| `layer1_official_frame_file` | Full Layer 1 official-frame contract artifact |
 | `model_spec` | Model family, feature builder, executor name |
 | `benchmark_spec` | Benchmark family and configuration |
 | `evaluation_spec` | Layer 4 evaluation choices |

@@ -17,6 +17,13 @@ choices, and metric-family availability. If `report_style=markdown_table`, the
 run also writes `evaluation_report.md`; if `report_style=latex_table`, it writes
 `evaluation_report.tex`.
 
+Layer 1 writes `layer1_official_frame.json` for every run. It records
+`layer1_official_frame_v1`: the resolved official frame handed to Layer 2,
+including source metadata, target/horizon identity, frame shape and columns,
+information-set provenance, raw missing/outlier choices, missing-availability,
+release-lag, variable-universe rules, official transform/T-code evidence, data
+warnings, and data reports.
+
 Layer 5 writes `artifact_manifest.json` for every run. It is the stable
 inventory of files that were actually materialized under the selected
 `output_spec`.
@@ -77,6 +84,12 @@ tuning, statistical-test, and importance artifacts when available.
       "artifact_type": "prediction_row_schema",
       "layer": "5_output_provenance",
       "format": "json"
+    },
+    {
+      "path": "layer1_official_frame.json",
+      "artifact_type": "layer1_official_frame",
+      "layer": "1_data_task",
+      "format": "json"
     }
   ]
 }
@@ -86,7 +99,9 @@ The manifest records `artifact_manifest_file`, `output_artifact_contract`,
 `saved_objects_effective`, `artifact_granularity_effective`, and
 `artifact_count`. `prediction_row_schema.json` uses
 `prediction_row_schema_v1` and is the versioned column contract for
-`predictions.csv`.
+`predictions.csv`. `layer1_official_frame.json` uses
+`layer1_official_frame_v1` and is the versioned upstream-frame contract for
+Layer 2 representation builders.
 
 This page should continue expanding:
 

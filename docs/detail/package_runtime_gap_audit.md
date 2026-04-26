@@ -24,6 +24,15 @@ fall back to another representation.
 
 ## Current Finding
 
+The Layer 1 official-frame handoff is now explicit. Runtime writes
+`layer1_official_frame.json` for every run, records
+`layer1_official_frame_contract=layer1_official_frame_v1` in `manifest.json`,
+and registers the file in `artifact_manifest.json` as a Layer 1 artifact. This
+closes the previous implicit boundary between raw/source handling and Layer 2
+representation builders.
+
+## Previous Finding
+
 `feature_block_set` had drifted. Runtime and compiler code already used it to
 route Layer 2 feature families, but the registry still marked every value
 `registry_only`, and explicit recipe selections could be overwritten by the
@@ -76,8 +85,8 @@ values that the Navigator can freely enable without companion choices.
 
 ## Next Runtime Queue
 
-1. Make the Layer 1 official frame handoff explicit before deeper
-   vintage/release-lag or mixed-source work.
-2. Keep generated Navigator UI data checked after each registry/status change.
-3. Defer deeper browser affordances until the package/runtime surface has no
+1. Keep generated Navigator UI data checked after each registry/status change.
+2. Defer deeper browser affordances until the package/runtime surface has no
    known registry-versus-runtime drift.
+3. Use `layer1_official_frame_v1` as the extension point before deeper
+   vintage/release-lag or mixed-source runtime widening.

@@ -86,6 +86,7 @@ from .types import (
     DIRECTION_FORECAST_PAYLOAD_CONTRACT_VERSION,
     FORECAST_PAYLOAD_CONTRACT_VERSION,
     INTERVAL_FORECAST_PAYLOAD_CONTRACT_VERSION,
+    LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
     LAYER2_REPRESENTATION_CONTRACT_VERSION,
     PREDICTION_ROW_SCHEMA_VERSION,
     DensityForecastPayload,
@@ -1995,6 +1996,143 @@ def _prediction_row_schema(predictions: pd.DataFrame) -> dict[str, object]:
         "payload_families": sorted(str(value) for value in predictions["payload_family"].dropna().unique()),
         "forecast_objects": sorted(str(value) for value in predictions["forecast_object"].dropna().unique()),
     }
+
+
+def _json_safe(value):
+    if isinstance(value, Mapping):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, pd.Timestamp):
+        return None if pd.isna(value) else value.strftime("%Y-%m-%d")
+    if isinstance(value, np.generic):
+        return _json_safe(value.item())
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, (str, int, bool)) or value is None:
+        return value
+    try:
+        json.dumps(value)
+    except TypeError:
+        return str(value)
+    return value
+
+
+def _index_value_to_string(value) -> str:
+    if isinstance(value, pd.Timestamp):
+        return value.strftime("%Y-%m-%d")
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d")
+    return str(value)
+
+
+def _raw_dataset_metadata_payload(raw_result) -> dict[str, object]:
+    metadata = getattr(raw_result, "dataset_metadata", None)
+    if metadata is None:
+        return {}
+    return {
+        "dataset": getattr(metadata, "dataset", None),
+        "source_family": getattr(metadata, "source_family", None),
+        "frequency": getattr(metadata, "frequency", None),
+        "version_mode": getattr(metadata, "version_mode", None),
+        "vintage": getattr(metadata, "vintage", None),
+        "data_through": getattr(metadata, "data_through", None),
+        "support_tier": getattr(metadata, "support_tier", None),
+        "parse_notes": list(getattr(metadata, "parse_notes", ()) or ()),
+    }
+
+
+def _raw_artifact_payload(raw_result) -> dict[str, object]:
+    artifact = getattr(raw_result, "artifact", None)
+    if artifact is None:
+        return {}
+    return {
+        "dataset": getattr(artifact, "dataset", None),
+        "version_mode": getattr(artifact, "version_mode", None),
+        "vintage": getattr(artifact, "vintage", None),
+        "source_url": getattr(artifact, "source_url", None),
+        "local_path": getattr(artifact, "local_path", None),
+        "file_format": getattr(artifact, "file_format", None),
+        "downloaded_at": getattr(artifact, "downloaded_at", None),
+        "file_sha256": getattr(artifact, "file_sha256", None),
+        "file_size_bytes": getattr(artifact, "file_size_bytes", None),
+        "cache_hit": getattr(artifact, "cache_hit", None),
+        "manifest_version": getattr(artifact, "manifest_version", None),
+    }
+
+
+def _layer1_official_frame_contract(
+    raw_result,
+    recipe: RecipeSpec,
+    preprocess: PreprocessContract,
+) -> dict[str, object]:
+    frame = getattr(raw_result, "data", None)
+    columns = [str(col) for col in frame.columns] if isinstance(frame, pd.DataFrame) else []
+    target_names = [str(target) for target in _recipe_targets(recipe)]
+    target_set = set(target_names)
+    index_start = None
+    index_end = None
+    if isinstance(frame, pd.DataFrame) and len(frame.index):
+        index_start = _index_value_to_string(frame.index[0])
+        index_end = _index_value_to_string(frame.index[-1])
+    policy, scope, source_payload = _official_transform_runtime_axes(recipe, preprocess)
+    transform_codes = dict(getattr(raw_result, "transform_codes", {}) or {})
+    tcode_report = _data_reports(raw_result).get("tcode", {})
+    if not isinstance(tcode_report, Mapping):
+        tcode_report = {}
+    metadata = _raw_dataset_metadata_payload(raw_result)
+    payload = {
+        "schema_version": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
+        "contract_version": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
+        "owner_layer": "1_data_task",
+        "consumer_layer": "2_preprocessing",
+        "dataset": metadata.get("dataset", recipe.raw_dataset),
+        "source_family": metadata.get("source_family"),
+        "frequency": metadata.get("frequency"),
+        "version_mode": metadata.get("version_mode"),
+        "vintage": metadata.get("vintage"),
+        "data_through": metadata.get("data_through"),
+        "support_tier": metadata.get("support_tier"),
+        "raw_dataset": recipe.raw_dataset,
+        "target": str(recipe.target),
+        "targets": target_names,
+        "horizons": [int(h) for h in recipe.horizons],
+        "forecast_object": _forecast_object(recipe),
+        "forecast_type": _forecast_type(recipe),
+        "information_set": getattr(recipe.stage0.fixed_design, "information_set", None),
+        "dataset_adapter": getattr(recipe.stage0.fixed_design, "dataset_adapter", None),
+        "sample_split": getattr(recipe.stage0.fixed_design, "sample_split", None),
+        "benchmark": getattr(recipe.stage0.fixed_design, "benchmark", None),
+        "frame_shape": [int(frame.shape[0]), int(frame.shape[1])] if isinstance(frame, pd.DataFrame) else [0, 0],
+        "index_start": index_start,
+        "index_end": index_end,
+        "column_count": len(columns),
+        "columns": columns,
+        "target_columns_available": [name for name in target_names if name in columns],
+        "predictor_columns": [name for name in columns if name not in target_set],
+        "transform_codes_columns": sorted(str(col) for col in transform_codes),
+        "transform_codes": {str(k): int(v) for k, v in transform_codes.items()},
+        "official_transform_policy": policy,
+        "official_transform_scope": scope,
+        "official_transform_source": source_payload,
+        "official_transform_report": dict(tcode_report),
+        "raw_missing_policy": _data_task_axis(recipe, "raw_missing_policy"),
+        "raw_outlier_policy": _data_task_axis(recipe, "raw_outlier_policy"),
+        "missing_availability": _data_task_axis(recipe, "missing_availability"),
+        "release_lag_rule": _data_task_axis(recipe, "release_lag_rule"),
+        "variable_universe": _data_task_axis(recipe, "variable_universe"),
+        "separation_rule": _data_task_axis(recipe, "separation_rule"),
+        "min_train_size_rule": _training_axis(recipe, "min_train_size"),
+        "training_start_rule": _training_axis(recipe, "training_start_rule"),
+        "data_task_spec": dict(getattr(recipe, "data_task_spec", {}) or {}),
+        "dataset_metadata": metadata,
+        "raw_artifact": _raw_artifact_payload(raw_result),
+        "data_warnings": _data_warnings(raw_result),
+        "data_reports": _data_reports(raw_result),
+    }
+    return _json_safe(payload)
 
 
 def _get_model_executor(recipe: RecipeSpec):
@@ -8564,6 +8702,7 @@ def execute_recipe(
     raw_result = _apply_release_lag(raw_result, _release_lag, spec=dict(recipe.data_task_spec))
     raw_result = _apply_missing_availability(raw_result, _missing_avail, target=str(recipe.target) if getattr(recipe, 'target', None) else None, spec=dict(recipe.data_task_spec))
     raw_result = _apply_variable_universe(raw_result, _var_universe, spec=dict(recipe.data_task_spec), target=str(recipe.target) if getattr(recipe, 'target', None) else None)
+    layer1_official_frame_contract = _layer1_official_frame_contract(raw_result, recipe, preprocess)
     targets = _recipe_targets(recipe)
     prediction_frames = []
     path_average_step_frames = []
@@ -8675,6 +8814,22 @@ def execute_recipe(
         "raw_artifact": raw_result.artifact.local_path,
         "preprocess_summary": preprocess_summary(preprocess),
         "preprocess_contract": preprocess_to_dict(preprocess),
+        "layer1_official_frame_contract": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
+        "layer1_official_frame_file": None,
+        "layer1_official_frame_summary": {
+            "schema_version": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
+            "raw_dataset": layer1_official_frame_contract["raw_dataset"],
+            "source_family": layer1_official_frame_contract["source_family"],
+            "frame_shape": layer1_official_frame_contract["frame_shape"],
+            "index_start": layer1_official_frame_contract["index_start"],
+            "index_end": layer1_official_frame_contract["index_end"],
+            "target_columns_available": layer1_official_frame_contract["target_columns_available"],
+            "official_transform_policy": layer1_official_frame_contract["official_transform_policy"],
+            "official_transform_scope": layer1_official_frame_contract["official_transform_scope"],
+            "missing_availability": layer1_official_frame_contract["missing_availability"],
+            "release_lag_rule": layer1_official_frame_contract["release_lag_rule"],
+            "variable_universe": layer1_official_frame_contract["variable_universe"],
+        },
         "execution_architecture": _EXECUTION_ARCHITECTURE,
         "forecast_engine": _model_spec(recipe)["executor_name"],
         "model_spec": _model_spec(recipe),
@@ -8769,6 +8924,15 @@ def execute_recipe(
         summary_lines.append(_tree_context_summary(tree_context))
     (run_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
     _record_artifact("summary.txt", artifact_type="run_summary", layer="5_output_provenance", file_format="txt")
+
+    _write_json(run_dir / "layer1_official_frame.json", layer1_official_frame_contract)
+    _record_artifact(
+        "layer1_official_frame.json",
+        artifact_type="layer1_official_frame",
+        layer="1_data_task",
+        file_format="json",
+    )
+    manifest["layer1_official_frame_file"] = "layer1_official_frame.json"
 
     # Provenance injection based on provenance_fields level
     if provenance_fields in ('standard', 'full'):

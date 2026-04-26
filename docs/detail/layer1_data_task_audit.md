@@ -47,6 +47,13 @@ transform/T-code step. Layer 1 owns the policy and provenance for those raw
 defects when the researcher chooses to inspect, fill, drop, winsorize, clip, or
 otherwise repair the source panel before official transforms are applied.
 
+Runtime now closes this boundary with `layer1_official_frame_v1`. Every run
+writes `layer1_official_frame.json`, records the contract version and compact
+summary in `manifest.json`, and registers the sidecar in
+`artifact_manifest.json` as a Layer 1 artifact. Layer 2 representation builders
+consume this resolved frame contract rather than relying on implicit
+`raw_result.data` semantics.
+
 The following axes were moved out of Layer 1 ownership:
 
 - to Layer 2: `horizon_target_construction`, `deterministic_components`,
@@ -198,3 +205,6 @@ Simple docs should stay short; this audit is the detailed contract source for La
   choices fail at compile time.
 - Layer 1 raw missing/outlier axes are recorded in `data_task_spec` and execute
   before official transforms/T-codes.
+- Layer 1 official-frame handoff is exported as `layer1_official_frame_v1`,
+  written to `layer1_official_frame.json`, summarized in `manifest.json`, and
+  listed in `artifact_manifest.json`.
