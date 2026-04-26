@@ -103,6 +103,38 @@ def test_release_lag_fixed_lag_shifts_columns():
     out = _apply_release_lag(r, 'fixed_lag_all_series')
     assert pd.isna(out.data['INDPRO'].iloc[0])
     assert out.data['INDPRO'].iloc[1] == 1.0
+    assert out.data.attrs['macrocast_reports']['release_lag'] == {
+        'rule': 'fixed_lag_all_series',
+        'lag_unit': 'periods',
+        'default_lag': 1,
+        'lag_by_column': {'INDPRO': 1},
+        'columns_shifted': ['INDPRO'],
+        'columns_not_found': [],
+        'max_lag': 1,
+        'level_source_shifted': False,
+    }
+
+
+def test_release_lag_series_specific_records_report():
+    import pandas as pd
+    r = _make_raw()
+    out = _apply_release_lag(
+        r,
+        'series_specific_lag',
+        spec={'release_lag_per_series': {'INDPRO': 2, 'RPI': 1}},
+    )
+    assert pd.isna(out.data['INDPRO'].iloc[0])
+    assert pd.isna(out.data['INDPRO'].iloc[1])
+    assert out.data['INDPRO'].iloc[2] == 1.0
+    assert out.data.attrs['macrocast_reports']['release_lag'] == {
+        'rule': 'series_specific_lag',
+        'lag_unit': 'periods',
+        'lag_by_column': {'INDPRO': 2, 'RPI': 1},
+        'columns_shifted': ['INDPRO'],
+        'columns_not_found': ['RPI'],
+        'max_lag': 2,
+        'level_source_shifted': False,
+    }
 
 
 def test_missing_availability_complete_case_is_noop():
@@ -111,6 +143,55 @@ def test_missing_availability_complete_case_is_noop():
     r = _make_raw()
     out = _apply_missing_availability(r, 'complete_case_only')
     assert out is r
+
+
+def test_missing_availability_available_case_records_report():
+    import pandas as pd
+    df = pd.DataFrame({
+        'date': pd.date_range('2000-01-01', periods=3, freq='MS'),
+        'INDPRO': [1.0, 2.0, 3.0],
+        'RPI': [1.0, None, 3.0],
+    })
+    raw = _StubRaw(df)
+
+    out = _apply_missing_availability(raw, 'available_case', target='INDPRO')
+
+    assert len(out.data) == 2
+    assert out.data.attrs['macrocast_reports']['missing_availability'] == {
+        'rule': 'available_case',
+        'required_columns': ['INDPRO', 'RPI'],
+        'before_rows': 3,
+        'after_rows': 2,
+        'rows_dropped': 1,
+    }
+
+
+def test_missing_availability_x_impute_only_records_report():
+    import pandas as pd
+    df = pd.DataFrame({
+        'date': pd.date_range('2000-01-01', periods=3, freq='MS'),
+        'INDPRO': [1.0, 2.0, 3.0],
+        'RPI': [1.0, None, 3.0],
+    })
+    raw = _StubRaw(df)
+
+    out = _apply_missing_availability(
+        raw,
+        'x_impute_only',
+        target='INDPRO',
+        spec={'x_imputation': 'mean'},
+    )
+
+    assert out.data['RPI'].iloc[1] == 2.0
+    assert out.data.attrs['macrocast_reports']['missing_availability'] == {
+        'rule': 'x_impute_only',
+        'strategy': 'mean',
+        'target': 'INDPRO',
+        'predictor_columns': ['RPI'],
+        'missing_before': {'RPI': 1},
+        'missing_after': {},
+        'columns_imputed': ['RPI'],
+    }
 
 
 def test_raw_missing_policy_x_impute_raw_fills_predictors_only():
