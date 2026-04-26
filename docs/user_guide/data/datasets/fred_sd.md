@@ -96,7 +96,8 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 - **Excel parsing** via `openpyxl`. Each sheet is read independently; `pd.read_excel(..., sheet_name=None)` returns `dict[str, DataFrame]` and the loader concatenates wide-form.
 - **Cache**: same mechanism as FRED-MD / FRED-QD (`~/.cache/macrocast/raw/`).
 - **support_tier = "provisional"** on the returned `RawDatasetMetadata` — signals that FRED-SD ingestion is newer than FRED-MD / FRED-QD and has edge cases still being worked out.
-- **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. Users applying T-codes must consult the paper's appendix or the variable's underlying FRED ID.
+- **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. FRED-SD transformation codes are therefore a research decision, not source metadata.
+- **T-code policy choices** — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The opt-in macrocast map uses a reviewed national-analog policy, applies one code per SD variable to all states, and records `official=false` in runtime reports.
 
 ## Known limitations in macrocast v1.0
 

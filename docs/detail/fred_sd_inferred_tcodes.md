@@ -123,11 +123,26 @@ FRED-MD/QD: apply official t-codes.
 FRED-SD: use source values as provided.
 ```
 
-An opt-in runtime policy may be added later:
+The current opt-in FRED-SD policy is:
 
 ```python
-sd_transform_policy="analog_tcode"
+Experiment(...).use_sd_inferred_tcodes()
 ```
 
-That policy must write the map version, selected code, confidence, and validation
-report location into the manifest.
+This activates `sd_tcode_policy="inferred_v0_1"`, backed by
+`sd-analog-v0.1`.
+
+This policy is a national-analog reviewed map. It applies one code to every
+state column for a given FRED-SD variable. It does not estimate a separate code
+for each state, and it does not claim to be the stationarity-only optimum.
+
+Future empirical policies must be named separately:
+
+- `variable_global_stationarity_*`: one empirically selected code per SD
+  variable, shared across states.
+- `state_series_stationarity_*`: one empirically selected code per
+  `SD variable x state` column.
+
+Both future policies must write the map version, selected code, confidence,
+sample window, vintage, diagnostics, and validation report location into the
+manifest.
