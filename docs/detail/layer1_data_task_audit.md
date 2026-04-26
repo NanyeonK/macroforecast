@@ -148,6 +148,7 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 - `missing_availability=zero_fill_before_start` is the default policy in the compiler and public experiment defaults.
 - `zero_fill_before_start` is sample-period aware: predictor leading missing values are zero-filled, fully missing predictors are zero-filled with warnings, predictor mid-sample missing values are reported, target leading missing values are reported, and target mid-sample missing values block execution.
 - `missing_availability=x_impute_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.
+- `missing_availability=available_case` and `missing_availability=x_impute_only` now write `data_reports.missing_availability` in `layer1_official_frame_v1`, including row-drop counts or predictor-imputation counts.
 - `raw_missing_policy=preserve_raw_missing` is the default raw-source missing policy.
 - `raw_missing_policy=zero_fill_leading_x_before_tcode` fills predictor leading missing values in the raw source panel before official transforms/T-codes.
 - `raw_missing_policy=x_impute_raw` requires `leaf_config.raw_x_imputation` in `{mean, median, ffill, bfill}` and imputes raw predictors before official transforms/T-codes.
@@ -155,6 +156,7 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 - `raw_outlier_policy=preserve_raw_outliers` is the default raw-source outlier policy.
 - `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `raw_outlier_to_missing` operate on raw numeric columns before official transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
 - `release_lag_rule=series_specific_lag` requires non-empty `leaf_config.release_lag_per_series`.
+- `release_lag_rule=fixed_lag_all_series` and `release_lag_rule=series_specific_lag` now write `data_reports.release_lag` in `layer1_official_frame_v1`, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.
 - `structural_break_segmentation` remains executable through fixed built-in dates; user-supplied break dates are owned by `deterministic_components=break_dummies`.
 
 Full-mode interpretation:

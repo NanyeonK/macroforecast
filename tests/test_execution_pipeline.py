@@ -287,6 +287,38 @@ def test_layer1_official_frame_contract_records_local_vintage_evidence(tmp_path:
     assert manifest["layer1_official_frame_summary"]["index_end"] == contract["index_end"]
 
 
+def test_layer1_official_frame_contract_records_release_lag_report(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    recipe = replace(
+        recipe,
+        data_task_spec={
+            **recipe.data_task_spec,
+            "release_lag_rule": "fixed_lag_all_series",
+        },
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    contract = json.loads((run_dir / "layer1_official_frame.json").read_text())
+    report = contract["data_reports"]["release_lag"]
+
+    assert contract["release_lag_rule"] == "fixed_lag_all_series"
+    assert contract["information_set_contract"]["release_lag_rule"] == "fixed_lag_all_series"
+    assert report["rule"] == "fixed_lag_all_series"
+    assert report["lag_unit"] == "periods"
+    assert report["default_lag"] == 1
+    assert report["columns_shifted"] == contract["columns"]
+    assert report["lag_by_column"] == {name: 1 for name in contract["columns"]}
+    assert report["max_lag"] == 1
+
+
 def test_execute_recipe_records_prediction_row_schema_contract(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})

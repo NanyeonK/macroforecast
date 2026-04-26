@@ -578,16 +578,33 @@ def _apply_release_lag(raw_result, rule: str, *, spec: dict | None = None):
     if rule == 'fixed_lag_all_series':
         try:
             new_data = data.copy()
+            new_data.attrs.update(getattr(data, "attrs", {}))
             cols = [c for c in new_data.columns if str(c).lower() != 'date']
             for c in cols:
                 new_data[c] = new_data[c].shift(1)
             source = getattr(data, "attrs", {}).get(_LEVEL_SOURCE_FRAME_ATTR)
+            level_source_shifted = False
             if isinstance(source, pd.DataFrame):
                 shifted_source = source.copy()
                 for c in cols:
                     if c in shifted_source.columns:
                         shifted_source[c] = shifted_source[c].shift(1)
                 _attach_level_source(new_data, shifted_source)
+                level_source_shifted = True
+            _append_frame_report(
+                new_data,
+                "release_lag",
+                {
+                    "rule": rule,
+                    "lag_unit": "periods",
+                    "default_lag": 1,
+                    "lag_by_column": {str(c): 1 for c in cols},
+                    "columns_shifted": [str(c) for c in cols],
+                    "columns_not_found": [],
+                    "max_lag": 1 if cols else 0,
+                    "level_source_shifted": level_source_shifted,
+                },
+            )
         except Exception:
             return raw_result
         return _replace_raw_data(raw_result, new_data)
@@ -597,15 +614,37 @@ def _apply_release_lag(raw_result, rule: str, *, spec: dict | None = None):
             raise ExecutionError("release_lag_rule='series_specific_lag' requires leaf_config.release_lag_per_series (dict[str, int])")
         try:
             new_data = data.copy()
+            new_data.attrs.update(getattr(data, "attrs", {}))
             source = getattr(data, "attrs", {}).get(_LEVEL_SOURCE_FRAME_ATTR)
             shifted_source = source.copy() if isinstance(source, pd.DataFrame) else None
+            normalized_lag_map: dict[str, int] = {}
+            columns_shifted: list[str] = []
+            columns_not_found: list[str] = []
             for col, lag in lag_map.items():
+                normalized_lag = int(lag)
+                normalized_lag_map[str(col)] = normalized_lag
                 if col in new_data.columns:
-                    new_data[col] = new_data[col].shift(int(lag))
+                    new_data[col] = new_data[col].shift(normalized_lag)
+                    columns_shifted.append(str(col))
+                else:
+                    columns_not_found.append(str(col))
                 if shifted_source is not None and col in shifted_source.columns:
-                    shifted_source[col] = shifted_source[col].shift(int(lag))
+                    shifted_source[col] = shifted_source[col].shift(normalized_lag)
             if shifted_source is not None:
                 _attach_level_source(new_data, shifted_source)
+            _append_frame_report(
+                new_data,
+                "release_lag",
+                {
+                    "rule": rule,
+                    "lag_unit": "periods",
+                    "lag_by_column": normalized_lag_map,
+                    "columns_shifted": columns_shifted,
+                    "columns_not_found": columns_not_found,
+                    "max_lag": max(normalized_lag_map.values()) if normalized_lag_map else 0,
+                    "level_source_shifted": shifted_source is not None,
+                },
+            )
         except Exception as exc:
             raise ExecutionError(f"series_specific_lag failed: {exc}") from exc
         return _replace_raw_data(raw_result, new_data)
@@ -634,11 +673,25 @@ def _apply_missing_availability(raw_result, rule: str, *, target: str | None = N
     if rule == 'available_case':
         # Complete-case filter across the whole panel; legitimate in short
         # fixture windows, aggressive for long panels.
+        before = len(data)
+        required_columns = [str(c) for c in data.columns if str(c).lower() != "date"]
         new_data = data.dropna(how='any').copy()
+        new_data.attrs.update(getattr(data, "attrs", {}))
         if len(new_data) == 0:
             # Fall back to original to avoid empty-data downstream crashes; the
             # evaluator will raise a more informative error.
             return raw_result
+        _append_frame_report(
+            new_data,
+            "missing_availability",
+            {
+                "rule": rule,
+                "required_columns": required_columns,
+                "before_rows": before,
+                "after_rows": len(new_data),
+                "rows_dropped": before - len(new_data),
+            },
+        )
         return _replace_raw_data(raw_result, new_data)
 
     if rule == 'x_impute_only':
@@ -649,6 +702,8 @@ def _apply_missing_availability(raw_result, rule: str, *, target: str | None = N
             raise ExecutionError(f"missing_availability='x_impute_only': unsupported leaf_config.x_imputation={strategy!r}; allowed: mean / median / ffill / bfill")
         x_cols = [c for c in data.columns if c != target and str(c).lower() != 'date']
         new_data = data.copy()
+        new_data.attrs.update(getattr(data, "attrs", {}))
+        missing_before = {str(c): int(new_data[c].isna().sum()) for c in x_cols if new_data[c].isna().any()}
         if strategy == 'ffill':
             new_data[x_cols] = new_data[x_cols].ffill().bfill()
         elif strategy == 'bfill':
@@ -663,6 +718,20 @@ def _apply_missing_availability(raw_result, rule: str, *, target: str | None = N
                 col = new_data[c]
                 if col.isna().any():
                     new_data[c] = col.fillna(col.median())
+        missing_after = {str(c): int(new_data[c].isna().sum()) for c in x_cols if new_data[c].isna().any()}
+        _append_frame_report(
+            new_data,
+            "missing_availability",
+            {
+                "rule": rule,
+                "strategy": strategy,
+                "target": target,
+                "predictor_columns": [str(c) for c in x_cols],
+                "missing_before": missing_before,
+                "missing_after": missing_after,
+                "columns_imputed": sorted(str(c) for c in missing_before),
+            },
+        )
         return _replace_raw_data(raw_result, new_data)
 
     raise ExecutionError(f'unsupported missing_availability={rule!r}')
