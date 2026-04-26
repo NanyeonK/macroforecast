@@ -13,11 +13,11 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 
 **Note on dropped axes:**
 
-- `alignment_rule` — mixed-frequency calendar axis; meaningful only for FRED-SD (v1.1 scope).
+- `alignment_rule` — mixed-frequency calendar axis; meaningful mainly for FRED-SD. Current runtime uses explicit monthly/quarterly conversion plus provenance reports; a proper MIDAS/state-space mixed-frequency adapter is not first-class yet.
 - `evaluation_scale` — re-homed to Layer 2 (`PreprocessContract.evaluation_scale`) where the actual runtime effect lives.
 - `exogenous_block` — redundant with `feature_builder` default logic.
 - `regime_task` — duplicates 1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.
-- `vintage_policy` — non-default values require real-time-vintage data infrastructure (v1.1 FRED-SD).
+- `vintage_policy` — dropped as a separate axis. Current real-time vintage control is handled by `information_set_type` plus `leaf_config.data_vintage`, including FRED-SD vintages.
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
 **At a glance (defaults):**
 - `missing_availability = zero_fill_before_start` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `complete_case_only`, `available_case`, or `x_impute_only` only when a specific missing-data treatment matters.

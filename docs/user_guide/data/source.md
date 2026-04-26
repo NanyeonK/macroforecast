@@ -161,7 +161,7 @@ path:
 
 ### Dropped values
 
-- `daily`, `weekly`, `yearly`, `mixed_frequency` — FRED-MD/QD only expose monthly and quarterly cadences. Daily/weekly/yearly would require new loaders (FRED-SD mixed-freq is v1.1); mixed_frequency requires MIDAS-style infra (v2).
+- `daily`, `weekly`, `yearly`, `mixed_frequency` — FRED-MD/QD only expose monthly and quarterly cadences. Daily/weekly/yearly would require new loaders. FRED-SD can be loaded and converted to monthly or quarterly, but a first-class mixed-frequency panel runtime would require MIDAS/state-space infrastructure.
 - Manifest records `frequency` for provenance.
 
 ### Recipe usage

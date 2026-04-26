@@ -54,7 +54,7 @@ Within a single workbook, the monthly series have 12 observations per year while
 
 - The loader reads every sheet into a single wide DataFrame. Monthly columns have NaN at positions where quarterly columns have values (and vice versa), depending on the underlying sheet's native index.
 - Downstream handling is the user's responsibility in v1.0. Two practical patterns:
-  - Pick `variables=[...]` to include only same-frequency series (pure-monthly or pure-quarterly).
+  - Pick `variables=[...]`, or `Experiment.use_fred_sd_selection(variables=[...])`, to include only same-frequency series (pure-monthly or pure-quarterly).
   - Let missing values propagate and use a Layer 2 preprocessing imputation (`x_missing_policy`) to fill quarterly observations into monthly gaps.
 
 A **proper mixed-frequency adapter** (MIDAS-style or state-space filling) is scheduled for v1.1 / Phase 10. See 1.3 Horizon & evaluation window and the `frequency` registry entry (`mixed_frequency` is `future` status, v2 Phase 11).
@@ -64,20 +64,20 @@ A **proper mixed-frequency adapter** (MIDAS-style or state-space filling) is sch
 FRED-SD is explicitly designed as a *real-time* database — each `.xlsx` file is the dataset as known at a specific publication month. This matters for studies that want to avoid contaminating forecasts with data revisions:
 
 - `information_set_type: real_time_vintage` + `leaf_config.data_vintage: "2022-03"` loads the March-2022 vintage exactly.
-- `information_set_type: revised` (default) loads the latest `FRED_SD.xlsx`.
+- `information_set_type: revised` (default) loads the latest official **Data by Series** workbook discovered from the St. Louis Fed landing page.
 
 The authors emphasise in the 2022 paper that some state-level series see substantial revisions (especially GDP by state), so real-time studies on FRED-SD generally should pin a vintage.
 
-## State selection — no registry axis yet in v1.0
+## State and variable selection
 
-The loader supports `states=["CA", "TX", ...]` but macrocast has **no Layer 1 axis that carries this list** in v1.0. Users who need a state subset should pass it via the loader directly:
+The loader supports direct source selectors:
 
 ```python
 from macrocast import load_fred_sd
 result = load_fred_sd(states=["CA", "TX", "NY", "FL"], variables=["PAYEMS"])
 ```
 
-Recipe/runtime selection is also available through Layer 1:
+Recipe/runtime selection is available through Layer 1 and the simple API:
 
 ```python
 import macrocast as mc
@@ -93,8 +93,6 @@ exp = (
     .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "BPPRIVSA"])
 )
 ```
-
-## Variable selection
 
 FRED-SD has two different variable concepts:
 
@@ -131,4 +129,4 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 - [FRED-MD](fred_md.md), [FRED-QD](fred_qd.md) — sister databases.
 - [Source & Frame (1.1)](../source.md) — `dataset` / `information_set_type` / `frequency` axis interaction.
-- [1.3 horizon & evaluation window](../window.md) (coming) — how mixed-frequency panels interact with horizon / OOS structure.
+- [Horizon & evaluation window (1.3)](../horizon.md) — how mixed-frequency panels interact with horizon / OOS structure.
