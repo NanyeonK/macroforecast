@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from macrocast.raw.cache import atomic_copy_to_cache
-from macrocast.raw import load_fred_md, load_fred_qd, parse_fred_csv
+from macrocast.raw import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
 from macrocast.raw.errors import RawDownloadError, RawVersionFormatError
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -54,6 +54,32 @@ def test_load_fred_md_uses_local_historical_zip_fallback(tmp_path: Path) -> None
 def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:
     with pytest.raises(RawVersionFormatError):
         load_fred_md(vintage="201802", cache_root=tmp_path, local_source=FIXTURES / "fred_md_sample.csv")
+
+
+def test_load_fred_sd_accepts_local_csv_fixture_without_excel_extra(tmp_path: Path) -> None:
+    result = load_fred_sd(
+        cache_root=tmp_path,
+        local_source=FIXTURES / "fred_sd_sample.csv",
+    )
+
+    assert result.dataset_metadata.dataset == "fred_sd"
+    assert result.dataset_metadata.frequency == "state_monthly"
+    assert result.artifact.file_format == "csv"
+    assert result.artifact.source_url.endswith("fred_sd_sample.csv")
+    assert list(result.data.columns) == ["BPPRIVSA_CA", "UR_CA", "BPPRIVSA_TX", "UR_TX"]
+    assert result.data.index[0].strftime("%Y-%m") == "2000-01"
+
+
+def test_load_fred_sd_local_csv_supports_state_variable_filters(tmp_path: Path) -> None:
+    result = load_fred_sd(
+        cache_root=tmp_path,
+        local_source=FIXTURES / "fred_sd_sample.csv",
+        states=["CA"],
+        variables=["UR"],
+    )
+
+    assert list(result.data.columns) == ["UR_CA"]
+    assert result.artifact.file_format == "csv"
 
 
 def test_load_fred_qd_wraps_download_failure(tmp_path: Path) -> None:

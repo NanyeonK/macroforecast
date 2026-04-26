@@ -77,6 +77,11 @@ The following axes were moved out of Layer 1 ownership:
 - `fred_md+fred_sd` is fixed to monthly.
 - `fred_qd+fred_sd` is fixed to quarterly.
 - Runtime conversion is active and documented: monthly to quarterly uses 3-month average; quarterly to monthly uses linear interpolation. Both paths report provenance warnings.
+- FRED-SD's official live/current source remains the St. Louis Fed workbook.
+  Local CSV is accepted as a fixture/runtime path for deterministic tests and
+  replication bundles that should not require the optional Excel parser. Wide
+  CSV columns use the same canonical `VARIABLE_STATE` names produced by the
+  workbook adapter.
 - `source_adapter=custom_csv/custom_parquet` remains operational but requires `leaf_config.custom_data_path`.
 - Official dataset transforms now have canonical Layer 1 axes:
   `official_transform_policy` and `official_transform_scope`.
@@ -223,6 +228,9 @@ Simple docs should stay short; this audit is the detailed contract source for La
 - Layer 1 official-frame handoff is exported as `layer1_official_frame_v1`,
   written to `layer1_official_frame.json`, summarized in `manifest.json`, and
   listed in `artifact_manifest.json`.
+- Local FRED-SD CSV fixtures parse without the optional `openpyxl` dependency,
+  preserve state/variable filters, and run in a `fred_md+fred_sd` composite
+  execution with component source evidence in `source_availability_contract_v1`.
 - Local vintage-path execution records version mode, requested vintage,
   data-through, artifact SHA, release-lag/missing-availability policy, and
   transform-code coverage in `layer1_official_frame_v1`.
