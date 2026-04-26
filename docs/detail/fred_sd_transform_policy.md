@@ -29,6 +29,37 @@ exp = (
 The opt-in map is `sd-analog-v0.1`. It is stored in
 `macrocast.raw.sd_inferred_tcodes.SD_INFERRED_TCODE_MAP`.
 
+Important interpretation:
+
+- `sd-analog-v0.1` is not a state-by-state stationarity optimizer.
+- It applies one reviewed code to every state column for a given FRED-SD
+  variable, for example all `UR_*` columns share code `2`.
+- The reviewed code is anchored to the closest FRED-MD/FRED-QD national analog
+  when that analog is economically direct, then checked against state-level
+  diagnostics.
+- The map therefore answers "what transformation is defensible for this SD
+  variable as a cross-state panel?" not "what code maximizes stationarity for
+  each individual state series?"
+
+## Policy Choices
+
+FRED-SD has no official `transform` row, so there are three distinct policies a
+researcher could choose. They should not be conflated.
+
+| policy | unit of decision | what it does | benefit | risk | macrocast status |
+|---|---|---|---|---|---|
+| National-analog transfer | SD variable | If an SD variable is a state version of a national FRED-MD/QD object, use the national official t-code analog and apply it to every state. | Anchored to official MD/QD source metadata; keeps state panels comparable. | May not maximize stationarity for every state; weak for variables without direct national analogs. | Current opt-in `sd-analog-v0.1`, `official=false`. |
+| Variable-global empirical | SD variable | Search candidate codes on all states and select one code per SD variable using state/aggregate diagnostics. | Targets stationarity while keeping one transform per cross-state panel. | Can disagree with official national analog semantics; sample/vintage dependent. | Research-only, not runtime default. |
+| State-variable empirical | SD variable x state | Search candidate codes independently for each state series, for example `UR_CA` and `UR_TX` may differ. | Maximizes stationarity diagnostics column by column. | Breaks cross-state comparability, can overfit small/state-specific samples, and may change by vintage. | Future explicit research override only; not supported by default runtime. |
+
+Recommended default for package runtime remains:
+
+1. Use official FRED-MD/QD t-codes where the source provides them.
+2. Leave FRED-SD untransformed unless the user explicitly opts in.
+3. When opting into FRED-SD, use the reviewed national-analog map first.
+4. Treat variable-global or state-variable empirical t-codes as a separate
+   research design, with manifest evidence and audit artifacts.
+
 ## Review Status
 
 Runtime applies only these statuses by default:
@@ -95,6 +126,62 @@ Reason:
   decision; interpolation does not create a new official monthly analog.
 - Stationarity diagnostics are weak, so the status is
   `frequency_specific_provisional`.
+
+## State-Level Stationarity Audit
+
+On 2026-04-26, macrocast checked the actual FRED-SD live by-series workbook
+`series-2026-03.xlsx` against candidate codes `(1, 2, 4, 5, 6)` for every
+state column, using observations from 2005-06 onward. For each
+`SD variable x state`, the audit selected the candidate with the best simple
+ADF/KPSS stationarity score. This is a diagnostic only; it does not define the
+runtime policy.
+
+The diagnostic confirms the user's concern: a stationarity-only state-level
+choice often differs from the national-analog code. For example, many
+employment panels have FRED-MD/QD analog code `5`, while state-by-state
+ADF/KPSS screening often favors code `2`. That does not automatically mean
+code `2` is the correct package default; it means the empirical-stationarity
+policy is a different research design from the national-analog policy.
+
+| SD variable | current opt-in code | dominant state-level stationarity code | dominant state share | state-level distribution |
+|---|---|---:|---:|---|
+| `BPPRIVSA` | monthly `4`, quarterly `5` | 2 | 0.92 | 2:0.92; 4:0.02; 5:0.04; 6:0.02 |
+| `CONS` | 5 | 2/6 tie | 0.45 | 1:0.02; 2:0.45; 5:0.08; 6:0.45 |
+| `CONSTNQGSP` | 5, not runtime-default status | 6 | 0.61 | 2:0.22; 5:0.16; 6:0.61 |
+| `EXPORTS` | 5 | 2 | 0.96 | 2:0.96; 5:0.04 |
+| `FIRE` | 5 | 2 | 0.67 | 2:0.67; 5:0.02; 6:0.31 |
+| `FIRENQGSP` | none | 6 | 0.39 | 2:0.24; 5:0.37; 6:0.39 |
+| `GOVNQGSP` | 5, not runtime-default status | 5 | 0.43 | 2:0.39; 5:0.43; 6:0.18 |
+| `GOVT` | 5 | 2 | 0.98 | 2:0.98; 6:0.02 |
+| `ICLAIMS` | 5 | 2 | 0.96 | 1:0.02; 2:0.96; 5:0.02 |
+| `IMPORTS` | 5 | 2 | 0.98 | 2:0.98; 6:0.02 |
+| `INFO` | 5 | 2 | 0.86 | 2:0.86; 5:0.06; 6:0.08 |
+| `INFONQGSP` | none | 2 | 0.59 | 2:0.59; 5:0.18; 6:0.24 |
+| `LF` | 5 | 2 | 0.88 | 2:0.88; 5:0.06; 6:0.06 |
+| `MANNQGSP` | 5, not runtime-default status | 2 | 0.94 | 2:0.94; 5:0.04; 6:0.02 |
+| `MFG` | 5 | 2 | 0.67 | 2:0.67; 5:0.12; 6:0.22 |
+| `MFGHRS` | 1 | 2 | 0.98 | 2:0.98; 6:0.02 |
+| `MINNG` | 5 | 2 | 0.88 | 2:0.88; 5:0.02; 6:0.10 |
+| `NA` | 5 | 2 | 1.00 | 2:1.00 |
+| `NATURNQGSP` | none | 2 | 0.97 | 2:0.97; 6:0.03 |
+| `NQGSP` | 5 | 5 | 0.67 | 2:0.20; 5:0.67; 6:0.14 |
+| `OTOT` | 5 | 5 | 0.55 | 2:0.39; 5:0.55; 6:0.06 |
+| `PARTRATE` | 2 | 2 | 0.98 | 2:0.98; 6:0.02 |
+| `PSERV` | 5 | 2 | 1.00 | 2:1.00 |
+| `PSERVNQGSP` | 5, not runtime-default status | 5 | 0.69 | 2:0.27; 5:0.69; 6:0.04 |
+| `RENTS` | none | 2 | 0.77 | 2:0.77; 5:0.06; 6:0.17 |
+| `STHPI` | 5 | 6 | 0.90 | 2:0.04; 5:0.06; 6:0.90 |
+| `UR` | 2 | 2 | 1.00 | 2:1.00 |
+| `UTILNQGSP` | none | 2 | 0.88 | 2:0.88; 5:0.06; 6:0.06 |
+
+Interpretation:
+
+- The current opt-in map keeps cross-state comparability by using one
+  variable-level code.
+- The state-level diagnostic is useful for sensitivity analysis and future
+  research modes, but it should not silently replace the national-analog map.
+- A future state-variable empirical mode must write every selected column code,
+  sample window, vintage, test battery, and tie-break rule into the manifest.
 
 ## Validation Protocol
 
