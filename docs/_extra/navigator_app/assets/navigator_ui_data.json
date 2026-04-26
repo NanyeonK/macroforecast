@@ -3206,6 +3206,62 @@
     "7_importance": "Layer 7: interpretation and importance"
   },
   "navigator_schema_version": "navigator_view_v1",
+  "operational_narrow_contracts": [
+    {
+      "axis": "feature_block_set",
+      "contract": "feature_block_set_public_axis_v1",
+      "owner_layer": "2_preprocessing",
+      "pruning_surface": "compiler blocked_reasons and skip_failed_cell manifests",
+      "required_companions": [
+        "x_lag_feature_block=fixed_x_lags for transformed_x_lags",
+        "non-none feature_selection_policy for selected_sparse_x",
+        "non-none level_feature_block for level_augmented_x",
+        "non-none rotation_feature_block for rotation_augmented_x",
+        "at least two active block sources for mixed_blocks",
+        "registered custom block or custom combiner for custom_blocks"
+      ],
+      "values": [
+        "transformed_x_lags",
+        "selected_sparse_x",
+        "level_augmented_x",
+        "rotation_augmented_x",
+        "mixed_blocks",
+        "custom_blocks"
+      ]
+    },
+    {
+      "axis": "exogenous_x_path_policy",
+      "contract": "exogenous_x_path_contract_v1",
+      "owner_layer": "3_training",
+      "pruning_surface": "Layer 3 capability matrix and compiler blocked_reasons",
+      "required_companions": [
+        "forecast_type=iterated",
+        "raw-panel feature runtime",
+        "target_lag_block=fixed_target_lags",
+        "scheduled_known_future_x_columns for scheduled_known_future_x",
+        "recursive_x_model_family=ar1 for recursive_x_model"
+      ],
+      "values": [
+        "hold_last_observed",
+        "observed_future_x",
+        "scheduled_known_future_x",
+        "recursive_x_model"
+      ]
+    },
+    {
+      "axis": "recursive_x_model_family",
+      "contract": "exogenous_x_path_contract_v1",
+      "owner_layer": "3_training",
+      "pruning_surface": "Navigator compatibility and compiler blocked_reasons",
+      "required_companions": [
+        "exogenous_x_path_policy=recursive_x_model",
+        "raw-panel iterated point forecast slice"
+      ],
+      "values": [
+        "ar1"
+      ]
+    }
+  ],
   "replication_library_version": "replication_library_v1",
   "replications": [
     {

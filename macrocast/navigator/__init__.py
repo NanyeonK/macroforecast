@@ -2,6 +2,7 @@
 
 from .core import (
     NAVIGATOR_SCHEMA_VERSION,
+    OPERATIONAL_NARROW_CONTRACTS,
     build_navigation_view,
     canonical_path,
     compatibility_view,
@@ -24,6 +25,7 @@ from .ui_data import (
 __all__ = [
     "NAVIGATOR_SCHEMA_VERSION",
     "NAVIGATOR_UI_DATA_SCHEMA_VERSION",
+    "OPERATIONAL_NARROW_CONTRACTS",
     "REPLICATION_LIBRARY_VERSION",
     "axis_catalog",
     "build_navigation_view",

@@ -9,9 +9,11 @@ import yaml
 from ..registry import get_axis_registry
 from .core import (
     NAVIGATOR_SCHEMA_VERSION,
+    OPERATIONAL_NARROW_CONTRACTS,
     _LAYER_LABELS,
     _TREE_AXES,
     _VIRTUAL_AXES,
+    _VIRTUAL_AXIS_STATUSES,
     build_navigation_view,
     load_recipe,
     navigator_state_engine_spec,
@@ -75,8 +77,7 @@ def axis_catalog() -> dict[str, Any]:
             "axis_type": "virtual",
             "allowed_values": list(values),
             "current_status": {
-                value: "operational_narrow" if value not in {"unavailable", "none"} else "gated_named"
-                for value in values
+                value: _VIRTUAL_AXIS_STATUSES.get(axis_name, {}).get(value, "unknown") for value in values
             },
             "default_policy": "fixed",
             "compatible_with": {},
@@ -95,6 +96,7 @@ def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dic
         "layer_labels": dict(_LAYER_LABELS),
         "tree_axes": {layer: list(axes) for layer, axes in _TREE_AXES.items()},
         "axis_catalog": axis_catalog(),
+        "operational_narrow_contracts": [dict(item) for item in OPERATIONAL_NARROW_CONTRACTS],
         "state_engine": navigator_state_engine_spec(),
         "samples": [_read_sample(path, root) for path in paths],
         "replications": list_replication_entries(),

@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from macrocast.navigator import (
+    OPERATIONAL_NARROW_CONTRACTS,
     build_navigation_view,
     get_replication_entry,
     navigator_ui_data,
@@ -283,12 +284,34 @@ def test_navigator_ui_data_export_roundtrip(tmp_path: Path):
     assert payload["state_engine"]["default_selections"]["importance_scope"] == "global"
     assert payload["state_engine"]["stat_tests"]["legacy_to_split"]["dm"]["axis"] == "equal_predictive"
     assert payload["state_engine"]["importance"]["legacy_to_axis"]["tree_shap"]["axis"] == "importance_shap"
+    assert payload["operational_narrow_contracts"]
     assert payload["replications"]
     assert payload["replications"][0]["recipe"]["path"]
 
     out = write_navigator_ui_data(tmp_path / "navigator_ui_data.json", sample_paths=("examples/recipes/model-benchmark.yaml",))
     assert out.exists()
     assert write_navigator_ui_data(out, sample_paths=("examples/recipes/model-benchmark.yaml",), check=True) == out
+
+
+def test_navigator_operational_narrow_contracts_are_source_of_truth():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    contracts = {item["axis"]: item for item in payload["operational_narrow_contracts"]}
+
+    assert tuple(OPERATIONAL_NARROW_CONTRACTS[0]["values"]) == tuple(contracts["feature_block_set"]["values"])
+    assert contracts["feature_block_set"]["contract"] == "feature_block_set_public_axis_v1"
+    assert contracts["exogenous_x_path_policy"]["contract"] == "exogenous_x_path_contract_v1"
+    assert "scheduled_known_future_x_columns" in " ".join(
+        contracts["exogenous_x_path_policy"]["required_companions"]
+    )
+    assert "recursive_x_model_family=ar1" in " ".join(
+        contracts["exogenous_x_path_policy"]["required_companions"]
+    )
+
+    axis_catalog = payload["axis_catalog"]
+    assert axis_catalog["exogenous_x_path_policy"]["current_status"]["unavailable"] == "gated_named"
+    assert axis_catalog["exogenous_x_path_policy"]["current_status"]["recursive_x_model"] == "operational_narrow"
+    assert axis_catalog["recursive_x_model_family"]["current_status"]["none"] == "gated_named"
+    assert axis_catalog["recursive_x_model_family"]["current_status"]["ar1"] == "operational_narrow"
 
 
 def test_navigator_cli_checks_ui_data(tmp_path: Path):

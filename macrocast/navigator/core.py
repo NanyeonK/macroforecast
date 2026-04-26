@@ -213,6 +213,75 @@ _VIRTUAL_AXES = {
     "recursive_x_model_family": ("none", "ar1"),
 }
 
+_VIRTUAL_AXIS_STATUSES = {
+    "exogenous_x_path_policy": {
+        "unavailable": "gated_named",
+        "hold_last_observed": "operational_narrow",
+        "observed_future_x": "operational_narrow",
+        "scheduled_known_future_x": "operational_narrow",
+        "recursive_x_model": "operational_narrow",
+    },
+    "recursive_x_model_family": {
+        "none": "gated_named",
+        "ar1": "operational_narrow",
+    },
+}
+
+OPERATIONAL_NARROW_CONTRACTS = (
+    {
+        "axis": "feature_block_set",
+        "values": (
+            "transformed_x_lags",
+            "selected_sparse_x",
+            "level_augmented_x",
+            "rotation_augmented_x",
+            "mixed_blocks",
+            "custom_blocks",
+        ),
+        "owner_layer": "2_preprocessing",
+        "contract": "feature_block_set_public_axis_v1",
+        "required_companions": (
+            "x_lag_feature_block=fixed_x_lags for transformed_x_lags",
+            "non-none feature_selection_policy for selected_sparse_x",
+            "non-none level_feature_block for level_augmented_x",
+            "non-none rotation_feature_block for rotation_augmented_x",
+            "at least two active block sources for mixed_blocks",
+            "registered custom block or custom combiner for custom_blocks",
+        ),
+        "pruning_surface": "compiler blocked_reasons and skip_failed_cell manifests",
+    },
+    {
+        "axis": "exogenous_x_path_policy",
+        "values": (
+            "hold_last_observed",
+            "observed_future_x",
+            "scheduled_known_future_x",
+            "recursive_x_model",
+        ),
+        "owner_layer": "3_training",
+        "contract": "exogenous_x_path_contract_v1",
+        "required_companions": (
+            "forecast_type=iterated",
+            "raw-panel feature runtime",
+            "target_lag_block=fixed_target_lags",
+            "scheduled_known_future_x_columns for scheduled_known_future_x",
+            "recursive_x_model_family=ar1 for recursive_x_model",
+        ),
+        "pruning_surface": "Layer 3 capability matrix and compiler blocked_reasons",
+    },
+    {
+        "axis": "recursive_x_model_family",
+        "values": ("ar1",),
+        "owner_layer": "3_training",
+        "contract": "exogenous_x_path_contract_v1",
+        "required_companions": (
+            "exogenous_x_path_policy=recursive_x_model",
+            "raw-panel iterated point forecast slice",
+        ),
+        "pruning_surface": "Navigator compatibility and compiler blocked_reasons",
+    },
+)
+
 _TREE_MODELS = frozenset({"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"})
 _LINEAR_MODELS = frozenset(
     {
@@ -346,10 +415,8 @@ def _axis_values(axis_name: str, registry: Mapping[str, Any]) -> tuple[str, ...]
 def _axis_status(axis_name: str, value: str, registry: Mapping[str, Any]) -> str:
     if axis_name in registry:
         return str(registry[axis_name].current_status.get(value, "unknown"))
-    if axis_name == "exogenous_x_path_policy":
-        return "operational_narrow" if value != "unavailable" else "gated_named"
-    if axis_name == "recursive_x_model_family":
-        return "operational_narrow" if value == "ar1" else "gated_named"
+    if axis_name in _VIRTUAL_AXIS_STATUSES:
+        return _VIRTUAL_AXIS_STATUSES[axis_name].get(value, "unknown")
     return "unknown"
 
 

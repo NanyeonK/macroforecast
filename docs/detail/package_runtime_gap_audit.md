@@ -57,14 +57,29 @@ The patched contract is:
 | `custom_blocks` | `operational_narrow` | Registered custom block or custom combiner contract. |
 | `legacy_feature_builder_bridge` | `registry_only` | Compatibility provenance only. |
 
+## Remaining Operational-Narrow Audit
+
+The remaining source-level `operational_narrow` surfaces are now explicit and
+exported through `navigator_ui_data_v1.operational_narrow_contracts`, so the
+static Navigator, docs, and compiler audit use the same contract list.
+
+| Axis / contract | Narrow values | Required companions | Enforcement surface |
+|---|---|---|---|
+| `feature_block_set` / `feature_block_set_public_axis_v1` | `transformed_x_lags`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks` | Matching Layer 2 sub-blocks: fixed X lags, non-none selection/level/rotation block, at least two active block sources, or a registered custom block/combiner. | Compiler blocked reasons, sweep skipped-cell manifests, Navigator status catalog. |
+| `exogenous_x_path_policy` / `exogenous_x_path_contract_v1` | `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, `recursive_x_model` | `forecast_type=iterated`, raw-panel feature runtime, `target_lag_block=fixed_target_lags`; scheduled paths require `scheduled_known_future_x_columns`; recursive paths require `recursive_x_model_family=ar1`. | Layer 3 capability matrix, compiler blocked reasons, Navigator virtual-axis status and compatibility reasons. |
+| `recursive_x_model_family` / `exogenous_x_path_contract_v1` | `ar1` | `exogenous_x_path_policy=recursive_x_model` and the raw-panel iterated point-forecast slice. | Compiler blocked reasons and Navigator compatibility reasons. |
+
+Ledger-only narrow contracts such as factor-score rotation, sequence handoff,
+interval/density wrappers, and raw-panel iterated payloads are documented in
+`docs/detail/layer_contract_ledger.md`; they do not create additional registry
+values that the Navigator can freely enable without companion choices.
+
 ## Next Runtime Queue
 
-1. Audit remaining `operational_narrow` axes where direct registry status
-   depends on `leaf_config` or companion axes.
-2. Define/version the `prediction_row_schema_v1` projection if payload
+1. Define/version the `prediction_row_schema_v1` projection if payload
    families continue expanding.
-3. Make the Layer 1 official frame handoff explicit before deeper
+2. Make the Layer 1 official frame handoff explicit before deeper
    vintage/release-lag or mixed-source work.
-4. Keep generated Navigator UI data checked after each registry/status change.
-5. Defer deeper browser affordances until the package/runtime surface has no
+3. Keep generated Navigator UI data checked after each registry/status change.
+4. Defer deeper browser affordances until the package/runtime surface has no
    known registry-versus-runtime drift.
