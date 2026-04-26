@@ -2,6 +2,8 @@
 
 The Compatibility Engine is the constraint-aware view over the registry and compiler. It does not merely list options. It explains which choices remain valid after the current selection.
 
+The CLI and static Navigator App share the same exported compatibility metadata. In UI data this lives under `state_engine` with schema version `navigator_state_engine_v1`. The browser uses that payload to recompute option status, disabled reasons, compatibility messages, and YAML preview output while the researcher edits a path.
+
 ## Current Rule Families
 
 | Current selection | Effect |

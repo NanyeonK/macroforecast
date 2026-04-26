@@ -68,7 +68,8 @@ h2 {
 }
 
 .top-actions a,
-.section-heading button {
+.section-heading button,
+.secondary-action {
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 8px 10px;
@@ -233,15 +234,21 @@ input {
 }
 
 .option-card {
+  width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
   background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
 }
 
 .option-card.disabled {
   background: var(--danger-soft);
   border-color: #ffd0c8;
+  cursor: not-allowed;
 }
 
 .option-card.enabled {
@@ -304,6 +311,11 @@ input {
   border-radius: 7px;
   padding: 10px;
   margin-bottom: 8px;
+}
+
+.rule.blocked {
+  border-color: #ffd0c8;
+  background: var(--danger-soft);
 }
 
 .rule strong,

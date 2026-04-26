@@ -219,6 +219,10 @@ def test_navigator_ui_data_export_roundtrip(tmp_path: Path):
     assert payload["schema_version"] == "navigator_ui_data_v1"
     assert payload["samples"][0]["view"]["schema_version"] == "navigator_view_v1"
     assert "model_family" in payload["axis_catalog"]
+    assert payload["state_engine"]["schema_version"] == "navigator_state_engine_v1"
+    assert payload["state_engine"]["default_selections"]["importance_scope"] == "global"
+    assert payload["state_engine"]["stat_tests"]["legacy_to_split"]["dm"]["axis"] == "equal_predictive"
+    assert payload["state_engine"]["importance"]["legacy_to_axis"]["tree_shap"]["axis"] == "importance_shap"
     assert payload["replications"]
 
     out = write_navigator_ui_data(tmp_path / "navigator_ui_data.json", sample_paths=("examples/recipes/model-benchmark.yaml",))

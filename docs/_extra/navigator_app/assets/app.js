@@ -4,6 +4,7 @@ const state = {
   axisFilter: "",
   layerFilter: "all",
   activeAxis: null,
+  engineState: null,
 };
 
 const els = {
@@ -21,6 +22,7 @@ const els = {
   replicationList: document.getElementById("replication-list"),
   yamlPreview: document.getElementById("yaml-preview"),
   copyYaml: document.getElementById("copy-yaml"),
+  resetPath: document.getElementById("reset-path"),
 };
 
 function escapeHtml(value) {
@@ -40,8 +42,12 @@ function currentView() {
   return currentSample().view;
 }
 
+function resetEngineState() {
+  state.engineState = NavigatorStateEngine.createState(state.data, currentSample());
+}
+
 function allAxes() {
-  return currentView().tree;
+  return NavigatorStateEngine.buildTree(state.data, state.engineState);
 }
 
 function axisMatchesLayer(axis) {
@@ -79,11 +85,12 @@ function renderSampleSelect() {
 function renderSummary() {
   const view = currentView();
   const preview = view.compile_preview || {};
-  const blocked = preview.blocked_reasons || [];
+  const selectedDisabled = NavigatorStateEngine.selectedDisabledReasons(state.data, state.engineState);
   const disabled = view.tree.reduce((count, axis) => count + axis.options.filter((option) => !option.enabled).length, 0);
-  els.executionStatus.textContent = preview.execution_status || "-";
-  els.blockedCount.textContent = String(blocked.length);
-  els.disabledCount.textContent = String(disabled);
+  const liveDisabled = allAxes().reduce((count, axis) => count + axis.options.filter((option) => !option.enabled).length, 0);
+  els.executionStatus.textContent = selectedDisabled.length ? "browser_blocked" : (Object.keys(state.engineState.edits).length ? "browser_preview" : (preview.execution_status || "-"));
+  els.blockedCount.textContent = String(selectedDisabled.length);
+  els.disabledCount.textContent = String(liveDisabled || disabled);
 }
 
 function renderAxisList() {
@@ -92,10 +99,11 @@ function renderAxisList() {
     .map((axis) => {
       const disabled = axis.options.filter((option) => !option.enabled).length;
       const active = axis.axis === state.activeAxis ? " active" : "";
+      const edited = axis.edited ? " | edited" : "";
       return `
         <button type="button" class="axis-button${active}" data-axis="${escapeHtml(axis.axis)}">
           <span class="axis-name">${escapeHtml(axis.axis)}</span>
-          <span class="axis-meta">${escapeHtml(axis.layer)} | selected: ${escapeHtml(axis.selected ?? "-")} | disabled: ${disabled}</span>
+          <span class="axis-meta">${escapeHtml(axis.layer)} | selected: ${escapeHtml(axis.selected ?? "-")} | disabled: ${disabled}${edited}</span>
         </button>
       `;
     })
@@ -119,31 +127,36 @@ function renderOptions() {
       const stateClass = option.enabled ? "enabled" : "disabled";
       const selected = option.value === axis.selected ? " selected" : "";
       const reason = option.disabled_reason ? `<p class="reason">${escapeHtml(option.disabled_reason)}</p>` : "";
+      const disabledAttr = option.enabled ? "" : " disabled";
       return `
-        <article class="option-card ${stateClass}${selected}">
+        <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
             <span>${escapeHtml(option.value)}</span>
             <span class="status">${escapeHtml(option.status)}</span>
           </div>
           ${reason}
           <div class="effect">${escapeHtml(option.canonical_path_effect)}</div>
-        </article>
+        </button>
       `;
     })
     .join("");
 }
 
 function renderCompatibility() {
-  const compatibility = currentView().compatibility || {};
+  const compatibility = NavigatorStateEngine.compatibility(state.data, state.engineState);
+  const selectedDisabled = NavigatorStateEngine.selectedDisabledReasons(state.data, state.engineState);
   const rules = compatibility.active_rules || [];
   const recommendations = compatibility.recommendations || [];
+  const selectedDisabledHtml = selectedDisabled.length
+    ? selectedDisabled.map((item) => `<div class="rule blocked"><strong>${escapeHtml(item.axis)}=${escapeHtml(item.value)}</strong><p>${escapeHtml(item.reason)}</p></div>`).join("")
+    : "";
   const ruleHtml = rules.length
     ? rules.map((rule) => `<div class="rule"><strong>${escapeHtml(rule.rule)}</strong><p>${escapeHtml(rule.effect)}</p></div>`).join("")
     : `<p class="muted">No active compatibility rules for this sample.</p>`;
   const recHtml = recommendations.length
     ? recommendations.map((item) => `<div class="rule"><strong>Recommendation</strong><p>${escapeHtml(item)}</p></div>`).join("")
     : "";
-  els.compatibilityView.innerHTML = ruleHtml + recHtml;
+  els.compatibilityView.innerHTML = selectedDisabledHtml + ruleHtml + recHtml;
 }
 
 function renderReplications() {
@@ -162,7 +175,7 @@ function renderReplications() {
 }
 
 function renderYaml() {
-  els.yamlPreview.textContent = currentSample().recipe_yaml || "";
+  els.yamlPreview.textContent = NavigatorStateEngine.recipeYaml(state.data, currentSample(), state.engineState);
 }
 
 function render() {
@@ -180,6 +193,7 @@ function bindEvents() {
   els.sampleSelect.addEventListener("change", (event) => {
     state.sampleIndex = Number(event.target.value);
     state.activeAxis = null;
+    resetEngineState();
     render();
   });
 
@@ -200,6 +214,20 @@ function bindEvents() {
     const button = event.target.closest("[data-axis]");
     if (!button) return;
     state.activeAxis = button.dataset.axis;
+    render();
+  });
+
+  els.optionList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-option]");
+    if (!button || button.disabled) return;
+    const axis = allAxes().find((item) => item.axis === state.activeAxis);
+    if (!axis) return;
+    state.engineState = NavigatorStateEngine.selectOption(state.data, state.engineState, axis.axis, button.dataset.option);
+    render();
+  });
+
+  els.resetPath.addEventListener("click", () => {
+    resetEngineState();
     render();
   });
 
@@ -229,6 +257,7 @@ async function boot() {
   const response = await fetch("assets/navigator_ui_data.json");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
+  resetEngineState();
   render();
 }
 
