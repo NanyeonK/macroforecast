@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import zipfile
+from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -8,6 +9,12 @@ import pytest
 
 from macrocast.raw.cache import atomic_copy_to_cache
 from macrocast.raw import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
+from macrocast.raw.datasets.fred_sd import (
+    _extract_vintage_xlsx_from_zip,
+    _latest_series_url_from_html,
+    _series_xlsx_url,
+    _series_zip_url,
+)
 from macrocast.raw.errors import RawDownloadError, RawVersionFormatError
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -80,6 +87,37 @@ def test_load_fred_sd_local_csv_supports_state_variable_filters(tmp_path: Path) 
 
     assert list(result.data.columns) == ["UR_CA"]
     assert result.artifact.file_format == "csv"
+
+
+def test_fred_sd_current_source_resolver_prefers_latest_by_series_workbook() -> None:
+    html = """
+    <a href="/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-02.xlsx">Series 2026 02</a>
+    <a href="/-/media/project/frbstl/stlouisfed/research/fred-sd/state/state-2026-04.xlsx">State 2026 04</a>
+    <a href="/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-03.xlsx">Series 2026 03</a>
+    """
+
+    url = _latest_series_url_from_html(html)
+
+    assert url == "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-03.xlsx"
+
+
+def test_fred_sd_vintage_source_urls_use_official_by_series_layout() -> None:
+    assert _series_xlsx_url("2026-03").endswith("/fred-sd/series/series-2026-03.xlsx")
+    assert _series_zip_url("2024-12").endswith("/fred-sd/series/fredsd_byseries_2024.zip")
+    assert _series_zip_url("2020-05").endswith("/fred-sd/series/fredsd_byseries_2019_2020.zip")
+    assert _series_zip_url("2005-06").endswith("/fred-sd/series/fredsd_byseries_2005_2006.zip")
+
+
+def test_fred_sd_zip_fallback_extracts_requested_by_series_vintage() -> None:
+    payload = BytesIO()
+    with zipfile.ZipFile(payload, "w") as zf:
+        zf.writestr("Series 2005-01.xlsx", b"PK workbook")
+        zf.writestr("Series 2005-02.xlsx", b"wrong")
+
+    entry, workbook = _extract_vintage_xlsx_from_zip(payload.getvalue(), "2005-01")
+
+    assert entry == "Series 2005-01.xlsx"
+    assert workbook == b"PK workbook"
 
 
 def test_load_fred_qd_wraps_download_failure(tmp_path: Path) -> None:

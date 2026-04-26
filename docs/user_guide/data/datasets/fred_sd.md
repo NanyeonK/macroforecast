@@ -12,8 +12,14 @@ FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel
 
 ## What macrocast downloads
 
-- **Current vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/FRED_SD.xlsx` (referenced in `macrocast/raw/datasets/fred_sd.py`). Excel workbook.
-- **Historical vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/{vintage}.xlsx` where `vintage` follows the publication-month convention.
+- **Current vintage**: macrocast reads the official FRED-SD landing page and
+  selects the latest **Data by Series** workbook link, for example
+  `.../fred-sd/series/series-YYYY-MM.xlsx`. This is the workbook layout the
+  loader expects: tabs are variables, columns are states.
+- **Historical vintage**: macrocast first tries the direct **Data by Series**
+  workbook URL, `.../fred-sd/series/series-YYYY-MM.xlsx`. If a vintage is only
+  distributed inside an official by-series archive, it falls back to the
+  appropriate `fredsd_byseries_*.zip` file and extracts the requested workbook.
 
 The workbook is laid out with **one sheet per variable**; within each sheet, **columns are states** (50 states plus DC) and **rows are observations** indexed by date. The macrocast loader (`macrocast/raw/datasets/fred_sd.py`) accepts two selectors:
 

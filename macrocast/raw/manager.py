@@ -11,7 +11,7 @@ from .types import RawArtifactRecord, RawVersionRequest
 _FIRST_VINTAGE = {
     "fred_md": "1999-01",
     "fred_qd": "2005-01",
-    "fred_sd": "2005-01",
+    "fred_sd": "2005-06",
 }
 
 
