@@ -315,6 +315,8 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
     artifact_dir = Path(result.artifact_dir)
     manifest = json.loads((artifact_dir / "manifest.json").read_text())
     layer1_contract = json.loads((artifact_dir / "layer1_official_frame.json").read_text())
+    metadata_contract = json.loads((artifact_dir / "fred_sd_series_metadata.json").read_text())
+    artifact_manifest = json.loads((artifact_dir / "artifact_manifest.json").read_text())
     preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
 
     assert manifest["data_task_spec"]["state_selection"] == "selected_states"
@@ -326,6 +328,22 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
     assert "BPPRIVSA_CA" not in preview.columns
     assert layer1_contract["data_task_spec"]["sd_states"] == ["CA"]
     assert layer1_contract["data_task_spec"]["sd_variables"] == ["UR"]
+    assert manifest["fred_sd_series_metadata_contract"] == "fred_sd_series_metadata_v1"
+    assert manifest["fred_sd_series_metadata_file"] == "fred_sd_series_metadata.json"
+    assert manifest["fred_sd_series_metadata_summary"] == {
+        "schema_version": "fred_sd_series_metadata_v1",
+        "contract_version": "fred_sd_series_metadata_v1",
+        "series_count": 1,
+        "state_count": 1,
+        "sd_variable_count": 1,
+        "native_frequency_counts": {"monthly": 1},
+    }
+    assert metadata_contract["selector"] == {"states": ["CA"], "variables": ["UR"]}
+    assert metadata_contract["series"][0]["column"] == "UR_CA"
+    assert layer1_contract["data_reports"]["components"]["fred_sd"]["fred_sd_series_metadata"]["series_count"] == 1
+    assert "fred_sd_series_metadata.json" in {
+        item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "fred_sd_series_metadata"
+    }
 
 
 def test_experiment_fred_sd_selection_lowers_to_layer1_axes() -> None:

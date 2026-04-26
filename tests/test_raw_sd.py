@@ -29,6 +29,17 @@ def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     )
 
     assert list(result.data.columns) == ["UR_CA", "UR_TX"]
+    report = result.data.attrs["macrocast_reports"]["fred_sd_series_metadata"]
+    assert report["contract_version"] == "fred_sd_series_metadata_v1"
+    assert report["selector"] == {"states": ["CA", "TX"], "variables": ["UR"]}
+    assert report["series_count"] == 2
+    assert report["state_count"] == 2
+    assert report["sd_variable_count"] == 1
+    assert report["native_frequency_counts"] == {"monthly": 2}
+    assert report["series"][0]["column"] == "UR_CA"
+    assert report["series"][0]["sd_variable"] == "UR"
+    assert report["series"][0]["state"] == "CA"
+    assert report["series"][0]["source_sheet"] == "UR"
 
 
 def test_load_fred_sd_vintage_is_marked_provisional(tmp_path: Path) -> None:

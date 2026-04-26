@@ -101,6 +101,21 @@ FRED-SD has two different variable concepts:
 - `variable_universe` remains the generic post-load column universe filter,
   after columns have canonical `VARIABLE_STATE` names.
 
+## Series metadata contract
+
+FRED-SD runs write `fred_sd_series_metadata.json` when the selected dataset
+includes FRED-SD. The contract version is `fred_sd_series_metadata_v1` and its
+owner is Layer 1. It records one row per loaded FRED-SD column:
+
+- canonical column name, `sd_variable`, state, and source sheet
+- inferred native frequency (`monthly`, `quarterly`, `annual`, `irregular`, or
+  `unknown`) from the non-missing observation calendar
+- observed start/end dates and non-missing observation count
+- selected states, selected SD variables, and native-frequency counts
+
+For composite datasets, the same contract is stored from the FRED-SD component
+before generic post-load `variable_universe` filtering.
+
 ## Changes from the 2020 working paper to current
 
 Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (first release late 2020):
@@ -114,6 +129,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 - **Excel parsing** via `openpyxl`. Each sheet is read independently; `pd.read_excel(..., sheet_name=None)` returns `dict[str, DataFrame]` and the loader concatenates wide-form.
 - **Cache**: same mechanism as FRED-MD / FRED-QD (`~/.cache/macrocast/raw/`).
 - **support_tier = "provisional"** on the returned `RawDatasetMetadata` — this now reflects remaining mixed-frequency and study-design edge cases, not lack of a live/vintage loader or t-code policy surface.
+- **Series metadata** — runtime runs that include FRED-SD write `fred_sd_series_metadata.json`, which makes the selected state/variable panel and native-frequency mix auditable.
 - **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. FRED-SD transformation codes are therefore a research decision, not source metadata.
 - **T-code policy choices** — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The reviewed national-analog map is opt-in via `Experiment.use_sd_inferred_tcodes()`. The empirical variable-global map is opt-in via `Experiment.use_sd_empirical_tcodes(unit="variable_global")`. State-by-series empirical codes require an explicit column map via `Experiment.use_sd_empirical_tcodes(unit="state_series", code_map={...})`. All three record `official=false` in runtime reports.
 

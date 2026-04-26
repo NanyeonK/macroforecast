@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from html import unescape
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,7 @@ _SERIES_YEAR_ZIP_URL_TEMPLATE = f"{_SOURCE_BASE_URL}/series/fredsd_byseries_{{ye
 _SERIES_RANGE_ZIP_URL_TEMPLATE = f"{_SOURCE_BASE_URL}/series/fredsd_byseries_{{start_year}}_{{end_year}}.zip"
 _SERIES_XLSX_LINK_RE = re.compile(r'href=["\']([^"\']*?/series/series-(\d{4}-\d{2})\.xlsx[^"\']*)["\']', re.I)
 _FRED_SD_HEADERS = {"User-Agent": "macrocast FRED-SD loader (https://github.com/NanyeonK/macrocast)"}
+_FRED_SD_SERIES_METADATA_CONTRACT_VERSION = "fred_sd_series_metadata_v1"
 
 
 def _local_source_format(local_source: str | Path | None) -> str:
@@ -163,6 +165,96 @@ def _read_local_fred_sd_csv(
     return df
 
 
+def _append_frame_report(frame: pd.DataFrame, key: str, payload: object) -> None:
+    reports = dict(frame.attrs.get("macrocast_reports", {}))
+    reports[key] = payload
+    frame.attrs["macrocast_reports"] = reports
+
+
+def _column_observed_window(series: pd.Series) -> tuple[str | None, str | None, int]:
+    observed = series.dropna()
+    if observed.empty:
+        return None, None, 0
+    return (
+        observed.index[0].strftime("%Y-%m-%d"),
+        observed.index[-1].strftime("%Y-%m-%d"),
+        int(observed.shape[0]),
+    )
+
+
+def _infer_native_frequency(series: pd.Series) -> str:
+    observed = series.dropna()
+    if observed.shape[0] < 2:
+        return "unknown"
+    periods = pd.DatetimeIndex(observed.index).to_period("M")
+    deltas = [int(right.ordinal - left.ordinal) for left, right in zip(periods[:-1], periods[1:]) if right.ordinal > left.ordinal]
+    if not deltas:
+        return "unknown"
+    most_common_delta, _ = Counter(deltas).most_common(1)[0]
+    if most_common_delta == 1:
+        return "monthly"
+    if most_common_delta == 3:
+        return "quarterly"
+    if most_common_delta == 12:
+        return "annual"
+    return "irregular"
+
+
+def _fred_sd_column_parts(column: object) -> tuple[str, str]:
+    name = str(column)
+    if "_" not in name:
+        return name, ""
+    variable, state = name.rsplit("_", 1)
+    return variable, state
+
+
+def _fred_sd_series_metadata(
+    frame: pd.DataFrame,
+    *,
+    states: list[str] | None,
+    variables: list[str] | None,
+    source_format: str,
+) -> dict[str, object]:
+    series: list[dict[str, object]] = []
+    for column in frame.columns:
+        variable, state = _fred_sd_column_parts(column)
+        observed_start, observed_end, non_missing_count = _column_observed_window(frame[column])
+        native_frequency = _infer_native_frequency(frame[column])
+        series.append(
+            {
+                "column": str(column),
+                "sd_variable": variable,
+                "state": state,
+                "source_sheet": variable,
+                "native_frequency": native_frequency,
+                "observed_start": observed_start,
+                "observed_end": observed_end,
+                "non_missing_observation_count": non_missing_count,
+            }
+        )
+    states_seen = sorted({str(row["state"]) for row in series if row["state"]})
+    variables_seen = sorted({str(row["sd_variable"]) for row in series})
+    frequency_counts = Counter(str(row["native_frequency"]) for row in series)
+    return {
+        "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
+        "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
+        "owner_layer": "1_data_task",
+        "dataset": "fred_sd",
+        "source_format": source_format,
+        "selector": {
+            "states": None if states is None else [str(state) for state in states],
+            "variables": None if variables is None else [str(variable) for variable in variables],
+        },
+        "series_count": len(series),
+        "state_count": len(states_seen),
+        "sd_variable_count": len(variables_seen),
+        "states": states_seen,
+        "sd_variables": variables_seen,
+        "native_frequency_counts": dict(sorted(frequency_counts.items())),
+        "series": series,
+    }
+
+
 def load_fred_sd(
     vintage: str | None = None,
     *,
@@ -223,6 +315,17 @@ def load_fred_sd(
     except Exception as exc:
         source_kind = "CSV" if local_format == "csv" else "workbook"
         raise RawParseError(f"failed to parse FRED-SD {source_kind} at {target}") from exc
+
+    _append_frame_report(
+        df,
+        "fred_sd_series_metadata",
+        _fred_sd_series_metadata(
+            df,
+            states=states,
+            variables=variables,
+            source_format=local_format,
+        ),
+    )
 
     artifact = build_raw_artifact_record(
         request=request,
