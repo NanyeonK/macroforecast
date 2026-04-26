@@ -24,6 +24,7 @@ from macrocast import (
 from macrocast.raw.types import RawArtifactRecord, RawDatasetMetadata, RawLoadResult
 
 FIXTURE_RAW = Path("tests/fixtures/fred_md_ar_sample.csv")
+FIXTURE_SD_CSV = Path("tests/fixtures/fred_sd_sample.csv")
 FIXTURE_START = "2000-01"
 FIXTURE_END = "2000-10"
 
@@ -263,6 +264,36 @@ def test_fred_sd_combination_uses_md_or_qd_frequency() -> None:
             end="2002-12",
             frequency="monthly",
         ).to_recipe_dict()
+
+
+def test_fred_md_sd_composite_runs_with_local_csv_sd_fixture(tmp_path: Path) -> None:
+    result = forecast(
+        "fred_md+fred_sd",
+        target="INDPRO",
+        start=FIXTURE_START,
+        end=FIXTURE_END,
+        horizons=[1],
+        output_root=tmp_path,
+        local_raw_source={"fred_md": FIXTURE_RAW, "fred_sd": FIXTURE_SD_CSV},
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    layer1_contract = json.loads((artifact_dir / "layer1_official_frame.json").read_text())
+
+    assert manifest["raw_dataset"] == "fred_md+fred_sd"
+    assert manifest["data_reports"]["combined_dataset"]["components"] == ["fred_md", "fred_sd"]
+    preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
+    assert "BPPRIVSA_CA" in preview.columns
+
+    source_contract = layer1_contract["source_availability_contract"]
+    assert source_contract["component_count"] == 2
+    components = {component["component"]: component for component in source_contract["component_source_contracts"]}
+    assert components["fred_md"]["source_url_kind"] == "local_path"
+    assert components["fred_sd"]["source_url_kind"] == "local_path"
+    assert components["fred_sd"]["uses_local_source"] is True
+    assert components["fred_sd"]["artifact_file_format"] == "csv"
+    assert components["fred_sd"]["artifact_file_size_bytes"] > 0
 
 
 def test_fred_qd_with_sd_converts_monthly_state_data_to_quarterly(monkeypatch, tmp_path: Path) -> None:
