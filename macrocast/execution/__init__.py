@@ -8,6 +8,8 @@ from .types import (
     ExecutionSpec,
     ForecastPayload,
     IntervalForecastPayload,
+    LAYER2_REPRESENTATION_CONTRACT_VERSION,
+    Layer2Representation,
 )
 
 __all__ = [
@@ -20,6 +22,8 @@ __all__ = [
     "DirectionForecastPayload",
     "IntervalForecastPayload",
     "DensityForecastPayload",
+    "Layer2Representation",
+    "LAYER2_REPRESENTATION_CONTRACT_VERSION",
     "SweepResult",
     "VariantResult",
     "execute_sweep",

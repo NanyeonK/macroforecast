@@ -36,7 +36,7 @@ test.
 | Contract | Owner | Layer 3 view | Producer | Consumer | Status | Notes |
 |---|---|---|---|---|---|---|
 | Layer 1 official frame handoff | Layer 1 | `outside_layer3` | raw/source adapters and official transform stage | Layer 2 representation builders | `legacy_implicit` | Covers official frame, target identity, horizons, information-set provenance, raw missing/outlier policy, and official transform/T-code reports. Should become an explicit schema before broader vintage/release-lag work. |
-| `Layer2Representation` tabular handoff | Layer 2 | `consumed` | supported Layer 2 tabular builders | Layer 3 tabular generators | `operational` | Contains `Z_train`, `y_train`, `Z_pred`, feature names, block order/roles, fit state, alignment, leakage contract, and runtime provenance. Current Layer 3 capability matrix is built around this handoff. |
+| `Layer2Representation` tabular handoff | Layer 2 | `consumed` | supported Layer 2 tabular builders | Layer 3 tabular generators | `operational` | Public runtime contract `layer2_representation_v1`. Contains `Z_train`, `y_train`, `Z_pred`, feature names, block order/roles, fit state, alignment, leakage contract, runtime provenance, and contract metadata. Current Layer 3 capability matrix is built around this handoff. |
 | `forecast_payload_v1` | Layer 3 | `owned` | scalar forecast generators | execution artifact writer and evaluation | `operational` | Public scalar payload with `y_pred`, `selected_lag`, `selected_bic`, `tuning_payload`, and `contract_version`. Legacy executor dictionaries are coerced into this shape. |
 | `sequence_representation_contract_v1` | Layer 2 | `future_dependency` | current univariate sequence adapter; future sequence/tensor representation builders | current deep autoreg generators; future Layer 3 sequence/tensor generators | `operational_narrow` | Operational for the current univariate target-history LSTM/GRU/TCN autoreg path: it records sample/window axis, lookback axis, channel names, target alignment, and leakage metadata. Full multivariate `sequence_tensor` Layer 2 handoff remains gated before sequence/tensor models enter full grids. |
 | `exogenous_x_path_contract_v1` | Layer 1/2 boundary plus Layer 3 scenario setup | `future_dependency` | future scenario or future-X provider | raw-panel iterated forecast generators | `operational_narrow` | `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, and `recursive_x_model` with `recursive_x_model_family='ar1'` are operational explicit path kinds. `observed_future_x` is an oracle/ex-post path and must be marked in provenance. `scheduled_known_future_x` replaces only configured known-future predictor columns from future rows while holding other predictors at the origin row. The `ar1` recursive-X slice forecasts each predictor from origin-available own history and does not consume observed future X. Unavailable X, other recursive-X families, and broader vintage/release-lag variants remain gated until they have path-specific tests. |
@@ -196,16 +196,14 @@ Highest-priority contract cleanup:
 
 1. Make the Layer 1 official frame handoff explicit before deeper vintage,
    release-lag, or mixed-source work.
-2. Decide whether the tabular `Layer2Representation` handoff needs an exported
-   schema/version constant before public extension APIs expand further.
-3. Keep package/runtime support ahead of additional Navigator UI work: registry
+2. Keep package/runtime support ahead of additional Navigator UI work: registry
    status, compiler pruning, runtime dispatch, and checked-in UI data must agree
    before a branch is promoted as selectable.
-4. Extend `sequence_representation_contract_v1` from the current univariate
+3. Extend `sequence_representation_contract_v1` from the current univariate
    deep-autoreg slice to a Layer 2 multivariate `sequence_tensor` handoff
    before opening sequence/tensor models in full grids.
-5. Broaden raw-panel iterated forecasting beyond the current
+4. Broaden raw-panel iterated forecasting beyond the current
    `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, and
    `recursive_x_model(ar1)` narrow slices only after additional path-specific
    future-X and target-scale tests exist.
-6. Version the prediction row schema if payload families continue expanding.
+5. Version the prediction row schema if payload families continue expanding.

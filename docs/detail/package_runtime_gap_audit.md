@@ -59,9 +59,12 @@ The patched contract is:
 
 ## Next Runtime Queue
 
-1. Export/version the tabular `Layer2Representation` handoff as a public schema.
-2. Audit remaining `operational_narrow` axes where direct registry status
+1. Audit remaining `operational_narrow` axes where direct registry status
    depends on `leaf_config` or companion axes.
-3. Keep generated Navigator UI data checked after each registry/status change.
-4. Defer deeper browser affordances until the package/runtime surface has no
+2. Define/version the `prediction_row_schema_v1` projection if payload
+   families continue expanding.
+3. Make the Layer 1 official frame handoff explicit before deeper
+   vintage/release-lag or mixed-source work.
+4. Keep generated Navigator UI data checked after each registry/status change.
+5. Defer deeper browser affordances until the package/runtime surface has no
    known registry-versus-runtime drift.

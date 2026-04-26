@@ -4,6 +4,8 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
+import numpy as np
+
 from macrocast import (
     build_execution_spec,
     build_preprocess_contract,
@@ -17,6 +19,8 @@ from macrocast import (
     execute_recipe,
     ExecutionError,
     ForecastPayload,
+    LAYER2_REPRESENTATION_CONTRACT_VERSION,
+    Layer2Representation,
 )
 from macrocast.preprocessing import FeatureBlockCallableResult, FeatureCombinerCallableResult
 import macrocast.execution.build as execution_build
@@ -167,6 +171,29 @@ def test_build_execution_spec_with_importance_context() -> None:
     assert execution.recipe.stage0.fixed_design.sample_split == "rolling_window_oos"
 
 
+def test_execute_recipe_records_layer2_representation_contract(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    tuning_result = json.loads((run_dir / "tuning_result.json").read_text())
+
+    assert manifest["layer2_representation_contract"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+    metadata = manifest["layer2_representation_contract_metadata"]
+    assert metadata["schema_version"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+    assert metadata["feature_runtime_builder"] == "raw_feature_panel"
+    assert metadata["matrix_shapes"]["Z_train"][1] == metadata["feature_count"]
+    assert tuning_result["layer2_representation_contract"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+
+
 def test_forecast_payload_contract_coerces_executor_mapping() -> None:
     payload = _coerce_forecast_payload(
         {
@@ -185,6 +212,32 @@ def test_forecast_payload_contract_coerces_executor_mapping() -> None:
     assert payload.tuning_payload["source"] == "unit"
     assert payload.tuning_payload["forecast_payload_contract"] == "forecast_payload_v1"
     assert payload.to_dict()["contract_version"] == "forecast_payload_v1"
+
+
+def test_layer2_representation_public_contract_metadata() -> None:
+    representation = Layer2Representation(
+        Z_train=np.zeros((3, 2)),
+        y_train=np.zeros(3),
+        Z_pred=np.zeros((1, 2)),
+        feature_names=("x1", "x2"),
+        block_order=("base_x",),
+        block_roles={"x1": "base_x", "x2": "base_x"},
+        alignment={"representation_runtime": "raw_feature_panel"},
+        leakage_contract="forecast_origin_only",
+        feature_builder="raw_feature_panel",
+        feature_runtime_builder="raw_feature_panel",
+        legacy_feature_builder="raw_feature_panel",
+    )
+
+    metadata = representation.contract_metadata()
+    context = representation.runtime_context(mode="fit")
+
+    assert representation.contract_version == LAYER2_REPRESENTATION_CONTRACT_VERSION
+    assert metadata["schema_version"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+    assert metadata["matrix_shapes"] == {"Z_train": [3, 2], "y_train": [3], "Z_pred": [1, 2]}
+    assert metadata["feature_names"] == ["x1", "x2"]
+    assert context["layer2_representation_contract"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
+    assert context["mode"] == "fit"
 
 
 def test_forecast_payload_contract_rejects_missing_fields() -> None:

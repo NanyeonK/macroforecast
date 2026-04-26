@@ -30,6 +30,18 @@ FORECAST_PAYLOAD_CONTRACT_VERSION = "forecast_payload_v1"
 DIRECTION_FORECAST_PAYLOAD_CONTRACT_VERSION = "direction_forecast_payload_v1"
 INTERVAL_FORECAST_PAYLOAD_CONTRACT_VERSION = "interval_forecast_payload_v1"
 DENSITY_FORECAST_PAYLOAD_CONTRACT_VERSION = "density_forecast_payload_v1"
+LAYER2_REPRESENTATION_CONTRACT_VERSION = "layer2_representation_v1"
+LAYER2_REPRESENTATION_REQUIRED_FIELDS = (
+    "Z_train",
+    "y_train",
+    "Z_pred",
+    "feature_names",
+    "block_order",
+    "block_roles",
+    "fit_state",
+    "alignment",
+    "leakage_contract",
+)
 
 
 @dataclass(frozen=True)
@@ -119,6 +131,7 @@ class Layer2Representation:
     feature_runtime_builder: str = ""
     legacy_feature_builder: str = ""
     feature_dispatch_source: str = "layer2_feature_blocks"
+    contract_version: str = LAYER2_REPRESENTATION_CONTRACT_VERSION
 
     @property
     def latest_fit_state(self) -> dict[str, Any] | None:
@@ -126,8 +139,33 @@ class Layer2Representation:
             return None
         return self.fit_state[-1]
 
+    def contract_metadata(self) -> dict[str, Any]:
+        z_train = np.asarray(self.Z_train)
+        y_train = np.asarray(self.y_train)
+        z_pred = np.asarray(self.Z_pred)
+        return {
+            "schema_version": self.contract_version,
+            "contract_version": self.contract_version,
+            "required_fields": list(LAYER2_REPRESENTATION_REQUIRED_FIELDS),
+            "matrix_shapes": {
+                "Z_train": list(z_train.shape),
+                "y_train": list(y_train.shape),
+                "Z_pred": list(z_pred.shape),
+            },
+            "feature_count": len(self.feature_names),
+            "feature_names": list(self.feature_names),
+            "block_order": list(self.block_order),
+            "block_roles": dict(self.block_roles),
+            "alignment": dict(self.alignment),
+            "leakage_contract": self.leakage_contract,
+            "feature_runtime_builder": self.feature_runtime_builder,
+            "legacy_feature_builder": self.legacy_feature_builder,
+            "feature_dispatch_source": self.feature_dispatch_source,
+        }
+
     def runtime_context(self, *, mode: str) -> dict[str, Any]:
         return {
+            "layer2_representation_contract": self.contract_version,
             "feature_builder": self.feature_builder,
             "feature_runtime_builder": self.feature_runtime_builder,
             "legacy_feature_builder": self.legacy_feature_builder,
