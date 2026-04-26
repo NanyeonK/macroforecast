@@ -10,6 +10,7 @@ runs/
     manifest.json               # Full provenance record
     layer1_official_frame.json  # Layer 1 official frame handoff contract
     fred_sd_series_metadata.json # FRED-SD selected panel metadata, if used
+    fred_sd_frequency_report.json # FRED-SD frequency composition, if used
     predictions.csv             # OOS prediction table
     prediction_row_schema.json   # Versioned predictions.csv column contract
     metrics.json                # Per-horizon evaluation metrics
@@ -69,6 +70,14 @@ sheets, canonical `VARIABLE_STATE` columns, per-column observed windows, and
 native-frequency counts inferred from the non-missing calendar. For composite
 FRED-MD/FRED-QD + FRED-SD runs, this file describes the FRED-SD component before
 generic post-load `variable_universe` filtering.
+
+## fred_sd_frequency_report.json
+
+Runs that include FRED-SD also write `fred_sd_frequency_report.json`. It records
+`fred_sd_frequency_report_v1`: native-frequency counts, single-vs-mixed status,
+monthly/quarterly mix flags, and state/variable breakdowns derived from the
+selected FRED-SD series metadata. Use it to audit whether a selected state panel
+needs an explicit mixed-frequency decision before comparing representations.
 
 ## metrics.json
 
@@ -171,6 +180,7 @@ The complete provenance record. Key fields:
 | `layer1_official_frame_contract` | Versioned Layer 1 official-frame handoff |
 | `layer1_official_frame_file` | Full Layer 1 official-frame contract artifact |
 | `fred_sd_series_metadata_file` | FRED-SD selected-panel metadata artifact, if present |
+| `fred_sd_frequency_report_file` | FRED-SD frequency-composition artifact, if present |
 | `model_spec` | Model family, feature builder, executor name |
 | `benchmark_spec` | Benchmark family and configuration |
 | `evaluation_spec` | Layer 4 evaluation choices |

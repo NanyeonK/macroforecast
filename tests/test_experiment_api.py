@@ -21,6 +21,7 @@ from macrocast import (
     list_custom_target_transformers,
     target_transformer,
 )
+from macrocast.execution.build import _fred_sd_frequency_report_from_metadata
 from macrocast.raw.types import RawArtifactRecord, RawDatasetMetadata, RawLoadResult
 
 FIXTURE_RAW = Path("tests/fixtures/fred_md_ar_sample.csv")
@@ -316,6 +317,7 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
     manifest = json.loads((artifact_dir / "manifest.json").read_text())
     layer1_contract = json.loads((artifact_dir / "layer1_official_frame.json").read_text())
     metadata_contract = json.loads((artifact_dir / "fred_sd_series_metadata.json").read_text())
+    frequency_report = json.loads((artifact_dir / "fred_sd_frequency_report.json").read_text())
     artifact_manifest = json.loads((artifact_dir / "artifact_manifest.json").read_text())
     preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
 
@@ -338,12 +340,57 @@ def test_fred_sd_selection_filters_component_before_composite_run(tmp_path: Path
         "sd_variable_count": 1,
         "native_frequency_counts": {"monthly": 1},
     }
+    assert manifest["fred_sd_frequency_report_contract"] == "fred_sd_frequency_report_v1"
+    assert manifest["fred_sd_frequency_report_file"] == "fred_sd_frequency_report.json"
+    assert manifest["fred_sd_frequency_report_summary"] == {
+        "schema_version": "fred_sd_frequency_report_v1",
+        "contract_version": "fred_sd_frequency_report_v1",
+        "series_count": 1,
+        "native_frequency_counts": {"monthly": 1},
+        "frequency_status": "single_frequency",
+        "has_monthly_quarterly_mix": False,
+        "requires_mixed_frequency_decision": False,
+    }
     assert metadata_contract["selector"] == {"states": ["CA"], "variables": ["UR"]}
     assert metadata_contract["series"][0]["column"] == "UR_CA"
+    assert frequency_report["source_series_metadata_contract"] == "fred_sd_series_metadata_v1"
+    assert frequency_report["frequency_status"] == "single_frequency"
+    assert frequency_report["by_sd_variable"] == {"UR": {"monthly": 1}}
     assert layer1_contract["data_reports"]["components"]["fred_sd"]["fred_sd_series_metadata"]["series_count"] == 1
+    assert layer1_contract["data_reports"]["fred_sd_frequency_report"]["frequency_status"] == "single_frequency"
     assert "fred_sd_series_metadata.json" in {
         item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "fred_sd_series_metadata"
     }
+    assert "fred_sd_frequency_report.json" in {
+        item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "fred_sd_frequency_report"
+    }
+
+
+def test_fred_sd_frequency_report_marks_mixed_panel() -> None:
+    report = _fred_sd_frequency_report_from_metadata(
+        {
+            "contract_version": "fred_sd_series_metadata_v1",
+            "selector": {"states": ["CA"], "variables": ["UR", "NQGSP", "X"]},
+            "series_count": 3,
+            "state_count": 1,
+            "sd_variable_count": 3,
+            "series": [
+                {"column": "UR_CA", "sd_variable": "UR", "state": "CA", "native_frequency": "monthly"},
+                {"column": "NQGSP_CA", "sd_variable": "NQGSP", "state": "CA", "native_frequency": "quarterly"},
+                {"column": "X_CA", "sd_variable": "X", "state": "CA", "native_frequency": "unknown"},
+            ],
+        }
+    )
+
+    assert report is not None
+    assert report["contract_version"] == "fred_sd_frequency_report_v1"
+    assert report["native_frequency_counts"] == {"monthly": 1, "quarterly": 1, "unknown": 1}
+    assert report["known_native_frequency_counts"] == {"monthly": 1, "quarterly": 1}
+    assert report["frequency_status"] == "mixed_frequency_with_unknown"
+    assert report["has_monthly_quarterly_mix"] is True
+    assert report["requires_mixed_frequency_decision"] is True
+    assert report["by_state"] == {"CA": {"monthly": 1, "quarterly": 1, "unknown": 1}}
+    assert report["by_sd_variable"]["NQGSP"] == {"quarterly": 1}
 
 
 def test_experiment_fred_sd_selection_lowers_to_layer1_axes() -> None:

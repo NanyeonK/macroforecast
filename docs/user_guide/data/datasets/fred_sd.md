@@ -116,6 +116,29 @@ owner is Layer 1. It records one row per loaded FRED-SD column:
 For composite datasets, the same contract is stored from the FRED-SD component
 before generic post-load `variable_universe` filtering.
 
+## Frequency composition report
+
+FRED-SD runs also write `fred_sd_frequency_report.json`. The contract version
+is `fred_sd_frequency_report_v1` and its owner is Layer 1. It is derived from
+`fred_sd_series_metadata_v1` and makes the selected native-frequency mix
+explicit before Layer 2 chooses any post-frame representation.
+
+The report records:
+
+- `native_frequency_counts` and `known_native_frequency_counts`
+- `frequency_status`: `empty`, `unknown_only`, `single_frequency`,
+  `single_frequency_with_unknown`, `mixed_frequency`, or
+  `mixed_frequency_with_unknown`
+- `has_monthly_quarterly_mix`
+- `requires_mixed_frequency_decision`
+- frequency counts by state and by SD variable
+
+This is a report contract, not yet a coercion policy. A selected panel with both
+monthly and quarterly state series is visible in the artifacts even if the run
+uses the current coarse frequency conversion path. The next Layer 1 policy axis
+will consume this report to reject, allow, or require explicit mixed-frequency
+handling choices.
+
 ## Changes from the 2020 working paper to current
 
 Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (first release late 2020):
@@ -130,6 +153,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 - **Cache**: same mechanism as FRED-MD / FRED-QD (`~/.cache/macrocast/raw/`).
 - **support_tier = "provisional"** on the returned `RawDatasetMetadata` — this now reflects remaining mixed-frequency and study-design edge cases, not lack of a live/vintage loader or t-code policy surface.
 - **Series metadata** — runtime runs that include FRED-SD write `fred_sd_series_metadata.json`, which makes the selected state/variable panel and native-frequency mix auditable.
+- **Frequency report** — runtime also writes `fred_sd_frequency_report.json`, which reduces the selected panel to a Layer 1 frequency-composition contract for downstream policy decisions.
 - **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. FRED-SD transformation codes are therefore a research decision, not source metadata.
 - **T-code policy choices** — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The reviewed national-analog map is opt-in via `Experiment.use_sd_inferred_tcodes()`. The empirical variable-global map is opt-in via `Experiment.use_sd_empirical_tcodes(unit="variable_global")`. State-by-series empirical codes require an explicit column map via `Experiment.use_sd_empirical_tcodes(unit="state_series", code_map={...})`. All three record `official=false` in runtime reports.
 

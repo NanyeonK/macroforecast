@@ -218,6 +218,11 @@ The simple API remains narrower than the full contract:
 - FRED-SD runs now expose `fred_sd_series_metadata_v1` through
   `fred_sd_series_metadata.json` and `data_reports.fred_sd_series_metadata`
   (or `data_reports.components.fred_sd.fred_sd_series_metadata` in composites).
+- FRED-SD runs now also expose `fred_sd_frequency_report_v1` through
+  `fred_sd_frequency_report.json` and `data_reports.fred_sd_frequency_report`.
+  This report is derived from selected series metadata and records whether the
+  panel is single-frequency, mixed-frequency, or partly unknown before Layer 2
+  representation choices are applied.
   The contract records selected states, selected SD variables, source sheets,
   per-column observed windows, and inferred native-frequency counts before
   later generic post-load column filtering.

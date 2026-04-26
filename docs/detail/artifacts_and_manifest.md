@@ -30,6 +30,12 @@ per-column observed windows, and inferred native-frequency counts for the
 FRED-SD component. For composite FRED-MD/FRED-QD + FRED-SD runs, this file
 describes the FRED-SD component before generic post-load column filtering.
 
+FRED-SD runs also write `fred_sd_frequency_report.json`. It records
+`fred_sd_frequency_report_v1`: frequency-composition counts, status flags, and
+state/variable breakdowns derived from the selected FRED-SD series metadata.
+This report tells downstream policy whether the selected panel is
+single-frequency, mixed-frequency, or partly unknown.
+
 Layer 5 writes `artifact_manifest.json` for every run. It is the stable
 inventory of files that were actually materialized under the selected
 `output_spec`.
@@ -102,6 +108,12 @@ tuning, statistical-test, and importance artifacts when available.
       "artifact_type": "fred_sd_series_metadata",
       "layer": "1_data_task",
       "format": "json"
+    },
+    {
+      "path": "fred_sd_frequency_report.json",
+      "artifact_type": "fred_sd_frequency_report",
+      "layer": "1_data_task",
+      "format": "json"
     }
   ]
 }
@@ -113,8 +125,9 @@ The manifest records `artifact_manifest_file`, `output_artifact_contract`,
 `prediction_row_schema_v1` and is the versioned column contract for
 `predictions.csv`. `layer1_official_frame.json` uses
 `layer1_official_frame_v1` and is the versioned upstream-frame contract for
-Layer 2 representation builders. `fred_sd_series_metadata.json` is present only
-when the selected dataset includes FRED-SD.
+Layer 2 representation builders. `fred_sd_series_metadata.json` and
+`fred_sd_frequency_report.json` are present only when the selected dataset
+includes FRED-SD.
 
 This page should continue expanding:
 

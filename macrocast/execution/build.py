@@ -312,6 +312,120 @@ def _fred_sd_series_metadata_summary(report: Mapping[str, object] | None) -> dic
     }
 
 
+_FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION = "fred_sd_frequency_report_v1"
+
+
+def _fred_sd_frequency_status(*, known_frequency_count: int, unknown_count: int, series_count: int) -> str:
+    if series_count == 0:
+        return "empty"
+    if known_frequency_count == 0:
+        return "unknown_only"
+    if known_frequency_count == 1 and unknown_count:
+        return "single_frequency_with_unknown"
+    if known_frequency_count == 1:
+        return "single_frequency"
+    if unknown_count:
+        return "mixed_frequency_with_unknown"
+    return "mixed_frequency"
+
+
+def _counter_dict(counter: Mapping[str, int]) -> dict[str, int]:
+    return {str(key): int(value) for key, value in sorted(counter.items()) if int(value)}
+
+
+def _fred_sd_frequency_report_from_metadata(metadata_report: Mapping[str, object] | None) -> dict[str, object] | None:
+    if not isinstance(metadata_report, Mapping):
+        return None
+    raw_series = metadata_report.get("series", [])
+    series = [row for row in raw_series if isinstance(row, Mapping)] if isinstance(raw_series, Sequence) else []
+    frequency_counts: dict[str, int] = {}
+    by_state: dict[str, dict[str, int]] = {}
+    by_sd_variable: dict[str, dict[str, int]] = {}
+    for row in series:
+        frequency = str(row.get("native_frequency") or "unknown")
+        frequency_counts[frequency] = frequency_counts.get(frequency, 0) + 1
+        state = str(row.get("state") or "")
+        variable = str(row.get("sd_variable") or "")
+        if state:
+            state_counts = by_state.setdefault(state, {})
+            state_counts[frequency] = state_counts.get(frequency, 0) + 1
+        if variable:
+            variable_counts = by_sd_variable.setdefault(variable, {})
+            variable_counts[frequency] = variable_counts.get(frequency, 0) + 1
+
+    known_frequencies = {
+        frequency: count
+        for frequency, count in frequency_counts.items()
+        if frequency != "unknown" and count
+    }
+    known_frequency_count = len(known_frequencies)
+    unknown_count = int(frequency_counts.get("unknown", 0))
+    series_count = int(metadata_report.get("series_count") or len(series))
+    dominant_native_frequency = None
+    if frequency_counts:
+        dominant_native_frequency = sorted(frequency_counts.items(), key=lambda item: (-int(item[1]), str(item[0])))[0][0]
+    has_mixed_known_frequencies = known_frequency_count > 1
+    has_monthly_quarterly_mix = bool(frequency_counts.get("monthly")) and bool(frequency_counts.get("quarterly"))
+    frequency_status = _fred_sd_frequency_status(
+        known_frequency_count=known_frequency_count,
+        unknown_count=unknown_count,
+        series_count=series_count,
+    )
+    return {
+        "schema_version": _FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION,
+        "contract_version": _FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION,
+        "owner_layer": "1_data_task",
+        "dataset": "fred_sd",
+        "source_contract": metadata_report.get("contract_version"),
+        "source_series_metadata_contract": metadata_report.get("contract_version"),
+        "selector": dict(metadata_report.get("selector", {}) or {}),
+        "series_count": series_count,
+        "state_count": metadata_report.get("state_count"),
+        "sd_variable_count": metadata_report.get("sd_variable_count"),
+        "native_frequency_counts": _counter_dict(frequency_counts),
+        "known_native_frequency_counts": _counter_dict(known_frequencies),
+        "unknown_frequency_count": unknown_count,
+        "known_native_frequency_classes": sorted(known_frequencies),
+        "dominant_native_frequency": dominant_native_frequency,
+        "frequency_status": frequency_status,
+        "has_unknown_frequency": unknown_count > 0,
+        "has_mixed_known_frequencies": has_mixed_known_frequencies,
+        "has_monthly_quarterly_mix": has_monthly_quarterly_mix,
+        "requires_mixed_frequency_decision": has_mixed_known_frequencies or unknown_count > 0,
+        "by_state": {state: _counter_dict(counts) for state, counts in sorted(by_state.items())},
+        "by_sd_variable": {variable: _counter_dict(counts) for variable, counts in sorted(by_sd_variable.items())},
+    }
+
+
+def _fred_sd_frequency_report(raw_result) -> dict[str, object] | None:
+    return _fred_sd_frequency_report_from_metadata(_fred_sd_series_metadata_report(raw_result))
+
+
+def _fred_sd_frequency_report_summary(report: Mapping[str, object] | None) -> dict[str, object] | None:
+    if not isinstance(report, Mapping):
+        return None
+    return {
+        "schema_version": report.get("schema_version"),
+        "contract_version": report.get("contract_version"),
+        "series_count": report.get("series_count"),
+        "native_frequency_counts": dict(report.get("native_frequency_counts", {}) or {}),
+        "frequency_status": report.get("frequency_status"),
+        "has_monthly_quarterly_mix": report.get("has_monthly_quarterly_mix"),
+        "requires_mixed_frequency_decision": report.get("requires_mixed_frequency_decision"),
+    }
+
+
+def _attach_fred_sd_frequency_report(raw_result):
+    report = _fred_sd_frequency_report(raw_result)
+    data = getattr(raw_result, "data", None)
+    if report is None or not isinstance(data, pd.DataFrame):
+        return raw_result
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    _append_frame_report(frame, "fred_sd_frequency_report", report)
+    return _raw_result_with(raw_result, data=frame)
+
+
 def _fred_tcode_transform(series: pd.Series, code: int) -> pd.Series:
     s = series.astype(float)
     if code == 1:
@@ -9044,6 +9158,7 @@ def execute_recipe(
     raw_result = _apply_release_lag(raw_result, _release_lag, spec=dict(recipe.data_task_spec))
     raw_result = _apply_missing_availability(raw_result, _missing_avail, target=str(recipe.target) if getattr(recipe, 'target', None) else None, spec=dict(recipe.data_task_spec))
     raw_result = _apply_variable_universe(raw_result, _var_universe, spec=dict(recipe.data_task_spec), target=str(recipe.target) if getattr(recipe, 'target', None) else None)
+    raw_result = _attach_fred_sd_frequency_report(raw_result)
     layer1_official_frame_contract = _layer1_official_frame_contract(raw_result, recipe, preprocess)
     targets = _recipe_targets(recipe)
     prediction_frames = []
@@ -9147,6 +9262,8 @@ def execute_recipe(
 
     fred_sd_series_metadata_report = _fred_sd_series_metadata_report(raw_result)
     fred_sd_series_metadata_summary = _fred_sd_series_metadata_summary(fred_sd_series_metadata_report)
+    fred_sd_frequency_report = _fred_sd_frequency_report(raw_result)
+    fred_sd_frequency_report_summary = _fred_sd_frequency_report_summary(fred_sd_frequency_report)
     manifest = {
         "recipe_id": recipe.recipe_id,
         "run_id": run.run_id,
@@ -9182,6 +9299,11 @@ def execute_recipe(
         ),
         "fred_sd_series_metadata_file": None,
         "fred_sd_series_metadata_summary": fred_sd_series_metadata_summary,
+        "fred_sd_frequency_report_contract": (
+            None if fred_sd_frequency_report is None else fred_sd_frequency_report.get("contract_version")
+        ),
+        "fred_sd_frequency_report_file": None,
+        "fred_sd_frequency_report_summary": fred_sd_frequency_report_summary,
         "execution_architecture": _EXECUTION_ARCHITECTURE,
         "forecast_engine": _model_spec(recipe)["executor_name"],
         "model_spec": _model_spec(recipe),
@@ -9295,6 +9417,16 @@ def execute_recipe(
             file_format="json",
         )
         manifest["fred_sd_series_metadata_file"] = "fred_sd_series_metadata.json"
+
+    if fred_sd_frequency_report is not None:
+        _write_json(run_dir / "fred_sd_frequency_report.json", fred_sd_frequency_report)
+        _record_artifact(
+            "fred_sd_frequency_report.json",
+            artifact_type="fred_sd_frequency_report",
+            layer="1_data_task",
+            file_format="json",
+        )
+        manifest["fred_sd_frequency_report_file"] = "fred_sd_frequency_report.json"
 
     # Provenance injection based on provenance_fields level
     if provenance_fields in ('standard', 'full'):
