@@ -87,6 +87,7 @@ from .types import (
     FORECAST_PAYLOAD_CONTRACT_VERSION,
     INTERVAL_FORECAST_PAYLOAD_CONTRACT_VERSION,
     LAYER2_REPRESENTATION_CONTRACT_VERSION,
+    PREDICTION_ROW_SCHEMA_VERSION,
     DensityForecastPayload,
     DirectionForecastPayload,
     ExecutionResult,
@@ -1857,6 +1858,143 @@ def _payload_artifact_records(predictions: pd.DataFrame) -> list[dict[str, objec
     ]
     cols = [col for col in base_cols + payload_cols if col in predictions.columns]
     return predictions[cols].to_dict(orient="records")
+
+
+_PREDICTION_ROW_REQUIRED_COLUMNS = (
+    "target",
+    "model_name",
+    "benchmark_name",
+    "horizon",
+    "origin_date",
+    "target_date",
+    "fit_origin_date",
+    "selected_lag",
+    "selected_bic",
+    "train_start_date",
+    "train_end_date",
+    "training_window_size",
+    "y_true",
+    "y_pred",
+    "benchmark_pred",
+    "y_true_model_scale",
+    "y_pred_model_scale",
+    "benchmark_pred_model_scale",
+    "y_true_transformed_scale",
+    "y_pred_transformed_scale",
+    "benchmark_pred_transformed_scale",
+    "y_true_original_scale",
+    "y_pred_original_scale",
+    "benchmark_pred_original_scale",
+    "target_transformer",
+    "target_normalization",
+    "target_normalization_fit_scope",
+    "target_normalization_params",
+    "model_target_scale",
+    "forecast_scale",
+    "evaluation_scale",
+    "target_construction_scale",
+    "error",
+    "abs_error",
+    "squared_error",
+    "benchmark_error",
+    "benchmark_abs_error",
+    "benchmark_squared_error",
+    "model_scale_error",
+    "model_scale_benchmark_error",
+    "transformed_scale_error",
+    "transformed_scale_benchmark_error",
+    "transformed_scale_squared_error",
+    "transformed_scale_benchmark_squared_error",
+    "original_scale_error",
+    "original_scale_benchmark_error",
+    "original_scale_squared_error",
+    "original_scale_benchmark_squared_error",
+    "horizon_target_construction",
+    "y_true_level",
+    "y_pred_level",
+    "benchmark_pred_level",
+    "forecast_object",
+    "payload_family",
+    "forecast_payload_contract",
+)
+
+_PREDICTION_ROW_OPTIONAL_GROUPS = {
+    "direction": (
+        "direction_threshold",
+        "direction_true",
+        "direction_pred",
+        "benchmark_direction_pred",
+        "direction_up_probability",
+        "benchmark_direction_up_probability",
+        "direction_hit",
+        "benchmark_direction_hit",
+    ),
+    "interval": (
+        "interval_method",
+        "interval_coverage",
+        "interval_sigma",
+        "interval_lower",
+        "interval_upper",
+        "benchmark_interval_lower",
+        "benchmark_interval_upper",
+        "interval_width",
+        "benchmark_interval_width",
+        "benchmark_interval_covered",
+        "interval_covered",
+    ),
+    "density": (
+        "density_distribution",
+        "density_mean",
+        "density_variance",
+        "density_std",
+        "benchmark_density_mean",
+        "benchmark_density_variance",
+        "density_log_score",
+        "benchmark_density_log_score",
+    ),
+    "path_average": (
+        "path_average_runtime",
+        "path_average_step_count",
+        "path_average_aggregation_rule",
+    ),
+    "raw_panel_iterated": (
+        "raw_panel_iterated_payload_contract",
+        "raw_panel_iterated_runtime",
+        "raw_panel_iterated_step_count",
+        "raw_panel_iterated_x_path_policy",
+        "raw_panel_iterated_step_predictions",
+        "raw_panel_iterated_final_step_prediction",
+        "raw_panel_iterated_model_target_scale",
+        "raw_panel_iterated_forecast_scale",
+        "raw_panel_iterated_evaluation_scale",
+        "raw_panel_iterated_target_transform_policy",
+        "raw_panel_iterated_target_normalization",
+    ),
+}
+
+
+def _prediction_row_schema(predictions: pd.DataFrame) -> dict[str, object]:
+    columns = [str(col) for col in predictions.columns]
+    missing = [col for col in _PREDICTION_ROW_REQUIRED_COLUMNS if col not in predictions.columns]
+    if missing:
+        raise ExecutionError(f"prediction row schema missing required columns: {missing}")
+    optional_groups = {
+        group: [col for col in group_columns if col in predictions.columns]
+        for group, group_columns in _PREDICTION_ROW_OPTIONAL_GROUPS.items()
+    }
+    optional_groups = {group: cols for group, cols in optional_groups.items() if cols}
+    return {
+        "schema_version": PREDICTION_ROW_SCHEMA_VERSION,
+        "contract_version": PREDICTION_ROW_SCHEMA_VERSION,
+        "row_count": int(len(predictions)),
+        "required_columns": list(_PREDICTION_ROW_REQUIRED_COLUMNS),
+        "observed_columns": columns,
+        "missing_required_columns": [],
+        "optional_column_groups": optional_groups,
+        "column_dtypes": {str(col): str(dtype) for col, dtype in predictions.dtypes.items()},
+        "payload_families": sorted(str(value) for value in predictions["payload_family"].dropna().unique()),
+        "forecast_objects": sorted(str(value) for value in predictions["forecast_object"].dropna().unique()),
+    }
 
 
 def _get_model_executor(recipe: RecipeSpec):
@@ -8495,6 +8633,7 @@ def execute_recipe(
     if not prediction_frames:
         raise ExecutionError("all target/model executions failed; no predictions available to save")
     predictions = pd.concat(prediction_frames, ignore_index=True)
+    prediction_row_schema = _prediction_row_schema(predictions)
     path_average_steps = (
         pd.concat(path_average_step_frames, ignore_index=True)
         if path_average_step_frames
@@ -8561,6 +8700,9 @@ def execute_recipe(
         "max_lag": _max_ar_lag(recipe),
         "minimum_train_size": _minimum_train_size(recipe),
         "prediction_rows": int(len(predictions)),
+        "prediction_row_schema_contract": PREDICTION_ROW_SCHEMA_VERSION,
+        "prediction_row_schema_file": None,
+        "prediction_columns": list(prediction_row_schema["observed_columns"]),
         "path_average_step_rows": int(len(path_average_steps)) if path_average_steps is not None else 0,
         "raw_panel_iterated_step_rows": int(len(raw_panel_iterated_steps)) if raw_panel_iterated_steps is not None else 0,
         "metrics_file": None,
@@ -8653,6 +8795,14 @@ def execute_recipe(
     if write_predictions:
         predictions.to_csv(run_dir / 'predictions.csv', index=False)
         _record_artifact("predictions.csv", artifact_type="predictions", layer="5_output_provenance", file_format="csv")
+        _write_json(run_dir / "prediction_row_schema.json", prediction_row_schema)
+        _record_artifact(
+            "prediction_row_schema.json",
+            artifact_type="prediction_row_schema",
+            layer="5_output_provenance",
+            file_format="json",
+        )
+        manifest["prediction_row_schema_file"] = "prediction_row_schema.json"
     if write_predictions and export_format in ('parquet', 'all'):
         predictions.to_parquet(run_dir / 'predictions.parquet')
         _record_artifact(

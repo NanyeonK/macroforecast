@@ -21,6 +21,7 @@ from macrocast import (
     ForecastPayload,
     LAYER2_REPRESENTATION_CONTRACT_VERSION,
     Layer2Representation,
+    PREDICTION_ROW_SCHEMA_VERSION,
 )
 from macrocast.preprocessing import FeatureBlockCallableResult, FeatureCombinerCallableResult
 import macrocast.execution.build as execution_build
@@ -194,6 +195,36 @@ def test_execute_recipe_records_layer2_representation_contract(tmp_path: Path) -
     assert tuning_result["layer2_representation_contract"] == LAYER2_REPRESENTATION_CONTRACT_VERSION
 
 
+def test_execute_recipe_records_prediction_row_schema_contract(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    schema = json.loads((run_dir / "prediction_row_schema.json").read_text())
+    artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
+    predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
+
+    assert manifest["prediction_row_schema_contract"] == PREDICTION_ROW_SCHEMA_VERSION
+    assert manifest["prediction_row_schema_file"] == "prediction_row_schema.json"
+    assert schema["schema_version"] == PREDICTION_ROW_SCHEMA_VERSION
+    assert schema["row_count"] == manifest["prediction_rows"] == len(predictions)
+    assert schema["observed_columns"] == list(predictions.columns)
+    assert set(schema["required_columns"]).issubset(schema["observed_columns"])
+    assert schema["missing_required_columns"] == []
+    assert schema["payload_families"] == ["point"]
+    assert "prediction_row_schema.json" in {
+        item["path"] for item in artifact_manifest["artifacts"] if item["artifact_type"] == "prediction_row_schema"
+    }
+
+
 def test_forecast_payload_contract_coerces_executor_mapping() -> None:
     payload = _coerce_forecast_payload(
         {
@@ -299,6 +330,7 @@ def test_execute_recipe_runs_raw_panel_iterated_hold_last_observed(tmp_path: Pat
 
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
+    schema = json.loads((run_dir / "prediction_row_schema.json").read_text())
     predictions = __import__("pandas").read_csv(run_dir / "predictions.csv")
     steps = __import__("pandas").read_csv(run_dir / "raw_panel_iterated_steps.csv")
     payloads = (run_dir / "forecast_payloads.jsonl").read_text().strip().splitlines()
@@ -306,6 +338,8 @@ def test_execute_recipe_runs_raw_panel_iterated_hold_last_observed(tmp_path: Pat
     assert manifest["forecast_type"] == "iterated"
     assert manifest["forecast_payload_contract"] == "multi_step_raw_panel_payload_v1"
     assert manifest["forecast_payload_family"] == "raw_panel_iterated"
+    assert schema["payload_families"] == ["raw_panel_iterated"]
+    assert "raw_panel_iterated" in schema["optional_column_groups"]
     assert manifest["raw_panel_iterated_steps_file"] == "raw_panel_iterated_steps.csv"
     assert manifest["raw_panel_iterated_runtime_contract"] == "raw_panel_iterated_hold_last_observed_v1"
     assert manifest["exogenous_x_path_policy"] == "hold_last_observed"

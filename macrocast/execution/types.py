@@ -31,6 +31,7 @@ DIRECTION_FORECAST_PAYLOAD_CONTRACT_VERSION = "direction_forecast_payload_v1"
 INTERVAL_FORECAST_PAYLOAD_CONTRACT_VERSION = "interval_forecast_payload_v1"
 DENSITY_FORECAST_PAYLOAD_CONTRACT_VERSION = "density_forecast_payload_v1"
 LAYER2_REPRESENTATION_CONTRACT_VERSION = "layer2_representation_v1"
+PREDICTION_ROW_SCHEMA_VERSION = "prediction_row_schema_v1"
 LAYER2_REPRESENTATION_REQUIRED_FIELDS = (
     "Z_train",
     "y_train",

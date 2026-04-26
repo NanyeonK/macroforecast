@@ -76,10 +76,8 @@ values that the Navigator can freely enable without companion choices.
 
 ## Next Runtime Queue
 
-1. Define/version the `prediction_row_schema_v1` projection if payload
-   families continue expanding.
-2. Make the Layer 1 official frame handoff explicit before deeper
+1. Make the Layer 1 official frame handoff explicit before deeper
    vintage/release-lag or mixed-source work.
-3. Keep generated Navigator UI data checked after each registry/status change.
-4. Defer deeper browser affordances until the package/runtime surface has no
+2. Keep generated Navigator UI data checked after each registry/status change.
+3. Defer deeper browser affordances until the package/runtime surface has no
    known registry-versus-runtime drift.

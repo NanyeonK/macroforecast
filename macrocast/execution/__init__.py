@@ -9,6 +9,7 @@ from .types import (
     ForecastPayload,
     IntervalForecastPayload,
     LAYER2_REPRESENTATION_CONTRACT_VERSION,
+    PREDICTION_ROW_SCHEMA_VERSION,
     Layer2Representation,
 )
 
@@ -24,6 +25,7 @@ __all__ = [
     "DensityForecastPayload",
     "Layer2Representation",
     "LAYER2_REPRESENTATION_CONTRACT_VERSION",
+    "PREDICTION_ROW_SCHEMA_VERSION",
     "SweepResult",
     "VariantResult",
     "execute_sweep",

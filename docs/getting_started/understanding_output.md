@@ -9,6 +9,7 @@ runs/
   {recipe_id}__{target}__h{horizons}/
     manifest.json               # Full provenance record
     predictions.csv             # OOS prediction table
+    prediction_row_schema.json   # Versioned predictions.csv column contract
     metrics.json                # Per-horizon evaluation metrics
     comparison_summary.json     # Model vs benchmark summary
     evaluation_summary.json     # Layer 4 evaluation contract summary
@@ -39,6 +40,11 @@ The core output table. Each row is one (forecast origin, target date, horizon) t
 | `squared_error` | error^2 |
 | `benchmark_error` | y_true - benchmark_pred |
 | `training_window_size` | Number of observations in training window |
+
+`prediction_row_schema.json` records `prediction_row_schema_v1`: required
+base columns, observed columns, optional payload column groups, dtypes, payload
+families, and forecast objects. Treat it as the stable contract for consumers
+that parse `predictions.csv`.
 
 ## metrics.json
 

@@ -71,6 +71,12 @@ tuning, statistical-test, and importance artifacts when available.
       "artifact_type": "predictions",
       "layer": "5_output_provenance",
       "format": "csv"
+    },
+    {
+      "path": "prediction_row_schema.json",
+      "artifact_type": "prediction_row_schema",
+      "layer": "5_output_provenance",
+      "format": "json"
     }
   ]
 }
@@ -78,7 +84,9 @@ tuning, statistical-test, and importance artifacts when available.
 
 The manifest records `artifact_manifest_file`, `output_artifact_contract`,
 `saved_objects_effective`, `artifact_granularity_effective`, and
-`artifact_count`.
+`artifact_count`. `prediction_row_schema.json` uses
+`prediction_row_schema_v1` and is the versioned column contract for
+`predictions.csv`.
 
 This page should continue expanding:
 
