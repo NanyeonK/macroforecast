@@ -86,6 +86,7 @@ from .types import (
     DIRECTION_FORECAST_PAYLOAD_CONTRACT_VERSION,
     FORECAST_PAYLOAD_CONTRACT_VERSION,
     INTERVAL_FORECAST_PAYLOAD_CONTRACT_VERSION,
+    LAYER2_REPRESENTATION_CONTRACT_VERSION,
     DensityForecastPayload,
     DirectionForecastPayload,
     ExecutionResult,
@@ -4600,6 +4601,8 @@ def _as_scalar_prediction(value, *, model_name: str) -> float:
 
 def _layer2_representation_tuning_payload(representation: Layer2Representation) -> dict[str, object]:
     payload: dict[str, object] = {
+        "layer2_representation_contract": representation.contract_version,
+        "layer2_representation_contract_metadata": representation.contract_metadata(),
         "feature_runtime_builder": representation.feature_runtime_builder,
         "legacy_feature_builder": representation.legacy_feature_builder,
         "feature_dispatch_source": representation.feature_dispatch_source,
@@ -8541,6 +8544,7 @@ def execute_recipe(
         "benchmark_spec": _benchmark_spec(recipe),
         "data_task_spec": dict(recipe.data_task_spec),
         "layer2_representation_spec": dict(getattr(recipe, "layer2_representation_spec", {}) or {}),
+        "layer2_representation_contract": LAYER2_REPRESENTATION_CONTRACT_VERSION,
         "data_warnings": _data_warnings(raw_result),
         "data_reports": _data_reports(raw_result),
         "training_spec": dict(recipe.training_spec),
@@ -8594,6 +8598,16 @@ def execute_recipe(
     )
     if forecast_payload_contract:
         manifest["base_forecast_payload_contract"] = forecast_payload_contract
+    layer2_representation_contract = (
+        _last_tp.get("layer2_representation_contract") if isinstance(_last_tp, dict) else None
+    )
+    layer2_representation_contract_metadata = (
+        _last_tp.get("layer2_representation_contract_metadata") if isinstance(_last_tp, dict) else None
+    )
+    if layer2_representation_contract:
+        manifest["layer2_representation_contract"] = layer2_representation_contract
+    if layer2_representation_contract_metadata:
+        manifest["layer2_representation_contract_metadata"] = layer2_representation_contract_metadata
     if feature_fit_state and write_full_bundle:
         _write_json(run_dir / "feature_representation_fit_state.json", feature_fit_state)
         _record_artifact(
@@ -8884,6 +8898,10 @@ def execute_recipe(
             "total_trials": _last_tp.get("total_trials", 0),
             "total_time_seconds": _last_tp.get("total_time_seconds", 0.0),
             "search_algorithm": _last_tp.get("search_algorithm", "none"),
+            "layer2_representation_contract": _last_tp.get(
+                "layer2_representation_contract",
+                LAYER2_REPRESENTATION_CONTRACT_VERSION,
+            ),
         }
         _write_json(run_dir / "tuning_result.json", tuning_result)
         _record_artifact("tuning_result.json", artifact_type="tuning_result", layer="3_training", file_format="json")

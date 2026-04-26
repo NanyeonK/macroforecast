@@ -69,6 +69,12 @@ representation handoff contract with:
 - train-window fit state;
 - alignment and leakage metadata.
 
+The public tabular handoff contract is `layer2_representation_v1`, exported as
+`LAYER2_REPRESENTATION_CONTRACT_VERSION` with the `Layer2Representation`
+dataclass. Execution manifests and Layer 3 tuning payloads record the contract
+version and runtime contract metadata so downstream consumers can verify which
+handoff shape produced a forecast.
+
 If runtime code still branches on legacy `feature_builder` families after this
 handoff point, that is compatibility debt. The ownership is still Layer 2: the
 builder path must be normalized before Layer 3 estimator code runs.
