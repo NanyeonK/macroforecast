@@ -57,6 +57,7 @@ _TREE_AXES = {
         "official_transform_scope",
     ),
     "2_preprocessing": (
+        "fred_sd_mixed_frequency_representation",
         "horizon_target_construction",
         "tcode_policy",
         "x_missing_policy",
@@ -158,6 +159,7 @@ _DEFAULT_SELECTIONS = {
     "fred_sd_frequency_policy": "report_only",
     "fred_sd_state_group": "all_states",
     "fred_sd_variable_group": "all_sd_variables",
+    "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
     "primary_metric": "msfe",
@@ -499,6 +501,12 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         return "fred_sd_state_group requires dataset to include fred_sd"
     if axis_name == "fred_sd_variable_group" and value != "all_sd_variables" and not _selection_has_fred_sd(selected):
         return "fred_sd_variable_group requires dataset to include fred_sd"
+    if (
+        axis_name == "fred_sd_mixed_frequency_representation"
+        and value != "calendar_aligned_frame"
+        and not _selection_has_fred_sd(selected)
+    ):
+        return "fred_sd_mixed_frequency_representation requires dataset to include fred_sd"
 
     if axis_name == "feature_builder":
         if model in _DEEP_SEQUENCE_MODELS:

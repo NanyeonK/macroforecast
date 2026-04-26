@@ -49,7 +49,7 @@ Layer 2 owns four types of decisions.
 |---|---|---|
 | Frame conditioning | How are post-official-frame missing values, outliers, scaling, filters, and target transforms handled? | `x_missing_policy`, `x_outlier_policy`, `scaling_policy`, `additional_preprocessing`, `target_transform`, `target_transformer` |
 | Target representation | Which target scale or horizon target is handed to the forecast generator? | `horizon_target_construction`, `target_transform`, `target_normalization`, `target_transformer` |
-| Input panel | Which source columns and information timing feed `Z`? | `predictor_family`, `contemporaneous_x_rule` |
+| Input panel | Which source columns and information timing feed `Z`? | `predictor_family`, `contemporaneous_x_rule`, `fred_sd_mixed_frequency_representation` |
 | Feature-block construction | Which blocks are built from `H`, `X`, and target history before forecasting? | `feature_builder`, `x_lag_creation`, `dimensionality_reduction_policy`, `feature_selection_policy` |
 | Block composition | Which blocks are included in `Z`, and how are they concatenated or substituted? | `data_richness_mode`, `feature_grouping`, deterministic feature blocks |
 | Representation dimensions and leakage discipline | How many factors/lags/features are used, and where are transforms fit? | `factor_count`, `preprocess_fit_scope`, `separation_rule` |
@@ -104,6 +104,34 @@ silently lowering them to a different representation.
 | `rotation_feature_block` | `none`, `marx_rotation`, `maf_rotation`, `moving_average_rotation`, `custom_rotation` | Rotated features such as moving-average rotations of `X` or factors. |
 | `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features`, `custom_temporal_features` | Local time-series features built within each training window. |
 | `feature_block_combination` | `replace_with_blocks`, `append_to_base_x`, `append_to_target_lags`, `concatenate_named_blocks`, `custom_combiner` | How selected blocks are assembled into `Z`. |
+
+## FRED-SD Mixed-Frequency Representation
+
+FRED-SD has a Layer 1 / Layer 2 split:
+
+- Layer 1 selects states and SD variables, infers each selected column's native
+  frequency, writes `fred_sd_frequency_report_v1`, and optionally gates the
+  selected panel with `fred_sd_frequency_policy`.
+- Layer 2 decides how the selected FRED-SD panel enters the representation
+  through `fred_sd_mixed_frequency_representation`.
+
+The Layer 2 axis is stored in
+`layer2_representation_spec.input_panel.fred_sd_mixed_frequency_representation`
+and writes `fred_sd_mixed_frequency_representation_v1` at runtime.
+
+| Value | Status | Meaning |
+|---|---|---|
+| `calendar_aligned_frame` | operational | Default. Keep selected FRED-SD columns on the recipe target calendar after generic frequency conversion. |
+| `drop_unknown_native_frequency` | operational | Drop FRED-SD columns whose inferred native frequency is `unknown`. |
+| `drop_non_target_native_frequency` | operational | Keep only FRED-SD columns whose inferred native frequency matches the recipe target frequency. |
+| `native_frequency_block_payload` | planned | Future separate native-frequency block payload for feature builders. |
+| `mixed_frequency_model_adapter` | planned | Future adapter path for MIDAS/state-space style models. |
+
+This is an input-panel shaping decision, not a model-family choice. Layer 3 may
+later consume native-frequency blocks through compatible models, but the
+decision to preserve, drop, or split the selected FRED-SD panel belongs here.
+The current runtime blocks any representation that would silently drop a
+FRED-SD target column.
 
 Operational support is currently narrow:
 

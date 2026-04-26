@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 145
+EXPECTED_AXIS_COUNT = 146
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -24,6 +24,7 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "fred_sd_frequency_policy",
         "fred_sd_state_group",
         "fred_sd_variable_group",
+        "fred_sd_mixed_frequency_representation",
         "relative_metrics",
         "direction_metrics",
         "regime_definition",

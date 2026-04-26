@@ -1154,6 +1154,28 @@
       "incompatible_with": {},
       "layer": "1_data_task"
     },
+    "fred_sd_mixed_frequency_representation": {
+      "allowed_values": [
+        "calendar_aligned_frame",
+        "drop_unknown_native_frequency",
+        "drop_non_target_native_frequency",
+        "native_frequency_block_payload",
+        "mixed_frequency_model_adapter"
+      ],
+      "axis_name": "fred_sd_mixed_frequency_representation",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "calendar_aligned_frame": "operational",
+        "drop_non_target_native_frequency": "operational",
+        "drop_unknown_native_frequency": "operational",
+        "mixed_frequency_model_adapter": "planned",
+        "native_frequency_block_payload": "planned"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "2_preprocessing"
+    },
     "fred_sd_state_group": {
       "allowed_values": [
         "all_states",
@@ -3848,6 +3870,7 @@
             "forecast_type": "direct",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
             "fred_sd_state_group": "all_states",
             "fred_sd_variable_group": "all_sd_variables",
             "horizons": [
@@ -5223,6 +5246,49 @@
               }
             ],
             "selected": null
+          },
+          {
+            "axis": "fred_sd_mixed_frequency_representation",
+            "layer": "2_preprocessing",
+            "layer_label": "Layer 2: representation construction",
+            "options": [
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'calendar_aligned_frame'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "calendar_aligned_frame"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_unknown_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_unknown_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_non_target_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_non_target_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'native_frequency_block_payload'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "native_frequency_block_payload"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'mixed_frequency_model_adapter'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "mixed_frequency_model_adapter"
+              }
+            ],
+            "selected": "calendar_aligned_frame"
           },
           {
             "axis": "horizon_target_construction",
@@ -9452,6 +9518,7 @@
             "forecast_type": "iterated",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
             "fred_sd_state_group": "all_states",
             "fred_sd_variable_group": "all_sd_variables",
             "horizons": [
@@ -10842,6 +10909,49 @@
               }
             ],
             "selected": null
+          },
+          {
+            "axis": "fred_sd_mixed_frequency_representation",
+            "layer": "2_preprocessing",
+            "layer_label": "Layer 2: representation construction",
+            "options": [
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'calendar_aligned_frame'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "calendar_aligned_frame"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_unknown_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_unknown_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_non_target_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_non_target_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'native_frequency_block_payload'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "native_frequency_block_payload"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'mixed_frequency_model_adapter'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "mixed_frequency_model_adapter"
+              }
+            ],
+            "selected": "calendar_aligned_frame"
           },
           {
             "axis": "horizon_target_construction",
@@ -15122,6 +15232,7 @@
             "forecast_type": "direct",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
             "fred_sd_state_group": "all_states",
             "fred_sd_variable_group": "all_sd_variables",
             "frequency": "monthly",
@@ -16577,6 +16688,49 @@
               }
             ],
             "selected": "apply_tcode_to_both"
+          },
+          {
+            "axis": "fred_sd_mixed_frequency_representation",
+            "layer": "2_preprocessing",
+            "layer_label": "Layer 2: representation construction",
+            "options": [
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'calendar_aligned_frame'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "calendar_aligned_frame"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_unknown_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_unknown_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'drop_non_target_native_frequency'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "drop_non_target_native_frequency"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'native_frequency_block_payload'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "native_frequency_block_payload"
+              },
+              {
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.fred_sd_mixed_frequency_representation = 'mixed_frequency_model_adapter'",
+                "disabled_reason": "fred_sd_mixed_frequency_representation requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "planned",
+                "value": "mixed_frequency_model_adapter"
+              }
+            ],
+            "selected": "calendar_aligned_frame"
           },
           {
             "axis": "horizon_target_construction",
@@ -20607,6 +20761,7 @@
       "forecast_object": "point_mean",
       "forecast_type": "direct",
       "fred_sd_frequency_policy": "report_only",
+      "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
       "fred_sd_state_group": "all_states",
       "fred_sd_variable_group": "all_sd_variables",
       "importance_aggregation": "mean_abs",
@@ -20925,6 +21080,7 @@
       "official_transform_scope"
     ],
     "2_preprocessing": [
+      "fred_sd_mixed_frequency_representation",
       "horizon_target_construction",
       "tcode_policy",
       "x_missing_policy",

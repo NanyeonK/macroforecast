@@ -7,6 +7,7 @@ from typing import Any, Iterable
 DEFAULT_PROFILE_NAME = "macrocast-default-v1"
 
 DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
+    "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
     "target_missing_policy": "none",
     "x_missing_policy": "none",
     "target_outlier_policy": "none",

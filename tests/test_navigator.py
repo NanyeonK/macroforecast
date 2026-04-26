@@ -119,7 +119,8 @@ console.log(JSON.stringify({
     equal_dm: option("equal_predictive", "dm"),
     equal_dm_hln: option("equal_predictive", "dm_hln"),
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
-    sd_variable_labor: option("fred_sd_variable_group", "labor_market_core")
+    sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
+    sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency")
   },
   selected_disabled: E.selectedDisabledReasons(data, state),
   recipe_id: imported.recipe_id,
@@ -385,7 +386,11 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     assert js["options"]["sd_variable_labor"]["enabled"] == _option(
         _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
     )["enabled"]
+    assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"
+    )["enabled"]
     assert "fred_sd" in js["options"]["sd_state_west"]["disabled_reason"]
+    assert "fred_sd" in js["options"]["sd_mixed_drop_non_target"]["disabled_reason"]
 
     fred_sd_recipe = _recipe()
     fred_sd_recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_md+fred_sd"
@@ -397,4 +402,7 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     )["enabled"]
     assert js["options"]["sd_variable_labor"]["enabled"] == _option(
         _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
+    )["enabled"]
+    assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"
     )["enabled"]

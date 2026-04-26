@@ -315,11 +315,17 @@ def _fred_sd_series_metadata_summary(report: Mapping[str, object] | None) -> dic
 
 _FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION = "fred_sd_frequency_report_v1"
 _FRED_SD_FREQUENCY_POLICY_REPORT_CONTRACT_VERSION = "fred_sd_frequency_policy_v1"
+_FRED_SD_MIXED_FREQUENCY_REPRESENTATION_CONTRACT_VERSION = "fred_sd_mixed_frequency_representation_v1"
 _FRED_SD_FREQUENCY_POLICIES = {
     "report_only",
     "allow_mixed_frequency",
     "reject_mixed_known_frequency",
     "require_single_known_frequency",
+}
+_FRED_SD_MIXED_FREQUENCY_REPRESENTATIONS = {
+    "calendar_aligned_frame",
+    "drop_unknown_native_frequency",
+    "drop_non_target_native_frequency",
 }
 
 
@@ -421,6 +427,154 @@ def _fred_sd_frequency_report_summary(report: Mapping[str, object] | None) -> di
         "has_monthly_quarterly_mix": report.get("has_monthly_quarterly_mix"),
         "requires_mixed_frequency_decision": report.get("requires_mixed_frequency_decision"),
     }
+
+
+def _fred_sd_native_frequency_by_column(metadata_report: Mapping[str, object] | None) -> dict[str, str]:
+    if not isinstance(metadata_report, Mapping):
+        return {}
+    raw_series = metadata_report.get("series", [])
+    if not isinstance(raw_series, Sequence):
+        return {}
+    by_column: dict[str, str] = {}
+    for row in raw_series:
+        if not isinstance(row, Mapping):
+            continue
+        column = row.get("column")
+        if column is None:
+            continue
+        by_column[str(column)] = str(row.get("native_frequency") or "unknown")
+    return by_column
+
+
+def _normalized_frequency_name(value: object) -> str:
+    frequency = str(value or "unknown")
+    if frequency == "state_monthly":
+        return "monthly"
+    return frequency
+
+
+def _fred_sd_mixed_frequency_representation_policy(recipe: RecipeSpec) -> str:
+    input_panel = _layer2_input_panel(recipe)
+    return str(
+        input_panel.get(
+            "fred_sd_mixed_frequency_representation",
+            "calendar_aligned_frame",
+        )
+    )
+
+
+def _fred_sd_mixed_frequency_representation_summary(
+    report: Mapping[str, object] | None,
+) -> dict[str, object] | None:
+    if not isinstance(report, Mapping):
+        return None
+    return {
+        "schema_version": report.get("schema_version"),
+        "contract_version": report.get("contract_version"),
+        "policy": report.get("policy"),
+        "target_frequency": report.get("target_frequency"),
+        "kept_fred_sd_column_count": report.get("kept_fred_sd_column_count"),
+        "dropped_fred_sd_column_count": report.get("dropped_fred_sd_column_count"),
+        "dropped_by_native_frequency": dict(report.get("dropped_by_native_frequency", {}) or {}),
+    }
+
+
+def _apply_fred_sd_mixed_frequency_representation(raw_result, recipe: RecipeSpec, *, policy: str | None = None):
+    policy = str(policy or _fred_sd_mixed_frequency_representation_policy(recipe))
+    if policy not in _FRED_SD_MIXED_FREQUENCY_REPRESENTATIONS:
+        raise ExecutionError(
+            f"fred_sd_mixed_frequency_representation={policy!r} is not executable in this runtime slice"
+        )
+    if not _dataset_has_fred_sd(recipe.raw_dataset):
+        if policy == "calendar_aligned_frame":
+            return raw_result
+        raise ExecutionError(
+            f"fred_sd_mixed_frequency_representation={policy!r} requires raw_dataset to include fred_sd"
+        )
+
+    data = getattr(raw_result, "data", None)
+    if not isinstance(data, pd.DataFrame):
+        return raw_result
+
+    metadata_report = _fred_sd_series_metadata_report(raw_result)
+    native_by_column = _fred_sd_native_frequency_by_column(metadata_report)
+    if not native_by_column and policy != "calendar_aligned_frame":
+        raise ExecutionError(
+            f"fred_sd_mixed_frequency_representation={policy!r} requires fred_sd_series_metadata_v1 "
+            "to be present in data reports"
+        )
+
+    frame = data.copy()
+    frame.attrs.update(getattr(data, "attrs", {}))
+    target_frequency = _normalized_frequency_name(
+        recipe.data_task_spec.get("frequency")
+        or getattr(raw_result.dataset_metadata, "frequency", "monthly")
+    )
+    present_fred_sd_columns = [column for column in frame.columns if str(column) in native_by_column]
+    drop_columns: list[object] = []
+    drop_reasons: dict[str, str] = {}
+    dropped_by_native_frequency: dict[str, int] = {}
+
+    for column in present_fred_sd_columns:
+        native_frequency = _normalized_frequency_name(native_by_column.get(str(column), "unknown"))
+        reason = None
+        if policy == "drop_unknown_native_frequency" and native_frequency == "unknown":
+            reason = "unknown_native_frequency"
+        elif policy == "drop_non_target_native_frequency" and native_frequency != target_frequency:
+            reason = "native_frequency_mismatch"
+        if reason is None:
+            continue
+        drop_columns.append(column)
+        drop_reasons[str(column)] = reason
+        dropped_by_native_frequency[native_frequency] = dropped_by_native_frequency.get(native_frequency, 0) + 1
+
+    recipe_targets = set(_recipe_targets(recipe))
+    dropped_targets = sorted(str(column) for column in drop_columns if str(column) in recipe_targets)
+    if dropped_targets:
+        raise ExecutionError(
+            f"fred_sd_mixed_frequency_representation={policy!r} would drop target columns {dropped_targets}"
+        )
+
+    if drop_columns:
+        frame = frame.drop(columns=drop_columns)
+        frame.attrs.update(getattr(data, "attrs", {}))
+
+    kept_fred_sd_columns = [str(column) for column in present_fred_sd_columns if str(column) in frame.columns]
+    non_fred_sd_column_count = int(len(frame.columns) - len(kept_fred_sd_columns))
+    if present_fred_sd_columns and not kept_fred_sd_columns and non_fred_sd_column_count == 0:
+        raise ExecutionError(
+            f"fred_sd_mixed_frequency_representation={policy!r} dropped all available FRED-SD columns"
+        )
+
+    _append_frame_report(
+        frame,
+        "fred_sd_mixed_frequency_representation",
+        {
+            "schema_version": _FRED_SD_MIXED_FREQUENCY_REPRESENTATION_CONTRACT_VERSION,
+            "contract_version": _FRED_SD_MIXED_FREQUENCY_REPRESENTATION_CONTRACT_VERSION,
+            "owner_layer": "2_preprocessing",
+            "policy": policy,
+            "target_frequency": target_frequency,
+            "source_series_metadata_contract": (
+                None if metadata_report is None else metadata_report.get("contract_version")
+            ),
+            "source_frequency_report_contract": _FRED_SD_FREQUENCY_REPORT_CONTRACT_VERSION,
+            "selected_fred_sd_column_count": int(len(present_fred_sd_columns)),
+            "kept_fred_sd_column_count": int(len(kept_fred_sd_columns)),
+            "dropped_fred_sd_column_count": int(len(drop_columns)),
+            "kept_fred_sd_columns": kept_fred_sd_columns,
+            "dropped_fred_sd_columns": [str(column) for column in drop_columns],
+            "drop_reasons": drop_reasons,
+            "dropped_by_native_frequency": dict(sorted(dropped_by_native_frequency.items())),
+            "non_fred_sd_column_count": non_fred_sd_column_count,
+        },
+    )
+    transform_codes = {
+        str(column): code
+        for column, code in dict(getattr(raw_result, "transform_codes", {}) or {}).items()
+        if str(column) not in {str(dropped) for dropped in drop_columns}
+    }
+    return _raw_result_with(raw_result, data=frame, transform_codes=transform_codes)
 
 
 def _attach_fred_sd_frequency_report(raw_result):
@@ -9217,6 +9371,7 @@ def execute_recipe(
     _fred_sd_frequency_policy = _data_task_axis(recipe, "fred_sd_frequency_policy")
     raw_result = _apply_fred_sd_frequency_policy(raw_result, recipe, policy=_fred_sd_frequency_policy)
     raw_result = _apply_frequency_policy(raw_result, recipe)
+    raw_result = _apply_fred_sd_mixed_frequency_representation(raw_result, recipe)
     raw_result = _apply_sd_inferred_tcodes(raw_result, recipe)
     _raw_missing_policy = _data_task_axis(recipe, "raw_missing_policy")
     _raw_outlier_policy = _data_task_axis(recipe, "raw_outlier_policy")
@@ -9339,6 +9494,14 @@ def execute_recipe(
     fred_sd_series_metadata_summary = _fred_sd_series_metadata_summary(fred_sd_series_metadata_report)
     fred_sd_frequency_report = _fred_sd_frequency_report(raw_result)
     fred_sd_frequency_report_summary = _fred_sd_frequency_report_summary(fred_sd_frequency_report)
+    fred_sd_mixed_frequency_representation_report = _data_reports(raw_result).get(
+        "fred_sd_mixed_frequency_representation"
+    )
+    fred_sd_mixed_frequency_representation_summary = _fred_sd_mixed_frequency_representation_summary(
+        fred_sd_mixed_frequency_representation_report
+        if isinstance(fred_sd_mixed_frequency_representation_report, Mapping)
+        else None
+    )
     manifest = {
         "recipe_id": recipe.recipe_id,
         "run_id": run.run_id,
@@ -9379,6 +9542,13 @@ def execute_recipe(
         ),
         "fred_sd_frequency_report_file": None,
         "fred_sd_frequency_report_summary": fred_sd_frequency_report_summary,
+        "fred_sd_mixed_frequency_representation_contract": (
+            None
+            if fred_sd_mixed_frequency_representation_summary is None
+            else fred_sd_mixed_frequency_representation_summary.get("contract_version")
+        ),
+        "fred_sd_mixed_frequency_representation_file": None,
+        "fred_sd_mixed_frequency_representation_summary": fred_sd_mixed_frequency_representation_summary,
         "execution_architecture": _EXECUTION_ARCHITECTURE,
         "forecast_engine": _model_spec(recipe)["executor_name"],
         "model_spec": _model_spec(recipe),
@@ -9502,6 +9672,19 @@ def execute_recipe(
             file_format="json",
         )
         manifest["fred_sd_frequency_report_file"] = "fred_sd_frequency_report.json"
+
+    if isinstance(fred_sd_mixed_frequency_representation_report, Mapping):
+        _write_json(
+            run_dir / "fred_sd_mixed_frequency_representation.json",
+            dict(fred_sd_mixed_frequency_representation_report),
+        )
+        _record_artifact(
+            "fred_sd_mixed_frequency_representation.json",
+            artifact_type="fred_sd_mixed_frequency_representation",
+            layer="2_preprocessing",
+            file_format="json",
+        )
+        manifest["fred_sd_mixed_frequency_representation_file"] = "fred_sd_mixed_frequency_representation.json"
 
     # Provenance injection based on provenance_fields level
     if provenance_fields in ('standard', 'full'):

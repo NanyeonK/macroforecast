@@ -241,9 +241,15 @@ The simple API remains narrower than the full contract:
   The contract records selected states, selected SD variables, source sheets,
   per-column observed windows, and inferred native-frequency counts before
   later generic post-load column filtering.
-- FRED-SD `support_tier=provisional` now points to remaining mixed-frequency
-  representation controls, not missing live/vintage ingestion, missing t-code
-  policy choices, or missing grouping recipes.
+- Layer 2 consumes this report through
+  `fred_sd_mixed_frequency_representation`. The executable Layer 2 choices are
+  `calendar_aligned_frame`, `drop_unknown_native_frequency`, and
+  `drop_non_target_native_frequency`. Layer 1 does not choose those
+  representation semantics.
+- FRED-SD `support_tier=provisional` now points to future native-frequency
+  block payload / mixed-frequency model-adapter support, not missing
+  live/vintage ingestion, missing t-code policy choices, missing grouping
+  recipes, or missing basic same-frequency filtering.
 
 Simple docs should stay short; this audit is the detailed contract source for Layer 1.
 
@@ -258,6 +264,10 @@ Simple docs should stay short; this audit is the detailed contract source for La
 - FRED-SD `fred_sd_state_group` and `fred_sd_variable_group` compile into
   `data_task_spec`, resolve to explicit source-load selectors, block
   non-FRED-SD datasets, and reject ambiguous use with explicit selector lists.
+- FRED-SD `fred_sd_mixed_frequency_representation` compiles into
+  `layer2_representation_spec.input_panel`, blocks non-FRED-SD datasets for
+  non-default values, writes `fred_sd_mixed_frequency_representation.json`, and
+  refuses to drop target columns silently.
 - FRED-SD selected component metadata writes `fred_sd_series_metadata.json`,
   registers the artifact in `artifact_manifest.json`, and records a compact
   manifest summary.

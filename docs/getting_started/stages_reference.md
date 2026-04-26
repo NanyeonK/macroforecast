@@ -123,6 +123,12 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | `_apply_release_lag`; `series_specific_lag` requires `leaf_config.release_lag_per_series: dict[str, int]` |
 | `contemporaneous_x_rule` | `allow_contemporaneous`, `forbid_contemporaneous` | affects `_build_raw_panel_training_data` X alignment (forbid: X_t paired with y_{t+h}; allow: X_{t+h} oracle benchmark) |
 
+Layer 2 FRED-SD follow-up:
+
+| Axis | Values | What it governs |
+|---|---|---|
+| `fred_sd_mixed_frequency_representation` | `calendar_aligned_frame`, `drop_unknown_native_frequency`, `drop_non_target_native_frequency`, planned `native_frequency_block_payload`, planned `mixed_frequency_model_adapter` | Post-Layer-1 FRED-SD panel shaping before representation construction; runtime writes `fred_sd_mixed_frequency_representation.json` |
+
 Moved out of Layer 1:
 
 - Layer 2: `horizon_target_construction`, `deterministic_components`, `structural_break_segmentation`

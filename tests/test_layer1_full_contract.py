@@ -267,6 +267,38 @@ def test_fred_sd_frequency_policy_compiles_into_data_task_spec() -> None:
     assert compiled.manifest["data_task_spec"]["fred_sd_frequency_policy"] == "reject_mixed_known_frequency"
 
 
+def test_fred_sd_mixed_frequency_representation_compiles_into_layer2_spec() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+        }
+    )
+    recipe["path"]["2_preprocessing"]["fixed_axes"][
+        "fred_sd_mixed_frequency_representation"
+    ] = "drop_non_target_native_frequency"
+
+    compiled = compile_recipe_dict(recipe)
+
+    assert (
+        compiled.manifest["layer2_representation_spec"]["input_panel"][
+            "fred_sd_mixed_frequency_representation"
+        ]
+        == "drop_non_target_native_frequency"
+    )
+
+
+def test_fred_sd_mixed_frequency_representation_requires_fred_sd_dataset() -> None:
+    recipe = _recipe()
+    recipe["path"]["2_preprocessing"]["fixed_axes"][
+        "fred_sd_mixed_frequency_representation"
+    ] = "drop_unknown_native_frequency"
+
+    with pytest.raises(CompileValidationError, match="requires a FRED-SD dataset"):
+        compile_recipe_dict(recipe)
+
+
 def test_fred_sd_selection_allows_non_sd_underscore_target_names() -> None:
     recipe = _recipe()
     recipe["path"]["1_data_task"]["fixed_axes"].update(

@@ -50,14 +50,16 @@ Unlike FRED-MD (purely monthly) or FRED-QD (purely quarterly), FRED-SD **mixes**
 - **Monthly series**: labor market indicators (unemployment, payroll employment), housing starts / permits.
 - **Quarterly series**: state GDP, state personal income (only from certain BEA releases), some productivity measures.
 
-Within a single workbook, the monthly series have 12 observations per year while the quarterly series have 4. macrocast does not currently reconcile this automatically:
+Within a single workbook, the monthly series have 12 observations per year while the quarterly series have 4. macrocast now separates this into two explicit decisions:
 
-- The loader reads every sheet into a single wide DataFrame. Monthly columns have NaN at positions where quarterly columns have values (and vice versa), depending on the underlying sheet's native index.
-- Downstream handling is the user's responsibility in v1.0. Two practical patterns:
-  - Pick `variables=[...]`, or `Experiment.use_fred_sd_selection(variables=[...])`, to include only same-frequency series (pure-monthly or pure-quarterly).
-  - Let missing values propagate and use a Layer 2 preprocessing imputation (`x_missing_policy`) to fill quarterly observations into monthly gaps.
+- Layer 1 reports and optionally gates the selected native-frequency mix through
+  `fred_sd_frequency_report_v1` and `fred_sd_frequency_policy`.
+- Layer 2 chooses how the selected FRED-SD panel enters the representation
+  through `fred_sd_mixed_frequency_representation`.
 
-A **proper mixed-frequency adapter** (MIDAS-style or state-space filling) is scheduled for v1.1 / Phase 10. See 1.3 Horizon & evaluation window and the `frequency` registry entry (`mixed_frequency` is `future` status, v2 Phase 11).
+A **proper mixed-frequency model adapter** (MIDAS-style or state-space filling)
+is still future work. The current executable surface is a panel-shaping
+contract, not a mixed-frequency likelihood/model.
 
 ## Real-time vintage discipline
 
@@ -194,6 +196,43 @@ The policy runs before Layer 2 representation construction. Use the strict
 policy for same-frequency FRED-SD studies where quarterly-vs-monthly conversion
 should not be silently folded into the downstream representation.
 
+## Layer 2 mixed-frequency representation
+
+After Layer 1 has selected the FRED-SD series and written the frequency report,
+Layer 2 can shape the panel with
+`fred_sd_mixed_frequency_representation`:
+
+| Value | Runtime behavior |
+|---|---|
+| `calendar_aligned_frame` | Default. Keep the selected FRED-SD columns on the recipe target calendar after generic monthly/quarterly conversion. This preserves the current behavior and records a Layer 2 report. |
+| `drop_unknown_native_frequency` | Drop selected FRED-SD columns whose inferred native frequency is `unknown`; keep known monthly, quarterly, annual, and irregular classes. |
+| `drop_non_target_native_frequency` | Keep only selected FRED-SD columns whose inferred native frequency matches the recipe frequency (`monthly` or `quarterly`). This is the strict same-frequency representation choice. |
+| `native_frequency_block_payload` | Planned. Reserved for future separate monthly/quarterly/unknown block payloads. |
+| `mixed_frequency_model_adapter` | Planned. Reserved for future MIDAS/state-space style adapters consumed with compatible Layer 3 models. |
+
+Simple API:
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_md+fred_sd",
+        target="INDPRO",
+        start="1985-01",
+        end="2019-12",
+        horizons=[1],
+    )
+    .use_fred_sd_groups(variable_group="labor_market_core")
+    .use_fred_sd_mixed_frequency_representation("drop_non_target_native_frequency")
+)
+```
+
+Runtime writes `fred_sd_mixed_frequency_representation.json` with owner
+`2_preprocessing`, the selected policy, target frequency, kept/dropped FRED-SD
+columns, and dropped counts by native frequency. Non-FRED-SD columns in a
+composite dataset are preserved. A FRED-SD target column is never silently
+dropped; runtime raises an execution error if the selected representation would
+remove it.
+
 ## Changes from the 2020 working paper to current
 
 Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (first release late 2020):
@@ -209,20 +248,22 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 - **support_tier = "provisional"** on the returned `RawDatasetMetadata` — this now reflects remaining mixed-frequency and study-design edge cases, not lack of a live/vintage loader or t-code policy surface.
 - **Series metadata** — runtime runs that include FRED-SD write `fred_sd_series_metadata.json`, which makes the selected state/variable panel and native-frequency mix auditable.
 - **Frequency report** — runtime also writes `fred_sd_frequency_report.json`, which reduces the selected panel to a Layer 1 frequency-composition contract for downstream policy decisions.
+- **Mixed-frequency representation report** — runtime writes `fred_sd_mixed_frequency_representation.json` for FRED-SD runs; this is the Layer 2 panel-shaping contract consumed before t-code preprocessing.
 - **No T-code row** — the FRED-SD workbook does not encode stationarity codes per variable the way FRED-MD / FRED-QD do. FRED-SD transformation codes are therefore a research decision, not source metadata.
 - **T-code policy choices** — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The reviewed national-analog map is opt-in via `Experiment.use_sd_inferred_tcodes()`. The empirical variable-global map is opt-in via `Experiment.use_sd_empirical_tcodes(unit="variable_global")`. State-by-series empirical codes require an explicit column map via `Experiment.use_sd_empirical_tcodes(unit="state_series", code_map={...})`. All three record `official=false` in runtime reports.
 
 ## Known limitations in macrocast v1.0
 
-1. **Mixed frequency is still coarse** — monthly-to-quarterly and quarterly-to-monthly conversion are available and reported, but MIDAS/state-space mixed-frequency modeling is not implemented.
+1. **Mixed-frequency modeling is not implemented** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, and unknown-frequency filtering are available and reported, but MIDAS/state-space mixed-frequency modeling is not implemented.
 2. **State and SD-variable groups are recipe-level selectors** —
    `fred_sd_state_group` and `fred_sd_variable_group` resolve into explicit
    `sd_states` / `sd_variables` before loading. They are not post-load
    `variable_universe` filters.
 3. **Generic `variable_universe` is post-load** — use `sd_variable_selection` for workbook-sheet selection and `variable_universe` for loaded `VARIABLE_STATE` columns.
 4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
-5. **`support_tier = provisional`** — keep this label until the Layer 2
-   mixed-frequency representation surface is first-class.
+5. **`support_tier = provisional`** — keep this label until the future
+   native-frequency block payload / mixed-frequency model-adapter path is
+   implemented.
 
 ## See also
 

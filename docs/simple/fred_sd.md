@@ -71,6 +71,35 @@ exp = (
 This is different from `variable_universe`, which filters already-loaded
 columns.
 
+## Mixed-Frequency Representation
+
+FRED-SD mixes monthly and quarterly state series. By default macrocast keeps the
+selected FRED-SD columns on the experiment calendar and records the decision:
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_md+fred_sd",
+        target="INDPRO",
+        start="1985-01",
+        end="2019-12",
+        horizons=[1],
+    )
+    .use_fred_sd_selection(states=["CA"], variables=["UR", "NQGSP"])
+    .use_fred_sd_mixed_frequency_representation("drop_non_target_native_frequency")
+)
+```
+
+Useful choices:
+
+- `calendar_aligned_frame`: default, keep selected FRED-SD columns.
+- `drop_unknown_native_frequency`: drop columns whose native frequency could
+  not be inferred.
+- `drop_non_target_native_frequency`: keep only FRED-SD columns matching the
+  experiment frequency.
+
+Runtime writes `fred_sd_mixed_frequency_representation.json`.
+
 ## Inferred Transforms
 
 Use inferred SD t-codes only when you want the reviewed national-analog

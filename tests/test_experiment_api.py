@@ -417,6 +417,28 @@ def test_experiment_fred_sd_frequency_policy_lowers_to_layer1_axis() -> None:
     )
 
 
+def test_experiment_fred_sd_mixed_frequency_representation_lowers_to_layer2_axis() -> None:
+    recipe = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2001-12",
+            horizons=[1],
+            frequency="monthly",
+        )
+        .use_fred_sd_mixed_frequency_representation("drop_non_target_native_frequency")
+        .to_recipe_dict()
+    )
+
+    assert (
+        recipe["path"]["2_preprocessing"]["fixed_axes"][
+            "fred_sd_mixed_frequency_representation"
+        ]
+        == "drop_non_target_native_frequency"
+    )
+
+
 def test_fred_sd_frequency_policy_blocks_mixed_native_panel(tmp_path: Path) -> None:
     dates = pd.date_range("2000-01-01", periods=12, freq="MS")
     source = tmp_path / "mixed_fred_sd.csv"
@@ -442,6 +464,76 @@ def test_fred_sd_frequency_policy_blocks_mixed_native_panel(tmp_path: Path) -> N
     )
 
     with pytest.raises(ExecutionError, match="fred_sd_frequency_policy='require_single_known_frequency'"):
+        exp.run(output_root=tmp_path / "runs", local_raw_source=source)
+
+
+def test_fred_sd_mixed_frequency_representation_drops_non_target_native_frequency(tmp_path: Path) -> None:
+    dates = pd.date_range("2000-01-01", periods=18, freq="MS")
+    source = tmp_path / "mixed_fred_sd.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(len(dates))],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(len(dates))],
+        }
+    ).to_csv(source, index=False)
+
+    result = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2001-06",
+            horizons=[1],
+            frequency="monthly",
+        )
+        .use_fred_sd_selection(states=["CA"], variables=["UR", "NQGSP"])
+        .use_fred_sd_mixed_frequency_representation("drop_non_target_native_frequency")
+        .run(output_root=tmp_path / "runs", local_raw_source=source)
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    representation = json.loads((artifact_dir / "fred_sd_mixed_frequency_representation.json").read_text())
+    preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
+
+    assert manifest["layer2_representation_spec"]["input_panel"][
+        "fred_sd_mixed_frequency_representation"
+    ] == "drop_non_target_native_frequency"
+    assert manifest["fred_sd_mixed_frequency_representation_contract"] == "fred_sd_mixed_frequency_representation_v1"
+    assert manifest["fred_sd_mixed_frequency_representation_file"] == "fred_sd_mixed_frequency_representation.json"
+    assert representation["owner_layer"] == "2_preprocessing"
+    assert representation["dropped_fred_sd_columns"] == ["NQGSP_CA"]
+    assert representation["dropped_by_native_frequency"] == {"quarterly": 1}
+    assert "UR_CA" in preview.columns
+    assert "NQGSP_CA" not in preview.columns
+
+
+def test_fred_sd_mixed_frequency_representation_does_not_drop_target(tmp_path: Path) -> None:
+    dates = pd.date_range("2000-01-01", periods=18, freq="MS")
+    source = tmp_path / "mixed_fred_sd.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(len(dates))],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(len(dates))],
+        }
+    ).to_csv(source, index=False)
+
+    exp = (
+        Experiment(
+            dataset="fred_sd",
+            target="NQGSP_CA",
+            start="2000-01",
+            end="2001-06",
+            horizons=[1],
+            frequency="monthly",
+        )
+        .use_fred_sd_selection(states=["CA"], variables=["UR", "NQGSP"])
+        .use_fred_sd_mixed_frequency_representation("drop_non_target_native_frequency")
+    )
+
+    with pytest.raises(ExecutionError, match="would drop target columns"):
         exp.run(output_root=tmp_path / "runs", local_raw_source=source)
 
 

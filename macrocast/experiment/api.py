@@ -35,6 +35,11 @@ _SWEEP_ALIASES: dict[str, tuple[str, str]] = {
     "fred_sd_state_group": ("1_data_task", "fred_sd_state_group"),
     "sd_variable_group": ("1_data_task", "fred_sd_variable_group"),
     "fred_sd_variable_group": ("1_data_task", "fred_sd_variable_group"),
+    "sd_mixed_frequency": ("2_preprocessing", "fred_sd_mixed_frequency_representation"),
+    "fred_sd_mixed_frequency_representation": (
+        "2_preprocessing",
+        "fred_sd_mixed_frequency_representation",
+    ),
 }
 
 
@@ -143,6 +148,7 @@ class Experiment:
         sd_tcode_policy: str = "none",
         sd_tcode_allowed_statuses: Iterable[str] | None = None,
         fred_sd_frequency_policy: str = "report_only",
+        fred_sd_mixed_frequency_representation: str = "calendar_aligned_frame",
     ) -> None:
         self.dataset = dataset
         self.target = target
@@ -162,6 +168,7 @@ class Experiment:
         self.benchmark_config = dict(benchmark_config or {})
         self.sd_tcode_policy = str(sd_tcode_policy)
         self.fred_sd_frequency_policy = str(fred_sd_frequency_policy)
+        self.fred_sd_mixed_frequency_representation = str(fred_sd_mixed_frequency_representation)
         self.sd_tcode_map_version: str | None = None
         self.sd_tcode_allowed_statuses = (
             None if sd_tcode_allowed_statuses is None else tuple(str(status) for status in sd_tcode_allowed_statuses)
@@ -280,6 +287,12 @@ class Experiment:
         self.fred_sd_frequency_policy = str(policy)
         return self
 
+    def use_fred_sd_mixed_frequency_representation(self, policy: str) -> "Experiment":
+        """Set the Layer 2 FRED-SD mixed-frequency representation policy."""
+
+        self.fred_sd_mixed_frequency_representation = str(policy)
+        return self
+
     def sweep(self, choices: dict[str, Any]) -> "Experiment":
         """Sweep a small set of user-facing aliases.
 
@@ -352,6 +365,10 @@ class Experiment:
             recipe["path"]["1_data_task"].setdefault("fixed_axes", {})[
                 "fred_sd_frequency_policy"
             ] = self.fred_sd_frequency_policy
+        if self.fred_sd_mixed_frequency_representation != "calendar_aligned_frame":
+            recipe["path"]["2_preprocessing"].setdefault("fixed_axes", {})[
+                "fred_sd_mixed_frequency_representation"
+            ] = self.fred_sd_mixed_frequency_representation
         if self.sd_tcode_policy != "none":
             preprocessing_leaf = recipe["path"]["2_preprocessing"].setdefault("leaf_config", {})
             preprocessing_leaf["sd_tcode_policy"] = self.sd_tcode_policy

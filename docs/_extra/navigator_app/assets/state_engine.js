@@ -150,6 +150,9 @@
     if (axisName === "fred_sd_variable_group" && value !== "all_sd_variables" && !hasFredSd) {
       return "fred_sd_variable_group requires dataset to include fred_sd";
     }
+    if (axisName === "fred_sd_mixed_frequency_representation" && value !== "calendar_aligned_frame" && !hasFredSd) {
+      return "fred_sd_mixed_frequency_representation requires dataset to include fred_sd";
+    }
 
     if (axisName === "feature_builder") {
       if (deepModels.has(model)) {

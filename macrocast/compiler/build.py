@@ -1232,6 +1232,18 @@ def _validate_layer2_feature_block_contract(
     selection_map: dict[str, AxisSelection],
     leaf_config: dict[str, Any],
 ) -> None:
+    dataset = _selection_value(selection_map, "dataset")
+    has_fred_sd = _dataset_has_fred_sd(dataset)
+    fred_sd_mixed_frequency_representation = _selection_value(
+        selection_map,
+        "fred_sd_mixed_frequency_representation",
+        default="calendar_aligned_frame",
+    )
+    if fred_sd_mixed_frequency_representation != "calendar_aligned_frame" and not has_fred_sd:
+        raise CompileValidationError(
+            "fred_sd_mixed_frequency_representation requires a FRED-SD dataset"
+        )
+
     level_feature_block = _selection_value(selection_map, "level_feature_block", default="none")
     if level_feature_block == "selected_level_addbacks":
         _require_non_empty_sequence(
@@ -2789,6 +2801,11 @@ def _layer2_representation_spec(
     horizon_target_construction = _selection_value(selection_map, "horizon_target_construction", default="future_target_level_t_plus_h")
     custom_preprocessor = _selection_value(selection_map, "custom_preprocessor", default="none")
     target_transformer = _selection_value(selection_map, "target_transformer", default="none")
+    fred_sd_mixed_frequency_representation = _selection_value(
+        selection_map,
+        "fred_sd_mixed_frequency_representation",
+        default="calendar_aligned_frame",
+    )
     explicit_feature_block_set = _selected_value_or_none(selection_map, "feature_block_set")
     horizons = tuple(int(h) for h in leaf_config.get("horizons", [1]))
     path_average_protocol = _path_average_protocols_for_horizons(str(horizon_target_construction), horizons)
@@ -2850,6 +2867,8 @@ def _layer2_representation_spec(
         "input_panel": {
             "predictor_family": predictor_family,
             "contemporaneous_x_rule": contemporaneous_x_rule,
+            "fred_sd_mixed_frequency_representation": fred_sd_mixed_frequency_representation,
+            "fred_sd_mixed_frequency_representation_contract": "fred_sd_mixed_frequency_representation_v1",
         },
         "feature_blocks": {
             "feature_block_set": _feature_block_set_from_bridge(
@@ -2919,6 +2938,7 @@ def _layer2_representation_spec(
         },
         "compatibility_notes": [
             "Feature-block specs drive executor-family dispatch, fixed target-lag matrix composition, fixed X-lag matrix composition, PCA static-factor matrix composition, and fixed target-lag concatenation with raw-panel/factor-panel direct Z.",
+            "FRED-SD mixed-frequency representation is a Layer 2 panel-shaping decision that consumes Layer 1 native-frequency metadata and runs before t-code preprocessing.",
             "Legacy y_lag_count remains accepted for target-lag selection; legacy factor_ar_lags remains accepted as a target-lag-count fallback. Use factor_lag_count for factor-lag feature depth.",
         ],
     }
