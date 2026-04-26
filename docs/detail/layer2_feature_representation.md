@@ -1,6 +1,6 @@
 # Layer 2 Feature Representation
 
-Date: 2026-04-24
+Date: 2026-04-26
 
 Layer 2 is the research preprocessing and feature-representation layer. Its job
 is to turn the Layer 1 official data frame into the model input matrices used by
@@ -80,6 +80,13 @@ the first raw-panel/autoregressive route decision. The old `feature_builder`
 names remain accepted as compatibility aliases and as fallback source
 provenance for old recipes.
 
+`feature_block_set` is a public representation-family axis. When a recipe sets
+it explicitly, the compiled manifest preserves that value and marks the source
+as `explicit_axis`; it is no longer overwritten by the legacy
+`feature_builder` bridge. Narrow family values still require compatible
+sub-block axes. The compiler reports those cells as non-executable instead of
+silently lowering them to a different representation.
+
 | Axis | Values | Meaning |
 |---|---|---|
 | `feature_block_set` | `target_lags_only`, `transformed_x`, `transformed_x_lags`, `factor_blocks_only`, `factors_plus_target_lags`, `high_dimensional_x`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks`, `legacy_feature_builder_bridge` | Top-level recipe for which blocks should form `Z`. `legacy_feature_builder_bridge` is retained only as a compatibility value for unknown old bridge recipes. |
@@ -94,6 +101,15 @@ provenance for old recipes.
 
 Operational support is currently narrow:
 
+- `feature_block_set=target_lags_only`, `transformed_x`,
+  `factors_plus_target_lags`, `factor_blocks_only`, and `high_dimensional_x`
+  are operational representation-family selectors.
+  `transformed_x_lags`, `selected_sparse_x`, `level_augmented_x`,
+  `rotation_augmented_x`, `mixed_blocks`, and `custom_blocks` are
+  `operational_narrow`: they require compatible sub-block axes such as
+  `x_lag_feature_block=fixed_x_lags`, an operational
+  `feature_selection_policy`, a non-none level/rotation block, at least two
+  named blocks, or registered custom block/combiner contracts.
 - `target_lag_block=none` and `fixed_target_lags` are operational. Fixed
   target-lag matrix composition reads `target_lag_block` directly; legacy
   `target_lag_selection`, `y_lag_count`, and `factor_ar_lags` remain accepted

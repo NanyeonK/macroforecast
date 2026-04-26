@@ -106,6 +106,26 @@ _RAW_PANEL_FEATURE_BLOCK_SETS = {
     "mixed_blocks",
     "custom_blocks",
 }
+_OPERATIONAL_FEATURE_BLOCK_SETS = {
+    "target_lags_only",
+    "transformed_x",
+    "factors_plus_target_lags",
+    "factor_blocks_only",
+    "high_dimensional_x",
+}
+_NARROW_OPERATIONAL_FEATURE_BLOCK_SETS = {
+    "transformed_x_lags",
+    "selected_sparse_x",
+    "level_augmented_x",
+    "rotation_augmented_x",
+    "mixed_blocks",
+    "custom_blocks",
+}
+_FEATURE_BLOCK_SET_STATUS = {
+    **{value: "operational" for value in _OPERATIONAL_FEATURE_BLOCK_SETS},
+    **{value: "operational_narrow" for value in _NARROW_OPERATIONAL_FEATURE_BLOCK_SETS},
+    "legacy_feature_builder_bridge": "registry_only",
+}
 _MARX_COMPOSITION_MODES = {
     "operational": [
         "replace_lag_polynomial_basis",
@@ -1994,30 +2014,51 @@ def _factor_block_from_bridge(
     return payload
 
 
-def _feature_block_set_from_bridge(feature_builder: str, data_richness_mode: str) -> dict[str, Any]:
-    if feature_builder == "autoreg_lagged_target":
-        value = "target_lags_only"
-    elif feature_builder == "factors_plus_AR":
-        value = "factors_plus_target_lags"
-    elif feature_builder in {"raw_feature_panel", "raw_X_only"}:
-        value = {
-            "target_lags_only": "target_lags_only",
-            "factor_plus_lags": "factors_plus_target_lags",
-            "full_high_dimensional_X": "high_dimensional_x",
-            "selected_sparse_X": "selected_sparse_x",
-            "mixed_mode": "mixed_blocks",
-        }.get(data_richness_mode, "transformed_x")
-    elif feature_builder == "factor_pca":
-        value = "factor_blocks_only"
+def _feature_block_set_from_bridge(
+    feature_builder: str,
+    data_richness_mode: str,
+    *,
+    explicit_value: str | None = None,
+) -> dict[str, Any]:
+    if explicit_value is not None:
+        value = explicit_value
+        source_axes = ["feature_block_set"]
+        source_values = {"feature_block_set": explicit_value}
+        source_kind = "explicit_axis"
     else:
-        value = "legacy_feature_builder_bridge"
-    return {
-        "value": value,
-        "source_axes": ["feature_builder", "data_richness_mode"],
-        "source_values": {
+        if feature_builder == "autoreg_lagged_target":
+            value = "target_lags_only"
+        elif feature_builder == "factors_plus_AR":
+            value = "factors_plus_target_lags"
+        elif feature_builder in {"raw_feature_panel", "raw_X_only"}:
+            value = {
+                "target_lags_only": "target_lags_only",
+                "factor_plus_lags": "factors_plus_target_lags",
+                "full_high_dimensional_X": "high_dimensional_x",
+                "selected_sparse_X": "selected_sparse_x",
+                "mixed_mode": "mixed_blocks",
+            }.get(data_richness_mode, "transformed_x")
+        elif feature_builder == "factor_pca":
+            value = "factor_blocks_only"
+        else:
+            value = "legacy_feature_builder_bridge"
+        source_axes = ["feature_builder", "data_richness_mode"]
+        source_values = {
             "feature_builder": feature_builder,
             "data_richness_mode": data_richness_mode,
-        },
+        }
+        source_kind = "legacy_bridge"
+    return {
+        "value": value,
+        "source_axes": source_axes,
+        "source_values": source_values,
+        "source_kind": source_kind,
+        "runtime_status": _FEATURE_BLOCK_SET_STATUS.get(value, "registry_only"),
+        "sweep_axis_status": "public_axis_with_runtime_pruning",
+        "governance_note": (
+            "feature_block_set is the public Layer 2 representation-family axis; "
+            "narrow values require compatible block sub-axes and are pruned by compiler/runtime gates"
+        ),
     }
 
 
@@ -2613,6 +2654,7 @@ def _layer2_representation_spec(
     horizon_target_construction = _selection_value(selection_map, "horizon_target_construction", default="future_target_level_t_plus_h")
     custom_preprocessor = _selection_value(selection_map, "custom_preprocessor", default="none")
     target_transformer = _selection_value(selection_map, "target_transformer", default="none")
+    explicit_feature_block_set = _selected_value_or_none(selection_map, "feature_block_set")
     horizons = tuple(int(h) for h in leaf_config.get("horizons", [1]))
     path_average_protocol = _path_average_protocols_for_horizons(str(horizon_target_construction), horizons)
     explicit_factor_feature_block = _factor_feature_block_value(selection_map)
@@ -2675,7 +2717,11 @@ def _layer2_representation_spec(
             "contemporaneous_x_rule": contemporaneous_x_rule,
         },
         "feature_blocks": {
-            "feature_block_set": _feature_block_set_from_bridge(str(feature_builder), str(data_richness_mode)),
+            "feature_block_set": _feature_block_set_from_bridge(
+                str(feature_builder),
+                str(data_richness_mode),
+                explicit_value=explicit_feature_block_set,
+            ),
             "target_lag_block": target_lag_block,
             "x_lag_feature_block": _x_lag_block_from_selection(selection_map, str(x_lag_creation)),
             "factor_rotation_order": _factor_rotation_order_from_selection(selection_map),
@@ -3212,6 +3258,63 @@ def _execution_status(
             or explicit_factor_block == "custom_factors"
             or feature_block_combination == "custom_combiner"
         )
+        explicit_feature_block_set = (
+            _selection_value(selection_map, "feature_block_set", default="")
+            if "feature_block_set" in selection_map
+            else ""
+        )
+        if (
+            explicit_feature_block_set == "transformed_x_lags"
+            and x_lag_feature_block == "none"
+            and getattr(preprocess_contract, "x_lag_creation", "no_x_lags") == "no_x_lags"
+        ):
+            not_supported.append(
+                "feature_block_set='transformed_x_lags' requires x_lag_feature_block='fixed_x_lags' "
+                "or legacy x_lag_creation='fixed_x_lags'"
+            )
+        if explicit_feature_block_set == "selected_sparse_x" and feature_selection == "none":
+            not_supported.append(
+                "feature_block_set='selected_sparse_x' requires an operational feature_selection_policy"
+            )
+        if explicit_feature_block_set == "level_augmented_x" and not level_block_active:
+            not_supported.append(
+                "feature_block_set='level_augmented_x' requires a non-none level_feature_block"
+            )
+        if explicit_feature_block_set == "rotation_augmented_x" and not rotation_block_active:
+            not_supported.append(
+                "feature_block_set='rotation_augmented_x' requires a non-none rotation_feature_block"
+            )
+        if explicit_feature_block_set == "factors_plus_target_lags" and (
+            target_lag_block == "none" or not (factor_block_active or registered_custom_factor)
+        ):
+            not_supported.append(
+                "feature_block_set='factors_plus_target_lags' requires target_lag_block plus an executable factor block"
+            )
+        if explicit_feature_block_set == "factor_blocks_only" and not (factor_block_active or registered_custom_factor):
+            not_supported.append(
+                "feature_block_set='factor_blocks_only' requires an executable factor_feature_block"
+            )
+        if explicit_feature_block_set == "mixed_blocks":
+            active_block_count = sum(
+                [
+                    target_lag_block != "none",
+                    x_lag_feature_block != "none"
+                    or getattr(preprocess_contract, "x_lag_creation", "no_x_lags") != "no_x_lags",
+                    factor_block_active or registered_custom_factor,
+                    level_block_active,
+                    temporal_block_active,
+                    rotation_block_active,
+                    feature_block_combination == "custom_combiner",
+                ]
+            )
+            if active_block_count < 2:
+                not_supported.append(
+                    "feature_block_set='mixed_blocks' requires at least two active feature block sub-axes"
+                )
+        if explicit_feature_block_set == "custom_blocks" and not custom_block_active:
+            not_supported.append(
+                "feature_block_set='custom_blocks' requires a custom feature block axis or custom feature combiner"
+            )
         deterministic_components = _selection_value(selection_map, "deterministic_components", default="none")
         structural_break_segmentation = _selection_value(selection_map, "structural_break_segmentation", default="none")
         if temporal_block_active and (factor_block_active or dimred != "none"):

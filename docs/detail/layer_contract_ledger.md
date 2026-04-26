@@ -1,6 +1,6 @@
 # Layer Contract Ledger
 
-Date: 2026-04-25
+Date: 2026-04-26
 
 This page is the canonical ledger for layer handoff, method-extension,
 generator, payload, and artifact contracts. Other detail pages may explain why
@@ -145,6 +145,7 @@ Required gates before opening:
 | Contract | Owner | Layer 3 view | Producer | Consumer | Status | Notes |
 |---|---|---|---|---|---|---|
 | `target_scale_contract_v1` | Layer 2 | `consumed` | target-scale compiler/runtime adapter | Layer 3 execution, inverse transform, evaluation | `operational` | Records target transform policy, normalization, evaluation scale, inversion support, and blockers. Interval/density wrappers currently require raw-level target scale, no target normalization, and no custom target transformer. |
+| `feature_block_set_public_axis_v1` | Layer 2 | `outside_layer3` | registry and compiler Layer 2 representation grammar | Layer 2 block composer, sweep planner, Navigator | `operational_narrow` | `feature_block_set` is now a public representation-family sweep axis, not only bridge provenance. Directly supported values remain constrained by compatible sub-block axes: for example `transformed_x_lags` requires an X-lag block, `level_augmented_x` requires a level block, `rotation_augmented_x` requires a rotation block, `selected_sparse_x` requires feature selection, `mixed_blocks` requires at least two active block sources, and `custom_blocks` requires a registered custom block or combiner. |
 | `custom_feature_block_callable_v1` | Layer 2 | `outside_layer3` | registered custom temporal, rotation, factor, or other feature block | Layer 2 block composer | `operational` | Block-local custom method contract. Requires train/pred feature frames, stable names, fit state, leakage metadata, and provenance. |
 | `custom_feature_combiner_v1` | Layer 2 | `outside_layer3` | registered custom combiner | Layer 2 final `Z` composer | `operational` | Combines already-built named blocks into final `Z_train`/`Z_pred`. Must preserve names, block roles, row alignment, fit state, and leakage evidence. |
 | `custom_final_z_selection_v1` | Layer 2 | `outside_layer3` | registered or built-in selector over final `Z` | Layer 2 final representation writer | `operational` | Records candidate, selected, and dropped feature names plus supervised/unsupervised selector fit state. Operational for supported registered custom block/combiner outputs. |
@@ -197,9 +198,14 @@ Highest-priority contract cleanup:
    release-lag, or mixed-source work.
 2. Decide whether the tabular `Layer2Representation` handoff needs an exported
    schema/version constant before public extension APIs expand further.
-3. Extend `sequence_representation_contract_v1` from the current univariate
+3. Keep package/runtime support ahead of additional Navigator UI work: registry
+   status, compiler pruning, runtime dispatch, and checked-in UI data must agree
+   before a branch is promoted as selectable.
+4. Extend `sequence_representation_contract_v1` from the current univariate
    deep-autoreg slice to a Layer 2 multivariate `sequence_tensor` handoff
    before opening sequence/tensor models in full grids.
-4. Define `exogenous_x_path_contract_v1` and `multi_step_raw_panel_payload_v1`
-   before opening raw-panel iterated forecasting.
-5. Version the prediction row schema if payload families continue expanding.
+5. Broaden raw-panel iterated forecasting beyond the current
+   `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, and
+   `recursive_x_model(ar1)` narrow slices only after additional path-specific
+   future-X and target-scale tests exist.
+6. Version the prediction row schema if payload families continue expanding.
