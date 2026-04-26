@@ -215,6 +215,12 @@ The simple API remains narrower than the full contract:
   `sd_variable_selection=selected_sd_variables` reads
   `leaf_config.sd_variables`. These selectors run at source-load time for the
   FRED-SD component before generic post-load `variable_universe` filtering.
+- FRED-SD runs now expose `fred_sd_series_metadata_v1` through
+  `fred_sd_series_metadata.json` and `data_reports.fred_sd_series_metadata`
+  (or `data_reports.components.fred_sd.fred_sd_series_metadata` in composites).
+  The contract records selected states, selected SD variables, source sheets,
+  per-column observed windows, and inferred native-frequency counts before
+  later generic post-load column filtering.
 - FRED-SD `support_tier=provisional` now points to remaining mixed-frequency
   and richer grouping controls, not missing live/vintage ingestion or missing
   t-code policy choices.
@@ -229,6 +235,9 @@ Simple docs should stay short; this audit is the detailed contract source for La
   `sd_variable_selection=selected_sd_variables` require explicit
   `leaf_config.sd_states` / `leaf_config.sd_variables`, flow into
   `data_task_spec`, and filter the FRED-SD component at load time.
+- FRED-SD selected component metadata writes `fred_sd_series_metadata.json`,
+  registers the artifact in `artifact_manifest.json`, and records a compact
+  manifest summary.
 - Distributional forecast objects with non-quantile models produce `blocked_by_incompatibility`.
 - Runtime-only missing leaf_config failures for Layer 1.4 and 1.5 are now compiler validation errors.
 - Multi-benchmark suites reject unsupported member families before execution.

@@ -284,6 +284,34 @@ def _data_reports(raw_result) -> dict[str, object]:
     return dict(getattr(data, "attrs", {}).get("macrocast_reports", {}))
 
 
+def _fred_sd_series_metadata_report(raw_result) -> dict[str, object] | None:
+    reports = _data_reports(raw_result)
+    direct = reports.get("fred_sd_series_metadata")
+    if isinstance(direct, Mapping):
+        return dict(direct)
+    components = reports.get("components")
+    if isinstance(components, Mapping):
+        fred_sd = components.get("fred_sd")
+        if isinstance(fred_sd, Mapping):
+            component_report = fred_sd.get("fred_sd_series_metadata")
+            if isinstance(component_report, Mapping):
+                return dict(component_report)
+    return None
+
+
+def _fred_sd_series_metadata_summary(report: Mapping[str, object] | None) -> dict[str, object] | None:
+    if not isinstance(report, Mapping):
+        return None
+    return {
+        "schema_version": report.get("schema_version"),
+        "contract_version": report.get("contract_version"),
+        "series_count": report.get("series_count"),
+        "state_count": report.get("state_count"),
+        "sd_variable_count": report.get("sd_variable_count"),
+        "native_frequency_counts": dict(report.get("native_frequency_counts", {}) or {}),
+    }
+
+
 def _fred_tcode_transform(series: pd.Series, code: int) -> pd.Series:
     s = series.astype(float)
     if code == 1:
@@ -9117,6 +9145,8 @@ def execute_recipe(
     if recipe.targets and active_importance_methods(importance_spec):
         raise ExecutionError("multi-target point-forecast slice does not yet support importance artifacts")
 
+    fred_sd_series_metadata_report = _fred_sd_series_metadata_report(raw_result)
+    fred_sd_series_metadata_summary = _fred_sd_series_metadata_summary(fred_sd_series_metadata_report)
     manifest = {
         "recipe_id": recipe.recipe_id,
         "run_id": run.run_id,
@@ -9147,6 +9177,11 @@ def execute_recipe(
             "release_lag_rule": layer1_official_frame_contract["release_lag_rule"],
             "variable_universe": layer1_official_frame_contract["variable_universe"],
         },
+        "fred_sd_series_metadata_contract": (
+            None if fred_sd_series_metadata_report is None else fred_sd_series_metadata_report.get("contract_version")
+        ),
+        "fred_sd_series_metadata_file": None,
+        "fred_sd_series_metadata_summary": fred_sd_series_metadata_summary,
         "execution_architecture": _EXECUTION_ARCHITECTURE,
         "forecast_engine": _model_spec(recipe)["executor_name"],
         "model_spec": _model_spec(recipe),
@@ -9250,6 +9285,16 @@ def execute_recipe(
         file_format="json",
     )
     manifest["layer1_official_frame_file"] = "layer1_official_frame.json"
+
+    if fred_sd_series_metadata_report is not None:
+        _write_json(run_dir / "fred_sd_series_metadata.json", fred_sd_series_metadata_report)
+        _record_artifact(
+            "fred_sd_series_metadata.json",
+            artifact_type="fred_sd_series_metadata",
+            layer="1_data_task",
+            file_format="json",
+        )
+        manifest["fred_sd_series_metadata_file"] = "fred_sd_series_metadata.json"
 
     # Provenance injection based on provenance_fields level
     if provenance_fields in ('standard', 'full'):

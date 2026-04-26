@@ -9,6 +9,7 @@ runs/
   {recipe_id}__{target}__h{horizons}/
     manifest.json               # Full provenance record
     layer1_official_frame.json  # Layer 1 official frame handoff contract
+    fred_sd_series_metadata.json # FRED-SD selected panel metadata, if used
     predictions.csv             # OOS prediction table
     prediction_row_schema.json   # Versioned predictions.csv column contract
     metrics.json                # Per-horizon evaluation metrics
@@ -59,6 +60,15 @@ data warnings, and data reports.
 Use this file when comparing runs that differ in data vintage, release-lag,
 raw missing/outlier handling, or official transform policy. The manifest keeps a
 compact `layer1_official_frame_summary`, while this file owns the full contract.
+
+## fred_sd_series_metadata.json
+
+Runs that include FRED-SD write `fred_sd_series_metadata.json`. It records
+`fred_sd_series_metadata_v1`: selected states, selected SD variables, source
+sheets, canonical `VARIABLE_STATE` columns, per-column observed windows, and
+native-frequency counts inferred from the non-missing calendar. For composite
+FRED-MD/FRED-QD + FRED-SD runs, this file describes the FRED-SD component before
+generic post-load `variable_universe` filtering.
 
 ## metrics.json
 
@@ -160,6 +170,7 @@ The complete provenance record. Key fields:
 | `preprocess_contract` | Exact preprocessing configuration |
 | `layer1_official_frame_contract` | Versioned Layer 1 official-frame handoff |
 | `layer1_official_frame_file` | Full Layer 1 official-frame contract artifact |
+| `fred_sd_series_metadata_file` | FRED-SD selected-panel metadata artifact, if present |
 | `model_spec` | Model family, feature builder, executor name |
 | `benchmark_spec` | Benchmark family and configuration |
 | `evaluation_spec` | Layer 4 evaluation choices |

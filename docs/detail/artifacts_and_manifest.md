@@ -24,6 +24,12 @@ information-set provenance, raw missing/outlier choices, missing-availability,
 release-lag, variable-universe rules, official transform/T-code evidence, data
 warnings, and data reports.
 
+FRED-SD runs also write `fred_sd_series_metadata.json`. It records
+`fred_sd_series_metadata_v1`: the selected state/variable panel, source sheets,
+per-column observed windows, and inferred native-frequency counts for the
+FRED-SD component. For composite FRED-MD/FRED-QD + FRED-SD runs, this file
+describes the FRED-SD component before generic post-load column filtering.
+
 Layer 5 writes `artifact_manifest.json` for every run. It is the stable
 inventory of files that were actually materialized under the selected
 `output_spec`.
@@ -90,6 +96,12 @@ tuning, statistical-test, and importance artifacts when available.
       "artifact_type": "layer1_official_frame",
       "layer": "1_data_task",
       "format": "json"
+    },
+    {
+      "path": "fred_sd_series_metadata.json",
+      "artifact_type": "fred_sd_series_metadata",
+      "layer": "1_data_task",
+      "format": "json"
     }
   ]
 }
@@ -101,7 +113,8 @@ The manifest records `artifact_manifest_file`, `output_artifact_contract`,
 `prediction_row_schema_v1` and is the versioned column contract for
 `predictions.csv`. `layer1_official_frame.json` uses
 `layer1_official_frame_v1` and is the versioned upstream-frame contract for
-Layer 2 representation builders.
+Layer 2 representation builders. `fred_sd_series_metadata.json` is present only
+when the selected dataset includes FRED-SD.
 
 This page should continue expanding:
 
