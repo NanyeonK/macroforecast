@@ -94,7 +94,7 @@ Deferred UI affordances:
 - richer route comparison;
 - browser-only convenience beyond authoritative CLI resolver/run commands.
 
-## Recommended Next Branch
+## First Runtime Widening Slice
 
 Start with Layer 1 vintage/release-lag/mixed-source audit and implement the
 smallest executable widening that can be tested without external network
@@ -102,3 +102,10 @@ fragility. The safest first candidate is a contract-only hardening pass for
 vintage/local-source paths: assert the sidecar records version mode, vintage,
 data-through, artifact SHA, transform-code coverage, and availability policy
 for local vintage fixtures before live-source widening.
+
+Implemented first slice:
+
+- `layer1_official_frame_v1` records `information_set_contract`;
+- `layer1_official_frame_v1` records `transform_code_coverage`;
+- local vintage FRED-MD execution is covered by a regression test without live
+  network dependency.

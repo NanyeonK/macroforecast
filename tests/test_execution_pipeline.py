@@ -240,6 +240,53 @@ def test_execute_recipe_records_layer1_official_frame_contract(tmp_path: Path) -
     }
 
 
+def test_layer1_official_frame_contract_records_local_vintage_evidence(tmp_path: Path) -> None:
+    fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
+    recipe = _recipe(
+        benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+        data_vintage="2020-01",
+    )
+
+    result = execute_recipe(
+        recipe=recipe,
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=fixture,
+    )
+
+    run_dir = tmp_path / result.run.artifact_subdir
+    contract = json.loads((run_dir / "layer1_official_frame.json").read_text())
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+
+    assert contract["schema_version"] == LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION
+    assert contract["version_mode"] == "vintage"
+    assert contract["vintage"] == "2020-01"
+    assert contract["dataset_metadata"]["version_mode"] == "vintage"
+    assert contract["dataset_metadata"]["vintage"] == "2020-01"
+    assert contract["raw_artifact"]["version_mode"] == "vintage"
+    assert contract["raw_artifact"]["vintage"] == "2020-01"
+    assert contract["raw_artifact"]["file_sha256"]
+    assert contract["raw_artifact"]["file_size_bytes"] > 0
+    assert contract["information_set_contract"] == {
+        "version_mode": "vintage",
+        "vintage": "2020-01",
+        "data_through": contract["data_through"],
+        "information_set": "revised_monthly",
+        "release_lag_rule": "ignore_release_lag",
+        "missing_availability": "complete_case_only",
+        "data_vintage_requested": "2020-01",
+        "uses_vintage_source": True,
+        "raw_artifact_sha256": contract["raw_artifact"]["file_sha256"],
+    }
+    coverage = contract["transform_code_coverage"]
+    assert coverage["data_column_count"] == contract["column_count"]
+    assert coverage["transform_code_column_count"] == 4
+    assert coverage["covered_column_count"] == 4
+    assert coverage["missing_transform_code_columns"] == []
+    assert coverage["coverage_ratio"] == 1.0
+    assert manifest["layer1_official_frame_summary"]["index_end"] == contract["index_end"]
+
+
 def test_execute_recipe_records_prediction_row_schema_contract(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})

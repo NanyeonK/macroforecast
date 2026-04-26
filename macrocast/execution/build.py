@@ -2063,6 +2063,21 @@ def _raw_artifact_payload(raw_result) -> dict[str, object]:
     }
 
 
+def _transform_code_coverage(transform_codes: Mapping[str, int], columns: Sequence[str]) -> dict[str, object]:
+    tcode_columns = {str(col) for col in transform_codes}
+    data_columns = [str(col) for col in columns if str(col).lower() != "date"]
+    covered = [col for col in data_columns if col in tcode_columns]
+    missing = [col for col in data_columns if col not in tcode_columns]
+    denominator = len(data_columns)
+    return {
+        "data_column_count": denominator,
+        "transform_code_column_count": len(tcode_columns),
+        "covered_column_count": len(covered),
+        "missing_transform_code_columns": missing,
+        "coverage_ratio": (len(covered) / denominator) if denominator else None,
+    }
+
+
 def _layer1_official_frame_contract(
     raw_result,
     recipe: RecipeSpec,
@@ -2083,6 +2098,24 @@ def _layer1_official_frame_contract(
     if not isinstance(tcode_report, Mapping):
         tcode_report = {}
     metadata = _raw_dataset_metadata_payload(raw_result)
+    version_mode = metadata.get("version_mode")
+    vintage = metadata.get("vintage")
+    data_through = metadata.get("data_through")
+    release_lag_rule = _data_task_axis(recipe, "release_lag_rule")
+    missing_availability = _data_task_axis(recipe, "missing_availability")
+    transform_code_coverage = _transform_code_coverage(transform_codes, columns)
+    artifact_payload = _raw_artifact_payload(raw_result)
+    information_set_contract = {
+        "version_mode": version_mode,
+        "vintage": vintage,
+        "data_through": data_through,
+        "information_set": getattr(recipe.stage0.fixed_design, "information_set", None),
+        "release_lag_rule": release_lag_rule,
+        "missing_availability": missing_availability,
+        "data_vintage_requested": recipe.data_vintage,
+        "uses_vintage_source": version_mode == "vintage",
+        "raw_artifact_sha256": artifact_payload.get("file_sha256"),
+    }
     payload = {
         "schema_version": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
         "contract_version": LAYER1_OFFICIAL_FRAME_CONTRACT_VERSION,
@@ -2091,9 +2124,9 @@ def _layer1_official_frame_contract(
         "dataset": metadata.get("dataset", recipe.raw_dataset),
         "source_family": metadata.get("source_family"),
         "frequency": metadata.get("frequency"),
-        "version_mode": metadata.get("version_mode"),
-        "vintage": metadata.get("vintage"),
-        "data_through": metadata.get("data_through"),
+        "version_mode": version_mode,
+        "vintage": vintage,
+        "data_through": data_through,
         "support_tier": metadata.get("support_tier"),
         "raw_dataset": recipe.raw_dataset,
         "target": str(recipe.target),
@@ -2114,21 +2147,23 @@ def _layer1_official_frame_contract(
         "predictor_columns": [name for name in columns if name not in target_set],
         "transform_codes_columns": sorted(str(col) for col in transform_codes),
         "transform_codes": {str(k): int(v) for k, v in transform_codes.items()},
+        "transform_code_coverage": transform_code_coverage,
         "official_transform_policy": policy,
         "official_transform_scope": scope,
         "official_transform_source": source_payload,
         "official_transform_report": dict(tcode_report),
         "raw_missing_policy": _data_task_axis(recipe, "raw_missing_policy"),
         "raw_outlier_policy": _data_task_axis(recipe, "raw_outlier_policy"),
-        "missing_availability": _data_task_axis(recipe, "missing_availability"),
-        "release_lag_rule": _data_task_axis(recipe, "release_lag_rule"),
+        "missing_availability": missing_availability,
+        "release_lag_rule": release_lag_rule,
         "variable_universe": _data_task_axis(recipe, "variable_universe"),
         "separation_rule": _data_task_axis(recipe, "separation_rule"),
         "min_train_size_rule": _training_axis(recipe, "min_train_size"),
         "training_start_rule": _training_axis(recipe, "training_start_rule"),
+        "information_set_contract": information_set_contract,
         "data_task_spec": dict(getattr(recipe, "data_task_spec", {}) or {}),
         "dataset_metadata": metadata,
-        "raw_artifact": _raw_artifact_payload(raw_result),
+        "raw_artifact": artifact_payload,
         "data_warnings": _data_warnings(raw_result),
         "data_reports": _data_reports(raw_result),
     }

@@ -213,3 +213,6 @@ Simple docs should stay short; this audit is the detailed contract source for La
 - Layer 1 official-frame handoff is exported as `layer1_official_frame_v1`,
   written to `layer1_official_frame.json`, summarized in `manifest.json`, and
   listed in `artifact_manifest.json`.
+- Local vintage-path execution records version mode, requested vintage,
+  data-through, artifact SHA, release-lag/missing-availability policy, and
+  transform-code coverage in `layer1_official_frame_v1`.
