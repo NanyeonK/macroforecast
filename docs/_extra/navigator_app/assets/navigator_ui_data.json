@@ -1154,6 +1154,86 @@
       "incompatible_with": {},
       "layer": "1_data_task"
     },
+    "fred_sd_state_group": {
+      "allowed_values": [
+        "all_states",
+        "census_region_northeast",
+        "census_region_midwest",
+        "census_region_south",
+        "census_region_west",
+        "census_division_new_england",
+        "census_division_middle_atlantic",
+        "census_division_east_north_central",
+        "census_division_west_north_central",
+        "census_division_south_atlantic",
+        "census_division_east_south_central",
+        "census_division_west_south_central",
+        "census_division_mountain",
+        "census_division_pacific",
+        "contiguous_48_plus_dc",
+        "custom_state_group"
+      ],
+      "axis_name": "fred_sd_state_group",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "all_states": "operational",
+        "census_division_east_north_central": "operational",
+        "census_division_east_south_central": "operational",
+        "census_division_middle_atlantic": "operational",
+        "census_division_mountain": "operational",
+        "census_division_new_england": "operational",
+        "census_division_pacific": "operational",
+        "census_division_south_atlantic": "operational",
+        "census_division_west_north_central": "operational",
+        "census_division_west_south_central": "operational",
+        "census_region_midwest": "operational",
+        "census_region_northeast": "operational",
+        "census_region_south": "operational",
+        "census_region_west": "operational",
+        "contiguous_48_plus_dc": "operational",
+        "custom_state_group": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
+    },
+    "fred_sd_variable_group": {
+      "allowed_values": [
+        "all_sd_variables",
+        "labor_market_core",
+        "employment_sector",
+        "gsp_output",
+        "housing",
+        "trade",
+        "income",
+        "direct_analog_high_confidence",
+        "provisional_analog_medium",
+        "semantic_review_outputs",
+        "no_reliable_analog",
+        "custom_sd_variable_group"
+      ],
+      "axis_name": "fred_sd_variable_group",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "all_sd_variables": "operational",
+        "custom_sd_variable_group": "operational",
+        "direct_analog_high_confidence": "operational",
+        "employment_sector": "operational",
+        "gsp_output": "operational",
+        "housing": "operational",
+        "income": "operational",
+        "labor_market_core": "operational",
+        "no_reliable_analog": "operational",
+        "provisional_analog_medium": "operational",
+        "semantic_review_outputs": "operational",
+        "trade": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
+    },
     "frequency": {
       "allowed_values": [
         "monthly",
@@ -3768,6 +3848,8 @@
             "forecast_type": "direct",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_state_group": "all_states",
+            "fred_sd_variable_group": "all_sd_variables",
             "horizons": [
               1,
               3
@@ -4612,27 +4694,239 @@
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "allow_mixed_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "reject_mixed_known_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "require_single_known_frequency"
               }
             ],
             "selected": "report_only"
+          },
+          {
+            "axis": "fred_sd_state_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_northeast'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_northeast"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_midwest'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_midwest"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_south'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_south"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_west'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_west"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_new_england'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_new_england"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_middle_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_middle_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_south_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_south_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_mountain'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_mountain"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_pacific'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_pacific"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'contiguous_48_plus_dc'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "contiguous_48_plus_dc"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'custom_state_group'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_state_group"
+              }
+            ],
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'labor_market_core'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "labor_market_core"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'employment_sector'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "employment_sector"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'gsp_output'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "gsp_output"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'housing'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "housing"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'trade'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "trade"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'income'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "income"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'direct_analog_high_confidence'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "direct_analog_high_confidence"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'provisional_analog_medium'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "provisional_analog_medium"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'semantic_review_outputs'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "semantic_review_outputs"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'no_reliable_analog'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "no_reliable_analog"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'custom_sd_variable_group'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_sd_variable_group"
+              }
+            ],
+            "selected": "all_sd_variables"
           },
           {
             "axis": "target_structure",
@@ -9158,6 +9452,8 @@
             "forecast_type": "iterated",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_state_group": "all_states",
+            "fred_sd_variable_group": "all_sd_variables",
             "horizons": [
               1
             ],
@@ -10017,27 +10313,239 @@
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "allow_mixed_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "reject_mixed_known_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "require_single_known_frequency"
               }
             ],
             "selected": "report_only"
+          },
+          {
+            "axis": "fred_sd_state_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_northeast'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_northeast"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_midwest'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_midwest"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_south'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_south"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_west'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_west"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_new_england'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_new_england"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_middle_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_middle_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_south_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_south_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_mountain'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_mountain"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_pacific'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_pacific"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'contiguous_48_plus_dc'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "contiguous_48_plus_dc"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'custom_state_group'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_state_group"
+              }
+            ],
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'labor_market_core'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "labor_market_core"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'employment_sector'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "employment_sector"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'gsp_output'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "gsp_output"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'housing'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "housing"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'trade'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "trade"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'income'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "income"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'direct_analog_high_confidence'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "direct_analog_high_confidence"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'provisional_analog_medium'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "provisional_analog_medium"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'semantic_review_outputs'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "semantic_review_outputs"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'no_reliable_analog'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "no_reliable_analog"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'custom_sd_variable_group'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_sd_variable_group"
+              }
+            ],
+            "selected": "all_sd_variables"
           },
           {
             "axis": "target_structure",
@@ -14614,6 +15122,8 @@
             "forecast_type": "direct",
             "framework": "expanding",
             "fred_sd_frequency_policy": "report_only",
+            "fred_sd_state_group": "all_states",
+            "fred_sd_variable_group": "all_sd_variables",
             "frequency": "monthly",
             "horizon_target_construction": "future_target_level_t_plus_h",
             "horizons": [
@@ -15538,27 +16048,239 @@
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'allow_mixed_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "allow_mixed_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'reject_mixed_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "reject_mixed_known_frequency"
               },
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'require_single_known_frequency'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "fred_sd_frequency_policy requires dataset to include fred_sd",
+                "enabled": false,
                 "status": "operational",
                 "value": "require_single_known_frequency"
               }
             ],
             "selected": "report_only"
+          },
+          {
+            "axis": "fred_sd_state_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_northeast'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_northeast"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_midwest'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_midwest"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_south'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_south"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_region_west'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_region_west"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_new_england'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_new_england"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_middle_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_middle_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_north_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_north_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_south_atlantic'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_south_atlantic"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_east_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_east_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_west_south_central'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_west_south_central"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_mountain'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_mountain"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'census_division_pacific'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "census_division_pacific"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'contiguous_48_plus_dc'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "contiguous_48_plus_dc"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'custom_state_group'",
+                "disabled_reason": "fred_sd_state_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_state_group"
+              }
+            ],
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'labor_market_core'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "labor_market_core"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'employment_sector'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "employment_sector"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'gsp_output'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "gsp_output"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'housing'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "housing"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'trade'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "trade"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'income'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "income"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'direct_analog_high_confidence'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "direct_analog_high_confidence"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'provisional_analog_medium'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "provisional_analog_medium"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'semantic_review_outputs'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "semantic_review_outputs"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'no_reliable_analog'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "no_reliable_analog"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'custom_sd_variable_group'",
+                "disabled_reason": "fred_sd_variable_group requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "custom_sd_variable_group"
+              }
+            ],
+            "selected": "all_sd_variables"
           },
           {
             "axis": "target_structure",
@@ -19885,6 +20607,8 @@
       "forecast_object": "point_mean",
       "forecast_type": "direct",
       "fred_sd_frequency_policy": "report_only",
+      "fred_sd_state_group": "all_states",
+      "fred_sd_variable_group": "all_sd_variables",
       "importance_aggregation": "mean_abs",
       "importance_gradient_path": "none",
       "importance_grouped": "none",
@@ -20188,6 +20912,8 @@
       "frequency",
       "information_set_type",
       "fred_sd_frequency_policy",
+      "fred_sd_state_group",
+      "fred_sd_variable_group",
       "target_structure",
       "variable_universe",
       "missing_availability",

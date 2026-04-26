@@ -31,6 +31,10 @@ _SWEEP_ALIASES: dict[str, tuple[str, str]] = {
     "preprocessor": ("2_preprocessing", "custom_preprocessor"),
     "custom_preprocessor": ("2_preprocessing", "custom_preprocessor"),
     "target_transformer": ("2_preprocessing", "target_transformer"),
+    "sd_state_group": ("1_data_task", "fred_sd_state_group"),
+    "fred_sd_state_group": ("1_data_task", "fred_sd_state_group"),
+    "sd_variable_group": ("1_data_task", "fred_sd_variable_group"),
+    "fred_sd_variable_group": ("1_data_task", "fred_sd_variable_group"),
 }
 
 
@@ -167,6 +171,8 @@ class Experiment:
         self.sd_tcode_audit_uri: str | None = None
         self.sd_states: tuple[str, ...] | None = None
         self.sd_variables: tuple[str, ...] | None = None
+        self.fred_sd_state_group = "all_states"
+        self.fred_sd_variable_group = "all_sd_variables"
         self._model_families: tuple[str, ...] = (model_family,)
         self._sweep_axes: dict[tuple[str, str], tuple[str, ...]] = {}
         self._custom_preprocessor: str | None = None
@@ -254,6 +260,20 @@ class Experiment:
         self.sd_variables = _normalize_optional_selector_values(variables, name="variables")
         return self
 
+    def use_fred_sd_groups(
+        self,
+        *,
+        state_group: str | None = None,
+        variable_group: str | None = None,
+    ) -> "Experiment":
+        """Restrict FRED-SD using built-in Layer 1 state or variable groups."""
+
+        if state_group is not None:
+            self.fred_sd_state_group = str(state_group)
+        if variable_group is not None:
+            self.fred_sd_variable_group = str(variable_group)
+        return self
+
     def use_fred_sd_frequency_policy(self, policy: str) -> "Experiment":
         """Set the Layer 1 FRED-SD native-frequency policy."""
 
@@ -320,6 +340,14 @@ class Experiment:
             if self.sd_variables is not None:
                 data_fixed["sd_variable_selection"] = "selected_sd_variables"
                 data_leaf["sd_variables"] = list(self.sd_variables)
+        if self.fred_sd_state_group != "all_states":
+            recipe["path"]["1_data_task"].setdefault("fixed_axes", {})[
+                "fred_sd_state_group"
+            ] = self.fred_sd_state_group
+        if self.fred_sd_variable_group != "all_sd_variables":
+            recipe["path"]["1_data_task"].setdefault("fixed_axes", {})[
+                "fred_sd_variable_group"
+            ] = self.fred_sd_variable_group
         if self.fred_sd_frequency_policy != "report_only":
             recipe["path"]["1_data_task"].setdefault("fixed_axes", {})[
                 "fred_sd_frequency_policy"

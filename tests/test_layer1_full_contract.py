@@ -163,6 +163,87 @@ def test_fred_sd_state_and_variable_selection_compile_into_data_task_spec() -> N
     assert data_task["fred_sd_frequency_policy"] == "report_only"
 
 
+def test_fred_sd_group_axes_resolve_into_source_selectors() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            "fred_sd_state_group": "census_region_west",
+            "fred_sd_variable_group": "labor_market_core",
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    data_task = compiled.manifest["data_task_spec"]
+    assert data_task["fred_sd_state_group"] == "census_region_west"
+    assert data_task["fred_sd_state_group_source"] == "census_region_west"
+    assert data_task["fred_sd_variable_group"] == "labor_market_core"
+    assert data_task["fred_sd_variable_group_source"] == "labor_market_core"
+    assert data_task["state_selection"] == "selected_states"
+    assert data_task["sd_variable_selection"] == "selected_sd_variables"
+    assert data_task["sd_states"] == ["AZ", "CO", "ID", "MT", "NV", "NM", "UT", "WY", "AK", "CA", "HI", "OR", "WA"]
+    assert data_task["sd_variables"] == ["ICLAIMS", "LF", "NA", "PARTRATE", "UR"]
+
+
+def test_fred_sd_group_axes_require_fred_sd_dataset() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"]["fred_sd_state_group"] = "census_region_west"
+
+    with pytest.raises(CompileValidationError, match="requires a FRED-SD dataset"):
+        compile_recipe_dict(recipe)
+
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"]["fred_sd_variable_group"] = "labor_market_core"
+
+    with pytest.raises(CompileValidationError, match="requires a FRED-SD dataset"):
+        compile_recipe_dict(recipe)
+
+
+def test_fred_sd_custom_group_axes_resolve_from_leaf_config() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_sd",
+            "frequency": "monthly",
+            "fred_sd_state_group": "custom_state_group",
+            "fred_sd_variable_group": "custom_sd_variable_group",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"].update(
+        {
+            "target": "UR_CA",
+            "sd_state_group_members": ["ca", "tx"],
+            "sd_variable_group_members": ["UR", "BPPRIVSA"],
+        }
+    )
+
+    compiled = compile_recipe_dict(recipe)
+
+    data_task = compiled.manifest["data_task_spec"]
+    assert data_task["sd_states"] == ["CA", "TX"]
+    assert data_task["sd_variables"] == ["UR", "BPPRIVSA"]
+    assert data_task["fred_sd_state_group_source"] == "sd_state_group_members"
+    assert data_task["fred_sd_variable_group_source"] == "sd_variable_group_members"
+
+
+def test_fred_sd_group_axes_do_not_mix_with_explicit_selector_lists() -> None:
+    recipe = _recipe()
+    recipe["path"]["1_data_task"]["fixed_axes"].update(
+        {
+            "dataset": "fred_md+fred_sd",
+            "frequency": "monthly",
+            "state_selection": "selected_states",
+            "fred_sd_state_group": "census_region_west",
+        }
+    )
+    recipe["path"]["1_data_task"]["leaf_config"]["sd_states"] = ["CA"]
+
+    with pytest.raises(CompileValidationError, match="cannot be combined"):
+        compile_recipe_dict(recipe)
+
+
 def test_fred_sd_frequency_policy_requires_fred_sd_dataset() -> None:
     recipe = _recipe()
     recipe["path"]["1_data_task"]["fixed_axes"]["fred_sd_frequency_policy"] = "require_single_known_frequency"

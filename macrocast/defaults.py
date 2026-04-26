@@ -213,6 +213,8 @@ def build_default_recipe_dict(
                     "frequency": resolved_frequency,
                     "information_set_type": information_set_type,
                     "fred_sd_frequency_policy": "report_only",
+                    "fred_sd_state_group": "all_states",
+                    "fred_sd_variable_group": "all_sd_variables",
                     "target_structure": "single_target_point_forecast",
                     "missing_availability": "zero_fill_before_start",
                 },

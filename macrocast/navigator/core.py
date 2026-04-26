@@ -44,6 +44,8 @@ _TREE_AXES = {
         "frequency",
         "information_set_type",
         "fred_sd_frequency_policy",
+        "fred_sd_state_group",
+        "fred_sd_variable_group",
         "target_structure",
         "variable_universe",
         "missing_availability",
@@ -154,6 +156,8 @@ _DEFAULT_SELECTIONS = {
     "forecast_type": "direct",
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",
+    "fred_sd_state_group": "all_states",
+    "fred_sd_variable_group": "all_sd_variables",
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
     "primary_metric": "msfe",
@@ -474,6 +478,12 @@ def _selected_importance_methods(
     return active_importance_methods(canonicalize_importance_spec(raw))
 
 
+def _selection_has_fred_sd(selected: Mapping[str, Any]) -> bool:
+    dataset = str(selected.get("dataset", ""))
+    tokens = {token.strip().lower() for token in dataset.replace(",", "+").split("+") if token.strip()}
+    return "fred_sd" in tokens
+
+
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
@@ -482,6 +492,13 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
     x_path = str(selected.get("exogenous_x_path_policy", "unavailable"))
     importance = str(selected.get("importance_method", "none"))
     importance_methods = set(_selected_importance_methods(selected))
+
+    if axis_name == "fred_sd_frequency_policy" and value != "report_only" and not _selection_has_fred_sd(selected):
+        return "fred_sd_frequency_policy requires dataset to include fred_sd"
+    if axis_name == "fred_sd_state_group" and value != "all_states" and not _selection_has_fred_sd(selected):
+        return "fred_sd_state_group requires dataset to include fred_sd"
+    if axis_name == "fred_sd_variable_group" and value != "all_sd_variables" and not _selection_has_fred_sd(selected):
+        return "fred_sd_variable_group requires dataset to include fred_sd"
 
     if axis_name == "feature_builder":
         if model in _DEEP_SEQUENCE_MODELS:

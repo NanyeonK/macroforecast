@@ -215,6 +215,15 @@ The simple API remains narrower than the full contract:
   `sd_variable_selection=selected_sd_variables` reads
   `leaf_config.sd_variables`. These selectors run at source-load time for the
   FRED-SD component before generic post-load `variable_universe` filtering.
+- FRED-SD state and workbook-variable group selectors are also canonical
+  Layer 1 axes: `fred_sd_state_group` and `fred_sd_variable_group` resolve to
+  the same source-load selector lists before the loader runs. Built-in state
+  groups cover Census regions/divisions and `contiguous_48_plus_dc`; built-in
+  variable groups cover labor-market, employment-sector, GSP/output, housing,
+  trade, income, and t-code-review bundles. Custom groups use
+  `leaf_config.sd_state_group_members` or
+  `leaf_config.sd_variable_group_members`, with named mapping forms also
+  supported.
 - FRED-SD runs now expose `fred_sd_series_metadata_v1` through
   `fred_sd_series_metadata.json` and `data_reports.fred_sd_series_metadata`
   (or `data_reports.components.fred_sd.fred_sd_series_metadata` in composites).
@@ -233,8 +242,8 @@ The simple API remains narrower than the full contract:
   per-column observed windows, and inferred native-frequency counts before
   later generic post-load column filtering.
 - FRED-SD `support_tier=provisional` now points to remaining mixed-frequency
-  and richer grouping controls, not missing live/vintage ingestion or missing
-  t-code policy choices.
+  representation controls, not missing live/vintage ingestion, missing t-code
+  policy choices, or missing grouping recipes.
 
 Simple docs should stay short; this audit is the detailed contract source for Layer 1.
 
@@ -246,6 +255,9 @@ Simple docs should stay short; this audit is the detailed contract source for La
   `sd_variable_selection=selected_sd_variables` require explicit
   `leaf_config.sd_states` / `leaf_config.sd_variables`, flow into
   `data_task_spec`, and filter the FRED-SD component at load time.
+- FRED-SD `fred_sd_state_group` and `fred_sd_variable_group` compile into
+  `data_task_spec`, resolve to explicit source-load selectors, block
+  non-FRED-SD datasets, and reject ambiguous use with explicit selector lists.
 - FRED-SD selected component metadata writes `fred_sd_series_metadata.json`,
   registers the artifact in `artifact_manifest.json`, and records a compact
   manifest summary.

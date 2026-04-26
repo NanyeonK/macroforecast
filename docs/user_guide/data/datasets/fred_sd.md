@@ -90,7 +90,25 @@ exp = (
         end="2019-12",
         horizons=[1, 3, 6],
     )
-    .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "BPPRIVSA"])
+.use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "BPPRIVSA"])
+)
+```
+
+Built-in groups are also Layer 1 source-load selectors:
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_md+fred_sd",
+        target="INDPRO",
+        start="1985-01",
+        end="2019-12",
+        horizons=[1, 3, 6],
+    )
+    .use_fred_sd_groups(
+        state_group="census_region_west",
+        variable_group="labor_market_core",
+    )
 )
 ```
 
@@ -98,8 +116,36 @@ FRED-SD has two different variable concepts:
 
 - `sd_variable_selection` chooses workbook sheets before loading, via
   `leaf_config.sd_variables`.
+- `fred_sd_variable_group` is a recipe-level shortcut that resolves to
+  `sd_variable_selection=selected_sd_variables` before loading.
 - `variable_universe` remains the generic post-load column universe filter,
   after columns have canonical `VARIABLE_STATE` names.
+
+The built-in state groups are Census regions and divisions plus
+`contiguous_48_plus_dc`. Full recipes may also use
+`fred_sd_state_group=custom_state_group` with either
+`leaf_config.sd_state_group_members` or
+`leaf_config.sd_state_groups` + `leaf_config.sd_state_group_name`.
+
+Built-in SD-variable groups are:
+
+- `labor_market_core`: `ICLAIMS`, `LF`, `NA`, `PARTRATE`, `UR`
+- `employment_sector`: `CONS`, `FIRE`, `GOVT`, `INFO`, `MFG`, `MFGHRS`,
+  `MINNG`, `PSERV`
+- `gsp_output`: aggregate and sector GSP/output variables
+- `housing`: `BPPRIVSA`, `RENTS`, `STHPI`
+- `trade`: `EXPORTS`, `IMPORTS`
+- `income`: `OTOT`
+- t-code-review groups: `direct_analog_high_confidence`,
+  `provisional_analog_medium`, `semantic_review_outputs`,
+  `no_reliable_analog`
+
+Use `fred_sd_variable_group=custom_sd_variable_group` with
+`leaf_config.sd_variable_group_members` or
+`leaf_config.sd_variable_groups` + `leaf_config.sd_variable_group_name` for
+paper-specific bundles. Group selectors and explicit list selectors are
+mutually exclusive for the same side; use one source of truth per state or
+variable selection.
 
 ## Series metadata contract
 
@@ -169,10 +215,14 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 ## Known limitations in macrocast v1.0
 
 1. **Mixed frequency is still coarse** — monthly-to-quarterly and quarterly-to-monthly conversion are available and reported, but MIDAS/state-space mixed-frequency modeling is not implemented.
-2. **State and SD-variable selectors are explicit but simple** — `state_selection=selected_states` uses `leaf_config.sd_states`; `sd_variable_selection=selected_sd_variables` uses `leaf_config.sd_variables`. Category/group selectors are not implemented.
+2. **State and SD-variable groups are recipe-level selectors** —
+   `fred_sd_state_group` and `fred_sd_variable_group` resolve into explicit
+   `sd_states` / `sd_variables` before loading. They are not post-load
+   `variable_universe` filters.
 3. **Generic `variable_universe` is post-load** — use `sd_variable_selection` for workbook-sheet selection and `variable_universe` for loaded `VARIABLE_STATE` columns.
 4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
-5. **`support_tier = provisional`** — keep this label until mixed-frequency controls and richer state/variable grouping recipes are first-class.
+5. **`support_tier = provisional`** — keep this label until the Layer 2
+   mixed-frequency representation surface is first-class.
 
 ## See also
 

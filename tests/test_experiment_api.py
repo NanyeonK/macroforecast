@@ -459,6 +459,55 @@ def test_experiment_fred_sd_selection_lowers_to_layer1_axes() -> None:
     assert data_task["leaf_config"]["sd_variables"] == ["UR"]
 
 
+def test_experiment_fred_sd_groups_lower_to_layer1_axes() -> None:
+    recipe = (
+        Experiment(dataset="fred_md+fred_sd", target="INDPRO", start="2000-01", end="2002-06", horizons=[1])
+        .use_fred_sd_groups(state_group="census_region_west", variable_group="labor_market_core")
+        .to_recipe_dict()
+    )
+
+    data_task = recipe["path"]["1_data_task"]
+    assert data_task["fixed_axes"]["fred_sd_state_group"] == "census_region_west"
+    assert data_task["fixed_axes"]["fred_sd_variable_group"] == "labor_market_core"
+
+
+def test_fred_sd_group_selection_filters_component_before_composite_run(tmp_path: Path) -> None:
+    result = (
+        Experiment(
+            dataset="fred_md+fred_sd",
+            target="INDPRO",
+            start=FIXTURE_START,
+            end=FIXTURE_END,
+            horizons=[1],
+        )
+        .use_fred_sd_groups(state_group="census_region_west", variable_group="labor_market_core")
+        .run(
+            output_root=tmp_path,
+            local_raw_source={"fred_md": FIXTURE_RAW, "fred_sd": FIXTURE_SD_CSV},
+        )
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    layer1_contract = json.loads((artifact_dir / "layer1_official_frame.json").read_text())
+    metadata_contract = json.loads((artifact_dir / "fred_sd_series_metadata.json").read_text())
+    preview = pd.read_csv(artifact_dir / "data_preview.csv", index_col=0)
+
+    assert manifest["data_task_spec"]["fred_sd_state_group"] == "census_region_west"
+    assert manifest["data_task_spec"]["fred_sd_variable_group"] == "labor_market_core"
+    assert manifest["data_task_spec"]["state_selection"] == "selected_states"
+    assert manifest["data_task_spec"]["sd_variable_selection"] == "selected_sd_variables"
+    assert "CA" in manifest["data_task_spec"]["sd_states"]
+    assert "TX" not in manifest["data_task_spec"]["sd_states"]
+    assert manifest["data_task_spec"]["sd_variables"] == ["ICLAIMS", "LF", "NA", "PARTRATE", "UR"]
+    assert "UR_CA" in preview.columns
+    assert "UR_TX" not in preview.columns
+    assert "BPPRIVSA_CA" not in preview.columns
+    assert metadata_contract["selector"]["states"] == manifest["data_task_spec"]["sd_states"]
+    assert metadata_contract["selector"]["variables"] == manifest["data_task_spec"]["sd_variables"]
+    assert layer1_contract["data_task_spec"]["fred_sd_state_group"] == "census_region_west"
+
+
 def test_experiment_fred_sd_selection_accepts_single_string_values() -> None:
     recipe = (
         Experiment(dataset="fred_md+fred_sd", target="INDPRO", start="2000-01", end="2002-06", horizons=[1])

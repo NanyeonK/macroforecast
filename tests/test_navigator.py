@@ -117,7 +117,9 @@ console.log(JSON.stringify({
     model_randomforest: option("model_family", "randomforest"),
     model_quantile_linear: option("model_family", "quantile_linear"),
     equal_dm: option("equal_predictive", "dm"),
-    equal_dm_hln: option("equal_predictive", "dm_hln")
+    equal_dm_hln: option("equal_predictive", "dm_hln"),
+    sd_state_west: option("fred_sd_state_group", "census_region_west"),
+    sd_variable_labor: option("fred_sd_variable_group", "labor_market_core")
   },
   selected_disabled: E.selectedDisabledReasons(data, state),
   recipe_id: imported.recipe_id,
@@ -370,3 +372,29 @@ def test_browser_state_engine_matches_python_hac_gate(tmp_path: Path):
         _axis(python_view, "equal_predictive"), "dm_hln"
     )["enabled"]
     assert "HAC-capable" in js["options"]["equal_dm"]["disabled_reason"]
+
+
+def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
+    recipe = _recipe()
+    python_view = build_navigation_view(recipe)
+    js = _js_state_snapshot(tmp_path, recipe, [])
+
+    assert js["options"]["sd_state_west"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_state_group"), "census_region_west"
+    )["enabled"]
+    assert js["options"]["sd_variable_labor"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
+    )["enabled"]
+    assert "fred_sd" in js["options"]["sd_state_west"]["disabled_reason"]
+
+    fred_sd_recipe = _recipe()
+    fred_sd_recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_md+fred_sd"
+    python_view = build_navigation_view(fred_sd_recipe)
+    js = _js_state_snapshot(tmp_path, fred_sd_recipe, [])
+
+    assert js["options"]["sd_state_west"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_state_group"), "census_region_west"
+    )["enabled"]
+    assert js["options"]["sd_variable_labor"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
+    )["enabled"]

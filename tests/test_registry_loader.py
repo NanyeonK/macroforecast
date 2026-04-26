@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 143
+EXPECTED_AXIS_COUNT = 145
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -22,6 +22,8 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "state_selection",
         "sd_variable_selection",
         "fred_sd_frequency_policy",
+        "fred_sd_state_group",
+        "fred_sd_variable_group",
         "relative_metrics",
         "direction_metrics",
         "regime_definition",
@@ -150,6 +152,8 @@ def test_registry_loader_discovers_stage1_data_task_axes() -> None:
         "release_lag_rule",
         "target_structure",
         "variable_universe",
+        "fred_sd_state_group",
+        "fred_sd_variable_group",
     }
     assert expected.issubset(registry)
     assert all(registry[axis].layer == "1_data_task" for axis in expected)
@@ -229,6 +233,18 @@ def test_registry_loader_preserves_stage1_operational_values() -> None:
         "require_single_known_frequency",
     )
     assert fred_sd_frequency_policy.current_status["require_single_known_frequency"] == "operational"
+
+    fred_sd_state_group = get_axis_registry_entry("fred_sd_state_group")
+    assert fred_sd_state_group.layer == "1_data_task"
+    assert fred_sd_state_group.current_status["all_states"] == "operational"
+    assert fred_sd_state_group.current_status["census_region_west"] == "operational"
+    assert fred_sd_state_group.current_status["custom_state_group"] == "operational"
+
+    fred_sd_variable_group = get_axis_registry_entry("fred_sd_variable_group")
+    assert fred_sd_variable_group.layer == "1_data_task"
+    assert fred_sd_variable_group.current_status["all_sd_variables"] == "operational"
+    assert fred_sd_variable_group.current_status["labor_market_core"] == "operational"
+    assert fred_sd_variable_group.current_status["custom_sd_variable_group"] == "operational"
 
 
 

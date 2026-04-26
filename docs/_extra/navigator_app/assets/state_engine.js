@@ -138,6 +138,18 @@
     const xPath = String(selected.exogenous_x_path_policy || "unavailable");
     const importance = String(selected.importance_method || "none");
     const importanceMethods = selectedImportanceMethods(data, engineState);
+    const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
+    const hasFredSd = datasetTokens.has("fred_sd");
+
+    if (axisName === "fred_sd_frequency_policy" && value !== "report_only" && !hasFredSd) {
+      return "fred_sd_frequency_policy requires dataset to include fred_sd";
+    }
+    if (axisName === "fred_sd_state_group" && value !== "all_states" && !hasFredSd) {
+      return "fred_sd_state_group requires dataset to include fred_sd";
+    }
+    if (axisName === "fred_sd_variable_group" && value !== "all_sd_variables" && !hasFredSd) {
+      return "fred_sd_variable_group requires dataset to include fred_sd";
+    }
 
     if (axisName === "feature_builder") {
       if (deepModels.has(model)) {

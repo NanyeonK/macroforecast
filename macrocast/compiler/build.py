@@ -43,6 +43,7 @@ from ..preprocessing import (
 from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
+from ..raw.fred_sd_groups import resolve_fred_sd_state_group, resolve_fred_sd_variable_group
 from ..design import build_design_frame, resolve_route_owner, design_to_dict
 from ..custom import (
     get_custom_feature_block,
@@ -984,6 +985,49 @@ def _require_mapping_entries_for_targets(
     return mapping
 
 
+def _resolve_fred_sd_selector_spec(
+    selection_map: dict[str, AxisSelection],
+    leaf_config: dict[str, Any],
+) -> dict[str, Any]:
+    state_group = _selection_value(selection_map, "fred_sd_state_group", default="all_states")
+    variable_group = _selection_value(selection_map, "fred_sd_variable_group", default="all_sd_variables")
+    state_selection = _selection_value(selection_map, "state_selection", default="all_states")
+    sd_variable_selection = _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables")
+
+    try:
+        group_states, state_group_source = resolve_fred_sd_state_group(state_group, leaf_config)
+        group_variables, variable_group_source = resolve_fred_sd_variable_group(variable_group, leaf_config)
+    except ValueError as exc:
+        raise CompileValidationError(str(exc)) from exc
+
+    if group_states is not None:
+        if state_selection == "selected_states" and leaf_config.get("sd_states") is not None:
+            raise CompileValidationError(
+                "fred_sd_state_group cannot be combined with explicit leaf_config.sd_states; "
+                "use the group axis or state_selection='selected_states', not both"
+            )
+        state_selection = "selected_states"
+
+    if group_variables is not None:
+        if sd_variable_selection == "selected_sd_variables" and leaf_config.get("sd_variables") is not None:
+            raise CompileValidationError(
+                "fred_sd_variable_group cannot be combined with explicit leaf_config.sd_variables; "
+                "use the group axis or sd_variable_selection='selected_sd_variables', not both"
+            )
+        sd_variable_selection = "selected_sd_variables"
+
+    return {
+        "fred_sd_state_group": state_group,
+        "fred_sd_state_group_source": state_group_source,
+        "fred_sd_variable_group": variable_group,
+        "fred_sd_variable_group_source": variable_group_source,
+        "state_selection": state_selection,
+        "sd_variable_selection": sd_variable_selection,
+        "sd_states": group_states if group_states is not None else leaf_config.get("sd_states"),
+        "sd_variables": group_variables if group_variables is not None else leaf_config.get("sd_variables"),
+    }
+
+
 def _validate_layer1_data_task_contract(
     selection_map: dict[str, AxisSelection],
     leaf_config: dict[str, Any],
@@ -1011,15 +1055,26 @@ def _validate_layer1_data_task_contract(
             f"fred_sd_frequency_policy={fred_sd_frequency_policy!r} requires a FRED-SD dataset"
         )
 
-    state_selection = _selection_value(selection_map, "state_selection", default="all_states")
+    fred_sd_state_group = _selection_value(selection_map, "fred_sd_state_group", default="all_states")
+    if fred_sd_state_group != "all_states" and not has_fred_sd:
+        raise CompileValidationError(f"fred_sd_state_group={fred_sd_state_group!r} requires a FRED-SD dataset")
+    fred_sd_variable_group = _selection_value(selection_map, "fred_sd_variable_group", default="all_sd_variables")
+    if fred_sd_variable_group != "all_sd_variables" and not has_fred_sd:
+        raise CompileValidationError(
+            f"fred_sd_variable_group={fred_sd_variable_group!r} requires a FRED-SD dataset"
+        )
+
+    fred_sd_selectors = _resolve_fred_sd_selector_spec(selection_map, leaf_config)
+    state_selection = str(fred_sd_selectors["state_selection"])
     if state_selection == "selected_states":
         if not has_fred_sd:
             raise CompileValidationError("state_selection='selected_states' requires a FRED-SD dataset")
-        states = _require_non_empty_sequence(
-            leaf_config,
-            "sd_states",
-            "state_selection='selected_states'",
-        )
+        states = fred_sd_selectors["sd_states"]
+        if not _is_non_empty_sequence(states):
+            raise CompileValidationError(
+                "state_selection='selected_states' requires leaf_config.sd_states as a non-empty list "
+                "or a non-default fred_sd_state_group"
+            )
         state_set = {str(state).strip().upper() for state in states}
         missing_targets = [
             target
@@ -1032,15 +1087,16 @@ def _validate_layer1_data_task_contract(
                 f"{missing_targets}"
             )
 
-    sd_variable_selection = _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables")
+    sd_variable_selection = str(fred_sd_selectors["sd_variable_selection"])
     if sd_variable_selection == "selected_sd_variables":
         if not has_fred_sd:
             raise CompileValidationError("sd_variable_selection='selected_sd_variables' requires a FRED-SD dataset")
-        variables = _require_non_empty_sequence(
-            leaf_config,
-            "sd_variables",
-            "sd_variable_selection='selected_sd_variables'",
-        )
+        variables = fred_sd_selectors["sd_variables"]
+        if not _is_non_empty_sequence(variables):
+            raise CompileValidationError(
+                "sd_variable_selection='selected_sd_variables' requires leaf_config.sd_variables "
+                "as a non-empty list or a non-default fred_sd_variable_group"
+            )
         variable_set = {str(variable).strip() for variable in variables}
         missing_targets = [
             target
@@ -1213,6 +1269,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     target_structure = _first_selected_value(selection_map, "target_structure", "single_target_point_forecast")
     feature_builder = _first_selected_value(selection_map, "feature_builder", "autoreg_lagged_target")
     information_set_type = _first_selected_value(selection_map, "information_set_type", "revised")
+    fred_sd_selectors = _resolve_fred_sd_selector_spec(selection_map, leaf_config)
     custom_blocks = leaf_config.get("custom_feature_blocks") or {}
     if not isinstance(custom_blocks, dict):
         custom_blocks = {}
@@ -1230,10 +1287,14 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
             "fred_sd_frequency_policy",
             default="report_only",
         ),
-        "state_selection": _selection_value(selection_map, "state_selection", default="all_states"),
-        "sd_variable_selection": _selection_value(selection_map, "sd_variable_selection", default="all_sd_variables"),
-        "sd_states": leaf_config.get("sd_states"),
-        "sd_variables": leaf_config.get("sd_variables"),
+        "fred_sd_state_group": fred_sd_selectors["fred_sd_state_group"],
+        "fred_sd_state_group_source": fred_sd_selectors["fred_sd_state_group_source"],
+        "fred_sd_variable_group": fred_sd_selectors["fred_sd_variable_group"],
+        "fred_sd_variable_group_source": fred_sd_selectors["fred_sd_variable_group_source"],
+        "state_selection": fred_sd_selectors["state_selection"],
+        "sd_variable_selection": fred_sd_selectors["sd_variable_selection"],
+        "sd_states": fred_sd_selectors["sd_states"],
+        "sd_variables": fred_sd_selectors["sd_variables"],
         # Compatibility mirror: canonical owner is Layer 6 stat_test_spec.
         "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),
         "sample_start_date": leaf_config.get("sample_start_date"),
