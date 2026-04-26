@@ -218,8 +218,10 @@ Before marking a contract `operational`, add or identify:
 
 Highest-priority contract cleanup:
 
-1. Make the Layer 1 official frame handoff explicit before deeper vintage,
-   release-lag, or mixed-source work.
+1. Use `layer1_official_frame_v1` as the stable extension point for deeper
+   vintage, release-lag, and mixed-source runtime widening. Do not open those
+   cells by mutating implicit `raw_result.data` behavior without extending the
+   contract and adding path-specific tests.
 2. Keep package/runtime support ahead of additional Navigator UI work: registry
    status, compiler pruning, runtime dispatch, and checked-in UI data must agree
    before a branch is promoted as selectable.
@@ -230,4 +232,5 @@ Highest-priority contract cleanup:
    `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, and
    `recursive_x_model(ar1)` narrow slices only after additional path-specific
    future-X and target-scale tests exist.
-5. Version the prediction row schema if payload families continue expanding.
+5. Version direct tabular generator protocol if additional generator families
+   require a richer fit/predict handoff than `forecast_payload_v1`.

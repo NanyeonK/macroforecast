@@ -54,6 +54,11 @@ summary in `manifest.json`, and registers the sidecar in
 consume this resolved frame contract rather than relying on implicit
 `raw_result.data` semantics.
 
+The next Layer 1 runtime frontier should extend this contract rather than
+creating parallel provenance fields. Vintage, release-lag, and mixed-source
+work all need path-specific evidence in the official-frame sidecar before their
+broader cells are marked selectable.
+
 The following axes were moved out of Layer 1 ownership:
 
 - to Layer 2: `horizon_target_construction`, `deterministic_components`,

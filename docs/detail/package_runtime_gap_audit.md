@@ -85,8 +85,10 @@ values that the Navigator can freely enable without companion choices.
 
 ## Next Runtime Queue
 
-1. Keep generated Navigator UI data checked after each registry/status change.
-2. Defer deeper browser affordances until the package/runtime surface has no
+1. Open the next Layer 1 runtime widening only through
+   `layer1_official_frame_v1`: deeper vintage support, release-lag handling, or
+   mixed-source provenance should extend the sidecar contract first and then
+   add compiler/runtime/artifact tests.
+2. Keep generated Navigator UI data checked after each registry/status change.
+3. Defer deeper browser affordances until the package/runtime surface has no
    known registry-versus-runtime drift.
-3. Use `layer1_official_frame_v1` as the extension point before deeper
-   vintage/release-lag or mixed-source runtime widening.
