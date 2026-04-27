@@ -73,9 +73,9 @@ AXIS_DEFINITION = AxisDefinition(
 | `nested` | `cw`, `enc_new`, `mse_f`, `mse_t` | + `forecast_encompassing_nested` |
 | `cpa_instability` | `cpa`, `rossi`, `rolling_dm` | + `fluctuation_test`, `chow_break_forecast`, `cusum_on_loss` |
 | `multiple_model` | `reality_check`, `spa`, `mcs` | + `stepwise_mcs`, `bootstrap_best_model` |
-| `density_interval` | (비어있음 — status=planned) | + `PIT_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
+| `density_interval` | (비어있음 — status=planned) | + `pit_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
 | `direction` | `pesaran_timmermann`, `binomial_hit` | + `mcnemar`, `roc_comparison` |
-| `residual_diagnostics` | `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `diagnostics_full` | + `autocorrelation_of_errors`, `serial_dependence_loss_diff` |
+| `residual_diagnostics` | `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `full_residual_diagnostics` | + `autocorrelation_of_errors`, `serial_dependence_loss_diff` |
 | `test_scope` | `per_target`, `per_horizon`, `per_model_pair` | + `full_grid_pairwise`, `benchmark_vs_all`, `regime_specific_tests`, `subsample_tests` |
 
 ### 4.2 `dispatch_stat_tests()` API
@@ -145,7 +145,7 @@ _LEGACY_TO_NEW: dict[str, tuple[str, str]] = {
     "ljung_box":         ("residual_diagnostics", "ljung_box"),
     "arch_lm":           ("residual_diagnostics", "arch_lm"),
     "bias_test":         ("residual_diagnostics", "bias_test"),
-    "diagnostics_full":  ("residual_diagnostics", "diagnostics_full"),
+    "full_residual_diagnostics":  ("residual_diagnostics", "full_residual_diagnostics"),
 }
 
 def migrate_legacy_stat_test(path_layer_6: dict) -> dict:

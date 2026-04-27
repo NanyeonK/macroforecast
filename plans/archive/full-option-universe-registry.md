@@ -85,7 +85,7 @@ Schema fields per entry:
 | `nested_sweep` | yes | no | planned | A |
 | `conditional` | yes | depends | operational | A |
 | `derived` | no | no | operational | A |
-| `eval_only` | no | no | registry_only | A |
+| `evaluation_only` | no | no | registry_only | A |
 | `report_only` | no | no | registry_only | B |
 
 ## 0.3 registry_type
@@ -1524,18 +1524,18 @@ Registry file: `macrocast/registry/evaluation/point_metrics.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `MSE` | operational | A |
-| `MSFE` | operational | A |
-| `RMSE` | operational | A |
-| `MAE` | operational | A |
-| `MAPE` | operational | A |
-| `sMAPE` | registry_only | B |
-| `MASE` | registry_only | B |
-| `RMSSE` | registry_only | B |
-| `MedAE` | registry_only | B |
-| `Huber_loss` | registry_only | B |
-| `QLIKE` | registry_only | B |
-| `TheilU` | registry_only | B |
+| `mse` | operational | A |
+| `msfe` | operational | A |
+| `rmse` | operational | A |
+| `mae` | operational | A |
+| `mape` | operational | A |
+| `smape` | registry_only | B |
+| `mase` | registry_only | B |
+| `rmsse` | registry_only | B |
+| `median_absolute_error` | registry_only | B |
+| `huber_loss` | registry_only | B |
+| `qlike` | registry_only | B |
+| `theil_u` | registry_only | B |
 
 ### 4.1.2 relative_metrics
 
@@ -1543,12 +1543,12 @@ Registry file: `macrocast/registry/evaluation/relative_metrics.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `relative_MSFE` | operational | A |
-| `relative_RMSE` | operational | A |
-| `relative_MAE` | operational | A |
-| `oos_R2` | operational | A |
+| `relative_msfe` | operational | A |
+| `relative_rmse` | operational | A |
+| `relative_mae` | operational | A |
+| `oos_r2` | operational | A |
 | `benchmark_win_rate` | operational | A |
-| `CSFE_difference` | operational | A |
+| `csfe_difference` | operational | A |
 
 ### 4.1.3 direction_event_metrics
 
@@ -1561,10 +1561,10 @@ Registry file: `macrocast/registry/evaluation/direction_metrics.py`
 | `turning_point_accuracy` | registry_only | B |
 | `precision` | registry_only | B |
 | `recall` | registry_only | B |
-| `F1` | registry_only | B |
+| `f1` | registry_only | B |
 | `balanced_accuracy` | registry_only | B |
-| `AUC` | registry_only | B |
-| `Brier_score` | registry_only | B |
+| `auc` | registry_only | B |
+| `brier_score` | registry_only | B |
 
 ### 4.1.4 quantile_interval_density_metrics
 
@@ -1573,13 +1573,13 @@ Registry file: `macrocast/registry/evaluation/density_metrics.py`
 | id | status | priority |
 |----|--------|----------|
 | `pinball_loss` | registry_only | B |
-| `CRPS` | registry_only | B |
+| `crps` | registry_only | B |
 | `interval_score` | registry_only | B |
 | `coverage_rate` | registry_only | B |
 | `winkler_score` | registry_only | B |
 | `log_score` | future | B |
-| `NLL` | future | B |
-| `PIT_based_metric` | future | B |
+| `nll` | future | B |
+| `pit_based_metric` | future | B |
 
 ### 4.1.5 economic_decision_metrics
 
@@ -1626,7 +1626,7 @@ Registry file: `macrocast/registry/evaluation/agg_time.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `full_oos_average` | operational | A |
+| `full_out_of_sample_average` | operational | A |
 | `rolling_average` | planned | A |
 | `regime_subsample_average` | planned | A |
 | `event_window_average` | registry_only | B |
@@ -1650,8 +1650,8 @@ Registry file: `macrocast/registry/evaluation/agg_target.py`
 | id | status | priority |
 |----|--------|----------|
 | `equal_weight` | planned | A |
-| `scale_adjusted_weight` | registry_only | B |
-| `economic_priority_weight` | future | B |
+| `scale_adjusted_weighting` | registry_only | B |
+| `economic_priority_weighting` | future | B |
 | `report_separately_only` | operational | A |
 
 ### 4.3.4 ranking_rule
@@ -1663,8 +1663,8 @@ Registry file: `macrocast/registry/evaluation/ranking.py`
 | `mean_metric_rank` | planned | A |
 | `median_metric_rank` | planned | A |
 | `win_count` | planned | A |
-| `benchmark_beat_freq` | planned | A |
-| `MCS_inclusion_priority` | planned | A |
+| `benchmark_beat_frequency` | planned | A |
+| `mcs_inclusion_priority` | planned | A |
 | `stability_weighted_rank` | registry_only | B |
 | `ensemble_selection_rank` | future | B |
 
@@ -1689,11 +1689,11 @@ Registry file: `macrocast/registry/evaluation/regime_definition.py`
 | id | status | priority |
 |----|--------|----------|
 | `none` | operational | A |
-| `NBER_recession` | operational | A |
+| `nber_recession` | operational | A |
 | `quantile_uncertainty` | registry_only | B |
 | `financial_stress` | registry_only | B |
 | `volatility_regime` | registry_only | B |
-| `Markov_switching_regime` | future | B |
+| `markov_switching_regime` | future | B |
 | `clustering_regime` | future | B |
 | `user_defined_regime` | operational | A |
 
@@ -1703,7 +1703,7 @@ Registry file: `macrocast/registry/evaluation/regime_use.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `eval_only` | operational | A |
+| `evaluation_only` | operational | A |
 | `train_only` | registry_only | B |
 | `train_and_eval` | registry_only | B |
 | `regime_specific_model` | future | B |
@@ -1730,7 +1730,7 @@ Registry file: `macrocast/registry/evaluation/decomposition_target.py`
 |----|--------|----------|
 | `nonlinearity_effect` | registry_only | B |
 | `regularization_effect` | registry_only | B |
-| `cv_scheme_effect` | registry_only | B |
+| `validation_scheme_effect` | registry_only | B |
 | `loss_function_effect` | registry_only | B |
 | `preprocessing_effect` | planned | A |
 | `feature_builder_effect` | planned | A |
@@ -1747,7 +1747,7 @@ Registry file: `macrocast/registry/evaluation/decomposition_order.py`
 | `two_way_interaction` | registry_only | B |
 | `three_way_interaction` | future | B |
 | `full_factorial` | future | B |
-| `Shapley_style_effect_decomp` | future | B |
+| `shapley_style_effect_decomp` | future | B |
 
 ---
 
@@ -1883,7 +1883,7 @@ Registry file: `macrocast/registry/tests/density_interval.py`
 
 | id | status | priority |
 |----|--------|----------|
-| `PIT_uniformity` | registry_only | B |
+| `pit_uniformity` | registry_only | B |
 | `Berkowitz_test` | registry_only | B |
 | `Kupiec_test` | registry_only | B |
 | `Christoffersen_unconditional` | registry_only | B |

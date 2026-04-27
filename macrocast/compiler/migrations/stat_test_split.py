@@ -13,6 +13,7 @@ import warnings
 from typing import Any
 
 from ...execution.stat_tests.dispatch import LEGACY_TO_NEW
+from ...registry.naming import canonical_axis_value
 
 _LAYER_STAT_TESTS = "6_stat_tests"
 
@@ -21,7 +22,7 @@ def _migrate_layer_block(layer_block: dict[str, Any]) -> dict[str, Any]:
     fixed = layer_block.get("fixed_axes") or {}
     if not isinstance(fixed, dict) or "stat_test" not in fixed:
         return layer_block
-    legacy_value = fixed["stat_test"]
+    legacy_value = canonical_axis_value("stat_test", str(fixed["stat_test"]))
     if legacy_value is None or legacy_value == "none":
         new_fixed = {k: v for k, v in fixed.items() if k != "stat_test"}
         new_block = dict(layer_block)

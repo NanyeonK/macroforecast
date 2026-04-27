@@ -161,23 +161,23 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `agg_horizon` | - | `enum` | `fixed` | operational=2, registry_only=2 | `operational`: `equal_weight`, `report_separately_only`<br>`registry_only`: `short_horizon_weighted`, `long_horizon_weighted` |
-| `agg_target` | - | `enum` | `fixed` | operational=2, registry_only=1, future=1 | `operational`: `equal_weight`, `report_separately_only`<br>`registry_only`: `scale_adjusted_weight`<br>`future`: `economic_priority_weight` |
-| `agg_time` | - | `enum` | `fixed` | operational=4, registry_only=1 | `operational`: `full_oos_average`, `rolling_average`, `regime_subsample_average`, `pre_post_break_average`<br>`registry_only`: `event_window_average` |
+| `agg_target` | - | `enum` | `fixed` | operational=2, registry_only=1, future=1 | `operational`: `equal_weight`, `report_separately_only`<br>`registry_only`: `scale_adjusted_weighting`<br>`future`: `economic_priority_weighting` |
+| `agg_time` | - | `enum` | `fixed` | operational=4, registry_only=1 | `operational`: `full_out_of_sample_average`, `rolling_average`, `regime_subsample_average`, `pre_post_break_average`<br>`registry_only`: `event_window_average` |
 | `benchmark_scope` | - | `enum` | `fixed` | operational=3, registry_only=1 | `operational`: `same_for_all`, `target_specific`, `horizon_specific`<br>`registry_only`: `target_horizon_specific` |
 | `benchmark_window` | - | `enum` | `fixed` | operational=3, registry_only=1 | `operational`: `expanding`, `rolling`, `fixed`<br>`registry_only`: `paper_exact_window` |
-| `decomposition_order` | - | `enum` | `fixed` | operational=1, registry_only=1, future=3 | `operational`: `marginal_effect_only`<br>`registry_only`: `two_way_interaction`<br>`future`: `three_way_interaction`, `full_factorial`, `Shapley_style_effect_decomp` |
-| `decomposition_target` | - | `enum` | `fixed` | operational=4, registry_only=5 | `operational`: `preprocessing_effect`, `feature_representation_effect`, `feature_builder_effect`, `benchmark_effect`<br>`registry_only`: `nonlinearity_effect`, `regularization_effect`, `cv_scheme_effect`, `loss_function_effect`, `importance_method_effect` |
-| `density_metrics` | - | `enum` | `fixed` | registry_only=5, future=3 | `registry_only`: `pinball_loss`, `CRPS`, `interval_score`, `coverage_rate`, `winkler_score`<br>`future`: `log_score`, `NLL`, `PIT_based_metric` |
-| `direction_metrics` | - | `enum` | `fixed` | operational=2, registry_only=7 | `operational`: `directional_accuracy`, `sign_accuracy`<br>`registry_only`: `turning_point_accuracy`, `precision`, `recall`, `F1`, `balanced_accuracy`, `AUC`, `Brier_score` |
+| `decomposition_order` | - | `enum` | `fixed` | operational=1, registry_only=1, future=3 | `operational`: `marginal_effect_only`<br>`registry_only`: `two_way_interaction`<br>`future`: `three_way_interaction`, `full_factorial`, `shapley_style_effect_decomp` |
+| `decomposition_target` | - | `enum` | `fixed` | operational=4, registry_only=5 | `operational`: `preprocessing_effect`, `feature_representation_effect`, `feature_builder_effect`, `benchmark_effect`<br>`registry_only`: `nonlinearity_effect`, `regularization_effect`, `validation_scheme_effect`, `loss_function_effect`, `importance_method_effect` |
+| `density_metrics` | - | `enum` | `fixed` | registry_only=5, future=3 | `registry_only`: `pinball_loss`, `crps`, `interval_score`, `coverage_rate`, `winkler_score`<br>`future`: `log_score`, `nll`, `pit_based_metric` |
+| `direction_metrics` | - | `enum` | `fixed` | operational=2, registry_only=7 | `operational`: `directional_accuracy`, `sign_accuracy`<br>`registry_only`: `turning_point_accuracy`, `precision`, `recall`, `f1`, `balanced_accuracy`, `auc`, `brier_score` |
 | `economic_metrics` | - | `enum` | `fixed` | future=5 | `future`: `utility_gain`, `certainty_equivalent`, `cost_sensitive_loss`, `policy_loss`, `turning_point_value` |
 | `oos_period` | - | `enum` | `fixed` | operational=3 | `operational`: `all_oos_data`, `recession_only_oos`, `expansion_only_oos` |
-| `point_metrics` | - | `enum` | `fixed` | operational=5, registry_only=7 | `operational`: `MSE`, `MSFE`, `RMSE`, `MAE`, `MAPE`<br>`registry_only`: `sMAPE`, `MASE`, `RMSSE`, `MedAE`, `Huber_loss`, `QLIKE`, `TheilU` |
+| `point_metrics` | - | `enum` | `fixed` | operational=5, registry_only=7 | `operational`: `mse`, `msfe`, `rmse`, `mae`, `mape`<br>`registry_only`: `smape`, `mase`, `rmsse`, `median_absolute_error`, `huber_loss`, `qlike`, `theil_u` |
 | `primary_metric` | - | `enum` | `fixed` | operational=7 | `operational`: `msfe`, `relative_msfe`, `oos_r2`, `csfe`, `rmse`, `mae`, `mape` |
-| `ranking` | - | `enum` | `fixed` | operational=5, registry_only=1, future=1 | `operational`: `mean_metric_rank`, `median_metric_rank`, `win_count`, `benchmark_beat_freq`, `MCS_inclusion_priority`<br>`registry_only`: `stability_weighted_rank`<br>`future`: `ensemble_selection_rank` |
-| `regime_definition` | - | `enum` | `fixed` | operational=3, registry_only=3, future=2 | `operational`: `none`, `NBER_recession`, `user_defined_regime`<br>`registry_only`: `quantile_uncertainty`, `financial_stress`, `volatility_regime`<br>`future`: `Markov_switching_regime`, `clustering_regime` |
+| `ranking` | - | `enum` | `fixed` | operational=5, registry_only=1, future=1 | `operational`: `mean_metric_rank`, `median_metric_rank`, `win_count`, `benchmark_beat_frequency`, `mcs_inclusion_priority`<br>`registry_only`: `stability_weighted_rank`<br>`future`: `ensemble_selection_rank` |
+| `regime_definition` | - | `enum` | `fixed` | operational=3, registry_only=3, future=2 | `operational`: `none`, `nber_recession`, `user_defined_regime`<br>`registry_only`: `quantile_uncertainty`, `financial_stress`, `volatility_regime`<br>`future`: `markov_switching_regime`, `clustering_regime` |
 | `regime_metrics` | - | `enum` | `fixed` | operational=3, registry_only=1 | `operational`: `all_main_metrics_by_regime`, `crisis_period_gain`, `state_dependent_oos_r2`<br>`registry_only`: `regime_transition_performance` |
-| `regime_use` | - | `enum` | `fixed` | operational=1, registry_only=2, future=2 | `operational`: `eval_only`<br>`registry_only`: `train_only`, `train_and_eval`<br>`future`: `regime_specific_model`, `regime_interaction_features` |
-| `relative_metrics` | - | `enum` | `fixed` | operational=6 | `operational`: `relative_MSFE`, `relative_RMSE`, `relative_MAE`, `oos_R2`, `benchmark_win_rate`, `CSFE_difference` |
+| `regime_use` | - | `enum` | `fixed` | operational=1, registry_only=2, future=2 | `operational`: `evaluation_only`<br>`registry_only`: `train_only`, `train_and_eval`<br>`future`: `regime_specific_model`, `regime_interaction_features` |
+| `relative_metrics` | - | `enum` | `fixed` | operational=6 | `operational`: `relative_msfe`, `relative_rmse`, `relative_mae`, `oos_r2`, `benchmark_win_rate`, `csfe_difference` |
 | `report_style` | - | `enum` | `fixed` | operational=3, registry_only=2 | `operational`: `tidy_dataframe`, `latex_table`, `markdown_table`<br>`registry_only`: `plot_dashboard`, `paper_ready_bundle` |
 
 ### Layer 5: outputs and provenance
@@ -185,7 +185,7 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `artifact_granularity` | - | `enum` | `fixed` | operational=1, registry_only=1, future=2 | `operational`: `aggregated`<br>`registry_only`: `per_target`<br>`future`: `per_target_horizon`, `hierarchical` |
-| `export_format` | - | `enum` | `fixed` | operational=5 | `operational`: `json`, `csv`, `parquet`, `json+csv`, `all` |
+| `export_format` | - | `enum` | `fixed` | operational=5 | `operational`: `json`, `csv`, `parquet`, `json_csv`, `all` |
 | `provenance_fields` | - | `enum` | `fixed` | operational=4 | `operational`: `none`, `minimal`, `standard`, `full` |
 | `saved_objects` | - | `enum` | `fixed` | operational=3, registry_only=1, future=2 | `operational`: `predictions_only`, `predictions_and_metrics`, `full_bundle`<br>`registry_only`: `none`<br>`future`: `models_only`, `data_only` |
 
@@ -194,15 +194,15 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `cpa_instability` | - | `enum` | `fixed` | operational=7 | `operational`: `none`, `cpa`, `rossi`, `rolling_dm`, `fluctuation_test`, `chow_break_forecast`, `cusum_on_loss` |
-| `density_interval` | - | `enum` | `fixed` | operational=8 | `operational`: `none`, `PIT_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
+| `density_interval` | - | `enum` | `fixed` | operational=8 | `operational`: `none`, `pit_uniformity`, `berkowitz`, `kupiec`, `christoffersen_unconditional`, `christoffersen_independence`, `christoffersen_conditional`, `interval_coverage` |
 | `dependence_correction` | - | `enum` | `fixed` | operational=4 | `operational`: `none`, `nw_hac`, `nw_hac_auto`, `block_bootstrap` |
 | `direction` | - | `enum` | `fixed` | operational=5 | `operational`: `none`, `pesaran_timmermann`, `binomial_hit`, `mcnemar`, `roc_comparison` |
 | `equal_predictive` | - | `enum` | `fixed` | operational=6 | `operational`: `none`, `dm`, `dm_hln`, `dm_modified`, `paired_t_on_loss_diff`, `wilcoxon_signed_rank` |
 | `multiple_model` | - | `enum` | `fixed` | operational=6 | `operational`: `none`, `reality_check`, `spa`, `mcs`, `stepwise_mcs`, `bootstrap_best_model` |
 | `nested` | - | `enum` | `fixed` | operational=6 | `operational`: `none`, `cw`, `enc_new`, `mse_f`, `mse_t`, `forecast_encompassing_nested` |
 | `overlap_handling` | - | `enum` | `fixed` | operational=2 | `operational`: `allow_overlap`, `evaluate_with_hac` |
-| `residual_diagnostics` | - | `enum` | `fixed` | operational=8 | `operational`: `none`, `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `diagnostics_full`, `autocorrelation_of_errors`, `serial_dependence_loss_diff` |
-| `stat_test` | - | `enum` | `fixed` | operational=21 | `operational`: `none`, `dm`, `dm_hln`, `dm_modified`, `cw`, `mcs`, `enc_new`, `mse_f`, `mse_t`, `cpa`, `rossi`, `rolling_dm`, `reality_check`, `spa`, `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `pesaran_timmermann`, `binomial_hit`, `diagnostics_full` |
+| `residual_diagnostics` | - | `enum` | `fixed` | operational=8 | `operational`: `none`, `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `full_residual_diagnostics`, `autocorrelation_of_errors`, `serial_dependence_loss_diff` |
+| `stat_test` | - | `enum` | `fixed` | operational=21 | `operational`: `none`, `dm`, `dm_hln`, `dm_modified`, `cw`, `mcs`, `enc_new`, `mse_f`, `mse_t`, `cpa`, `rossi`, `rolling_dm`, `reality_check`, `spa`, `mincer_zarnowitz`, `ljung_box`, `arch_lm`, `bias_test`, `pesaran_timmermann`, `binomial_hit`, `full_residual_diagnostics` |
 | `test_scope` | - | `enum` | `fixed` | operational=1, registry_only=3, future=3 | `operational`: `per_target`<br>`registry_only`: `per_horizon`, `per_model_pair`, `benchmark_vs_all`<br>`future`: `full_grid_pairwise`, `regime_specific_tests`, `subsample_tests` |
 
 ### Layer 7: interpretation and importance

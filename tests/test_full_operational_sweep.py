@@ -148,7 +148,7 @@ def test_model_factor_executes(model, tmp_path):
 STAT_TESTS = ["dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t",
               "cpa", "rossi", "rolling_dm", "reality_check", "spa",
               "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test",
-              "pesaran_timmermann", "binomial_hit", "diagnostics_full"]
+              "pesaran_timmermann", "binomial_hit", "full_residual_diagnostics"]
 
 @pytest.mark.parametrize("test_name", STAT_TESTS)
 def test_stat_test_executes(test_name, tmp_path):
@@ -226,7 +226,7 @@ def test_importance_method_executes(method, model, tmp_path):
 # ============================================================
 # Export formats
 # ============================================================
-EXPORT_FORMATS = ["json", "csv", "parquet", "json+csv", "all"]
+EXPORT_FORMATS = ["json", "csv", "parquet", "json_csv", "all"]
 
 @pytest.mark.parametrize("fmt", EXPORT_FORMATS)
 def test_export_format_executes(fmt, tmp_path):

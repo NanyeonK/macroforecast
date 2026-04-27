@@ -45,18 +45,18 @@
     "agg_target": {
       "allowed_values": [
         "equal_weight",
-        "scale_adjusted_weight",
-        "economic_priority_weight",
+        "scale_adjusted_weighting",
+        "economic_priority_weighting",
         "report_separately_only"
       ],
       "axis_name": "agg_target",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "economic_priority_weight": "future",
+        "economic_priority_weighting": "future",
         "equal_weight": "operational",
         "report_separately_only": "operational",
-        "scale_adjusted_weight": "registry_only"
+        "scale_adjusted_weighting": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -64,7 +64,7 @@
     },
     "agg_time": {
       "allowed_values": [
-        "full_oos_average",
+        "full_out_of_sample_average",
         "rolling_average",
         "regime_subsample_average",
         "event_window_average",
@@ -75,7 +75,7 @@
       "compatible_with": {},
       "current_status": {
         "event_window_average": "registry_only",
-        "full_oos_average": "operational",
+        "full_out_of_sample_average": "operational",
         "pre_post_break_average": "operational",
         "regime_subsample_average": "operational",
         "rolling_average": "operational"
@@ -420,15 +420,15 @@
         "two_way_interaction",
         "three_way_interaction",
         "full_factorial",
-        "Shapley_style_effect_decomp"
+        "shapley_style_effect_decomp"
       ],
       "axis_name": "decomposition_order",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "Shapley_style_effect_decomp": "future",
         "full_factorial": "future",
         "marginal_effect_only": "operational",
+        "shapley_style_effect_decomp": "future",
         "three_way_interaction": "future",
         "two_way_interaction": "registry_only"
       },
@@ -440,7 +440,7 @@
       "allowed_values": [
         "nonlinearity_effect",
         "regularization_effect",
-        "cv_scheme_effect",
+        "validation_scheme_effect",
         "loss_function_effect",
         "preprocessing_effect",
         "feature_representation_effect",
@@ -453,14 +453,14 @@
       "compatible_with": {},
       "current_status": {
         "benchmark_effect": "operational",
-        "cv_scheme_effect": "registry_only",
         "feature_builder_effect": "operational",
         "feature_representation_effect": "operational",
         "importance_method_effect": "registry_only",
         "loss_function_effect": "registry_only",
         "nonlinearity_effect": "registry_only",
         "preprocessing_effect": "operational",
-        "regularization_effect": "registry_only"
+        "regularization_effect": "registry_only",
+        "validation_scheme_effect": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -469,7 +469,7 @@
     "density_interval": {
       "allowed_values": [
         "none",
-        "PIT_uniformity",
+        "pit_uniformity",
         "berkowitz",
         "kupiec",
         "christoffersen_unconditional",
@@ -481,14 +481,14 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "PIT_uniformity": "operational",
         "berkowitz": "operational",
         "christoffersen_conditional": "operational",
         "christoffersen_independence": "operational",
         "christoffersen_unconditional": "operational",
         "interval_coverage": "operational",
         "kupiec": "operational",
-        "none": "operational"
+        "none": "operational",
+        "pit_uniformity": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -497,25 +497,25 @@
     "density_metrics": {
       "allowed_values": [
         "pinball_loss",
-        "CRPS",
+        "crps",
         "interval_score",
         "coverage_rate",
         "winkler_score",
         "log_score",
-        "NLL",
-        "PIT_based_metric"
+        "nll",
+        "pit_based_metric"
       ],
       "axis_name": "density_metrics",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "CRPS": "registry_only",
-        "NLL": "future",
-        "PIT_based_metric": "future",
         "coverage_rate": "registry_only",
+        "crps": "registry_only",
         "interval_score": "registry_only",
         "log_score": "future",
+        "nll": "future",
         "pinball_loss": "registry_only",
+        "pit_based_metric": "future",
         "winkler_score": "registry_only"
       },
       "default_policy": "fixed",
@@ -615,20 +615,20 @@
         "turning_point_accuracy",
         "precision",
         "recall",
-        "F1",
+        "f1",
         "balanced_accuracy",
-        "AUC",
-        "Brier_score"
+        "auc",
+        "brier_score"
       ],
       "axis_name": "direction_metrics",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "AUC": "registry_only",
-        "Brier_score": "registry_only",
-        "F1": "registry_only",
+        "auc": "registry_only",
         "balanced_accuracy": "registry_only",
+        "brier_score": "registry_only",
         "directional_accuracy": "operational",
+        "f1": "registry_only",
         "precision": "registry_only",
         "recall": "registry_only",
         "sign_accuracy": "operational",
@@ -831,7 +831,7 @@
         "json",
         "csv",
         "parquet",
-        "json+csv",
+        "json_csv",
         "all"
       ],
       "axis_name": "export_format",
@@ -841,7 +841,7 @@
         "all": "operational",
         "csv": "operational",
         "json": "operational",
-        "json+csv": "operational",
+        "json_csv": "operational",
         "parquet": "operational"
       },
       "default_policy": "fixed",
@@ -1991,35 +1991,35 @@
     },
     "point_metrics": {
       "allowed_values": [
-        "MSE",
-        "MSFE",
-        "RMSE",
-        "MAE",
-        "MAPE",
-        "sMAPE",
-        "MASE",
-        "RMSSE",
-        "MedAE",
-        "Huber_loss",
-        "QLIKE",
-        "TheilU"
+        "mse",
+        "msfe",
+        "rmse",
+        "mae",
+        "mape",
+        "smape",
+        "mase",
+        "rmsse",
+        "median_absolute_error",
+        "huber_loss",
+        "qlike",
+        "theil_u"
       ],
       "axis_name": "point_metrics",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "Huber_loss": "registry_only",
-        "MAE": "operational",
-        "MAPE": "operational",
-        "MASE": "registry_only",
-        "MSE": "operational",
-        "MSFE": "operational",
-        "MedAE": "registry_only",
-        "QLIKE": "registry_only",
-        "RMSE": "operational",
-        "RMSSE": "registry_only",
-        "TheilU": "registry_only",
-        "sMAPE": "registry_only"
+        "huber_loss": "registry_only",
+        "mae": "operational",
+        "mape": "operational",
+        "mase": "registry_only",
+        "median_absolute_error": "registry_only",
+        "mse": "operational",
+        "msfe": "operational",
+        "qlike": "registry_only",
+        "rmse": "operational",
+        "rmsse": "registry_only",
+        "smape": "registry_only",
+        "theil_u": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2142,8 +2142,8 @@
         "mean_metric_rank",
         "median_metric_rank",
         "win_count",
-        "benchmark_beat_freq",
-        "MCS_inclusion_priority",
+        "benchmark_beat_frequency",
+        "mcs_inclusion_priority",
         "stability_weighted_rank",
         "ensemble_selection_rank"
       ],
@@ -2151,9 +2151,9 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "MCS_inclusion_priority": "operational",
-        "benchmark_beat_freq": "operational",
+        "benchmark_beat_frequency": "operational",
         "ensemble_selection_rank": "future",
+        "mcs_inclusion_priority": "operational",
         "mean_metric_rank": "operational",
         "median_metric_rank": "operational",
         "stability_weighted_rank": "registry_only",
@@ -2246,11 +2246,11 @@
     "regime_definition": {
       "allowed_values": [
         "none",
-        "NBER_recession",
+        "nber_recession",
         "quantile_uncertainty",
         "financial_stress",
         "volatility_regime",
-        "Markov_switching_regime",
+        "markov_switching_regime",
         "clustering_regime",
         "user_defined_regime"
       ],
@@ -2258,10 +2258,10 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "Markov_switching_regime": "future",
-        "NBER_recession": "operational",
         "clustering_regime": "future",
         "financial_stress": "registry_only",
+        "markov_switching_regime": "future",
+        "nber_recession": "operational",
         "none": "operational",
         "quantile_uncertainty": "registry_only",
         "user_defined_regime": "operational",
@@ -2293,7 +2293,7 @@
     },
     "regime_use": {
       "allowed_values": [
-        "eval_only",
+        "evaluation_only",
         "train_only",
         "train_and_eval",
         "regime_specific_model",
@@ -2303,7 +2303,7 @@
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "eval_only": "operational",
+        "evaluation_only": "operational",
         "regime_interaction_features": "future",
         "regime_specific_model": "future",
         "train_and_eval": "registry_only",
@@ -2315,23 +2315,23 @@
     },
     "relative_metrics": {
       "allowed_values": [
-        "relative_MSFE",
-        "relative_RMSE",
-        "relative_MAE",
-        "oos_R2",
+        "relative_msfe",
+        "relative_rmse",
+        "relative_mae",
+        "oos_r2",
         "benchmark_win_rate",
-        "CSFE_difference"
+        "csfe_difference"
       ],
       "axis_name": "relative_metrics",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "CSFE_difference": "operational",
         "benchmark_win_rate": "operational",
-        "oos_R2": "operational",
-        "relative_MAE": "operational",
-        "relative_MSFE": "operational",
-        "relative_RMSE": "operational"
+        "csfe_difference": "operational",
+        "oos_r2": "operational",
+        "relative_mae": "operational",
+        "relative_msfe": "operational",
+        "relative_rmse": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2442,7 +2442,7 @@
         "ljung_box",
         "arch_lm",
         "bias_test",
-        "diagnostics_full",
+        "full_residual_diagnostics",
         "autocorrelation_of_errors",
         "serial_dependence_loss_diff"
       ],
@@ -2453,7 +2453,7 @@
         "arch_lm": "operational",
         "autocorrelation_of_errors": "operational",
         "bias_test": "operational",
-        "diagnostics_full": "operational",
+        "full_residual_diagnostics": "operational",
         "ljung_box": "operational",
         "mincer_zarnowitz": "operational",
         "none": "operational",
@@ -2741,7 +2741,7 @@
         "bias_test",
         "pesaran_timmermann",
         "binomial_hit",
-        "diagnostics_full"
+        "full_residual_diagnostics"
       ],
       "axis_name": "stat_test",
       "axis_type": "enum",
@@ -2752,11 +2752,11 @@
         "binomial_hit": "operational",
         "cpa": "operational",
         "cw": "operational",
-        "diagnostics_full": "operational",
         "dm": "operational",
         "dm_hln": "operational",
         "dm_modified": "operational",
         "enc_new": "operational",
+        "full_residual_diagnostics": "operational",
         "ljung_box": "operational",
         "mcs": "operational",
         "mincer_zarnowitz": "operational",
@@ -3710,6 +3710,21 @@
     ],
     "axis_value_aliases": [
       {
+        "axis": "agg_target",
+        "canonical_id": "economic_priority_weighting",
+        "legacy_id": "economic_priority_weight"
+      },
+      {
+        "axis": "agg_target",
+        "canonical_id": "scale_adjusted_weighting",
+        "legacy_id": "scale_adjusted_weight"
+      },
+      {
+        "axis": "agg_time",
+        "canonical_id": "full_out_of_sample_average",
+        "legacy_id": "full_oos_average"
+      },
+      {
         "axis": "benchmark_family",
         "canonical_id": "autoregressive_bic",
         "legacy_id": "ar_bic"
@@ -3765,6 +3780,51 @@
         "legacy_id": "selected_sparse_X"
       },
       {
+        "axis": "decomposition_order",
+        "canonical_id": "shapley_style_effect_decomp",
+        "legacy_id": "Shapley_style_effect_decomp"
+      },
+      {
+        "axis": "decomposition_target",
+        "canonical_id": "validation_scheme_effect",
+        "legacy_id": "cv_scheme_effect"
+      },
+      {
+        "axis": "density_interval",
+        "canonical_id": "pit_uniformity",
+        "legacy_id": "PIT_uniformity"
+      },
+      {
+        "axis": "density_metrics",
+        "canonical_id": "crps",
+        "legacy_id": "CRPS"
+      },
+      {
+        "axis": "density_metrics",
+        "canonical_id": "nll",
+        "legacy_id": "NLL"
+      },
+      {
+        "axis": "density_metrics",
+        "canonical_id": "pit_based_metric",
+        "legacy_id": "PIT_based_metric"
+      },
+      {
+        "axis": "direction_metrics",
+        "canonical_id": "auc",
+        "legacy_id": "AUC"
+      },
+      {
+        "axis": "direction_metrics",
+        "canonical_id": "brier_score",
+        "legacy_id": "Brier_score"
+      },
+      {
+        "axis": "direction_metrics",
+        "canonical_id": "f1",
+        "legacy_id": "F1"
+      },
+      {
         "axis": "experiment_unit",
         "canonical_id": "single_target_generator_grid",
         "legacy_id": "single_target_model_grid"
@@ -3773,6 +3833,11 @@
         "axis": "experiment_unit",
         "canonical_id": "single_target_single_generator",
         "legacy_id": "single_target_single_model"
+      },
+      {
+        "axis": "export_format",
+        "canonical_id": "json_csv",
+        "legacy_id": "json+csv"
       },
       {
         "axis": "feature_block_combination",
@@ -3955,6 +4020,66 @@
         "legacy_id": "apply_tcode_to_target"
       },
       {
+        "axis": "point_metrics",
+        "canonical_id": "huber_loss",
+        "legacy_id": "Huber_loss"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "mae",
+        "legacy_id": "MAE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "mape",
+        "legacy_id": "MAPE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "mase",
+        "legacy_id": "MASE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "mse",
+        "legacy_id": "MSE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "msfe",
+        "legacy_id": "MSFE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "median_absolute_error",
+        "legacy_id": "MedAE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "qlike",
+        "legacy_id": "QLIKE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "rmse",
+        "legacy_id": "RMSE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "rmsse",
+        "legacy_id": "RMSSE"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "theil_u",
+        "legacy_id": "TheilU"
+      },
+      {
+        "axis": "point_metrics",
+        "canonical_id": "smape",
+        "legacy_id": "sMAPE"
+      },
+      {
         "axis": "predictor_family",
         "canonical_id": "explicit_variable_list",
         "legacy_id": "handpicked_set"
@@ -3973,6 +4098,16 @@
         "axis": "preprocess_order",
         "canonical_id": "official_tcode_then_extra",
         "legacy_id": "tcode_then_extra"
+      },
+      {
+        "axis": "ranking",
+        "canonical_id": "mcs_inclusion_priority",
+        "legacy_id": "MCS_inclusion_priority"
+      },
+      {
+        "axis": "ranking",
+        "canonical_id": "benchmark_beat_frequency",
+        "legacy_id": "benchmark_beat_freq"
       },
       {
         "axis": "raw_missing_policy",
@@ -3995,6 +4130,46 @@
         "legacy_id": "raw_outlier_to_missing"
       },
       {
+        "axis": "regime_definition",
+        "canonical_id": "markov_switching_regime",
+        "legacy_id": "Markov_switching_regime"
+      },
+      {
+        "axis": "regime_definition",
+        "canonical_id": "nber_recession",
+        "legacy_id": "NBER_recession"
+      },
+      {
+        "axis": "regime_use",
+        "canonical_id": "evaluation_only",
+        "legacy_id": "eval_only"
+      },
+      {
+        "axis": "relative_metrics",
+        "canonical_id": "csfe_difference",
+        "legacy_id": "CSFE_difference"
+      },
+      {
+        "axis": "relative_metrics",
+        "canonical_id": "oos_r2",
+        "legacy_id": "oos_R2"
+      },
+      {
+        "axis": "relative_metrics",
+        "canonical_id": "relative_mae",
+        "legacy_id": "relative_MAE"
+      },
+      {
+        "axis": "relative_metrics",
+        "canonical_id": "relative_msfe",
+        "legacy_id": "relative_MSFE"
+      },
+      {
+        "axis": "relative_metrics",
+        "canonical_id": "relative_rmse",
+        "legacy_id": "relative_RMSE"
+      },
+      {
         "axis": "representation_policy",
         "canonical_id": "official_tcode_only",
         "legacy_id": "tcode_only"
@@ -4013,6 +4188,16 @@
         "axis": "research_design",
         "canonical_id": "single_forecast_run",
         "legacy_id": "single_path_benchmark"
+      },
+      {
+        "axis": "residual_diagnostics",
+        "canonical_id": "full_residual_diagnostics",
+        "legacy_id": "diagnostics_full"
+      },
+      {
+        "axis": "stat_test",
+        "canonical_id": "full_residual_diagnostics",
+        "legacy_id": "diagnostics_full"
       },
       {
         "axis": "target_structure",
@@ -4716,7 +4901,7 @@
           "selected": {
             "agg_horizon": "equal_weight",
             "agg_target": "report_separately_only",
-            "agg_time": "full_oos_average",
+            "agg_time": "full_out_of_sample_average",
             "artifact_granularity": "aggregated",
             "benchmark_family": "zero_change",
             "benchmark_scope": "same_for_all",
@@ -4769,7 +4954,7 @@
             "nested": "none",
             "oos_period": "all_oos_data",
             "overlap_handling": "allow_overlap",
-            "point_metrics": "MSFE",
+            "point_metrics": "msfe",
             "preprocess_fit_scope": "not_applicable",
             "preprocess_order": "none",
             "primary_metric": "msfe",
@@ -4778,8 +4963,8 @@
             "recursive_x_model_family": "none",
             "regime_definition": "none",
             "regime_metrics": "all_main_metrics_by_regime",
-            "regime_use": "eval_only",
-            "relative_metrics": "relative_MSFE",
+            "regime_use": "evaluation_only",
+            "relative_metrics": "relative_msfe",
             "report_style": "tidy_dataframe",
             "research_design": "single_forecast_run",
             "residual_diagnostics": "none",
@@ -8038,91 +8223,91 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSE"
+                "value": "mse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSFE"
+                "value": "msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "RMSE"
+                "value": "rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAE"
+                "value": "mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mape'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAPE"
+                "value": "mape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'sMAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'smape'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "sMAPE"
+                "value": "smape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MASE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mase'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MASE"
+                "value": "mase"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmsse'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "RMSSE"
+                "value": "rmsse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MedAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'median_absolute_error'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MedAE"
+                "value": "median_absolute_error"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'Huber_loss'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'huber_loss'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Huber_loss"
+                "value": "huber_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'QLIKE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'qlike'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "QLIKE"
+                "value": "qlike"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'TheilU'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'theil_u'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "TheilU"
+                "value": "theil_u"
               }
             ],
-            "selected": "MSFE"
+            "selected": "msfe"
           },
           {
             "axis": "density_metrics",
@@ -8137,11 +8322,11 @@
                 "value": "pinball_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'CRPS'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'crps'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "CRPS"
+                "value": "crps"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'interval_score'",
@@ -8172,18 +8357,18 @@
                 "value": "log_score"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'NLL'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'nll'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "NLL"
+                "value": "nll"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'PIT_based_metric'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'pit_based_metric'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "PIT_based_metric"
+                "value": "pit_based_metric"
               }
             ],
             "selected": "pinball_loss"
@@ -8229,11 +8414,11 @@
                 "value": "recall"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'F1'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'f1'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "F1"
+                "value": "f1"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'balanced_accuracy'",
@@ -8243,18 +8428,18 @@
                 "value": "balanced_accuracy"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'AUC'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'auc'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "AUC"
+                "value": "auc"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'Brier_score'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'brier_score'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Brier_score"
+                "value": "brier_score"
               }
             ],
             "selected": "directional_accuracy"
@@ -8265,32 +8450,32 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MSFE"
+                "value": "relative_msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_RMSE"
+                "value": "relative_rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MAE"
+                "value": "relative_mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_R2'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_r2'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "oos_R2"
+                "value": "oos_r2"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'benchmark_win_rate'",
@@ -8300,14 +8485,14 @@
                 "value": "benchmark_win_rate"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'CSFE_difference'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'csfe_difference'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "CSFE_difference"
+                "value": "csfe_difference"
               }
             ],
-            "selected": "relative_MSFE"
+            "selected": "relative_msfe"
           },
           {
             "axis": "economic_metrics",
@@ -8430,11 +8615,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_oos_average'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_out_of_sample_average'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "full_oos_average"
+                "value": "full_out_of_sample_average"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'rolling_average'",
@@ -8465,7 +8650,7 @@
                 "value": "pre_post_break_average"
               }
             ],
-            "selected": "full_oos_average"
+            "selected": "full_out_of_sample_average"
           },
           {
             "axis": "agg_horizon",
@@ -8516,18 +8701,18 @@
                 "value": "equal_weight"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weighting'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "scale_adjusted_weight"
+                "value": "scale_adjusted_weighting"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weighting'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "economic_priority_weight"
+                "value": "economic_priority_weighting"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'report_separately_only'",
@@ -8566,18 +8751,18 @@
                 "value": "win_count"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_freq'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_frequency'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "benchmark_beat_freq"
+                "value": "benchmark_beat_frequency"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'MCS_inclusion_priority'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'mcs_inclusion_priority'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MCS_inclusion_priority"
+                "value": "mcs_inclusion_priority"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'stability_weighted_rank'",
@@ -8652,11 +8837,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'NBER_recession'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'nber_recession'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "NBER_recession"
+                "value": "nber_recession"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'quantile_uncertainty'",
@@ -8680,11 +8865,11 @@
                 "value": "volatility_regime"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'Markov_switching_regime'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'markov_switching_regime'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Markov_switching_regime"
+                "value": "markov_switching_regime"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'clustering_regime'",
@@ -8709,11 +8894,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'eval_only'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'evaluation_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "eval_only"
+                "value": "evaluation_only"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'train_only'",
@@ -8744,7 +8929,7 @@
                 "value": "regime_interaction_features"
               }
             ],
-            "selected": "eval_only"
+            "selected": "evaluation_only"
           },
           {
             "axis": "regime_metrics",
@@ -8802,11 +8987,11 @@
                 "value": "regularization_effect"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'cv_scheme_effect'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'validation_scheme_effect'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_scheme_effect"
+                "value": "validation_scheme_effect"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'loss_function_effect'",
@@ -8887,11 +9072,11 @@
                 "value": "full_factorial"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'Shapley_style_effect_decomp'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'shapley_style_effect_decomp'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Shapley_style_effect_decomp"
+                "value": "shapley_style_effect_decomp"
               }
             ],
             "selected": "marginal_effect_only"
@@ -8952,11 +9137,11 @@
                 "value": "parquet"
               },
               {
-                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json+csv'",
+                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json_csv'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "json+csv"
+                "value": "json_csv"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'all'",
@@ -9236,11 +9421,11 @@
                 "value": "binomial_hit"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               }
             ],
             "selected": "none"
@@ -9465,11 +9650,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'PIT_uniformity'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'pit_uniformity'",
                 "disabled_reason": "density/interval tests require interval, density, or quantile forecast objects",
                 "enabled": false,
                 "status": "operational",
-                "value": "PIT_uniformity"
+                "value": "pit_uniformity"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'berkowitz'",
@@ -9600,11 +9785,11 @@
                 "value": "bias_test"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'autocorrelation_of_errors'",
@@ -10418,7 +10603,7 @@
           "selected": {
             "agg_horizon": "equal_weight",
             "agg_target": "report_separately_only",
-            "agg_time": "full_oos_average",
+            "agg_time": "full_out_of_sample_average",
             "artifact_granularity": "aggregated",
             "benchmark_family": "zero_change",
             "benchmark_scope": "same_for_all",
@@ -10473,7 +10658,7 @@
             "nested": "none",
             "oos_period": "all_oos_data",
             "overlap_handling": "allow_overlap",
-            "point_metrics": "MSFE",
+            "point_metrics": "msfe",
             "preprocess_fit_scope": "not_applicable",
             "preprocess_order": "none",
             "primary_metric": "msfe",
@@ -10483,8 +10668,8 @@
             "recursive_x_model_family": "none",
             "regime_definition": "none",
             "regime_metrics": "all_main_metrics_by_regime",
-            "regime_use": "eval_only",
-            "relative_metrics": "relative_MSFE",
+            "regime_use": "evaluation_only",
+            "relative_metrics": "relative_msfe",
             "report_style": "tidy_dataframe",
             "reproducibility_mode": "seeded_reproducible",
             "research_design": "single_forecast_run",
@@ -13758,91 +13943,91 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSE"
+                "value": "mse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSFE"
+                "value": "msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "RMSE"
+                "value": "rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAE"
+                "value": "mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mape'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAPE"
+                "value": "mape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'sMAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'smape'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "sMAPE"
+                "value": "smape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MASE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mase'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MASE"
+                "value": "mase"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmsse'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "RMSSE"
+                "value": "rmsse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MedAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'median_absolute_error'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MedAE"
+                "value": "median_absolute_error"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'Huber_loss'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'huber_loss'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Huber_loss"
+                "value": "huber_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'QLIKE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'qlike'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "QLIKE"
+                "value": "qlike"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'TheilU'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'theil_u'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "TheilU"
+                "value": "theil_u"
               }
             ],
-            "selected": "MSFE"
+            "selected": "msfe"
           },
           {
             "axis": "density_metrics",
@@ -13857,11 +14042,11 @@
                 "value": "pinball_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'CRPS'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'crps'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "CRPS"
+                "value": "crps"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'interval_score'",
@@ -13892,18 +14077,18 @@
                 "value": "log_score"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'NLL'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'nll'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "NLL"
+                "value": "nll"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'PIT_based_metric'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'pit_based_metric'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "PIT_based_metric"
+                "value": "pit_based_metric"
               }
             ],
             "selected": "pinball_loss"
@@ -13949,11 +14134,11 @@
                 "value": "recall"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'F1'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'f1'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "F1"
+                "value": "f1"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'balanced_accuracy'",
@@ -13963,18 +14148,18 @@
                 "value": "balanced_accuracy"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'AUC'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'auc'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "AUC"
+                "value": "auc"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'Brier_score'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'brier_score'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Brier_score"
+                "value": "brier_score"
               }
             ],
             "selected": "directional_accuracy"
@@ -13985,32 +14170,32 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MSFE"
+                "value": "relative_msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_RMSE"
+                "value": "relative_rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MAE"
+                "value": "relative_mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_R2'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_r2'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "oos_R2"
+                "value": "oos_r2"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'benchmark_win_rate'",
@@ -14020,14 +14205,14 @@
                 "value": "benchmark_win_rate"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'CSFE_difference'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'csfe_difference'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "CSFE_difference"
+                "value": "csfe_difference"
               }
             ],
-            "selected": "relative_MSFE"
+            "selected": "relative_msfe"
           },
           {
             "axis": "economic_metrics",
@@ -14150,11 +14335,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_oos_average'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_out_of_sample_average'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "full_oos_average"
+                "value": "full_out_of_sample_average"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'rolling_average'",
@@ -14185,7 +14370,7 @@
                 "value": "pre_post_break_average"
               }
             ],
-            "selected": "full_oos_average"
+            "selected": "full_out_of_sample_average"
           },
           {
             "axis": "agg_horizon",
@@ -14236,18 +14421,18 @@
                 "value": "equal_weight"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weighting'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "scale_adjusted_weight"
+                "value": "scale_adjusted_weighting"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weighting'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "economic_priority_weight"
+                "value": "economic_priority_weighting"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'report_separately_only'",
@@ -14286,18 +14471,18 @@
                 "value": "win_count"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_freq'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_frequency'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "benchmark_beat_freq"
+                "value": "benchmark_beat_frequency"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'MCS_inclusion_priority'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'mcs_inclusion_priority'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MCS_inclusion_priority"
+                "value": "mcs_inclusion_priority"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'stability_weighted_rank'",
@@ -14372,11 +14557,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'NBER_recession'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'nber_recession'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "NBER_recession"
+                "value": "nber_recession"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'quantile_uncertainty'",
@@ -14400,11 +14585,11 @@
                 "value": "volatility_regime"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'Markov_switching_regime'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'markov_switching_regime'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Markov_switching_regime"
+                "value": "markov_switching_regime"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'clustering_regime'",
@@ -14429,11 +14614,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'eval_only'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'evaluation_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "eval_only"
+                "value": "evaluation_only"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'train_only'",
@@ -14464,7 +14649,7 @@
                 "value": "regime_interaction_features"
               }
             ],
-            "selected": "eval_only"
+            "selected": "evaluation_only"
           },
           {
             "axis": "regime_metrics",
@@ -14522,11 +14707,11 @@
                 "value": "regularization_effect"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'cv_scheme_effect'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'validation_scheme_effect'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_scheme_effect"
+                "value": "validation_scheme_effect"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'loss_function_effect'",
@@ -14607,11 +14792,11 @@
                 "value": "full_factorial"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'Shapley_style_effect_decomp'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'shapley_style_effect_decomp'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Shapley_style_effect_decomp"
+                "value": "shapley_style_effect_decomp"
               }
             ],
             "selected": "marginal_effect_only"
@@ -14672,11 +14857,11 @@
                 "value": "parquet"
               },
               {
-                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json+csv'",
+                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json_csv'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "json+csv"
+                "value": "json_csv"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'all'",
@@ -14956,11 +15141,11 @@
                 "value": "binomial_hit"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               }
             ],
             "selected": "none"
@@ -15185,11 +15370,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'PIT_uniformity'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'pit_uniformity'",
                 "disabled_reason": "density/interval tests require interval, density, or quantile forecast objects",
                 "enabled": false,
                 "status": "operational",
-                "value": "PIT_uniformity"
+                "value": "pit_uniformity"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'berkowitz'",
@@ -15320,11 +15505,11 @@
                 "value": "bias_test"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'autocorrelation_of_errors'",
@@ -16187,7 +16372,7 @@
           "selected": {
             "agg_horizon": "equal_weight",
             "agg_target": "report_separately_only",
-            "agg_time": "full_oos_average",
+            "agg_time": "full_out_of_sample_average",
             "artifact_granularity": "aggregated",
             "benchmark_family": "autoregressive_bic",
             "benchmark_scope": "same_for_all",
@@ -16253,7 +16438,7 @@
             "official_transform_scope": "target_and_predictors",
             "oos_period": "all_oos_data",
             "overlap_handling": "allow_overlap",
-            "point_metrics": "MSFE",
+            "point_metrics": "msfe",
             "preprocess_fit_scope": "train_only",
             "preprocess_order": "official_tcode_then_extra",
             "primary_metric": "msfe",
@@ -16265,8 +16450,8 @@
             "recursive_x_model_family": "none",
             "regime_definition": "none",
             "regime_metrics": "all_main_metrics_by_regime",
-            "regime_use": "eval_only",
-            "relative_metrics": "relative_MSFE",
+            "regime_use": "evaluation_only",
+            "relative_metrics": "relative_msfe",
             "release_lag_rule": "ignore_release_lag",
             "report_style": "tidy_dataframe",
             "reproducibility_mode": "seeded_reproducible",
@@ -19594,91 +19779,91 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSE"
+                "value": "mse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MSFE"
+                "value": "msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "RMSE"
+                "value": "rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAE"
+                "value": "mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mape'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MAPE"
+                "value": "mape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'sMAPE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'smape'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "sMAPE"
+                "value": "smape"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MASE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'mase'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MASE"
+                "value": "mase"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'RMSSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'rmsse'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "RMSSE"
+                "value": "rmsse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'MedAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'median_absolute_error'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "MedAE"
+                "value": "median_absolute_error"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'Huber_loss'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'huber_loss'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Huber_loss"
+                "value": "huber_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'QLIKE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'qlike'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "QLIKE"
+                "value": "qlike"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'TheilU'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.point_metrics = 'theil_u'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "TheilU"
+                "value": "theil_u"
               }
             ],
-            "selected": "MSFE"
+            "selected": "msfe"
           },
           {
             "axis": "density_metrics",
@@ -19693,11 +19878,11 @@
                 "value": "pinball_loss"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'CRPS'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'crps'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "CRPS"
+                "value": "crps"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'interval_score'",
@@ -19728,18 +19913,18 @@
                 "value": "log_score"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'NLL'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'nll'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "NLL"
+                "value": "nll"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'PIT_based_metric'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.density_metrics = 'pit_based_metric'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "PIT_based_metric"
+                "value": "pit_based_metric"
               }
             ],
             "selected": "pinball_loss"
@@ -19785,11 +19970,11 @@
                 "value": "recall"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'F1'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'f1'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "F1"
+                "value": "f1"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'balanced_accuracy'",
@@ -19799,18 +19984,18 @@
                 "value": "balanced_accuracy"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'AUC'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'auc'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "AUC"
+                "value": "auc"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'Brier_score'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.direction_metrics = 'brier_score'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "Brier_score"
+                "value": "brier_score"
               }
             ],
             "selected": "directional_accuracy"
@@ -19821,32 +20006,32 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MSFE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_msfe'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MSFE"
+                "value": "relative_msfe"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_RMSE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_rmse'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_RMSE"
+                "value": "relative_rmse"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_MAE'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'relative_mae'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "relative_MAE"
+                "value": "relative_mae"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_R2'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'oos_r2'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "oos_R2"
+                "value": "oos_r2"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'benchmark_win_rate'",
@@ -19856,14 +20041,14 @@
                 "value": "benchmark_win_rate"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'CSFE_difference'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.relative_metrics = 'csfe_difference'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "CSFE_difference"
+                "value": "csfe_difference"
               }
             ],
-            "selected": "relative_MSFE"
+            "selected": "relative_msfe"
           },
           {
             "axis": "economic_metrics",
@@ -19986,11 +20171,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_oos_average'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'full_out_of_sample_average'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "full_oos_average"
+                "value": "full_out_of_sample_average"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_time = 'rolling_average'",
@@ -20021,7 +20206,7 @@
                 "value": "pre_post_break_average"
               }
             ],
-            "selected": "full_oos_average"
+            "selected": "full_out_of_sample_average"
           },
           {
             "axis": "agg_horizon",
@@ -20072,18 +20257,18 @@
                 "value": "equal_weight"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'scale_adjusted_weighting'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "scale_adjusted_weight"
+                "value": "scale_adjusted_weighting"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weight'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'economic_priority_weighting'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "economic_priority_weight"
+                "value": "economic_priority_weighting"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.agg_target = 'report_separately_only'",
@@ -20122,18 +20307,18 @@
                 "value": "win_count"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_freq'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'benchmark_beat_frequency'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "benchmark_beat_freq"
+                "value": "benchmark_beat_frequency"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'MCS_inclusion_priority'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'mcs_inclusion_priority'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "MCS_inclusion_priority"
+                "value": "mcs_inclusion_priority"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.ranking = 'stability_weighted_rank'",
@@ -20208,11 +20393,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'NBER_recession'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'nber_recession'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "NBER_recession"
+                "value": "nber_recession"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'quantile_uncertainty'",
@@ -20236,11 +20421,11 @@
                 "value": "volatility_regime"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'Markov_switching_regime'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'markov_switching_regime'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Markov_switching_regime"
+                "value": "markov_switching_regime"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_definition = 'clustering_regime'",
@@ -20265,11 +20450,11 @@
             "layer_label": "Layer 4: evaluation",
             "options": [
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'eval_only'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'evaluation_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "eval_only"
+                "value": "evaluation_only"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.regime_use = 'train_only'",
@@ -20300,7 +20485,7 @@
                 "value": "regime_interaction_features"
               }
             ],
-            "selected": "eval_only"
+            "selected": "evaluation_only"
           },
           {
             "axis": "regime_metrics",
@@ -20358,11 +20543,11 @@
                 "value": "regularization_effect"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'cv_scheme_effect'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'validation_scheme_effect'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_scheme_effect"
+                "value": "validation_scheme_effect"
               },
               {
                 "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_target = 'loss_function_effect'",
@@ -20443,11 +20628,11 @@
                 "value": "full_factorial"
               },
               {
-                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'Shapley_style_effect_decomp'",
+                "canonical_path_effect": "path.4_evaluation.fixed_axes.decomposition_order = 'shapley_style_effect_decomp'",
                 "disabled_reason": "future design value; runtime contract is not open",
                 "enabled": false,
                 "status": "future",
-                "value": "Shapley_style_effect_decomp"
+                "value": "shapley_style_effect_decomp"
               }
             ],
             "selected": "marginal_effect_only"
@@ -20508,11 +20693,11 @@
                 "value": "parquet"
               },
               {
-                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json+csv'",
+                "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'json_csv'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "json+csv"
+                "value": "json_csv"
               },
               {
                 "canonical_path_effect": "path.5_output_provenance.fixed_axes.export_format = 'all'",
@@ -20792,11 +20977,11 @@
                 "value": "binomial_hit"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               }
             ],
             "selected": "none"
@@ -21021,11 +21206,11 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'PIT_uniformity'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'pit_uniformity'",
                 "disabled_reason": "density/interval tests require interval, density, or quantile forecast objects",
                 "enabled": false,
                 "status": "operational",
-                "value": "PIT_uniformity"
+                "value": "pit_uniformity"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.density_interval = 'berkowitz'",
@@ -21156,11 +21341,11 @@
                 "value": "bias_test"
               },
               {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'diagnostics_full'",
+                "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'full_residual_diagnostics'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "diagnostics_full"
+                "value": "full_residual_diagnostics"
               },
               {
                 "canonical_path_effect": "path.6_stat_tests.fixed_axes.residual_diagnostics = 'autocorrelation_of_errors'",
@@ -21785,7 +21970,7 @@
     "default_selections": {
       "agg_horizon": "equal_weight",
       "agg_target": "report_separately_only",
-      "agg_time": "full_oos_average",
+      "agg_time": "full_out_of_sample_average",
       "artifact_granularity": "aggregated",
       "benchmark_scope": "same_for_all",
       "benchmark_window": "expanding",
@@ -21823,15 +22008,15 @@
       "nested": "none",
       "oos_period": "all_oos_data",
       "overlap_handling": "allow_overlap",
-      "point_metrics": "MSFE",
+      "point_metrics": "msfe",
       "primary_metric": "msfe",
       "provenance_fields": "full",
       "ranking": "mean_metric_rank",
       "recursive_x_model_family": "none",
       "regime_definition": "none",
       "regime_metrics": "all_main_metrics_by_regime",
-      "regime_use": "eval_only",
-      "relative_metrics": "relative_MSFE",
+      "regime_use": "evaluation_only",
+      "relative_metrics": "relative_msfe",
       "report_style": "tidy_dataframe",
       "residual_diagnostics": "none",
       "saved_objects": "full_bundle",
@@ -21840,14 +22025,14 @@
     },
     "forecast_object_rules": {
       "density_interval_stats": [
-        "PIT_uniformity",
         "berkowitz",
         "christoffersen_conditional",
         "christoffersen_independence",
         "christoffersen_unconditional",
         "interval_coverage",
         "kupiec",
-        "none"
+        "none",
+        "pit_uniformity"
       ],
       "direction_stats": [
         "binomial_hit",
@@ -22026,7 +22211,7 @@
         },
         "diagnostics_full": {
           "axis": "residual_diagnostics",
-          "value": "diagnostics_full"
+          "value": "full_residual_diagnostics"
         },
         "dm": {
           "axis": "equal_predictive",
@@ -22043,6 +22228,10 @@
         "enc_new": {
           "axis": "nested",
           "value": "enc_new"
+        },
+        "full_residual_diagnostics": {
+          "axis": "residual_diagnostics",
+          "value": "full_residual_diagnostics"
         },
         "ljung_box": {
           "axis": "residual_diagnostics",

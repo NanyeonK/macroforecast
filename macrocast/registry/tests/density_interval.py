@@ -10,7 +10,7 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(id="none", description="No density/interval calibration test", status="operational", priority="A"),
-        EnumRegistryEntry(id="PIT_uniformity",             description="Probability integral transform uniformity test", status="operational", priority="B"),
+        EnumRegistryEntry(id="pit_uniformity",             description="Probability integral transform uniformity test", status="operational", priority="B"),
         EnumRegistryEntry(id="berkowitz",                  description="Berkowitz density-forecast test", status="operational", priority="B"),
         EnumRegistryEntry(id="kupiec",                     description="Kupiec unconditional coverage test", status="operational", priority="B"),
         EnumRegistryEntry(id="christoffersen_unconditional", description="Christoffersen unconditional coverage test", status="operational", priority="B"),

@@ -60,7 +60,7 @@ manifest records `importance_contract=layer7_importance_split_v1`, the resolved
 
 | Axis | Operational values | Effect |
 |---|---|---|
-| `export_format` | `json`, `csv`, `parquet`, `json+csv`, `all` | Controls structured metric/comparison sidecar formats. `predictions.csv` and `manifest.json` remain stable baseline files. |
+| `export_format` | `json`, `csv`, `parquet`, `json_csv`, `all` | Controls structured metric/comparison sidecar formats. `predictions.csv` and `manifest.json` remain stable baseline files. |
 | `saved_objects` | `predictions_only`, `predictions_and_metrics`, `full_bundle` | Controls the minimum object family saved by runtime. |
 | `provenance_fields` | `none`, `minimal`, `standard`, `full` | Controls extra provenance fields such as package version, git commit, and config hash. |
 | `artifact_granularity` | `aggregated` | Writes one aggregated run directory. Per-target/per-horizon/hierarchical layouts are registry-only or future. |

@@ -421,7 +421,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "stat_test",
             "prompt": "Stat test",
-            "options": ["none", "dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t", "cpa", "rossi", "rolling_dm", "reality_check", "spa", "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "pesaran_timmermann", "binomial_hit", "diagnostics_full"],
+            "options": ["none", "dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t", "cpa", "rossi", "rolling_dm", "reality_check", "spa", "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "pesaran_timmermann", "binomial_hit", "full_residual_diagnostics"],
         },
         {
             "key": "importance_method",
@@ -578,8 +578,8 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
         expected_artifacts.append("stat_test_pesaran_timmermann.json")
     if stat_test == "binomial_hit":
         expected_artifacts.append("stat_test_binomial_hit.json")
-    if stat_test == "diagnostics_full":
-        expected_artifacts.append("stat_test_diagnostics_bundle.json")
+    if stat_test == "full_residual_diagnostics":
+        expected_artifacts.append("stat_test_full_residual_diagnostics.json")
     if importance_methods:
         expected_artifacts.append("importance_artifacts.json")
         expected_artifacts.extend(IMPORTANCE_FILE_NAMES.get(method, f"importance_{method}.json") for method in importance_methods)
