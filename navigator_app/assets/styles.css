@@ -25,6 +25,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -32,7 +33,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 24px 32px 18px;
+  padding: 22px 32px 18px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
@@ -65,6 +66,48 @@ h2 {
 .top-actions {
   display: flex;
   gap: 10px;
+  min-width: 0;
+}
+
+.layer-rail {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: #eef2f7;
+}
+
+.layer-rail button {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.layer-rail button.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.layer-rail span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.layer-rail strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .action-row {
@@ -86,14 +129,26 @@ h2 {
   cursor: pointer;
 }
 
+.top-actions a,
+.secondary-action,
+.section-heading button {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(360px, 1fr) minmax(320px, 420px);
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(320px, 420px);
   gap: 18px;
   padding: 18px;
 }
 
+.layout > * {
+  min-width: 0;
+}
+
 .panel {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -136,38 +191,9 @@ input {
   font-size: 14px;
 }
 
-.segmented {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.segmented button {
-  min-width: 0;
-  border: 0;
-  border-right: 1px solid var(--line);
-  padding: 8px 4px;
-  background: #fff;
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.segmented button:last-child {
-  border-right: 0;
-}
-
-.segmented button.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 700;
-}
-
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -175,6 +201,18 @@ input {
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 9px;
+  min-width: 0;
+}
+
+.summary-grid strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.summary-grid div:first-child {
+  grid-column: 1 / -1;
 }
 
 .metric-label {
@@ -190,7 +228,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(100vh - 310px);
+  max-height: calc(100vh - 270px);
   overflow: auto;
 }
 
@@ -319,6 +357,106 @@ input {
   gap: 18px;
 }
 
+.tree-path-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.tree-path-item button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tree-path-item button:hover,
+.tree-path-item button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.tree-path-item.blocked button {
+  border-color: #ffd0c8;
+  background: var(--danger-soft);
+}
+
+.path-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.path-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.path-axis {
+  width: 100%;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.path-value {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #fff;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.path-edited {
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.path-effect,
+.path-reason {
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.path-effect {
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.path-reason {
+  color: var(--danger);
+}
+
 .rule,
 .replication-card {
   border: 1px solid var(--line);
@@ -350,7 +488,7 @@ input {
 }
 
 .code-block {
-  max-height: 320px;
+  max-height: 380px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -368,5 +506,38 @@ input {
 
   .axis-list {
     max-height: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .top-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .top-actions a {
+    text-align: center;
+  }
+
+  .layer-rail {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .layout {
+    padding: 12px;
+    width: 100vw;
+    max-width: 100vw;
   }
 }

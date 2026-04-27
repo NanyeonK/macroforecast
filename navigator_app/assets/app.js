@@ -2,7 +2,7 @@ const state = {
   data: null,
   sampleIndex: 0,
   axisFilter: "",
-  layerFilter: "all",
+  layerFilter: "0_meta",
   activeAxis: null,
   engineState: null,
   loadedSource: null,
@@ -29,6 +29,8 @@ const els = {
   resetPath: document.getElementById("reset-path"),
   pathSource: document.getElementById("path-source"),
   resolverPreview: document.getElementById("resolver-preview"),
+  treePath: document.getElementById("tree-path"),
+  treePathLayer: document.getElementById("tree-path-layer"),
 };
 
 function escapeHtml(value) {
@@ -67,9 +69,19 @@ function allAxes() {
 }
 
 function axisMatchesLayer(axis) {
-  if (state.layerFilter === "all") return true;
   if (state.layerFilter === "downstream") return !["0_meta", "1_data_task", "2_preprocessing", "3_training"].includes(axis.layer);
   return axis.layer === state.layerFilter;
+}
+
+function layerLabel(layer) {
+  const labels = {
+    "0_meta": "L0 Study setup",
+    "1_data_task": "L1 Data task",
+    "2_preprocessing": "L2 Representation",
+    "3_training": "L3 Generator",
+    downstream: "L4-7 Evaluate",
+  };
+  return labels[layer] || layer || "Layer";
 }
 
 function filteredAxes() {
@@ -161,6 +173,42 @@ function renderOptions() {
     .join("");
 }
 
+function renderTreePath() {
+  const axes = allAxes().filter(axisMatchesLayer);
+  els.treePathLayer.textContent = layerLabel(state.layerFilter);
+  if (!axes.length) {
+    els.treePath.innerHTML = `<p class="muted">No axes in this layer.</p>`;
+    return;
+  }
+  els.treePath.innerHTML = `
+    <ol class="tree-path-list">
+      ${axes.map((axis, idx) => {
+        const selectedOption = axis.options.find((option) => option.value === axis.selected);
+        const disabledReason = selectedOption && selectedOption.disabled_reason;
+        const pathEffect = selectedOption && selectedOption.canonical_path_effect
+          ? selectedOption.canonical_path_effect
+          : `selected: ${axis.selected ?? "-"}`;
+        const blocked = disabledReason ? " blocked" : "";
+        const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
+        return `
+          <li class="tree-path-item${blocked}" data-tree-axis="${escapeHtml(axis.axis)}">
+            <button type="button">
+              <span class="path-step">${idx + 1}</span>
+              <span class="path-body">
+                <span class="path-axis">${escapeHtml(axis.axis)}</span>
+                <span class="path-value">${escapeHtml(axis.selected ?? "-")}</span>
+                ${edited}
+                <span class="path-effect">${escapeHtml(pathEffect)}</span>
+                ${disabledReason ? `<span class="path-reason">${escapeHtml(disabledReason)}</span>` : ""}
+              </span>
+            </button>
+          </li>
+        `;
+      }).join("")}
+    </ol>
+  `;
+}
+
 function renderCompatibility() {
   const compatibility = NavigatorStateEngine.compatibility(state.data, state.engineState);
   const selectedDisabled = NavigatorStateEngine.selectedDisabledReasons(state.data, state.engineState);
@@ -231,6 +279,7 @@ function render() {
   renderSummary();
   renderAxisList();
   renderOptions();
+  renderTreePath();
   renderCompatibility();
   renderReplications();
   renderResolverPreview();
@@ -289,6 +338,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.layerFilter = button.dataset.layer;
       document.querySelectorAll("[data-layer]").forEach((item) => item.classList.toggle("active", item === button));
+      state.activeAxis = null;
       render();
     });
   });
@@ -306,6 +356,13 @@ function bindEvents() {
     const axis = allAxes().find((item) => item.axis === state.activeAxis);
     if (!axis) return;
     state.engineState = NavigatorStateEngine.selectOption(state.data, state.engineState, axis.axis, button.dataset.option);
+    render();
+  });
+
+  els.treePath.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-tree-axis]");
+    if (!item) return;
+    state.activeAxis = item.dataset.treeAxis;
     render();
   });
 
