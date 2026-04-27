@@ -1,60 +1,55 @@
 # macrocast
 
-> Choose a forecasting path, inspect the constraints, generate a runnable recipe, and run the same path from CLI, notebook, or code.
+macrocast is a research-oriented forecasting package for economists and macro-finance researchers. The docs are organized around decisions first and API signatures last.
 
-macrocast is a research-oriented forecasting package for economists and macro-finance researchers. The documentation is organized around decisions first and API signatures last.
+## Choose Your Entry Point
 
-## 0. Getting Started
+### 0. Getting Started
 
-Start here for installation and the three supported ways to use the package:
-
-- choose a path in the Navigator, export YAML, then run it;
-- write simple Python code with `forecast()` or `Experiment`;
-- write full layer-path code or YAML when you need exact control.
+Install macrocast and choose one of three usage paths: Navigator/YAML/CLI, Simple Python code, or full Detail code/YAML.
 
 [Open Getting Started](getting_started/index.md)
 
-## 1. Philosophy
+### 1. Philosophy
 
-The package is built around explicit defaults, layer contracts, reproducible artifacts, and custom researcher methods that run beside built-ins.
+Read this when you want the package rules: explicit defaults, layer contracts, reproducible artifacts, and custom researcher methods beside built-ins.
 
 [Read Philosophy](philosophy.md)
 
-## 2. Navigator
+### 2. Navigator
 
-Use the Navigator when you need a constraint-aware decision tree: selectable options, disabled options, disabled reasons, canonical path effects, replication recipes, and YAML generation.
+Use the Navigator when you need a constraint-aware decision tree. It shows selectable options, disabled options, disabled reasons, canonical path effects, and YAML generation.
 
 - [Open Navigator App](navigator_app/index.html)
 - [Navigator Docs](navigator/index.md)
 
-## 3. Simple (code)
+### 3. Simple (code)
 
-Use Simple docs when you want code-first forecasting without reading every layer contract.
+Use Simple docs when you want forecasting code without reading every layer contract first.
 
 [Open Simple Docs](simple/index.md)
 
-## 4. Detail (code)
+### 4. Detail (code)
 
-Use Detail docs when you need the full layer grammar, exact contracts, YAML shape, runtime artifacts, or custom method hooks.
+Use Detail docs when you need exact layer control, YAML shape, runtime artifacts, or custom method hooks.
 
 [Open Detail Docs](detail/index.md)
 
 ## Reference
 
-API Reference is for signatures after you know which path you want.
+Use API Reference after you know which path you want.
 
 [Open API Reference](api/index.md)
 
 ```{toctree}
 :hidden:
-:maxdepth: 2
+:maxdepth: 1
 
 getting_started/index
 philosophy
 navigator/index
 simple/index
 detail/index
-user_guide/index
 api/index
 CONVENTIONS
 ```

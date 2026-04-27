@@ -67,7 +67,7 @@ html_theme_options = {
     "navigation_depth": 3,
     "collapse_navigation": False,
     "sticky_navigation": True,
-    "titles_only": False,
+    "titles_only": True,
     "prev_next_buttons_location": "bottom",
 }
 
@@ -120,4 +120,6 @@ intersphinx_mapping = {
 # -- Warnings -----------------------------------------------------------------
 
 nitpicky = False
-suppress_warnings = ["myst.xref_missing"]
+# During the docs IA migration, some audit and compatibility pages are
+# intentionally link-only so they do not dominate the main navigation.
+suppress_warnings = ["myst.xref_missing", "toc.not_included"]

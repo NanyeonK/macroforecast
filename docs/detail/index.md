@@ -1,82 +1,98 @@
 # 4. Detail (code)
 
-Detail docs are the full layer-by-layer contract for macrocast. Use them when you need exact YAML, runtime artifacts, custom method hooks, or compatibility rules.
+Detail docs are the full macrocast layer grammar. Read them when you need exact YAML, runtime artifacts, custom method hooks, or compatibility rules.
 
-Each layer page follows the same structure:
+Use the layers in order. Earlier layers define the data and representation contract that later layers consume.
 
-- role;
-- input contract;
-- output contract;
-- decision order;
-- axis list;
-- forced or derived choices;
-- compatibility gates;
-- runtime artifacts;
-- YAML path shape;
-- code path;
-- related Navigator links.
+## 4.1 Layer 0: Study Design / Execution Grammar
 
-## Layer listing
+[Open Layer 0](layer0/index.md)
 
-| Section | Layer | Owns |
-|---|---|---|
-| [4.1](layer0/index.md) | Layer 0: Study setup | Research design, runner unit, failure policy, reproducibility, compute layout. |
-| [4.2](layer1/index.md) | Layer 1: Data task | Dataset, source adapter, target structure, data availability, raw missing/outlier policy, official transforms. |
-| [4.3](layer2/index.md) | Layer 2: Representation | T-code use, missing/outlier handling after official frame, target construction, feature blocks, scaling, selection, custom preprocessing. |
-| [4.4](layer3/index.md) | Layer 3: Forecast generator | Model family, benchmark family, forecast type/object, training windows, tuning, future-X paths. |
-| [4.5](layer4/index.md) | Layer 4: Evaluation | Metrics, benchmark comparison scope, aggregation, ranking, regimes, OOS period. |
-| [4.6](layer5/index.md) | Layer 5: Output / provenance | Export formats, saved objects, artifact granularity, manifest and sidecar contracts. |
-| [4.7](layer6/index.md) | Layer 6: Statistical tests | Equal predictive ability, nested tests, multiple-model tests, density/direction tests, correction rules. |
-| [4.8](layer7/index.md) | Layer 7: Interpretation / importance | Importance family, SHAP, local surrogate, partial dependence, grouping, stability, temporal output. |
+Layer 0 decides the shape of the study before data or models are chosen.
 
-```{toctree}
-:maxdepth: 2
-:caption: Layers
+- research design;
+- experiment unit;
+- failure policy;
+- reproducibility mode;
+- compute mode.
 
-layer0/index
-layer1/index
-layer2/index
-layer3/index
-layer4/index
-layer5/index
-layer6/index
-layer7/index
-```
+## 4.2 Layer 1: Data Task / Official Frame
 
-```{toctree}
-:maxdepth: 1
-:caption: Reference and Audits
+[Open Layer 1](layer1/index.md)
 
-terminology
-philosophy
-experiment_object
-default_profiles
-recipe_layers
-layer_boundary_contract
-layer_contract_ledger
-layer_axis_census
-layer_axis_migration_plan
-package_runtime_gap_audit
-post_pr70_runtime_roadmap
-registry_axes
-execution_engine
-artifacts_and_manifest
-custom_extensions
-target_transformer
-raw_panel_iterated_contract
-reproducibility
-layer0_meta_audit
-layer1_data_task_audit
-layer2_feature_representation
-layer2_closure_ledger
-layer2_layer3_detailed_design
-layer2_layer3_sweep_contract
-layer2_layer3_grid_examples
-layer2_revision_plan
-layer3_training_audit
-preprocessing_layer_audit
-fred_sd_transform_policy
-fred_sd_inferred_tcodes
-fred_sd_inferred_tcode_review_v0_1
-layer_audit
-```
+Layer 1 decides the official data task and produces the data frame that later layers are allowed to use.
+
+- dataset and source adapter;
+- target structure and variable universe;
+- information set, vintage, release lag, and contemporaneous-X rules;
+- raw source missing/outlier handling;
+- official transform policy.
+
+## 4.3 Layer 2: Representation / Research Preprocessing
+
+[Open Layer 2](layer2/index.md)
+
+Layer 2 turns the Layer 1 official frame into the representation used by forecast generators.
+
+- target construction and target scaling;
+- post-official-frame missing/outlier handling;
+- lag, factor, rotation, and feature-block construction;
+- feature selection and representation sweep choices;
+- custom representation hooks.
+
+## 4.4 Layer 3: Forecast Generator
+
+[Open Layer 3](layer3/index.md)
+
+Layer 3 consumes the Layer 2 representation and generates forecasts.
+
+- model family and benchmark choices;
+- forecast type and forecast object;
+- training window and tuning policy;
+- future-X and iterated-forecast paths;
+- payload and model-extension contracts.
+
+## 4.5 Layer 4: Evaluation
+
+[Open Layer 4](layer4/index.md)
+
+Layer 4 evaluates forecast artifacts without changing the forecast-generation path.
+
+- metric family;
+- comparison scope;
+- aggregation and ranking;
+- regime and OOS-period choices.
+
+## 4.6 Layer 5: Output / Provenance
+
+[Open Layer 5](layer5/index.md)
+
+Layer 5 decides how artifacts, manifests, and saved objects are written.
+
+- export format;
+- artifact granularity;
+- saved-object policy;
+- manifest and sidecar contracts.
+
+## 4.7 Layer 6: Statistical Tests
+
+[Open Layer 6](layer6/index.md)
+
+Layer 6 applies statistical tests to already generated forecast and evaluation artifacts.
+
+- equal predictive ability tests;
+- nested-model tests;
+- multiple-model tests;
+- density and direction tests;
+- multiple-testing correction.
+
+## 4.8 Layer 7: Interpretation / Importance
+
+[Open Layer 7](layer7/index.md)
+
+Layer 7 explains fitted models and forecast paths without changing the forecast itself.
+
+- importance family;
+- SHAP and surrogate methods;
+- partial dependence;
+- grouping, stability, and temporal output.
