@@ -15,6 +15,18 @@ Layer 6 owns statistical testing over forecast errors, loss differences, density
 | Test families | `equal_predictive`, `nested`, `cpa_instability`, `multiple_model`, `density_interval`, `direction`, `residual_diagnostics` |
 | Scope and dependence | `test_scope`, `dependence_correction`, `overlap_handling` |
 
+## Naming migration
+
+Layer 6 split test-family axes are canonical. The legacy router still exists
+for older recipes, but mixed-case legacy values compile through
+`registry_naming_v1`.
+
+| Axis | Legacy value | Canonical value |
+|---|---:|---:|
+| `density_interval` | `PIT_uniformity` | `pit_uniformity` |
+| `residual_diagnostics` | `diagnostics_full` | `full_residual_diagnostics` |
+| `stat_test` | `diagnostics_full` | `full_residual_diagnostics` |
+
 ## Layer contract
 
 Input:

@@ -120,6 +120,34 @@
 </tbody>
 </table>
 </section>
+<section id="naming-migration">
+<h2>Naming migration<a class="headerlink" href="#naming-migration" title="Link to this heading"></a></h2>
+<p>Layer 6 split test-family axes are canonical. The legacy router still exists
+for older recipes, but mixed-case legacy values compile through
+<code class="docutils literal notranslate"><span class="pre">registry_naming_v1</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head text-right"><p>Legacy value</p></th>
+<th class="head text-right"><p>Canonical value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">density_interval</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">PIT_uniformity</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">pit_uniformity</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">residual_diagnostics</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">diagnostics_full</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">full_residual_diagnostics</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stat_test</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">diagnostics_full</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">full_residual_diagnostics</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="layer-contract">
 <h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
 <p>Input:</p>
