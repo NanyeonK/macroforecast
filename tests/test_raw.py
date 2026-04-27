@@ -115,7 +115,7 @@ def _raw_component(
         version_mode="vintage",
         vintage="2020-01",
         data_through=data_through,
-        support_tier="stable" if dataset == "fred_md" else "provisional",
+        support_tier="stable",
     )
     artifact = RawArtifactRecord(
         dataset=dataset,

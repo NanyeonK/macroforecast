@@ -165,6 +165,82 @@ _SYNTHETIC_REPLICATION_RECIPE: dict[str, Any] = {
     },
 }
 
+_FRED_SD_MIDASR_ALMONP_RECIPE: dict[str, Any] = {
+    "recipe_id": "fred-sd-midasr-almonp-direct",
+    "path": {
+        "0_meta": {
+            "fixed_axes": {
+                "research_design": "single_path_benchmark",
+                "experiment_unit": "single_target_single_model",
+                "failure_policy": "fail_fast",
+                "compute_mode": "serial",
+                "reproducibility_mode": "seeded_reproducible",
+            },
+            "leaf_config": {"random_seed": 42},
+        },
+        "1_data_task": {
+            "fixed_axes": {
+                "dataset": "fred_sd",
+                "source_adapter": "fred_sd",
+                "frequency": "monthly",
+                "information_set_type": "revised",
+                "target_structure": "single_target_point_forecast",
+                "fred_sd_frequency_policy": "report_only",
+                "official_transform_policy": "raw_official_frame",
+                "raw_missing_policy": "preserve_raw_missing",
+                "raw_outlier_policy": "preserve_raw_outliers",
+            },
+            "leaf_config": {"target": "UR_CA", "horizons": [1]},
+        },
+        "2_preprocessing": {
+            "fixed_axes": {
+                "fred_sd_mixed_frequency_representation": "mixed_frequency_model_adapter",
+                "horizon_target_construction": "future_target_level_t_plus_h",
+                "target_transform_policy": "raw_level",
+                "x_transform_policy": "raw_level",
+                "tcode_policy": "raw_only",
+                "target_missing_policy": "none",
+                "x_missing_policy": "none",
+                "target_outlier_policy": "none",
+                "x_outlier_policy": "none",
+                "scaling_policy": "none",
+                "dimensionality_reduction_policy": "none",
+                "feature_selection_policy": "none",
+                "preprocess_order": "none",
+                "preprocess_fit_scope": "not_applicable",
+                "inverse_transform_policy": "none",
+                "evaluation_scale": "raw_level",
+                "feature_block_set": "transformed_x",
+            }
+        },
+        "3_training": {
+            "fixed_axes": {
+                "framework": "expanding",
+                "benchmark_family": "zero_change",
+                "feature_builder": "raw_feature_panel",
+                "model_family": "midasr",
+                "midasr_weight_family": "almonp",
+                "forecast_type": "direct",
+                "forecast_object": "point_mean",
+            },
+            "leaf_config": {
+                "training_config": {
+                    "midas_max_lag": 3,
+                    "midasr_almonp_degree": 2,
+                    "midasr_max_terms": 12,
+                    "midasr_max_nfev": 500,
+                }
+            },
+        },
+        "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
+        "5_output_provenance": {
+            "leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}
+        },
+        "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+        "7_importance": {"fixed_axes": {"importance_method": "none"}},
+    },
+}
+
 
 def _dump_recipe(recipe: dict[str, Any]) -> str:
     return yaml.safe_dump(recipe, sort_keys=False)
@@ -241,6 +317,55 @@ _ENTRIES: dict[str, ReplicationEntry] = {
         ),
         expected_outputs=("manifest.json", "predictions.csv", "metrics.json", "comparison_summary.json"),
         deviations_from_original_paper=("Synthetic fixture route; no external paper claims.",),
+    ),
+    "fred-sd-midasr-almonp-direct": ReplicationEntry(
+        id="fred-sd-midasr-almonp-direct",
+        paper_name="FRED-SD mixed-frequency MIDAS runtime route",
+        short_description=(
+            "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads "
+            "and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
+        ),
+        exact_tree_path=(
+            "1_data_task.dataset=fred_sd",
+            "1_data_task.frequency=monthly",
+            "2_preprocessing.fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter",
+            "3_training.feature_builder=raw_feature_panel",
+            "3_training.model_family=midasr",
+            "3_training.midasr_weight_family=almonp",
+            "3_training.forecast_type=direct",
+        ),
+        recipe_yaml=_dump_recipe(_FRED_SD_MIDASR_ALMONP_RECIPE),
+        command=(
+            "macrocast-navigate run examples/recipes/replications/"
+            "fred-sd-midasr-almonp-direct.yaml --local-raw-source tests/fixtures/fred_sd_sample.csv "
+            "--output-root results/fred_sd_midasr_almonp"
+        ),
+        notebook_snippet=(
+            "from macrocast.navigator import replication_recipe_yaml\n"
+            "from macrocast import compile_recipe_dict, run_compiled_recipe\n"
+            "import yaml\n"
+            "recipe = yaml.safe_load(replication_recipe_yaml('fred-sd-midasr-almonp-direct'))\n"
+            "compiled = compile_recipe_dict(recipe)\n"
+            "result = run_compiled_recipe(\n"
+            "    compiled.compiled,\n"
+            "    output_root='results/fred_sd_midasr_almonp',\n"
+            "    local_raw_source='tests/fixtures/fred_sd_sample.csv',\n"
+            ")\n"
+        ),
+        expected_outputs=(
+            "manifest.json",
+            "predictions.csv",
+            "metrics.json",
+            "fred_sd_series_metadata.json",
+            "fred_sd_frequency_report.json",
+            "fred_sd_mixed_frequency_representation.json",
+            "fred_sd_mixed_frequency_model_adapter.json",
+        ),
+        deviations_from_original_paper=(
+            "Runtime fixture route; no paper-identical claims.",
+            "Uses current package FRED-SD fixture unless an official vintage is supplied.",
+            "Demonstrates the almonp MIDAS weight-family branch, not a full MIDAS grid.",
+        ),
     ),
 }
 

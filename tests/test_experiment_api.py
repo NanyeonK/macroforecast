@@ -756,6 +756,51 @@ def test_fred_sd_midasr_nealmon_runs_as_builtin_midasr_slice(tmp_path: Path) -> 
     assert "midasr_nealmon:quarterly" in metadata["block_order"]
 
 
+def test_fred_sd_midasr_almonp_runs_as_builtin_weight_family(tmp_path: Path) -> None:
+    dates = pd.date_range("2000-01-01", periods=30, freq="MS")
+    source = tmp_path / "mixed_fred_sd.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(len(dates))],
+            "UR_TX": [4.5 + idx / 20 for idx in range(len(dates))],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(len(dates))],
+        }
+    ).to_csv(source, index=False)
+
+    result = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2002-06",
+            horizons=[1],
+            frequency="monthly",
+            model_family="midasr",
+            feature_builder="raw_feature_panel",
+            benchmark_config={"minimum_train_size": 12, "rolling_window_size": 12},
+        )
+        .sweep({"midasr_weight_family": "almonp"})
+        .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
+        .use_fred_sd_mixed_frequency_adapter()
+        .run(output_root=tmp_path / "runs", local_raw_source=source)
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+
+    assert manifest["model_spec"]["model_family"] == "midasr"
+    assert manifest["model_spec"]["executor_name"] == "midasr:fred_sd_mixed_frequency_model_adapter_v1"
+    assert manifest["model_spec"]["fred_sd_mixed_frequency_builtin_model"] is True
+    assert manifest["model_spec"]["fred_sd_mixed_frequency_builtin_model_family"] == "midasr"
+    metadata = manifest["layer2_representation_contract_metadata"]
+    assert metadata["alignment"]["midasr_contract"] == "midasr_restricted_direct_v1"
+    assert metadata["alignment"]["midasr_weight_family"] == "almonp"
+    assert metadata["alignment"]["midasr_reference_function"] == "midas_r + almonp"
+    assert "midasr:monthly" in metadata["block_order"]
+    assert "midasr:quarterly" in metadata["block_order"]
+
+
 def test_fred_sd_advanced_mixed_frequency_requires_custom_or_midas_model(tmp_path: Path) -> None:
     dates = pd.date_range("2000-01-01", periods=18, freq="MS")
     source = tmp_path / "mixed_fred_sd.csv"

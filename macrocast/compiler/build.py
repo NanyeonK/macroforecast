@@ -1490,6 +1490,17 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
+        "midas_max_lag": training_cfg.get("midas_max_lag", 3),
+        "midasr_weight_family": _selection_value(
+            selection_map,
+            "midasr_weight_family",
+            default=training_cfg.get("midasr_weight_family", "nealmon"),
+        ),
+        "midasr_degree": training_cfg.get("midasr_degree"),
+        "midasr_nealmon_degree": training_cfg.get("midasr_nealmon_degree", 2),
+        "midasr_almonp_degree": training_cfg.get("midasr_almonp_degree", 2),
+        "midasr_max_terms": training_cfg.get("midasr_max_terms", 12),
+        "midasr_max_nfev": training_cfg.get("midasr_max_nfev", 500),
         "random_seed": leaf_config.get("random_seed", 42),
     }
 
@@ -3178,7 +3189,13 @@ def _execution_status(
         "native_frequency_block_payload",
         "mixed_frequency_model_adapter",
     }
-    fred_sd_builtin_mixed_frequency_models = {"midas_almon", "midasr_nealmon"}
+    fred_sd_builtin_mixed_frequency_models = {"midas_almon", "midasr", "midasr_nealmon"}
+    midasr_weight_family_selected = "midasr_weight_family" in selection_map
+    midasr_weight_family = _selection_value(
+        selection_map,
+        "midasr_weight_family",
+        default="nealmon",
+    )
     if fred_sd_mixed_frequency_representation in fred_sd_advanced_mixed_frequency_representations:
         if feature_runtime != "raw_feature_panel":
             blocked.append(
@@ -3191,7 +3208,7 @@ def _execution_status(
         ):
             blocked.append(
                 f"fred_sd_mixed_frequency_representation={fred_sd_mixed_frequency_representation!r} "
-                "requires a registered custom Layer 3 model or model_family in ['midas_almon', 'midasr_nealmon']"
+                "requires a registered custom Layer 3 model or model_family in ['midas_almon', 'midasr', 'midasr_nealmon']"
             )
         if forecast_type != "direct":
             blocked.append(
@@ -3207,6 +3224,10 @@ def _execution_status(
             "set fred_sd_mixed_frequency_representation to 'native_frequency_block_payload' "
             "or 'mixed_frequency_model_adapter'"
         )
+    if midasr_weight_family_selected and model_family not in {"midasr", "midasr_nealmon"}:
+        blocked.append("midasr_weight_family is only valid with model_family in ['midasr', 'midasr_nealmon']")
+    if model_family == "midasr_nealmon" and midasr_weight_family != "nealmon":
+        blocked.append("model_family='midasr_nealmon' only supports midasr_weight_family='nealmon'")
     horizon_target_construction_for_l3 = _selection_value(
         selection_map,
         "horizon_target_construction",

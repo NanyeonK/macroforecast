@@ -49,6 +49,7 @@ Every entry contains:
 | ID | Route | Purpose |
 |---|---|---|
 | `goulet-coulombe-2021-fred-md-ridge` | Goulet Coulombe et al. (2021), FRED-MD ridge-style path | Official transformations, train-only standardization, raw-panel ridge generator, AR-BIC benchmark, MSFE, and DM test. |
+| `fred-sd-midasr-almonp-direct` | FRED-SD mixed-frequency MIDAS runtime route | Fixture-safe route for Layer 2 native-frequency adapter payloads plus Layer 3 `model_family=midasr`, `midasr_weight_family=almonp`. |
 | `synthetic-replication-roundtrip` | Fixture-safe synthetic route | Small route for verifying YAML generation, path resolution, and one-line execution. |
 
 ## Goulet-Coulombe-Style Path
@@ -68,6 +69,33 @@ The package-native route uses:
 ```
 
 The key Layer 2 detail is that `t-code + standardize` is not `tcode_only`. It is `tcode_then_extra_preprocess` with train-only scaling.
+
+## FRED-SD MIDASR Path
+
+This entry exercises the package-owned mixed-frequency route:
+
+```text
+1_data_task.dataset=fred_sd
+1_data_task.frequency=monthly
+2_preprocessing.fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter
+3_training.feature_builder=raw_feature_panel
+3_training.model_family=midasr
+3_training.midasr_weight_family=almonp
+3_training.forecast_type=direct
+```
+
+It is a runtime recipe, not a paper-identical replication. Run it against the
+small fixture or replace `--local-raw-source` with an official FRED-SD
+workbook:
+
+```bash
+macrocast-navigate replications fred-sd-midasr-almonp-direct \
+  --write-yaml /tmp/fred-sd-midasr-almonp.yaml
+
+macrocast-navigate run /tmp/fred-sd-midasr-almonp.yaml \
+  --local-raw-source tests/fixtures/fred_sd_sample.csv \
+  --output-root /tmp/macrocast-fred-sd-midasr
+```
 
 ## Synthetic Round Trip
 

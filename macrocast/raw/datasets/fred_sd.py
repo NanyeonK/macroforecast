@@ -341,7 +341,7 @@ def load_fred_sd(
         version_mode=request.mode,
         vintage=request.vintage,
         data_through=df.index[-1].strftime("%Y-%m") if len(df) else None,
-        support_tier="provisional",
+        support_tier="stable",
     )
     result = RawLoadResult(data=df, dataset_metadata=metadata, artifact=artifact)
     append_raw_manifest_entry(result, cache_root=cache_root)

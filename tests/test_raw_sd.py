@@ -14,7 +14,7 @@ def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_sd"
     assert result.dataset_metadata.frequency == "state_monthly"
-    assert result.dataset_metadata.support_tier == "provisional"
+    assert result.dataset_metadata.support_tier == "stable"
     assert result.data.shape[0] > 0
     assert any(col.startswith("UR_") for col in result.data.columns)
 
@@ -42,7 +42,7 @@ def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     assert report["series"][0]["source_sheet"] == "UR"
 
 
-def test_load_fred_sd_vintage_is_marked_provisional(tmp_path: Path) -> None:
+def test_load_fred_sd_vintage_is_marked_stable(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
     result = load_fred_sd(
         vintage="2020-01",
@@ -51,4 +51,4 @@ def test_load_fred_sd_vintage_is_marked_provisional(tmp_path: Path) -> None:
     )
 
     assert result.dataset_metadata.vintage == "2020-01"
-    assert result.dataset_metadata.support_tier == "provisional"
+    assert result.dataset_metadata.support_tier == "stable"

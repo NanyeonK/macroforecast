@@ -7,9 +7,19 @@ from collections.abc import Sequence
 import numpy as np
 
 
+MIDASR_RESTRICTED_CONTRACT_VERSION = "midasr_restricted_direct_v1"
 MIDASR_NEALMON_CONTRACT_VERSION = "midasr_nealmon_direct_v1"
 MIDASR_REFERENCE_PACKAGE = "midasr"
-MIDASR_REFERENCE_FUNCTION = "midas_r + nealmon"
+MIDASR_REFERENCE_FUNCTION = "midas_r"
+MIDASR_SUPPORTED_WEIGHT_FAMILIES = ("nealmon", "almonp")
+MIDASR_WEIGHT_REFERENCE_FUNCTIONS = {
+    "nealmon": "midas_r + nealmon",
+    "almonp": "midas_r + almonp",
+}
+MIDASR_WEIGHT_BASIS_NAMES = {
+    "nealmon": "midasr_nealmon_normalized_exponential_almon",
+    "almonp": "midasr_almonp_raw_polynomial",
+}
 
 
 @dataclass(frozen=True)
@@ -29,6 +39,26 @@ def _as_positive_int(value: int, *, name: str) -> int:
     if out < 1:
         raise ValueError(f"{name} must be >= 1")
     return out
+
+
+def normalize_midasr_weight_family(value: str) -> str:
+    family = str(value).strip().lower().replace("-", "_")
+    if family not in MIDASR_SUPPORTED_WEIGHT_FAMILIES:
+        allowed = ", ".join(MIDASR_SUPPORTED_WEIGHT_FAMILIES)
+        raise ValueError(f"unsupported midasr_weight_family={value!r}; expected one of: {allowed}")
+    return family
+
+
+def midasr_weight_param_width(weight_family: str, degree: int) -> int:
+    family = normalize_midasr_weight_family(weight_family)
+    degree = int(degree)
+    if family == "nealmon":
+        if degree < 1:
+            raise ValueError("degree must be >= 1 for nealmon")
+        return degree + 1
+    if degree < 0:
+        raise ValueError("degree must be >= 0 for almonp")
+    return degree + 1
 
 
 def almonp_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
@@ -66,24 +96,33 @@ def nealmon_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
     return delta * exp_eta / denom
 
 
-def fit_midasr_nealmon_direct(
+def midasr_weights(weight_family: str, params: Sequence[float], lag_count: int) -> np.ndarray:
+    family = normalize_midasr_weight_family(weight_family)
+    if family == "nealmon":
+        return nealmon_weights(params, lag_count)
+    return almonp_weights(params, lag_count)
+
+
+def fit_midasr_restricted_direct(
     lag_tensor: np.ndarray,
     y_train: Sequence[float],
     pred_lag_tensor: np.ndarray,
     *,
+    weight_family: str = "nealmon",
     degree: int = 2,
     max_nfev: int = 500,
 ) -> MidasrNealmonFitResult:
-    """Fit a restricted MIDAS direct forecast with nealmon weights.
+    """Fit a restricted MIDAS direct forecast with an R midasr weight family.
 
     lag_tensor has shape (n_obs, n_terms, n_lags). pred_lag_tensor accepts
     either (n_terms, n_lags) or (1, n_terms, n_lags).
     """
 
+    family = normalize_midasr_weight_family(weight_family)
     try:
         from scipy.optimize import least_squares
     except ModuleNotFoundError as exc:  # pragma: no cover - scipy is required by pyproject
-        raise RuntimeError("scipy is required for model_family='midasr_nealmon'") from exc
+        raise RuntimeError("scipy is required for model_family='midasr'") from exc
 
     X = np.asarray(lag_tensor, dtype=float)
     if X.ndim != 3:
@@ -92,14 +131,12 @@ def fit_midasr_nealmon_direct(
     if X.shape[0] != y.shape[0]:
         raise ValueError("lag_tensor row count must match y_train")
     if X.shape[0] < 2:
-        raise ValueError("midasr_nealmon requires at least two training rows")
+        raise ValueError("midasr requires at least two training rows")
     term_count = int(X.shape[1])
     lag_count = int(X.shape[2])
     if term_count < 1 or lag_count < 1:
         raise ValueError("lag_tensor must include at least one term and one lag")
-    degree = int(degree)
-    if degree < 1:
-        raise ValueError("degree must be >= 1 for nealmon")
+    param_width = midasr_weight_param_width(family, int(degree))
 
     X_pred = np.asarray(pred_lag_tensor, dtype=float)
     if X_pred.ndim == 3:
@@ -115,13 +152,12 @@ def fit_midasr_nealmon_direct(
     finite_rows = np.isfinite(y)
     finite_rows &= np.isfinite(X).all(axis=(1, 2))
     if int(finite_rows.sum()) < 2:
-        raise ValueError("midasr_nealmon has fewer than two finite training rows")
+        raise ValueError("midasr has fewer than two finite training rows")
     X = X[finite_rows]
     y = y[finite_rows]
     if not np.isfinite(X_pred).all():
         raise ValueError("pred_lag_tensor contains non-finite values")
 
-    param_width = degree + 1
     start = np.zeros(1 + term_count * param_width, dtype=float)
     start[0] = float(np.mean(y))
     if term_count:
@@ -130,13 +166,16 @@ def fit_midasr_nealmon_direct(
             y_scale = 1.0
         for term_idx in range(term_count):
             offset = 1 + term_idx * param_width
-            start[offset] = y_scale / max(term_count, 1)
+            if family == "nealmon":
+                start[offset] = y_scale / max(term_count, 1)
+            else:
+                start[offset] = y_scale / max(term_count * lag_count, 1)
 
     def _predict(params: np.ndarray, tensor: np.ndarray) -> np.ndarray:
         out = np.full(tensor.shape[0], float(params[0]), dtype=float)
         for term_idx in range(term_count):
             offset = 1 + term_idx * param_width
-            weights = nealmon_weights(params[offset : offset + param_width], lag_count)
+            weights = midasr_weights(family, params[offset : offset + param_width], lag_count)
             out += tensor[:, term_idx, :] @ weights
         return out
 
@@ -158,7 +197,7 @@ def fit_midasr_nealmon_direct(
         offset = 1 + term_idx * param_width
         term_params = tuple(float(v) for v in params[offset : offset + param_width])
         params_by_term.append(term_params)
-        weights_by_term.append(tuple(float(v) for v in nealmon_weights(term_params, lag_count)))
+        weights_by_term.append(tuple(float(v) for v in midasr_weights(family, term_params, lag_count)))
     return MidasrNealmonFitResult(
         prediction=pred,
         intercept=float(params[0]),
@@ -170,3 +209,26 @@ def fit_midasr_nealmon_direct(
         nfev=int(opt.nfev),
     )
 
+
+def fit_midasr_nealmon_direct(
+    lag_tensor: np.ndarray,
+    y_train: Sequence[float],
+    pred_lag_tensor: np.ndarray,
+    *,
+    degree: int = 2,
+    max_nfev: int = 500,
+) -> MidasrNealmonFitResult:
+    """Fit a restricted MIDAS direct forecast with nealmon weights.
+
+    lag_tensor has shape (n_obs, n_terms, n_lags). pred_lag_tensor accepts
+    either (n_terms, n_lags) or (1, n_terms, n_lags).
+    """
+
+    return fit_midasr_restricted_direct(
+        lag_tensor,
+        y_train,
+        pred_lag_tensor,
+        weight_family="nealmon",
+        degree=degree,
+        max_nfev=max_nfev,
+    )

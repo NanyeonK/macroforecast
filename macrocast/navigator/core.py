@@ -79,6 +79,7 @@ _TREE_AXES = {
     ),
     "3_training": (
         "model_family",
+        "midasr_weight_family",
         "benchmark_family",
         "forecast_type",
         "forecast_object",
@@ -319,11 +320,13 @@ _LINEAR_MODELS = frozenset(
         "huber",
         "adaptivelasso",
         "midas_almon",
+        "midasr",
+        "midasr_nealmon",
         "quantile_linear",
     }
 )
 _DEEP_SEQUENCE_MODELS = frozenset({"lstm", "gru", "tcn"})
-_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = frozenset({"midas_almon", "midasr_nealmon"})
+_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = frozenset({"midas_almon", "midasr", "midasr_nealmon"})
 _BUILTIN_MODELS = frozenset(
     {
         "ar",
@@ -609,6 +612,13 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "importance_method=linear_shap requires a linear estimator"
         if forecast_object == "quantile" and value != "quantile_linear":
             return "forecast_object=quantile currently requires model_family=quantile_linear"
+    if axis_name == "midasr_weight_family":
+        if model not in {"midasr", "midasr_nealmon"}:
+            return "midasr_weight_family applies only to model_family=midasr or midasr_nealmon"
+        if model == "midasr_nealmon" and value != "nealmon":
+            return "model_family=midasr_nealmon is the compatibility alias for nealmon only"
+        if value in {"nbeta", "genexp", "harstep"}:
+            return f"midasr_weight_family={value} is registered but runtime-gated"
     if axis_name == "forecast_object":
         if value == "quantile" and model and model != "quantile_linear":
             return "quantile forecasts currently require model_family=quantile_linear"

@@ -173,6 +173,15 @@ The docs and runtime now mostly follow this split:
   no target normalization, and no custom target transformer.
 - Registered custom Layer 3 models receive `custom_model_v1` context and Layer
   2 provenance.
+- FRED-SD mixed-frequency direct generators now include `midas_almon`, generic
+  `midasr` with `midasr_weight_family` values `nealmon` / `almonp`, and the
+  legacy `midasr_nealmon` alias. They consume Layer 2 native-frequency block
+  payloads; they do not own FRED-SD panel-shaping decisions.
+- State-space nowcasting remains explicitly gated. The reserved
+  `state_space_mixed_frequency_payload_v1` contract must define observation
+  equations, missing-observation handling, filter/smoother state payloads, and
+  forecast-origin update semantics before any `state_space_run` cell becomes
+  executable.
 - The compiler validates important Layer 2 x Layer 3 incompatibilities, such
   as raw-panel `Z` with `model_family='ar'`, raw-panel iterated forecasting,
   and quantile forecast objects with non-quantile models.
@@ -193,6 +202,7 @@ The docs and runtime now mostly follow this split:
 | Group | Axes |
 |---|---|
 | Forecast generator | `model_family` as compatibility alias for `forecast_generator_family`; `benchmark_family` as compatibility alias for baseline generator role; `forecast_type`, `forecast_object`, `horizon_modelization` |
+| Generator subfamily | `midasr_weight_family` for the restricted MIDAS weight family under `model_family=midasr`; `nealmon` and `almonp` are operational-narrow, while `nbeta`, `genexp`, and `harstep` remain future |
 | Training window | `min_train_size`, `training_start_rule`, `outer_window`, `refit_policy`, `lookback` |
 | Model order | `y_lag_count` for AR/model-order selection; fixed target-lag feature construction is Layer 2 provenance |
 | Validation/search | `validation_size_rule`, `validation_location`, `embargo_gap`, `split_family`, `shuffle_rule`, `alignment_fairness`, `search_algorithm`, `tuning_objective`, `tuning_budget`, `hp_space_style` |

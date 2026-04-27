@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 146
+EXPECTED_AXIS_COUNT = 147
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -43,12 +43,21 @@ def test_registry_loader_preserves_legacy_entry_contract() -> None:
     assert entry.allowed_values[:5] == ("ar", "ols", "ridge", "lasso", "elasticnet")
     assert "xgboost" in entry.allowed_values
     assert "midas_almon" in entry.allowed_values
+    assert "midasr" in entry.allowed_values
     assert "midasr_nealmon" in entry.allowed_values
     assert entry.current_status["xgboost"] == "operational"
     assert entry.current_status["randomforest"] == "operational"
     assert entry.current_status["midas_almon"] == "operational_narrow"
+    assert entry.current_status["midasr"] == "operational_narrow"
     assert entry.current_status["midasr_nealmon"] == "operational_narrow"
     assert entry.default_policy == "sweep"
+
+    weight_entry = get_axis_registry_entry("midasr_weight_family")
+    assert weight_entry.layer == "3_training"
+    assert weight_entry.allowed_values[:2] == ("nealmon", "almonp")
+    assert weight_entry.current_status["nealmon"] == "operational_narrow"
+    assert weight_entry.current_status["almonp"] == "operational_narrow"
+    assert weight_entry.current_status["nbeta"] == "future"
 
 
 def test_axis_governance_table_matches_discovered_registry() -> None:

@@ -161,7 +161,7 @@ path:
 
 ### Dropped values
 
-- `daily`, `weekly`, `yearly`, `mixed_frequency` — FRED-MD/QD only expose monthly and quarterly cadences. Daily/weekly/yearly would require new loaders. FRED-SD can be loaded and converted to monthly or quarterly, but a first-class mixed-frequency panel runtime would require MIDAS/state-space infrastructure.
+- `daily`, `weekly`, `yearly`, `mixed_frequency` — FRED-MD/QD only expose monthly and quarterly cadences. Daily/weekly/yearly would require new loaders. FRED-SD can be loaded and converted to monthly or quarterly, and the package has a narrow first-class mixed-frequency route through native-frequency payloads, custom adapters, `midas_almon`, and `midasr` with `nealmon` / `almonp`; state-space infrastructure remains future.
 - Manifest records `frequency` for provenance.
 
 ### Recipe usage

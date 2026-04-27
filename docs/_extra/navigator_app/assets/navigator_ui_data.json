@@ -1710,6 +1710,33 @@
       "incompatible_with": {},
       "layer": "3_training"
     },
+    "midasr_weight_family": {
+      "allowed_values": [
+        "nealmon",
+        "almonp",
+        "nbeta",
+        "genexp",
+        "harstep"
+      ],
+      "axis_name": "midasr_weight_family",
+      "axis_type": "enum",
+      "compatible_with": {
+        "model_family": [
+          "midasr",
+          "midasr_nealmon"
+        ]
+      },
+      "current_status": {
+        "almonp": "operational_narrow",
+        "genexp": "future",
+        "harstep": "future",
+        "nbeta": "future",
+        "nealmon": "operational_narrow"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "3_training"
+    },
     "min_train_size": {
       "allowed_values": [
         "fixed_n_obs",
@@ -1772,6 +1799,7 @@
         "factor_augmented_linear",
         "quantile_linear",
         "midas_almon",
+        "midasr",
         "midasr_nealmon",
         "randomforest",
         "extratrees",
@@ -1805,6 +1833,7 @@
         "lightgbm": "operational",
         "lstm": "operational",
         "midas_almon": "operational_narrow",
+        "midasr": "operational_narrow",
         "midasr_nealmon": "operational_narrow",
         "mlp": "operational",
         "ols": "operational",
@@ -3685,6 +3714,136 @@
       },
       "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_path_benchmark\n      experiment_unit: single_target_single_model\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Small fixture-safe replication route used to verify recipe lowering and artifact contracts."
+    },
+    {
+      "command": "macrocast-navigate run examples/recipes/replications/fred-sd-midasr-almonp-direct.yaml --local-raw-source tests/fixtures/fred_sd_sample.csv --output-root results/fred_sd_midasr_almonp",
+      "deviations_from_original_paper": [
+        "Runtime fixture route; no paper-identical claims.",
+        "Uses current package FRED-SD fixture unless an official vintage is supplied.",
+        "Demonstrates the almonp MIDAS weight-family branch, not a full MIDAS grid."
+      ],
+      "exact_tree_path": [
+        "1_data_task.dataset=fred_sd",
+        "1_data_task.frequency=monthly",
+        "2_preprocessing.fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter",
+        "3_training.feature_builder=raw_feature_panel",
+        "3_training.model_family=midasr",
+        "3_training.midasr_weight_family=almonp",
+        "3_training.forecast_type=direct"
+      ],
+      "expected_outputs": [
+        "manifest.json",
+        "predictions.csv",
+        "metrics.json",
+        "fred_sd_series_metadata.json",
+        "fred_sd_frequency_report.json",
+        "fred_sd_mixed_frequency_representation.json",
+        "fred_sd_mixed_frequency_model_adapter.json"
+      ],
+      "id": "fred-sd-midasr-almonp-direct",
+      "notebook_snippet": "from macrocast.navigator import replication_recipe_yaml\nfrom macrocast import compile_recipe_dict, run_compiled_recipe\nimport yaml\nrecipe = yaml.safe_load(replication_recipe_yaml('fred-sd-midasr-almonp-direct'))\ncompiled = compile_recipe_dict(recipe)\nresult = run_compiled_recipe(\n    compiled.compiled,\n    output_root='results/fred_sd_midasr_almonp',\n    local_raw_source='tests/fixtures/fred_sd_sample.csv',\n)\n",
+      "paper_name": "FRED-SD mixed-frequency MIDAS runtime route",
+      "recipe": {
+        "path": {
+          "0_meta": {
+            "fixed_axes": {
+              "compute_mode": "serial",
+              "experiment_unit": "single_target_single_model",
+              "failure_policy": "fail_fast",
+              "reproducibility_mode": "seeded_reproducible",
+              "research_design": "single_path_benchmark"
+            },
+            "leaf_config": {
+              "random_seed": 42
+            }
+          },
+          "1_data_task": {
+            "fixed_axes": {
+              "dataset": "fred_sd",
+              "fred_sd_frequency_policy": "report_only",
+              "frequency": "monthly",
+              "information_set_type": "revised",
+              "official_transform_policy": "raw_official_frame",
+              "raw_missing_policy": "preserve_raw_missing",
+              "raw_outlier_policy": "preserve_raw_outliers",
+              "source_adapter": "fred_sd",
+              "target_structure": "single_target_point_forecast"
+            },
+            "leaf_config": {
+              "horizons": [
+                1
+              ],
+              "target": "UR_CA"
+            }
+          },
+          "2_preprocessing": {
+            "fixed_axes": {
+              "dimensionality_reduction_policy": "none",
+              "evaluation_scale": "raw_level",
+              "feature_block_set": "transformed_x",
+              "feature_selection_policy": "none",
+              "fred_sd_mixed_frequency_representation": "mixed_frequency_model_adapter",
+              "horizon_target_construction": "future_target_level_t_plus_h",
+              "inverse_transform_policy": "none",
+              "preprocess_fit_scope": "not_applicable",
+              "preprocess_order": "none",
+              "scaling_policy": "none",
+              "target_missing_policy": "none",
+              "target_outlier_policy": "none",
+              "target_transform_policy": "raw_level",
+              "tcode_policy": "raw_only",
+              "x_missing_policy": "none",
+              "x_outlier_policy": "none",
+              "x_transform_policy": "raw_level"
+            }
+          },
+          "3_training": {
+            "fixed_axes": {
+              "benchmark_family": "zero_change",
+              "feature_builder": "raw_feature_panel",
+              "forecast_object": "point_mean",
+              "forecast_type": "direct",
+              "framework": "expanding",
+              "midasr_weight_family": "almonp",
+              "model_family": "midasr"
+            },
+            "leaf_config": {
+              "training_config": {
+                "midas_max_lag": 3,
+                "midasr_almonp_degree": 2,
+                "midasr_max_nfev": 500,
+                "midasr_max_terms": 12
+              }
+            }
+          },
+          "4_evaluation": {
+            "fixed_axes": {
+              "primary_metric": "msfe"
+            }
+          },
+          "5_output_provenance": {
+            "leaf_config": {
+              "benchmark_config": {
+                "minimum_train_size": 5
+              },
+              "manifest_mode": "full"
+            }
+          },
+          "6_stat_tests": {
+            "fixed_axes": {
+              "stat_test": "none"
+            }
+          },
+          "7_importance": {
+            "fixed_axes": {
+              "importance_method": "none"
+            }
+          }
+        },
+        "recipe_id": "fred-sd-midasr-almonp-direct"
+      },
+      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_path_benchmark\n      experiment_unit: single_target_single_model\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: raw_official_frame\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_x\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
   "samples": [
@@ -6364,6 +6523,13 @@
                 "value": "midas_almon"
               },
               {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr"
+              },
+              {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
                 "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
@@ -6442,6 +6608,49 @@
               }
             ],
             "selected": "ar"
+          },
+          {
+            "axis": "midasr_weight_family",
+            "layer": "3_training",
+            "layer_label": "Layer 3: forecast generation",
+            "options": [
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nealmon'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "nealmon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'almonp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "almonp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "nbeta"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "genexp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "harstep"
+              }
+            ],
+            "selected": null
           },
           {
             "axis": "benchmark_family",
@@ -12041,6 +12250,13 @@
                 "value": "midas_almon"
               },
               {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr"
+              },
+              {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
                 "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
@@ -12119,6 +12335,49 @@
               }
             ],
             "selected": "ar"
+          },
+          {
+            "axis": "midasr_weight_family",
+            "layer": "3_training",
+            "layer_label": "Layer 3: forecast generation",
+            "options": [
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nealmon'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "nealmon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'almonp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "almonp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "nbeta"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "genexp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "harstep"
+              }
+            ],
+            "selected": null
           },
           {
             "axis": "benchmark_family",
@@ -17834,6 +18093,13 @@
                 "value": "midas_almon"
               },
               {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr"
+              },
+              {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
                 "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
@@ -17912,6 +18178,49 @@
               }
             ],
             "selected": "ridge"
+          },
+          {
+            "axis": "midasr_weight_family",
+            "layer": "3_training",
+            "layer_label": "Layer 3: forecast generation",
+            "options": [
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nealmon'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "nealmon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'almonp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "almonp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "nbeta"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "genexp"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
+                "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
+                "enabled": false,
+                "status": "future",
+                "value": "harstep"
+              }
+            ],
+            "selected": null
           },
           {
             "axis": "benchmark_family",
@@ -20982,6 +21291,7 @@
       ],
       "fred_sd_mixed_frequency_builtin_models": [
         "midas_almon",
+        "midasr",
         "midasr_nealmon"
       ],
       "linear_models": [
@@ -20992,6 +21302,8 @@
         "huber",
         "lasso",
         "midas_almon",
+        "midasr",
+        "midasr_nealmon",
         "ols",
         "quantile_linear",
         "ridge"
@@ -21170,6 +21482,7 @@
     ],
     "3_training": [
       "model_family",
+      "midasr_weight_family",
       "benchmark_family",
       "forecast_type",
       "forecast_object",

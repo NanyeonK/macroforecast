@@ -198,6 +198,18 @@
       if (forecastObject === "quantile" && value !== forecastRules.quantile_model) return "forecast_object=quantile currently requires model_family=quantile_linear";
     }
 
+    if (axisName === "midasr_weight_family") {
+      if (model !== "midasr" && model !== "midasr_nealmon") {
+        return "midasr_weight_family applies only to model_family=midasr or midasr_nealmon";
+      }
+      if (model === "midasr_nealmon" && value !== "nealmon") {
+        return "model_family=midasr_nealmon is the compatibility alias for nealmon only";
+      }
+      if (["nbeta", "genexp", "harstep"].includes(value)) {
+        return `midasr_weight_family=${value} is registered but runtime-gated`;
+      }
+    }
+
     if (axisName === "forecast_object") {
       if (value === "quantile" && model && model !== forecastRules.quantile_model) return "quantile forecasts currently require model_family=quantile_linear";
       if ((value === "interval" || value === "density") && String(selected.target_normalization || "none") !== "none") {

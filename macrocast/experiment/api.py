@@ -40,6 +40,8 @@ _SWEEP_ALIASES: dict[str, tuple[str, str]] = {
         "2_preprocessing",
         "fred_sd_mixed_frequency_representation",
     ),
+    "midasr_weight": ("3_training", "midasr_weight_family"),
+    "midasr_weight_family": ("3_training", "midasr_weight_family"),
 }
 
 

@@ -14,9 +14,11 @@ FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel
   [`midas_r`](https://rdrr.io/cran/midasr/man/midas_r.html),
   [`nealmon`](https://rdrr.io/cran/midasr/man/nealmon.html), and
   [`almonp`](https://rdrr.io/cran/midasr/man/almonp.html). macrocast's
-  `midasr_nealmon` slice mirrors the `midas_r + nealmon` restricted-NLS
-  surface for the FRED-SD direct raw-panel route; it is not a full port of all
-  `midasr` model classes.
+  `model_family=midasr` route currently supports `midasr_weight_family` values
+  `nealmon` and `almonp` for the FRED-SD direct raw-panel route. The legacy
+  `midasr_nealmon` family remains as a compatibility alias for
+  `midasr_weight_family=nealmon`; this is not a full port of all `midasr`
+  model classes.
 
 ## What macrocast downloads
 
@@ -67,10 +69,11 @@ Within a single workbook, the monthly series have 12 observations per year while
 
 The built-in estimator set is intentionally narrow. The executable surface is
 a Layer 2 native-frequency block payload plus Layer 3 registered-custom-model
-adapter routes and two package-owned direct MIDAS baselines: `midas_almon`
-and `midasr_nealmon`. Full state-space mixed-frequency likelihoods, broader
-MIDAS weight families, and regularized group MIDAS remain research-extension
-work.
+adapter routes and package-owned direct MIDAS baselines: `midas_almon`,
+`midasr` with `nealmon` or `almonp` weights, and the legacy
+`midasr_nealmon` alias. Full state-space mixed-frequency likelihoods, beta /
+generalized-exponential / HAR-step MIDAS weights, and regularized group MIDAS
+remain research-extension work.
 
 ## Real-time vintage discipline
 
@@ -218,8 +221,8 @@ Layer 2 can shape the panel with
 | `calendar_aligned_frame` | Default. Keep the selected FRED-SD columns on the recipe target calendar after generic monthly/quarterly conversion. This preserves the current behavior and records a Layer 2 report. |
 | `drop_unknown_native_frequency` | Drop selected FRED-SD columns whose inferred native frequency is `unknown`; keep known monthly, quarterly, annual, and irregular classes. |
 | `drop_non_target_native_frequency` | Keep only selected FRED-SD columns whose inferred native frequency matches the recipe frequency (`monthly` or `quarterly`). This is the strict same-frequency representation choice. |
-| `native_frequency_block_payload` | Operational narrow. Preserve the calendar-aligned frame and emit `fred_sd_native_frequency_block_payload_v1`, which groups selected FRED-SD columns by inferred native frequency for registered custom Layer 3 models or the built-in `midas_almon` / `midasr_nealmon` executors. |
-| `mixed_frequency_model_adapter` | Operational narrow. Emit the native-frequency block payload and `fred_sd_mixed_frequency_model_adapter_v1`; execution currently accepts a registered custom model or the built-in `midas_almon` / `midasr_nealmon` executors. |
+| `native_frequency_block_payload` | Operational narrow. Preserve the calendar-aligned frame and emit `fred_sd_native_frequency_block_payload_v1`, which groups selected FRED-SD columns by inferred native frequency for registered custom Layer 3 models or the built-in `midas_almon`, `midasr`, and `midasr_nealmon` executors. |
+| `mixed_frequency_model_adapter` | Operational narrow. Emit the native-frequency block payload and `fred_sd_mixed_frequency_model_adapter_v1`; execution currently accepts a registered custom model or the built-in `midas_almon`, `midasr`, and `midasr_nealmon` executors. |
 
 Simple API:
 
@@ -249,7 +252,7 @@ Advanced block/adapter choices are deliberately narrow. They require:
 - `dataset` includes `fred_sd`
 - `feature_builder="raw_feature_panel"`
 - `forecast_type="direct"`
-- `model_family` is a registered custom model, `midas_almon`, or
+- `model_family` is a registered custom model, `midas_almon`, `midasr`, or
   `midasr_nealmon`
 
 The custom model receives the regular tabular `X_train`, `y_train`, `X_test`
@@ -270,16 +273,24 @@ calendar, and fits a ridge-regularized direct forecast. Tunable fields are
 `midasr`-style nonlinear MIDAS implementation and does not replace custom
 research adapters.
 
-`model_family="midasr_nealmon"` is the first Python parity slice against the R
-`midasr` package. It consumes the same FRED-SD native-frequency block/adapter
-route, constructs raw lag tensors from the selected predictors, and estimates
-a restricted direct MIDAS forecast by nonlinear least squares with normalized
-exponential Almon (`nealmon`) weights. Tunable fields are `midas_max_lag`
-(default `3`), `midasr_nealmon_degree` (default `2`),
-`midasr_max_terms` (default `12`), and `midasr_max_nfev` (default `500`).
-Use Layer 2 state/variable/feature selection before this route when the raw
-panel is wide; the NLS slice is meant for explicit research specifications,
-not blind high-dimensional grids.
+`model_family="midasr"` is the Python parity surface against the R `midasr`
+restricted-weight grammar. It consumes the same FRED-SD native-frequency
+block/adapter route, constructs raw lag tensors from the selected predictors,
+and estimates a restricted direct MIDAS forecast by nonlinear least squares.
+The runtime `midasr_weight_family` choices are:
+
+| `midasr_weight_family` | Runtime status | Meaning |
+|---|---|---|
+| `nealmon` | operational narrow | Normalized exponential Almon weights; compatibility alias `model_family="midasr_nealmon"`. |
+| `almonp` | operational narrow | Raw polynomial Almon weights. |
+| `nbeta`, `genexp`, `harstep` | future | Registered in the decision tree but blocked until their exact Python parity tests and parameter contracts are added. |
+
+Tunable fields are `midas_max_lag` (default `3`), `midasr_nealmon_degree`
+(default `2` for `nealmon`), `midasr_almonp_degree` (default `2` for
+`almonp`), `midasr_max_terms` (default `12`), and `midasr_max_nfev` (default
+`500`). Use Layer 2 state/variable/feature selection before this route when
+the raw panel is wide; the NLS slice is meant for explicit research
+specifications, not blind high-dimensional grids.
 
 ```python
 import macrocast as mc
@@ -327,7 +338,7 @@ exp = (
 )
 ```
 
-R `midasr`-style `nealmon` route:
+R `midasr`-style weight-family route:
 
 ```python
 exp = (
@@ -338,10 +349,11 @@ exp = (
         end="2020-12",
         horizons=[1],
         frequency="monthly",
-        model_family="midasr_nealmon",
+        model_family="midasr",
         feature_builder="raw_feature_panel",
         benchmark_config={"minimum_train_size": 60, "rolling_window_size": 60},
     )
+    .sweep({"midasr_weight_family": "almonp"})
     .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
     .use_fred_sd_mixed_frequency_adapter()
 )
@@ -349,8 +361,8 @@ exp = (
 
 The adapter variant uses `.use_fred_sd_mixed_frequency_adapter()`. The package
 now supplies the enforced Layer 2 payload, Layer 3 custom-adapter route, and
-two built-in direct MIDAS baselines. State-space estimators and broader MIDAS
-families remain future extensions.
+built-in direct MIDAS baselines. State-space estimators, regularized group
+MIDAS, and the remaining `midasr` weight families remain future extensions.
 
 ## Changes from the 2020 working paper to current
 
@@ -364,7 +376,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 - **Excel parsing** via `openpyxl`. Each sheet is read independently; `pd.read_excel(..., sheet_name=None)` returns `dict[str, DataFrame]` and the loader concatenates wide-form.
 - **Cache**: same mechanism as FRED-MD / FRED-QD (`~/.cache/macrocast/raw/`).
-- **support_tier = "provisional"** on the returned `RawDatasetMetadata` — this now reflects remaining mixed-frequency and study-design edge cases, not lack of a live/vintage loader or t-code policy surface.
+- **support_tier = "stable"** on the returned `RawDatasetMetadata` — the live/vintage loader, selectors, metadata report, and FRED-SD t-code policy surface are package-owned. Mixed-frequency estimator families still report their own operational-narrow status.
 - **Series metadata** — runtime runs that include FRED-SD write `fred_sd_series_metadata.json`, which makes the selected state/variable panel and native-frequency mix auditable.
 - **Frequency report** — runtime also writes `fred_sd_frequency_report.json`, which reduces the selected panel to a Layer 1 frequency-composition contract for downstream policy decisions.
 - **Mixed-frequency representation report** — runtime writes `fred_sd_mixed_frequency_representation.json` for FRED-SD runs; this is the Layer 2 panel-shaping contract consumed before t-code preprocessing.
@@ -373,7 +385,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 ## Known limitations in macrocast v1.0
 
-1. **Built-in mixed-frequency estimators are narrow** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, the built-in `midas_almon` direct Almon-lag baseline, and the `midasr_nealmon` restricted-NLS slice are available. Broader MIDAS weight families, regularized group MIDAS, and state-space nowcasting estimators remain future work.
+1. **Built-in mixed-frequency estimators are narrow** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, the built-in `midas_almon` direct Almon-lag baseline, `midasr` with `nealmon` / `almonp`, and the compatibility `midasr_nealmon` restricted-NLS slice are available. Other MIDAS weight families, regularized group MIDAS, and state-space nowcasting estimators remain future work.
 2. **State and SD-variable groups are recipe-level selectors** —
    `fred_sd_state_group` and `fred_sd_variable_group` resolve into explicit
    `sd_states` / `sd_variables` before loading. They are not post-load
