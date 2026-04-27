@@ -1728,9 +1728,9 @@
       },
       "current_status": {
         "almonp": "operational_narrow",
-        "genexp": "future",
-        "harstep": "future",
-        "nbeta": "future",
+        "genexp": "operational_narrow",
+        "harstep": "operational_narrow",
+        "nbeta": "operational_narrow",
         "nealmon": "operational_narrow"
       },
       "default_policy": "fixed",
@@ -6632,21 +6632,21 @@
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "nbeta"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "genexp"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "harstep"
               }
             ],
@@ -12359,21 +12359,21 @@
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "nbeta"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "genexp"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "harstep"
               }
             ],
@@ -18202,21 +18202,21 @@
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'nbeta'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "nbeta"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'genexp'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "genexp"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.midasr_weight_family = 'harstep'",
                 "disabled_reason": "midasr_weight_family applies only to model_family=midasr or midasr_nealmon",
                 "enabled": false,
-                "status": "future",
+                "status": "operational_narrow",
                 "value": "harstep"
               }
             ],

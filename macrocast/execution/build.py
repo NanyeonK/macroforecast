@@ -78,6 +78,12 @@ from .importance_dispatch import (
     canonicalize_importance_spec,
 )
 from .stat_tests.dispatch import active_stat_test_axes, canonicalize_stat_test_spec
+from .models.midasr import (
+    MIDASR_SUPPORTED_WEIGHT_FAMILIES,
+    MIDASR_WEIGHT_BASIS_NAMES,
+    MIDASR_WEIGHT_REFERENCE_FUNCTIONS,
+    midasr_weight_param_width,
+)
 from ..raw.windowing import WindowSpec as _WindowSpec, _resolve_min_train_obs as _resolve_min_train_obs
 from .nber import filter_origins_by_regime as _filter_origins_by_regime
 from .deterministic import augment_array as _augment_deterministic_array
@@ -6612,13 +6618,20 @@ def _midasr_config(recipe: RecipeSpec) -> dict[str, object]:
         if "midasr_weight_family" in raw and weight_family != "nealmon":
             raise ExecutionError("model_family='midasr_nealmon' only supports midasr_weight_family='nealmon'")
         weight_family = "nealmon"
-    if weight_family not in {"nealmon", "almonp"}:
-        raise ExecutionError("model_family='midasr' requires midasr_weight_family in ['nealmon', 'almonp']")
-    max_lag = int(raw.get("midas_max_lag", 3))
-    degree_key = "midasr_nealmon_degree" if weight_family == "nealmon" else "midasr_almonp_degree"
+    if weight_family not in MIDASR_SUPPORTED_WEIGHT_FAMILIES:
+        allowed = ", ".join(MIDASR_SUPPORTED_WEIGHT_FAMILIES)
+        raise ExecutionError(f"model_family='midasr' requires midasr_weight_family in [{allowed}]")
+    max_lag_default = 20 if weight_family == "harstep" else 3
+    max_lag = int(raw.get("midas_max_lag", max_lag_default))
+    degree_key = {
+        "nealmon": "midasr_nealmon_degree",
+        "almonp": "midasr_almonp_degree",
+    }.get(weight_family)
     degree_value = raw.get("midasr_degree")
-    if degree_value is None:
+    if degree_value is None and degree_key is not None:
         degree_value = raw.get(degree_key, 2)
+    if degree_value is None:
+        degree_value = 0
     degree = int(degree_value)
     max_terms = int(raw.get("midasr_max_terms", 12))
     max_nfev = int(raw.get("midasr_max_nfev", 500))
@@ -6629,18 +6642,23 @@ def _midasr_config(recipe: RecipeSpec) -> dict[str, object]:
         raise ExecutionError(f"{model_label} requires midasr_nealmon_degree >= 1")
     if weight_family == "almonp" and degree < 0:
         raise ExecutionError(f"{model_label} requires midasr_almonp_degree >= 0")
+    if weight_family == "harstep" and max_lag != 20:
+        raise ExecutionError(f"{model_label} with midasr_weight_family='harstep' requires midas_max_lag=20")
     if max_terms < 1:
         raise ExecutionError(f"{model_label} requires midasr_max_terms >= 1")
     if max_nfev < 1:
         raise ExecutionError(f"{model_label} requires midasr_max_nfev >= 1")
+    param_width = midasr_weight_param_width(weight_family, degree)
     config: dict[str, object] = {
         "midas_max_lag": max_lag,
         "midasr_weight_family": weight_family,
         "midasr_degree": degree,
+        "midasr_param_width": param_width,
         "midasr_max_terms": max_terms,
         "midasr_max_nfev": max_nfev,
     }
-    config[degree_key] = degree
+    if degree_key is not None:
+        config[degree_key] = degree
     return config
 
 
@@ -6682,18 +6700,15 @@ def _build_midasr_representation(
     max_lag = int(config["midas_max_lag"])
     weight_family = str(config["midasr_weight_family"])
     degree = int(config["midasr_degree"])
+    param_width = int(config["midasr_param_width"])
     max_terms = int(config["midasr_max_terms"])
     contract_version = (
         _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION
         if model_family == _MIDASR_NEALMON_MODEL_FAMILY
         else _MIDASR_RESTRICTED_RUNTIME_CONTRACT_VERSION
     )
-    reference_function = f"midas_r + {weight_family}"
-    basis_name = (
-        "midasr_nealmon_normalized_exponential_almon"
-        if weight_family == "nealmon"
-        else "midasr_almonp_raw_polynomial"
-    )
+    reference_function = MIDASR_WEIGHT_REFERENCE_FUNCTIONS[weight_family]
+    basis_name = MIDASR_WEIGHT_BASIS_NAMES[weight_family]
     spec = _layer2_runtime_spec(recipe)
     predictors = _raw_panel_columns(
         raw_frame,
@@ -6782,6 +6797,7 @@ def _build_midasr_representation(
         "midasr_reference_function": reference_function,
         "midas_max_lag": max_lag,
         "midasr_degree": degree,
+        "midasr_param_width": param_width,
         "midas_lag_basis": basis_name,
         "train_row_count": int(X_train.shape[0]),
         "train_start_date": train_index[0].strftime("%Y-%m-%d") if train_index else None,
@@ -6790,8 +6806,10 @@ def _build_midasr_representation(
     if weight_family == "nealmon":
         alignment["midasr_nealmon_contract"] = _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION
         alignment["midasr_nealmon_degree"] = degree
-    else:
+    elif weight_family == "almonp":
         alignment["midasr_almonp_degree"] = degree
+    elif weight_family == "harstep":
+        alignment["midasr_harstep_lag_count"] = 20
     alignment.update(_fred_sd_representation_alignment_payload(raw_frame))
     fit_state = (
         {
@@ -6849,12 +6867,13 @@ def _run_midasr_raw_panel_executor(
     config = _midasr_config(recipe)
     weight_family = str(config["midasr_weight_family"])
     degree = int(config["midasr_degree"])
+    param_width = int(config["midasr_param_width"])
     contract_version = (
         _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION
         if model_family == _MIDASR_NEALMON_MODEL_FAMILY
         else _MIDASR_RESTRICTED_RUNTIME_CONTRACT_VERSION
     )
-    reference_function = f"midas_r + {weight_family}"
+    reference_function = MIDASR_WEIGHT_REFERENCE_FUNCTIONS[weight_family]
     try:
         fit = fit_midasr_restricted_direct(
             lag_tensor,
@@ -6885,6 +6904,7 @@ def _run_midasr_raw_panel_executor(
             "midasr_contract": contract_version,
             "midasr_weight_family": weight_family,
             "midasr_degree": degree,
+            "midasr_param_width": param_width,
             "midasr_reference_package": "midasr",
             "midasr_reference_function": reference_function,
             **config,
