@@ -84,25 +84,25 @@
 
 <span class="n">_TARGET</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_target_transform&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_X</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_x_transform&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_TCODE</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_transform_pipeline&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_transform_sequence&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_REPRESENTATION_POLICY</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_transform_only&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_TCODE_APPLICATION_SCOPE</span> <span class="o">=</span> <span class="p">{</span>
@@ -167,10 +167,10 @@
 <span class="p">}</span>
 <span class="n">_ORDER</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
     <span class="s2">&quot;extra_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_then_extra&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_FIT_SCOPE</span> <span class="o">=</span> <span class="p">{</span>
@@ -369,7 +369,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_extra_preprocessing</span><span class="p">(</span><span class="n">contract</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_only&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -378,18 +378,18 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">elif</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_then_extra&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
         <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -458,11 +458,11 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_official_tcode_only_contract</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -476,9 +476,9 @@
         <span class="k">return</span> <span class="kc">False</span>
     <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
     <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
-    <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
 
@@ -498,23 +498,23 @@
             <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only representation requires tcode_application_scope=&#39;none&#39;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only requires raw-level target and x representation&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only representation cannot pair with tcode_only ordering&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only representation cannot pair with official_tcode_only ordering&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation requires a non-empty official transform scope&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only representation requires a non-empty official transform scope&quot;</span><span class="p">)</span>
         <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
         <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation target policy must match tcode_application_scope&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation x policy must match tcode_application_scope&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">}:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation requires explicit tcode ordering semantics&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only representation target policy must match tcode_application_scope&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only representation x policy must match tcode_application_scope&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only representation requires explicit tcode ordering semantics&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;none cannot use tcode-transformed representation&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
@@ -525,39 +525,39 @@
         <span class="k">if</span> <span class="n">extra_present</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only cannot carry extra preprocessing&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only requires at least one tcode-transformed side&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only requires preprocess_order=&#39;tcode_only&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only requires at least one tcode-transformed side&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only requires preprocess_order=&#39;official_tcode_only&#39;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">extra_present</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only cannot carry extra preprocessing&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_only cannot carry extra preprocessing&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires preprocess_order=&#39;tcode_then_extra&#39;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_then_extra&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_then_extra_preprocess requires preprocess_order=&#39;official_tcode_then_extra&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_then_extra_preprocess requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;official_tcode_then_extra_preprocess requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_only&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_only&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires preprocess_order=&#39;extra_only&#39;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode cannot use tcode-transformed representation&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_only requires preprocess_order=&#39;extra_only&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_only cannot use tcode-transformed representation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires tcode_application_scope=&#39;none&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_only requires tcode_application_scope=&#39;none&#39;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_only requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires preprocess_order=&#39;extra_then_tcode&#39;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_then_official_tcode requires preprocess_order=&#39;extra_preprocess_then_official_tcode&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_then_official_tcode requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_then_official_tcode requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="o">!=</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;preprocess_fit_scope can be non-trivial only when extra preprocessing is explicit&quot;</span><span class="p">)</span>

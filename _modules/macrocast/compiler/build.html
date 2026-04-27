@@ -621,7 +621,7 @@
     <span class="s2">&quot;representation_policy&quot;</span><span class="p">,</span>
     <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">_OFFICIAL_TCODE_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">}</span>
+<span class="n">_OFFICIAL_TCODE_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_has_legacy_official_transform_bridge</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -631,8 +631,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_legacy_official_transform_scope</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="s2">&quot;tcode_application_scope&quot;</span> <span class="ow">in</span> <span class="n">selection_map</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">)</span>
-    <span class="n">target_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span>
-    <span class="n">x_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span>
+    <span class="n">target_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span>
+    <span class="n">x_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span>
     <span class="k">if</span> <span class="n">target_tcode</span> <span class="ow">and</span> <span class="n">x_tcode</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;target_and_predictors&quot;</span>
     <span class="k">if</span> <span class="n">target_tcode</span><span class="p">:</span>
@@ -651,8 +651,8 @@
     <span class="n">scope</span> <span class="o">=</span> <span class="n">_legacy_official_transform_scope</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="n">tcode_policy</span> <span class="ow">in</span> <span class="n">_OFFICIAL_TCODE_POLICIES</span>
-        <span class="ow">or</span> <span class="n">target_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span>
-        <span class="ow">or</span> <span class="n">x_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span>
+        <span class="ow">or</span> <span class="n">target_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span>
+        <span class="ow">or</span> <span class="n">x_policy</span> <span class="o">==</span> <span class="s2">&quot;official_tcode_transformed&quot;</span>
         <span class="ow">or</span> <span class="n">scope</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;apply_official_tcode&quot;</span>
@@ -773,20 +773,20 @@
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
             <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;extra_preprocess_only&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
             <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="s2">&quot;extra_only&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
             <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
             <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="n">target_policy</span> <span class="o">=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
-    <span class="n">x_policy</span> <span class="o">=</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
+    <span class="n">target_policy</span> <span class="o">=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
+    <span class="n">x_policy</span> <span class="o">=</span> <span class="s2">&quot;official_tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="n">target_policy</span><span class="p">,</span>
         <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="n">x_policy</span><span class="p">,</span>
-        <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="s2">&quot;tcode_then_extra&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="s2">&quot;official_tcode_then_extra&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
         <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="n">scope</span><span class="p">,</span>
     <span class="p">}</span>
 

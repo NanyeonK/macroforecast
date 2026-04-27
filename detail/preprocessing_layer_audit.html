@@ -233,14 +233,14 @@ that request <code class="docutils literal notranslate"><span class="pre">featur
 | <code class="docutils literal notranslate"><span class="pre">target_outlier_policy</span></code> | <code class="docutils literal notranslate"><span class="pre">none</span></code> | Target-side outlier algorithms are not supported in the operational contract. |
 | <code class="docutils literal notranslate"><span class="pre">inverse_transform_policy</span></code> | <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_scale_only</span></code> | Built-in inverse paths are executable for supported target transforms. Custom inverse policies remain gated. |
 | <code class="docutils literal notranslate"><span class="pre">evaluation_scale</span></code> | <code class="docutils literal notranslate"><span class="pre">raw_level</span></code>, <code class="docutils literal notranslate"><span class="pre">original_scale</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_scale</span></code>, <code class="docutils literal notranslate"><span class="pre">both</span></code> | Runtime writes model/transformed/original scale prediction columns and scale-specific metric summaries. |
-| <code class="docutils literal notranslate"><span class="pre">preprocess_order</span></code> | <code class="docutils literal notranslate"><span class="pre">none</span></code>, derived <code class="docutils literal notranslate"><span class="pre">tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_only</span></code>, <code class="docutils literal notranslate"><span class="pre">tcode_then_extra</span></code> | <code class="docutils literal notranslate"><span class="pre">tcode_then_extra</span></code> is executable for supported raw-panel extra preprocessing after Layer 1 official t-codes. |
+| <code class="docutils literal notranslate"><span class="pre">preprocess_order</span></code> | <code class="docutils literal notranslate"><span class="pre">none</span></code>, derived <code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_only</span></code>, <code class="docutils literal notranslate"><span class="pre">official_tcode_then_extra</span></code> | <code class="docutils literal notranslate"><span class="pre">official_tcode_then_extra</span></code> is executable for supported raw-panel extra preprocessing after Layer 1 official t-codes. |
 | <code class="docutils literal notranslate"><span class="pre">preprocess_fit_scope</span></code> | <code class="docutils literal notranslate"><span class="pre">not_applicable</span></code>, <code class="docutils literal notranslate"><span class="pre">train_only</span></code> | Extra preprocessing requires <code class="docutils literal notranslate"><span class="pre">train_only</span></code> today. |
 | <code class="docutils literal notranslate"><span class="pre">separation_rule</span></code> | <code class="docutils literal notranslate"><span class="pre">strict_separation</span></code> | Non-strict helper modes are registry-only until wired into the main execution loop as a general dispatcher. |
 | <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code> | fixed registered plugin name or <code class="docutils literal notranslate"><span class="pre">none</span></code> | Predictor-side function must return transformed X_train/X_test and must not transform the target. |
 | <code class="docutils literal notranslate"><span class="pre">target_transformer</span></code> | fixed registered plugin name or <code class="docutils literal notranslate"><span class="pre">none</span></code> | Executable under target-transformer constraints; raw-scale evaluation only. |</p>
 <p>Current runtime profiles:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_only</span></code>: executable default. Layer 1 chooses official transforms;
+<li><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code>: executable default. Layer 1 chooses official transforms;
 compiler derives a runtime bridge contract with no extra Layer 2 preprocessing.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_only</span></code>: executable non-default path with no official T-code and no extra
 preprocessing.</p></li>
@@ -255,7 +255,7 @@ additional preprocessing, and the current built-in implementation supports that
 only for raw-panel style feature builders.</strong> The default official T-code path is
 executable, and supported extra preprocessing can now be attached after the
 Layer 1 official T-code step through the derived
-<code class="docutils literal notranslate"><span class="pre">tcode_then_extra_preprocess</span></code> bridge contract.
+<code class="docutils literal notranslate"><span class="pre">official_tcode_then_extra_preprocess</span></code> bridge contract.
 This definition pass splits the migrated representation axes into general
 feature-block primitives: target-lag blocks, transformed-X lag blocks, factor
 blocks, level add-backs, lag rotations, local temporal factors, volatility
@@ -272,7 +272,7 @@ implementation task.</p>
 <p>Layer 2 is closed for fixed full recipes under the current runtime scope:</p>
 <ul class="simple">
 <li><p>all Layer 2 axes have canonical ownership and honest registry status;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_only</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_train_only_extra</span></code>, and
+<li><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_only</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_train_only_extra</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">apply_official_tcode_then_train_only_extra</span></code> compile and execute where their
 constraints are satisfied;</p></li>
 <li><p>representable-but-not-executable values remain in the grammar as
@@ -303,22 +303,22 @@ runtime integration and acceptance tests.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_transform_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tcode_transformed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_transformed</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x_transform_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_transformed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_transformed</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tcode_only</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">representation_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tcode_only</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tcode_application_scope</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_order</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tcode_only</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_fit_scope</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">not_applicable</span></code></p></td>
@@ -369,15 +369,15 @@ t-code bridge inputs. Runtime t-code reports repeat whether execution used
 <section id="executable-contract-classes">
 <h2>Executable Contract Classes<a class="headerlink" href="#executable-contract-classes" title="Link to this heading"></a></h2>
 <p>The code currently recognizes four useful preprocessing classes.</p>
-<section id="tcode-only">
-<h3><code class="docutils literal notranslate"><span class="pre">tcode_only</span></code><a class="headerlink" href="#tcode-only" title="Link to this heading"></a></h3>
+<section id="official-tcode-only">
+<h3><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code><a class="headerlink" href="#official-tcode-only" title="Link to this heading"></a></h3>
 <p>Status: executable and default.</p>
 <p>Contract:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">target_transform_policy='tcode_transformed'</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_transform_policy='apply_official_tcode_transformed'</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='tcode_only'</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">representation_policy='tcode_only'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_transform_policy='official_tcode_transformed'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_transform_policy='official_tcode_transformed'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='official_tcode_only'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">representation_policy='official_tcode_only'</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tcode_application_scope='target_and_predictors'</span></code></p></li>
 <li><p>no missing, outlier, scaling, dimensionality reduction, or feature selection extras</p></li>
 </ul>
@@ -401,13 +401,13 @@ t-code bridge inputs. Runtime t-code reports repeat whether execution used
 </ul>
 <p>This path skips dataset t-code transforms.</p>
 </section>
-<section id="extra-preprocess-without-tcode">
-<h3><code class="docutils literal notranslate"><span class="pre">extra_preprocess_without_tcode</span></code><a class="headerlink" href="#extra-preprocess-without-tcode" title="Link to this heading"></a></h3>
+<section id="extra-preprocess-only">
+<h3><code class="docutils literal notranslate"><span class="pre">extra_preprocess_only</span></code><a class="headerlink" href="#extra-preprocess-only" title="Link to this heading"></a></h3>
 <p>Status: executable for raw-panel style feature builders, not the simple default.</p>
 <p>Contract:</p>
 <ul class="simple">
 <li><p>raw target and X representation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='extra_preprocess_without_tcode'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='extra_preprocess_only'</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">preprocess_order='extra_only'</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">preprocess_fit_scope='train_only'</span></code></p></li>
 <li><p>no target-side missing/outlier transformation</p></li>
@@ -424,8 +424,8 @@ t-code bridge inputs. Runtime t-code reports repeat whether execution used
 </ul>
 <p>Important caveat: these helpers are wired through <code class="docutils literal notranslate"><span class="pre">_apply_raw_panel_preprocessing</span></code>, which is used by raw-panel style feature builders. They are not a drop-in extension of the default autoregressive t-code path.</p>
 </section>
-<section id="tcode-then-extra-preprocess">
-<h3><code class="docutils literal notranslate"><span class="pre">tcode_then_extra_preprocess</span></code><a class="headerlink" href="#tcode-then-extra-preprocess" title="Link to this heading"></a></h3>
+<section id="official-tcode-then-extra-preprocess">
+<h3><code class="docutils literal notranslate"><span class="pre">official_tcode_then_extra_preprocess</span></code><a class="headerlink" href="#official-tcode-then-extra-preprocess" title="Link to this heading"></a></h3>
 <p>Status: executable for supported raw-panel feature-builder paths.</p>
 <p>This is the natural contract researchers expect for “official FRED transform,
 then scale/impute/select features.” The public recipe should express the
@@ -438,9 +438,9 @@ official transform through Layer 1 axes:</p>
 <p>When a supported Layer 2 extra-preprocessing axis is non-neutral, the compiler
 derives the runtime bridge:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='tcode_then_extra_preprocess'</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">preprocess_order='tcode_then_extra'</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">representation_policy='tcode_only'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy='official_tcode_then_extra_preprocess'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preprocess_order='official_tcode_then_extra'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">representation_policy='official_tcode_only'</span></code></p></li>
 </ul>
 <p>Runtime order:</p>
 <ol class="arabic simple">
@@ -532,7 +532,7 @@ support exists.</p>
 <p>The simple API now blocks preprocessing sweeps before execution.</p>
 <p>Reasons:</p>
 <ol class="arabic simple">
-<li><p>Default preprocessing is still <code class="docutils literal notranslate"><span class="pre">apply_official_tcode_only</span></code>.</p></li>
+<li><p>Default preprocessing is still <code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_then_train_only_extra</span></code> is executable only as a fixed
 preprocessing contract, not as a public simple sweep.</p></li>
 <li><p>Co-sweeping model and preprocessing is explicitly rejected by governance for
@@ -542,7 +542,7 @@ ordinary baseline comparison.</p></li>
 </ol>
 <p>Therefore, the executable MVP is:</p>
 <ul class="simple">
-<li><p>default <code class="docutils literal notranslate"><span class="pre">tcode_only</span></code></p></li>
+<li><p>default <code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></li>
 <li><p>fixed <code class="docutils literal notranslate"><span class="pre">apply_official_tcode_then_train_only_extra</span></code> for supported raw-panel paths</p></li>
 <li><p>model sweeps</p></li>
 <li><p>fixed custom model</p></li>
@@ -562,7 +562,7 @@ ordinary baseline comparison.</p></li>
 <ol class="arabic simple">
 <li><p>Decide the public preprocessing profiles:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_only</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_train_only_extra</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode_then_train_only_extra</span></code></p></li>
 </ul>

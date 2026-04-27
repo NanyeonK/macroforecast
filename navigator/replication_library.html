@@ -199,7 +199,7 @@ researcher-owned.</p>
 <p>The package-native route uses:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1_data_task.dataset=fred_md
 1_data_task.official_transform_policy=apply_official_tcode
-2_preprocessing.tcode_policy=tcode_then_extra_preprocess
+2_preprocessing.tcode_policy=official_tcode_then_extra_preprocess
 2_preprocessing.scaling_policy=standard
 3_training.feature_builder=raw_feature_panel
 3_training.model_family=ridge
@@ -208,7 +208,7 @@ researcher-owned.</p>
 6_stat_tests.equal_predictive=dm
 </pre></div>
 </div>
-<p>The key Layer 2 detail is that <code class="docutils literal notranslate"><span class="pre">t-code</span> <span class="pre">+</span> <span class="pre">standardize</span></code> is not <code class="docutils literal notranslate"><span class="pre">tcode_only</span></code>. It is <code class="docutils literal notranslate"><span class="pre">tcode_then_extra_preprocess</span></code> with train-only scaling.</p>
+<p>The key Layer 2 detail is that <code class="docutils literal notranslate"><span class="pre">t-code</span> <span class="pre">+</span> <span class="pre">standardize</span></code> is not <code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code>. It is <code class="docutils literal notranslate"><span class="pre">official_tcode_then_extra_preprocess</span></code> with train-only scaling.</p>
 </section>
 <section id="fred-sd-midasr-path">
 <h2>FRED-SD MIDASR Path<a class="headerlink" href="#fred-sd-midasr-path" title="Link to this heading"></a></h2>

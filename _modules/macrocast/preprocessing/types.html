@@ -84,28 +84,28 @@
 
 <span class="n">TargetTransformPolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_target_transform&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">XTransformPolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apply_official_tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_transformed&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_x_transform&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">TcodePolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_transform_pipeline&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_transform_sequence&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="n">RepresentationPolicy</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom_transform_only&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -178,10 +178,10 @@
 
 <span class="n">PreprocessOrder</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
     <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span>
     <span class="s2">&quot;extra_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;official_tcode_then_extra&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_then_official_tcode&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 

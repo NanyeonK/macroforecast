@@ -157,8 +157,8 @@
 <p>The resolver is the last authority before execution. The Tree Navigator can explain disabled branches, but the compiler still decides whether the complete route is executable.</p>
 <p>Examples:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy=tcode_only</span></code> with <code class="docutils literal notranslate"><span class="pre">scaling_policy=standard</span></code> is invalid because <code class="docutils literal notranslate"><span class="pre">tcode_only</span></code> cannot carry extra preprocessing.</p></li>
-<li><p>Coulombe-style <code class="docutils literal notranslate"><span class="pre">t-code</span> <span class="pre">+</span> <span class="pre">standardize</span></code> must use <code class="docutils literal notranslate"><span class="pre">tcode_policy=tcode_then_extra_preprocess</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocess_order=tcode_then_extra</span></code>, and a train-only fit scope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tcode_policy=official_tcode_only</span></code> with <code class="docutils literal notranslate"><span class="pre">scaling_policy=standard</span></code> is invalid because <code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code> cannot carry extra preprocessing.</p></li>
+<li><p>Coulombe-style <code class="docutils literal notranslate"><span class="pre">t-code</span> <span class="pre">+</span> <span class="pre">standardize</span></code> must use <code class="docutils literal notranslate"><span class="pre">tcode_policy=official_tcode_then_extra_preprocess</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocess_order=official_tcode_then_extra</span></code>, and a train-only fit scope.</p></li>
 <li><p>Raw-panel iterated forecasting requires an explicit future-X path assumption.</p></li>
 </ul>
 </section>

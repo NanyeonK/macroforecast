@@ -216,14 +216,14 @@ describes the registry layer after migration.</p>
 <tr class="row-odd"><td><p>legacy official t-code bridge fields</p></td>
 <td><p>2_preprocessing</p></td>
 <td><p>compatibility bridge</p></td>
-<td><p>Keep accepting <code class="docutils literal notranslate"><span class="pre">target_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">x_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">tcode_policy=tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">tcode_application_scope</span></code>, and <code class="docutils literal notranslate"><span class="pre">preprocess_order=tcode_only</span></code> while generated recipes move to Layer 1 official-transform axes.</p></td>
+<td><p>Keep accepting <code class="docutils literal notranslate"><span class="pre">target_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">x_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">tcode_policy=official_tcode_only</span></code>, <code class="docutils literal notranslate"><span class="pre">tcode_application_scope</span></code>, and <code class="docutils literal notranslate"><span class="pre">preprocess_order=official_tcode_only</span></code> while generated recipes move to Layer 1 official-transform axes.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code> values beyond official transform</p></td>
 <td><p>2_preprocessing</p></td>
 <td><p>2_preprocessing</p></td>
 <td><p>Keep extra/custom transform pipelines in Layer 2.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_order=tcode_only</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_order=official_tcode_only</span></code></p></td>
 <td><p>2_preprocessing</p></td>
 <td><p>compatibility bridge</p></td>
 <td><p>Official-only order is represented by Layer 1 <code class="docutils literal notranslate"><span class="pre">official_transform_policy=apply_official_tcode</span></code>; extra orders remain Layer 2.</p></td>

@@ -85,8 +85,8 @@ source metadata.</p>
 <h2>Policy<a class="headerlink" href="#policy" title="Link to this heading"></a></h2>
 <p>Default runtime policy:</p>
 <ul class="simple">
-<li><p>FRED-MD official t-codes are applied when <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;tcode_only&quot;</span></code>.</p></li>
-<li><p>FRED-QD official t-codes are applied when <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;tcode_only&quot;</span></code>.</p></li>
+<li><p>FRED-MD official t-codes are applied when <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;official_tcode_only&quot;</span></code>.</p></li>
+<li><p>FRED-QD official t-codes are applied when <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;official_tcode_only&quot;</span></code>.</p></li>
 <li><p>FRED-SD inferred t-codes are not applied by default.</p></li>
 </ul>
 <p>Opt-in runtime policy:</p>
@@ -652,7 +652,7 @@ score-ranked diagnostics with reviewed status metadata from
 <li><p><code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code> uses quarterly frequency.</p></li>
 </ul>
 <p>Then SD inferred t-code metadata is added to <code class="docutils literal notranslate"><span class="pre">transform_codes</span></code> only when the
-user opted in. The existing <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;tcode_only&quot;</span></code> preprocessing path then
+user opted in. The existing <code class="docutils literal notranslate"><span class="pre">tcode_policy=&quot;official_tcode_only&quot;</span></code> preprocessing path then
 applies MD/QD official codes and any opted-in SD inferred codes together.</p>
 </section>
 <section id="non-goals">

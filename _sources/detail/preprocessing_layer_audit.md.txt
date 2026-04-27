@@ -94,7 +94,7 @@ that request `feature_builder` are normalized to `feature_representation`.
 | `target_outlier_policy` | `none` | Target-side outlier algorithms are not supported in the operational contract. |
 | `inverse_transform_policy` | `none`, `target_only`, `forecast_scale_only` | Built-in inverse paths are executable for supported target transforms. Custom inverse policies remain gated. |
 | `evaluation_scale` | `raw_level`, `original_scale`, `transformed_scale`, `both` | Runtime writes model/transformed/original scale prediction columns and scale-specific metric summaries. |
-| `preprocess_order` | `none`, derived `tcode_only`, `extra_only`, `tcode_then_extra` | `tcode_then_extra` is executable for supported raw-panel extra preprocessing after Layer 1 official t-codes. |
+| `preprocess_order` | `none`, derived `official_tcode_only`, `extra_only`, `official_tcode_then_extra` | `official_tcode_then_extra` is executable for supported raw-panel extra preprocessing after Layer 1 official t-codes. |
 | `preprocess_fit_scope` | `not_applicable`, `train_only` | Extra preprocessing requires `train_only` today. |
 | `separation_rule` | `strict_separation` | Non-strict helper modes are registry-only until wired into the main execution loop as a general dispatcher. |
 | `custom_preprocessor` | fixed registered plugin name or `none` | Predictor-side function must return transformed X_train/X_test and must not transform the target. |
@@ -102,7 +102,7 @@ that request `feature_builder` are normalized to `feature_representation`.
 
 Current runtime profiles:
 
-- `apply_official_tcode_only`: executable default. Layer 1 chooses official transforms;
+- `official_tcode_only`: executable default. Layer 1 chooses official transforms;
   compiler derives a runtime bridge contract with no extra Layer 2 preprocessing.
 - `raw_only`: executable non-default path with no official T-code and no extra
   preprocessing.
@@ -118,7 +118,7 @@ additional preprocessing, and the current built-in implementation supports that
 only for raw-panel style feature builders.** The default official T-code path is
 executable, and supported extra preprocessing can now be attached after the
 Layer 1 official T-code step through the derived
-`tcode_then_extra_preprocess` bridge contract.
+`official_tcode_then_extra_preprocess` bridge contract.
 This definition pass splits the migrated representation axes into general
 feature-block primitives: target-lag blocks, transformed-X lag blocks, factor
 blocks, level add-backs, lag rotations, local temporal factors, volatility
@@ -136,7 +136,7 @@ implementation task.
 Layer 2 is closed for fixed full recipes under the current runtime scope:
 
 - all Layer 2 axes have canonical ownership and honest registry status;
-- `apply_official_tcode_only`, `raw_only`, `raw_train_only_extra`, and
+- `official_tcode_only`, `raw_only`, `raw_train_only_extra`, and
   `apply_official_tcode_then_train_only_extra` compile and execute where their
   constraints are satisfied;
 - representable-but-not-executable values remain in the grammar as
@@ -158,12 +158,12 @@ runtime integration and acceptance tests.
 |------|---------|
 | `official_transform_policy` | `apply_official_tcode` |
 | `official_transform_scope` | `target_and_predictors` |
-| `target_transform_policy` | `tcode_transformed` |
-| `x_transform_policy` | `apply_official_tcode_transformed` |
-| `tcode_policy` | `tcode_only` |
-| `representation_policy` | `tcode_only` |
+| `target_transform_policy` | `official_tcode_transformed` |
+| `x_transform_policy` | `official_tcode_transformed` |
+| `tcode_policy` | `official_tcode_only` |
+| `representation_policy` | `official_tcode_only` |
 | `tcode_application_scope` | `target_and_predictors` |
-| `preprocess_order` | `tcode_only` |
+| `preprocess_order` | `official_tcode_only` |
 | `preprocess_fit_scope` | `not_applicable` |
 | extra preprocessing axes | `none` |
 
@@ -209,16 +209,16 @@ Current bridge status:
 
 The code currently recognizes four useful preprocessing classes.
 
-### `tcode_only`
+### `official_tcode_only`
 
 Status: executable and default.
 
 Contract:
 
-- `target_transform_policy='tcode_transformed'`
-- `x_transform_policy='apply_official_tcode_transformed'`
-- `tcode_policy='tcode_only'`
-- `representation_policy='tcode_only'`
+- `target_transform_policy='official_tcode_transformed'`
+- `x_transform_policy='official_tcode_transformed'`
+- `tcode_policy='official_tcode_only'`
+- `representation_policy='official_tcode_only'`
 - `tcode_application_scope='target_and_predictors'`
 - no missing, outlier, scaling, dimensionality reduction, or feature selection extras
 
@@ -243,14 +243,14 @@ Contract:
 
 This path skips dataset t-code transforms.
 
-### `extra_preprocess_without_tcode`
+### `extra_preprocess_only`
 
 Status: executable for raw-panel style feature builders, not the simple default.
 
 Contract:
 
 - raw target and X representation
-- `tcode_policy='extra_preprocess_without_tcode'`
+- `tcode_policy='extra_preprocess_only'`
 - `preprocess_order='extra_only'`
 - `preprocess_fit_scope='train_only'`
 - no target-side missing/outlier transformation
@@ -267,7 +267,7 @@ Runtime helpers exist for:
 
 Important caveat: these helpers are wired through `_apply_raw_panel_preprocessing`, which is used by raw-panel style feature builders. They are not a drop-in extension of the default autoregressive t-code path.
 
-### `tcode_then_extra_preprocess`
+### `official_tcode_then_extra_preprocess`
 
 Status: executable for supported raw-panel feature-builder paths.
 
@@ -282,9 +282,9 @@ official transform through Layer 1 axes:
 When a supported Layer 2 extra-preprocessing axis is non-neutral, the compiler
 derives the runtime bridge:
 
-- `tcode_policy='tcode_then_extra_preprocess'`
-- `preprocess_order='tcode_then_extra'`
-- `representation_policy='tcode_only'`
+- `tcode_policy='official_tcode_then_extra_preprocess'`
+- `preprocess_order='official_tcode_then_extra'`
+- `representation_policy='official_tcode_only'`
 
 Runtime order:
 
@@ -352,7 +352,7 @@ The simple API now blocks preprocessing sweeps before execution.
 
 Reasons:
 
-1. Default preprocessing is still `apply_official_tcode_only`.
+1. Default preprocessing is still `official_tcode_only`.
 2. `apply_official_tcode_then_train_only_extra` is executable only as a fixed
    preprocessing contract, not as a public simple sweep.
 3. Co-sweeping model and preprocessing is explicitly rejected by governance for
@@ -362,7 +362,7 @@ Reasons:
 
 Therefore, the executable MVP is:
 
-- default `tcode_only`
+- default `official_tcode_only`
 - fixed `apply_official_tcode_then_train_only_extra` for supported raw-panel paths
 - model sweeps
 - fixed custom model
@@ -379,7 +379,7 @@ The blocked MVP surface is:
 ## Required Work Before Opening Preprocessing Sweeps
 
 1. Decide the public preprocessing profiles:
-   - `apply_official_tcode_only`
+   - `official_tcode_only`
    - `raw_train_only_extra`
    - `apply_official_tcode_then_train_only_extra`
 
