@@ -42,8 +42,10 @@ def test_registry_loader_preserves_legacy_entry_contract() -> None:
     assert entry.layer == "3_training"
     assert entry.allowed_values[:5] == ("ar", "ols", "ridge", "lasso", "elasticnet")
     assert "xgboost" in entry.allowed_values
+    assert "midas_almon" in entry.allowed_values
     assert entry.current_status["xgboost"] == "operational"
     assert entry.current_status["randomforest"] == "operational"
+    assert entry.current_status["midas_almon"] == "operational_narrow"
     assert entry.default_policy == "sweep"
 
 

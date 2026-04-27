@@ -123,6 +123,7 @@
     const treeModels = asSet(groups.tree_models);
     const linearModels = asSet(groups.linear_models);
     const deepModels = asSet(groups.deep_sequence_models);
+    const fredSdMixedFrequencyBuiltinModels = asSet(groups.fred_sd_mixed_frequency_builtin_models);
     const builtinModels = asSet(((data.axis_catalog.model_family || {}).allowed_values) || []);
     const advancedFredSdMixedFrequency = asSet(["native_frequency_block_payload", "mixed_frequency_model_adapter"]);
     const rawPanelBuilders = asSet(groups.raw_panel_builders);
@@ -156,9 +157,16 @@
     if (axisName === "fred_sd_mixed_frequency_representation" && value !== "calendar_aligned_frame" && !hasFredSd) {
       return "fred_sd_mixed_frequency_representation requires dataset to include fred_sd";
     }
+    if (
+      axisName === "fred_sd_mixed_frequency_representation" &&
+      fredSdMixedFrequencyBuiltinModels.has(model) &&
+      !advancedFredSdMixedFrequency.has(value)
+    ) {
+      return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation";
+    }
     if (axisName === "fred_sd_mixed_frequency_representation" && advancedFredSdMixedFrequency.has(value)) {
       if (featureBuilder !== "raw_feature_panel") return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder";
-      if (builtinModels.has(model)) return "advanced FRED-SD mixed-frequency representation requires a registered custom model";
+      if (builtinModels.has(model) && !fredSdMixedFrequencyBuiltinModels.has(model)) return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon";
       if (forecastType !== "direct") return "advanced FRED-SD mixed-frequency representation currently supports forecast_type=direct only";
     }
 
@@ -177,8 +185,11 @@
     }
 
     if (axisName === "model_family") {
-      if (advancedFredSdMixedFrequency.has(fredSdMixedFrequency) && builtinModels.has(value)) {
-        return "advanced FRED-SD mixed-frequency representation requires a registered custom model";
+      if (fredSdMixedFrequencyBuiltinModels.has(value) && !advancedFredSdMixedFrequency.has(fredSdMixedFrequency)) {
+        return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation";
+      }
+      if (advancedFredSdMixedFrequency.has(fredSdMixedFrequency) && builtinModels.has(value) && !fredSdMixedFrequencyBuiltinModels.has(value)) {
+        return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon";
       }
       if (rawPanelBuilders.has(featureBuilder) && value === "ar") return "raw-panel feature builders cannot feed the AR-BIC target-lag generator";
       if (featureBuilder === "sequence_tensor" && !deepModels.has(value)) return "sequence_tensor is reserved for sequence/tensor generators";

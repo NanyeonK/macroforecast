@@ -1771,6 +1771,7 @@
         "pls",
         "factor_augmented_linear",
         "quantile_linear",
+        "midas_almon",
         "randomforest",
         "extratrees",
         "gbm",
@@ -1802,6 +1803,7 @@
         "lasso": "operational",
         "lightgbm": "operational",
         "lstm": "operational",
+        "midas_almon": "operational_narrow",
         "mlp": "operational",
         "ols": "operational",
         "pcr": "operational",
@@ -3391,7 +3393,7 @@
       "required_companions": [
         "dataset includes fred_sd",
         "feature_builder=raw_feature_panel",
-        "registered custom model_family",
+        "registered custom model_family or model_family=midas_almon",
         "forecast_type=direct",
         "mixed_frequency_model_adapter additionally records fred_sd_mixed_frequency_model_adapter_v1"
       ],
@@ -6351,6 +6353,13 @@
                 "enabled": true,
                 "status": "operational",
                 "value": "quantile_linear"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
+                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midas_almon"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
@@ -12014,6 +12023,13 @@
                 "enabled": true,
                 "status": "operational",
                 "value": "quantile_linear"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
+                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midas_almon"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
@@ -17795,6 +17811,13 @@
                 "value": "quantile_linear"
               },
               {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
+                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midas_almon"
+              },
+              {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
                 "disabled_reason": null,
                 "enabled": true,
@@ -20934,6 +20957,9 @@
         "lstm",
         "tcn"
       ],
+      "fred_sd_mixed_frequency_builtin_models": [
+        "midas_almon"
+      ],
       "linear_models": [
         "adaptivelasso",
         "ar",
@@ -20941,6 +20967,7 @@
         "elasticnet",
         "huber",
         "lasso",
+        "midas_almon",
         "ols",
         "quantile_linear",
         "ridge"

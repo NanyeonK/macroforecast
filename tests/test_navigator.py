@@ -114,6 +114,7 @@ const imported = E.recipeFromYaml(E.recipeYaml(data, source, state));
 console.log(JSON.stringify({
   options: {
     model_ridge: option("model_family", "ridge"),
+    model_midas_almon: option("model_family", "midas_almon"),
     model_randomforest: option("model_family", "randomforest"),
     model_quantile_linear: option("model_family", "quantile_linear"),
     equal_dm: option("equal_predictive", "dm"),
@@ -419,3 +420,18 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     )["enabled"]
     assert "custom model" in js["options"]["sd_mixed_blocks"]["disabled_reason"]
     assert "custom model" in js["options"]["sd_mixed_adapter"]["disabled_reason"]
+
+    midas_recipe = _recipe(model_family="midas_almon")
+    midas_recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_md+fred_sd"
+    python_view = build_navigation_view(midas_recipe)
+    js = _js_state_snapshot(tmp_path, midas_recipe, [])
+
+    assert js["options"]["sd_mixed_blocks"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
+    )["enabled"]
+    assert js["options"]["sd_mixed_adapter"]["enabled"] == _option(
+        _axis(python_view, "fred_sd_mixed_frequency_representation"), "mixed_frequency_model_adapter"
+    )["enabled"]
+    assert js["options"]["sd_mixed_blocks"]["enabled"] is True
+    assert js["options"]["sd_mixed_adapter"]["enabled"] is True
+    assert "advanced FRED-SD" in js["options"]["sd_mixed_drop_non_target"]["disabled_reason"]

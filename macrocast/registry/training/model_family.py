@@ -26,6 +26,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(id='pls', description='pls', status='operational', priority="A"),
         EnumRegistryEntry(id='factor_augmented_linear', description='factor augmented linear', status='operational', priority="A"),
         EnumRegistryEntry(id='quantile_linear', description='quantile linear', status='operational', priority="A"),
+        EnumRegistryEntry(id='midas_almon', description='midas almon distributed lag', status='operational_narrow', priority="B"),
         EnumRegistryEntry(id='randomforest', description='randomforest', status='operational', priority="A"),
         EnumRegistryEntry(id='extratrees', description='extratrees', status='operational', priority="A"),
         EnumRegistryEntry(id='gbm', description='gbm', status='operational', priority="A"),

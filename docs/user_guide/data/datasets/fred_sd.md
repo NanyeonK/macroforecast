@@ -208,8 +208,8 @@ Layer 2 can shape the panel with
 | `calendar_aligned_frame` | Default. Keep the selected FRED-SD columns on the recipe target calendar after generic monthly/quarterly conversion. This preserves the current behavior and records a Layer 2 report. |
 | `drop_unknown_native_frequency` | Drop selected FRED-SD columns whose inferred native frequency is `unknown`; keep known monthly, quarterly, annual, and irregular classes. |
 | `drop_non_target_native_frequency` | Keep only selected FRED-SD columns whose inferred native frequency matches the recipe frequency (`monthly` or `quarterly`). This is the strict same-frequency representation choice. |
-| `native_frequency_block_payload` | Operational narrow. Preserve the calendar-aligned frame and emit `fred_sd_native_frequency_block_payload_v1`, which groups selected FRED-SD columns by inferred native frequency for registered custom Layer 3 models. |
-| `mixed_frequency_model_adapter` | Operational narrow. Emit the native-frequency block payload and `fred_sd_mixed_frequency_model_adapter_v1`; execution currently requires a registered custom model that consumes the adapter context. |
+| `native_frequency_block_payload` | Operational narrow. Preserve the calendar-aligned frame and emit `fred_sd_native_frequency_block_payload_v1`, which groups selected FRED-SD columns by inferred native frequency for registered custom Layer 3 models or the built-in `midas_almon` executor. |
+| `mixed_frequency_model_adapter` | Operational narrow. Emit the native-frequency block payload and `fred_sd_mixed_frequency_model_adapter_v1`; execution currently accepts a registered custom model or the built-in `midas_almon` executor. |
 
 Simple API:
 
@@ -239,7 +239,7 @@ Advanced block/adapter choices are deliberately narrow. They require:
 - `dataset` includes `fred_sd`
 - `feature_builder="raw_feature_panel"`
 - `forecast_type="direct"`
-- `model_family` is a registered custom model
+- `model_family` is a registered custom model or `midas_almon`
 
 The custom model receives the regular tabular `X_train`, `y_train`, `X_test`
 plus `context["auxiliary_payloads"]`. For `native_frequency_block_payload`,
@@ -248,6 +248,16 @@ that context includes `fred_sd_native_frequency_block_payload` with
 `mixed_frequency_model_adapter`, it also includes
 `fred_sd_mixed_frequency_model_adapter`, whose current adapter kind is
 `registered_custom_model`.
+
+`model_family="midas_almon"` is a narrow built-in direct executor for users who
+want a package-owned MIDAS-style baseline without adding an R dependency. It
+builds Almon polynomial distributed-lag basis columns from the raw-panel FRED-SD
+predictors, forward-fills native lower-frequency columns within the available
+calendar, and fits a ridge-regularized direct forecast. Tunable fields are
+`midas_max_lag` (default `3`), `midas_almon_degree` (default `2`), and
+`midas_alpha` (default `1.0`) in the training/leaf config. This is not a full
+`midasr`-style nonlinear MIDAS implementation and does not replace custom
+research adapters.
 
 ```python
 import macrocast as mc
@@ -276,6 +286,25 @@ exp = (
 )
 ```
 
+Built-in MIDAS-style route:
+
+```python
+exp = (
+    mc.Experiment(
+        dataset="fred_sd",
+        target="UR_CA",
+        start="2000-01",
+        end="2020-12",
+        horizons=[1],
+        frequency="monthly",
+        model_family="midas_almon",
+        feature_builder="raw_feature_panel",
+    )
+    .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
+    .use_fred_sd_mixed_frequency_adapter()
+)
+```
+
 The adapter variant uses `.use_fred_sd_mixed_frequency_adapter()`. Built-in
 MIDAS or state-space estimators are not shipped yet; the package now supplies
 the enforced Layer 2 payload and Layer 3 custom-adapter route.
@@ -301,7 +330,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 ## Known limitations in macrocast v1.0
 
-1. **Built-in mixed-frequency estimators are not implemented** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, and a custom adapter route are available and reported, but built-in MIDAS/state-space estimators are not implemented.
+1. **Built-in mixed-frequency estimators are narrow** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, and the built-in `midas_almon` direct Almon-lag baseline are available. Full nonlinear MIDAS families, regularized group MIDAS, and state-space nowcasting estimators remain future work.
 2. **State and SD-variable groups are recipe-level selectors** —
    `fred_sd_state_group` and `fred_sd_variable_group` resolve into explicit
    `sd_states` / `sd_variables` before loading. They are not post-load

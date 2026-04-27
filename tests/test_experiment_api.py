@@ -659,7 +659,54 @@ def test_fred_sd_mixed_frequency_adapter_runs_with_custom_model(tmp_path: Path) 
         clear_custom_extensions()
 
 
-def test_fred_sd_advanced_mixed_frequency_requires_custom_model(tmp_path: Path) -> None:
+def test_fred_sd_midas_almon_runs_as_builtin_mixed_frequency_model(tmp_path: Path) -> None:
+    dates = pd.date_range("2000-01-01", periods=18, freq="MS")
+    source = tmp_path / "mixed_fred_sd.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(len(dates))],
+            "UR_TX": [4.5 + idx / 20 for idx in range(len(dates))],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(len(dates))],
+        }
+    ).to_csv(source, index=False)
+
+    result = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2001-06",
+            horizons=[1],
+            frequency="monthly",
+            model_family="midas_almon",
+            feature_builder="raw_feature_panel",
+            benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
+        )
+        .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
+        .use_fred_sd_mixed_frequency_adapter()
+        .run(output_root=tmp_path / "runs", local_raw_source=source)
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    adapter_payload = json.loads((artifact_dir / "fred_sd_mixed_frequency_model_adapter.json").read_text())
+
+    assert manifest["model_spec"]["model_family"] == "midas_almon"
+    assert manifest["model_spec"]["executor_name"] == (
+        "midas_almon:fred_sd_mixed_frequency_model_adapter_v1"
+    )
+    assert manifest["model_spec"]["fred_sd_mixed_frequency_custom_model_required"] is False
+    assert manifest["model_spec"]["fred_sd_mixed_frequency_builtin_model"] is True
+    assert adapter_payload["contract_version"] == "fred_sd_mixed_frequency_model_adapter_v1"
+    metadata = manifest["layer2_representation_contract_metadata"]
+    assert metadata["alignment"]["midas_almon_contract"] == "midas_almon_direct_v1"
+    assert metadata["alignment"]["midas_max_lag"] == 3
+    assert "midas_almon:monthly" in metadata["block_order"]
+    assert "midas_almon:quarterly" in metadata["block_order"]
+
+
+def test_fred_sd_advanced_mixed_frequency_requires_custom_or_midas_model(tmp_path: Path) -> None:
     dates = pd.date_range("2000-01-01", periods=18, freq="MS")
     source = tmp_path / "mixed_fred_sd.csv"
     pd.DataFrame(
@@ -685,7 +732,7 @@ def test_fred_sd_advanced_mixed_frequency_requires_custom_model(tmp_path: Path) 
         .use_fred_sd_native_frequency_blocks()
     )
 
-    with pytest.raises(CompileValidationError, match="registered custom Layer 3 model"):
+    with pytest.raises(CompileValidationError, match="registered custom Layer 3 model or model_family='midas_almon'"):
         exp.run(output_root=tmp_path / "runs", local_raw_source=source)
 
 

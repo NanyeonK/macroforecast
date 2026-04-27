@@ -269,7 +269,7 @@ OPERATIONAL_NARROW_CONTRACTS = (
         "required_companions": (
             "dataset includes fred_sd",
             "feature_builder=raw_feature_panel",
-            "registered custom model_family",
+            "registered custom model_family or model_family=midas_almon",
             "forecast_type=direct",
             "mixed_frequency_model_adapter additionally records fred_sd_mixed_frequency_model_adapter_v1",
         ),
@@ -318,10 +318,12 @@ _LINEAR_MODELS = frozenset(
         "bayesianridge",
         "huber",
         "adaptivelasso",
+        "midas_almon",
         "quantile_linear",
     }
 )
 _DEEP_SEQUENCE_MODELS = frozenset({"lstm", "gru", "tcn"})
+_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = frozenset({"midas_almon"})
 _BUILTIN_MODELS = frozenset(
     {
         "ar",
@@ -341,6 +343,7 @@ _BUILTIN_MODELS = frozenset(
         "pls",
         "factor_augmented_linear",
         "quantile_linear",
+        *_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS,
         "randomforest",
         "extratrees",
         "gbm",
@@ -559,11 +562,17 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         and not _selection_has_fred_sd(selected)
     ):
         return "fred_sd_mixed_frequency_representation requires dataset to include fred_sd"
+    if (
+        axis_name == "fred_sd_mixed_frequency_representation"
+        and model in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
+        and value not in _FRED_SD_ADVANCED_MIXED_FREQUENCY
+    ):
+        return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation"
     if axis_name == "fred_sd_mixed_frequency_representation" and value in _FRED_SD_ADVANCED_MIXED_FREQUENCY:
         if feature_builder != "raw_feature_panel":
             return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder"
-        if model in _BUILTIN_MODELS:
-            return "advanced FRED-SD mixed-frequency representation requires a registered custom model"
+        if model in _BUILTIN_MODELS and model not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS:
+            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon"
         if forecast_type != "direct":
             return "advanced FRED-SD mixed-frequency representation currently supports forecast_type=direct only"
 
@@ -579,8 +588,17 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         if model == "ar" and value in _RAW_PANEL_BUILDERS:
             return "model_family=ar is target-lag/autoreg only; raw-panel Z is incompatible"
     if axis_name == "model_family":
-        if fred_sd_mixed_frequency in _FRED_SD_ADVANCED_MIXED_FREQUENCY and value in _BUILTIN_MODELS:
-            return "advanced FRED-SD mixed-frequency representation requires a registered custom model"
+        if (
+            value in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
+            and fred_sd_mixed_frequency not in _FRED_SD_ADVANCED_MIXED_FREQUENCY
+        ):
+            return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation"
+        if (
+            fred_sd_mixed_frequency in _FRED_SD_ADVANCED_MIXED_FREQUENCY
+            and value in _BUILTIN_MODELS
+            and value not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
+        ):
+            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon"
         if feature_builder in _RAW_PANEL_BUILDERS and value == "ar":
             return "raw-panel feature builders cannot feed the AR-BIC target-lag generator"
         if feature_builder == "sequence_tensor" and value not in _DEEP_SEQUENCE_MODELS:
@@ -694,6 +712,7 @@ def navigator_state_engine_spec() -> dict[str, Any]:
             "tree_models": sorted(_TREE_MODELS),
             "linear_models": sorted(_LINEAR_MODELS),
             "deep_sequence_models": sorted(_DEEP_SEQUENCE_MODELS),
+            "fred_sd_mixed_frequency_builtin_models": sorted(_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS),
             "raw_panel_builders": sorted(_RAW_PANEL_BUILDERS),
             "autoreg_builders": sorted(_AUTOREG_BUILDERS),
         },

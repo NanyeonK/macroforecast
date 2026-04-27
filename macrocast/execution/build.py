@@ -138,6 +138,8 @@ _EXECUTION_ARCHITECTURE = "separate_model_and_benchmark_executors"
 _DEFAULT_MINIMUM_TRAIN_SIZE = 5
 _DEFAULT_MAX_AR_LAG = 3
 _LAG_SELECTION = "bic"
+_MIDAS_ALMON_MODEL_FAMILY = "midas_almon"
+_MIDAS_ALMON_RUNTIME_CONTRACT_VERSION = "midas_almon_direct_v1"
 _TARGET_TRANSFORMER_FEATURE_RUNTIMES = {"autoreg_lagged_target", "raw_feature_panel"}
 _TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
 _RAW_PANEL_FEATURE_BUILDERS = {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}
@@ -2168,6 +2170,7 @@ def _requires_fred_sd_mixed_frequency_custom_model(recipe: RecipeSpec) -> bool:
     return (
         _fred_sd_mixed_frequency_representation_policy(recipe)
         in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+        and _model_family(recipe) != _MIDAS_ALMON_MODEL_FAMILY
     )
 
 
@@ -2182,10 +2185,10 @@ def _validate_fred_sd_mixed_frequency_model_route(recipe: RecipeSpec) -> None:
             f"fred_sd_mixed_frequency_representation={policy!r} requires "
             "feature_runtime_builder='raw_feature_panel'"
         )
-    if not is_custom_model(model_family):
+    if not is_custom_model(model_family) and model_family != _MIDAS_ALMON_MODEL_FAMILY:
         raise ExecutionError(
             f"fred_sd_mixed_frequency_representation={policy!r} requires a registered "
-            "custom model until built-in mixed-frequency adapters are implemented"
+            "custom model or model_family='midas_almon'"
         )
     if _forecast_type(recipe) != "direct":
         raise ExecutionError(
@@ -2195,17 +2198,25 @@ def _validate_fred_sd_mixed_frequency_model_route(recipe: RecipeSpec) -> None:
 
 
 def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe: RecipeSpec | None = None) -> str:
-    if recipe is not None and _requires_fred_sd_mixed_frequency_custom_model(recipe):
+    if recipe is not None and _fred_sd_mixed_frequency_representation_policy(recipe) in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES:
         policy = _fred_sd_mixed_frequency_representation_policy(recipe)
+        suffix = (
+            "fred_sd_mixed_frequency_model_adapter_v1"
+            if policy == "mixed_frequency_model_adapter"
+            else "fred_sd_native_frequency_block_payload_v1"
+        )
+        if model_family == _MIDAS_ALMON_MODEL_FAMILY:
+            return f"midas_almon:{suffix}"
         if is_custom_model(model_family):
-            suffix = (
-                "fred_sd_mixed_frequency_model_adapter_v1"
-                if policy == "mixed_frequency_model_adapter"
-                else "fred_sd_native_frequency_block_payload_v1"
-            )
             return f"custom_model:{model_family}:{suffix}"
         raise ExecutionError(
-            f"fred_sd_mixed_frequency_representation={policy!r} requires a registered custom model"
+            f"fred_sd_mixed_frequency_representation={policy!r} requires a registered custom model "
+            "or model_family='midas_almon'"
+        )
+    if model_family == _MIDAS_ALMON_MODEL_FAMILY:
+        raise ExecutionError(
+            "model_family='midas_almon' requires fred_sd_mixed_frequency_representation "
+            "to be 'native_frequency_block_payload' or 'mixed_frequency_model_adapter'"
         )
     if feature_runtime_builder == "autoreg_lagged_target":
         if is_custom_model(model_family):
@@ -2282,6 +2293,11 @@ def _model_spec(recipe: RecipeSpec) -> dict[str, object]:
         "executor_name": _model_executor_name(model_family, runtime_feature_builder, recipe),
         "fred_sd_mixed_frequency_representation": _fred_sd_mixed_frequency_representation_policy(recipe),
         "fred_sd_mixed_frequency_custom_model_required": _requires_fred_sd_mixed_frequency_custom_model(recipe),
+        "fred_sd_mixed_frequency_builtin_model": (
+            model_family == _MIDAS_ALMON_MODEL_FAMILY
+            and _fred_sd_mixed_frequency_representation_policy(recipe)
+            in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+        ),
         "framework": recipe.stage0.fixed_design.sample_split,
         "lag_selection": _LAG_SELECTION if model_family == "ar" else "fixed_lag_feature_builder",
         "max_ar_lag": _max_ar_lag(recipe),
@@ -3018,6 +3034,12 @@ def _get_model_executor(recipe: RecipeSpec):
         return _run_custom_autoreg_executor
     if is_custom_model(model_family) and feature_runtime_builder == "raw_feature_panel":
         return _run_custom_raw_panel_executor
+    if (
+        model_family == _MIDAS_ALMON_MODEL_FAMILY
+        and feature_runtime_builder == "raw_feature_panel"
+        and _fred_sd_mixed_frequency_representation_policy(recipe) in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+    ):
+        return _run_midas_almon_raw_panel_executor
     if feature_runtime_builder == "autoreg_lagged_target":
         dispatch = {
             "ar": _run_ar_model_executor,
@@ -6334,6 +6356,219 @@ def _run_custom_raw_panel_executor(
         "selected_lag": 0,
         "selected_bic": math.nan,
         "tuning_payload": _custom_model_tuning_payload(representation, model_name=model_name),
+    }
+
+
+def _midas_almon_config(recipe: RecipeSpec) -> dict[str, object]:
+    raw = {
+        **dict(getattr(recipe, "data_task_spec", {}) or {}),
+        **dict(getattr(recipe, "training_spec", {}) or {}),
+    }
+    max_lag = int(raw.get("midas_max_lag", 3))
+    degree = int(raw.get("midas_almon_degree", 2))
+    alpha = float(raw.get("midas_alpha", 1.0))
+    if max_lag < 1:
+        raise ExecutionError("model_family='midas_almon' requires midas_max_lag >= 1")
+    if degree < 0:
+        raise ExecutionError("model_family='midas_almon' requires midas_almon_degree >= 0")
+    if alpha < 0:
+        raise ExecutionError("model_family='midas_almon' requires midas_alpha >= 0")
+    return {
+        "midas_max_lag": max_lag,
+        "midas_almon_degree": degree,
+        "midas_alpha": alpha,
+    }
+
+
+def _midas_almon_basis_names(predictors: Sequence[str], degree: int) -> tuple[str, ...]:
+    return tuple(
+        f"{column}__midas_almon_p{basis_degree}"
+        for column in predictors
+        for basis_degree in range(degree + 1)
+    )
+
+
+def _midas_almon_basis_row(
+    source: pd.DataFrame,
+    *,
+    row_idx: int,
+    predictors: Sequence[str],
+    max_lag: int,
+    degree: int,
+) -> list[float]:
+    lag_positions = np.linspace(0.0, 1.0, max_lag, dtype=float)
+    row: list[float] = []
+    for column in predictors:
+        lag_values = np.asarray(
+            [float(source[str(column)].iloc[row_idx - lag]) for lag in range(max_lag)],
+            dtype=float,
+        )
+        for basis_degree in range(degree + 1):
+            basis = np.ones(max_lag, dtype=float) if basis_degree == 0 else lag_positions**basis_degree
+            row.append(float(np.dot(lag_values, basis)))
+    return row
+
+
+def _build_midas_almon_representation(
+    raw_frame: pd.DataFrame,
+    recipe: RecipeSpec,
+    horizon: int,
+    start_idx: int,
+    origin_idx: int,
+    *,
+    target_window: pd.Series,
+) -> Layer2Representation:
+    config = _midas_almon_config(recipe)
+    max_lag = int(config["midas_max_lag"])
+    degree = int(config["midas_almon_degree"])
+    spec = _layer2_runtime_spec(recipe)
+    predictors = _raw_panel_columns(
+        raw_frame,
+        recipe.target,
+        predictor_family=_predictor_family(recipe),
+        spec=spec,
+    )
+    if origin_idx - horizon < start_idx + max_lag - 1:
+        raise ExecutionError(
+            "model_family='midas_almon' produced empty direct training rows; "
+            "increase the training window or reduce midas_max_lag"
+        )
+
+    predictor_names = [str(column) for column in predictors]
+    source = raw_frame[predictors].astype(float).copy()
+    source.columns = predictor_names
+    source = source.ffill().fillna(0.0)
+    feature_names = _midas_almon_basis_names(predictor_names, degree)
+
+    train_rows: list[list[float]] = []
+    y_values: list[float] = []
+    train_index = []
+    first_row = start_idx + max_lag - 1
+    last_row = origin_idx - int(horizon)
+    for row_idx in range(first_row, last_row + 1):
+        target_offset = (row_idx - start_idx) + int(horizon)
+        y_value = float(target_window.iloc[target_offset])
+        if not math.isfinite(y_value):
+            continue
+        train_rows.append(
+            _midas_almon_basis_row(
+                source,
+                row_idx=row_idx,
+                predictors=predictor_names,
+                max_lag=max_lag,
+                degree=degree,
+            )
+        )
+        y_values.append(y_value)
+        train_index.append(raw_frame.index[row_idx])
+
+    if not train_rows:
+        raise ExecutionError("model_family='midas_almon' has no finite target rows to fit")
+
+    X_train = np.asarray(train_rows, dtype=float)
+    y_train = np.asarray(y_values, dtype=float)
+    X_pred = np.asarray(
+        [
+            _midas_almon_basis_row(
+                source,
+                row_idx=origin_idx,
+                predictors=predictor_names,
+                max_lag=max_lag,
+                degree=degree,
+            )
+        ],
+        dtype=float,
+    )
+    block_payload = _fred_sd_representation_auxiliary_payloads(raw_frame).get(
+        "fred_sd_native_frequency_block_payload",
+        {},
+    )
+    column_to_frequency = (
+        dict(block_payload.get("column_to_native_frequency", {}) or {})
+        if isinstance(block_payload, Mapping)
+        else {}
+    )
+    block_roles: dict[str, str] = {}
+    for column in predictor_names:
+        frequency = _normalized_frequency_name(column_to_frequency.get(column, "unknown"))
+        for basis_degree in range(degree + 1):
+            block_roles[f"{column}__midas_almon_p{basis_degree}"] = f"midas_almon:{frequency}"
+    block_order = tuple(dict.fromkeys(block_roles.values())) or ("midas_almon",)
+    alignment = {
+        "representation_runtime": "fred_sd_midas_almon",
+        "forecast_protocol": "direct",
+        "midas_almon_contract": _MIDAS_ALMON_RUNTIME_CONTRACT_VERSION,
+        "midas_max_lag": max_lag,
+        "midas_almon_degree": degree,
+        "midas_lag_basis": "normalized_almon_polynomial",
+        "train_row_count": int(X_train.shape[0]),
+        "train_start_date": train_index[0].strftime("%Y-%m-%d") if train_index else None,
+        "train_end_date": train_index[-1].strftime("%Y-%m-%d") if train_index else None,
+    }
+    alignment.update(_fred_sd_representation_alignment_payload(raw_frame))
+    fit_state = (
+        {
+            "block": "midas_almon",
+            "contract_version": _MIDAS_ALMON_RUNTIME_CONTRACT_VERSION,
+            **config,
+            "source_feature_count": len(predictor_names),
+            "basis_feature_count": len(feature_names),
+            "source_columns": predictor_names,
+        },
+    )
+    return Layer2Representation(
+        Z_train=X_train,
+        y_train=y_train,
+        Z_pred=X_pred,
+        feature_names=feature_names,
+        block_order=block_order,
+        block_roles=block_roles,
+        fit_state=fit_state,
+        alignment=alignment,
+        auxiliary_payloads=_fred_sd_representation_auxiliary_payloads(raw_frame),
+        leakage_contract="forecast_origin_only_with_almon_lag_basis",
+        feature_builder=_feature_runtime_builder(recipe),
+        feature_runtime_builder=_feature_runtime_builder(recipe),
+        legacy_feature_builder=_feature_builder(recipe),
+    )
+
+
+def _run_midas_almon_raw_panel_executor(
+    train: pd.Series,
+    horizon: int,
+    recipe: RecipeSpec,
+    contract: PreprocessContract,
+    raw_frame: pd.DataFrame | None = None,
+    origin_idx: int | None = None,
+    start_idx: int = 0,
+) -> dict[str, object]:
+    del contract
+    assert raw_frame is not None and origin_idx is not None
+    representation = _build_midas_almon_representation(
+        raw_frame,
+        recipe,
+        horizon,
+        start_idx,
+        origin_idx,
+        target_window=train,
+    )
+    config = _midas_almon_config(recipe)
+    model = Ridge(alpha=float(config["midas_alpha"]))
+    model.fit(representation.Z_train, representation.y_train)
+    tuning_payload = _merge_layer2_representation_payload(
+        {
+            "midas_almon_contract": _MIDAS_ALMON_RUNTIME_CONTRACT_VERSION,
+            **config,
+            "coef_l2_norm": float(np.linalg.norm(np.asarray(model.coef_, dtype=float))),
+            "intercept": float(model.intercept_),
+        },
+        representation,
+    )
+    return {
+        "y_pred": float(model.predict(representation.Z_pred)[0]),
+        "selected_lag": int(config["midas_max_lag"]),
+        "selected_bic": math.nan,
+        "tuning_payload": tuning_payload,
     }
 
 

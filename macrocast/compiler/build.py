@@ -3174,25 +3174,38 @@ def _execution_status(
         "fred_sd_mixed_frequency_representation",
         default="calendar_aligned_frame",
     )
-    if fred_sd_mixed_frequency_representation in {
+    fred_sd_advanced_mixed_frequency_representations = {
         "native_frequency_block_payload",
         "mixed_frequency_model_adapter",
-    }:
+    }
+    if fred_sd_mixed_frequency_representation in fred_sd_advanced_mixed_frequency_representations:
         if feature_runtime != "raw_feature_panel":
             blocked.append(
                 f"fred_sd_mixed_frequency_representation={fred_sd_mixed_frequency_representation!r} "
                 "requires raw-panel Layer 2 feature runtime"
             )
-        if model_family is None or not is_custom_model(model_family):
+        if model_family is None or (
+            not is_custom_model(model_family)
+            and model_family != "midas_almon"
+        ):
             blocked.append(
                 f"fred_sd_mixed_frequency_representation={fred_sd_mixed_frequency_representation!r} "
-                "requires a registered custom Layer 3 model"
+                "requires a registered custom Layer 3 model or model_family='midas_almon'"
             )
         if forecast_type != "direct":
             blocked.append(
                 f"fred_sd_mixed_frequency_representation={fred_sd_mixed_frequency_representation!r} "
                 "currently supports forecast_type='direct' only"
             )
+    if (
+        model_family == "midas_almon"
+        and fred_sd_mixed_frequency_representation not in fred_sd_advanced_mixed_frequency_representations
+    ):
+        blocked.append(
+            "model_family='midas_almon' is an operational-narrow FRED-SD mixed-frequency executor; "
+            "set fred_sd_mixed_frequency_representation to 'native_frequency_block_payload' "
+            "or 'mixed_frequency_model_adapter'"
+        )
     horizon_target_construction_for_l3 = _selection_value(
         selection_map,
         "horizon_target_construction",
