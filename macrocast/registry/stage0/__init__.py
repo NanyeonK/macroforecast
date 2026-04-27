@@ -1,4 +1,4 @@
-"""Registry layer for the 7 Layer 0 meta axes.
+"""Registry layer for the six Layer 0 meta axes.
 
 Holds enum definitions for axis_type, compute_mode, experiment_unit,
 failure_policy, reproducibility_mode, and research_design —

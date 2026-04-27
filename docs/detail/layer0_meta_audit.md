@@ -31,7 +31,25 @@ Current source axes:
 | `reproducibility_mode` | public advanced option | `seeded_reproducible` |
 | `axis_type` | internal registry grammar | not a user recipe choice |
 
-Stale note: old `study_mode` / `registry_type` pycache files may exist, but current source files do not define active axes for them.
+Layer 0 has six active source axes. `axis_type` is intentionally outside the
+Navigator decision tree because it describes recipe grammar (`fixed`,
+`sweep`, `nested_sweep`, `conditional`, `derived`) rather than a research
+choice.
+
+Stale note: old `study_mode` / `registry_type` pycache files may exist, but
+current source files do not define active axes for them.
+
+## 2026-04-27 Census Finding
+
+The live registry / Navigator census shows:
+
+| Item | Finding | Decision |
+|---|---|---|
+| Active Layer 0 axes | 6 registry axes, 38 total values. | Keep. Code docstrings now say six axes. |
+| Primary Navigator axes | 5 axes: `research_design`, `experiment_unit`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
+| Internal axis | `axis_type`. | Keep hidden from the primary Navigator tree; document it as registry grammar. |
+| Runner handoffs | `orchestrated_bundle`, `replication_override`, `multi_target_separate_runs`, and `replication_recipe` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
+| Main open Layer 0 question | Whether benchmark/ablation wrapper families should become real public simple API methods. | Defer until wrapper result/artifact contracts are audited after Layers 4-6. |
 
 ## Full Route Contract
 
@@ -56,7 +74,7 @@ Only `route_owner="single_run"` can be executed by `run_compiled_recipe`.
 | `single_path_benchmark` | one fixed recipe path | `forecast(...)` / `Experiment(...).run()` |
 | `controlled_variation` | one controlled comparison surface | `.compare_models(...)`, `.sweep({"models": ...})` |
 | `orchestrated_bundle` | wrapper-managed bundle | advanced/detail only |
-| `replication_override` | replication-locked route | future public replication API |
+| `replication_override` | replication-locked route | `execute_replication` / Replication Library route |
 
 `Experiment` should set `research_design` automatically. Users should not need to pass this in the simple path.
 
@@ -200,9 +218,9 @@ Layer 0 can represent more designs than simple API should expose today.
 | model x preprocessing grid | explicit advanced grid, likely wrapper or advanced internal sweep | governance and result interpretation not fixed |
 | custom benchmark suite | wrapper bundle or multi-benchmark design | Layer 4 benchmark/result contract not public |
 | custom metric ranking | controlled variation with metric direction metadata | Layer 4 custom metric contract not public |
-| replication | replication-locked plan | public API and artifact diff contract not finalized |
-| ablation | wrapper bundle | ablation public API not finalized |
-| multi-target experiment | shared design or separate runs | Layer 1 target contract needs audit |
+| replication | replication-locked plan | CLI/Navigator route exists; simple high-level replication API and artifact diff UX can still improve |
+| ablation | wrapper bundle | ablation public API and wrapper artifact contract not finalized |
+| multi-target experiment | shared design or separate runs | shared-design and separate-run paths exist; per-target/hierarchical reporting still needs later artifact audit |
 
 ## Recommendation
 
