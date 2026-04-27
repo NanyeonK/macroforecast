@@ -3385,7 +3385,7 @@
   "axis_presentation": {
     "compute_mode": {
       "contract": "Execution parallelism contract. Unsupported modes or singleton work units degrade to serial/no-op behavior.",
-      "docs_url": "../user_guide/design.html#compute-mode",
+      "docs_url": "../detail/layer0/compute_mode.html",
       "label": "Compute layout",
       "order": 5,
       "question": "Where should parallel work be attempted?",
@@ -3424,7 +3424,7 @@
     },
     "experiment_unit": {
       "contract": "Derived runner contract. Explicit values must match target and sweep constraints.",
-      "docs_url": "../user_guide/design.html#experiment-unit",
+      "docs_url": "../detail/layer0/experiment_unit.html",
       "label": "Runner unit",
       "order": 2,
       "question": "Which execution unit owns this recipe?",
@@ -3479,7 +3479,7 @@
     },
     "failure_policy": {
       "contract": "Runtime failure contract. Sweep-compatible modes decide whether invalid variants stop or are skipped.",
-      "docs_url": "../user_guide/design.html#failure-policy",
+      "docs_url": "../detail/layer0/failure_policy.html",
       "label": "Failure handling",
       "order": 3,
       "question": "What should happen when a variant or cell fails?",
@@ -3518,7 +3518,7 @@
     },
     "reproducibility_mode": {
       "contract": "Seed and determinism contract applied before stochastic model code runs.",
-      "docs_url": "../user_guide/design.html#reproducibility-mode",
+      "docs_url": "../detail/layer0/reproducibility_mode.html",
       "label": "Reproducibility",
       "order": 4,
       "question": "How strictly should stochastic components be pinned?",
@@ -3545,7 +3545,7 @@
     },
     "research_design": {
       "contract": "User-facing runner route. This affects executor family, sweep interpretation, and artifact shape.",
-      "docs_url": "../user_guide/design.html#research-design",
+      "docs_url": "../detail/layer0/research_design.html",
       "label": "Study route",
       "order": 1,
       "question": "What kind of forecasting study is this?",

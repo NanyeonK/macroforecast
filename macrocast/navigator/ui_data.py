@@ -34,7 +34,7 @@ _L0_AXIS_PRESENTATION: dict[str, dict[str, Any]] = {
         "label": "Study route",
         "question": "What kind of forecasting study is this?",
         "summary": "Selects the top-level runner route: single run, controlled comparison, wrapper bundle, or replication.",
-        "docs_url": "../user_guide/design.html#research-design",
+        "docs_url": "../detail/layer0/research_design.html",
         "contract": "User-facing runner route. This affects executor family, sweep interpretation, and artifact shape.",
         "selection_kind": "user_choice",
         "values": {
@@ -61,7 +61,7 @@ _L0_AXIS_PRESENTATION: dict[str, dict[str, Any]] = {
         "label": "Runner unit",
         "question": "Which execution unit owns this recipe?",
         "summary": "Usually derived by the compiler from study route, target structure, and sweep shape.",
-        "docs_url": "../user_guide/design.html#experiment-unit",
+        "docs_url": "../detail/layer0/experiment_unit.html",
         "contract": "Derived runner contract. Explicit values must match target and sweep constraints.",
         "selection_kind": "usually_derived",
         "values": {
@@ -116,7 +116,7 @@ _L0_AXIS_PRESENTATION: dict[str, dict[str, Any]] = {
         "label": "Failure handling",
         "question": "What should happen when a variant or cell fails?",
         "summary": "Controls whether the run stops immediately, skips failed cells, or preserves partial results.",
-        "docs_url": "../user_guide/design.html#failure-policy",
+        "docs_url": "../detail/layer0/failure_policy.html",
         "contract": "Runtime failure contract. Sweep-compatible modes decide whether invalid variants stop or are skipped.",
         "selection_kind": "user_choice",
         "values": {
@@ -155,7 +155,7 @@ _L0_AXIS_PRESENTATION: dict[str, dict[str, Any]] = {
         "label": "Reproducibility",
         "question": "How strictly should stochastic components be pinned?",
         "summary": "Controls seeds and deterministic-library settings before model execution.",
-        "docs_url": "../user_guide/design.html#reproducibility-mode",
+        "docs_url": "../detail/layer0/reproducibility_mode.html",
         "contract": "Seed and determinism contract applied before stochastic model code runs.",
         "selection_kind": "user_choice",
         "values": {
@@ -182,7 +182,7 @@ _L0_AXIS_PRESENTATION: dict[str, dict[str, Any]] = {
         "label": "Compute layout",
         "question": "Where should parallel work be attempted?",
         "summary": "Requests serial or parallel execution across models, horizons, targets, OOS dates, or trials.",
-        "docs_url": "../user_guide/design.html#compute-mode",
+        "docs_url": "../detail/layer0/compute_mode.html",
         "contract": "Execution parallelism contract. Unsupported modes or singleton work units degrade to serial/no-op behavior.",
         "selection_kind": "user_choice",
         "values": {

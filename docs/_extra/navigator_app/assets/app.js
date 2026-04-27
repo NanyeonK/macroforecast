@@ -16,11 +16,11 @@ const els = {
   axisTitle: document.getElementById("axis-title"),
   axisLayer: document.getElementById("axis-layer"),
   axisSelected: document.getElementById("axis-selected"),
+  activeLayerTitle: document.getElementById("active-layer-title"),
+  activeLayerDescription: document.getElementById("active-layer-description"),
   executionStatus: document.getElementById("execution-status"),
   blockedCount: document.getElementById("blocked-count"),
   disabledCount: document.getElementById("disabled-count"),
-  compatibilityView: document.getElementById("compatibility-view"),
-  replicationList: document.getElementById("replication-list"),
   yamlPreview: document.getElementById("yaml-preview"),
   copyYaml: document.getElementById("copy-yaml"),
   downloadYaml: document.getElementById("download-yaml"),
@@ -28,9 +28,7 @@ const els = {
   importYamlInput: document.getElementById("import-yaml-input"),
   resetPath: document.getElementById("reset-path"),
   pathSource: document.getElementById("path-source"),
-  resolverPreview: document.getElementById("resolver-preview"),
   treePath: document.getElementById("tree-path"),
-  treePathLayer: document.getElementById("tree-path-layer"),
 };
 
 function escapeHtml(value) {
@@ -131,6 +129,33 @@ function docsLink(axisName) {
   return axisPresentation(axisName).docs_url || "";
 }
 
+function layerDescription(layer) {
+  const descriptions = {
+    "0_meta": "5 user-facing decisions in order: study route, runner unit, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
+    "1_data_task": "Official data task and source frame: source, target structure, availability, raw source policy, and official transforms.",
+    "2_preprocessing": "Representation construction after the official frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
+    "3_training": "Forecast generation: model, benchmark, forecast object, future-X path, windows, and tuning.",
+    "4_evaluation": "Evaluation choices: metrics, benchmark comparison, aggregation, ranking, regimes, decomposition, and OOS period.",
+    "5_output_provenance": "Output and provenance: export format, saved objects, provenance fields, and artifact granularity.",
+    "6_stat_tests": "Statistical tests over forecasts, losses, density or interval outputs, direction, and residual diagnostics.",
+    "7_importance": "Interpretation and importance outputs: method family, scope, aggregation, temporal shape, and detailed reports.",
+  };
+  return descriptions[layer] || "";
+}
+
+function layerNumber(layer) {
+  const match = String(layer || "").match(/^(\d+)/);
+  return match ? match[1] : "";
+}
+
+function setLayerFilter(layer) {
+  state.layerFilter = layer;
+  document.querySelectorAll("[data-layer]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.layer === layer);
+  });
+  state.activeAxis = null;
+}
+
 function filteredAxes() {
   const q = state.axisFilter.trim().toLowerCase();
   return allAxes().filter((axis) => {
@@ -169,6 +194,12 @@ function renderSummary() {
   els.pathSource.textContent = state.loadedSource
     ? `loaded: ${state.loadedSource.label || state.loadedSource.id}`
     : `sample: ${currentSample().label}`;
+}
+
+function renderPathHeader() {
+  const fullLabel = (state.data.layer_labels && state.data.layer_labels[state.layerFilter]) || layerLabel(state.layerFilter);
+  els.activeLayerTitle.textContent = fullLabel;
+  els.activeLayerDescription.textContent = layerDescription(state.layerFilter);
 }
 
 function renderAxisList() {
@@ -225,128 +256,106 @@ function renderOptions() {
 }
 
 function renderTreePath() {
-  const axes = allAxes().filter(axisMatchesLayer);
-  els.treePathLayer.textContent = layerLabel(state.layerFilter);
+  const axes = allAxes();
   if (!axes.length) {
-    els.treePath.innerHTML = `<p class="muted">No axes in this layer.</p>`;
+    els.treePath.innerHTML = `<p class="muted">No path axes available.</p>`;
     return;
   }
+  const axesByLayer = axes.reduce((acc, axis) => {
+    if (!acc[axis.layer]) acc[axis.layer] = [];
+    acc[axis.layer].push(axis);
+    return acc;
+  }, {});
+  const layers = Object.keys(state.data.tree_axes || {});
   els.treePath.innerHTML = `
-    <ol class="tree-path-list">
-      ${axes.map((axis, idx) => {
-        const selectedOption = axis.options.find((option) => option.value === axis.selected);
-        const disabledReason = selectedOption && selectedOption.disabled_reason;
-        const pathEffect = selectedOption && selectedOption.canonical_path_effect
-          ? selectedOption.canonical_path_effect
-          : `selected: ${axis.selected ?? "-"}`;
-        const blocked = disabledReason ? " blocked" : "";
-        const active = axis.axis === state.activeAxis ? " active" : "";
-        const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
-        const docs = docsLink(axis.axis);
-        const valueLabel = valueDisplayName(axis.axis, axis.selected);
-        const selectedSummary = valueSummary(axis.axis, axis.selected);
-        const presentation = axisPresentation(axis.axis);
-        const contract = presentation.contract ? `<span class="path-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</span>` : "";
-        const status = selectedOption && selectedOption.status ? `<span class="status">${escapeHtml(selectedOption.status)}</span>` : "";
+    <div class="path-flow" aria-label="Full tree path">
+      ${layers.map((layer, layerIdx) => {
+        const layerAxes = axesByLayer[layer] || [];
+        const activeLayer = layer === state.layerFilter ? " active" : "";
+        const blockedCount = layerAxes.reduce((count, axis) => {
+          const selectedOption = axis.options.find((option) => option.value === axis.selected);
+          return count + (selectedOption && selectedOption.disabled_reason ? 1 : 0);
+        }, 0);
+        const editedCount = layerAxes.filter((axis) => axis.edited).length;
+        const compact = layer !== state.layerFilter ? " compact" : "";
         return `
-          <li class="tree-path-item${blocked}${active}">
-            <div class="tree-path-card" data-tree-axis="${escapeHtml(axis.axis)}" tabindex="0" role="button">
-              <span class="path-step">${idx + 1}</span>
-              <span class="path-body">
-                <span class="path-axis">${escapeHtml(axisDisplayName(axis))}</span>
-                <span class="path-question">${escapeHtml(axisQuestion(axis))}</span>
-                <span class="path-value">${escapeHtml(valueLabel || "-")}</span>
-                <span class="path-raw">${escapeHtml(axis.axis)} = ${escapeHtml(axis.selected ?? "-")}</span>
-                ${edited}
-                ${status}
-                <span class="path-summary">${escapeHtml(selectedSummary || axisSummary(axis))}</span>
-                ${contract}
-                <span class="path-effect">YAML: ${escapeHtml(pathEffect)}</span>
-                ${docs ? `<a class="path-docs" href="${escapeHtml(docs)}">Detailed docs</a>` : ""}
-                ${disabledReason ? `<span class="path-reason">${escapeHtml(disabledReason)}</span>` : ""}
-              </span>
+          <section class="path-layer${activeLayer}${compact}" data-tree-layer="${escapeHtml(layer)}" tabindex="0" role="button">
+            <div class="path-layer-marker">${escapeHtml(layerNumber(layer))}</div>
+            <div class="path-layer-card">
+              <div class="path-layer-head">
+                <div>
+                  <p class="eyebrow">${escapeHtml(layerLabel(layer))}</p>
+                  <h3>${escapeHtml((state.data.layer_labels && state.data.layer_labels[layer]) || layerLabel(layer))}</h3>
+                </div>
+                <div class="path-layer-stats">
+                  <span>${layerAxes.length} axes</span>
+                  ${blockedCount ? `<span class="danger-chip">${blockedCount} blocked</span>` : ""}
+                  ${editedCount ? `<span class="path-edited">${editedCount} edited</span>` : ""}
+                </div>
+              </div>
+              <div class="path-axis-grid">
+                ${layerAxes.map((axis, axisIdx) => renderPathAxis(axis, axisIdx, layer === state.layerFilter)).join("")}
+              </div>
             </div>
-          </li>
+          </section>
         `;
       }).join("")}
-    </ol>
+    </div>
   `;
 }
 
-function renderCompatibility() {
-  const compatibility = NavigatorStateEngine.compatibility(state.data, state.engineState);
-  const selectedDisabled = NavigatorStateEngine.selectedDisabledReasons(state.data, state.engineState);
-  const rules = compatibility.active_rules || [];
-  const recommendations = compatibility.recommendations || [];
-  const selectedDisabledHtml = selectedDisabled.length
-    ? selectedDisabled.map((item) => `<div class="rule blocked"><strong>${escapeHtml(item.axis)}=${escapeHtml(item.value)}</strong><p>${escapeHtml(item.reason)}</p></div>`).join("")
+function renderPathAxis(axis, axisIdx, expanded) {
+  const selectedOption = axis.options.find((option) => option.value === axis.selected);
+  const disabledReason = selectedOption && selectedOption.disabled_reason;
+  const pathEffect = selectedOption && selectedOption.canonical_path_effect
+    ? selectedOption.canonical_path_effect
+    : `selected: ${axis.selected ?? "-"}`;
+  const blocked = disabledReason ? " blocked" : "";
+  const active = axis.axis === state.activeAxis ? " active" : "";
+  const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
+  const docs = docsLink(axis.axis);
+  const valueLabel = valueDisplayName(axis.axis, axis.selected);
+  const selectedSummary = valueSummary(axis.axis, axis.selected);
+  const presentation = axisPresentation(axis.axis);
+  const contract = presentation.contract ? `<span class="path-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</span>` : "";
+  const status = selectedOption && selectedOption.status ? `<span class="status">${escapeHtml(selectedOption.status)}</span>` : "";
+  const detail = expanded
+    ? `
+      <span class="path-question">${escapeHtml(axisQuestion(axis))}</span>
+      ${status}
+      <span class="path-summary">${escapeHtml(selectedSummary || axisSummary(axis))}</span>
+      ${contract}
+      <span class="path-effect">YAML: ${escapeHtml(pathEffect)}</span>
+      ${docs ? `<a class="path-docs" href="${escapeHtml(docs)}">Detailed docs</a>` : ""}
+      ${disabledReason ? `<span class="path-reason">${escapeHtml(disabledReason)}</span>` : ""}
+    `
     : "";
-  const ruleHtml = rules.length
-    ? rules.map((rule) => `<div class="rule"><strong>${escapeHtml(rule.rule)}</strong><p>${escapeHtml(rule.effect)}</p></div>`).join("")
-    : `<p class="muted">No active compatibility rules for this sample.</p>`;
-  const recHtml = recommendations.length
-    ? recommendations.map((item) => `<div class="rule"><strong>Recommendation</strong><p>${escapeHtml(item)}</p></div>`).join("")
-    : "";
-  els.compatibilityView.innerHTML = selectedDisabledHtml + ruleHtml + recHtml;
-}
-
-function renderReplications() {
-  els.replicationList.innerHTML = state.data.replications
-    .map((entry) => {
-      const outputs = (entry.expected_outputs || []).join(", ");
-      const path = (entry.exact_tree_path || []).join(" | ");
-      const deviations = (entry.deviations_from_original_paper || []).join(" ");
-      return `
-        <article class="replication-card" data-replication-card="${escapeHtml(entry.id)}">
-          <strong>${escapeHtml(entry.id)}</strong>
-          <p>${escapeHtml(entry.paper_name)}</p>
-          <p>${escapeHtml(entry.short_description)}</p>
-          <p><b>Path:</b> ${escapeHtml(path)}</p>
-          <p><b>Outputs:</b> ${escapeHtml(outputs)}</p>
-          <p><b>Deviations:</b> ${escapeHtml(deviations)}</p>
-          <button type="button" class="secondary-action" data-replication-id="${escapeHtml(entry.id)}">Load path</button>
-        </article>
-      `;
-    })
-    .join("");
+  return `
+    <div class="tree-path-item${blocked}${active}" data-tree-axis="${escapeHtml(axis.axis)}" data-tree-layer="${escapeHtml(axis.layer)}" tabindex="0" role="button">
+      <span class="path-step">${axisIdx + 1}</span>
+      <span class="path-body">
+        <span class="path-axis">${escapeHtml(axisDisplayName(axis))}</span>
+        <span class="path-value">${escapeHtml(valueLabel || "-")}</span>
+        <span class="path-raw">${escapeHtml(axis.axis)} = ${escapeHtml(axis.selected ?? "-")}</span>
+        ${edited}
+        ${detail}
+      </span>
+    </div>
+  `;
 }
 
 function renderYaml() {
   els.yamlPreview.textContent = NavigatorStateEngine.recipeYaml(state.data, currentSource(), state.engineState);
 }
 
-function renderResolverPreview() {
-  const selectedDisabled = NavigatorStateEngine.selectedDisabledReasons(state.data, state.engineState);
-  const source = currentSource();
-  const filename = `${sanitizeFilename((source.recipe || {}).recipe_id || source.label || "navigator-recipe")}.yaml`;
-  const status = selectedDisabled.length ? "browser_blocked" : (Object.keys(state.engineState.edits).length || state.loadedSource ? "browser_preview" : (currentView().compile_preview || {}).execution_status || "unknown");
-  const blockedHtml = selectedDisabled.length
-    ? selectedDisabled.map((item) => `<div class="rule blocked"><strong>${escapeHtml(item.axis)}=${escapeHtml(item.value)}</strong><p>${escapeHtml(item.reason)}</p></div>`).join("")
-    : `<p class="muted">No selected branch is blocked in the browser state engine.</p>`;
-  const snapshot = !state.loadedSource && !Object.keys(state.engineState.edits).length && currentView().compile_preview
-    ? `<p class="muted">Compiler snapshot: ${escapeHtml(currentView().compile_preview.status || currentView().compile_preview.execution_status || "available")}</p>`
-    : `<p class="muted">Browser preview only. Run the resolver command against the downloaded YAML before execution.</p>`;
-  els.resolverPreview.innerHTML = `
-    <div class="rule">
-      <strong>${escapeHtml(status)}</strong>
-      ${snapshot}
-      <div class="effect">macrocast-navigate resolve ${escapeHtml(filename)}</div>
-      <div class="effect">macrocast-navigate run ${escapeHtml(filename)} --output-root results/${escapeHtml(filename.replace(/\.ya?ml$/, ""))}</div>
-    </div>
-    ${blockedHtml}
-  `;
-}
-
 function render() {
   setDefaultAxis();
   renderSampleSelect();
   renderSummary();
+  renderPathHeader();
   renderAxisList();
   renderOptions();
   renderTreePath();
-  renderCompatibility();
-  renderReplications();
-  renderResolverPreview();
   renderYaml();
 }
 
@@ -400,9 +409,7 @@ function bindEvents() {
 
   document.querySelectorAll("[data-layer]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.layerFilter = button.dataset.layer;
-      document.querySelectorAll("[data-layer]").forEach((item) => item.classList.toggle("active", item === button));
-      state.activeAxis = null;
+      setLayerFilter(button.dataset.layer);
       render();
     });
   });
@@ -425,41 +432,31 @@ function bindEvents() {
 
   els.treePath.addEventListener("click", (event) => {
     if (event.target.closest("a")) return;
-    const item = event.target.closest("[data-tree-axis]");
-    if (!item) return;
-    state.activeAxis = item.dataset.treeAxis;
+    const axisItem = event.target.closest("[data-tree-axis]");
+    const layerItem = event.target.closest("[data-tree-layer]");
+    if (layerItem && layerItem.dataset.treeLayer !== state.layerFilter) {
+      setLayerFilter(layerItem.dataset.treeLayer);
+    }
+    if (axisItem) state.activeAxis = axisItem.dataset.treeAxis;
     render();
   });
 
   els.treePath.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     if (event.target.closest("a")) return;
-    const item = event.target.closest("[data-tree-axis]");
-    if (!item) return;
+    const axisItem = event.target.closest("[data-tree-axis]");
+    const layerItem = event.target.closest("[data-tree-layer]");
+    if (!axisItem && !layerItem) return;
     event.preventDefault();
-    state.activeAxis = item.dataset.treeAxis;
+    if (layerItem && layerItem.dataset.treeLayer !== state.layerFilter) {
+      setLayerFilter(layerItem.dataset.treeLayer);
+    }
+    if (axisItem) state.activeAxis = axisItem.dataset.treeAxis;
     render();
   });
 
   els.resetPath.addEventListener("click", () => {
     resetEngineState();
-    render();
-  });
-
-  els.replicationList.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-replication-id]");
-    if (!button) return;
-    const entry = state.data.replications.find((item) => item.id === button.dataset.replicationId);
-    if (!entry || !entry.recipe) return;
-    loadSource({
-      id: entry.id,
-      label: entry.id,
-      path: entry.id,
-      recipe: entry.recipe,
-      recipe_yaml: entry.recipe_yaml,
-      source_type: "replication",
-      replication: entry,
-    });
     render();
   });
 
@@ -479,7 +476,7 @@ function bindEvents() {
     try {
       await importYamlFile(file);
     } catch (error) {
-      els.resolverPreview.innerHTML = `<div class="rule blocked"><strong>import_failed</strong><p>${escapeHtml(error.message)}</p></div>`;
+      els.pathSource.textContent = `import failed: ${error.message}`;
     } finally {
       els.importYamlInput.value = "";
     }

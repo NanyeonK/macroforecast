@@ -2,6 +2,18 @@
 
 Layer 0 decides the shape of the study before data or models are chosen. It answers: what kind of run is this, which runner owns it, how failures behave, how deterministic it should be, and how work may be parallelized.
 
+## How many steps?
+
+Layer 0 has **five user-facing steps**. Select them in this order:
+
+1. `research_design` — choose the study route.
+2. `experiment_unit` — confirm the runner unit, usually derived by the compiler.
+3. `failure_policy` — decide how failed variants or cells are handled.
+4. `reproducibility_mode` — decide how strictly stochastic components are pinned.
+5. `compute_mode` — decide whether execution is serial or parallelized over a work unit.
+
+There is also an internal `axis_type` grammar, but it is not a sixth user step. Users express it by placing choices under `fixed_axes`, `sweep_axes`, or `conditional_axes`.
+
 ## Decision order
 
 | Step | Axis | Role |
@@ -12,7 +24,20 @@ Layer 0 decides the shape of the study before data or models are chosen. It answ
 | 4.1.4 | [reproducibility_mode](reproducibility_mode.md) | Seed and determinism policy. |
 | 4.1.5 | [compute_mode](compute_mode.md) | Serial or parallel work layout. |
 
-`axis_type` is internal path grammar for fixed/sweep/conditional/derived choices. It is documented as an appendix because users normally express it by placing values under `fixed_axes`, `sweep_axes`, or `conditional_axes`.
+## Selection logic
+
+Start with `research_design`. That decision constrains or derives the runner shape:
+
+- `single_path_benchmark` normally derives `experiment_unit=single_target_single_model` unless the target/sweep shape requires another supported unit.
+- `controlled_variation` is used when one or more axes are swept while the rest of the path is held fixed.
+- `orchestrated_bundle` is a wrapper route and only opens when a concrete wrapper runner contract exists.
+- `replication_override` routes to a replication-style runner and should preserve recipe provenance.
+
+Then set policies:
+
+- `failure_policy` matters most when a sweep or bundle can produce invalid cells.
+- `reproducibility_mode` should be stricter for replication and looser for exploratory work.
+- `compute_mode` is an execution request. It only has an effect when the selected run has multiple units of the chosen type.
 
 ## Layer contract
 
