@@ -76,6 +76,38 @@ _CUSTOM_FEATURE_COMBINERS: dict[str, CustomFeatureCombinerSpec] = {}
 
 
 def custom_model_contract_metadata() -> dict[str, Any]:
+    required_context_fields = (
+        "contract_version",
+        "model_name",
+        "target",
+        "horizon",
+        "feature_names",
+        "feature_runtime_builder",
+        "block_order",
+        "block_roles",
+        "alignment",
+        "leakage_contract",
+        "mode",
+    )
+    optional_context_fields = (
+        "feature_builder",
+        "legacy_feature_builder",
+        "feature_dispatch_source",
+        "auxiliary_payloads",
+        "train_index",
+        "target_train_index",
+        "forecast_type",
+        "forecast_object",
+        "recursive_step",
+        "raw_panel_iterated_step",
+        "x_path_policy",
+        "x_source_date",
+        "scheduled_known_future_x_columns",
+        "recursive_x_model_family",
+        "recursive_x_model_fallback_columns",
+        "raw_panel_iterated_runtime_contract",
+        "raw_panel_iterated_payload_contract",
+    )
     return {
         "contract_version": CUSTOM_MODEL_CONTRACT_VERSION,
         "layer": 3,
@@ -86,28 +118,55 @@ def custom_model_contract_metadata() -> dict[str, Any]:
             "X_test": "1 x n_features",
         },
         "return_shape": "scalar or one-element array/sequence",
-        "context_fields": (
-            "model_name",
-            "target",
-            "horizon",
-            "feature_names",
-            "feature_builder",
-            "feature_runtime_builder",
-            "legacy_feature_builder",
-            "feature_dispatch_source",
-            "block_order",
-            "block_roles",
-            "alignment",
-            "auxiliary_payloads",
-            "leakage_contract",
-            "mode",
-            "contract_version",
-        ),
+        "required_context_fields": required_context_fields,
+        "optional_context_fields": optional_context_fields,
+        "context_fields": tuple(dict.fromkeys(required_context_fields + optional_context_fields)),
         "auxiliary_payload_contracts": (
             "fred_sd_native_frequency_block_payload_v1",
             "fred_sd_mixed_frequency_model_adapter_v1",
         ),
+        "auxiliary_payload_conditions": {
+            "fred_sd_native_frequency_block_payload_v1": {
+                "context_key": "auxiliary_payloads.fred_sd_native_frequency_block_payload",
+                "present_when": (
+                    "dataset includes fred_sd and "
+                    "fred_sd_mixed_frequency_representation is "
+                    "native_frequency_block_payload or mixed_frequency_model_adapter"
+                ),
+                "contains": (
+                    "contract_version",
+                    "blocks",
+                    "block_order",
+                    "column_to_native_frequency",
+                ),
+            },
+            "fred_sd_mixed_frequency_model_adapter_v1": {
+                "context_key": "auxiliary_payloads.fred_sd_mixed_frequency_model_adapter",
+                "present_when": (
+                    "dataset includes fred_sd and "
+                    "fred_sd_mixed_frequency_representation is mixed_frequency_model_adapter"
+                ),
+                "contains": (
+                    "contract_version",
+                    "adapter_kind",
+                    "block_payload_contract",
+                    "requires_registered_custom_model",
+                ),
+            },
+        },
+        "accepted_return": {
+            "scalar": "single forecast value",
+            "one_element_array": "array or sequence with exactly one forecast value",
+        },
         "leakage_rule": "consume only Layer 2 train/pred matrices supplied by runtime",
+        "routing_notes": (
+            "registered custom model names are accepted as model_family values "
+            "in the current Python process",
+            "YAML recipes can select the registered name, but they do not import "
+            "or register Python callables by themselves",
+            "custom models should not read future rows, full-sample statistics, "
+            "or source panels outside the supplied train/pred payload",
+        ),
     }
 
 

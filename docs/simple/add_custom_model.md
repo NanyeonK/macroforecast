@@ -38,12 +38,52 @@ fn(X_train, y_train, X_test, context) -> prediction
 
 `context` includes:
 
+- `contract_version`
 - `model_name`
-- `feature_builder`
 - `target`
 - `horizon`
 - `feature_names`
-- `contract_version`
+- `feature_runtime_builder`
+- `block_order`
+- `block_roles`
+- `alignment`
+- `leakage_contract`
+- `mode`
+
+Some routes add optional fields. FRED-SD mixed-frequency routes add
+`context["auxiliary_payloads"]` with native-frequency block metadata.
+
+```python
+@mc.custom_model("my_fred_sd_mixed_frequency_model")
+def my_fred_sd_mixed_frequency_model(X_train, y_train, X_test, context):
+    payloads = context.get("auxiliary_payloads", {})
+    blocks = payloads["fred_sd_native_frequency_block_payload"]
+    native_frequency = blocks["column_to_native_frequency"]
+    # Fit a leakage-free mixed-frequency research model here.
+    return float(y_train[-1])
+
+result = (
+    mc.Experiment(
+        dataset="fred_sd",
+        target="UR_CA",
+        start="2000-01",
+        end="2020-12",
+        horizons=[1],
+        frequency="monthly",
+        feature_builder="raw_feature_panel",
+        model_family="my_fred_sd_mixed_frequency_model",
+    )
+    .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
+    .use_fred_sd_mixed_frequency_adapter()
+    .run(local_raw_source="tests/fixtures/fred_sd_sample.csv")
+)
+```
+
+See `examples/custom_fred_sd_mixed_frequency_model.py` and
+`examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml`.
+When using YAML, import the Python module that registers the model before
+running the recipe. YAML selects `model_family`; it does not register the
+callable.
 
 The manifest records the model as custom:
 

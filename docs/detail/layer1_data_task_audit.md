@@ -244,12 +244,13 @@ The simple API remains narrower than the full contract:
 - Layer 2 consumes this report through
   `fred_sd_mixed_frequency_representation`. The executable Layer 2 choices are
   `calendar_aligned_frame`, `drop_unknown_native_frequency`, and
-  `drop_non_target_native_frequency`. Layer 1 does not choose those
-  representation semantics.
-- FRED-SD `support_tier=provisional` now points to future native-frequency
-  block payload / mixed-frequency model-adapter support, not missing
-  live/vintage ingestion, missing t-code policy choices, missing grouping
-  recipes, or missing basic same-frequency filtering.
+  `drop_non_target_native_frequency`, plus the operational-narrow
+  `native_frequency_block_payload` and `mixed_frequency_model_adapter`
+  payload routes. Layer 1 does not choose those representation semantics.
+- FRED-SD `support_tier=stable` covers live/vintage ingestion, t-code policy
+  choices, grouping recipes, frequency reports, and source-load metadata.
+  Advanced mixed-frequency estimator families still carry their own
+  operational-narrow status in Layer 2/3.
 
 Simple docs should stay short; this audit is the detailed contract source for Layer 1.
 

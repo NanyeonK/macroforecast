@@ -264,7 +264,12 @@ that context includes `fred_sd_native_frequency_block_payload` with
 `blocks`, `block_order`, and `column_to_native_frequency`. For
 `mixed_frequency_model_adapter`, it also includes
 `fred_sd_mixed_frequency_model_adapter`, whose current adapter kind is
-`registered_custom_model`.
+`registered_custom_model`. See
+`examples/custom_fred_sd_mixed_frequency_model.py` for an executable custom
+model template and
+`examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml` for the
+matching recipe skeleton. Import the Python module that registers the callable
+before running a YAML recipe that selects the custom `model_family`.
 
 `model_family="midas_almon"` is a narrow built-in direct executor for users who
 want a package-owned MIDAS-style baseline without adding an R dependency. It
@@ -323,7 +328,7 @@ exp = (
         model_family="my_fred_sd_mf_model",
     )
     .use_fred_sd_selection(states=["CA"], variables=["UR", "NQGSP"])
-    .use_fred_sd_native_frequency_blocks()
+    .use_fred_sd_mixed_frequency_adapter()
 )
 ```
 
@@ -411,9 +416,10 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
    `variable_universe` filters.
 3. **Generic `variable_universe` is post-load** — use `sd_variable_selection` for workbook-sheet selection and `variable_universe` for loaded `VARIABLE_STATE` columns.
 4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
-5. **`support_tier = provisional`** — keep this label until built-in
-   mixed-frequency estimators and broader FRED-SD replication recipes are
-   implemented.
+5. **Mixed-frequency estimator scope is narrow** — `support_tier` is stable
+   for FRED-SD loading and metadata, but advanced mixed-frequency estimators
+   remain operational-narrow unless explicitly documented as built-in runtime
+   families.
 
 ## See also
 

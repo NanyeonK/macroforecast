@@ -18,6 +18,9 @@ The CLI and static Navigator App share the same exported compatibility metadata.
 | `forecast_object=direction` | Recommends direction tests such as `pesaran_timmermann` and `binomial_hit`. |
 | `forecast_object=interval` or `density` | Recommends density/interval calibration tests on the `density_interval` axis. |
 | `model_family in {lstm, gru, tcn}` | Current runtime uses the univariate target-history sequence route. Full multivariate `feature_runtime=sequence_tensor` remains gated until the Layer 2 sequence representation handoff is opened. |
+| registered custom `model_family` | Enabled in the current Python process after `@mc.custom_model(...)` registration. Custom names are valid forecast generators, but YAML alone cannot register the callable. |
+| `fred_sd_mixed_frequency_representation=native_frequency_block_payload` | Requires `dataset` including `fred_sd`, `feature_builder=raw_feature_panel`, and `forecast_type=direct`. It enables FRED-SD native-frequency payloads for registered custom models and supported MIDAS routes. |
+| `fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter` | Requires the same FRED-SD raw-panel direct route and enables the adapter payload for registered custom models, `midas_almon`, `midasr`, and `midasr_nealmon`. |
 | `forecast_type=iterated` with raw-panel features | Requires an explicit `exogenous_x_path_policy`: `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, or `recursive_x_model` with `recursive_x_model_family=ar1`. |
 | `export_format=parquet` or `all` | Adds sidecar artifact files; the CSV prediction table remains the stable baseline artifact. |
 | `saved_objects=predictions_only` | Saves manifest, run summary, predictions, and forecast payload files only; Layer 4 metrics/reports and Layer 6/7 artifacts are not materialized. |
@@ -52,6 +55,16 @@ model_family=ridge -> disabled: quantile currently requires model_family=quantil
 feature_builder=raw_feature_panel
 forecast_type=iterated
 exogenous_x_path_policy=unavailable -> disabled for executable raw-panel iterated runs
+```
+
+```text
+fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter
+feature_builder=autoreg_lagged_target -> disabled: FRED-SD adapter payloads require raw_feature_panel
+```
+
+```text
+model_family=my_custom_model in YAML
+callable not registered in Python process -> disabled at compile/run: custom model name is unknown
 ```
 
 ## Operational Versus Named-Gated

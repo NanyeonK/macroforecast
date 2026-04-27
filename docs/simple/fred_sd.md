@@ -112,8 +112,10 @@ registered custom `model_family`, `model_family="midas_almon"`, or
 
 Use `model_family="midas_almon"` for the built-in narrow MIDAS-style baseline.
 It constructs Almon distributed-lag basis features from the selected FRED-SD
-raw panel and fits a ridge direct forecast. Full MIDAS/state-space estimator
-families remain future work.
+raw panel and fits a ridge direct forecast. Use
+`examples/custom_fred_sd_mixed_frequency_model.py` when the estimator is
+researcher-owned and should consume the native-frequency block payload.
+Regularized group MIDAS and state-space estimator families remain future work.
 
 Use `model_family="midasr"` when you want the package-owned Python slice
 aligned to the R `midasr` package's restricted MIDAS surface. Set

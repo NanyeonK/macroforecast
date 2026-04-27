@@ -186,15 +186,55 @@ Runtime contract:
 - return value: scalar or one-element sequence/array.
 - `context["contract_version"] == "custom_model_v1"`.
 
-The model context includes `model_name`, `target`, `horizon`, `feature_names`,
-`feature_builder`, `feature_runtime_builder`, `legacy_feature_builder`,
-`feature_dispatch_source`, `block_order`, `block_roles`, `alignment`,
-`leakage_contract`, and `mode`.
+The required context fields are:
+
+| Field | Meaning |
+|---|---|
+| `contract_version` | Custom model contract identifier; currently `custom_model_v1`. |
+| `model_name` | Registered model name selected through `model_family`. |
+| `target` | Current target series name. |
+| `horizon` | Current forecast horizon. |
+| `feature_names` | Public Layer 2 feature names. |
+| `feature_runtime_builder` | Runtime feature route used to build the current matrices. |
+| `block_order` | Ordered Layer 2 block names that produced the final matrix. |
+| `block_roles` | Feature/block role metadata used by manifests and diagnostics. |
+| `alignment` | Train/pred alignment contract for the current forecast origin. |
+| `leakage_contract` | Runtime leakage policy and audit metadata. |
+| `mode` | Execution mode, such as direct or recursive runtime. |
+
+Optional context fields include compatibility aliases
+`feature_builder`, `legacy_feature_builder`, and `feature_dispatch_source`;
+runtime-specific fields such as `forecast_type`, `forecast_object`,
+`train_index`, and iterated raw-panel payload metadata; and
+`auxiliary_payloads` when a Layer 2 route emits an extra model-facing payload.
 
 Registered custom model names are accepted through the current `model_family`
 compatibility axis. Canonically, they are custom forecast generator families
 and can be compared with built-in generators through the normal execution and
 experiment APIs.
+
+### FRED-SD Mixed-Frequency Payloads
+
+FRED-SD can emit extra Layer 2 payloads for custom Layer 3 models:
+
+| Payload contract | Context key | Present when |
+|---|---|---|
+| `fred_sd_native_frequency_block_payload_v1` | `context["auxiliary_payloads"]["fred_sd_native_frequency_block_payload"]` | `fred_sd_mixed_frequency_representation` is `native_frequency_block_payload` or `mixed_frequency_model_adapter`. |
+| `fred_sd_mixed_frequency_model_adapter_v1` | `context["auxiliary_payloads"]["fred_sd_mixed_frequency_model_adapter"]` | `fred_sd_mixed_frequency_representation` is `mixed_frequency_model_adapter`. |
+
+The native-frequency payload includes `blocks`, `block_order`, and
+`column_to_native_frequency`. The adapter payload records the adapter route and
+the block-payload contract consumed by the model. This is the supported place
+to implement research-specific mixed-frequency likelihoods, weighting schemes,
+state updates, or direct forecast rules while leaving Layer 1 source/t-code
+policy and Layer 2 representation choices auditable.
+
+Use `examples/custom_fred_sd_mixed_frequency_model.py` as an executable Python
+template and
+`examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml` as the
+matching recipe skeleton. YAML can select the registered `model_family`, but it
+does not import Python code. Import the module that calls `@mc.custom_model(...)`
+before compiling or running the recipe.
 
 ## Method Comparison Sweeps
 

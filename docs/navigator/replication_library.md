@@ -52,6 +52,26 @@ Every entry contains:
 | `fred-sd-midasr-almonp-direct` | FRED-SD mixed-frequency MIDAS runtime route | Fixture-safe route for Layer 2 native-frequency adapter payloads plus Layer 3 `model_family=midasr`, `midasr_weight_family=almonp`. |
 | `synthetic-replication-roundtrip` | Fixture-safe synthetic route | Small route for verifying YAML generation, path resolution, and one-line execution. |
 
+## Templates Versus Entries
+
+Replication entries are runnable from YAML alone. Custom model recipes are
+different: the YAML can select `model_family=my_registered_model`, but the
+callable must already be registered in the Python process with
+`@mc.custom_model(...)`.
+
+Custom extension examples therefore live as templates rather than built-in
+replication entries. The current FRED-SD mixed-frequency template is:
+
+```text
+examples/custom_fred_sd_mixed_frequency_model.py
+examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml
+```
+
+Use the Python file in a script or notebook to register the custom model, then
+compile or run the YAML route. The Navigator should display this as a custom
+route template, not as a paper replication entry, because the model code is
+researcher-owned.
+
 ## Goulet-Coulombe-Style Path
 
 The package-native route uses:
