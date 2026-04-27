@@ -1,18 +1,23 @@
 name: ci-docs
 
-# Sphinx docs build verification.
-# Runs when docs/** or conf.py changes.
+# Sphinx docs build verification and GitHub Pages deployment.
+# Pull requests verify docs. Pushes to main also publish docs to gh-pages.
 
 on:
   push:
     branches: [main]
     paths:
+      - '.github/workflows/ci-docs.yml'
       - 'docs/**'
       - 'pyproject.toml'
   pull_request:
     paths:
+      - '.github/workflows/ci-docs.yml'
       - 'docs/**'
       - 'pyproject.toml'
+
+permissions:
+  contents: read
 
 jobs:
   sphinx:
@@ -49,3 +54,46 @@ jobs:
           name: docs-html
           path: docs/_build/html/
           retention-days: 7
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: sphinx
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download docs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: docs-html
+
+      - name: Deploy docs to gh-pages
+        run: |
+          set -euo pipefail
+
+          git fetch origin gh-pages
+
+          deploy_dir="$(mktemp -d)"
+          git worktree add -B gh-pages "$deploy_dir" origin/gh-pages
+
+          find "$deploy_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          cp -R docs-html/. "$deploy_dir"/
+          touch "$deploy_dir/.nojekyll"
+
+          cd "$deploy_dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No docs changes to deploy."
+            exit 0
+          fi
+
+          git commit -m "Deploy docs from ${GITHUB_SHA}"
+          git push origin gh-pages
