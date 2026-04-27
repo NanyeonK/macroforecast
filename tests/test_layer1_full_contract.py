@@ -436,9 +436,9 @@ def test_official_transform_axes_record_layer1_apply_official_tcode_path() -> No
         "scope_source": "layer1_axis",
         "legacy_bridge_axes": [],
     }
-    assert preprocess["tcode_policy"] == "tcode_only"
-    assert preprocess["target_transform_policy"] == "tcode_transformed"
-    assert preprocess["x_transform_policy"] == "apply_official_tcode_transformed"
+    assert preprocess["tcode_policy"] == "official_tcode_only"
+    assert preprocess["target_transform_policy"] == "official_tcode_transformed"
+    assert preprocess["x_transform_policy"] == "official_tcode_transformed"
     assert axis_layers["official_transform_policy"] == "1_data_task"
     assert axis_layers["official_transform_scope"] == "1_data_task"
 
@@ -455,8 +455,8 @@ def test_official_transform_scope_can_target_only_without_layer2_bridge() -> Non
     compiled = compile_recipe_dict(recipe)
 
     preprocess = compiled.manifest["preprocess_contract"]
-    assert preprocess["tcode_policy"] == "tcode_only"
-    assert preprocess["target_transform_policy"] == "tcode_transformed"
+    assert preprocess["tcode_policy"] == "official_tcode_only"
+    assert preprocess["target_transform_policy"] == "official_tcode_transformed"
     assert preprocess["x_transform_policy"] == "raw_level"
     assert preprocess["tcode_application_scope"] == "target_only"
 

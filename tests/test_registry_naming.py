@@ -55,10 +55,36 @@ def test_stage1_legacy_value_aliases_canonicalize() -> None:
 
 def test_shared_tcode_and_predictor_legacy_aliases_canonicalize() -> None:
     assert (
+        canonical_axis_value("target_transform_policy", "tcode_transformed")
+        == "official_tcode_transformed"
+    )
+    assert (
         canonical_axis_value("x_transform_policy", "dataset_tcode_transformed")
-        == "apply_official_tcode_transformed"
+        == "official_tcode_transformed"
+    )
+    assert (
+        canonical_axis_value("x_transform_policy", "apply_official_tcode_transformed")
+        == "official_tcode_transformed"
+    )
+    assert canonical_axis_value("tcode_policy", "tcode_only") == "official_tcode_only"
+    assert (
+        canonical_axis_value("tcode_policy", "tcode_then_extra_preprocess")
+        == "official_tcode_then_extra_preprocess"
+    )
+    assert (
+        canonical_axis_value("tcode_policy", "extra_preprocess_without_tcode")
+        == "extra_preprocess_only"
+    )
+    assert (
+        canonical_axis_value("tcode_policy", "extra_then_tcode")
+        == "extra_preprocess_then_official_tcode"
     )
     assert canonical_axis_value("tcode_application_scope", "apply_tcode_to_X") == "predictors_only"
+    assert canonical_axis_value("preprocess_order", "tcode_only") == "official_tcode_only"
+    assert (
+        canonical_axis_value("preprocess_order", "tcode_then_extra")
+        == "official_tcode_then_extra"
+    )
     assert canonical_axis_value("predictor_family", "handpicked_set") == "explicit_variable_list"
 
 

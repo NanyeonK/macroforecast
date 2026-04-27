@@ -7,8 +7,8 @@ source metadata.
 
 Default runtime policy:
 
-- FRED-MD official t-codes are applied when `tcode_policy="tcode_only"`.
-- FRED-QD official t-codes are applied when `tcode_policy="tcode_only"`.
+- FRED-MD official t-codes are applied when `tcode_policy="official_tcode_only"`.
+- FRED-QD official t-codes are applied when `tcode_policy="official_tcode_only"`.
 - FRED-SD inferred t-codes are not applied by default.
 
 Opt-in runtime policy:
@@ -287,7 +287,7 @@ For composite datasets, macrocast first aligns component frequencies:
 - `fred_qd+fred_sd` uses quarterly frequency.
 
 Then SD inferred t-code metadata is added to `transform_codes` only when the
-user opted in. The existing `tcode_policy="tcode_only"` preprocessing path then
+user opted in. The existing `tcode_policy="official_tcode_only"` preprocessing path then
 applies MD/QD official codes and any opted-in SD inferred codes together.
 
 ## Non-Goals

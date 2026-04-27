@@ -114,7 +114,7 @@ def _layer2_temporal_block_recipe(
     if rotation_feature_block is not None:
         preprocessing_axes["rotation_feature_block"] = rotation_feature_block
     if x_lag_feature_block is not None:
-        preprocessing_axes["tcode_policy"] = "extra_preprocess_without_tcode"
+        preprocessing_axes["tcode_policy"] = "extra_preprocess_only"
         preprocessing_axes["preprocess_order"] = "extra_only"
         preprocessing_axes["preprocess_fit_scope"] = "train_only"
         preprocessing_axes["x_lag_feature_block"] = x_lag_feature_block
@@ -497,7 +497,7 @@ def test_compile_robust_scaling_recipe_is_executable(tmp_path: Path) -> None:
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "extra_preprocess_without_tcode",
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "extra_preprocess_only",
                 "target_missing_policy": "none", "x_missing_policy": "em_impute", "target_outlier_policy": "none", "x_outlier_policy": "none",
                 "scaling_policy": "robust", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_order": "extra_only", "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
@@ -556,9 +556,9 @@ def test_compile_apply_official_tcode_then_train_only_extra_is_executable(tmp_pa
     assert compile_result.compiled.execution_status == "executable"
     assert compile_result.manifest["data_task_spec"]["official_transform_policy"] == "apply_official_tcode"
     contract = compile_result.manifest["preprocess_contract"]
-    assert contract["tcode_policy"] == "tcode_then_extra_preprocess"
-    assert contract["preprocess_order"] == "tcode_then_extra"
-    assert contract["representation_policy"] == "tcode_only"
+    assert contract["tcode_policy"] == "official_tcode_then_extra_preprocess"
+    assert contract["preprocess_order"] == "official_tcode_then_extra"
+    assert contract["representation_policy"] == "official_tcode_only"
 
     execution = run_compiled_recipe(
         compile_result.compiled,
@@ -1230,7 +1230,7 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "extra_preprocess_without_tcode",
+                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "extra_preprocess_only",
                 "target_missing_policy": "none", "x_missing_policy": "mean_impute", "target_outlier_policy": "none", "x_outlier_policy": "winsorize",
                 "scaling_policy": "minmax", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_order": "extra_only", "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
@@ -1561,7 +1561,7 @@ def test_layer2_feature_block_set_accepts_compatible_sub_blocks() -> None:
         _explicit_feature_block_set_recipe(
             "mixed_blocks",
             preprocessing_axes={
-                "tcode_policy": "extra_preprocess_without_tcode",
+                "tcode_policy": "extra_preprocess_only",
                 "preprocess_order": "extra_only",
                 "preprocess_fit_scope": "train_only",
                 "target_lag_block": "fixed_target_lags",
@@ -1784,7 +1784,7 @@ def test_layer2_explicit_raw_block_can_omit_feature_builder_bridge() -> None:
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "none",
                     "target_outlier_policy": "none",
@@ -1840,7 +1840,7 @@ def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "none",
                     "target_outlier_policy": "none",
@@ -2226,7 +2226,7 @@ def test_layer2_explicit_marx_rotation_supports_static_factor_composition(tmp_pa
         {
             "factor_feature_block": "pca_static_factors",
             "dimensionality_reduction_policy": "pca",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2266,7 +2266,7 @@ def test_layer2_factor_then_marx_runs_factor_score_rotation(tmp_path: Path) -> N
         {
             "factor_feature_block": "pca_static_factors",
             "factor_rotation_order": "factor_then_rotation",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2305,7 +2305,7 @@ def test_layer2_maf_rotation_runs_factor_score_rotation(tmp_path: Path) -> None:
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
             "factor_feature_block": "pca_static_factors",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2341,7 +2341,7 @@ def test_layer2_pca_factor_lags_run_as_factor_block(tmp_path: Path) -> None:
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
             "factor_feature_block": "pca_factor_lags",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2375,7 +2375,7 @@ def test_layer2_supervised_factors_run_as_factor_block(tmp_path: Path) -> None:
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
             "factor_feature_block": "supervised_factors",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2473,7 +2473,7 @@ def test_layer2_append_to_target_lags_combination_is_executable(tmp_path: Path) 
             "factor_feature_block": "pca_static_factors",
             "target_lag_block": "fixed_target_lags",
             "feature_block_combination": "append_to_target_lags",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -2583,7 +2583,7 @@ def test_layer2_select_after_custom_blocks_requires_custom_surface() -> None:
     )
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "feature_selection_policy": "correlation_filter",
@@ -2669,7 +2669,7 @@ def test_layer2_explicit_target_and_x_lag_blocks_execute_with_raw_panel_composer
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "none",
                     "target_outlier_policy": "none",
@@ -2734,7 +2734,7 @@ def test_layer2_explicit_target_lag_and_static_factor_blocks_execute(tmp_path) -
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "em_impute",
                     "target_outlier_policy": "none",
@@ -2900,7 +2900,7 @@ def test_layer2_explicit_factor_block_lowers_to_dimred_bridge() -> None:
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "mean_impute",
                     "target_outlier_policy": "none",
@@ -3030,7 +3030,7 @@ def test_layer2_factor_block_accepts_select_before_factor_mix() -> None:
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "mean_impute",
                     "target_outlier_policy": "none",
@@ -3085,7 +3085,7 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
                 "fixed_axes": {
                     "target_transform_policy": "raw_level",
                     "x_transform_policy": "raw_level",
-                    "tcode_policy": "extra_preprocess_without_tcode",
+                    "tcode_policy": "extra_preprocess_only",
                     "target_missing_policy": "none",
                     "x_missing_policy": "mean_impute",
                     "target_outlier_policy": "none",
@@ -3136,7 +3136,7 @@ def test_layer2_non_pca_factor_blocks_accept_selection_semantics(factor_block: s
             "factor_feature_block": factor_block,
             "feature_selection_policy": "lasso_select",
             "feature_selection_semantics": "select_after_factor",
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "scaling_policy": "standard",
@@ -3160,7 +3160,7 @@ def test_layer2_target_representation_records_scale_contract() -> None:
     )
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
-            "tcode_policy": "extra_preprocess_without_tcode",
+            "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "x_missing_policy": "mean_impute",

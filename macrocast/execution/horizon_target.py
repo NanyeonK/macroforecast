@@ -41,7 +41,7 @@ PATH_AVERAGE_CONSTRUCTIONS: Final[frozenset[str]] = frozenset({
     "path_average_log_growth_1_to_h",
 })
 LEGACY_CONSTRUCTION_ALIASES: Final[dict[str, str]] = {
-    "future_level_y_t_plus_h": "future_target_level_t_plus_h",
+    "future_target_level_t_plus_h": "future_target_level_t_plus_h",
 }
 SUPPORTED_CONSTRUCTIONS: Final[frozenset[str]] = (
     OPERATIONAL_CONSTRUCTIONS | PATH_AVERAGE_CONSTRUCTIONS | frozenset(LEGACY_CONSTRUCTION_ALIASES)

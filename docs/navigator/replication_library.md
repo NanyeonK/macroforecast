@@ -79,7 +79,7 @@ The package-native route uses:
 ```text
 1_data_task.dataset=fred_md
 1_data_task.official_transform_policy=apply_official_tcode
-2_preprocessing.tcode_policy=tcode_then_extra_preprocess
+2_preprocessing.tcode_policy=official_tcode_then_extra_preprocess
 2_preprocessing.scaling_policy=standard
 3_training.feature_builder=raw_feature_panel
 3_training.model_family=ridge
@@ -88,7 +88,7 @@ The package-native route uses:
 6_stat_tests.equal_predictive=dm
 ```
 
-The key Layer 2 detail is that `t-code + standardize` is not `tcode_only`. It is `tcode_then_extra_preprocess` with train-only scaling.
+The key Layer 2 detail is that `t-code + standardize` is not `official_tcode_only`. It is `official_tcode_then_extra_preprocess` with train-only scaling.
 
 ## FRED-SD MIDASR Path
 

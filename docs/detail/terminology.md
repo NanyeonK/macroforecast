@@ -33,7 +33,7 @@ notation and then return to `target`.
 Some older artifact columns and values still contain `y`:
 
 - `y_true`, `y_pred`, `y_true_level`, `y_pred_level`, `y_pred_model_scale`;
-- legacy `horizon_target_construction=future_level_y_t_plus_h`.
+- legacy `horizon_target_construction=future_target_level_t_plus_h`.
 
 Keep these accepted for backward compatibility. New docs and generated recipes
 should prefer canonical target-language values such as

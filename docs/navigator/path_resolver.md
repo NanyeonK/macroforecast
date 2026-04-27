@@ -38,8 +38,8 @@ The resolver is the last authority before execution. The Tree Navigator can expl
 
 Examples:
 
-- `tcode_policy=tcode_only` with `scaling_policy=standard` is invalid because `tcode_only` cannot carry extra preprocessing.
-- Coulombe-style `t-code + standardize` must use `tcode_policy=tcode_then_extra_preprocess`, `preprocess_order=tcode_then_extra`, and a train-only fit scope.
+- `tcode_policy=official_tcode_only` with `scaling_policy=standard` is invalid because `official_tcode_only` cannot carry extra preprocessing.
+- Coulombe-style `t-code + standardize` must use `tcode_policy=official_tcode_then_extra_preprocess`, `preprocess_order=official_tcode_then_extra`, and a train-only fit scope.
 - Raw-panel iterated forecasting requires an explicit future-X path assumption.
 
 ## Python

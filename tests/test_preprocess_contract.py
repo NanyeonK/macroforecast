@@ -49,7 +49,7 @@ def _train_only_raw_panel_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="em_impute",
         target_outlier_policy="none",
@@ -68,7 +68,7 @@ def _train_only_raw_panel_robust_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="em_impute",
         target_outlier_policy="none",
@@ -95,7 +95,7 @@ def test_build_preprocess_contract_raw_only_operational() -> None:
 def test_build_preprocess_contract_train_only_raw_panel_is_operational() -> None:
     contract = _train_only_raw_panel_contract()
 
-    assert contract.tcode_policy == "extra_preprocess_without_tcode"
+    assert contract.tcode_policy == "extra_preprocess_only"
     assert contract.x_missing_policy == "em_impute"
     assert contract.scaling_policy == "standard"
     assert is_operational_preprocess_contract(contract) is True
@@ -105,7 +105,7 @@ def test_build_preprocess_contract_train_only_raw_panel_is_operational() -> None
 def test_build_preprocess_contract_train_only_raw_panel_robust_is_operational() -> None:
     contract = _train_only_raw_panel_robust_contract()
 
-    assert contract.tcode_policy == "extra_preprocess_without_tcode"
+    assert contract.tcode_policy == "extra_preprocess_only"
     assert contract.x_missing_policy == "em_impute"
     assert contract.scaling_policy == "robust"
     assert is_operational_preprocess_contract(contract) is True
@@ -114,9 +114,9 @@ def test_build_preprocess_contract_train_only_raw_panel_robust_is_operational() 
 
 def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
     contract = build_preprocess_contract(
-        target_transform_policy="tcode_transformed",
-        x_transform_policy="apply_official_tcode_transformed",
-        tcode_policy="tcode_then_extra_preprocess",
+        target_transform_policy="official_tcode_transformed",
+        x_transform_policy="official_tcode_transformed",
+        tcode_policy="official_tcode_then_extra_preprocess",
         target_missing_policy="none",
         x_missing_policy="em_impute",
         target_outlier_policy="none",
@@ -124,24 +124,24 @@ def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
         scaling_policy="standard",
         dimensionality_reduction_policy="none",
         feature_selection_policy="none",
-        preprocess_order="tcode_then_extra",
+        preprocess_order="official_tcode_then_extra",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="target_only",
         evaluation_scale="raw_level",
-        representation_policy="tcode_only",
+        representation_policy="official_tcode_only",
         tcode_application_scope="target_and_predictors",
     )
 
-    assert contract.preprocess_order == "tcode_then_extra"
+    assert contract.preprocess_order == "official_tcode_then_extra"
     assert is_operational_preprocess_contract(contract) is False
     check_preprocess_governance(contract, preprocessing_sweep=True)
 
 
 def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() -> None:
     contract = build_preprocess_contract(
-        target_transform_policy="tcode_transformed",
-        x_transform_policy="apply_official_tcode_transformed",
-        tcode_policy="tcode_then_extra_preprocess",
+        target_transform_policy="official_tcode_transformed",
+        x_transform_policy="official_tcode_transformed",
+        tcode_policy="official_tcode_then_extra_preprocess",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -149,11 +149,11 @@ def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() 
         scaling_policy="standard",
         dimensionality_reduction_policy="none",
         feature_selection_policy="none",
-        preprocess_order="tcode_then_extra",
+        preprocess_order="official_tcode_then_extra",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
         evaluation_scale="raw_level",
-        representation_policy="tcode_only",
+        representation_policy="official_tcode_only",
         tcode_application_scope="target_and_predictors",
     )
 
@@ -165,7 +165,7 @@ def test_target_normalization_is_operational_with_window_fit() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -188,7 +188,7 @@ def test_target_scale_contract_records_operational_normalization() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -269,7 +269,7 @@ def test_preprocess_governance_rejects_dual_axis_sweep() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="em_impute",
         target_outlier_policy="none",
@@ -293,7 +293,7 @@ def test_preprocess_governance_rejects_dual_axis_sweep() -> None:
 
 def test_preprocess_governance_rejects_raw_only_with_hidden_transform() -> None:
     contract = build_preprocess_contract(
-        target_transform_policy="tcode_transformed",
+        target_transform_policy="official_tcode_transformed",
         x_transform_policy="raw_level",
         tcode_policy="raw_only",
         target_missing_policy="none",
@@ -337,7 +337,7 @@ def test_build_preprocess_contract_mean_impute_minmax_is_operational() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -358,7 +358,7 @@ def test_build_preprocess_contract_pca_path_is_operational() -> None:
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="median_impute",
         target_outlier_policy="none",
@@ -379,7 +379,7 @@ def test_build_preprocess_contract_accepts_combined_dimred_and_feature_selection
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -399,7 +399,7 @@ def test_build_preprocess_contract_accepts_select_after_factor_semantics() -> No
     contract = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",

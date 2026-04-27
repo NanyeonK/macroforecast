@@ -5,28 +5,28 @@ from typing import Literal
 
 TargetTransformPolicy = Literal[
     "raw_level",
-    "tcode_transformed",
+    "official_tcode_transformed",
     "custom_target_transform",
 ]
 
 XTransformPolicy = Literal[
     "raw_level",
-    "apply_official_tcode_transformed",
+    "official_tcode_transformed",
     "custom_x_transform",
 ]
 
 TcodePolicy = Literal[
     "raw_only",
-    "tcode_only",
-    "tcode_then_extra_preprocess",
-    "extra_preprocess_without_tcode",
-    "extra_then_tcode",
-    "custom_transform_pipeline",
+    "official_tcode_only",
+    "official_tcode_then_extra_preprocess",
+    "extra_preprocess_only",
+    "extra_preprocess_then_official_tcode",
+    "custom_transform_sequence",
 ]
 
 RepresentationPolicy = Literal[
     "raw_only",
-    "tcode_only",
+    "official_tcode_only",
     "custom_transform_only",
 ]
 
@@ -99,10 +99,10 @@ FeatureSelectionPolicy = Literal[
 
 PreprocessOrder = Literal[
     "none",
-    "tcode_only",
+    "official_tcode_only",
     "extra_only",
-    "tcode_then_extra",
-    "extra_then_tcode",
+    "official_tcode_then_extra",
+    "extra_preprocess_then_official_tcode",
     "custom",
 ]
 

@@ -302,7 +302,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
                 preprocess["scaling_policy"] = "none"
                 preprocess["preprocess_order"] = "none"
                 preprocess["preprocess_fit_scope"] = "not_applicable"
-            elif value == "extra_preprocess_without_tcode":
+            elif value == "extra_preprocess_only":
                 preprocess.setdefault("x_missing_policy", "em_impute")
                 preprocess.setdefault("scaling_policy", "standard")
                 preprocess["preprocess_order"] = "extra_only"
@@ -371,7 +371,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "tcode_policy",
             "prompt": "T-code policy",
-            "options": ["raw_only", "extra_preprocess_without_tcode"],
+            "options": ["raw_only", "extra_preprocess_only"],
         },
         {
             "key": "x_missing_policy",
