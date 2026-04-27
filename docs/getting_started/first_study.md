@@ -13,7 +13,7 @@ The **fixed design** defines the comparison environment. Everything here stays c
 - **Dataset**: `fred_md` (FRED-MD monthly macro panel)
 - **Information set**: `final_revised_data` (latest available data, not real-time vintages)
 - **Framework**: `expanding` (expanding training window)
-- **Benchmark**: `ar_bic` (AR model with BIC-selected lag order)
+- **Benchmark**: `autoregressive_bic` (AR model with BIC-selected lag order)
 - **Horizons**: 1, 3, 6, 12 months ahead
 
 These choices go in `0_meta`, `1_data_task`, and the `fixed_axes` of `3_training`.
@@ -47,7 +47,7 @@ path:
       dataset: fred_md
       information_set_type: final_revised_data
       target_structure: single_target
-      benchmark_family: ar_bic
+      benchmark_family: autoregressive_bic
       evaluation_scale: raw_level
     leaf_config:
       target: INDPRO

@@ -123,6 +123,19 @@ def test_layer2_feature_composer_legacy_aliases_canonicalize() -> None:
     )
 
 
+def test_layer3_training_legacy_aliases_canonicalize() -> None:
+    assert canonical_axis_value("model_family", "bayesianridge") == "bayesian_ridge"
+    assert canonical_axis_value("model_family", "adaptivelasso") == "adaptive_lasso"
+    assert canonical_axis_value("model_family", "randomforest") == "random_forest"
+    assert canonical_axis_value("model_family", "extratrees") == "extra_trees"
+    assert canonical_axis_value("model_family", "gbm") == "gradient_boosting"
+    assert canonical_axis_value("benchmark_family", "ar_bic") == "autoregressive_bic"
+    assert canonical_axis_value("benchmark_family", "ar_fixed_p") == "autoregressive_fixed_lag"
+    assert canonical_axis_value("benchmark_family", "ardi") == "autoregressive_diffusion_index"
+    assert canonical_axis_value("benchmark_family", "factor_model") == "factor_model_benchmark"
+    assert canonical_axis_value("benchmark_family", "multi_benchmark_suite") == "benchmark_suite"
+
+
 def test_canonicalize_recipe_path_rewrites_legacy_stage0_values() -> None:
     recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "single_path_benchmark"
@@ -203,6 +216,18 @@ def test_legacy_layer2_feature_composer_recipe_compiles_to_canonical_ids() -> No
     assert layer2["feature_blocks"]["feature_block_combination"]["value"] == "append_to_base_predictors"
 
 
+def test_legacy_layer3_training_recipe_compiles_to_canonical_ids() -> None:
+    recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
+    axes = recipe["path"]["3_training"]["fixed_axes"]
+    axes["benchmark_family"] = "ar_bic"
+    axes["model_family"] = "randomforest"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.manifest["model_spec"]["model_family"] == "random_forest"
+    assert result.manifest["benchmark_spec"]["benchmark_family"] == "autoregressive_bic"
+
+
 def test_rename_ledger_lists_stage0_aliases() -> None:
     aliases = {
         (item["axis"], item["legacy_id"]): item["canonical_id"]
@@ -237,3 +262,17 @@ def test_rename_ledger_lists_layer2_feature_composer_aliases() -> None:
     assert aliases[("x_lag_creation", "fixed_x_lags")] == "fixed_predictor_lags"
     assert aliases[("feature_block_combination", "append_to_base_x")] == "append_to_base_predictors"
     assert aliases[("feature_selection_semantics", "select_after_custom_blocks")] == "select_after_custom_feature_blocks"
+
+
+def test_rename_ledger_lists_layer3_training_aliases() -> None:
+    aliases = {
+        (item["axis"], item["legacy_id"]): item["canonical_id"]
+        for item in rename_ledger()["axis_value_aliases"]
+    }
+
+    assert aliases[("model_family", "randomforest")] == "random_forest"
+    assert aliases[("model_family", "extratrees")] == "extra_trees"
+    assert aliases[("model_family", "gbm")] == "gradient_boosting"
+    assert aliases[("benchmark_family", "ar_bic")] == "autoregressive_bic"
+    assert aliases[("benchmark_family", "ar_fixed_p")] == "autoregressive_fixed_lag"
+    assert aliases[("benchmark_family", "ardi")] == "autoregressive_diffusion_index"

@@ -308,7 +308,7 @@ OPERATIONAL_NARROW_CONTRACTS = (
     },
 )
 
-_TREE_MODELS = frozenset({"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"})
+_TREE_MODELS = frozenset({"random_forest", "extra_trees", "gradient_boosting", "xgboost", "lightgbm", "catboost"})
 _LINEAR_MODELS = frozenset(
     {
         "ar",
@@ -316,9 +316,9 @@ _LINEAR_MODELS = frozenset(
         "ridge",
         "lasso",
         "elasticnet",
-        "bayesianridge",
+        "bayesian_ridge",
         "huber",
-        "adaptivelasso",
+        "adaptive_lasso",
         "midas_almon",
         "midasr",
         "midasr_nealmon",
@@ -334,9 +334,9 @@ _BUILTIN_MODELS = frozenset(
         "ridge",
         "lasso",
         "elasticnet",
-        "bayesianridge",
+        "bayesian_ridge",
         "huber",
-        "adaptivelasso",
+        "adaptive_lasso",
         "svr_linear",
         "svr_rbf",
         "componentwise_boosting",
@@ -347,9 +347,9 @@ _BUILTIN_MODELS = frozenset(
         "factor_augmented_linear",
         "quantile_linear",
         *_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS,
-        "randomforest",
-        "extratrees",
-        "gbm",
+        "random_forest",
+        "extra_trees",
+        "gradient_boosting",
         "xgboost",
         "lightgbm",
         "catboost",

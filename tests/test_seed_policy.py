@@ -72,7 +72,7 @@ def test_strict_reproducible_varies_by_variant():
 def test_strict_reproducible_varies_by_model_family():
     spec = {"reproducibility_mode": "strict_reproducible"}
     a = resolve_seed(recipe_id="r1", variant_id="v1", reproducibility_spec=spec, model_family="rf")
-    b = resolve_seed(recipe_id="r1", variant_id="v1", reproducibility_spec=spec, model_family="lgbm")
+    b = resolve_seed(recipe_id="r1", variant_id="v1", reproducibility_spec=spec, model_family="lgradient_boosting")
     assert a != b
 
 
@@ -104,9 +104,9 @@ def test_current_seed_reads_installed_context():
     try:
         assert get_context() == ctx
         seed_rf = current_seed(model_family="rf")
-        seed_lgbm = current_seed(model_family="lgbm")
+        seed_lgradient_boosting = current_seed(model_family="lgradient_boosting")
         assert isinstance(seed_rf, int)
-        assert seed_rf != seed_lgbm
+        assert seed_rf != seed_lgradient_boosting
     finally:
         reset_context(token)
 

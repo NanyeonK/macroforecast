@@ -17,7 +17,7 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "experiment_unit": "single_target_generator_grid"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target", "benchmark_family": "ar_bic", "evaluation_scale": "raw_level"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target", "benchmark_family": "autoregressive_bic", "evaluation_scale": "raw_level"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -74,9 +74,9 @@ def _compile_and_run(recipe, tmp_path):
 # ============================================================
 # Model family sweep (autoreg path)
 # ============================================================
-AUTOREG_MODELS = ["ar", "ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber",
-                  "adaptivelasso", "svr_linear", "svr_rbf", "randomforest", "extratrees",
-                  "gbm", "xgboost", "lightgbm", "catboost", "mlp",
+AUTOREG_MODELS = ["ar", "ols", "ridge", "lasso", "elasticnet", "bayesian_ridge", "huber",
+                  "adaptive_lasso", "svr_linear", "svr_rbf", "random_forest", "extra_trees",
+                  "gradient_boosting", "xgboost", "lightgbm", "catboost", "mlp",
                   "componentwise_boosting", "boosting_ridge", "boosting_lasso", "quantile_linear"]
 
 @pytest.mark.parametrize("model", AUTOREG_MODELS)
@@ -97,9 +97,9 @@ def test_model_autoreg_executes(model, tmp_path):
 # ============================================================
 # Model family sweep (raw_panel path)
 # ============================================================
-RAW_PANEL_MODELS = ["ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber",
-                    "adaptivelasso", "svr_linear", "svr_rbf", "randomforest", "extratrees",
-                    "gbm", "xgboost", "lightgbm", "catboost", "mlp",
+RAW_PANEL_MODELS = ["ols", "ridge", "lasso", "elasticnet", "bayesian_ridge", "huber",
+                    "adaptive_lasso", "svr_linear", "svr_rbf", "random_forest", "extra_trees",
+                    "gradient_boosting", "xgboost", "lightgbm", "catboost", "mlp",
                     "componentwise_boosting", "boosting_ridge", "boosting_lasso"]
 
 @pytest.mark.parametrize("model", RAW_PANEL_MODELS)
@@ -182,7 +182,7 @@ def test_dependence_correction_executes(dep, tmp_path):
 # Importance methods sweep
 # ============================================================
 IMPORTANCE_MODEL_PAIRS = [
-    ("tree_shap", "randomforest"),
+    ("tree_shap", "random_forest"),
     ("tree_shap", "xgboost"),
     ("tree_shap", "lightgbm"),
     ("kernel_shap", "ridge"),
@@ -191,14 +191,14 @@ IMPORTANCE_MODEL_PAIRS = [
     ("permutation_importance", "ridge"),
     ("permutation_importance", "xgboost"),
     ("lime", "ridge"),
-    ("feature_ablation", "randomforest"),
+    ("feature_ablation", "random_forest"),
     ("pdp", "ridge"),
     ("ice", "ridge"),
     ("ale", "ridge"),
     ("grouped_permutation", "ridge"),
     ("importance_stability", "ridge"),
     ("minimal_importance", "ridge"),
-    ("minimal_importance", "randomforest"),
+    ("minimal_importance", "random_forest"),
 ]
 
 @pytest.mark.parametrize("method,model", IMPORTANCE_MODEL_PAIRS)

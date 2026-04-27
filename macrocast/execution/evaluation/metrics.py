@@ -1,7 +1,7 @@
 """Relative-metrics utilities extracted from execution/build.py.
 
 Provides compute_relative_metrics for a single (model, benchmark) pair plus
-compute_relative_metrics_suite for multi_benchmark_suite consumers, and
+compute_relative_metrics_suite for benchmark_suite consumers, and
 compute_metrics_dict as a thin wrapper matching the pre-existing dict shape.
 """
 from __future__ import annotations
@@ -62,7 +62,7 @@ def compute_relative_metrics_suite(
     benchmark_forecasts: pd.DataFrame,
     actuals: pd.Series,
 ):
-    """Per-benchmark dicts when multi_benchmark_suite is active.
+    """Per-benchmark dicts when benchmark_suite is active.
 
     Returns a dict with keys relative_msfe, relative_rmse, relative_mae, oos_r2
     each mapping benchmark_name -> scalar value.

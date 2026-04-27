@@ -46,7 +46,7 @@ def test_registry_loader_preserves_legacy_entry_contract() -> None:
     assert "midasr" in entry.allowed_values
     assert "midasr_nealmon" in entry.allowed_values
     assert entry.current_status["xgboost"] == "operational"
-    assert entry.current_status["randomforest"] == "operational"
+    assert entry.current_status["random_forest"] == "operational"
     assert entry.current_status["midas_almon"] == "operational_narrow"
     assert entry.current_status["midasr"] == "operational_narrow"
     assert entry.current_status["midasr_nealmon"] == "operational_narrow"
@@ -484,7 +484,7 @@ def test_registry_loader_discovers_stage3_training_axes() -> None:
 
 def test_registry_loader_expands_stage3_model_family_axis() -> None:
     entry = get_axis_registry_entry("model_family")
-    for value in ("ols", "bayesianridge", "huber", "adaptivelasso", "svr_linear", "svr_rbf", "componentwise_boosting", "boosting_ridge", "boosting_lasso", "pcr", "pls", "factor_augmented_linear", "extratrees", "gbm", "xgboost", "lightgbm", "catboost", "mlp"):
+    for value in ("ols", "bayesian_ridge", "huber", "adaptive_lasso", "svr_linear", "svr_rbf", "componentwise_boosting", "boosting_ridge", "boosting_lasso", "pcr", "pls", "factor_augmented_linear", "extra_trees", "gradient_boosting", "xgboost", "lightgbm", "catboost", "mlp"):
         assert value in entry.allowed_values
         assert entry.current_status[value] == "operational"
 

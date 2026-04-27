@@ -86,7 +86,7 @@ _GOULET_COULOMBE_2021_RECIPE: dict[str, Any] = {
         "3_training": {
             "fixed_axes": {
                 "framework": "expanding",
-                "benchmark_family": "ar_bic",
+                "benchmark_family": "autoregressive_bic",
                 "feature_builder": "raw_feature_panel",
                 "model_family": "ridge",
                 "forecast_type": "direct",
@@ -262,7 +262,7 @@ _ENTRIES: dict[str, ReplicationEntry] = {
             "2_preprocessing.scaling_policy=standard",
             "3_training.feature_builder=raw_feature_panel",
             "3_training.model_family=ridge",
-            "3_training.benchmark_family=ar_bic",
+            "3_training.benchmark_family=autoregressive_bic",
             "4_evaluation.primary_metric=msfe",
             "6_stat_tests.equal_predictive=dm",
         ),

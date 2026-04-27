@@ -192,7 +192,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Pat
     assert manifest["importance_files"] == {"importance_model_native": "importance_minimal.json"}
 
 
-def test_compile_minimal_importance_recipe_is_executable_for_randomforest(tmp_path: Path) -> None:
+def test_compile_minimal_importance_recipe_is_executable_for_random_forest(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "importance-rf-rolling",
         "path": {
@@ -208,7 +208,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_randomforest(tmp_pa
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "randomforest"
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "random_forest"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
@@ -246,7 +246,7 @@ def test_compile_stage7_split_importance_axis_is_manifested() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "randomforest"
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "random_forest"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},

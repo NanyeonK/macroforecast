@@ -95,7 +95,7 @@ def test_per_variant_directories_do_not_have_local_raw_cache(tmp_path: Path) -> 
 def test_sweep_produces_one_manifest_at_root_regardless_of_variant_count(
     tmp_path: Path,
 ) -> None:
-    plan = compile_sweep_plan(_horse_race_recipe(["ridge", "lasso", "elasticnet", "bayesianridge"]))
+    plan = compile_sweep_plan(_horse_race_recipe(["ridge", "lasso", "elasticnet", "bayesian_ridge"]))
     result = execute_sweep(plan=plan, output_root=tmp_path, local_raw_source=FIXTURE_RAW)
 
     manifests = list(tmp_path.glob("study_manifest.json"))

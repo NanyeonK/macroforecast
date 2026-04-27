@@ -77,10 +77,10 @@ _X_IMPUTATION_METHODS = {"mean", "median", "ffill", "bfill"}
 _MULTI_BENCHMARK_ALLOWED_MEMBERS = {
     "historical_mean",
     "zero_change",
-    "ar_bic",
+    "autoregressive_bic",
     "rolling_mean",
-    "ar_fixed_p",
-    "ardi",
+    "autoregressive_fixed_lag",
+    "autoregressive_diffusion_index",
 }
 
 _TARGET_TRANSFORMER_FEATURE_RUNTIMES = {"target_lag_features", "raw_feature_panel"}
@@ -191,8 +191,8 @@ _HAC_COMPATIBLE_STAT_TESTS = {
 _TREE_IMPORTANCE_METHODS = {"tree_shap"}
 _LINEAR_IMPORTANCE_METHODS = {"linear_shap"}
 _RAW_PANEL_ONLY_IMPORTANCE_METHODS = {"minimal_importance"}
-_TREE_IMPORTANCE_MODELS = {"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"}
-_LINEAR_IMPORTANCE_MODELS = {"ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber", "adaptivelasso"}
+_TREE_IMPORTANCE_MODELS = {"random_forest", "extra_trees", "gradient_boosting", "xgboost", "lightgbm", "catboost"}
+_LINEAR_IMPORTANCE_MODELS = {"ols", "ridge", "lasso", "elasticnet", "bayesian_ridge", "huber", "adaptive_lasso"}
 _LOCAL_IMPORTANCE_METHODS = {"kernel_shap", "lime", "feature_ablation"}
 
 
@@ -1150,16 +1150,16 @@ def _validate_layer1_data_task_contract(
         )
 
     benchmark_family = _selection_value(selection_map, "benchmark_family")
-    if benchmark_family == "multi_benchmark_suite":
+    if benchmark_family == "benchmark_suite":
         suite = _require_non_empty_sequence(
             leaf_config,
             "benchmark_suite",
-            "benchmark_family='multi_benchmark_suite'",
+            "benchmark_family='benchmark_suite'",
         )
         unknown = sorted(set(suite) - _MULTI_BENCHMARK_ALLOWED_MEMBERS)
         if unknown:
             raise CompileValidationError(
-                "benchmark_family='multi_benchmark_suite' supports benchmark_suite members "
+                "benchmark_family='benchmark_suite' supports benchmark_suite members "
                 f"{sorted(_MULTI_BENCHMARK_ALLOWED_MEMBERS)}; got unsupported members {unknown}"
             )
     elif benchmark_family == "paper_specific_benchmark":

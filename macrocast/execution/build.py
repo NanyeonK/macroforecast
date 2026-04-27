@@ -103,7 +103,7 @@ from .types import (
     IntervalForecastPayload,
     Layer2Representation,
 )
-from .deep_training import fit_factor_model, fit_with_optional_tuning, fit_adaptive_lasso, predict_adaptive_lasso
+from .deep_training import fit_factor_model_benchmark, fit_with_optional_tuning, fit_adaptive_lasso, predict_adaptive_lasso
 from ..preprocessing import (
     PreprocessContract,
     is_operational_preprocess_contract,
@@ -2242,19 +2242,19 @@ def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe
         if is_custom_model(model_family):
             return f"custom_model:{model_family}:target_lag_features_v0"
         return {
-            "ar": "ar_bic_autoreg_v0",
+            "ar": "autoregressive_bic_autoreg_v0",
             "ols": "ols_autoreg_v0",
             "ridge": "ridge_autoreg_v0",
             "lasso": "lasso_autoreg_v0",
             "elasticnet": "elasticnet_autoreg_v0",
-            "bayesianridge": "bayesianridge_autoreg_v0",
+            "bayesian_ridge": "bayesian_ridge_autoreg_v0",
             "huber": "huber_autoreg_v0",
-            "adaptivelasso": "adaptivelasso_autoreg_v0",
+            "adaptive_lasso": "adaptive_lasso_autoreg_v0",
             "svr_linear": "svr_linear_autoreg_v0",
             "svr_rbf": "svr_rbf_autoreg_v0",
-            "randomforest": "randomforest_autoreg_v0",
-            "extratrees": "extratrees_autoreg_v0",
-            "gbm": "gbm_autoreg_v0",
+            "random_forest": "random_forest_autoreg_v0",
+            "extra_trees": "extra_trees_autoreg_v0",
+            "gradient_boosting": "gradient_boosting_autoreg_v0",
             "xgboost": "xgboost_autoreg_v0",
             "lightgbm": "lightgbm_autoreg_v0",
             "catboost": "catboost_autoreg_v0",
@@ -2275,14 +2275,14 @@ def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe
             "ridge": "ridge_raw_feature_panel_v0",
             "lasso": "lasso_raw_feature_panel_v0",
             "elasticnet": "elasticnet_raw_feature_panel_v0",
-            "bayesianridge": "bayesianridge_raw_feature_panel_v0",
+            "bayesian_ridge": "bayesian_ridge_raw_feature_panel_v0",
             "huber": "huber_raw_feature_panel_v0",
-            "adaptivelasso": "adaptivelasso_raw_feature_panel_v0",
+            "adaptive_lasso": "adaptive_lasso_raw_feature_panel_v0",
             "svr_linear": "svr_linear_raw_feature_panel_v0",
             "svr_rbf": "svr_rbf_raw_feature_panel_v0",
-            "randomforest": "randomforest_raw_feature_panel_v0",
-            "extratrees": "extratrees_raw_feature_panel_v0",
-            "gbm": "gbm_raw_feature_panel_v0",
+            "random_forest": "random_forest_raw_feature_panel_v0",
+            "extra_trees": "extra_trees_raw_feature_panel_v0",
+            "gradient_boosting": "gradient_boosting_raw_feature_panel_v0",
             "xgboost": "xgboost_raw_feature_panel_v0",
             "lightgbm": "lightgbm_raw_feature_panel_v0",
             "catboost": "catboost_raw_feature_panel_v0",
@@ -3082,14 +3082,14 @@ def _get_model_executor(recipe: RecipeSpec):
             "ridge": _run_ridge_autoreg_executor,
             "lasso": _run_lasso_autoreg_executor,
             "elasticnet": _run_elasticnet_autoreg_executor,
-            "bayesianridge": _run_bayesianridge_autoreg_executor,
+            "bayesian_ridge": _run_bayesian_ridge_autoreg_executor,
             "huber": _run_huber_autoreg_executor,
-            "adaptivelasso": _run_adaptivelasso_autoreg_executor,
+            "adaptive_lasso": _run_adaptive_lasso_autoreg_executor,
             "svr_linear": _run_svr_linear_autoreg_executor,
             "svr_rbf": _run_svr_rbf_autoreg_executor,
-            "randomforest": _run_randomforest_autoreg_executor,
-            "extratrees": _run_extratrees_autoreg_executor,
-            "gbm": _run_gbm_autoreg_executor,
+            "random_forest": _run_random_forest_autoreg_executor,
+            "extra_trees": _run_extra_trees_autoreg_executor,
+            "gradient_boosting": _run_gradient_boosting_autoreg_executor,
             "xgboost": _run_xgboost_autoreg_executor,
             "lightgbm": _run_lightgbm_autoreg_executor,
             "catboost": _run_catboost_autoreg_executor,
@@ -3113,14 +3113,14 @@ def _get_model_executor(recipe: RecipeSpec):
             "ridge": _run_ridge_raw_panel_executor,
             "lasso": _run_lasso_raw_panel_executor,
             "elasticnet": _run_elasticnet_raw_panel_executor,
-            "bayesianridge": _run_bayesianridge_raw_panel_executor,
+            "bayesian_ridge": _run_bayesian_ridge_raw_panel_executor,
             "huber": _run_huber_raw_panel_executor,
-            "adaptivelasso": _run_adaptivelasso_raw_panel_executor,
+            "adaptive_lasso": _run_adaptive_lasso_raw_panel_executor,
             "svr_linear": _run_svr_linear_raw_panel_executor,
             "svr_rbf": _run_svr_rbf_raw_panel_executor,
-            "randomforest": _run_randomforest_raw_panel_executor,
-            "extratrees": _run_extratrees_raw_panel_executor,
-            "gbm": _run_gbm_raw_panel_executor,
+            "random_forest": _run_random_forest_raw_panel_executor,
+            "extra_trees": _run_extra_trees_raw_panel_executor,
+            "gradient_boosting": _run_gradient_boosting_raw_panel_executor,
             "xgboost": _run_xgboost_raw_panel_executor,
             "lightgbm": _run_lightgbm_raw_panel_executor,
             "catboost": _run_catboost_raw_panel_executor,
@@ -3143,9 +3143,9 @@ def _get_model_executor(recipe: RecipeSpec):
 def _get_benchmark_executor(recipe: RecipeSpec):
     benchmark_family = _benchmark_family(recipe)
     if benchmark_family in {
-        "historical_mean", "zero_change", "ar_bic", "custom_benchmark",
-        "rolling_mean", "ar_fixed_p", "ardi", "factor_model",
-        "expert_benchmark", "multi_benchmark_suite",
+        "historical_mean", "zero_change", "autoregressive_bic", "custom_benchmark",
+        "rolling_mean", "autoregressive_fixed_lag", "autoregressive_diffusion_index", "factor_model_benchmark",
+        "expert_benchmark", "benchmark_suite",
         "paper_specific_benchmark", "survey_forecast",
     }:
         return _run_benchmark_executor
@@ -3362,7 +3362,7 @@ def _fit_autoreg(train: pd.Series, lag: int):
         return AutoReg(train, lags=lag, trend="c", old_names=False).fit()
 
 
-def _select_ar_bic_model(train: pd.Series, max_ar_lag: int) -> tuple[int, float, object]:
+def _select_autoregressive_bic_model(train: pd.Series, max_ar_lag: int) -> tuple[int, float, object]:
     max_candidate_lag = min(max_ar_lag, len(train) - 2)
     if max_candidate_lag < 1:
         raise ExecutionError("training window too small to fit any AR lag candidate")
@@ -5575,7 +5575,7 @@ def _build_raw_panel_training_data(
 
 
 def _run_ar_model_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    selected_lag, selected_bic, fitted = _select_ar_bic_model(train, _max_ar_lag(recipe))
+    selected_lag, selected_bic, fitted = _select_autoregressive_bic_model(train, _max_ar_lag(recipe))
     prediction = fitted.predict(start=len(train), end=len(train) + horizon - 1)
     return {
         "y_pred": float(prediction.iloc[-1]),
@@ -5954,14 +5954,14 @@ def _run_elasticnet_autoreg_executor(train: pd.Series, horizon: int, recipe: Rec
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_randomforest_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "randomforest", RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="randomforest")))
+def _run_random_forest_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "random_forest", RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="random_forest")))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_bayesianridge_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "bayesianridge", BayesianRidge())
+def _run_bayesian_ridge_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "bayesian_ridge", BayesianRidge())
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
@@ -5972,8 +5972,8 @@ def _run_huber_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSp
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_adaptivelasso_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "adaptivelasso", None)
+def _run_adaptive_lasso_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "adaptive_lasso", None)
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_adaptive_lasso(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
@@ -5990,14 +5990,14 @@ def _run_svr_rbf_autoreg_executor(train: pd.Series, horizon: int, recipe: Recipe
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_extratrees_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "extratrees", ExtraTreesRegressor(n_estimators=200, random_state=current_seed(model_family="extratrees")))
+def _run_extra_trees_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "extra_trees", ExtraTreesRegressor(n_estimators=200, random_state=current_seed(model_family="extra_trees")))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_gbm_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
-    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "gbm", GradientBoostingRegressor(random_state=current_seed(model_family="gbm")))
+def _run_gradient_boosting_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+    representation, _, _, model, _tp = _fit_autoreg_sklearn(train, recipe, "gradient_boosting", GradientBoostingRegressor(random_state=current_seed(model_family="gradient_boosting")))
     lag_order = int(representation.alignment["lag_order"])
     return {"y_pred": _recursive_predict_sklearn(model, train, horizon, lag_order), "selected_lag": lag_order, "selected_bic": math.nan, "tuning_payload": _tp}
 
@@ -6091,7 +6091,7 @@ def _run_tcn_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
 
 
 def _predict_fitted_scalar(model, X_pred: np.ndarray, *, model_family: str) -> float:
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         return float(predict_adaptive_lasso(model, X_pred)[0])
     return float(model.predict(X_pred)[0])
 
@@ -6953,15 +6953,15 @@ def _run_elasticnet_raw_panel_executor(train: pd.Series, horizon: int, recipe: R
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_randomforest_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+def _run_random_forest_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "randomforest", RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="randomforest")), target_window=train)
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "random_forest", RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="random_forest")), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_bayesianridge_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+def _run_bayesian_ridge_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "bayesianridge", BayesianRidge(), target_window=train)
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "bayesian_ridge", BayesianRidge(), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -6971,9 +6971,9 @@ def _run_huber_raw_panel_executor(train: pd.Series, horizon: int, recipe: Recipe
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_adaptivelasso_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+def _run_adaptive_lasso_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "adaptivelasso", None, target_window=train)
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "adaptive_lasso", None, target_window=train)
     return {"y_pred": float(predict_adaptive_lasso(model, X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -6989,15 +6989,15 @@ def _run_svr_rbf_raw_panel_executor(train: pd.Series, horizon: int, recipe: Reci
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_extratrees_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+def _run_extra_trees_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "extratrees", ExtraTreesRegressor(n_estimators=200, random_state=current_seed(model_family="extratrees")), target_window=train)
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "extra_trees", ExtraTreesRegressor(n_estimators=200, random_state=current_seed(model_family="extra_trees")), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
-def _run_gbm_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
+def _run_gradient_boosting_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     assert raw_frame is not None and origin_idx is not None
-    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "gbm", GradientBoostingRegressor(random_state=current_seed(model_family="gbm")), target_window=train)
+    _, _, _, X_pred, model, _tp = _fit_raw_panel_model(raw_frame, recipe, horizon, start_idx, origin_idx, contract, "gradient_boosting", GradientBoostingRegressor(random_state=current_seed(model_family="gradient_boosting")), target_window=train)
     return {"y_pred": float(model.predict(X_pred)[0]), "selected_lag": 0, "selected_bic": math.nan, "tuning_payload": _tp}
 
 
@@ -7078,7 +7078,7 @@ def _run_boosting_lasso_autoreg_executor(train: pd.Series, horizon: int, recipe:
 def _run_pcr_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     representation = _build_target_lag_representation(train, recipe, default_prefix="y_lag")
     lag_order = int(representation.alignment["lag_order"])
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "pcr",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7093,7 +7093,7 @@ def _run_pcr_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
 def _run_pls_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     representation = _build_target_lag_representation(train, recipe, default_prefix="y_lag")
     lag_order = int(representation.alignment["lag_order"])
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "pls",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7108,7 +7108,7 @@ def _run_pls_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec
 def _run_factor_augmented_linear_autoreg_executor(train: pd.Series, horizon: int, recipe: RecipeSpec, contract: PreprocessContract, raw_frame: pd.DataFrame | None = None, origin_idx: int | None = None, start_idx: int = 0) -> dict[str, float | int]:
     representation = _build_target_lag_representation(train, recipe, default_prefix="y_lag")
     lag_order = int(representation.alignment["lag_order"])
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "factor_augmented_linear",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7155,7 +7155,7 @@ def _run_pcr_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSp
         contract,
         target_window=train,
     )
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "pcr",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7178,7 +7178,7 @@ def _run_pls_raw_panel_executor(train: pd.Series, horizon: int, recipe: RecipeSp
         contract,
         target_window=train,
     )
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "pls",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7201,7 +7201,7 @@ def _run_factor_augmented_linear_raw_panel_executor(train: pd.Series, horizon: i
         contract,
         target_window=train,
     )
-    pred, _tp = fit_factor_model(
+    pred, _tp = fit_factor_model_benchmark(
         "factor_augmented_linear",
         pd.DataFrame(representation.Z_train, columns=representation.feature_names),
         representation.y_train,
@@ -7255,7 +7255,7 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
         return _historical_mean_prediction(train)
     if benchmark_family == "zero_change":
         return float(train.iloc[-1])
-    if benchmark_family == "ar_bic":
+    if benchmark_family == "autoregressive_bic":
         fitted = _run_ar_model_executor(train, horizon, recipe, contract=_build_noop_contract())
         return float(fitted["y_pred"])
     if benchmark_family == "custom_benchmark":
@@ -7269,19 +7269,19 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
         from .evaluation.benchmark_resolver import _rolling_mean
         effective_len = window_len if window_len > 0 else len(train)
         return _rolling_mean(train, effective_len)
-    if benchmark_family == "ar_fixed_p":
-        from .evaluation.benchmark_resolver import _ar_fixed_p_forecast, BenchmarkResolverError
+    if benchmark_family == "autoregressive_fixed_lag":
+        from .evaluation.benchmark_resolver import _autoregressive_fixed_lag_forecast, BenchmarkResolverError
         try:
-            return _ar_fixed_p_forecast(train, int(horizon), _benchmark_fixed_p(recipe))
+            return _autoregressive_fixed_lag_forecast(train, int(horizon), _benchmark_fixed_p(recipe))
         except BenchmarkResolverError as exc:
             raise ExecutionError(str(exc)) from exc
-    if benchmark_family == "ardi":
-        from .evaluation.benchmark_resolver import _ardi_forecast, BenchmarkResolverError
+    if benchmark_family == "autoregressive_diffusion_index":
+        from .evaluation.benchmark_resolver import _autoregressive_diffusion_index_forecast, BenchmarkResolverError
         try:
-            return _ardi_forecast(train, int(horizon), _benchmark_n_factors(recipe), None, train.index[-1])
+            return _autoregressive_diffusion_index_forecast(train, int(horizon), _benchmark_n_factors(recipe), None, train.index[-1])
         except BenchmarkResolverError as exc:
             raise ExecutionError(str(exc)) from exc
-    if benchmark_family == "factor_model":
+    if benchmark_family == "factor_model_benchmark":
         # v1.0: compute simple OLS regression on the leading principal-factor of
         # the training window (univariate factor surrogate). Iterates forward h
         # steps using the factor-regressed mean as the level. If the training
@@ -7314,20 +7314,20 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
             return float(value)
         except (TypeError, ValueError) as exc:
             raise ExecutionError("expert_benchmark callable must return numeric") from exc
-    if benchmark_family == "multi_benchmark_suite":
+    if benchmark_family == "benchmark_suite":
         # v1.0: run each declared benchmark and return the arithmetic mean of
         # their forecasts. Members are declared at compile time via
         # leaf_config.benchmark_suite (a list of benchmark_family names). Each
         # member must itself be executable.
         suite = recipe.data_task_spec.get("benchmark_suite") or []
         if not isinstance(suite, (list, tuple)) or not suite:
-            raise ExecutionError("benchmark_family='multi_benchmark_suite' requires leaf_config.benchmark_suite (list[str])")
-        allowed = {"historical_mean", "zero_change", "ar_bic", "rolling_mean", "ar_fixed_p", "ardi"}
+            raise ExecutionError("benchmark_family='benchmark_suite' requires leaf_config.benchmark_suite (list[str])")
+        allowed = {"historical_mean", "zero_change", "autoregressive_bic", "rolling_mean", "autoregressive_fixed_lag", "autoregressive_diffusion_index"}
         preds = []
         original_family = benchmark_family
         for member in suite:
             if member not in allowed:
-                raise ExecutionError(f"benchmark_family='multi_benchmark_suite' member {member!r} is not one of {sorted(allowed)}")
+                raise ExecutionError(f"benchmark_family='benchmark_suite' member {member!r} is not one of {sorted(allowed)}")
             # Build a shallow copy of the recipe with a different benchmark_family
             member_recipe = recipe
             # Recurse by swapping the benchmark_family in data_task_spec is not trivial;
@@ -7339,19 +7339,19 @@ def _run_benchmark_executor(train: pd.Series, horizon: int, recipe: RecipeSpec) 
             elif member == "rolling_mean":
                 from .evaluation.benchmark_resolver import _rolling_mean as _rm
                 preds.append(_rm(train, window_len if window_len > 0 else len(train)))
-            elif member == "ar_bic":
+            elif member == "autoregressive_bic":
                 fitted = _run_ar_model_executor(train, horizon, recipe, contract=_build_noop_contract())
                 preds.append(float(fitted["y_pred"]))
-            elif member == "ar_fixed_p":
-                from .evaluation.benchmark_resolver import _ar_fixed_p_forecast, BenchmarkResolverError
+            elif member == "autoregressive_fixed_lag":
+                from .evaluation.benchmark_resolver import _autoregressive_fixed_lag_forecast, BenchmarkResolverError
                 try:
-                    preds.append(_ar_fixed_p_forecast(train, int(horizon), _benchmark_fixed_p(recipe)))
+                    preds.append(_autoregressive_fixed_lag_forecast(train, int(horizon), _benchmark_fixed_p(recipe)))
                 except BenchmarkResolverError:
                     preds.append(_historical_mean_prediction(train))
-            elif member == "ardi":
-                from .evaluation.benchmark_resolver import _ardi_forecast, BenchmarkResolverError
+            elif member == "autoregressive_diffusion_index":
+                from .evaluation.benchmark_resolver import _autoregressive_diffusion_index_forecast, BenchmarkResolverError
                 try:
-                    preds.append(_ardi_forecast(train, int(horizon), _benchmark_n_factors(recipe), None, train.index[-1]))
+                    preds.append(_autoregressive_diffusion_index_forecast(train, int(horizon), _benchmark_n_factors(recipe), None, train.index[-1]))
                 except BenchmarkResolverError:
                     preds.append(_historical_mean_prediction(train))
         if not preds:
@@ -8507,7 +8507,7 @@ def _compute_minimal_importance(
     model_family = _model_family(recipe)
     legacy_feature_builder = _feature_builder(recipe)
     feature_runtime_builder = _feature_runtime_builder(recipe)
-    if model_family not in {"ridge", "lasso", "randomforest"}:
+    if model_family not in {"ridge", "lasso", "random_forest"}:
         raise ExecutionError(f"minimal_importance not implemented for model_family {model_family!r}")
     if feature_runtime_builder != "raw_feature_panel":
         raise ExecutionError(
@@ -8540,7 +8540,7 @@ def _compute_minimal_importance(
         model.fit(representation.Z_train, representation.y_train)
         importance_values = np.abs(model.coef_)
     else:
-        model = RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="randomforest"))
+        model = RandomForestRegressor(n_estimators=200, random_state=current_seed(model_family="random_forest"))
         model.fit(representation.Z_train, representation.y_train)
         importance_values = model.feature_importances_
 
@@ -8590,7 +8590,7 @@ def _fit_importance_model(recipe: RecipeSpec, X_train: np.ndarray, y_train: np.n
     model_family = _model_family(recipe)
     if model_family == "quantile_linear":
         raise ExecutionError("importance not implemented for quantile_linear")
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         return fit_adaptive_lasso(X_train, y_train, recipe.training_spec)
     model, _ = fit_with_optional_tuning(model_family, X_train, y_train, recipe.training_spec)
     return model
@@ -8623,7 +8623,7 @@ def _importance_runtime_metadata(bundle: Mapping[str, object]) -> dict[str, obje
 
 
 def _predict_importance_model(model, model_family: str, X: np.ndarray) -> np.ndarray:
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         return predict_adaptive_lasso(model, X)
     return model.predict(X)
 
@@ -8639,7 +8639,7 @@ def _ranked_feature_payload(name: str, feature_names: list[str], values: np.ndar
 def _compute_tree_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
     import shap
     bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
-    if bundle["model_family"] not in {"randomforest", "extratrees", "gbm", "xgboost", "lightgbm", "catboost"}:
+    if bundle["model_family"] not in {"random_forest", "extra_trees", "gradient_boosting", "xgboost", "lightgbm", "catboost"}:
         raise ExecutionError("tree_shap requires tree-based model_family")
     sample = bundle["X_train"][: min(32, len(bundle["X_train"]))]
     explainer = shap.TreeExplainer(bundle["model"])
@@ -8659,7 +8659,7 @@ def _compute_tree_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Ser
 def _compute_linear_shap_importance(raw_frame: pd.DataFrame, target_series: pd.Series, recipe: RecipeSpec, contract: PreprocessContract) -> dict[str, object]:
     import shap
     bundle = _importance_training_bundle(raw_frame, target_series, recipe, contract)
-    if bundle["model_family"] not in {"ols", "ridge", "lasso", "elasticnet", "bayesianridge", "huber", "adaptivelasso"}:
+    if bundle["model_family"] not in {"ols", "ridge", "lasso", "elasticnet", "bayesian_ridge", "huber", "adaptive_lasso"}:
         raise ExecutionError("linear_shap requires linear model_family")
     sample = bundle["X_train"][: min(32, len(bundle["X_train"]))]
     try:
@@ -8669,7 +8669,7 @@ def _compute_linear_shap_importance(raw_frame: pd.DataFrame, target_series: pd.S
             shap_values = shap_values[0]
         mean_abs = np.mean(np.abs(np.asarray(shap_values, dtype=float)), axis=0)
     except Exception:
-        if bundle["model_family"] == "adaptivelasso":
+        if bundle["model_family"] == "adaptive_lasso":
             coef = np.abs(bundle["model"].coef_ / bundle["model"]._adaptive_weights)
         else:
             coef = np.abs(np.asarray(bundle["model"].coef_, dtype=float))
@@ -8762,7 +8762,7 @@ def _top_feature_indices(bundle: dict[str, object], top_k: int = 3) -> list[int]
     X_train = np.asarray(bundle["X_train"], dtype=float)
     model = bundle["model"]
     model_family = str(bundle["model_family"])
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         score = np.abs(model.coef_ / model._adaptive_weights)
     elif hasattr(model, "coef_"):
         score = np.abs(np.asarray(model.coef_, dtype=float))
@@ -10113,9 +10113,9 @@ def execute_recipe(
         )
 
     if _benchmark_family(recipe) not in {
-        "historical_mean", "zero_change", "ar_bic", "custom_benchmark",
-        "rolling_mean", "random_walk", "ar_fixed_p", "ardi", "factor_model",
-        "expert_benchmark", "multi_benchmark_suite",
+        "historical_mean", "zero_change", "autoregressive_bic", "custom_benchmark",
+        "rolling_mean", "random_walk", "autoregressive_fixed_lag", "autoregressive_diffusion_index", "factor_model_benchmark",
+        "expert_benchmark", "benchmark_suite",
     }:
         raise ExecutionError(
             f"benchmark_family {_benchmark_family(recipe)!r} is not supported in current runtime slice"

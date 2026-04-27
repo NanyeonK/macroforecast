@@ -29,7 +29,7 @@ def _base_recipe() -> dict:
             },
             "2_preprocessing": {"fixed_axes": {"scaling_policy": "standard"}},
             "3_training": {
-                "fixed_axes": {"framework": "expanding", "benchmark_family": "ar_bic"},
+                "fixed_axes": {"framework": "expanding", "benchmark_family": "autoregressive_bic"},
                 "sweep_axes": {"model_family": ["ridge", "lasso", "elasticnet"]},
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -149,7 +149,7 @@ def test_max_variants_exceeded_raises() -> None:
 def test_max_variants_none_disables_cap() -> None:
     recipe = _base_recipe()
     recipe["path"]["3_training"]["sweep_axes"] = {
-        "model_family": ["ridge", "lasso", "elasticnet", "bayesianridge"],
+        "model_family": ["ridge", "lasso", "elasticnet", "bayesian_ridge"],
     }
 
     plan = compile_sweep_plan(recipe, max_variants=None)
@@ -198,7 +198,7 @@ def _nested_recipe() -> dict:
             },
             "2_preprocessing": {"fixed_axes": {"scaling_policy": "standard"}},
             "3_training": {
-                "fixed_axes": {"framework": "expanding", "benchmark_family": "ar_bic"},
+                "fixed_axes": {"framework": "expanding", "benchmark_family": "autoregressive_bic"},
                 "nested_sweep_axes": {
                     "model_family": {
                         "ridge": {"hp_space_style": ["paper_fixed_hp", "grid_linear"]},

@@ -1,7 +1,7 @@
 """End-to-end tests for 1.4 implementation: 19 values flipped operational.
 
 Covers:
-- benchmark_family: factor_model, multi_benchmark_suite, paper_specific_benchmark, survey_forecast.
+- benchmark_family: factor_model_benchmark, benchmark_suite, paper_specific_benchmark, survey_forecast.
 - predictor_family: all_except_target, category_based, factor_only, explicit_variable_list.
 - variable_universe: 6 subset rules via leaf_config input channels.
 - deterministic_components: 5 feature-augmentation rules.
@@ -73,23 +73,23 @@ def _recipe(**axes_1_extras) -> dict:
 
 # ---------- benchmark_family ----------
 
-def test_benchmark_family_factor_model_compiles() -> None:
+def test_benchmark_family_factor_model_benchmark_compiles() -> None:
     recipe = _recipe()
-    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "factor_model"
+    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "factor_model_benchmark"
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"
 
 
 def test_benchmark_family_multi_suite_requires_list() -> None:
     recipe = _recipe()
-    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "multi_benchmark_suite"
+    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "benchmark_suite"
     with pytest.raises(CompileValidationError, match="benchmark_suite"):
         compile_recipe_dict(recipe)
 
 
 def test_benchmark_family_multi_suite_compiles_with_list() -> None:
     recipe = _recipe()
-    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "multi_benchmark_suite"
+    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "benchmark_suite"
     recipe["path"]["1_data_task"]["leaf_config"]["benchmark_suite"] = ["historical_mean", "zero_change"]
     r = compile_recipe_dict(recipe)
     assert r.compiled.execution_status == "executable"

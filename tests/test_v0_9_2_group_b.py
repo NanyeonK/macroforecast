@@ -103,7 +103,7 @@ def test_layer2_target_lag_block_drives_autoreg_runtime_dispatch():
     assert _feature_runtime_builder(recipe) == "target_lag_features"
     assert spec["feature_runtime_builder"] == "target_lag_features"
     assert spec["feature_runtime"] == "target_lag_features_v1"
-    assert spec["executor_name"] == "ar_bic_autoreg_v0"
+    assert spec["executor_name"] == "autoregressive_bic_autoreg_v0"
 
 
 def test_target_transformer_gate_uses_layer2_feature_runtime_not_legacy_bridge():
@@ -565,7 +565,7 @@ def test_raw_panel_representation_bundle_records_marx_then_factor_alignment():
     assert all("__marx_ma_lag1_to_lag" in name for name in bundle.latest_fit_state["source_feature_names"])
 
 
-def test_factor_model_raw_panel_executor_uses_layer2_representation_bundle():
+def test_factor_model_benchmark_raw_panel_executor_uses_layer2_representation_bundle():
     frame = pd.DataFrame(
         {
             "target": [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0],

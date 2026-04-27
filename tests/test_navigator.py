@@ -120,7 +120,7 @@ console.log(JSON.stringify({
     model_midasr: option("model_family", "midasr"),
     model_midasr_nealmon: option("model_family", "midasr_nealmon"),
     midasr_weight_almonp: option("midasr_weight_family", "almonp"),
-    model_randomforest: option("model_family", "randomforest"),
+    model_random_forest: option("model_family", "random_forest"),
     model_quantile_linear: option("model_family", "quantile_linear"),
     equal_dm: option("equal_predictive", "dm"),
     equal_dm_hln: option("equal_predictive", "dm_hln"),
@@ -238,7 +238,7 @@ def test_navigation_disables_tree_shap_for_non_tree_model():
     model_axis = _axis(view, "model_family")
     assert _option(model_axis, "ridge")["enabled"] is False
     assert "tree_shap" in _option(model_axis, "ridge")["disabled_reason"]
-    assert _option(model_axis, "randomforest")["enabled"] is True
+    assert _option(model_axis, "random_forest")["enabled"] is True
 
 
 def test_navigation_disables_split_tree_shap_for_non_tree_model():
@@ -249,7 +249,7 @@ def test_navigation_disables_split_tree_shap_for_non_tree_model():
     model_axis = _axis(view, "model_family")
     assert _option(model_axis, "ridge")["enabled"] is False
     assert "tree_shap" in _option(model_axis, "ridge")["disabled_reason"]
-    assert _option(model_axis, "randomforest")["enabled"] is True
+    assert _option(model_axis, "random_forest")["enabled"] is True
 
 
 def test_navigation_quantile_forecast_restricts_model_family():
@@ -368,8 +368,8 @@ def test_browser_state_engine_matches_python_tree_shap_model_gate(tmp_path: Path
     js = _js_state_snapshot(tmp_path, recipe, [("importance_shap", "tree_shap")])
 
     assert js["options"]["model_ridge"]["enabled"] == _option(_axis(python_view, "model_family"), "ridge")["enabled"]
-    assert js["options"]["model_randomforest"]["enabled"] == _option(
-        _axis(python_view, "model_family"), "randomforest"
+    assert js["options"]["model_random_forest"]["enabled"] == _option(
+        _axis(python_view, "model_family"), "random_forest"
     )["enabled"]
     assert "tree_shap" in js["options"]["model_ridge"]["disabled_reason"]
     assert js["edited_recipe"]["path"]["7_importance"]["fixed_axes"]["importance_shap"] == "tree_shap"

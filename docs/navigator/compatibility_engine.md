@@ -8,8 +8,8 @@ The CLI and static Navigator App share the same exported compatibility metadata.
 
 | Current selection | Effect |
 |---|---|
-| `importance_method=tree_shap` | Keeps tree generators: `randomforest`, `extratrees`, `gbm`, `xgboost`, `lightgbm`, `catboost`. Non-tree models are disabled. |
-| `importance_method=linear_shap` | Keeps linear estimators such as `ridge`, `lasso`, `elasticnet`, `bayesianridge`, `huber`, `adaptivelasso`, and `quantile_linear`. |
+| `importance_method=tree_shap` | Keeps tree generators: `random_forest`, `extra_trees`, `gradient_boosting`, `xgboost`, `lightgbm`, `catboost`. Non-tree models are disabled. |
+| `importance_method=linear_shap` | Keeps linear estimators such as `ridge`, `lasso`, `elasticnet`, `bayesian_ridge`, `huber`, `adaptive_lasso`, and `quantile_linear`. |
 | `importance_shap=tree_shap` | Same tree-model restriction as the legacy single `importance_method` route. |
 | `importance_shap=linear_shap` | Same linear-estimator restriction as the legacy single `importance_method` route. |
 | `importance_model_native=minimal_importance` | Requires the current raw-panel importance runtime. |

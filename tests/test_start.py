@@ -216,7 +216,7 @@ def test_macrocast_single_run_model_grid_route_message(monkeypatch, tmp_path: Pa
     out = macrocast_single_run(max_steps=13)
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "model_grid"}
-    assert payload["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge", "lasso", "randomforest"]
+    assert payload["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge", "lasso", "random_forest"]
     assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
     assert "Model grid" in out["route_preview"]["message"]
 

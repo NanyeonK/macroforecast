@@ -378,7 +378,7 @@ def test_fred_sd_selection_compares_target_state_case_insensitively() -> None:
 @pytest.mark.parametrize(
     ("benchmark_family", "message"),
     [
-        ("multi_benchmark_suite", "benchmark_suite"),
+        ("benchmark_suite", "benchmark_suite"),
         ("paper_specific_benchmark", "paper_forecast_series"),
         ("survey_forecast", "survey_forecast_series"),
         ("expert_benchmark", "expert_callable"),
@@ -395,9 +395,9 @@ def test_layer1_benchmark_required_inputs_are_compile_time_contracts(
         compile_recipe_dict(recipe)
 
 
-def test_multi_benchmark_suite_rejects_unsupported_members() -> None:
+def test_benchmark_suite_rejects_unsupported_members() -> None:
     recipe = _recipe()
-    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "multi_benchmark_suite"
+    recipe["path"]["3_training"]["fixed_axes"]["benchmark_family"] = "benchmark_suite"
     recipe["path"]["1_data_task"]["leaf_config"]["benchmark_suite"] = ["historical_mean", "expert_benchmark"]
 
     with pytest.raises(CompileValidationError, match="unsupported members"):

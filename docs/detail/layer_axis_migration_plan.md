@@ -27,7 +27,7 @@ describes the registry layer after migration.
 | `official_transform_policy` | split from Layer 2 t-code axes | 1_data_task | Official dataset transformations define the official frame, before researcher preprocessing. |
 | `official_transform_scope` | split from `tcode_application_scope` | 1_data_task | Target/X official transform scope is part of official frame construction. |
 | `source_adapter` | `dataset_source` | 1_data_task | Loader dispatch is an adapter choice; `dataset` remains the schema identity. |
-| `target_structure` | `task` | 1_data_task | Layer 1 records target cardinality; Layer 0 owns runner grammar. |
+| `target_structure` | `task` | 1_data_task | Layer 1 records target cautoregressive_diffusion_indexnality; Layer 0 owns runner grammar. |
 
 ## Still To Migrate
 

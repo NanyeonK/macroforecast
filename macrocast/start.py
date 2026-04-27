@@ -230,14 +230,14 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         elif value == "single_target_generator_grid":
             training["feature_builder"] = training.get("feature_builder", "target_lag_features")
             training.pop("model_family", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep.pop("feature_builder", None)
         elif value == "single_target_full_sweep":
             output_leaf["wrapper_family"] = value
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             training.pop("model_family", None)
             training.pop("feature_builder", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
         return
     if key == "target":
@@ -261,13 +261,13 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         elif value == "model_grid":
             training["feature_builder"] = current_feature
             training.pop("model_family", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep.pop("feature_builder", None)
             _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_generator_grid"
         elif value == "full_sweep":
             training.pop("model_family", None)
             training.pop("feature_builder", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
             _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_full_sweep"
             _recipe_leaf(recipe, "5_output_provenance")["wrapper_family"] = "single_target_full_sweep"
@@ -359,7 +359,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "benchmark_family",
             "prompt": "Benchmark family",
-            "options": ["zero_change", "ar_bic", "historical_mean", "custom_benchmark"],
+            "options": ["zero_change", "autoregressive_bic", "historical_mean", "custom_benchmark"],
         },
     ]
     if benchmark_family == "custom_benchmark":
@@ -401,7 +401,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "model_family",
             "prompt": "Model family",
-            "options": ["ar", "ridge", "lasso", "randomforest"],
+            "options": ["ar", "ridge", "lasso", "random_forest"],
         },
         {
             "key": "feature_builder",

@@ -793,10 +793,10 @@ def test_execute_recipe_runs_custom_raw_panel_iterated_hold_last_observed(tmp_pa
         clear_custom_extensions()
 
 
-def test_execute_recipe_writes_minimal_importance_artifact_for_randomforest(tmp_path: Path) -> None:
+def test_execute_recipe_writes_minimal_importance_artifact_for_random_forest(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="randomforest", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        recipe=_recipe(model_family="random_forest", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -805,7 +805,7 @@ def test_execute_recipe_writes_minimal_importance_artifact_for_randomforest(tmp_
 
     run_dir = tmp_path / result.run.artifact_subdir
     importance = json.loads((run_dir / "importance_minimal.json").read_text())
-    assert importance["model_family"] == "randomforest"
+    assert importance["model_family"] == "random_forest"
     assert len(importance["feature_importance"]) > 0
 
 
@@ -1970,16 +1970,16 @@ def test_execute_recipe_supports_lightgbm_raw_panel_model(tmp_path: Path) -> Non
 
 
 
-def test_execute_recipe_supports_adaptivelasso_autoreg_model(tmp_path: Path) -> None:
+def test_execute_recipe_supports_adaptive_lasso_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="adaptivelasso", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="adaptive_lasso", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
-    assert manifest["model_spec"]["model_family"] == "adaptivelasso"
+    assert manifest["model_spec"]["model_family"] == "adaptive_lasso"
     assert manifest["prediction_rows"] > 0
 
 
@@ -2036,16 +2036,16 @@ def test_execute_recipe_supports_catboost_raw_panel_model(tmp_path: Path) -> Non
 
 
 
-def test_execute_recipe_supports_adaptivelasso_raw_panel_model(tmp_path: Path) -> None:
+def test_execute_recipe_supports_adaptive_lasso_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="adaptivelasso", feature_builder="raw_feature_panel", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        recipe=_recipe(model_family="adaptive_lasso", feature_builder="raw_feature_panel", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
-    assert manifest["model_spec"]["model_family"] == "adaptivelasso"
+    assert manifest["model_spec"]["model_family"] == "adaptive_lasso"
     assert manifest["prediction_rows"] > 0
 
 
@@ -2426,17 +2426,17 @@ def test_execute_recipe_stage6_split_stat_test_contract(tmp_path: Path) -> None:
 def test_execute_recipe_stage7_importance_methods(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     cases = [
-        ("tree_shap", {"model_family": "randomforest"}, "importance_tree_shap.json"),
+        ("tree_shap", {"model_family": "random_forest"}, "importance_tree_shap.json"),
         ("kernel_shap", {"model_family": "ridge"}, "importance_kernel_shap.json"),
         ("linear_shap", {"model_family": "ridge"}, "importance_linear_shap.json"),
-        ("permutation_importance", {"model_family": "randomforest"}, "importance_permutation_importance.json"),
+        ("permutation_importance", {"model_family": "random_forest"}, "importance_permutation_importance.json"),
         ("lime", {"model_family": "ridge"}, "importance_lime.json"),
         ("feature_ablation", {"model_family": "ridge"}, "importance_feature_ablation.json"),
         ("pdp", {"model_family": "ridge"}, "importance_pdp.json"),
         ("ice", {"model_family": "ridge"}, "importance_ice.json"),
         ("ale", {"model_family": "ridge"}, "importance_ale.json"),
-        ("grouped_permutation", {"model_family": "randomforest"}, "importance_grouped_permutation.json"),
-        ("importance_stability", {"model_family": "randomforest"}, "importance_stability.json"),
+        ("grouped_permutation", {"model_family": "random_forest"}, "importance_grouped_permutation.json"),
+        ("importance_stability", {"model_family": "random_forest"}, "importance_stability.json"),
     ]
     for idx, (method, overrides, filename) in enumerate(cases):
         out_root = tmp_path / f"importance_{idx}_{method}"

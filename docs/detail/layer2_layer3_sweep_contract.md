@@ -142,7 +142,7 @@ path:
       scaling_policy: [none, standard, robust]
   3_training:
     sweep_axes:
-      model_family: [ridge, lasso, randomforest]
+      model_family: [ridge, lasso, random_forest]
 ```
 
 `model_family` is the current recipe spelling for the candidate

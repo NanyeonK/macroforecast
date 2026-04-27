@@ -91,6 +91,16 @@ AXIS_VALUE_ALIASES: dict[tuple[str, str], str] = {
     ("feature_block_combination", "custom_combiner"): "custom_feature_combiner",
     ("feature_selection_policy", "lasso_select"): "lasso_selection",
     ("feature_selection_semantics", "select_after_custom_blocks"): "select_after_custom_feature_blocks",
+    ("model_family", "bayesianridge"): "bayesian_ridge",
+    ("model_family", "adaptivelasso"): "adaptive_lasso",
+    ("model_family", "randomforest"): "random_forest",
+    ("model_family", "extratrees"): "extra_trees",
+    ("model_family", "gbm"): "gradient_boosting",
+    ("benchmark_family", "ar_bic"): "autoregressive_bic",
+    ("benchmark_family", "ar_fixed_p"): "autoregressive_fixed_lag",
+    ("benchmark_family", "ardi"): "autoregressive_diffusion_index",
+    ("benchmark_family", "factor_model"): "factor_model_benchmark",
+    ("benchmark_family", "multi_benchmark_suite"): "benchmark_suite",
 }
 
 RENAMED_AXES: tuple[dict[str, str], ...] = tuple(

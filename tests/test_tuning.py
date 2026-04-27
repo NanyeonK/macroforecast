@@ -74,7 +74,7 @@ def test_tuning_budget_loss_plateau_uses_min_improvement() -> None:
     assert budget.exceeded() is True
 
 
-def test_fit_with_optional_tuning_supports_adaptivelasso_and_boosting() -> None:
+def test_fit_with_optional_tuning_supports_adaptive_lasso_and_boosting() -> None:
     X = np.arange(80, dtype=float).reshape(40, 2)
     y = np.linspace(0.0, 1.0, 40)
     training_spec = {
@@ -90,7 +90,7 @@ def test_fit_with_optional_tuning_supports_adaptivelasso_and_boosting() -> None:
         "early_stop_trials": 2,
         "random_seed": 42,
     }
-    for model_family in ["adaptivelasso", "componentwise_boosting", "boosting_ridge", "boosting_lasso"]:
+    for model_family in ["adaptive_lasso", "componentwise_boosting", "boosting_ridge", "boosting_lasso"]:
         model, payload = fit_with_optional_tuning(model_family, X, y, training_spec)
         pred = model.predict(X[:2])
         assert pred.shape == (2,)

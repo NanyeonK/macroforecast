@@ -33,7 +33,7 @@ path:
       benchmark_family: zero_change
       feature_builder: raw_feature_panel
     sweep_axes:
-      model_family: [ridge, lasso, elasticnet, bayesianridge]
+      model_family: [ridge, lasso, elasticnet, bayesian_ridge]
   4_evaluation:
     fixed_axes:
       primary_metric: msfe

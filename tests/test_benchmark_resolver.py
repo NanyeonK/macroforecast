@@ -27,7 +27,7 @@ def test_four_variants_produce_different_forecasts():
         BenchmarkSpec(benchmark_model="historical_mean", estimation_window="expanding"),
         BenchmarkSpec(benchmark_model="rolling_mean", estimation_window="rolling", window_len=20),
         BenchmarkSpec(benchmark_model="random_walk"),
-        BenchmarkSpec(benchmark_model="ar_bic", max_p=4),
+        BenchmarkSpec(benchmark_model="autoregressive_bic", max_p=4),
     )
     preds = []
     for spec in specs:
@@ -85,9 +85,9 @@ def test_paper_specific_benchmark_stub_raises_notimplemented():
         resolve_benchmark_forecasts(target_series=y, horizon=1, spec=spec, train_origins=idx[50:55])
 
 
-def test_multi_benchmark_suite_via_single_dispatch_raises():
+def test_benchmark_suite_via_single_dispatch_raises():
     y, idx = _synthetic_series(n=100)
-    spec = BenchmarkSpec(benchmark_model="multi_benchmark_suite")
+    spec = BenchmarkSpec(benchmark_model="benchmark_suite")
     with pytest.raises(BenchmarkResolverError):
         resolve_benchmark_forecasts(target_series=y, horizon=1, spec=spec, train_origins=idx[50:55])
 

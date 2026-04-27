@@ -9,7 +9,7 @@ MODEL_HP_SPACES = {
         "alpha": HPDistribution("log_float", 1e-6, 1e2, log=True),
         "l1_ratio": HPDistribution("float", 0.01, 0.99),
     },
-    "adaptivelasso": {
+    "adaptive_lasso": {
         "gamma": HPDistribution("float", 0.5, 3.0),
         "init_estimator": HPDistribution("categorical", choices=("ridge", "ols")),
         "alpha": HPDistribution("log_float", 1e-5, 1e1, log=True),
@@ -37,9 +37,9 @@ MODEL_HP_SPACES = {
         "learning_rate": HPDistribution("log_float", 0.01, 0.3, log=True),
         "lasso_alpha": HPDistribution("log_float", 1e-5, 1e1, log=True),
     },
-    "randomforest": {"n_estimators": HPDistribution("int", 100, 400), "max_depth": HPDistribution("int", 3, 10)},
-    "extratrees": {"n_estimators": HPDistribution("int", 100, 400), "max_depth": HPDistribution("int", 3, 10)},
-    "gbm": {
+    "random_forest": {"n_estimators": HPDistribution("int", 100, 400), "max_depth": HPDistribution("int", 3, 10)},
+    "extra_trees": {"n_estimators": HPDistribution("int", 100, 400), "max_depth": HPDistribution("int", 3, 10)},
+    "gradient_boosting": {
         "n_estimators": HPDistribution("int", 50, 300),
         "learning_rate": HPDistribution("log_float", 0.01, 0.3, log=True),
         "max_depth": HPDistribution("int", 2, 5),

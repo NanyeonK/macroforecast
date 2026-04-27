@@ -24,10 +24,10 @@ _OPERATIONAL_FAMILIES = (
     "historical_mean",
     "rolling_mean",
     "random_walk",
-    "ar_bic",
-    "ar_fixed_p",
-    "ardi",
-    "factor_model",
+    "autoregressive_bic",
+    "autoregressive_fixed_lag",
+    "autoregressive_diffusion_index",
+    "factor_model_benchmark",
     "expert_benchmark",
 )
 _STUB_FAMILIES = ("survey_forecast", "paper_specific_benchmark")
@@ -87,7 +87,7 @@ def _random_walk(train: pd.Series) -> float:
     return float(train.iloc[-1])
 
 
-def _ar_bic_forecast(train: pd.Series, horizon: int, max_p: int) -> float:
+def _autoregressive_bic_forecast(train: pd.Series, horizon: int, max_p: int) -> float:
     max_candidate = min(max_p, len(train) - 2)
     if max_candidate < 1:
         raise BenchmarkResolverError(
@@ -114,11 +114,11 @@ def _ar_bic_forecast(train: pd.Series, horizon: int, max_p: int) -> float:
     return float(np.asarray(forecast)[-1])
 
 
-def _ar_fixed_p_forecast(train: pd.Series, horizon: int, fixed_p: int) -> float:
+def _autoregressive_fixed_lag_forecast(train: pd.Series, horizon: int, fixed_p: int) -> float:
     if fixed_p < 1:
-        raise BenchmarkResolverError("ar_fixed_p requires fixed_p>=1")
+        raise BenchmarkResolverError("autoregressive_fixed_lag requires fixed_p>=1")
     if len(train) <= fixed_p + 1:
-        raise BenchmarkResolverError("training window too small for ar_fixed_p")
+        raise BenchmarkResolverError("training window too small for autoregressive_fixed_lag")
     with warnings.catch_warnings(), np.errstate(divide="ignore", invalid="ignore"):
         warnings.simplefilter("ignore")
         fit = AutoReg(train, lags=fixed_p, trend="c", old_names=False).fit()
@@ -145,7 +145,7 @@ def _factor_panel_at(
     return factors, factors[-1]
 
 
-def _ardi_forecast(
+def _autoregressive_diffusion_index_forecast(
     train: pd.Series,
     horizon: int,
     n_factors: int,
@@ -157,7 +157,7 @@ def _ardi_forecast(
         raise BenchmarkResolverError("ARDI requires at least 4 training observations")
     factors, _latest = _factor_panel_at(auxiliary_panel, origin, n_factors)
     if factors is None or factors.shape[0] < len(train):
-        return _ar_fixed_p_forecast(train, horizon, fixed_p=1)
+        return _autoregressive_fixed_lag_forecast(train, horizon, fixed_p=1)
     factor_series = pd.Series(factors[-len(train):, 0], index=train.index)
     y = train.values[1:]
     X = np.column_stack([train.values[:-1], factor_series.values[:-1]])
@@ -168,7 +168,7 @@ def _ardi_forecast(
     return pred
 
 
-def _factor_model_forecast(
+def _factor_model_benchmark_forecast(
     train: pd.Series,
     horizon: int,
     n_factors: int,
@@ -177,11 +177,11 @@ def _factor_model_forecast(
 ) -> float:
     """Pure factor regression: y_{t+h} ~ factors_t (no own lag)."""
     if len(train) < 4:
-        raise BenchmarkResolverError("factor_model requires at least 4 training observations")
+        raise BenchmarkResolverError("factor_model_benchmark requires at least 4 training observations")
     factors, _ = _factor_panel_at(auxiliary_panel, origin, n_factors)
     if factors is None or factors.shape[0] < len(train):
         raise BenchmarkResolverError(
-            "factor_model requires auxiliary_panel with sufficient observations"
+            "factor_model_benchmark requires auxiliary_panel with sufficient observations"
         )
     F = factors[-len(train):, :]
     reg = LinearRegression().fit(F[:-1], train.values[1:])
@@ -217,23 +217,23 @@ def _dispatch_single(
         return _rolling_mean(train, spec.window_len)
     if family == "random_walk":
         return _random_walk(train)
-    if family == "ar_bic":
-        return _ar_bic_forecast(train, horizon, spec.max_p)
-    if family == "ar_fixed_p":
-        return _ar_fixed_p_forecast(train, horizon, spec.fixed_p)
-    if family == "ardi":
-        return _ardi_forecast(train, horizon, spec.n_factors, auxiliary_panel, origin)
-    if family == "factor_model":
-        return _factor_model_forecast(train, horizon, spec.n_factors, auxiliary_panel, origin)
+    if family == "autoregressive_bic":
+        return _autoregressive_bic_forecast(train, horizon, spec.max_p)
+    if family == "autoregressive_fixed_lag":
+        return _autoregressive_fixed_lag_forecast(train, horizon, spec.fixed_p)
+    if family == "autoregressive_diffusion_index":
+        return _autoregressive_diffusion_index_forecast(train, horizon, spec.n_factors, auxiliary_panel, origin)
+    if family == "factor_model_benchmark":
+        return _factor_model_benchmark_forecast(train, horizon, spec.n_factors, auxiliary_panel, origin)
     if family == "expert_benchmark":
         return _expert_forecast(train, horizon, spec)
     if family in _STUB_FAMILIES:
         raise NotImplementedError(
             f"benchmark_family {family!r} is registered as a stub"
         )
-    if family == "multi_benchmark_suite":
+    if family == "benchmark_suite":
         raise BenchmarkResolverError(
-            "multi_benchmark_suite must be dispatched via resolve_benchmark_suite"
+            "benchmark_suite must be dispatched via resolve_benchmark_suite"
         )
     raise BenchmarkResolverError(f"unknown benchmark_model: {family!r}")
 

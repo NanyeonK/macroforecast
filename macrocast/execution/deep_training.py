@@ -127,7 +127,7 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
         return Lasso(alpha=float(hp.get("alpha", 1e-4)), max_iter=10000)
     if model_family == "elasticnet":
         return ElasticNet(alpha=float(hp.get("alpha", 1e-4)), l1_ratio=float(hp.get("l1_ratio", 0.5)), max_iter=10000)
-    if model_family == "bayesianridge":
+    if model_family == "bayesian_ridge":
         return BayesianRidge()
     if model_family == "huber":
         return HuberRegressor(epsilon=float(hp.get("epsilon", 1.35)), alpha=float(hp.get("alpha", 0.0001)))
@@ -158,24 +158,24 @@ def make_model_instance(model_family: str, hp: dict[str, Any] | None = None):
             learning_rate=float(hp.get("learning_rate", 0.1)),
             lasso_alpha=float(hp.get("lasso_alpha", 1e-4)),
         )
-    if model_family == "randomforest":
+    if model_family == "random_forest":
         return RandomForestRegressor(
             n_estimators=int(hp.get("n_estimators", 200)),
             max_depth=None if hp.get("max_depth") is None else int(hp.get("max_depth")),
-            random_state=current_seed(model_family="randomforest"),
+            random_state=current_seed(model_family="random_forest"),
         )
-    if model_family == "extratrees":
+    if model_family == "extra_trees":
         return ExtraTreesRegressor(
             n_estimators=int(hp.get("n_estimators", 200)),
             max_depth=None if hp.get("max_depth") is None else int(hp.get("max_depth")),
-            random_state=current_seed(model_family="extratrees"),
+            random_state=current_seed(model_family="extra_trees"),
         )
-    if model_family == "gbm":
+    if model_family == "gradient_boosting":
         return GradientBoostingRegressor(
             n_estimators=int(hp.get("n_estimators", 100)),
             learning_rate=float(hp.get("learning_rate", 0.05)),
             max_depth=int(hp.get("max_depth", 3)),
-            random_state=current_seed(model_family="gbm"),
+            random_state=current_seed(model_family="gradient_boosting"),
         )
     if model_family == "xgboost":
         estimator_cls = _optional_estimator_cls(XGBRegressor, package="xgboost", extra="xgboost")
@@ -260,7 +260,7 @@ def _tuning_budget_spec(training_spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def _fit_without_tuning(model_family: str, X_train: np.ndarray, y_train: np.ndarray, training_spec: dict[str, Any]):
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         return fit_adaptive_lasso(X_train, y_train), {}
     if model_family == "quantile_linear":
         quantile = float(training_spec.get("quantile_level", 0.5))
@@ -281,7 +281,7 @@ def fit_with_optional_tuning(model_family: str, X_train: np.ndarray, y_train: np
             return _fit_without_tuning(model_family, X_train, y_train, training_spec)
         except Exception:
             if convergence_handling == "fallback_to_safe_hp":
-                if model_family == "adaptivelasso":
+                if model_family == "adaptive_lasso":
                     return fit_adaptive_lasso(X_train, y_train, {"gamma": 1.0}), {"fallback": True}
                 model = make_model_instance(model_family)
                 model.fit(X_train, y_train)
@@ -304,7 +304,7 @@ def fit_with_optional_tuning(model_family: str, X_train: np.ndarray, y_train: np
         embargo_gap_size=int(training_spec.get("embargo_gap_size", 0)),
         seed=int(training_spec.get("random_seed", 42)),
     )
-    if model_family == "adaptivelasso":
+    if model_family == "adaptive_lasso":
         class _AdaptiveWrap:
             def __init__(self, hp):
                 self.hp = hp
@@ -398,7 +398,7 @@ def build_factor_panel(
         fit_state_sink.append(
             {
                 "block": "pca_static_factors",
-                "runtime_policy": "factor_model",
+                "runtime_policy": "factor_model_benchmark",
                 "n_components": int(n_components),
                 "factor_count_mode": training_spec.get("factor_count", "fixed"),
                 "feature_names": feature_names + target_lag_feature_names,
@@ -432,7 +432,7 @@ def build_factor_panel(
     return X_aug, X_pred_aug
 
 
-def fit_factor_model(
+def fit_factor_model_benchmark(
     model_family: str,
     X_train_df: pd.DataFrame,
     y_train: np.ndarray,

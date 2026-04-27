@@ -15,7 +15,7 @@ def _stage0(task: str = "single_target"):
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
             "sample_split": "expanding_window_oos",
-            "benchmark": "ar_bic",
+            "benchmark": "autoregressive_bic",
             "evaluation_protocol": "point_forecast_core",
             "forecast_task": task,
         },

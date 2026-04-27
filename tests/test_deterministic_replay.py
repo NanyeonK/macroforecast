@@ -24,13 +24,13 @@ def _stage0():
             "benchmark_policy": "identical",
             "evaluation_policy": "identical",
         },
-        varying_design={"model_families": ("randomforest",), "feature_recipes": ("raw_feature_panel",), "horizons": ("h1",)},
+        varying_design={"model_families": ("random_forest",), "feature_recipes": ("raw_feature_panel",), "horizons": ("h1",)},
     )
 
 
 def _recipe():
     return build_recipe_spec(
-        recipe_id="fred_md_rolling_randomforest_raw_feature_panel",
+        recipe_id="fred_md_rolling_random_forest_raw_feature_panel",
         stage0=_stage0(),
         target="INDPRO",
         horizons=(1, 3),

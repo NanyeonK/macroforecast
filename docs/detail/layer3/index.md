@@ -18,6 +18,26 @@ Layer 3 owns forecast generation. It consumes Layer 2 representation contracts a
 | Training window | `min_train_size`, `training_start_rule`, `y_lag_count` |
 | Tuning | `search_algorithm`, `tuning_objective`, `tuning_budget`, `validation_location`, `validation_size_rule` |
 
+## Current naming migration
+
+Layer 3 IDs now prefer explicit model and benchmark names over glued
+abbreviations. Old recipe values are still accepted through
+`registry_naming_v1`; compiled recipes, Navigator paths, and generated YAML
+emit the canonical names below.
+
+| Axis | Legacy value | Canonical value |
+|---|---|---|
+| `model_family` | `bayesianridge` | `bayesian_ridge` |
+| `model_family` | `adaptivelasso` | `adaptive_lasso` |
+| `model_family` | `randomforest` | `random_forest` |
+| `model_family` | `extratrees` | `extra_trees` |
+| `model_family` | `gbm` | `gradient_boosting` |
+| `benchmark_family` | `ar_bic` | `autoregressive_bic` |
+| `benchmark_family` | `ar_fixed_p` | `autoregressive_fixed_lag` |
+| `benchmark_family` | `ardi` | `autoregressive_diffusion_index` |
+| `benchmark_family` | `factor_model` | `factor_model_benchmark` |
+| `benchmark_family` | `multi_benchmark_suite` | `benchmark_suite` |
+
 ## Layer contract
 
 Input:

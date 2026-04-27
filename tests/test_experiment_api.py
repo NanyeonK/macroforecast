@@ -1484,7 +1484,7 @@ def test_target_transformer_blocks_unsupported_raw_panel_model() -> None:
             start=FIXTURE_START,
             end=FIXTURE_END,
             horizons=[1],
-            model_family="randomforest",
+            model_family="random_forest",
             feature_builder="raw_feature_panel",
         )
         .use_target_transformer("identity_target")

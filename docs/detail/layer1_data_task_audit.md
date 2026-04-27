@@ -103,7 +103,7 @@ The following axes were moved out of Layer 1 ownership:
   target or multiple targets.
 - `single_target` requires `leaf_config.target`.
 - `multi_target` requires `leaf_config.targets`.
-- Layer 0 owns the execution shape derived from target cardinality through
+- Layer 0 owns the execution shape derived from target cautoregressive_diffusion_indexnality through
   `experiment_unit`.
 - `forecast_type` remains dynamic by the Layer 2 feature runtime: autoregressive paths default to `iterated`, raw/factor panel paths default to `direct`.
 - Crossed `forecast_type` / feature-runtime pairs remain `blocked_by_incompatibility`; legacy `feature_builder` recipes are mapped to that runtime for compatibility.
@@ -126,8 +126,8 @@ The following axes were moved out of Layer 1 ownership:
 
 Kept values that require extra user inputs are now compile-time contracts:
 
-- `benchmark_family=multi_benchmark_suite` requires non-empty `leaf_config.benchmark_suite`.
-- Multi-benchmark suite members are restricted to `historical_mean`, `zero_change`, `ar_bic`, `rolling_mean`, `ar_fixed_p`, `ardi`.
+- `benchmark_family=benchmark_suite` requires non-empty `leaf_config.benchmark_suite`.
+- Multi-benchmark suite members are restricted to `historical_mean`, `zero_change`, `autoregressive_bic`, `rolling_mean`, `autoregressive_fixed_lag`, `autoregressive_diffusion_index`.
 - `paper_specific_benchmark` requires `leaf_config.paper_forecast_series` entries for the current target(s).
 - `survey_forecast` requires `leaf_config.survey_forecast_series` entries for the current target(s).
 - `expert_benchmark` requires `leaf_config.benchmark_config.expert_callable`.
