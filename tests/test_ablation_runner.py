@@ -20,7 +20,7 @@ def _baseline_single_path_recipe() -> dict:
     return {
         "recipe_id": "ablation-baseline",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",

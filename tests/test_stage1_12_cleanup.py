@@ -24,7 +24,7 @@ def _base_recipe(overrides_1_data_task: dict[str, str] | None = None) -> dict:
     return {
         "recipe_id": "stage1-12-cleanup-test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},

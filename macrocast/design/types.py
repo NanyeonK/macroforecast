@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 ResearchDesign = Literal[
-    "single_path_benchmark",
+    "single_forecast_run",
     "controlled_variation",
-    "orchestrated_bundle",
-    "replication_override",
+    "study_bundle",
+    "replication_recipe",
 ]
 
 ExecutionPosture = Literal[

@@ -75,7 +75,7 @@ Output/provenance is closed for aggregated run directories. Still gated:
 - wrapper/orchestrator handoff for `multi_target_separate_runs`,
   `benchmark_suite`, and `ablation_study`;
 - branch deltas for `single_target_full_sweep` and
-  `single_target_model_grid`.
+  `single_target_generator_grid`.
 
 ### 5. Docs And Navigator UI
 

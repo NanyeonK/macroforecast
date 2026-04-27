@@ -40,7 +40,7 @@ def _base_contract() -> dict:
 
 def test_stage0_roundtrip_dict() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar", "ridge"), "horizons": ("h1", "h3")},
@@ -53,7 +53,7 @@ def test_stage0_roundtrip_dict() -> None:
 
 def test_replication_route_owner_and_execution_posture() -> None:
     stage0 = build_design_frame(
-        research_design="replication_override",
+        research_design="replication_recipe",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},
@@ -81,7 +81,7 @@ def test_blank_fixed_design_field_raises_validation_error() -> None:
 
     with pytest.raises(DesignValidationError):
         build_design_frame(
-            research_design="single_path_benchmark",
+            research_design="single_forecast_run",
             fixed_design=fixed,
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
@@ -90,7 +90,7 @@ def test_blank_fixed_design_field_raises_validation_error() -> None:
 
 def test_single_run_without_model_families_raises_completeness_error() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design=VaryingDesign(),
@@ -100,9 +100,9 @@ def test_single_run_without_model_families_raises_completeness_error() -> None:
         check_design_completeness(stage0)
 
 
-def test_orchestrated_bundle_route_owner_is_wrapper() -> None:
+def test_study_bundle_route_owner_is_wrapper() -> None:
     stage0 = build_design_frame(
-        research_design="orchestrated_bundle",
+        research_design="study_bundle",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},

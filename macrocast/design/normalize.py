@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from .errors import DesignNormalizationError
 from .types import ComparisonContract, FixedDesign, ReplicationInput, ResearchDesign, VaryingDesign
+from ..registry.naming import canonical_axis_value
 
 _ALLOWED_RESEARCH_DESIGNS: tuple[ResearchDesign, ...] = (
-    "single_path_benchmark",
+    "single_forecast_run",
     "controlled_variation",
-    "orchestrated_bundle",
-    "replication_override",
+    "study_bundle",
+    "replication_recipe",
 )
 
 
@@ -26,6 +27,7 @@ def _tupleize(value: object) -> tuple[str, ...]:
 
 
 def normalize_research_design(value: str) -> str:
+    value = canonical_axis_value("research_design", value)
     if value not in _ALLOWED_RESEARCH_DESIGNS:
         raise DesignNormalizationError(
             f"unknown research_design={value!r}; expected one of {_ALLOWED_RESEARCH_DESIGNS}"

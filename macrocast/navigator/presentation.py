@@ -17,7 +17,7 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         "contract": "User-facing runner route. This affects executor family, sweep interpretation, and artifact shape.",
         "selection_kind": "user_choice",
         "values": {
-            "single_path_benchmark": {
+            "single_forecast_run": {
                 "label": "Single Forecasting Run",
                 "short_label": "Single Run",
                 "summary": "Run one resolved forecasting path and produce forecasts, metrics, and artifacts.",
@@ -27,12 +27,12 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
                 "short_label": "Comparison",
                 "summary": "Vary one or more choices while holding the rest of the study path fixed.",
             },
-            "orchestrated_bundle": {
+            "study_bundle": {
                 "label": "Study Bundle",
                 "short_label": "Bundle",
                 "summary": "Hand the recipe to a higher-level study runner, such as a benchmark suite or ablation route.",
             },
-            "replication_override": {
+            "replication_recipe": {
                 "label": "Replication Recipe",
                 "short_label": "Replication",
                 "summary": "Rerun a known paper-style recipe and record replication provenance and deviations.",
@@ -49,12 +49,12 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         "contract": "Derived runner contract. Explicit values must match target and sweep constraints.",
         "selection_kind": "usually_derived",
         "values": {
-            "single_target_single_model": {
+            "single_target_single_generator": {
                 "label": "One Target, One Model",
                 "short_label": "One Target / One Model",
                 "summary": "Default unit for a single target with one model path.",
             },
-            "single_target_model_grid": {
+            "single_target_generator_grid": {
                 "label": "Model Comparison",
                 "short_label": "Model Grid",
                 "summary": "Compare model-family or representation variants for one target.",

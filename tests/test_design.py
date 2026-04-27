@@ -14,9 +14,9 @@ from macrocast.design import (
 )
 
 
-def test_build_stage0_frame_single_path_benchmark() -> None:
+def test_build_stage0_frame_single_forecast_run() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design=FixedDesign(
             dataset_adapter="fred_md",
             information_set="revised_monthly",
@@ -43,7 +43,7 @@ def test_build_stage0_frame_single_path_benchmark() -> None:
 
 def test_build_stage0_frame_single_fixed_model_and_feature_is_one_tool_surface() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design=FixedDesign(
             dataset_adapter="fred_md",
             information_set="revised_monthly",
@@ -63,12 +63,12 @@ def test_build_stage0_frame_single_fixed_model_and_feature_is_one_tool_surface()
 
     assert stage0.design_shape == "one_fixed_env_one_tool_surface"
     assert stage0.execution_posture == "single_run_recipe"
-    assert stage0.experiment_unit == "single_target_single_model"
+    assert stage0.experiment_unit == "single_target_single_generator"
 
 
 def test_build_stage0_frame_multiple_feature_recipes_is_controlled_variation() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design=FixedDesign(
             dataset_adapter="fred_md",
             information_set="revised_monthly",
@@ -96,7 +96,7 @@ def test_build_stage0_frame_multiple_feature_recipes_is_controlled_variation() -
 
 def test_build_stage0_frame_bundle_route() -> None:
     stage0 = build_design_frame(
-        research_design="orchestrated_bundle",
+        research_design="study_bundle",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -121,7 +121,7 @@ def test_build_stage0_frame_bundle_route() -> None:
 
 def test_check_stage0_completeness_rejects_empty_model_surface() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -144,7 +144,7 @@ def test_check_stage0_completeness_rejects_empty_model_surface() -> None:
 
 def test_stage0_summary_contains_core_fields() -> None:
     stage0 = build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -164,7 +164,7 @@ def test_stage0_summary_contains_core_fields() -> None:
 
     summary = design_summary(stage0)
 
-    assert "single_path_benchmark" in summary
+    assert "single_forecast_run" in summary
     assert "fred_md" in summary
     assert "single_run_recipe" in summary
 
@@ -172,7 +172,7 @@ def test_stage0_summary_contains_core_fields() -> None:
 
 def test_build_stage0_frame_explicit_experiment_unit_controls_wrapper_route() -> None:
     stage0 = build_design_frame(
-        research_design="orchestrated_bundle",
+        research_design="study_bundle",
         experiment_unit="benchmark_suite",
         fixed_design={
             "dataset_adapter": "fred_md",

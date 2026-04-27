@@ -10,7 +10,7 @@ from macrocast import (
 
 def _stage0(task: str = "single_target_point_forecast"):
     return build_design_frame(
-        research_design="single_path_benchmark",
+        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

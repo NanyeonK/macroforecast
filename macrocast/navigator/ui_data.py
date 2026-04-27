@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from ..registry import get_axis_registry
+from ..registry.naming import NAMING_LEDGER_VERSION, rename_ledger
 from .core import (
     NAVIGATOR_SCHEMA_VERSION,
     OPERATIONAL_NARROW_CONTRACTS,
@@ -98,11 +99,13 @@ def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dic
         "schema_version": NAVIGATOR_UI_DATA_SCHEMA_VERSION,
         "navigator_schema_version": NAVIGATOR_SCHEMA_VERSION,
         "axis_presentation_schema_version": AXIS_PRESENTATION_SCHEMA_VERSION,
+        "naming_ledger_version": NAMING_LEDGER_VERSION,
         "replication_library_version": REPLICATION_LIBRARY_VERSION,
         "layer_labels": dict(_LAYER_LABELS),
         "tree_axes": {layer: list(axes) for layer, axes in _TREE_AXES.items()},
         "axis_catalog": axis_catalog(),
         "axis_presentation": axis_presentation(),
+        "rename_ledger": rename_ledger(),
         "operational_narrow_contracts": [dict(item) for item in OPERATIONAL_NARROW_CONTRACTS],
         "state_engine": navigator_state_engine_spec(),
         "samples": [_read_sample(path, root) for path in paths],

@@ -10,8 +10,8 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy='fixed',
     entries=(
         EnumRegistryEntry(
-            id='single_path_benchmark',
-            description='single path benchmark study',
+            id='single_forecast_run',
+            description='single resolved forecasting run',
             status='operational',
             priority="A",
         ),
@@ -22,14 +22,14 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id='orchestrated_bundle',
-            description='orchestrated bundle study',
+            id='study_bundle',
+            description='study bundle routed to a wrapper/orchestrator',
             status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
-            id='replication_override',
-            description='replication override study',
+            id='replication_recipe',
+            description='replication recipe study',
             status="operational",
             priority="A",
         ),

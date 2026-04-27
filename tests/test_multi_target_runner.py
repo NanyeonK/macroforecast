@@ -18,7 +18,7 @@ def _multi_target_recipe() -> dict:
         "recipe_id": "separate-runs-test",
         "path": {
             "0_meta": {"fixed_axes": {
-                "research_design": "single_path_benchmark",
+                "research_design": "single_forecast_run",
                 "experiment_unit": "multi_target_separate_runs",
             }},
             "1_data_task": {

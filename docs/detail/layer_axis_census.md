@@ -42,10 +42,10 @@ This census is generated from the live registry and Navigator tree after PR #92.
 |---|---|---|---|---|---|
 | `axis_type` | - | `enum` | `fixed` | operational=5 | `operational`: `fixed`, `sweep`, `nested_sweep`, `conditional`, `derived` |
 | `compute_mode` | - | `enum` | `fixed` | operational=5, registry_only=2 | `operational`: `serial`, `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date`<br>`registry_only`: `parallel_by_trial`, `distributed_cluster` |
-| `experiment_unit` | - | `enum` | `fixed` | operational=5, registry_only=3, future=3 | `operational`: `single_target_single_model`, `single_target_model_grid`, `multi_target_separate_runs`, `multi_target_shared_design`, `replication_recipe`<br>`registry_only`: `single_target_full_sweep`, `benchmark_suite`, `ablation_study`<br>`future`: `hierarchical_forecasting_run`, `panel_forecasting_run`, `state_space_run` |
+| `experiment_unit` | - | `enum` | `fixed` | operational=5, registry_only=3, future=3 | `operational`: `single_target_single_generator`, `single_target_generator_grid`, `multi_target_separate_runs`, `multi_target_shared_design`, `replication_recipe`<br>`registry_only`: `single_target_full_sweep`, `benchmark_suite`, `ablation_study`<br>`future`: `hierarchical_forecasting_run`, `panel_forecasting_run`, `state_space_run` |
 | `failure_policy` | - | `enum` | `fixed` | operational=5, registry_only=2 | `operational`: `fail_fast`, `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only`<br>`registry_only`: `retry_then_skip`, `fallback_to_default_hp` |
 | `reproducibility_mode` | - | `enum` | `fixed` | operational=4 | `operational`: `strict_reproducible`, `seeded_reproducible`, `best_effort`, `exploratory` |
-| `research_design` | - | `enum` | `fixed` | operational=4 | `operational`: `single_path_benchmark`, `controlled_variation`, `orchestrated_bundle`, `replication_override` |
+| `research_design` | - | `enum` | `fixed` | operational=4 | `operational`: `single_forecast_run`, `controlled_variation`, `study_bundle`, `replication_recipe` |
 
 ### Layer 1: source data, target, and official frame
 

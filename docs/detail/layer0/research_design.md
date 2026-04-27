@@ -33,12 +33,12 @@ Read this axis as a route decision. Pick the block that matches the study you wa
 
 | Choice | Route Type | Default Owner |
 |---|---|---|
-| `single_path_benchmark` | one resolved path | direct recipe |
+| `single_forecast_run` | one resolved path | direct recipe |
 | `controlled_variation` | controlled comparison | direct recipe or sweep runner |
-| `orchestrated_bundle` | wrapper bundle grammar | wrapper runner |
-| `replication_override` | replication route | replication runner |
+| `study_bundle` | wrapper bundle grammar | wrapper runner |
+| `replication_recipe` | replication route | replication runner |
 
-### `single_path_benchmark`
+### `single_forecast_run`
 
 Use this for the ordinary one-path case: one target design, one representation, one model family, one evaluation route.
 
@@ -46,18 +46,18 @@ Use this for the ordinary one-path case: one target design, one representation, 
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
 ```
 
 Typical compiler result:
 
 ```text
-research_design = single_path_benchmark
-experiment_unit = single_target_single_model
+research_design = single_forecast_run
+experiment_unit = single_target_single_generator
 route_owner     = single_run
 ```
 
-If downstream model or feature axes are swept, the compiler may derive `single_target_model_grid` or `single_target_full_sweep` instead.
+If downstream model or feature axes are swept, the compiler may derive `single_target_generator_grid` or `single_target_full_sweep` instead.
 
 ### `controlled_variation`
 
@@ -78,12 +78,12 @@ Typical compiler result:
 ```text
 research_design = controlled_variation
 design_shape    = one_fixed_env_controlled_axis_variation
-experiment_unit = single_target_model_grid
+experiment_unit = single_target_generator_grid
 ```
 
 If the variation is represented as a parent sweep, the compiler reports `ready_for_sweep_runner`. In that case, run through `compile_sweep_plan` / `execute_sweep`, not as one ordinary leaf recipe.
 
-### `orchestrated_bundle`
+### `study_bundle`
 
 Use this when a higher-level wrapper owns the run. Examples are benchmark suites, ablation studies, or multi-target fan-out recipes.
 
@@ -91,7 +91,7 @@ Use this when a higher-level wrapper owns the run. Examples are benchmark suites
 path:
   0_meta:
     fixed_axes:
-      research_design: orchestrated_bundle
+      research_design: study_bundle
     leaf_config:
       wrapper_family: benchmark_suite
 ```
@@ -99,14 +99,14 @@ path:
 Typical compiler result:
 
 ```text
-research_design   = orchestrated_bundle
+research_design   = study_bundle
 execution_posture = wrapper_bundle_plan
 route_owner       = wrapper
 ```
 
 Direct `execute_recipe` is not the owner. The compiler records wrapper handoff metadata when a concrete wrapper family is supplied.
 
-### `replication_override`
+### `replication_recipe`
 
 Use this when the recipe is anchored to a paper or known replication path and deviations must be explicit.
 
@@ -115,13 +115,13 @@ recipe_id: goulet-coulombe-2021-fred-md-ridge
 path:
   0_meta:
     fixed_axes:
-      research_design: replication_override
+      research_design: replication_recipe
 ```
 
 Typical compiler result:
 
 ```text
-research_design = replication_override
+research_design = replication_recipe
 experiment_unit = replication_recipe
 route_owner     = replication
 ```
@@ -153,7 +153,7 @@ Then `derive_experiment_unit_default()` maps the route and recipe shape to the d
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
 ```
 
 For a controlled variation:
@@ -171,13 +171,13 @@ For replication:
 path:
   0_meta:
     fixed_axes:
-      research_design: replication_override
+      research_design: replication_recipe
 ```
 
 ## Runtime Notes
 
-`single_path_benchmark` is the default route for ordinary runnable recipes.
+`single_forecast_run` is the default route for ordinary runnable recipes.
 
 `controlled_variation` can produce a parent recipe that must be expanded by the sweep compiler. The important runtime distinction is whether the compiler says `executable` or `ready_for_sweep_runner`.
 
-`orchestrated_bundle` and `replication_override` are not ordinary single-run calls. They route through wrapper or replication ownership. The compiler will surface that through execution status, warnings, and wrapper handoff metadata.
+`study_bundle` and `replication_recipe` are not ordinary single-run calls. They route through wrapper or replication ownership. The compiler will surface that through execution status, warnings, and wrapper handoff metadata.

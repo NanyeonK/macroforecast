@@ -135,7 +135,7 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         training = _recipe_fixed(recipe, "3_training")
         training_sweep = _recipe_sweep(recipe, "3_training")
         return derive_experiment_unit_default(
-            research_design=_recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark"),
+            research_design=_recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run"),
             task=_target_structure_value(recipe),
             model_axis_mode="sweep" if "model_family" in training_sweep else "fixed",
             feature_axis_mode="sweep" if "feature_builder" in training_sweep else "fixed",
@@ -196,12 +196,12 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         meta["experiment_unit"] = value
         output_leaf = _recipe_leaf(recipe, "5_output_provenance")
         if value == "replication_recipe":
-            meta["research_design"] = "replication_override"
+            meta["research_design"] = "replication_recipe"
             output_leaf.pop("wrapper_family", None)
             output_leaf.pop("bundle_label", None)
             return
         if value in {"benchmark_suite", "ablation_study"}:
-            meta["research_design"] = "orchestrated_bundle"
+            meta["research_design"] = "study_bundle"
             _set_target_structure(recipe, "single_target_point_forecast")
             leaf.pop("targets", None)
             leaf.setdefault("target", "INDPRO")
@@ -209,25 +209,25 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
         if value in {"multi_target_separate_runs", "multi_target_shared_design"}:
-            meta["research_design"] = "orchestrated_bundle"
+            meta["research_design"] = "study_bundle"
             _set_target_structure(recipe, "multi_target_point_forecast")
             leaf.pop("target", None)
             leaf.setdefault("targets", ["INDPRO", "RPI"])
             output_leaf["wrapper_family"] = value
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
-        meta["research_design"] = "single_path_benchmark"
+        meta["research_design"] = "single_forecast_run"
         _set_target_structure(recipe, "single_target_point_forecast")
         leaf.pop("targets", None)
         leaf.setdefault("target", "INDPRO")
         output_leaf.pop("wrapper_family", None)
         output_leaf.pop("bundle_label", None)
-        if value == "single_target_single_model":
+        if value == "single_target_single_generator":
             training["model_family"] = training.get("model_family", "ar")
             training["feature_builder"] = training.get("feature_builder", "autoreg_lagged_target")
             training_sweep.pop("model_family", None)
             training_sweep.pop("feature_builder", None)
-        elif value == "single_target_model_grid":
+        elif value == "single_target_generator_grid":
             training["feature_builder"] = training.get("feature_builder", "autoreg_lagged_target")
             training.pop("model_family", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
@@ -257,13 +257,13 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             training["feature_builder"] = current_feature
             training_sweep.pop("model_family", None)
             training_sweep.pop("feature_builder", None)
-            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_single_model"
+            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_single_generator"
         elif value == "model_grid":
             training["feature_builder"] = current_feature
             training.pop("model_family", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
             training_sweep.pop("feature_builder", None)
-            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_model_grid"
+            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_generator_grid"
         elif value == "full_sweep":
             training.pop("model_family", None)
             training.pop("feature_builder", None)
@@ -326,7 +326,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "key": "research_design",
             "prompt": "Study mode",
             "options": [
-                "single_path_benchmark",
+                "single_forecast_run",
                 "controlled_variation",
             ],
         },
@@ -342,7 +342,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "key": "experiment_unit",
             "prompt": "Experiment unit",
             "options": list(experiment_unit_options_for_wizard(
-                _recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark"),
+                _recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run"),
                 target_structure,
             )),
         },
@@ -488,10 +488,10 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
 
 
 def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
-    research_design = _recipe_fixed(recipe, "0_meta").get("research_design", "single_path_benchmark")
+    research_design = _recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run")
     target_structure = _target_structure_value(recipe)
     explicit_unit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
-    route_owner = "wrapper" if research_design == "orchestrated_bundle" else "single_run"
+    route_owner = "wrapper" if research_design == "study_bundle" else "single_run"
     if explicit_unit in {"single_target_full_sweep", "multi_target_separate_runs", "multi_target_shared_design", "benchmark_suite", "ablation_study"}:
         route_owner = "wrapper"
     elif explicit_unit == "replication_recipe":

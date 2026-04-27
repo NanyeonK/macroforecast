@@ -32,7 +32,7 @@ _GOULET_COULOMBE_2021_RECIPE: dict[str, Any] = {
     "path": {
         "0_meta": {
             "fixed_axes": {
-                "research_design": "single_path_benchmark",
+                "research_design": "single_forecast_run",
                 "failure_policy": "fail_fast",
                 "compute_mode": "serial",
                 "reproducibility_mode": "seeded_reproducible",
@@ -113,8 +113,8 @@ _SYNTHETIC_REPLICATION_RECIPE: dict[str, Any] = {
     "path": {
         "0_meta": {
             "fixed_axes": {
-                "research_design": "single_path_benchmark",
-                "experiment_unit": "single_target_single_model",
+                "research_design": "single_forecast_run",
+                "experiment_unit": "single_target_single_generator",
                 "failure_policy": "fail_fast",
                 "compute_mode": "serial",
                 "reproducibility_mode": "seeded_reproducible",
@@ -170,8 +170,8 @@ _FRED_SD_MIDASR_ALMONP_RECIPE: dict[str, Any] = {
     "path": {
         "0_meta": {
             "fixed_axes": {
-                "research_design": "single_path_benchmark",
-                "experiment_unit": "single_target_single_model",
+                "research_design": "single_forecast_run",
+                "experiment_unit": "single_target_single_generator",
                 "failure_policy": "fail_fast",
                 "compute_mode": "serial",
                 "reproducibility_mode": "seeded_reproducible",
@@ -255,7 +255,7 @@ _ENTRIES: dict[str, ReplicationEntry] = {
             "raw-panel ridge generator, AR-BIC benchmark, and MSFE evaluation."
         ),
         exact_tree_path=(
-            "0_meta.research_design=single_path_benchmark",
+            "0_meta.research_design=single_forecast_run",
             "1_data_task.dataset=fred_md",
             "1_data_task.official_transform_policy=dataset_tcode",
             "2_preprocessing.tcode_policy=tcode_then_extra_preprocess",
@@ -298,8 +298,8 @@ _ENTRIES: dict[str, ReplicationEntry] = {
         paper_name="Synthetic replication round-trip",
         short_description="Small fixture-safe replication route used to verify recipe lowering and artifact contracts.",
         exact_tree_path=(
-            "0_meta.research_design=single_path_benchmark",
-            "0_meta.experiment_unit=single_target_single_model",
+            "0_meta.research_design=single_forecast_run",
+            "0_meta.experiment_unit=single_target_single_generator",
             "1_data_task.dataset=fred_md",
             "2_preprocessing.tcode_policy=raw_only",
             "3_training.feature_builder=autoreg_lagged_target",

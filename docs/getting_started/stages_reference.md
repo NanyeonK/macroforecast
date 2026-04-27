@@ -27,10 +27,10 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 | Value | Check / observe |
 |---|---|
-| `single_path_benchmark` (default) | Single recipe → `execute_recipe()` → one predictions file + one metrics file |
+| `single_forecast_run` (default) | Single recipe → `execute_recipe()` → one predictions file + one metrics file |
 | `controlled_variation` | Sweep plan → one run per variant, shared baseline contract → `study_manifest.json` |
-| `orchestrated_bundle` | Compile-only in v1.0 (Phase 8 `PaperReadyBundle` will consume) — manifest carries `wrapper_handoff` |
-| `replication_override` | `execute_replication()` runner → byte-identical re-run vs. source manifest |
+| `study_bundle` | Compile-only in v1.0 (Phase 8 `PaperReadyBundle` will consume) — manifest carries `wrapper_handoff` |
+| `replication_recipe` | `execute_replication()` runner → byte-identical re-run vs. source manifest |
 
 **Deep dive:** [user_guide/design.md 0.1](../user_guide/design.md#01-research_design).
 
@@ -40,8 +40,8 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 | Value | Check / observe |
 |---|---|
-| `single_target_single_model` | one target + one model → default derivation |
-| `single_target_model_grid` | one target + `model_family` sweep |
+| `single_target_single_generator` | one target + one model → default derivation |
+| `single_target_generator_grid` | one target + `model_family` sweep |
 | `single_target_full_sweep` | registry-only; dropped until a wrapper runner exists |
 | `multi_target_separate_runs` | N targets → N independent `execute_recipe` calls (dedicated runner) |
 | `multi_target_shared_design` | N targets → one run with shared preprocessing + benchmarks |

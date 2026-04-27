@@ -69,7 +69,7 @@ def test_already_migrated_recipe_is_idempotent() -> None:
 
 
 def test_recipe_without_layer_6_passes_through() -> None:
-    recipe = {"recipe_id": "rt", "path": {"0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}}}}
+    recipe = {"recipe_id": "rt", "path": {"0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}}}}
     result = migrate_legacy_stat_test(recipe)
     assert result == recipe
 
@@ -83,7 +83,7 @@ def test_compile_hook_runs_migration_via_compile_recipe_dict(tmp_path) -> None:
     recipe = {
         "recipe_id": "migration-hook-check",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "info_set": "revised", "task": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},

@@ -30,7 +30,7 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
     recipe = {
         "recipe_id": "wrapper_preview",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "orchestrated_bundle"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
+            "0_meta": {"fixed_axes": {"research_design": "study_bundle"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "revised", "target_structure": "single_target_point_forecast"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -71,7 +71,7 @@ def test_macrocast_single_run_interactive_first_step(monkeypatch, tmp_path: Path
     assert out["interactive"] is True
     assert out["yaml_path"].endswith("wizard.yaml")
     assert out["completed_choices"][0]["key"] == "research_design"
-    assert out["completed_choices"][0]["value"] == "single_path_benchmark"
+    assert out["completed_choices"][0]["value"] == "single_forecast_run"
     assert out["current_choice"]["key"] == "target_structure"
     assert out["route_preview"]["route_owner"] == "single_run"
 
@@ -81,7 +81,7 @@ def test_macrocast_single_run_interactive_drops_unsupported_wrapper_choice(monke
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=0)
     assert out["current_choice"]["key"] == "research_design"
-    assert "orchestrated_bundle" not in out["current_choice"]["options"]
+    assert "study_bundle" not in out["current_choice"]["options"]
 
 
 def test_macrocast_single_run_interactive_task_switches_next_choice(monkeypatch, tmp_path: Path) -> None:

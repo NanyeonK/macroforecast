@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ..registry.stage0.experiment_unit import get_experiment_unit_entry
+from ..registry.naming import canonical_axis_value
 from .derive import derive_design_shape, derive_execution_posture, derive_experiment_unit
 from .errors import DesignCompletenessError, DesignRoutingError, DesignValidationError
 from .normalize import (
@@ -29,7 +30,11 @@ def build_design_frame(
     normalized_varying_design = normalize_varying_design(varying_design)
     normalized_replication_input = normalize_replication_input(replication_input)
 
-    resolved_experiment_unit = experiment_unit
+    resolved_experiment_unit = (
+        canonical_axis_value("experiment_unit", str(experiment_unit))
+        if experiment_unit is not None
+        else None
+    )
     if resolved_experiment_unit is None:
         provisional_design_shape = derive_design_shape(
             normalized_research_design,
@@ -56,7 +61,7 @@ def build_design_frame(
         raise DesignValidationError(
             f"experiment_unit={resolved_experiment_unit!r} requires forecast_task='multi_target_point_forecast'"
         )
-    if not unit_entry.requires_multi_target and normalized_fixed_design.forecast_task == "multi_target_point_forecast" and resolved_experiment_unit not in {"single_target_model_grid", "single_target_single_model", "single_target_full_sweep", "replication_recipe"}:
+    if not unit_entry.requires_multi_target and normalized_fixed_design.forecast_task == "multi_target_point_forecast" and resolved_experiment_unit not in {"single_target_generator_grid", "single_target_single_generator", "single_target_full_sweep", "replication_recipe"}:
         pass
 
     design_shape = derive_design_shape(

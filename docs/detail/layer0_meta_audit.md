@@ -24,7 +24,7 @@ Current source axes:
 
 | Axis | Public role | Current default |
 |------|-------------|-----------------|
-| `research_design` | public concept, mostly derived by `Experiment` | `single_path_benchmark` |
+| `research_design` | public concept, mostly derived by `Experiment` | `single_forecast_run` |
 | `experiment_unit` | internal/advanced route selector | derived |
 | `compute_mode` | advanced execution control | `serial` |
 | `failure_policy` | advanced execution control | `fail_fast` |
@@ -48,7 +48,7 @@ The live registry / Navigator census shows:
 | Active Layer 0 axes | 6 registry axes, 38 total values. | Keep. Code docstrings now say six axes. |
 | Primary Navigator axes | 5 axes: `research_design`, `experiment_unit`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
 | Internal axis | `axis_type`. | Keep hidden from the primary Navigator tree; document it as registry grammar. |
-| Runner handoffs | `orchestrated_bundle`, `replication_override`, `multi_target_separate_runs`, and `replication_recipe` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
+| Runner handoffs | `study_bundle`, `replication_recipe`, `multi_target_separate_runs`, and `replication_recipe` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
 | Main open Layer 0 question | Whether benchmark/ablation wrapper families should become real public simple API methods. | Defer until wrapper result/artifact contracts are audited after Layers 4-6. |
 
 ## Full Route Contract
@@ -71,10 +71,10 @@ Only `route_owner="single_run"` can be executed by `run_compiled_recipe`.
 
 | Value | Meaning | MVP public API |
 |-------|---------|----------------|
-| `single_path_benchmark` | one fixed recipe path | `forecast(...)` / `Experiment(...).run()` |
+| `single_forecast_run` | one fixed recipe path | `forecast(...)` / `Experiment(...).run()` |
 | `controlled_variation` | one controlled comparison surface | `.compare_models(...)`, `.sweep({"models": ...})` |
-| `orchestrated_bundle` | wrapper-managed bundle | advanced/detail only |
-| `replication_override` | replication-locked route | `execute_replication` / Replication Library route |
+| `study_bundle` | wrapper-managed bundle | advanced/detail only |
+| `replication_recipe` | replication-locked route | `execute_replication` / Replication Library route |
 
 `Experiment` should set `research_design` automatically. Users should not need to pass this in the simple path.
 
@@ -84,8 +84,8 @@ Only `route_owner="single_run"` can be executed by `run_compiled_recipe`.
 
 | Value | Route owner | Runtime status | Public role |
 |-------|-------------|----------------|-------------|
-| `single_target_single_model` | `single_run` | executable | simple default |
-| `single_target_model_grid` | `single_run` | executable through sweep runner | one controlled single-run axis, usually model comparison |
+| `single_target_single_generator` | `single_run` | executable | simple default |
+| `single_target_generator_grid` | `single_run` | executable through sweep runner | one controlled single-run axis, usually model comparison |
 | `single_target_full_sweep` | `wrapper` | registry_only / not_supported | dropped until a wrapper runner exists |
 | `multi_target_shared_design` | `single_run` | executable | advanced after Layer 1 audit |
 | `multi_target_separate_runs` | `wrapper` | executable wrapper path | advanced after Layer 1 audit |
@@ -100,7 +100,7 @@ The simple API should not expose `experiment_unit` directly. It should expose cl
 
 Full contract notes:
 
-- `single_target_model_grid` is historical naming. In the current full contract it means one controlled single-run axis, usually `model_family`.
+- `single_target_generator_grid` is historical naming. In the current full contract it means one controlled single-run axis, usually `model_family`.
 - `multi_target_separate_runs` is a wrapper handoff with a concrete `execute_separate_runs` runner; it is not a direct executable compiled recipe.
 - `single_target_full_sweep`, `benchmark_suite`, and `ablation_study` are wrapper handoffs without compiled-recipe runner contracts and compile as `not_supported`.
 - `replication_recipe` is a replication handoff. It is consumed by `execute_replication`, not by `run_compiled_recipe`.
@@ -142,13 +142,13 @@ Correct behavior:
 ```text
 one model + one feature recipe -> one_fixed_env_one_tool_surface
 one model + multiple feature recipes -> one_fixed_env_controlled_axis_variation
-multiple models + single_path_benchmark -> one_fixed_env_multi_tool_surface
+multiple models + single_forecast_run -> one_fixed_env_multi_tool_surface
 controlled_variation -> one_fixed_env_controlled_axis_variation
 ```
 
 The derivation now counts feature/preprocess/tuning axes only when they contain more than one value.
 When that produces a single-run controlled axis, Layer 0 keeps the route in
-`single_target_model_grid` until a finer-grained experiment unit is introduced.
+`single_target_generator_grid` until a finer-grained experiment unit is introduced.
 The name is historical; the current contract is "one controlled single-run
 axis", not strictly "model axis only".
 
@@ -156,9 +156,9 @@ axis", not strictly "model axis only".
 
 | User action | Layer 0 mapping |
 |-------------|-----------------|
-| `mc.forecast(...)` | `single_path_benchmark`, `single_target_single_model`, `single_run_recipe` |
+| `mc.forecast(...)` | `single_forecast_run`, `single_target_single_generator`, `single_run_recipe` |
 | `Experiment(...).run()` | same as `forecast` when no sweep axes exist |
-| `.compare_models([...])` | `controlled_variation`, `single_target_model_grid`, `single_run_with_internal_sweep` |
+| `.compare_models([...])` | `controlled_variation`, `single_target_generator_grid`, `single_run_with_internal_sweep` |
 | `.sweep({"models": [...]})` | same as `compare_models` |
 | fixed `.use_preprocessor(...)` | still single path unless models are compared |
 | fixed `.use_target_transformer(...)` | still single path unless models are compared |

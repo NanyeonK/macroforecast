@@ -23,7 +23,7 @@ DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
 
 DEFAULT_PROFILE: dict[str, Any] = {
     "name": DEFAULT_PROFILE_NAME,
-    "research_design": "single_path_benchmark",
+    "research_design": "single_forecast_run",
     "information_set_type": "revised",
     "target_structure": "single_target_point_forecast",
     "framework": "expanding",
@@ -179,7 +179,7 @@ def build_default_recipe_dict(
     if benchmark_config:
         resolved_benchmark_config.update(benchmark_config)
 
-    research_design = "controlled_variation" if len(model_values) > 1 else "single_path_benchmark"
+    research_design = "controlled_variation" if len(model_values) > 1 else "single_forecast_run"
     training_fixed = {
         "framework": framework,
         "benchmark_family": benchmark_family,

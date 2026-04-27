@@ -82,7 +82,7 @@ def _recipe(
     return {
         "recipe_id": "ft-q-test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
                 "leaf_config": data_leaf,

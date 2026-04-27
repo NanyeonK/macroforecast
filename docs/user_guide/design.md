@@ -3,7 +3,7 @@
 Stage 0 decides **the shape of the study**: which runner fires, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. Six axes cover 38 allowed values; the simple default path uses only the small operational subset needed for a single run or model comparison. Every axis ships a default that matches the most common research flow — most researchers leave all six alone and never read this page.
 
 **At a glance (defaults):**
-- `research_design = single_path_benchmark` — one recipe, one forecast.
+- `research_design = single_forecast_run` — one recipe, one forecast.
 - `experiment_unit` is derived from `target_structure` + sweep shape (auto-picked; never needs to be set).
 - `axis_type = fixed` per axis — set to `sweep` only on the axis you are varying.
 - `failure_policy = fail_fast` — stop on the first error.
@@ -18,21 +18,21 @@ Deviate when you explicitly want multiple variants, different runners, looser er
 
 **Selection question**: Is this a single forecast, a horse race across variants, a Phase 8 paper bundle, or a replication of a prior recipe?
 
-**Default**: `single_path_benchmark` — one recipe produces one forecast and one metrics file. Most empirical work starts here.
+**Default**: `single_forecast_run` — one recipe produces one forecast and one metrics file. Most empirical work starts here.
 
 ### Value catalog
 
 | Value | Status | When to use | Verify |
 |---|---|---|---|
-| `single_path_benchmark` | operational (default) | Default. Any study that compares the chosen model against a benchmark on one dataset/target combination. | `manifest["research_design"] == "single_path_benchmark"` |
+| `single_forecast_run` | operational (default) | Default. Any study that compares the chosen model against a benchmark on one dataset/target combination. | `manifest["research_design"] == "single_forecast_run"` |
 | `controlled_variation` | operational | Horse-race studies — one axis sweeps across values, everything else held fixed. | One `study_manifest.json` per sweep plan; one `run/` directory per variant. |
-| `orchestrated_bundle` | operational as a routing shape | Use only with an experiment unit that has a concrete runner contract. Unsupported wrapper families compile as `not_supported`. | `execution_status` is `ready_for_wrapper_runner` for supported wrappers, otherwise `not_supported`. |
-| `replication_override` | operational | Re-running an existing recipe and asserting byte-identical output. | `execute_replication()` returns `ReplicationResult`; identical forecast + manifest hashes. |
+| `study_bundle` | operational as a routing shape | Use only with an experiment unit that has a concrete runner contract. Unsupported wrapper families compile as `not_supported`. | `execution_status` is `ready_for_wrapper_runner` for supported wrappers, otherwise `not_supported`. |
+| `replication_recipe` | operational | Re-running an existing recipe and asserting byte-identical output. | `execute_replication()` returns `ReplicationResult`; identical forecast + manifest hashes. |
 
 ### Functions & features
 
 - Runner dispatch: `macrocast.compiler.build` resolves `research_design` + `target_structure` → `experiment_unit` via `derive_experiment_unit_default`.
-- Artifacts: `single_path_benchmark` → `execute_recipe()`; `controlled_variation` → `execute_sweep()`; `replication_override` → `execute_replication()`.
+- Artifacts: `single_forecast_run` → `execute_recipe()`; `controlled_variation` → `execute_sweep()`; `replication_recipe` → `execute_replication()`.
 
 ### Recipe usage
 
@@ -61,12 +61,12 @@ The compiler calls `derive_experiment_unit_default(research_design, target_struc
 
 | Value | Status | When to use | Verify |
 |---|---|---|---|
-| `single_target_single_model` | operational (default for single-target, no sweeps) | Default auto-derivation. | `manifest["experiment_unit"] == "single_target_single_model"` |
-| `single_target_model_grid` | operational | Auto-picked when `model_family` sweeps. | manifest records the derived value. |
+| `single_target_single_generator` | operational (default for single-target, no sweeps) | Default auto-derivation. | `manifest["experiment_unit"] == "single_target_single_generator"` |
+| `single_target_generator_grid` | operational | Auto-picked when `model_family` sweeps. | manifest records the derived value. |
 | `single_target_full_sweep` | registry_only | Grammar retained for future wrapper/orchestrator work; not exposed as runnable. | `execution_status == "not_supported"`. |
 | `multi_target_separate_runs` | operational | Multi-target recipe, each target runs independently via `execute_separate_runs`. | N `run/` directories; `separate_runs_manifest.json`. |
 | `multi_target_shared_design` | operational (default for multi-target) | Multi-target with shared preprocessing / benchmarks (default auto-derivation). | Single run directory; `predictions.csv` contains all targets. |
-| `replication_recipe` | operational | Auto-derived when `research_design=replication_override`. | `ReplicationResult` artefact. |
+| `replication_recipe` | operational | Auto-derived when `research_design=replication_recipe`. | `ReplicationResult` artefact. |
 | `benchmark_suite` | registry_only | Reserved for a future PaperReadyBundle/runtime contract. | `execution_status == "not_supported"`. |
 | `ablation_study` | registry_only | Standalone `AblationSpec` runner exists, but compiled-recipe wrapper handoff is not wired. | `execution_status == "not_supported"`. |
 

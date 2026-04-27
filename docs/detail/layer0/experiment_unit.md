@@ -33,8 +33,8 @@ Read this axis as the execution owner. In most recipes, do not choose it directl
 
 | Choice | Owner | Current State |
 |---|---|---|
-| `single_target_single_model` | `single_run` | runnable |
-| `single_target_model_grid` | `single_run` | runnable / sweep-aware |
+| `single_target_single_generator` | `single_run` | runnable |
+| `single_target_generator_grid` | `single_run` | runnable / sweep-aware |
 | `multi_target_shared_design` | `single_run` | runnable |
 | `multi_target_separate_runs` | `wrapper` | runnable through wrapper |
 | `replication_recipe` | `replication` | runnable through replication runner |
@@ -47,7 +47,7 @@ Read this axis as the execution owner. In most recipes, do not choose it directl
 
 ### Runnable Direct Units
 
-#### `single_target_single_model`
+#### `single_target_single_generator`
 
 This is the smallest ordinary execution unit.
 
@@ -55,8 +55,8 @@ This is the smallest ordinary execution unit.
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
-      experiment_unit: single_target_single_model
+      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
 ```
 
 The direct runner owns it:
@@ -66,7 +66,7 @@ route_owner = single_run
 runner      = execute_recipe
 ```
 
-#### `single_target_model_grid`
+#### `single_target_generator_grid`
 
 Use this when one target is evaluated across a controlled model or feature comparison.
 
@@ -75,7 +75,7 @@ path:
   0_meta:
     fixed_axes:
       research_design: controlled_variation
-      experiment_unit: single_target_model_grid
+      experiment_unit: single_target_generator_grid
   3_training:
     sweep_axes:
       model_family: [ridge, lasso, random_forest]
@@ -96,7 +96,7 @@ Use this when several targets share one design and should be evaluated in one co
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
       experiment_unit: multi_target_shared_design
   1_data_task:
     fixed_axes:
@@ -123,7 +123,7 @@ Use this when each target should run as a separate single-target job with its ow
 path:
   0_meta:
     fixed_axes:
-      research_design: orchestrated_bundle
+      research_design: study_bundle
       experiment_unit: multi_target_separate_runs
   1_data_task:
     fixed_axes:
@@ -148,7 +148,7 @@ recipe_id: goulet-coulombe-2021-fred-md-ridge
 path:
   0_meta:
     fixed_axes:
-      research_design: replication_override
+      research_design: replication_recipe
       experiment_unit: replication_recipe
 ```
 
@@ -188,7 +188,7 @@ This is reserved grammar for a wrapper-managed benchmark suite.
 path:
   0_meta:
     fixed_axes:
-      research_design: orchestrated_bundle
+      research_design: study_bundle
       experiment_unit: benchmark_suite
 ```
 
@@ -207,7 +207,7 @@ This is reserved grammar for ablation routes.
 path:
   0_meta:
     fixed_axes:
-      research_design: orchestrated_bundle
+      research_design: study_bundle
       experiment_unit: ablation_study
 ```
 
@@ -252,13 +252,13 @@ runtime = registry placeholder; not opened as runnable route
 
 | Recipe Shape | Derived Unit |
 |---|---|
-| `research_design=replication_override` | `replication_recipe` |
+| `research_design=replication_recipe` | `replication_recipe` |
 | `leaf_config.wrapper_family` names a known unit | that wrapper family |
 | `target_structure=multi_target_point_forecast` | `multi_target_shared_design` |
-| `research_design=orchestrated_bundle` | `benchmark_suite` unless a wrapper family overrides it |
+| `research_design=study_bundle` | `benchmark_suite` unless a wrapper family overrides it |
 | both `model_family` and `feature_builder` are swept | `single_target_full_sweep` |
-| either `model_family` or `feature_builder` is swept | `single_target_model_grid` |
-| none of the above | `single_target_single_model` |
+| either `model_family` or `feature_builder` is swept | `single_target_generator_grid` |
+| none of the above | `single_target_single_generator` |
 
 If `experiment_unit` is explicit in YAML, `_build_stage0_and_recipe()` checks that it matches the unit implied by the recipe shape. A mismatch is a compile error.
 
@@ -270,7 +270,7 @@ Usually derived:
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
     derived_axes:
       experiment_unit: experiment_unit_default
 ```
@@ -281,8 +281,8 @@ Explicit Full recipe:
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
-      experiment_unit: single_target_single_model
+      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
 ```
 
 Multi-target shared design:
@@ -291,7 +291,7 @@ Multi-target shared design:
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
       experiment_unit: multi_target_shared_design
   1_data_task:
     fixed_axes:

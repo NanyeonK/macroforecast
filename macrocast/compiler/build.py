@@ -42,6 +42,7 @@ from ..preprocessing import (
 )
 from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
+from ..registry.naming import canonical_axis_name, canonical_axis_value
 from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
 from ..raw.fred_sd_groups import resolve_fred_sd_state_group, resolve_fred_sd_variable_group
 from ..design import build_design_frame, resolve_route_owner, design_to_dict
@@ -57,16 +58,6 @@ from ..custom import (
 )
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
-
-_AXIS_NAME_ALIASES = {
-    "info_set": "information_set_type",
-    "dataset_source": "source_adapter",
-    "task": "target_structure",
-}
-
-_AXIS_VALUE_ALIASES = {
-    ("horizon_target_construction", "future_level_y_t_plus_h"): "future_target_level_t_plus_h",
-}
 
 _DATASET_DEFAULT_FREQUENCY = {
     "fred_md": "monthly",
@@ -230,11 +221,11 @@ def _normalize_layer_spec(layer_spec: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def _canonical_axis_name(axis_name: str) -> str:
-    return _AXIS_NAME_ALIASES.get(axis_name, axis_name)
+    return canonical_axis_name(axis_name)
 
 
 def _canonical_axis_value(axis_name: str, value: str) -> str:
-    return _AXIS_VALUE_ALIASES.get((axis_name, value), value)
+    return canonical_axis_value(axis_name, value)
 
 
 def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, ...]:
@@ -292,7 +283,7 @@ def _rule_experiment_unit_default(
             return selection_map[name].selected_values[0]
         return default
 
-    research_design = _sv("research_design", "single_path_benchmark")
+    research_design = _sv("research_design", "single_forecast_run")
     task = (
         _sv("target_structure")
         or leaf_config.get("target_structure")
@@ -302,7 +293,7 @@ def _rule_experiment_unit_default(
     model_sel = selection_map.get("model_family")
     feature_sel = selection_map.get("feature_builder")
     return derive_experiment_unit_default(
-        research_design=research_design or "single_path_benchmark",
+        research_design=research_design or "single_forecast_run",
         task=task,
         model_axis_mode=model_sel.selection_mode if model_sel else "fixed",
         feature_axis_mode=feature_sel.selection_mode if feature_sel else "fixed",
@@ -3680,9 +3671,9 @@ def _execution_status(
         stage0.experiment_unit
         if stage0 is not None
         else (
-            _selection_value(selection_map, "experiment_unit", default="single_target_single_model")
+            _selection_value(selection_map, "experiment_unit", default="single_target_single_generator")
             if "experiment_unit" in selection_map
-            else "single_target_single_model"
+            else "single_target_single_generator"
         )
     )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")

@@ -23,7 +23,7 @@ recipe_id: ablation-preprocessing-baseline
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
   1_data_task:
     fixed_axes:
       dataset: fred_md

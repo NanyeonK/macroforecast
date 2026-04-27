@@ -2,7 +2,7 @@ recipe_id: goulet-coulombe-2021-fred-md-ridge
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
       failure_policy: fail_fast
       compute_mode: serial
       reproducibility_mode: seeded_reproducible

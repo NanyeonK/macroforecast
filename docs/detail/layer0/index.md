@@ -32,10 +32,10 @@ There is also an internal `axis_type` grammar, but it is not a sixth user step. 
 
 Start with `research_design`. That decision constrains or derives the runner shape:
 
-- `single_path_benchmark` normally derives `experiment_unit=single_target_single_model` unless the target/sweep shape requires another supported unit.
+- `single_forecast_run` normally derives `experiment_unit=single_target_single_generator` unless the target/sweep shape requires another supported unit.
 - `controlled_variation` is used when one or more axes are swept while the rest of the path is held fixed.
-- `orchestrated_bundle` is a wrapper route and only opens when a concrete wrapper runner contract exists.
-- `replication_override` routes to a replication-style runner and should preserve recipe provenance.
+- `study_bundle` is a wrapper route and only opens when a concrete wrapper runner contract exists.
+- `replication_recipe` routes to a replication-style runner and should preserve recipe provenance.
 
 Then set policies:
 
@@ -54,13 +54,29 @@ Output:
 - resolved or derived `experiment_unit`;
 - failure/reproducibility/compute policies recorded in manifest and runner context.
 
+## Naming migration
+
+Layer 0 now uses clearer canonical IDs. Older recipe IDs are still accepted at
+compile time and normalized before registry validation:
+
+| Legacy ID | Canonical ID |
+|---|---|
+| `single_path_benchmark` | `single_forecast_run` |
+| `orchestrated_bundle` | `study_bundle` |
+| `replication_override` | `replication_recipe` |
+| `single_target_single_model` | `single_target_single_generator` |
+| `single_target_model_grid` | `single_target_generator_grid` |
+
+New docs and generated Navigator data use the canonical IDs. Keep legacy IDs
+only for old recipes that have not yet been rewritten.
+
 ## YAML shape
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: single_path_benchmark
+      research_design: single_forecast_run
       failure_policy: fail_fast
       reproducibility_mode: seeded_reproducible
       compute_mode: serial

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ..base import AxisDefinition, EnumRegistryEntry
+from ..naming import canonical_axis_value
 
 RouteOwner = Literal["single_run", "wrapper", "orchestrator", "replication"]
 
@@ -18,8 +19,8 @@ class ExperimentUnitEntry(EnumRegistryEntry):
 
 EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
     ExperimentUnitEntry(
-        id="single_target_single_model",
-        description="Single-target executable single-model run.",
+        id="single_target_single_generator",
+        description="Single-target executable single-generator run.",
         status="operational",
         priority="A",
         route_owner="single_run",
@@ -27,8 +28,8 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
         requires_wrapper=False,
     ),
     ExperimentUnitEntry(
-        id="single_target_model_grid",
-        description="Single-target controlled one-axis comparison within the single-run family; usually a model grid.",
+        id="single_target_generator_grid",
+        description="Single-target controlled one-axis comparison within the single-run family; usually a generator grid.",
         status="operational",
         priority="A",
         route_owner="single_run",
@@ -135,7 +136,7 @@ _BY_ID = {entry.id: entry for entry in EXPERIMENT_UNIT_ENTRIES}
 
 
 def get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry:
-    return _BY_ID[experiment_unit]
+    return _BY_ID[canonical_axis_value("experiment_unit", experiment_unit)]
 
 
 def experiment_unit_options_for_wizard(research_design: str, task: str) -> tuple[str, ...]:
@@ -145,19 +146,20 @@ def experiment_unit_options_for_wizard(research_design: str, task: str) -> tuple
     returned — registry_only and future entries are intentionally filtered
     so UIs do not propose non-executable units.
     """
-    if research_design == "replication_override":
+    research_design = canonical_axis_value("research_design", research_design)
+    if research_design == "replication_recipe":
         candidates = ("replication_recipe",)
     elif task == "multi_target_point_forecast":
         candidates = (
             "multi_target_shared_design",
             "multi_target_separate_runs",
         )
-    elif research_design == "orchestrated_bundle":
+    elif research_design == "study_bundle":
         candidates = ("benchmark_suite", "ablation_study")
     else:
         candidates = (
-            "single_target_single_model",
-            "single_target_model_grid",
+            "single_target_single_generator",
+            "single_target_generator_grid",
             "single_target_full_sweep",
         )
     return tuple(cid for cid in candidates if _BY_ID[cid].status == "operational")
@@ -171,7 +173,8 @@ def derive_experiment_unit_default(
     feature_axis_mode: str = "fixed",
     wrapper_family: str | None = None,
 ) -> str:
-    if research_design == "replication_override":
+    research_design = canonical_axis_value("research_design", research_design)
+    if research_design == "replication_recipe":
         return "replication_recipe"
     if wrapper_family in _BY_ID:
         return wrapper_family
@@ -179,10 +182,10 @@ def derive_experiment_unit_default(
         # shared_design is handled by execute_recipe; separate_runs is the
         # supported wrapper-runner fan-out path.
         return "multi_target_shared_design"
-    if research_design == "orchestrated_bundle":
+    if research_design == "study_bundle":
         return "benchmark_suite"
     if model_axis_mode == "sweep" and feature_axis_mode == "sweep":
         return "single_target_full_sweep"
     if model_axis_mode == "sweep" or feature_axis_mode == "sweep":
-        return "single_target_model_grid"
-    return "single_target_single_model"
+        return "single_target_generator_grid"
+    return "single_target_single_generator"

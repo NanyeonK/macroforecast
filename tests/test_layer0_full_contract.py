@@ -47,7 +47,7 @@ def test_single_default_is_direct_single_run_executable() -> None:
     assert compiled.execution_status == "executable"
     assert compiled.tree_context["route_owner"] == "single_run"
     assert compiled.tree_context["route_contract"] == "single_run_executable"
-    assert compiled.tree_context["experiment_unit"] == "single_target_single_model"
+    assert compiled.tree_context["experiment_unit"] == "single_target_single_generator"
 
 
 def test_model_comparison_parent_requires_sweep_runner_but_variants_are_executable() -> None:
@@ -75,7 +75,7 @@ def test_feature_only_controlled_variation_is_sweep_runner_contract() -> None:
     assert compiled.tree_context["route_owner"] == "single_run"
     assert compiled.tree_context["route_contract"] == "sweep_runner_executable"
     assert compiled.tree_context["controlled_axis_kind"] == "feature"
-    assert compiled.tree_context["experiment_unit"] == "single_target_model_grid"
+    assert compiled.tree_context["experiment_unit"] == "single_target_generator_grid"
 
 
 def test_preprocessing_sweep_is_runner_ready_but_variants_can_be_blocked_by_layer2() -> None:
@@ -130,9 +130,9 @@ def test_multi_target_separate_runs_is_wrapper_runner_ready_not_direct_executabl
         run_compiled_recipe(compiled, output_root=tmp_path)
 
 
-def test_replication_override_is_handoff_not_direct_executable(tmp_path) -> None:
+def test_replication_recipe_is_handoff_not_direct_executable(tmp_path) -> None:
     recipe = _base_recipe("replication")
-    _set_meta(recipe, research_design="replication_override")
+    _set_meta(recipe, research_design="replication_recipe")
 
     compiled = compile_recipe_dict(recipe).compiled
 

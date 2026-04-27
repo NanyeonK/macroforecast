@@ -18,6 +18,7 @@ from macrocast.navigator import (
 )
 from macrocast.navigator.cli import main as navigator_main
 from macrocast.navigator.presentation import AXIS_PRESENTATION_SCHEMA_VERSION, AXIS_PRESENTATION_MAP
+from macrocast.registry.naming import NAMING_LEDGER_VERSION
 
 
 def _recipe(**training_overrides):
@@ -33,7 +34,7 @@ def _recipe(**training_overrides):
     return {
         "recipe_id": "navigator-test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_path_benchmark"}},
+            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -210,11 +211,23 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
 
     assert payload["axis_presentation_schema_version"] == AXIS_PRESENTATION_SCHEMA_VERSION
     assert presentation["research_design"]["label"] == "Research Design"
-    assert presentation["research_design"]["values"]["single_path_benchmark"]["label"] == "Single Forecasting Run"
+    assert presentation["research_design"]["values"]["single_forecast_run"]["label"] == "Single Forecasting Run"
     assert presentation["research_design"]["docs_url"].endswith("/detail/layer0/research_design.html")
     assert presentation["experiment_unit"]["selection_kind"] == "usually_derived"
     assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallelize Models"
     assert AXIS_PRESENTATION_MAP["failure_policy"]["values"]["fail_fast"]["label"] == "Stop on First Failure"
+
+
+def test_navigator_ui_data_exports_rename_ledger():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    aliases = {
+        (item["axis"], item["legacy_id"]): item["canonical_id"]
+        for item in payload["rename_ledger"]["axis_value_aliases"]
+    }
+
+    assert payload["naming_ledger_version"] == NAMING_LEDGER_VERSION
+    assert aliases[("research_design", "single_path_benchmark")] == "single_forecast_run"
+    assert aliases[("experiment_unit", "single_target_model_grid")] == "single_target_generator_grid"
 
 
 def test_navigation_disables_tree_shap_for_non_tree_model():
@@ -282,10 +295,10 @@ def test_replication_library_writes_yaml(tmp_path: Path):
     payload = yaml.safe_load(out.read_text())
 
     assert payload["recipe_id"] == "synthetic-replication-roundtrip-navigator"
-    assert payload["path"]["0_meta"]["fixed_axes"]["research_design"] == "single_path_benchmark"
+    assert payload["path"]["0_meta"]["fixed_axes"]["research_design"] == "single_forecast_run"
     assert payload["path"]["3_training"]["fixed_axes"]["forecast_type"] == "iterated"
     assert get_replication_entry("synthetic-replication-roundtrip")["expected_outputs"]
-    assert "single_path_benchmark" in replication_recipe_yaml("synthetic-replication-roundtrip")
+    assert "single_forecast_run" in replication_recipe_yaml("synthetic-replication-roundtrip")
 
 
 def test_navigator_cli_writes_replication_yaml(tmp_path: Path):
