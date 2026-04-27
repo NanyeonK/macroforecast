@@ -1448,6 +1448,12 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         legacy_y_lag_count=str(legacy_y_lag_count),
     )
     _validate_legacy_factor_ar_lags(training_cfg)
+    midasr_weight_family = _selection_value(
+        selection_map,
+        "midasr_weight_family",
+        default=training_cfg.get("midasr_weight_family", "nealmon"),
+    )
+    midas_max_lag_default = 20 if str(midasr_weight_family).strip().lower().replace("-", "_") == "harstep" else 3
     return {
         "outer_window": _selection_value(selection_map, "outer_window", default=framework),
         "refit_policy": _selection_value(selection_map, "refit_policy", default="refit_every_step"),
@@ -1490,12 +1496,8 @@ def _training_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[st
         "embargo_gap_size": training_cfg.get("embargo_gap_size", 0),
         "refit_k_steps": training_cfg.get("refit_k_steps", 3),
         "anchored_max_window_size": training_cfg.get("anchored_max_window_size", 60),
-        "midas_max_lag": training_cfg.get("midas_max_lag", 3),
-        "midasr_weight_family": _selection_value(
-            selection_map,
-            "midasr_weight_family",
-            default=training_cfg.get("midasr_weight_family", "nealmon"),
-        ),
+        "midas_max_lag": training_cfg.get("midas_max_lag", midas_max_lag_default),
+        "midasr_weight_family": midasr_weight_family,
         "midasr_degree": training_cfg.get("midasr_degree"),
         "midasr_nealmon_degree": training_cfg.get("midasr_nealmon_degree", 2),
         "midasr_almonp_degree": training_cfg.get("midasr_almonp_degree", 2),

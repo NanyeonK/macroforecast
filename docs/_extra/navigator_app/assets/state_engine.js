@@ -205,9 +205,6 @@
       if (model === "midasr_nealmon" && value !== "nealmon") {
         return "model_family=midasr_nealmon is the compatibility alias for nealmon only";
       }
-      if (["nbeta", "genexp", "harstep"].includes(value)) {
-        return `midasr_weight_family=${value} is registered but runtime-gated`;
-      }
     }
 
     if (axisName === "forecast_object") {

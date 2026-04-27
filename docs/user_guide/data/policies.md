@@ -13,7 +13,7 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 
 **Note on dropped axes:**
 
-- `alignment_rule` — mixed-frequency calendar axis; meaningful mainly for FRED-SD. Current runtime uses explicit monthly/quarterly conversion plus provenance reports, Layer 2 native-frequency block payloads, custom mixed-frequency adapters, and narrow built-in MIDAS routes (`midas_almon`, `midasr` with `nealmon` / `almonp`). State-space mixed-frequency likelihoods remain future.
+- `alignment_rule` — mixed-frequency calendar axis; meaningful mainly for FRED-SD. Current runtime uses explicit monthly/quarterly conversion plus provenance reports, Layer 2 native-frequency block payloads, custom mixed-frequency adapters, and narrow built-in MIDAS routes (`midas_almon`, `midasr` with `nealmon` / `almonp` / `nbeta` / `genexp` / `harstep`). State-space mixed-frequency likelihoods remain future.
 - `evaluation_scale` — re-homed to Layer 2 (`PreprocessContract.evaluation_scale`) where the actual runtime effect lives.
 - `exogenous_block` — redundant with `feature_builder` default logic.
 - `regime_task` — duplicates 1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.

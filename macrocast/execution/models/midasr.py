@@ -11,14 +11,20 @@ MIDASR_RESTRICTED_CONTRACT_VERSION = "midasr_restricted_direct_v1"
 MIDASR_NEALMON_CONTRACT_VERSION = "midasr_nealmon_direct_v1"
 MIDASR_REFERENCE_PACKAGE = "midasr"
 MIDASR_REFERENCE_FUNCTION = "midas_r"
-MIDASR_SUPPORTED_WEIGHT_FAMILIES = ("nealmon", "almonp")
+MIDASR_SUPPORTED_WEIGHT_FAMILIES = ("nealmon", "almonp", "nbeta", "genexp", "harstep")
 MIDASR_WEIGHT_REFERENCE_FUNCTIONS = {
     "nealmon": "midas_r + nealmon",
     "almonp": "midas_r + almonp",
+    "nbeta": "midas_r + nbeta",
+    "genexp": "midas_r + genexp",
+    "harstep": "midas_r + harstep",
 }
 MIDASR_WEIGHT_BASIS_NAMES = {
     "nealmon": "midasr_nealmon_normalized_exponential_almon",
     "almonp": "midasr_almonp_raw_polynomial",
+    "nbeta": "midasr_nbeta_normalized_beta",
+    "genexp": "midasr_genexp_generalized_exponential",
+    "harstep": "midasr_harstep_har_rv_step",
 }
 
 
@@ -56,9 +62,22 @@ def midasr_weight_param_width(weight_family: str, degree: int) -> int:
         if degree < 1:
             raise ValueError("degree must be >= 1 for nealmon")
         return degree + 1
-    if degree < 0:
-        raise ValueError("degree must be >= 0 for almonp")
-    return degree + 1
+    if family == "almonp":
+        if degree < 0:
+            raise ValueError("degree must be >= 0 for almonp")
+        return degree + 1
+    if family in {"nbeta", "harstep"}:
+        return 3
+    if family == "genexp":
+        return 4
+    raise AssertionError(f"unhandled midasr_weight_family={family!r}")
+
+
+def _require_param_width(params: Sequence[float], *, expected: int, family: str) -> np.ndarray:
+    p = np.asarray(params, dtype=float).reshape(-1)
+    if p.size != expected:
+        raise ValueError(f"{family} params must contain exactly {expected} values")
+    return p
 
 
 def almonp_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
@@ -96,11 +115,60 @@ def nealmon_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
     return delta * exp_eta / denom
 
 
+def nbeta_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
+    """R midasr nbeta-compatible normalized beta lag weights."""
+
+    d = _as_positive_int(lag_count, name="lag_count")
+    p = _require_param_width(params, expected=3, family="nbeta")
+    if d == 1:
+        return np.asarray([float(p[0])], dtype=float)
+    eps = np.finfo(float).eps
+    xi = (np.arange(1, d + 1, dtype=float) - 1.0) / float(d - 1)
+    xi[0] += eps
+    xi[-1] -= eps
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        beta_shape = (xi ** (float(p[1]) - 1.0)) * ((1.0 - xi) ** (float(p[2]) - 1.0))
+    total = float(np.sum(beta_shape))
+    if not math.isfinite(total) or total <= eps:
+        return np.zeros(d, dtype=float)
+    return float(p[0]) * beta_shape / total
+
+
+def genexp_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
+    """R midasr genexp-compatible generalized exponential lag weights."""
+
+    d = _as_positive_int(lag_count, name="lag_count")
+    p = _require_param_width(params, expected=4, family="genexp")
+    positions = (np.arange(1, d + 1, dtype=float) - 1.0) / 100.0
+    exponent = float(p[2]) * positions + float(p[3]) * (positions**2)
+    return (float(p[0]) + float(p[1]) * positions) * np.exp(np.clip(exponent, -700.0, 700.0))
+
+
+def harstep_weights(params: Sequence[float], lag_count: int) -> np.ndarray:
+    """R midasr harstep-compatible HAR(3)-RV lag weights."""
+
+    d = _as_positive_int(lag_count, name="lag_count")
+    if d != 20:
+        raise ValueError("harstep requires lag_count=20, matching R midasr HAR(3)-RV weights")
+    p = _require_param_width(params, expected=3, family="harstep")
+    weights = np.zeros(20, dtype=float)
+    weights[0] = float(p[0]) + float(p[1]) / 5.0 + float(p[2]) / 20.0
+    weights[1:5] = float(p[1]) / 5.0 + float(p[2]) / 20.0
+    weights[5:20] = float(p[2]) / 20.0
+    return weights
+
+
 def midasr_weights(weight_family: str, params: Sequence[float], lag_count: int) -> np.ndarray:
     family = normalize_midasr_weight_family(weight_family)
     if family == "nealmon":
         return nealmon_weights(params, lag_count)
-    return almonp_weights(params, lag_count)
+    if family == "almonp":
+        return almonp_weights(params, lag_count)
+    if family == "nbeta":
+        return nbeta_weights(params, lag_count)
+    if family == "genexp":
+        return genexp_weights(params, lag_count)
+    return harstep_weights(params, lag_count)
 
 
 def fit_midasr_restricted_direct(
@@ -168,8 +236,25 @@ def fit_midasr_restricted_direct(
             offset = 1 + term_idx * param_width
             if family == "nealmon":
                 start[offset] = y_scale / max(term_count, 1)
-            else:
+            elif family == "almonp":
                 start[offset] = y_scale / max(term_count * lag_count, 1)
+            elif family == "nbeta":
+                start[offset] = y_scale / max(term_count, 1)
+                start[offset + 1] = 1.0
+                start[offset + 2] = 1.0
+            elif family == "genexp":
+                start[offset] = y_scale / max(term_count * lag_count, 1)
+            else:
+                scale = y_scale / max(term_count * 3, 1)
+                start[offset : offset + 3] = scale
+
+    lower = np.full(start.shape, -np.inf, dtype=float)
+    upper = np.full(start.shape, np.inf, dtype=float)
+    if family == "nbeta":
+        for term_idx in range(term_count):
+            offset = 1 + term_idx * param_width
+            lower[offset + 1] = np.finfo(float).eps
+            lower[offset + 2] = np.finfo(float).eps
 
     def _predict(params: np.ndarray, tensor: np.ndarray) -> np.ndarray:
         out = np.full(tensor.shape[0], float(params[0]), dtype=float)
@@ -185,6 +270,7 @@ def fit_midasr_restricted_direct(
     opt = least_squares(
         _residuals,
         start,
+        bounds=(lower, upper),
         max_nfev=int(max_nfev),
         method="trf",
     )

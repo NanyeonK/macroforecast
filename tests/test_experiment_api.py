@@ -801,6 +801,59 @@ def test_fred_sd_midasr_almonp_runs_as_builtin_weight_family(tmp_path: Path) -> 
     assert "midasr:quarterly" in metadata["block_order"]
 
 
+@pytest.mark.parametrize(
+    ("weight_family", "expected_lag"),
+    [
+        ("nbeta", 3),
+        ("genexp", 3),
+        ("harstep", 20),
+    ],
+)
+def test_fred_sd_midasr_runs_remaining_builtin_weight_families(
+    tmp_path: Path,
+    weight_family: str,
+    expected_lag: int,
+) -> None:
+    dates = pd.date_range("2000-01-01", periods=55, freq="MS")
+    source = tmp_path / f"mixed_fred_sd_{weight_family}.csv"
+    pd.DataFrame(
+        {
+            "date": dates,
+            "UR_CA": [5.0 + idx / 10 for idx in range(len(dates))],
+            "UR_TX": [4.5 + idx / 20 for idx in range(len(dates))],
+            "NQGSP_CA": [100.0 + idx if idx % 3 == 0 else None for idx in range(len(dates))],
+        }
+    ).to_csv(source, index=False)
+
+    result = (
+        Experiment(
+            dataset="fred_sd",
+            target="UR_CA",
+            start="2000-01",
+            end="2004-07",
+            horizons=[1],
+            frequency="monthly",
+            model_family="midasr",
+            feature_builder="raw_feature_panel",
+            benchmark_config={"minimum_train_size": 30, "rolling_window_size": 30},
+        )
+        .sweep({"midasr_weight_family": weight_family})
+        .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
+        .use_fred_sd_mixed_frequency_adapter()
+        .run(output_root=tmp_path / f"runs_{weight_family}", local_raw_source=source)
+    )
+
+    artifact_dir = Path(result.artifact_dir)
+    manifest = json.loads((artifact_dir / "manifest.json").read_text())
+    metadata = manifest["layer2_representation_contract_metadata"]
+
+    assert manifest["model_spec"]["model_family"] == "midasr"
+    assert metadata["alignment"]["midasr_weight_family"] == weight_family
+    assert metadata["alignment"]["midasr_reference_function"] == f"midas_r + {weight_family}"
+    assert metadata["alignment"]["midas_max_lag"] == expected_lag
+    assert metadata["alignment"]["midasr_param_width"] in {3, 4}
+
+
 def test_fred_sd_advanced_mixed_frequency_requires_custom_or_midas_model(tmp_path: Path) -> None:
     dates = pd.date_range("2000-01-01", periods=18, freq="MS")
     source = tmp_path / "mixed_fred_sd.csv"

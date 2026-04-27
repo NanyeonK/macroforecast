@@ -617,8 +617,6 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "midasr_weight_family applies only to model_family=midasr or midasr_nealmon"
         if model == "midasr_nealmon" and value != "nealmon":
             return "model_family=midasr_nealmon is the compatibility alias for nealmon only"
-        if value in {"nbeta", "genexp", "harstep"}:
-            return f"midasr_weight_family={value} is registered but runtime-gated"
     if axis_name == "forecast_object":
         if value == "quantile" and model and model != "quantile_linear":
             return "quantile forecasts currently require model_family=quantile_linear"

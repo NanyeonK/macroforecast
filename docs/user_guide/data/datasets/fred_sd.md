@@ -12,10 +12,14 @@ FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel
 - **MIDAS implementation reference**: R package
   [`midasr`](https://cran.r-project.org/package=midasr), especially
   [`midas_r`](https://rdrr.io/cran/midasr/man/midas_r.html),
-  [`nealmon`](https://rdrr.io/cran/midasr/man/nealmon.html), and
-  [`almonp`](https://rdrr.io/cran/midasr/man/almonp.html). macrocast's
+  [`nealmon`](https://rdrr.io/cran/midasr/man/nealmon.html),
+  [`almonp`](https://rdrr.io/cran/midasr/man/almonp.html),
+  [`nbeta`](https://rdrr.io/cran/midasr/man/nbeta.html),
+  [`genexp`](https://rdrr.io/cran/midasr/man/genexp.html), and
+  [`harstep`](https://rdrr.io/cran/midasr/man/harstep.html). macrocast's
   `model_family=midasr` route currently supports `midasr_weight_family` values
-  `nealmon` and `almonp` for the FRED-SD direct raw-panel route. The legacy
+  `nealmon`, `almonp`, `nbeta`, `genexp`, and `harstep` for the FRED-SD direct
+  raw-panel route. The legacy
   `midasr_nealmon` family remains as a compatibility alias for
   `midasr_weight_family=nealmon`; this is not a full port of all `midasr`
   model classes.
@@ -70,10 +74,9 @@ Within a single workbook, the monthly series have 12 observations per year while
 The built-in estimator set is intentionally narrow. The executable surface is
 a Layer 2 native-frequency block payload plus Layer 3 registered-custom-model
 adapter routes and package-owned direct MIDAS baselines: `midas_almon`,
-`midasr` with `nealmon` or `almonp` weights, and the legacy
-`midasr_nealmon` alias. Full state-space mixed-frequency likelihoods, beta /
-generalized-exponential / HAR-step MIDAS weights, and regularized group MIDAS
-remain research-extension work.
+`midasr` with `nealmon`, `almonp`, `nbeta`, `genexp`, or `harstep` weights,
+and the legacy `midasr_nealmon` alias. Full state-space mixed-frequency
+likelihoods and regularized group MIDAS remain research-extension work.
 
 ## Real-time vintage discipline
 
@@ -283,13 +286,18 @@ The runtime `midasr_weight_family` choices are:
 |---|---|---|
 | `nealmon` | operational narrow | Normalized exponential Almon weights; compatibility alias `model_family="midasr_nealmon"`. |
 | `almonp` | operational narrow | Raw polynomial Almon weights. |
-| `nbeta`, `genexp`, `harstep` | future | Registered in the decision tree but blocked until their exact Python parity tests and parameter contracts are added. |
+| `nbeta` | operational narrow | Normalized beta weights with three parameters. |
+| `genexp` | operational narrow | Generalized exponential weights with four parameters. |
+| `harstep` | operational narrow | HAR(3)-RV step weights with three parameters and exactly 20 lags. |
 
 Tunable fields are `midas_max_lag` (default `3`), `midasr_nealmon_degree`
 (default `2` for `nealmon`), `midasr_almonp_degree` (default `2` for
 `almonp`), `midasr_max_terms` (default `12`), and `midasr_max_nfev` (default
-`500`). Use Layer 2 state/variable/feature selection before this route when
-the raw panel is wide; the NLS slice is meant for explicit research
+`500`). `nbeta`, `genexp`, and `harstep` use fixed parameter widths rather than
+a polynomial degree. `harstep` requires `midas_max_lag=20`; the compiler uses
+20 as the default when `harstep` is selected and no explicit lag is supplied.
+Use Layer 2 state/variable/feature selection before this route when the raw
+panel is wide; the NLS slice is meant for explicit research
 specifications, not blind high-dimensional grids.
 
 ```python
@@ -359,10 +367,21 @@ exp = (
 )
 ```
 
+To sweep all package-owned R `midasr` weight branches, use:
+
+```python
+exp = exp.sweep(
+    {"midasr_weight_family": ["nealmon", "almonp", "nbeta", "genexp", "harstep"]}
+)
+```
+
+Do not force `midas_max_lag=3` in that sweep; the `harstep` branch needs 20
+lags and the compiler will supply 20 when the branch is selected.
+
 The adapter variant uses `.use_fred_sd_mixed_frequency_adapter()`. The package
 now supplies the enforced Layer 2 payload, Layer 3 custom-adapter route, and
-built-in direct MIDAS baselines. State-space estimators, regularized group
-MIDAS, and the remaining `midasr` weight families remain future extensions.
+built-in direct MIDAS baselines. State-space estimators and regularized group
+MIDAS remain future extensions.
 
 ## Changes from the 2020 working paper to current
 
@@ -385,7 +404,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
 
 ## Known limitations in macrocast v1.0
 
-1. **Built-in mixed-frequency estimators are narrow** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, the built-in `midas_almon` direct Almon-lag baseline, `midasr` with `nealmon` / `almonp`, and the compatibility `midasr_nealmon` restricted-NLS slice are available. Other MIDAS weight families, regularized group MIDAS, and state-space nowcasting estimators remain future work.
+1. **Built-in mixed-frequency estimators are narrow** — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, the built-in `midas_almon` direct Almon-lag baseline, `midasr` with `nealmon` / `almonp` / `nbeta` / `genexp` / `harstep`, and the compatibility `midasr_nealmon` restricted-NLS slice are available. Regularized group MIDAS and state-space nowcasting estimators remain future work.
 2. **State and SD-variable groups are recipe-level selectors** —
    `fred_sd_state_group` and `fred_sd_variable_group` resolve into explicit
    `sd_states` / `sd_variables` before loading. They are not post-load

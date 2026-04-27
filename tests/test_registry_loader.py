@@ -57,7 +57,9 @@ def test_registry_loader_preserves_legacy_entry_contract() -> None:
     assert weight_entry.allowed_values[:2] == ("nealmon", "almonp")
     assert weight_entry.current_status["nealmon"] == "operational_narrow"
     assert weight_entry.current_status["almonp"] == "operational_narrow"
-    assert weight_entry.current_status["nbeta"] == "future"
+    assert weight_entry.current_status["nbeta"] == "operational_narrow"
+    assert weight_entry.current_status["genexp"] == "operational_narrow"
+    assert weight_entry.current_status["harstep"] == "operational_narrow"
 
 
 def test_axis_governance_table_matches_discovered_registry() -> None:

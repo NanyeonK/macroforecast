@@ -117,8 +117,10 @@ families remain future work.
 
 Use `model_family="midasr"` when you want the package-owned Python slice
 aligned to the R `midasr` package's restricted MIDAS surface. Set
-`midasr_weight_family` to `nealmon` or `almonp`; `midasr_nealmon` is kept as a
-legacy alias for the `nealmon` branch. This is still an operational-narrow
+`midasr_weight_family` to `nealmon`, `almonp`, `nbeta`, `genexp`, or
+`harstep`; `midasr_nealmon` is kept as a legacy alias for the `nealmon`
+branch. `harstep` uses the R `midasr` 20-lag HAR shape, so leave
+`midas_max_lag` unset or set it to `20`. This is still an operational-narrow
 research route, so keep the selected predictor set explicit.
 
 ## Inferred Transforms
