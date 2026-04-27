@@ -71,16 +71,14 @@ The static Navigator App ships the exported `navigator_state_engine_v1` payload.
 
 - clicking an enabled option changes the current axis selection;
 - disabled options remain visible with the reason they are unavailable;
-- compatibility messages are recomputed from the active browser path;
+- the full Tree Path shows Layers 0-7 as vertical blocks, with the active
+  layer expanded and other layers summarized;
 - YAML preview is regenerated from the selected path and changed axes;
 - generated YAML can be downloaded and existing recipe YAML can be imported;
-- replication entries can load their package-native route into the tree;
-- the resolver preview shows browser-blocked branches plus the CLI commands
-  needed for authoritative `resolve` and `run`;
 - `browser_preview` means the edited path is internally compatible in the browser;
 - `browser_blocked` means the current browser path contains a selected value that violates an active rule.
 
-The browser state engine is an exploration surface. `compile_preview` is still the snapshot from the exported sample recipe, and `macrocast-navigate resolve` remains the authoritative compiler check before running a recipe.
+The browser state engine is an exploration surface. `compile_preview` is still the snapshot from the exported sample recipe, and `macrocast-navigate resolve` remains the authoritative compiler check before running a recipe. The static app keeps the resolver, compatibility, and replication explanations in the docs pages rather than as separate in-app panels.
 
 ## Output Shape
 

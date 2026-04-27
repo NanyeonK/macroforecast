@@ -53,33 +53,44 @@
     </nav>
 
     <main class="layout">
-      <section class="panel controls" aria-label="Navigator controls">
-        <label for="sample-select">Recipe path</label>
-        <select id="sample-select"></select>
-        <p id="path-source" class="source-note">sample: -</p>
-        <button id="reset-path" type="button" class="secondary-action">Reset path</button>
-        <div class="action-row">
-          <button id="import-yaml" type="button" class="secondary-action">Import YAML</button>
-          <input id="import-yaml-input" type="file" accept=".yaml,.yml,text/yaml,text/plain" hidden />
+      <section class="panel path-overview" aria-label="Recipe path overview">
+        <div class="path-toolbar">
+          <div class="recipe-picker">
+            <label for="sample-select">Recipe path</label>
+            <select id="sample-select"></select>
+            <p id="path-source" class="source-note">sample: -</p>
+            <div class="action-row">
+              <button id="reset-path" type="button" class="secondary-action">Reset path</button>
+              <button id="import-yaml" type="button" class="secondary-action">Import YAML</button>
+              <input id="import-yaml-input" type="file" accept=".yaml,.yml,text/yaml,text/plain" hidden />
+            </div>
+          </div>
+          <div class="layer-context">
+            <p class="eyebrow" id="active-layer-kicker">Selected layer</p>
+            <h2 id="active-layer-title">Layer</h2>
+            <p id="active-layer-description" class="source-note"></p>
+          </div>
+          <div class="summary-grid">
+            <div>
+              <span class="metric-label">Status</span>
+              <strong id="execution-status">-</strong>
+            </div>
+            <div>
+              <span class="metric-label">Blocked</span>
+              <strong id="blocked-count">0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Disabled</span>
+              <strong id="disabled-count">0</strong>
+            </div>
+          </div>
         </div>
+        <div id="tree-path" class="tree-path"></div>
+      </section>
 
+      <section class="panel controls" aria-label="Navigator controls">
         <label for="axis-search">Filter axes</label>
         <input id="axis-search" type="search" placeholder="model, tcode, forecast..." />
-
-        <div class="summary-grid">
-          <div>
-            <span class="metric-label">Status</span>
-            <strong id="execution-status">-</strong>
-          </div>
-          <div>
-            <span class="metric-label">Blocked</span>
-            <strong id="blocked-count">0</strong>
-          </div>
-          <div>
-            <span class="metric-label">Disabled</span>
-            <strong id="disabled-count">0</strong>
-          </div>
-        </div>
 
         <div id="axis-list" class="axis-list"></div>
       </section>
@@ -98,14 +109,6 @@
       <aside class="side-stack">
         <section class="panel">
           <div class="section-heading compact">
-            <h2>Tree Path</h2>
-            <span id="tree-path-layer" class="pill">L0</span>
-          </div>
-          <div id="tree-path" class="tree-path"></div>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
             <h2>YAML Preview</h2>
             <div class="action-row">
               <button id="copy-yaml" type="button">Copy</button>
@@ -113,27 +116,6 @@
             </div>
           </div>
           <pre id="yaml-preview" class="code-block"></pre>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
-            <h2>Resolver Preview</h2>
-          </div>
-          <div id="resolver-preview"></div>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
-            <h2>Compatibility</h2>
-          </div>
-          <div id="compatibility-view"></div>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
-            <h2>Replication Library</h2>
-          </div>
-          <div id="replication-list" class="replication-list"></div>
         </section>
       </aside>
     </main>

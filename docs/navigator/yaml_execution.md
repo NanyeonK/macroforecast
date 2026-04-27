@@ -21,9 +21,9 @@ macrocast-navigate resolve /tmp/synthetic-replication.yaml
 
 Run only when `execution_status` is `executable`.
 
-The app's resolver preview is a browser-side preflight. It can show
-`browser_preview` or `browser_blocked` from `navigator_state_engine_v1`, but it
-does not replace `macrocast-navigate resolve`.
+The browser app is a path editor and YAML generator. It does not replace
+`macrocast-navigate resolve`, which remains the authoritative preflight before
+execution.
 
 ## Run YAML
 

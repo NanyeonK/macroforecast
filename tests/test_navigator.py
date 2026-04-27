@@ -208,7 +208,7 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     presentation = payload["axis_presentation"]
 
     assert presentation["research_design"]["label"] == "Study route"
-    assert presentation["research_design"]["docs_url"].endswith("#research-design")
+    assert presentation["research_design"]["docs_url"].endswith("/detail/layer0/research_design.html")
     assert presentation["experiment_unit"]["selection_kind"] == "usually_derived"
     assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallel by model"
 
