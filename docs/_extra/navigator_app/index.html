@@ -9,14 +9,36 @@
   <body>
     <header class="topbar">
       <div>
-        <p class="eyebrow">macrocast navigator</p>
-        <h1>Decision Tree Navigator</h1>
+        <h1>macrocast Navigator</h1>
       </div>
       <div class="top-actions">
         <a href="../index.html">Docs</a>
         <a href="../navigator/index.html">Navigator Guide</a>
       </div>
     </header>
+
+    <nav class="layer-rail" aria-label="Layer filter">
+      <button type="button" data-layer="0_meta" class="active">
+        <span>L0</span>
+        <strong>Study setup</strong>
+      </button>
+      <button type="button" data-layer="1_data_task">
+        <span>L1</span>
+        <strong>Data task</strong>
+      </button>
+      <button type="button" data-layer="2_preprocessing">
+        <span>L2</span>
+        <strong>Representation</strong>
+      </button>
+      <button type="button" data-layer="3_training">
+        <span>L3</span>
+        <strong>Generator</strong>
+      </button>
+      <button type="button" data-layer="downstream">
+        <span>L4-7</span>
+        <strong>Evaluate</strong>
+      </button>
+    </nav>
 
     <main class="layout">
       <section class="panel controls" aria-label="Navigator controls">
@@ -31,15 +53,6 @@
 
         <label for="axis-search">Filter axes</label>
         <input id="axis-search" type="search" placeholder="model, tcode, forecast..." />
-
-        <div class="segmented" role="group" aria-label="Layer filter">
-          <button type="button" data-layer="all" class="active">All</button>
-          <button type="button" data-layer="0_meta">L0</button>
-          <button type="button" data-layer="1_data_task">L1</button>
-          <button type="button" data-layer="2_preprocessing">L2</button>
-          <button type="button" data-layer="3_training">L3</button>
-          <button type="button" data-layer="downstream">L4-7</button>
-        </div>
 
         <div class="summary-grid">
           <div>
@@ -73,23 +86,10 @@
       <aside class="side-stack">
         <section class="panel">
           <div class="section-heading compact">
-            <h2>Compatibility</h2>
+            <h2>Tree Path</h2>
+            <span id="tree-path-layer" class="pill">L0</span>
           </div>
-          <div id="compatibility-view"></div>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
-            <h2>Replication Library</h2>
-          </div>
-          <div id="replication-list" class="replication-list"></div>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading compact">
-            <h2>Resolver Preview</h2>
-          </div>
-          <div id="resolver-preview"></div>
+          <div id="tree-path" class="tree-path"></div>
         </section>
 
         <section class="panel">
@@ -101,6 +101,27 @@
             </div>
           </div>
           <pre id="yaml-preview" class="code-block"></pre>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>Resolver Preview</h2>
+          </div>
+          <div id="resolver-preview"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>Compatibility</h2>
+          </div>
+          <div id="compatibility-view"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading compact">
+            <h2>Replication Library</h2>
+          </div>
+          <div id="replication-list" class="replication-list"></div>
         </section>
       </aside>
     </main>
