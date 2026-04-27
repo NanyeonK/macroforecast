@@ -162,40 +162,40 @@
     <span class="s2">&quot;ardi&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="n">_TARGET_TRANSFORMER_FEATURE_RUNTIMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">}</span>
+<span class="n">_TARGET_TRANSFORMER_FEATURE_RUNTIMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">}</span>
 <span class="n">_TARGET_TRANSFORMER_RAW_PANEL_MODELS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;elasticnet&quot;</span><span class="p">}</span>
-<span class="n">_RAW_PANEL_FEATURE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}</span>
+<span class="n">_RAW_PANEL_FEATURE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}</span>
 <span class="n">_RAW_PANEL_FEATURE_BLOCK_SETS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;transformed_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;transformed_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictor_lags&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factor_blocks_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;high_dimensional_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;selected_sparse_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;level_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rotation_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;level_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rotation_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_OPERATIONAL_FEATURE_BLOCK_SETS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;target_lags_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;transformed_x&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictors&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factor_blocks_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;high_dimensional_x&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_NARROW_OPERATIONAL_FEATURE_BLOCK_SETS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;transformed_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;selected_sparse_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;level_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rotation_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;level_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rotation_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_FEATURE_BLOCK_SET_STATUS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="o">**</span><span class="p">{</span><span class="n">value</span><span class="p">:</span> <span class="s2">&quot;operational&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_OPERATIONAL_FEATURE_BLOCK_SETS</span><span class="p">},</span>
     <span class="o">**</span><span class="p">{</span><span class="n">value</span><span class="p">:</span> <span class="s2">&quot;operational_narrow&quot;</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_NARROW_OPERATIONAL_FEATURE_BLOCK_SETS</span><span class="p">},</span>
-    <span class="s2">&quot;legacy_feature_builder_bridge&quot;</span><span class="p">:</span> <span class="s2">&quot;registry_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feature_builder_compatibility_bridge&quot;</span><span class="p">:</span> <span class="s2">&quot;registry_only&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_MARX_COMPOSITION_MODES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span>
@@ -238,12 +238,12 @@
     <span class="s2">&quot;custom&quot;</span><span class="p">:</span> <span class="s2">&quot;model_specific&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_X_LAG_FEATURE_BLOCK_TO_CREATION</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;variable_specific_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_specific_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;category_specific_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;category_specific_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;variable_specific_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_specific_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;category_specific_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;category_specific_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cv_selected_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;cv_selected_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_DIMRED_TO_FACTOR_FEATURE_BLOCK</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
@@ -255,7 +255,7 @@
     <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">},</span>
     <span class="s2">&quot;pca_static_factors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;pca&quot;</span><span class="p">,</span> <span class="s2">&quot;static_factor&quot;</span><span class="p">},</span>
 <span class="p">}</span>
-<span class="n">_FACTOR_BRIDGE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}</span>
+<span class="n">_FACTOR_BRIDGE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}</span>
 <span class="n">_FACTOR_DIMRED_BRIDGES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pca&quot;</span><span class="p">,</span> <span class="s2">&quot;static_factor&quot;</span><span class="p">}</span>
 <span class="n">_HAC_COMPATIBLE_STAT_TESTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;dm_hln&quot;</span><span class="p">,</span>
@@ -482,20 +482,20 @@
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">block_set</span> <span class="o">=</span> <span class="n">_selected_value_or_none</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_block_set&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_lags_only&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_lag_features&quot;</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;factors_plus_AR&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;factor_blocks_only&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;factor_pca&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;pca_factor_features&quot;</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="ow">in</span> <span class="p">{</span>
-        <span class="s2">&quot;transformed_x&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;transformed_x_lags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;high_dimensional_x&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;selected_sparse_x&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;level_augmented_x&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;rotation_augmented_x&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;custom_blocks&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;transformed_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;transformed_predictor_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;level_augmented_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rotation_augmented_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span>
     <span class="p">}:</span>
         <span class="k">return</span> <span class="s2">&quot;raw_feature_panel&quot;</span>
 
@@ -509,13 +509,13 @@
     <span class="p">]</span>
     <span class="n">has_raw_block</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">raw_block_values</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">factor_block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">target_lag_block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;factors_plus_AR&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span>
     <span class="k">if</span> <span class="n">factor_block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;factor_pca&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;pca_factor_features&quot;</span>
     <span class="k">if</span> <span class="n">has_raw_block</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;raw_feature_panel&quot;</span>
     <span class="k">if</span> <span class="n">target_lag_block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_lag_features&quot;</span>
     <span class="k">return</span> <span class="kc">None</span>
 
 
@@ -557,16 +557,16 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_feature_block_name_from_leaf</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">custom_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="n">block_kind</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_feature_block&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_feature_block&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_block&quot;</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_block&quot;</span><span class="p">)</span>
@@ -585,16 +585,16 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_feature_combiner_name_from_leaf</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">custom_blocks</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_combiner&quot;</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_block_combiner&quot;</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="kc">None</span>
@@ -603,7 +603,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_feature_combiner_axis_is_registered</span><span class="p">(</span><span class="n">selection</span><span class="p">:</span> <span class="n">AxisSelection</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">axis_name</span> <span class="o">!=</span> <span class="s2">&quot;feature_block_combination&quot;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="n">combiner_name</span> <span class="o">=</span> <span class="n">_custom_feature_combiner_name_from_leaf</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">combiner_name</span> <span class="ow">and</span> <span class="n">is_custom_feature_combiner</span><span class="p">(</span><span class="n">combiner_name</span><span class="p">))</span>
@@ -734,7 +734,7 @@
         <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
         <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">:</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span>
         <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
         <span class="s2">&quot;x_lag_feature_block&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">neutral</span> <span class="ow">in</span> <span class="n">neutral_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -748,7 +748,7 @@
     <span class="k">return</span> <span class="n">_X_LAG_FEATURE_BLOCK_TO_CREATION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="s2">&quot;custom_lags&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_x_lag_creation_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_x_lag_creation_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">block</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;x_lag_feature_block&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;x_lag_feature_block&quot;</span> <span class="ow">in</span> <span class="n">selection_map</span>
@@ -1352,12 +1352,12 @@
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_md&quot;</span><span class="p">)</span>
     <span class="n">source_adapter</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;source_adapter&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
     <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span>
-    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
     <span class="n">information_set_type</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;information_set_type&quot;</span><span class="p">,</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">)</span>
     <span class="n">fred_sd_selectors</span> <span class="o">=</span> <span class="n">_resolve_fred_sd_selector_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
-    <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">custom_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;custom_data_path&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_data_path&quot;</span><span class="p">),</span>
         <span class="s2">&quot;source_adapter&quot;</span><span class="p">:</span> <span class="n">source_adapter</span><span class="p">,</span>
@@ -1398,15 +1398,15 @@
         <span class="s2">&quot;level_growth_pair_columns&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level_growth_pair_columns&quot;</span><span class="p">),</span>
         <span class="s2">&quot;marx_max_lag&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;marx_max_lag&quot;</span><span class="p">),</span>
         <span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;custom_temporal_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_temporal_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;temporal&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;custom_rotation_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_rotation_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rotation&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;custom_factor_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_factor_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;custom_temporal_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_temporal_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;temporal&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;custom_rotation_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_rotation_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rotation&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;custom_factor_feature_block&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_factor_feature_block&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">),</span>
         <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">:</span> <span class="p">(</span>
             <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_combiner&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_block_combiner&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_combiner&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_combiner&quot;</span><span class="p">)</span>
         <span class="p">),</span>
         <span class="c1"># 1.4 benchmark_family input channels</span>
         <span class="s2">&quot;benchmark_suite&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;benchmark_suite&quot;</span><span class="p">),</span>
@@ -1501,7 +1501,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_training_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">framework</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;framework&quot;</span><span class="p">,</span> <span class="s2">&quot;expanding&quot;</span><span class="p">)</span>
     <span class="n">model_family</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;ar&quot;</span><span class="p">)</span>
-    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
     <span class="n">feature_runtime</span> <span class="o">=</span> <span class="n">_feature_runtime_for_validation</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">fallback_feature_builder</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">feature_builder</span><span class="p">))</span>
     <span class="n">forecast_type_default</span> <span class="o">=</span> <span class="n">_layer3_forecast_type_default</span><span class="p">(</span><span class="n">feature_runtime</span><span class="p">)</span>
     <span class="n">training_cfg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;training_config&quot;</span><span class="p">,</span> <span class="p">{}))</span>
@@ -1709,19 +1709,19 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_x_lag_block_from_bridge</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_axis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;variable_specific_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_specific_x_lags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;category_specific_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;category_specific_x_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cv_selected_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;cv_selected_predictor_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_specific_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_specific_predictor_lags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;category_specific_predictor_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;category_specific_predictor_lags&quot;</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="n">block</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;custom_x_lags&quot;</span><span class="p">)</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;custom_predictor_lags&quot;</span><span class="p">)</span>
     <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">block</span><span class="p">,</span>
         <span class="s2">&quot;source_axis&quot;</span><span class="p">:</span> <span class="n">source_axis</span><span class="p">,</span>
         <span class="s2">&quot;source_value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">block</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">block</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
         <span class="n">payload</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">&quot;lag_orders&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span>
@@ -1732,7 +1732,7 @@
                     <span class="s2">&quot;prediction_origin_uses&quot;</span><span class="p">:</span> <span class="s2">&quot;X_{origin-k}&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;lookahead&quot;</span><span class="p">:</span> <span class="s2">&quot;forbidden&quot;</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="s2">&quot;runtime_bridge&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;runtime_bridge&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">},</span>
             <span class="p">}</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">payload</span>
@@ -2157,7 +2157,7 @@
             <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
             <span class="s2">&quot;supported_semantics&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;select_after_factor&quot;</span><span class="p">],</span>
             <span class="s2">&quot;gated_semantics&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="s2">&quot;active_semantic&quot;</span><span class="p">:</span> <span class="p">(</span>
                 <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">,</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">)</span>
@@ -2259,22 +2259,22 @@
         <span class="n">source_values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;feature_block_set&quot;</span><span class="p">:</span> <span class="n">explicit_value</span><span class="p">}</span>
         <span class="n">source_kind</span> <span class="o">=</span> <span class="s2">&quot;explicit_axis&quot;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;target_lags_only&quot;</span>
-        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span>
-        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">}:</span>
+        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">}:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;target_lags_only&quot;</span><span class="p">:</span> <span class="s2">&quot;target_lags_only&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;factor_plus_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;full_high_dimensional_X&quot;</span><span class="p">:</span> <span class="s2">&quot;high_dimensional_x&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;selected_sparse_X&quot;</span><span class="p">:</span> <span class="s2">&quot;selected_sparse_x&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;mixed_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">,</span>
-            <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_richness_mode</span><span class="p">,</span> <span class="s2">&quot;transformed_x&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">:</span>
+                <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">:</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">:</span> <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">:</span> <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">,</span>
+            <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_richness_mode</span><span class="p">,</span> <span class="s2">&quot;transformed_predictors&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;factor_blocks_only&quot;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;legacy_feature_builder_bridge&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;feature_builder_compatibility_bridge&quot;</span>
         <span class="n">source_axes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;data_richness_mode&quot;</span><span class="p">]</span>
         <span class="n">source_values</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="n">feature_builder</span><span class="p">,</span>
@@ -2304,17 +2304,17 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">explicit_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">explicit_value</span>
-    <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;append_to_target_lags&quot;</span>
-    <span class="k">elif</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;append_to_base_x&quot;</span>
-    <span class="k">elif</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">}:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;replace_with_blocks&quot;</span>
+    <span class="k">elif</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;append_to_base_predictors&quot;</span>
+    <span class="k">elif</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">}:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span>
     <span class="n">operational_values</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;append_to_base_x&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;append_to_base_predictors&quot;</span><span class="p">,</span>
         <span class="s2">&quot;append_to_target_lags&quot;</span><span class="p">,</span>
         <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">,</span>
     <span class="p">}</span>
@@ -2334,7 +2334,7 @@
             <span class="s2">&quot;invalid compositions are rejected by compiler/runtime compatibility gates&quot;</span>
         <span class="p">),</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">:</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data_task_spec</span> <span class="ow">or</span> <span class="p">{})</span>
         <span class="n">custom_name</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">)</span>
         <span class="n">registered</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">custom_name</span> <span class="ow">and</span> <span class="n">is_custom_feature_combiner</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">custom_name</span><span class="p">)))</span>
@@ -2349,7 +2349,7 @@
                     <span class="s2">&quot;return final Z_train/Z_pred with stable public feature names&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;return block roles, fit-state provenance, and leakage metadata&quot;</span><span class="p">,</span>
                 <span class="p">],</span>
-                <span class="s2">&quot;scope_note&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_combiner owns final Layer 2 block composition before Layer 3 consumes Z&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;scope_note&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_feature_combiner owns final Layer 2 block composition before Layer 3 consumes Z&quot;</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">registered</span><span class="p">:</span>
@@ -2405,13 +2405,13 @@
 
     <span class="n">target_lag_block</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_lag_block&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="o">==</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="ow">or</span> <span class="n">target_lag_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_lag_features&quot;</span>
 
     <span class="k">return</span> <span class="n">fallback_feature_builder</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_layer3_forecast_type_default</span><span class="p">(</span><span class="n">feature_runtime</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="s2">&quot;iterated&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="k">else</span> <span class="s2">&quot;direct&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;iterated&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span> <span class="k">else</span> <span class="s2">&quot;direct&quot;</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_layer3_capability_rejections</span><span class="p">(</span>
@@ -2482,7 +2482,7 @@
             <span class="n">blocked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;forecast_type=&#39;iterated&#39; for raw-panel feature runtime currently supports forecast_object=&#39;point_mean&#39; only&quot;</span>
             <span class="p">)</span>
-    <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="ow">and</span> <span class="n">forecast_type</span> <span class="o">==</span> <span class="s2">&quot;direct&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span> <span class="ow">and</span> <span class="n">forecast_type</span> <span class="o">==</span> <span class="s2">&quot;direct&quot;</span><span class="p">:</span>
         <span class="n">blocked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="s2">&quot;forecast_type=&#39;direct&#39; is not implemented for the target-lag-only feature runtime in v1.0 &quot;</span>
             <span class="s2">&quot;(the operational path is iterated); use forecast_type=&#39;iterated&#39; or leave unset to take the dynamic default&quot;</span>
@@ -2721,16 +2721,16 @@
         <span class="s2">&quot;rules&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;feature_runtime&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;ar&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">],</span>
                     <span class="s2">&quot;blocked&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span> <span class="s2">&quot;AR runtime consumes target-lag-only representation&quot;</span><span class="p">},</span>
                 <span class="p">},</span>
                 <span class="s2">&quot;default_non_ar&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">],</span>
                     <span class="s2">&quot;blocked&quot;</span><span class="p">:</span> <span class="p">{},</span>
                 <span class="p">},</span>
             <span class="p">},</span>
             <span class="s2">&quot;forecast_type&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;iterated&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;operational&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;iterated&quot;</span><span class="p">],</span>
                     <span class="s2">&quot;blocked&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;direct&quot;</span><span class="p">:</span> <span class="s2">&quot;direct target-lag-only runtime is not implemented&quot;</span><span class="p">},</span>
@@ -2853,14 +2853,14 @@
     <span class="n">data_task_spec</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">training_spec</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+    <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
     <span class="n">data_richness_mode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span>
         <span class="n">selection_map</span><span class="p">,</span>
         <span class="s2">&quot;data_richness_mode&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="k">else</span> <span class="s2">&quot;full_high_dimensional_X&quot;</span><span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span> <span class="k">else</span> <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">feature_runtime</span> <span class="o">=</span> <span class="n">_feature_runtime_for_validation</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">fallback_feature_builder</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">feature_builder</span><span class="p">))</span>
-    <span class="n">predictor_family_default</span> <span class="o">=</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="k">else</span> <span class="s2">&quot;all_macro_vars&quot;</span>
+    <span class="n">predictor_family_default</span> <span class="o">=</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span> <span class="k">else</span> <span class="s2">&quot;all_macro_vars&quot;</span>
     <span class="n">predictor_family</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;predictor_family&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">predictor_family_default</span><span class="p">)</span>
     <span class="n">contemporaneous_x_rule</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">)</span>
     <span class="n">deterministic_components</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;deterministic_components&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
@@ -2882,7 +2882,7 @@
     <span class="n">target_lag_count</span><span class="p">,</span> <span class="n">target_lag_count_source</span> <span class="o">=</span> <span class="n">_target_lag_count_config</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">,</span> <span class="n">training_spec</span><span class="p">)</span>
     <span class="n">factor_lag_count</span><span class="p">,</span> <span class="n">factor_lag_count_source</span> <span class="o">=</span> <span class="n">_factor_lag_count_config</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">,</span> <span class="n">training_spec</span><span class="p">)</span>
     <span class="n">factor_count_config</span> <span class="o">=</span> <span class="n">_factor_count_config</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">,</span> <span class="n">training_spec</span><span class="p">)</span>
-    <span class="n">x_lag_creation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span>
+    <span class="n">x_lag_creation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span>
     <span class="n">dimred</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
     <span class="n">horizon_target_construction</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;horizon_target_construction&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;future_target_level_t_plus_h&quot;</span><span class="p">)</span>
     <span class="n">custom_preprocessor</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;custom_preprocessor&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
@@ -2904,7 +2904,7 @@
             <span class="n">source_value</span><span class="o">=</span><span class="n">target_lag_selection_source_value</span><span class="p">,</span>
             <span class="n">lag_count</span><span class="o">=</span><span class="n">target_lag_count</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">has_explicit_target_lag_block</span> <span class="ow">or</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">has_explicit_target_lag_block</span> <span class="ow">or</span> <span class="n">feature_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}</span>
         <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;source_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;source_value&quot;</span><span class="p">:</span> <span class="n">feature_builder</span><span class="p">}</span>
     <span class="p">)</span>
     <span class="n">compatibility_source</span> <span class="o">=</span> <span class="n">_compatibility_source_payload</span><span class="p">(</span>
@@ -3019,7 +3019,7 @@
             <span class="s2">&quot;custom_final_z_selection_contract&quot;</span><span class="p">:</span> <span class="p">(</span>
                 <span class="n">custom_final_z_selection_contract_metadata</span><span class="p">()</span>
                 <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">,</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">)</span>
-                <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span>
+                <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span>
                 <span class="k">else</span> <span class="p">{}</span>
             <span class="p">),</span>
             <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;feature_grouping&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
@@ -3404,7 +3404,7 @@
     <span class="n">_importance_spec_value</span> <span class="o">=</span> <span class="n">_importance_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="n">_importance_methods</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">active_importance_methods</span><span class="p">(</span><span class="n">_importance_spec_value</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">_importance_methods</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">feature_runtime</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">feature_runtime</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">}:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;Layer 7 importance artifacts currently require raw-panel or target-lag tabular feature runtimes&quot;</span>
             <span class="p">)</span>
@@ -3431,8 +3431,8 @@
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;global-only Layer 7 importance methods require importance_scope=&#39;global&#39;&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">feature_runtime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">predictor_family</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;predictor_family&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="k">else</span> <span class="s2">&quot;all_macro_vars&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="ow">and</span> <span class="n">feature_runtime</span> <span class="o">!=</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+        <span class="n">predictor_family</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;predictor_family&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span> <span class="k">else</span> <span class="s2">&quot;all_macro_vars&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="ow">and</span> <span class="n">feature_runtime</span> <span class="o">!=</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
             <span class="n">blocked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;predictor_family=&#39;target_lags_only&#39; requires the target-lag-only feature runtime in the current runtime slice&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;all_macro_vars&quot;</span> <span class="ow">and</span> <span class="n">feature_runtime</span> <span class="o">!=</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span>
             <span class="n">blocked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;predictor_family=&#39;all_macro_vars&#39; requires a macro-X or factor feature runtime in the current runtime slice&quot;</span><span class="p">)</span>
@@ -3480,21 +3480,21 @@
         <span class="n">rotation_feature_block</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;rotation_feature_block&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
         <span class="n">rotation_block_active</span> <span class="o">=</span> <span class="n">rotation_feature_block</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;moving_average_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;marx_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;maf_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_rotation&quot;</span><span class="p">}</span>
         <span class="n">factor_rotation_order</span> <span class="o">=</span> <span class="n">_factor_rotation_order_from_selection</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="n">feature_block_combination</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_block_combination&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">)</span>
-        <span class="n">marx_append_mode</span> <span class="o">=</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_x&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}</span>
-        <span class="n">custom_combiner_name</span> <span class="o">=</span> <span class="n">_custom_feature_combiner_name_from_leaf</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">)</span>
-        <span class="n">custom_combiner_registered</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
-            <span class="n">custom_combiner_name</span> <span class="ow">and</span> <span class="n">is_custom_feature_combiner</span><span class="p">(</span><span class="n">custom_combiner_name</span><span class="p">)</span>
+        <span class="n">feature_block_combination</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_block_combination&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">)</span>
+        <span class="n">marx_append_mode</span> <span class="o">=</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_predictors&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}</span>
+        <span class="n">custom_feature_combiner_name</span> <span class="o">=</span> <span class="n">_custom_feature_combiner_name_from_leaf</span><span class="p">(</span><span class="n">leaf_config</span><span class="p">)</span>
+        <span class="n">custom_feature_combiner_registered</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">custom_feature_combiner_name</span> <span class="ow">and</span> <span class="n">is_custom_feature_combiner</span><span class="p">(</span><span class="n">custom_feature_combiner_name</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">!=</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span>
                 <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="s2">&quot;feature_block_combination=&#39;custom_combiner&#39; is currently executable only with &quot;</span>
+                    <span class="s2">&quot;feature_block_combination=&#39;custom_feature_combiner&#39; is currently executable only with &quot;</span>
                     <span class="s2">&quot;raw-panel Layer 2 tabular feature runtimes&quot;</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_combiner_registered</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_feature_combiner_registered</span><span class="p">:</span>
                 <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="s2">&quot;feature_block_combination=&#39;custom_combiner&#39; requires a registered &quot;</span>
+                    <span class="s2">&quot;feature_block_combination=&#39;custom_feature_combiner&#39; requires a registered &quot;</span>
                     <span class="s2">&quot;leaf_config.custom_feature_combiner callable&quot;</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="n">temporal_block_active</span> <span class="ow">and</span> <span class="n">feature_runtime</span> <span class="o">!=</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span>
@@ -3509,7 +3509,7 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;marx_rotation&quot;</span>
-            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span>
+            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="n">marx_append_mode</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -3551,7 +3551,7 @@
             <span class="n">temporal_feature_block</span> <span class="o">==</span> <span class="s2">&quot;custom_temporal_features&quot;</span>
             <span class="ow">or</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;custom_rotation&quot;</span>
             <span class="ow">or</span> <span class="n">explicit_factor_block</span> <span class="o">==</span> <span class="s2">&quot;custom_factors&quot;</span>
-            <span class="ow">or</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_combiner&quot;</span>
+            <span class="ow">or</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_combiner&quot;</span>
         <span class="p">)</span>
         <span class="n">explicit_feature_block_set</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_block_set&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -3559,25 +3559,25 @@
             <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
-            <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;transformed_x_lags&quot;</span>
+            <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;transformed_predictor_lags&quot;</span>
             <span class="ow">and</span> <span class="n">x_lag_feature_block</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span>
-            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;no_x_lags&quot;</span>
+            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;no_predictor_lags&quot;</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_block_set=&#39;transformed_x_lags&#39; requires x_lag_feature_block=&#39;fixed_x_lags&#39; &quot;</span>
-                <span class="s2">&quot;or legacy x_lag_creation=&#39;fixed_x_lags&#39;&quot;</span>
+                <span class="s2">&quot;feature_block_set=&#39;transformed_predictor_lags&#39; requires x_lag_feature_block=&#39;fixed_predictor_lags&#39; &quot;</span>
+                <span class="s2">&quot;or legacy x_lag_creation=&#39;fixed_predictor_lags&#39;&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;selected_sparse_x&quot;</span> <span class="ow">and</span> <span class="n">feature_selection</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;selected_sparse_predictors&quot;</span> <span class="ow">and</span> <span class="n">feature_selection</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_block_set=&#39;selected_sparse_x&#39; requires an operational feature_selection_policy&quot;</span>
+                <span class="s2">&quot;feature_block_set=&#39;selected_sparse_predictors&#39; requires an operational feature_selection_policy&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;level_augmented_x&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">level_block_active</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;level_augmented_predictors&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">level_block_active</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_block_set=&#39;level_augmented_x&#39; requires a non-none level_feature_block&quot;</span>
+                <span class="s2">&quot;feature_block_set=&#39;level_augmented_predictors&#39; requires a non-none level_feature_block&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;rotation_augmented_x&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rotation_block_active</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;rotation_augmented_predictors&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rotation_block_active</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_block_set=&#39;rotation_augmented_x&#39; requires a non-none rotation_feature_block&quot;</span>
+                <span class="s2">&quot;feature_block_set=&#39;rotation_augmented_predictors&#39; requires a non-none rotation_feature_block&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="n">target_lag_block</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">factor_block_active</span> <span class="ow">or</span> <span class="n">registered_custom_factor</span><span class="p">)</span>
@@ -3589,26 +3589,26 @@
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;feature_block_set=&#39;factor_blocks_only&#39; requires an executable factor_feature_block&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">:</span>
             <span class="n">active_block_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">target_lag_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
                     <span class="n">x_lag_feature_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
-                    <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+                    <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
                     <span class="n">factor_block_active</span> <span class="ow">or</span> <span class="n">registered_custom_factor</span><span class="p">,</span>
                     <span class="n">level_block_active</span><span class="p">,</span>
                     <span class="n">temporal_block_active</span><span class="p">,</span>
                     <span class="n">rotation_block_active</span><span class="p">,</span>
-                    <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">,</span>
+                    <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">active_block_count</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="s2">&quot;feature_block_set=&#39;mixed_blocks&#39; requires at least two active feature block sub-axes&quot;</span>
+                    <span class="s2">&quot;feature_block_set=&#39;mixed_feature_blocks&#39; requires at least two active feature block sub-axes&quot;</span>
                 <span class="p">)</span>
-        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;custom_blocks&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">custom_block_active</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_feature_block_set</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_blocks&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">custom_block_active</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_block_set=&#39;custom_blocks&#39; requires a custom feature block axis or custom feature combiner&quot;</span>
+                <span class="s2">&quot;feature_block_set=&#39;custom_feature_blocks&#39; requires a custom feature block axis or custom feature combiner&quot;</span>
             <span class="p">)</span>
         <span class="n">deterministic_components</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;deterministic_components&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
         <span class="n">structural_break_segmentation</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;structural_break_segmentation&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
@@ -3645,10 +3645,10 @@
                 <span class="s2">&quot;factor_rotation_order=&#39;factor_then_rotation&#39; is currently executable only with &quot;</span>
                 <span class="s2">&quot;pca_static_factors or an equivalent pca/static_factor bridge&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">factor_then_rotation_requested</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">factor_then_rotation_requested</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocess_contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;factor_rotation_order=&#39;factor_then_rotation&#39; currently requires x_lag_feature_block=&#39;none&#39; &quot;</span>
-                <span class="s2">&quot;and x_lag_creation=&#39;no_x_lags&#39;&quot;</span>
+                <span class="s2">&quot;and x_lag_creation=&#39;no_predictor_lags&#39;&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">factor_then_rotation_requested</span> <span class="ow">and</span> <span class="n">level_block_active</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -3683,7 +3683,7 @@
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">feature_selection</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
             <span class="ow">and</span> <span class="n">explicit_factor_block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">operational_factor_blocks</span><span class="p">}</span>
-            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">!=</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span>
+            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">!=</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;feature_selection_policy is operational with factor blocks only for &quot;</span>
@@ -3691,21 +3691,21 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">feature_selection</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
-            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span>
+            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="n">custom_block_active</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_selection_semantics=&#39;select_after_custom_blocks&#39; requires a custom feature block &quot;</span>
-                <span class="s2">&quot;or feature_block_combination=&#39;custom_combiner&#39;&quot;</span>
+                <span class="s2">&quot;feature_selection_semantics=&#39;select_after_custom_feature_blocks&#39; requires a custom feature block &quot;</span>
+                <span class="s2">&quot;or feature_block_combination=&#39;custom_feature_combiner&#39;&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">feature_selection</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
-            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span>
+            <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span>
             <span class="ow">and</span> <span class="n">explicit_factor_block</span> <span class="o">==</span> <span class="s2">&quot;custom_factors&quot;</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="n">registered_custom_factor</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;feature_selection_semantics=&#39;select_after_custom_blocks&#39; with custom_factors requires &quot;</span>
+                <span class="s2">&quot;feature_selection_semantics=&#39;select_after_custom_feature_blocks&#39; with custom_factors requires &quot;</span>
                 <span class="s2">&quot;a registered custom factor feature block&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">feature_selection</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_factor&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">factor_block_active</span><span class="p">:</span>

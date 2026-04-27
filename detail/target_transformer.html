@@ -128,7 +128,7 @@ raw-panel supervised models. Raw-panel support is limited to <code class="docuti
 <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elasticnet</span></code>, or registered custom models because those paths can keep
 the target transformer fit/inverse-transform contract aligned with each
 horizon-specific supervised target vector. Compatibility builders such as
-<code class="docutils literal notranslate"><span class="pre">factor_pca</span></code> are treated by this gate according to the feature runtime they
+<code class="docutils literal notranslate"><span class="pre">pca_factor_features</span></code> are treated by this gate according to the feature runtime they
 compile to; static-factor recipes therefore use the same raw-panel model-family
 allowlist. Non-raw-panel feature runtimes remain gated until their
 target-transformer scale contract is designed and tested.</p>

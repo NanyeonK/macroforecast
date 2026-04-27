@@ -198,8 +198,8 @@ silently lowering them to a different representation.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_x</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_blocks_only</span></code>, <code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">high_dimensional_x</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_x</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_x</span></code>, <code class="docutils literal notranslate"><span class="pre">rotation_augmented_x</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">legacy_feature_builder_bridge</span></code></p></td>
-<td><p>Top-level recipe for which blocks should form <code class="docutils literal notranslate"><span class="pre">Z</span></code>. <code class="docutils literal notranslate"><span class="pre">legacy_feature_builder_bridge</span></code> is retained only as a compatibility value for unknown old bridge recipes.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_blocks_only</span></code>, <code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">high_dimensional_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">rotation_augmented_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_feature_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_builder_compatibility_bridge</span></code></p></td>
+<td><p>Top-level recipe for which blocks should form <code class="docutils literal notranslate"><span class="pre">Z</span></code>. <code class="docutils literal notranslate"><span class="pre">feature_builder_compatibility_bridge</span></code> is retained only as a compatibility value for unknown old bridge recipes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_lag_block</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">ic_selected_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_specific_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_target_lags</span></code></p></td>
@@ -210,7 +210,7 @@ silently lowering them to a different representation.</p>
 <td><p>Target-language replacement for public Layer 2 lag-selection provenance; legacy <code class="docutils literal notranslate"><span class="pre">y_lag_count</span></code> remains accepted for Layer 3/model-order compatibility.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_specific_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">category_specific_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">cv_selected_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_x_lags</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_specific_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">category_specific_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">cv_selected_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_predictor_lags</span></code></p></td>
 <td><p>Lagged predictor features built from <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_feature_block</span></code></p></td>
@@ -230,7 +230,7 @@ silently lowering them to a different representation.</p>
 <td><p>Local time-series features built within each training window.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">replace_with_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">append_to_base_x</span></code>, <code class="docutils literal notranslate"><span class="pre">append_to_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">concatenate_named_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_combiner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">replace_with_selected_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">append_to_base_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">append_to_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">concatenate_named_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_feature_combiner</span></code></p></td>
 <td><p>How selected blocks are assembled into <code class="docutils literal notranslate"><span class="pre">Z</span></code>.</p></td>
 </tr>
 </tbody>
@@ -288,13 +288,13 @@ Layer 3 generator is explicitly custom and block-aware or is the package-owned
 <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code> / <code class="docutils literal notranslate"><span class="pre">midasr</span></code> / <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code> narrow executor.</p>
 <p>Operational support is currently narrow:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_x</span></code>,
-<code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_blocks_only</span></code>, and <code class="docutils literal notranslate"><span class="pre">high_dimensional_x</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">transformed_predictors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_blocks_only</span></code>, and <code class="docutils literal notranslate"><span class="pre">high_dimensional_predictors</span></code>
 are operational representation-family selectors.
-<code class="docutils literal notranslate"><span class="pre">transformed_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_x</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_x</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rotation_augmented_x</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_blocks</span></code> are
+<code class="docutils literal notranslate"><span class="pre">transformed_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_predictors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rotation_augmented_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_feature_blocks</span></code> are
 <code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code>: they require compatible sub-block axes such as
-<code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_x_lags</span></code>, an operational
+<code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_predictor_lags</span></code>, an operational
 <code class="docutils literal notranslate"><span class="pre">feature_selection_policy</span></code>, a non-none level/rotation block, at least two
 named blocks, or registered custom block/combiner contracts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">target_lag_block=none</span></code> and <code class="docutils literal notranslate"><span class="pre">fixed_target_lags</span></code> are operational. Fixed
@@ -304,7 +304,7 @@ as fallback fields for old recipes. New compiled specs write
 <code class="docutils literal notranslate"><span class="pre">target_lag_count</span></code> in <code class="docutils literal notranslate"><span class="pre">layer2_representation_spec.target_lag_config</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">target_lag_selection=none</span></code> and <code class="docutils literal notranslate"><span class="pre">fixed</span></code> are operational Layer 2 names; IC,
 CV, horizon-specific, and custom lag selection remain registry-only.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=none</span></code> and <code class="docutils literal notranslate"><span class="pre">fixed_x_lags</span></code> are operational. Fixed X-lag
+<li><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=none</span></code> and <code class="docutils literal notranslate"><span class="pre">fixed_predictor_lags</span></code> are operational. Fixed X-lag
 matrix composition reads <code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code> directly; legacy
 <code class="docutils literal notranslate"><span class="pre">x_lag_creation</span></code> remains accepted as fallback. Variable, category, CV, and
 custom X-lag blocks remain registry-only.</p></li>
@@ -320,7 +320,7 @@ target lags are concatenated after the factor scores.</p></li>
 appends lagged factor-score blocks; <code class="docutils literal notranslate"><span class="pre">supervised_factors</span></code> uses train-window PLS
 factors; registered custom factor blocks use <code class="docutils literal notranslate"><span class="pre">custom_feature_block_callable_v1</span></code>.
 Old
-<code class="docutils literal notranslate"><span class="pre">feature_builder=factor_pca</span></code> / <code class="docutils literal notranslate"><span class="pre">factors_plus_AR</span></code> and raw-panel
+<code class="docutils literal notranslate"><span class="pre">feature_builder=pca_factor_features</span></code> / <code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code> and raw-panel
 <code class="docutils literal notranslate"><span class="pre">dimensionality_reduction_policy=pca</span></code> / <code class="docutils literal notranslate"><span class="pre">static_factor</span></code> remain accepted
 compatibility paths. Runtime writes a factor fit-state artifact containing
 stable factor/loadings provenance.</p></li>
@@ -367,7 +367,7 @@ lag-polynomial rotation, and replaces the source lag-polynomial basis in
 final <code class="docutils literal notranslate"><span class="pre">Z</span></code> by default. It now also supports <code class="docutils literal notranslate"><span class="pre">marx_then_factor</span></code>, where static
 PCA factors are fit on the MARX basis before any target-lag append, plus
 append composition with fixed X lags or deterministic temporal blocks via
-<code class="docutils literal notranslate"><span class="pre">feature_block_combination=append_to_base_x</span></code> /
+<code class="docutils literal notranslate"><span class="pre">feature_block_combination=append_to_base_predictors</span></code> /
 <code class="docutils literal notranslate"><span class="pre">concatenate_named_blocks</span></code>.</p></li>
 <li><p>Advanced rotation values are explicit boundaries, not aliases for the generic
 primitive. <code class="docutils literal notranslate"><span class="pre">maf_rotation</span></code> is operational only as a factor-score rotation:
@@ -394,7 +394,7 @@ rotation remains explicitly gated.</p></li>
 raw-panel direct <code class="docutils literal notranslate"><span class="pre">Z</span></code> paths. Target lag columns become the anchor block, and
 selected factor/raw-panel blocks are concatenated after them with stable
 feature-name order.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_combiner</span></code> is executable when the recipe
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_feature_combiner</span></code> is executable when the recipe
 supplies a registered <code class="docutils literal notranslate"><span class="pre">custom_feature_combiner</span></code>. The combiner receives named
 train/pred block frames plus the final candidate <code class="docutils literal notranslate"><span class="pre">Z</span></code>, then returns final
 <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>, <code class="docutils literal notranslate"><span class="pre">Z_pred</span></code>, stable public feature names, block roles, fit state,
@@ -408,7 +408,7 @@ window and then estimates the static factor block on the selected panel;
 <code class="docutils literal notranslate"><span class="pre">select_after_factor</span></code> first estimates the static factor block, optionally
 appends target lags and deterministic/break columns in the final <code class="docutils literal notranslate"><span class="pre">Z</span></code>, and
 then selects among the composed final columns. Custom-block final-<code class="docutils literal notranslate"><span class="pre">Z</span></code>
-selection is operational through <code class="docutils literal notranslate"><span class="pre">select_after_custom_blocks</span></code>, which records
+selection is operational through <code class="docutils literal notranslate"><span class="pre">select_after_custom_feature_blocks</span></code>, which records
 <code class="docutils literal notranslate"><span class="pre">custom_final_z_selection_v1</span></code> candidate, selected, and dropped feature names.</p></li>
 </ul>
 </section>
@@ -478,32 +478,32 @@ and writes the horizon aggregate row to <code class="docutils literal notranslat
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=autoreg_lagged_target</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=target_lag_features</span></code></p></td>
 <td><p>target-lag block only; fixed target-lag construction now drives the supervised target-lag matrix path, with legacy fields retained as fallback/provenance.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_feature_panel</span></code></p></td>
 <td><p>transformed or raw predictor panel block, chosen after Layer 1 official-frame policy and <code class="docutils literal notranslate"><span class="pre">predictor_family</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_X_only</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_predictors_only</span></code></p></td>
 <td><p>predictor panel block without target-lag features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factor_pca</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=pca_factor_features</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=factor_blocks_only</span></code> plus a static factor feature block from the predictor panel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factors_plus_AR</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factors_plus_target_lags</span></code></p></td>
 <td><p>factor feature block plus target-lag block.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=target_lags_only</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=target_lags_only</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=factor_plus_lags</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=factors_plus_target_lags</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=factors_plus_target_lags</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=full_high_dimensional_X</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=high_dimensional_x</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=high_dimensional_predictors</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=high_dimensional_predictors</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=selected_sparse_X</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=selected_sparse_x</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=selected_sparse_predictors</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set=selected_sparse_predictors</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

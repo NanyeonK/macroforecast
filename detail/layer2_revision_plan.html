@@ -208,19 +208,19 @@ recipes without changing runtime matrices.</p>
 <li><p>add a compiled <code class="docutils literal notranslate"><span class="pre">layer2_representation_spec</span></code> or equivalent provenance payload;</p></li>
 <li><p>translate current bridge values into explicit feature-block intent:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=autoreg_lagged_target</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=target_lag_features</span></code> -&gt;
 <code class="docutils literal notranslate"><span class="pre">feature_block_set=target_lags_only</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_feature_panel</span></code> -&gt;
 transformed/raw predictor panel block;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_X_only</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=raw_predictors_only</span></code> -&gt;
 predictor panel block with no target-lag block;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factor_pca</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=pca_factor_features</span></code> -&gt;
 <code class="docutils literal notranslate"><span class="pre">feature_block_set=factor_blocks_only</span></code> plus a static factor block;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factors_plus_AR</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder=factors_plus_target_lags</span></code> -&gt;
 factor block plus target-lag block;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=full_high_dimensional_X</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=high_dimensional_predictors</span></code> -&gt;
 high-dimensional predictor block;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=selected_sparse_X</span></code> -&gt;
+<li><p><code class="docutils literal notranslate"><span class="pre">data_richness_mode=selected_sparse_predictors</span></code> -&gt;
 selected sparse predictor block;</p></li>
 </ul>
 </li>
@@ -341,7 +341,7 @@ old <code class="docutils literal notranslate"><span class="pre">feature_builder
 <p>Changes:</p>
 <ul class="simple">
 <li><p>implement <code class="docutils literal notranslate"><span class="pre">target_lag_block=fixed_target_lags</span></code>;</p></li>
-<li><p>implement <code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_x_lags</span></code>;</p></li>
+<li><p>implement <code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_predictor_lags</span></code>;</p></li>
 <li><p>define stable feature names, such as <code class="docutils literal notranslate"><span class="pre">target_lag_1</span></code> and
 <code class="docutils literal notranslate"><span class="pre">{predictor}_lag_{k}</span></code>;</p></li>
 <li><p>enforce train-window alignment and no lookahead;</p></li>
@@ -381,7 +381,7 @@ especially <code class="docutils literal notranslate"><span class="pre">select_a
 <ul class="simple">
 <li><p>factor extraction is fit recursively or train-only;</p></li>
 <li><p>factor feature names and loadings/provenance are saved;</p></li>
-<li><p>old <code class="docutils literal notranslate"><span class="pre">feature_builder=factor_pca</span></code> and <code class="docutils literal notranslate"><span class="pre">factors_plus_AR</span></code> recipes translate to
+<li><p>old <code class="docutils literal notranslate"><span class="pre">feature_builder=pca_factor_features</span></code> and <code class="docutils literal notranslate"><span class="pre">factors_plus_target_lags</span></code> recipes translate to
 equivalent explicit blocks.</p></li>
 </ul>
 </section>

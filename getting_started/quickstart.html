@@ -158,14 +158,14 @@
                 <span class="s2">&quot;target_domain&quot;</span><span class="p">:</span> <span class="s2">&quot;unconstrained&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;scaling_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;columnwise&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">},</span>
         <span class="s2">&quot;3_training&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;framework&quot;</span><span class="p">:</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="s2">&quot;sweep_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;model_family&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">],</span>

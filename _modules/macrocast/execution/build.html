@@ -234,20 +234,20 @@
     <span class="n">_MIDASR_MODEL_FAMILY</span><span class="p">,</span>
     <span class="n">_MIDASR_NEALMON_MODEL_FAMILY</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">_TARGET_TRANSFORMER_FEATURE_RUNTIMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">}</span>
+<span class="n">_TARGET_TRANSFORMER_FEATURE_RUNTIMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">}</span>
 <span class="n">_TARGET_TRANSFORMER_RAW_PANEL_MODELS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;elasticnet&quot;</span><span class="p">}</span>
-<span class="n">_RAW_PANEL_FEATURE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}</span>
+<span class="n">_RAW_PANEL_FEATURE_BUILDERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}</span>
 <span class="n">_RAW_PANEL_FEATURE_BLOCK_SETS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;transformed_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;transformed_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_predictor_lags&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">,</span>
     <span class="s2">&quot;factor_blocks_only&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;high_dimensional_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;selected_sparse_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;level_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rotation_augmented_x&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;mixed_blocks&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;custom_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;high_dimensional_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;selected_sparse_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;level_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rotation_augmented_predictors&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mixed_feature_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="n">_PHASE3_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
@@ -2013,7 +2013,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_feature_builder</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">recipe</span><span class="o">.</span><span class="n">stage0</span><span class="o">.</span><span class="n">varying_design</span><span class="o">.</span><span class="n">feature_recipes</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">recipe</span><span class="o">.</span><span class="n">stage0</span><span class="o">.</span><span class="n">varying_design</span><span class="o">.</span><span class="n">feature_recipes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;target_lag_features&quot;</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_layer2_feature_blocks</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
@@ -2063,7 +2063,7 @@
         <span class="k">return</span> <span class="s2">&quot;raw_feature_panel&quot;</span>
     <span class="n">target_lag_block</span> <span class="o">=</span> <span class="n">_layer2_block_value</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="s2">&quot;target_lag_block&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">block_set</span> <span class="o">==</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="ow">or</span> <span class="n">target_lag_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_lag_features&quot;</span>
 
     <span class="n">legacy_feature_builder</span> <span class="o">=</span> <span class="n">_feature_builder</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">legacy_feature_builder</span> <span class="ow">in</span> <span class="n">_RAW_PANEL_FEATURE_BUILDERS</span><span class="p">:</span>
@@ -2075,8 +2075,8 @@
     <span class="n">runtime_builder</span> <span class="o">=</span> <span class="n">_feature_runtime_builder</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;raw_panel_v1&quot;</span>
-    <span class="k">if</span> <span class="n">runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;autoreg_lagged_target_v1&quot;</span>
+    <span class="k">if</span> <span class="n">runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;target_lag_features_v1&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">runtime_builder</span><span class="si">}</span><span class="s2">_v1&quot;</span>
 
 
@@ -2159,8 +2159,8 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_feature_block_combination</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">recipe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;replace_with_blocks&quot;</span>
-    <span class="k">return</span> <span class="n">_layer2_block_value</span><span class="p">(</span><span class="n">_layer2_feature_blocks</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span> <span class="s2">&quot;feature_block_combination&quot;</span><span class="p">,</span> <span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span>
+    <span class="k">return</span> <span class="n">_layer2_block_value</span><span class="p">(</span><span class="n">_layer2_feature_blocks</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span> <span class="s2">&quot;feature_block_combination&quot;</span><span class="p">,</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_factor_rotation_active_semantic</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -2320,9 +2320,9 @@
             <span class="sa">f</span><span class="s2">&quot;model_family=</span><span class="si">{</span><span class="n">model_family</span><span class="si">!r}</span><span class="s2"> requires fred_sd_mixed_frequency_representation &quot;</span>
             <span class="s2">&quot;to be &#39;native_frequency_block_payload&#39; or &#39;mixed_frequency_model_adapter&#39;&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">):</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;custom_model:</span><span class="si">{</span><span class="n">model_family</span><span class="si">}</span><span class="s2">:autoreg_lagged_target_v0&quot;</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;custom_model:</span><span class="si">{</span><span class="n">model_family</span><span class="si">}</span><span class="s2">:target_lag_features_v0&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;ar&quot;</span><span class="p">:</span> <span class="s2">&quot;ar_bic_autoreg_v0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;ols&quot;</span><span class="p">:</span> <span class="s2">&quot;ols_autoreg_v0&quot;</span><span class="p">,</span>
@@ -2349,7 +2349,7 @@
             <span class="s2">&quot;factor_augmented_linear&quot;</span><span class="p">:</span> <span class="s2">&quot;factor_augmented_linear_autoreg_v0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;quantile_linear&quot;</span><span class="p">:</span> <span class="s2">&quot;quantile_linear_autoreg_v0&quot;</span><span class="p">,</span>
         <span class="p">}[</span><span class="n">model_family</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}:</span>
+    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}:</span>
         <span class="k">if</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">):</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;custom_model:</span><span class="si">{</span><span class="n">model_family</span><span class="si">}</span><span class="s2">:raw_feature_panel_v0&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -3141,7 +3141,7 @@
     <span class="n">model_family</span> <span class="o">=</span> <span class="n">_model_family</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="n">feature_runtime_builder</span> <span class="o">=</span> <span class="n">_feature_runtime_builder</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="n">_validate_fred_sd_mixed_frequency_model_route</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">)</span> <span class="ow">and</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">)</span> <span class="ow">and</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_run_custom_autoreg_executor</span>
     <span class="k">if</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">)</span> <span class="ow">and</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_run_custom_raw_panel_executor</span>
@@ -3157,7 +3157,7 @@
         <span class="ow">and</span> <span class="n">_fred_sd_mixed_frequency_representation_policy</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="n">_run_midasr_raw_panel_executor</span>
-    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
         <span class="n">dispatch</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;ar&quot;</span><span class="p">:</span> <span class="n">_run_ar_model_executor</span><span class="p">,</span>
             <span class="s2">&quot;ols&quot;</span><span class="p">:</span> <span class="n">_run_ols_autoreg_executor</span><span class="p">,</span>
@@ -3189,7 +3189,7 @@
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">model_family</span> <span class="ow">in</span> <span class="n">dispatch</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">dispatch</span><span class="p">[</span><span class="n">model_family</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_AR&quot;</span><span class="p">}:</span>
+    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">,</span> <span class="s2">&quot;factors_plus_target_lags&quot;</span><span class="p">}:</span>
         <span class="n">dispatch</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;ols&quot;</span><span class="p">:</span> <span class="n">_run_ols_raw_panel_executor</span><span class="p">,</span>
             <span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="n">_run_ridge_raw_panel_executor</span><span class="p">,</span>
@@ -3505,7 +3505,7 @@
         <span class="n">block_order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target_lag&quot;</span><span class="p">,),</span>
         <span class="n">block_roles</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="s2">&quot;target_lag&quot;</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">feature_names</span><span class="p">},</span>
         <span class="n">alignment</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;representation_runtime&quot;</span><span class="p">:</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;representation_runtime&quot;</span><span class="p">:</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span>
             <span class="s2">&quot;lag_order&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lag_order</span><span class="p">),</span>
             <span class="s2">&quot;target_lag_timing&quot;</span><span class="p">:</span> <span class="s2">&quot;recursive_target_history_reversed_most_recent_first&quot;</span><span class="p">,</span>
         <span class="p">},</span>
@@ -3566,7 +3566,7 @@
 <span class="sd">    - ``all_macro_vars`` (default) : every column except the target.</span>
 <span class="sd">    - ``target_lags_only``         : empty predictor set — raw panel degrades to target-lag-only; compiler guards already tie this value to the autoregressive feature runtime, so this branch should not normally be reached.</span>
 <span class="sd">    - ``category_based``           : user supplies a mapping (spec[&#39;predictor_category_columns&#39;][spec[&#39;predictor_category&#39;]]).</span>
-<span class="sd">    - ``factor_only``              : columns whose name starts with &#39;F_&#39; (convention for factor outputs of factor_pca / factor_augmented_linear builders).</span>
+<span class="sd">    - ``factor_only``              : columns whose name starts with &#39;F_&#39; (convention for factor outputs of pca_factor_features / factor_augmented_linear builders).</span>
 <span class="sd">    - ``explicit_variable_list``           : spec[&#39;handpicked_columns&#39;] list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span>
@@ -3725,9 +3725,9 @@
     <span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
     <span class="n">policy</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">X_pred</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_fixed_x_lag_frame</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span> <span class="n">_fixed_x_lag_frame</span><span class="p">(</span><span class="n">X_pred</span><span class="p">)</span>
     <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_lag_creation </span><span class="si">{</span><span class="n">policy</span><span class="si">!r}</span><span class="s2"> is not executable in current runtime slice&quot;</span><span class="p">)</span>
 
@@ -3752,23 +3752,23 @@
         <span class="n">runtime_bridge</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runtime_bridge&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_bridge</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">runtime_bridge</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x_lag_creation&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">runtime_bridge</span><span class="p">[</span><span class="s2">&quot;x_lag_creation&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;fixed_x_lags&quot;</span>
+        <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span>
         <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;no_x_lags&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;no_predictor_lags&quot;</span>
     <span class="n">contract</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;preprocess_contract&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">contract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="s2">&quot;no_x_lags&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">&quot;no_predictor_lags&quot;</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_x_lag_creation_from_feature_block</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">fallback</span>
     <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;no_x_lags&quot;</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;fixed_x_lags&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;no_predictor_lags&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span>
     <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_lag_feature_block </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is not executable in current runtime slice&quot;</span><span class="p">)</span>
 
 
@@ -3842,7 +3842,7 @@
         <span class="n">corrs</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_train</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="n">keep</span> <span class="o">=</span> <span class="n">corrs</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">corrs</span><span class="p">))))</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">X_train</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">X_pred</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;lasso_select&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;lasso_selection&quot;</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Lasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">y_train</span><span class="p">)</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
@@ -4112,7 +4112,7 @@
                 <span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
                 <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_factor&quot;</span>
             <span class="p">)</span>
-            <span class="ow">or</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span>
+            <span class="ow">or</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span>
         <span class="p">)</span>
     <span class="p">):</span>
         <span class="n">X_train</span><span class="p">,</span> <span class="n">X_pred</span> <span class="o">=</span> <span class="n">_apply_feature_selection_policy</span><span class="p">(</span>
@@ -4293,16 +4293,16 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_feature_block_name</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">axis_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;data_task_spec&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span>
-    <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-        <span class="n">custom_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="n">block_kind</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_feature_block&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_feature_block&quot;</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">block_kind</span><span class="si">}</span><span class="s2">_block&quot;</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
@@ -4434,19 +4434,19 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_feature_combiner_name</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;data_task_spec&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span>
-    <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-        <span class="n">custom_blocks</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">custom_feature_blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_block_combiner&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_feature_block_combiner&quot;</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
-        <span class="s2">&quot;feature_block_combination=&#39;custom_combiner&#39; requires &quot;</span>
+        <span class="s2">&quot;feature_block_combination=&#39;custom_feature_combiner&#39; requires &quot;</span>
         <span class="s2">&quot;data_task_spec[&#39;custom_feature_combiner&#39;] or data_task_spec[&#39;custom_feature_blocks&#39;][&#39;combiner&#39;]&quot;</span>
     <span class="p">)</span>
 
@@ -4675,7 +4675,7 @@
     <span class="n">pred_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">rotation_feature_block</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">marx_max_lag</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_block_combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">,</span>
+    <span class="n">feature_block_combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">,</span>
     <span class="n">fit_state_sink</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -4701,7 +4701,7 @@
         <span class="n">rotated</span> <span class="o">=</span> <span class="n">_build_marx_rotation_frame</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">marx_max_lag</span><span class="p">))</span>
         <span class="n">rotated_train</span> <span class="o">=</span> <span class="n">rotated</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X_train</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">rotated_pred</span> <span class="o">=</span> <span class="n">rotated</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X_pred</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_x&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_predictors&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}:</span>
             <span class="n">overlap</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">X_train</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">rotated_train</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">overlap</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MARX rotation produced duplicate feature names while appending: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -4709,7 +4709,7 @@
                 <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X_train</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">rotated_train</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                 <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">X_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">rotated_pred</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">!=</span> <span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">!=</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;feature_block_combination=</span><span class="si">{</span><span class="n">feature_block_combination</span><span class="si">!r}</span><span class="s2"> is not supported with marx_rotation&quot;</span>
             <span class="p">)</span>
@@ -4742,7 +4742,7 @@
     <span class="n">X_train</span><span class="p">,</span> <span class="n">X_history</span> <span class="o">=</span> <span class="n">_apply_scaling_policy</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_history</span><span class="p">,</span> <span class="n">contract</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
         <span class="n">feature_selection_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
-        <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;select_after_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;select_after_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span><span class="p">}</span>
     <span class="p">):</span>
         <span class="n">X_train</span><span class="p">,</span> <span class="n">X_history</span> <span class="o">=</span> <span class="n">_apply_feature_selection_policy</span><span class="p">(</span>
             <span class="n">X_train</span><span class="p">,</span>
@@ -4837,8 +4837,8 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">active_semantic</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;factor_then_marx&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_then_maf&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">X_pred</span>
-    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;factor-then-rotation requires x_lag_creation=&#39;no_x_lags&#39;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;factor-then-rotation requires x_lag_creation=&#39;no_predictor_lags&#39;&quot;</span><span class="p">)</span>
     <span class="n">factor_policy</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">factor_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;pca&quot;</span><span class="p">,</span> <span class="s2">&quot;static_factor&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
@@ -4926,7 +4926,7 @@
         <span class="n">spec</span><span class="o">=</span><span class="n">_layer2_runtime_spec</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">base_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
         <span class="n">names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_fixed_x_lag_public_feature_names</span><span class="p">(</span><span class="n">base_names</span><span class="p">))</span>
     <span class="n">temporal_feature_block</span> <span class="o">=</span> <span class="n">_temporal_feature_block</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">temporal_feature_block</span> <span class="o">==</span> <span class="s2">&quot;moving_average_features&quot;</span><span class="p">:</span>
@@ -4953,7 +4953,7 @@
             <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">base_names</span>
             <span class="k">for</span> <span class="n">rotation_order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">marx_max_lag</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="p">]</span>
-        <span class="k">if</span> <span class="n">_feature_block_combination</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_x&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">_feature_block_combination</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_predictors&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}:</span>
             <span class="n">names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">marx_names</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">names</span> <span class="o">=</span> <span class="n">marx_names</span>
@@ -5150,7 +5150,7 @@
         <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;base_x&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
             <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;x_lag&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_temporal_feature_block</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
@@ -5187,7 +5187,7 @@
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">_feature_runtime_builder</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;raw_feature_panel&quot;</span> <span class="ow">and</span> <span class="n">_target_lag_feature_block</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_target_lags&quot;</span><span class="p">:</span>
         <span class="n">alignment</span><span class="p">[</span><span class="s2">&quot;target_lag_timing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;target_lag_1_equals_target_observed_at_forecast_origin&quot;</span>
-    <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_x_lag_creation_for_feature_names</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
         <span class="n">alignment</span><span class="p">[</span><span class="s2">&quot;x_lag_timing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;origin_aligned_trailing_x_history&quot;</span>
     <span class="k">if</span> <span class="n">_temporal_feature_block</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="n">alignment</span><span class="p">[</span><span class="s2">&quot;temporal_timing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;origin_aligned_trailing_window&quot;</span>
@@ -5326,7 +5326,7 @@
     <span class="n">target_lag_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target_lag_feature_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">marx_max_lag</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_block_combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;replace_with_blocks&quot;</span><span class="p">,</span>
+    <span class="n">feature_block_combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;replace_with_selected_blocks&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
     <span class="n">predictors</span> <span class="o">=</span> <span class="n">_raw_panel_columns</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">predictor_family</span><span class="o">=</span><span class="n">predictor_family</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">origin_idx</span> <span class="o">-</span> <span class="n">horizon</span> <span class="o">&lt;</span> <span class="n">start_idx</span><span class="p">:</span>
@@ -5379,15 +5379,15 @@
         <span class="n">factor_feature_block</span><span class="p">,</span>
         <span class="n">fallback</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">marx_append_mode</span> <span class="o">=</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_x&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}</span>
+    <span class="n">marx_append_mode</span> <span class="o">=</span> <span class="n">feature_block_combination</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;append_to_base_predictors&quot;</span><span class="p">,</span> <span class="s2">&quot;concatenate_named_blocks&quot;</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;marx_rotation&quot;</span> <span class="ow">and</span> <span class="n">temporal_feature_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">marx_append_mode</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
-            <span class="s2">&quot;rotation_feature_block=&#39;marx_rotation&#39; requires feature_block_combination=&#39;append_to_base_x&#39; &quot;</span>
+            <span class="s2">&quot;rotation_feature_block=&#39;marx_rotation&#39; requires feature_block_combination=&#39;append_to_base_predictors&#39; &quot;</span>
             <span class="s2">&quot;or &#39;concatenate_named_blocks&#39; when combined with temporal_feature_block&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;marx_rotation&quot;</span> <span class="ow">and</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">marx_append_mode</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;marx_rotation&quot;</span> <span class="ow">and</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">marx_append_mode</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
-            <span class="s2">&quot;rotation_feature_block=&#39;marx_rotation&#39; requires feature_block_combination=&#39;append_to_base_x&#39; &quot;</span>
+            <span class="s2">&quot;rotation_feature_block=&#39;marx_rotation&#39; requires feature_block_combination=&#39;append_to_base_predictors&#39; &quot;</span>
             <span class="s2">&quot;or &#39;concatenate_named_blocks&#39; when combined with x_lag_creation&quot;</span>
         <span class="p">)</span>
     <span class="n">factor_rotation_semantic</span> <span class="o">=</span> <span class="n">_factor_rotation_active_semantic</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
@@ -5401,15 +5401,15 @@
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;factor-then-rotation cannot yet be combined with temporal_feature_block&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">level_feature_block</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;factor-then-rotation cannot yet be combined with level_feature_block&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x_lag_creation</span> <span class="o">!=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;factor-then-rotation currently requires x_lag_feature_block=&#39;none&#39;&quot;</span><span class="p">)</span>
     <span class="n">preprocessing_contract</span> <span class="o">=</span> <span class="n">contract</span>
-    <span class="k">if</span> <span class="n">x_lag_creation</span> <span class="o">==</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">x_lag_creation</span> <span class="o">==</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">:</span>
         <span class="n">lag_source</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">predictors</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">pred_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">lagged_source</span> <span class="o">=</span> <span class="n">_fixed_x_lag_frame</span><span class="p">(</span><span class="n">lag_source</span><span class="p">)</span>
         <span class="n">X_train</span> <span class="o">=</span> <span class="n">lagged_source</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X_train</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">X_pred</span> <span class="o">=</span> <span class="n">lagged_source</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X_pred</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">preprocessing_contract</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="n">x_lag_creation</span><span class="o">=</span><span class="s2">&quot;no_x_lags&quot;</span><span class="p">)</span>
+        <span class="n">preprocessing_contract</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="n">x_lag_creation</span><span class="o">=</span><span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">dimensionality_reduction_policy</span> <span class="o">!=</span> <span class="n">preprocessing_contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">:</span>
         <span class="n">preprocessing_contract</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
             <span class="n">preprocessing_contract</span><span class="p">,</span>
@@ -5592,7 +5592,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">names</span>
 
-    <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_combiner&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_block_combination</span> <span class="o">==</span> <span class="s2">&quot;custom_feature_combiner&quot;</span><span class="p">:</span>
         <span class="n">candidate_feature_names</span> <span class="o">=</span> <span class="n">_candidate_feature_names_for_current_matrix</span><span class="p">()</span>
         <span class="n">X_train_arr</span><span class="p">,</span> <span class="n">X_pred_arr</span><span class="p">,</span> <span class="n">custom_combined_feature_names</span> <span class="o">=</span> <span class="n">_apply_custom_feature_combiner</span><span class="p">(</span>
             <span class="n">X_train_arr</span><span class="p">,</span>
@@ -5605,7 +5605,7 @@
             <span class="n">horizon</span><span class="o">=</span><span class="n">horizon</span><span class="p">,</span>
             <span class="n">fit_state_sink</span><span class="o">=</span><span class="n">fit_state_sink</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">feature_selection_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">feature_selection_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span><span class="p">:</span>
             <span class="n">X_train_arr</span><span class="p">,</span> <span class="n">X_pred_arr</span><span class="p">,</span> <span class="n">_selected_custom_names</span> <span class="o">=</span> <span class="n">_apply_custom_final_z_selection</span><span class="p">(</span>
                 <span class="n">X_train_arr</span><span class="p">,</span>
                 <span class="n">y_train</span><span class="p">,</span>
@@ -5616,7 +5616,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">X_train_arr</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_pred_arr</span>
 
-    <span class="k">if</span> <span class="n">feature_selection_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_selection_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">feature_selection_semantics</span> <span class="o">==</span> <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span><span class="p">:</span>
         <span class="n">candidate_feature_names</span> <span class="o">=</span> <span class="n">_candidate_feature_names_for_current_matrix</span><span class="p">()</span>
         <span class="n">X_train_arr</span><span class="p">,</span> <span class="n">X_pred_arr</span><span class="p">,</span> <span class="n">_selected_custom_names</span> <span class="o">=</span> <span class="n">_apply_custom_final_z_selection</span><span class="p">(</span>
             <span class="n">X_train_arr</span><span class="p">,</span>
@@ -8661,7 +8661,7 @@
             <span class="n">contract</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">representation</span><span class="o">.</span><span class="n">feature_names</span><span class="p">),</span> <span class="n">representation</span><span class="o">.</span><span class="n">Z_train</span><span class="p">,</span> <span class="n">representation</span><span class="o">.</span><span class="n">y_train</span><span class="p">,</span> <span class="n">representation</span><span class="o">.</span><span class="n">Z_pred</span>
-    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
         <span class="n">train</span> <span class="o">=</span> <span class="n">target_series</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span> <span class="n">origin_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
         <span class="n">representation</span> <span class="o">=</span> <span class="n">_build_target_lag_representation</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">recipe</span><span class="p">,</span> <span class="n">default_prefix</span><span class="o">=</span><span class="s2">&quot;lag&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">representation</span><span class="o">.</span><span class="n">feature_names</span><span class="p">),</span> <span class="n">representation</span><span class="o">.</span><span class="n">Z_train</span><span class="p">,</span> <span class="n">representation</span><span class="o">.</span><span class="n">y_train</span><span class="p">,</span> <span class="n">representation</span><span class="o">.</span><span class="n">Z_pred</span>
@@ -9011,7 +9011,7 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="n">target_transformer_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="ow">and</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_X_only&quot;</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="n">feature_runtime_builder</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_predictors_only&quot;</span><span class="p">}</span>
         <span class="ow">and</span> <span class="n">model_family</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_TARGET_TRANSFORMER_RAW_PANEL_MODELS</span>
         <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_custom_model</span><span class="p">(</span><span class="n">model_family</span><span class="p">)</span>
     <span class="p">):</span>
@@ -9148,7 +9148,7 @@
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_step_model_train_window</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">effective_origin_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">path_step_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">feature_runtime_builder</span> <span class="o">==</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">path_step_target</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">effective_origin_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">path_step_target</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">effective_origin_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
 

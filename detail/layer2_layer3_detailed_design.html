@@ -324,7 +324,7 @@ summaries, custom rotations, custom factors, or other block-level transforms.</p
 </section>
 <section id="custom-combiner">
 <h3>Custom Combiner<a class="headerlink" href="#custom-combiner" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_combiner</span></code> is the broader Layer 2 extension.
+<p><code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_feature_combiner</span></code> is the broader Layer 2 extension.
 It is not a block. It owns how already-built blocks are combined into final
 <code class="docutils literal notranslate"><span class="pre">Z</span></code>.</p>
 <p>Operational contract: <code class="docutils literal notranslate"><span class="pre">custom_feature_combiner_v1</span></code>.</p>
@@ -421,7 +421,7 @@ dropped feature names, and selector fit state;</p></li>
 <li><p>selected/dropped custom feature names remain traceable to the source custom
 block or custom combiner.</p></li>
 </ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">feature_selection_semantics=select_after_custom_blocks</span></code> when custom
+<p>Use <code class="docutils literal notranslate"><span class="pre">feature_selection_semantics=select_after_custom_feature_blocks</span></code> when custom
 representation columns should participate in the same selection sweeps as
 built-ins.</p>
 </section>

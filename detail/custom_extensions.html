@@ -169,13 +169,13 @@ blocks.</p>
     <span class="p">)</span>
 </pre></div>
 </div>
-<p>Select it with <code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_combiner</span></code> plus
+<p>Select it with <code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_feature_combiner</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">custom_feature_combiner=&lt;registered</span> <span class="pre">name&gt;</span></code> in the Layer 1 leaf config or
 <code class="docutils literal notranslate"><span class="pre">custom_feature_blocks.combiner=&lt;registered</span> <span class="pre">name&gt;</span></code>.</p>
 </section>
 <section id="layer-2-final-z-selection-after-custom-blocks">
 <h2>Layer 2: Final-Z Selection After Custom Blocks<a class="headerlink" href="#layer-2-final-z-selection-after-custom-blocks" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">feature_selection_semantics=select_after_custom_blocks</span></code> applies an operational
+<p><code class="docutils literal notranslate"><span class="pre">feature_selection_semantics=select_after_custom_feature_blocks</span></code> applies an operational
 feature-selection policy after custom blocks or a custom combiner have produced
 final <code class="docutils literal notranslate"><span class="pre">Z</span></code> candidates. The runtime records <code class="docutils literal notranslate"><span class="pre">custom_final_z_selection_v1</span></code> with
 candidate names, selected names, dropped names, policy, fit state, and leakage
@@ -379,7 +379,7 @@ built-in variants that differ only by an unused custom name.</p>
 <span class="w">    </span><span class="nt">nested_sweep_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">feature_block_combination</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">concatenate_named_blocks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
-<span class="w">        </span><span class="nt">custom_combiner</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">custom_feature_combiner</span><span class="p">:</span>
 <span class="w">          </span><span class="nt">leaf_config.custom_feature_combiner</span><span class="p">:</span>
 <span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_combiner</span>
 </pre></div>

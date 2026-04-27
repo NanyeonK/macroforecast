@@ -105,7 +105,7 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">zero_change</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">autoreg_lagged_target</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_lag_features</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ar</span></code></p></td>
@@ -143,7 +143,7 @@
 </tbody>
 </table>
 <p>This default still writes legacy-compatible
-<code class="docutils literal notranslate"><span class="pre">feature_builder=autoreg_lagged_target</span></code>; the compiler also records canonical
+<code class="docutils literal notranslate"><span class="pre">feature_builder=target_lag_features</span></code>; the compiler also records canonical
 Layer 2 block/runtime provenance. New full recipes may use explicit feature
 blocks directly.</p>
 <p>The profile also keeps the current Layer 3 compatibility names:

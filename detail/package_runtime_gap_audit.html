@@ -195,11 +195,11 @@ provenance.</p></li>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
 <td><p>Target-lag runtime; bridge defaults can derive the fixed target-lag block.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transformed_x</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transformed_predictors</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
 <td><p>Raw-panel feature runtime.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">high_dimensional_x</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">high_dimensional_predictors</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
 <td><p>Raw-panel feature runtime.</p></td>
 </tr>
@@ -211,31 +211,31 @@ provenance.</p></li>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
 <td><p>Executable factor block plus target-lag block.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transformed_x_lags</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transformed_predictor_lags</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_x_lags</span></code> or legacy fixed X-lag creation.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block=fixed_predictor_lags</span></code> or legacy fixed X-lag creation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">selected_sparse_x</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">selected_sparse_predictors</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
 <td><p>Operational <code class="docutils literal notranslate"><span class="pre">feature_selection_policy</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">level_augmented_x</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">level_augmented_predictors</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
 <td><p>Non-none executable <code class="docutils literal notranslate"><span class="pre">level_feature_block</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rotation_augmented_x</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rotation_augmented_predictors</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
 <td><p>Non-none executable <code class="docutils literal notranslate"><span class="pre">rotation_feature_block</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
 <td><p>At least two active block sources.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_blocks</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_feature_blocks</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
 <td><p>Registered custom block or custom combiner contract.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">legacy_feature_builder_bridge</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_builder_compatibility_bridge</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">registry_only</span></code></p></td>
 <td><p>Compatibility provenance only.</p></td>
 </tr>
@@ -257,7 +257,7 @@ static Navigator, docs, and compiler audit use the same contract list.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set</span></code> / <code class="docutils literal notranslate"><span class="pre">feature_block_set_public_axis_v1</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">transformed_x_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_x</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_x</span></code>, <code class="docutils literal notranslate"><span class="pre">rotation_augmented_x</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">transformed_predictor_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sparse_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">level_augmented_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">rotation_augmented_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_feature_blocks</span></code></p></td>
 <td><p>Matching Layer 2 sub-blocks: fixed X lags, non-none selection/level/rotation block, at least two active block sources, or a registered custom block/combiner.</p></td>
 <td><p>Compiler blocked reasons, sweep skipped-cell manifests, Navigator status catalog.</p></td>
 </tr>

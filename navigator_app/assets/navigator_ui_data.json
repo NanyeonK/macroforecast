@@ -373,19 +373,19 @@
     "data_richness_mode": {
       "allowed_values": [
         "target_lags_only",
-        "factor_plus_lags",
-        "full_high_dimensional_X",
-        "selected_sparse_X",
-        "mixed_mode"
+        "factors_plus_target_lags",
+        "high_dimensional_predictors",
+        "selected_sparse_predictors",
+        "mixed_feature_blocks"
       ],
       "axis_name": "data_richness_mode",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "factor_plus_lags": "operational",
-        "full_high_dimensional_X": "operational",
-        "mixed_mode": "registry_only",
-        "selected_sparse_X": "operational",
+        "factors_plus_target_lags": "operational",
+        "high_dimensional_predictors": "operational",
+        "mixed_feature_blocks": "registry_only",
+        "selected_sparse_predictors": "operational",
         "target_lags_only": "operational"
       },
       "default_policy": "fixed",
@@ -936,21 +936,21 @@
     },
     "feature_block_combination": {
       "allowed_values": [
-        "replace_with_blocks",
-        "append_to_base_x",
+        "replace_with_selected_blocks",
+        "append_to_base_predictors",
         "append_to_target_lags",
         "concatenate_named_blocks",
-        "custom_combiner"
+        "custom_feature_combiner"
       ],
       "axis_name": "feature_block_combination",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "append_to_base_x": "operational",
+        "append_to_base_predictors": "operational",
         "append_to_target_lags": "operational",
         "concatenate_named_blocks": "operational",
-        "custom_combiner": "registry_only",
-        "replace_with_blocks": "operational"
+        "custom_feature_combiner": "registry_only",
+        "replace_with_selected_blocks": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -958,35 +958,35 @@
     },
     "feature_block_set": {
       "allowed_values": [
-        "legacy_feature_builder_bridge",
+        "feature_builder_compatibility_bridge",
         "target_lags_only",
-        "transformed_x",
-        "transformed_x_lags",
+        "transformed_predictors",
+        "transformed_predictor_lags",
         "factors_plus_target_lags",
         "factor_blocks_only",
-        "high_dimensional_x",
-        "selected_sparse_x",
-        "level_augmented_x",
-        "rotation_augmented_x",
-        "mixed_blocks",
-        "custom_blocks"
+        "high_dimensional_predictors",
+        "selected_sparse_predictors",
+        "level_augmented_predictors",
+        "rotation_augmented_predictors",
+        "mixed_feature_blocks",
+        "custom_feature_blocks"
       ],
       "axis_name": "feature_block_set",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "custom_blocks": "operational_narrow",
+        "custom_feature_blocks": "operational_narrow",
         "factor_blocks_only": "operational",
         "factors_plus_target_lags": "operational",
-        "high_dimensional_x": "operational",
-        "legacy_feature_builder_bridge": "registry_only",
-        "level_augmented_x": "operational_narrow",
-        "mixed_blocks": "operational_narrow",
-        "rotation_augmented_x": "operational_narrow",
-        "selected_sparse_x": "operational_narrow",
+        "feature_builder_compatibility_bridge": "registry_only",
+        "high_dimensional_predictors": "operational",
+        "level_augmented_predictors": "operational_narrow",
+        "mixed_feature_blocks": "operational_narrow",
+        "rotation_augmented_predictors": "operational_narrow",
+        "selected_sparse_predictors": "operational_narrow",
         "target_lags_only": "operational",
-        "transformed_x": "operational",
-        "transformed_x_lags": "operational_narrow"
+        "transformed_predictor_lags": "operational_narrow",
+        "transformed_predictors": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -994,23 +994,23 @@
     },
     "feature_builder": {
       "allowed_values": [
-        "autoreg_lagged_target",
-        "factors_plus_AR",
+        "target_lag_features",
+        "factors_plus_target_lags",
         "raw_feature_panel",
-        "raw_X_only",
-        "factor_pca",
+        "raw_predictors_only",
+        "pca_factor_features",
         "sequence_tensor"
       ],
       "axis_name": "feature_builder",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "autoreg_lagged_target": "operational",
-        "factor_pca": "operational",
-        "factors_plus_AR": "operational",
-        "raw_X_only": "operational",
+        "factors_plus_target_lags": "operational",
+        "pca_factor_features": "operational",
         "raw_feature_panel": "operational",
-        "sequence_tensor": "future"
+        "raw_predictors_only": "operational",
+        "sequence_tensor": "future",
+        "target_lag_features": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1042,7 +1042,7 @@
       "allowed_values": [
         "none",
         "correlation_filter",
-        "lasso_select",
+        "lasso_selection",
         "mutual_information_screen",
         "custom"
       ],
@@ -1052,7 +1052,7 @@
       "current_status": {
         "correlation_filter": "operational",
         "custom": "external_plugin",
-        "lasso_select": "operational",
+        "lasso_selection": "operational",
         "mutual_information_screen": "registry_only",
         "none": "operational"
       },
@@ -1064,13 +1064,13 @@
       "allowed_values": [
         "select_before_factor",
         "select_after_factor",
-        "select_after_custom_blocks"
+        "select_after_custom_feature_blocks"
       ],
       "axis_name": "feature_selection_semantics",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "select_after_custom_blocks": "operational",
+        "select_after_custom_feature_blocks": "operational",
         "select_after_factor": "operational",
         "select_before_factor": "operational"
       },
@@ -3229,21 +3229,21 @@
     },
     "x_lag_creation": {
       "allowed_values": [
-        "no_x_lags",
-        "fixed_x_lags",
-        "cv_selected_x_lags",
-        "variable_specific_lags",
-        "category_specific_lags"
+        "no_predictor_lags",
+        "fixed_predictor_lags",
+        "cv_selected_predictor_lags",
+        "variable_specific_predictor_lags",
+        "category_specific_predictor_lags"
       ],
       "axis_name": "x_lag_creation",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "category_specific_lags": "registry_only",
-        "cv_selected_x_lags": "registry_only",
-        "fixed_x_lags": "operational",
-        "no_x_lags": "operational",
-        "variable_specific_lags": "registry_only"
+        "category_specific_predictor_lags": "registry_only",
+        "cv_selected_predictor_lags": "registry_only",
+        "fixed_predictor_lags": "operational",
+        "no_predictor_lags": "operational",
+        "variable_specific_predictor_lags": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3252,22 +3252,22 @@
     "x_lag_feature_block": {
       "allowed_values": [
         "none",
-        "fixed_x_lags",
-        "variable_specific_x_lags",
-        "category_specific_x_lags",
-        "cv_selected_x_lags",
-        "custom_x_lags"
+        "fixed_predictor_lags",
+        "variable_specific_predictor_lags",
+        "category_specific_predictor_lags",
+        "cv_selected_predictor_lags",
+        "custom_predictor_lags"
       ],
       "axis_name": "x_lag_feature_block",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "category_specific_x_lags": "registry_only",
-        "custom_x_lags": "registry_only",
-        "cv_selected_x_lags": "registry_only",
-        "fixed_x_lags": "operational",
+        "category_specific_predictor_lags": "registry_only",
+        "custom_predictor_lags": "registry_only",
+        "cv_selected_predictor_lags": "registry_only",
+        "fixed_predictor_lags": "operational",
         "none": "operational",
-        "variable_specific_x_lags": "registry_only"
+        "variable_specific_predictor_lags": "registry_only"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3627,20 +3627,20 @@
       "owner_layer": "2_preprocessing",
       "pruning_surface": "compiler blocked_reasons and skip_failed_cell manifests",
       "required_companions": [
-        "x_lag_feature_block=fixed_x_lags for transformed_x_lags",
-        "non-none feature_selection_policy for selected_sparse_x",
-        "non-none level_feature_block for level_augmented_x",
-        "non-none rotation_feature_block for rotation_augmented_x",
-        "at least two active block sources for mixed_blocks",
-        "registered custom block or custom combiner for custom_blocks"
+        "x_lag_feature_block=fixed_predictor_lags for transformed_predictor_lags",
+        "non-none feature_selection_policy for selected_sparse_predictors",
+        "non-none level_feature_block for level_augmented_predictors",
+        "non-none rotation_feature_block for rotation_augmented_predictors",
+        "at least two active block sources for mixed_feature_blocks",
+        "registered custom block or custom combiner for custom_feature_blocks"
       ],
       "values": [
-        "transformed_x_lags",
-        "selected_sparse_x",
-        "level_augmented_x",
-        "rotation_augmented_x",
-        "mixed_blocks",
-        "custom_blocks"
+        "transformed_predictor_lags",
+        "selected_sparse_predictors",
+        "level_augmented_predictors",
+        "rotation_augmented_predictors",
+        "mixed_feature_blocks",
+        "custom_feature_blocks"
       ]
     },
     {
@@ -3720,6 +3720,26 @@
         "legacy_id": "forbid_contemporaneous"
       },
       {
+        "axis": "data_richness_mode",
+        "canonical_id": "factors_plus_target_lags",
+        "legacy_id": "factor_plus_lags"
+      },
+      {
+        "axis": "data_richness_mode",
+        "canonical_id": "high_dimensional_predictors",
+        "legacy_id": "full_high_dimensional_X"
+      },
+      {
+        "axis": "data_richness_mode",
+        "canonical_id": "mixed_feature_blocks",
+        "legacy_id": "mixed_mode"
+      },
+      {
+        "axis": "data_richness_mode",
+        "canonical_id": "selected_sparse_predictors",
+        "legacy_id": "selected_sparse_X"
+      },
+      {
         "axis": "experiment_unit",
         "canonical_id": "single_target_generator_grid",
         "legacy_id": "single_target_model_grid"
@@ -3728,6 +3748,96 @@
         "axis": "experiment_unit",
         "canonical_id": "single_target_single_generator",
         "legacy_id": "single_target_single_model"
+      },
+      {
+        "axis": "feature_block_combination",
+        "canonical_id": "append_to_base_predictors",
+        "legacy_id": "append_to_base_x"
+      },
+      {
+        "axis": "feature_block_combination",
+        "canonical_id": "custom_feature_combiner",
+        "legacy_id": "custom_combiner"
+      },
+      {
+        "axis": "feature_block_combination",
+        "canonical_id": "replace_with_selected_blocks",
+        "legacy_id": "replace_with_blocks"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "custom_feature_blocks",
+        "legacy_id": "custom_blocks"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "high_dimensional_predictors",
+        "legacy_id": "high_dimensional_x"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "feature_builder_compatibility_bridge",
+        "legacy_id": "legacy_feature_builder_bridge"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "level_augmented_predictors",
+        "legacy_id": "level_augmented_x"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "mixed_feature_blocks",
+        "legacy_id": "mixed_blocks"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "rotation_augmented_predictors",
+        "legacy_id": "rotation_augmented_x"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "selected_sparse_predictors",
+        "legacy_id": "selected_sparse_x"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "transformed_predictors",
+        "legacy_id": "transformed_x"
+      },
+      {
+        "axis": "feature_block_set",
+        "canonical_id": "transformed_predictor_lags",
+        "legacy_id": "transformed_x_lags"
+      },
+      {
+        "axis": "feature_builder",
+        "canonical_id": "target_lag_features",
+        "legacy_id": "autoreg_lagged_target"
+      },
+      {
+        "axis": "feature_builder",
+        "canonical_id": "pca_factor_features",
+        "legacy_id": "factor_pca"
+      },
+      {
+        "axis": "feature_builder",
+        "canonical_id": "factors_plus_target_lags",
+        "legacy_id": "factors_plus_AR"
+      },
+      {
+        "axis": "feature_builder",
+        "canonical_id": "raw_predictors_only",
+        "legacy_id": "raw_X_only"
+      },
+      {
+        "axis": "feature_selection_policy",
+        "canonical_id": "lasso_selection",
+        "legacy_id": "lasso_select"
+      },
+      {
+        "axis": "feature_selection_semantics",
+        "canonical_id": "select_after_custom_feature_blocks",
+        "legacy_id": "select_after_custom_blocks"
       },
       {
         "axis": "horizon_target_construction",
@@ -3935,6 +4045,56 @@
         "legacy_id": "target_specific_subset"
       },
       {
+        "axis": "x_lag_creation",
+        "canonical_id": "category_specific_predictor_lags",
+        "legacy_id": "category_specific_lags"
+      },
+      {
+        "axis": "x_lag_creation",
+        "canonical_id": "cv_selected_predictor_lags",
+        "legacy_id": "cv_selected_x_lags"
+      },
+      {
+        "axis": "x_lag_creation",
+        "canonical_id": "fixed_predictor_lags",
+        "legacy_id": "fixed_x_lags"
+      },
+      {
+        "axis": "x_lag_creation",
+        "canonical_id": "no_predictor_lags",
+        "legacy_id": "no_x_lags"
+      },
+      {
+        "axis": "x_lag_creation",
+        "canonical_id": "variable_specific_predictor_lags",
+        "legacy_id": "variable_specific_lags"
+      },
+      {
+        "axis": "x_lag_feature_block",
+        "canonical_id": "category_specific_predictor_lags",
+        "legacy_id": "category_specific_x_lags"
+      },
+      {
+        "axis": "x_lag_feature_block",
+        "canonical_id": "custom_predictor_lags",
+        "legacy_id": "custom_x_lags"
+      },
+      {
+        "axis": "x_lag_feature_block",
+        "canonical_id": "cv_selected_predictor_lags",
+        "legacy_id": "cv_selected_x_lags"
+      },
+      {
+        "axis": "x_lag_feature_block",
+        "canonical_id": "fixed_predictor_lags",
+        "legacy_id": "fixed_x_lags"
+      },
+      {
+        "axis": "x_lag_feature_block",
+        "canonical_id": "variable_specific_predictor_lags",
+        "legacy_id": "variable_specific_x_lags"
+      },
+      {
         "axis": "x_transform_policy",
         "canonical_id": "official_tcode_transformed",
         "legacy_id": "apply_official_tcode_transformed"
@@ -4023,7 +4183,7 @@
               "dimensionality_reduction_policy": "none",
               "evaluation_scale": "raw_level",
               "factor_feature_block": "none",
-              "feature_block_combination": "replace_with_blocks",
+              "feature_block_combination": "replace_with_selected_blocks",
               "feature_selection_policy": "none",
               "horizon_target_construction": "future_target_level_t_plus_h",
               "inverse_transform_policy": "target_only",
@@ -4086,7 +4246,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "FRED-MD style macro forecasting path with official transformations, raw-panel ridge generator, AR-BIC benchmark, and MSFE evaluation."
     },
     {
@@ -4099,7 +4259,7 @@
         "0_meta.experiment_unit=single_target_single_generator",
         "1_data_task.dataset=fred_md",
         "2_preprocessing.tcode_policy=raw_only",
-        "3_training.feature_builder=autoreg_lagged_target",
+        "3_training.feature_builder=target_lag_features",
         "3_training.model_family=ar"
       ],
       "expected_outputs": [
@@ -4160,7 +4320,7 @@
           "3_training": {
             "fixed_axes": {
               "benchmark_family": "zero_change",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
               "framework": "expanding",
@@ -4193,7 +4353,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Small fixture-safe replication route used to verify recipe lowering and artifact contracts."
     },
     {
@@ -4261,7 +4421,7 @@
             "fixed_axes": {
               "dimensionality_reduction_policy": "none",
               "evaluation_scale": "raw_level",
-              "feature_block_set": "transformed_x",
+              "feature_block_set": "transformed_predictors",
               "feature_selection_policy": "none",
               "fred_sd_mixed_frequency_representation": "mixed_frequency_model_adapter",
               "horizon_target_construction": "future_target_level_t_plus_h",
@@ -4323,7 +4483,7 @@
         },
         "recipe_id": "fred-sd-midasr-almonp-direct"
       },
-      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_x\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_predictors\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
@@ -4374,7 +4534,7 @@
           "3_training": {
             "fixed_axes": {
               "benchmark_family": "zero_change",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "framework": "expanding",
               "model_family": "ar"
             }
@@ -4405,7 +4565,7 @@
         },
         "recipe_id": "model-benchmark-ar-vs-zero-change"
       },
-      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -4456,7 +4616,7 @@
           "3_training": {
             "fixed_axes": {
               "benchmark_family": "zero_change",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "framework": "expanding",
               "model_family": "ar"
             },
@@ -4525,7 +4685,7 @@
             "evaluation_scale": "raw_level",
             "exogenous_x_path_policy": "unavailable",
             "export_format": "json",
-            "feature_builder": "autoreg_lagged_target",
+            "feature_builder": "target_lag_features",
             "feature_selection_policy": "none",
             "forecast_object": "point_mean",
             "forecast_type": "direct",
@@ -4594,8 +4754,8 @@
           "layer3_capability_matrix": {
             "active_cell": {
               "blocked_reasons": [],
-              "feature_builder": "autoreg_lagged_target",
-              "feature_runtime": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
+              "feature_runtime": "target_lag_features",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
               "model_family": "ar",
@@ -4608,7 +4768,7 @@
               "forecast_object": "point_mean",
               "forecast_protocol": "iterated",
               "payload_contract": "forecast_payload_v1",
-              "representation_runtime": "autoreg_lagged_target",
+              "representation_runtime": "target_lag_features",
               "runtime_status": "operational"
             },
             "canonical_dimensions": [
@@ -4770,14 +4930,14 @@
                     "raw_feature_panel": "AR runtime consumes target-lag-only representation"
                   },
                   "operational": [
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 },
                 "default_non_ar": {
                   "blocked": {},
                   "operational": [
                     "raw_feature_panel",
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 }
               },
@@ -4811,15 +4971,6 @@
                 }
               },
               "forecast_type": {
-                "autoreg_lagged_target": {
-                  "blocked": {
-                    "direct": "direct target-lag-only runtime is not implemented"
-                  },
-                  "default": "iterated",
-                  "operational": [
-                    "iterated"
-                  ]
-                },
                 "raw_feature_panel": {
                   "blocked": {
                     "iterated": "raw-panel iterated runtime requires an explicit future-X scenario"
@@ -4838,6 +4989,15 @@
                   "default": "direct",
                   "operational": [
                     "direct"
+                  ]
+                },
+                "target_lag_features": {
+                  "blocked": {
+                    "direct": "direct target-lag-only runtime is not implemented"
+                  },
+                  "default": "iterated",
+                  "operational": [
+                    "iterated"
                   ]
                 }
               }
@@ -4897,7 +5057,7 @@
               "dataset": "fred_md",
               "dimensionality_reduction_policy": "none",
               "evaluation_scale": "raw_level",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "feature_selection_policy": "none",
               "framework": "expanding",
               "importance_method": "none",
@@ -4945,7 +5105,7 @@
             "variation_axes": [],
             "varying_design": {
               "feature_recipes": [
-                "autoreg_lagged_target"
+                "target_lag_features"
               ],
               "horizons": [
                 "h1",
@@ -6448,39 +6608,39 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_predictor_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "fixed_x_lags"
+                "value": "fixed_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "variable_specific_x_lags"
+                "value": "variable_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "category_specific_x_lags"
+                "value": "category_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_selected_x_lags"
+                "value": "cv_selected_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_x_lags"
+                "value": "custom_predictor_lags"
               }
             ],
             "selected": null
@@ -6670,18 +6830,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_selected_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_with_blocks"
+                "value": "replace_with_selected_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_x'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_base_x"
+                "value": "append_to_base_predictors"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_target_lags'",
@@ -6698,11 +6858,11 @@
                 "value": "concatenate_named_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_combiner'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_feature_combiner'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_combiner"
+                "value": "custom_feature_combiner"
               }
             ],
             "selected": null
@@ -6727,11 +6887,11 @@
                 "value": "correlation_filter"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_select'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_selection'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "lasso_select"
+                "value": "lasso_selection"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'mutual_information_screen'",
@@ -6770,11 +6930,11 @@
                 "value": "select_after_factor"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_feature_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "select_after_custom_blocks"
+                "value": "select_after_custom_feature_blocks"
               }
             ],
             "selected": null
@@ -6821,18 +6981,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'autoreg_lagged_target'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'target_lag_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "autoreg_lagged_target"
+                "value": "target_lag_features"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_AR'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_target_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factors_plus_AR"
+                "value": "factors_plus_target_lags"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_feature_panel'",
@@ -6842,18 +7002,18 @@
                 "value": "raw_feature_panel"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_X_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_predictors_only'",
                 "disabled_reason": "model_family=ar is target-lag/autoreg only; raw-panel Z is incompatible",
                 "enabled": false,
                 "status": "operational",
-                "value": "raw_X_only"
+                "value": "raw_predictors_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factor_pca'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'pca_factor_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factor_pca"
+                "value": "pca_factor_features"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'sequence_tensor'",
@@ -6863,7 +7023,7 @@
                 "value": "sequence_tensor"
               }
             ],
-            "selected": "autoreg_lagged_target"
+            "selected": "target_lag_features"
           },
           {
             "axis": "model_family",
@@ -10066,7 +10226,7 @@
           "3_training": {
             "fixed_axes": {
               "benchmark_family": "zero_change",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
               "framework": "expanding",
@@ -10099,7 +10259,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -10156,7 +10316,7 @@
           "3_training": {
             "fixed_axes": {
               "benchmark_family": "zero_change",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
               "framework": "expanding",
@@ -10230,7 +10390,7 @@
             "experiment_unit": "single_target_single_generator",
             "export_format": "json",
             "failure_policy": "fail_fast",
-            "feature_builder": "autoreg_lagged_target",
+            "feature_builder": "target_lag_features",
             "feature_selection_policy": "none",
             "forecast_object": "point_mean",
             "forecast_type": "iterated",
@@ -10301,8 +10461,8 @@
           "layer3_capability_matrix": {
             "active_cell": {
               "blocked_reasons": [],
-              "feature_builder": "autoreg_lagged_target",
-              "feature_runtime": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
+              "feature_runtime": "target_lag_features",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
               "model_family": "ar",
@@ -10315,7 +10475,7 @@
               "forecast_object": "point_mean",
               "forecast_protocol": "iterated",
               "payload_contract": "forecast_payload_v1",
-              "representation_runtime": "autoreg_lagged_target",
+              "representation_runtime": "target_lag_features",
               "runtime_status": "operational"
             },
             "canonical_dimensions": [
@@ -10477,14 +10637,14 @@
                     "raw_feature_panel": "AR runtime consumes target-lag-only representation"
                   },
                   "operational": [
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 },
                 "default_non_ar": {
                   "blocked": {},
                   "operational": [
                     "raw_feature_panel",
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 }
               },
@@ -10518,15 +10678,6 @@
                 }
               },
               "forecast_type": {
-                "autoreg_lagged_target": {
-                  "blocked": {
-                    "direct": "direct target-lag-only runtime is not implemented"
-                  },
-                  "default": "iterated",
-                  "operational": [
-                    "iterated"
-                  ]
-                },
                 "raw_feature_panel": {
                   "blocked": {
                     "iterated": "raw-panel iterated runtime requires an explicit future-X scenario"
@@ -10545,6 +10696,15 @@
                   "default": "direct",
                   "operational": [
                     "direct"
+                  ]
+                },
+                "target_lag_features": {
+                  "blocked": {
+                    "direct": "direct target-lag-only runtime is not implemented"
+                  },
+                  "default": "iterated",
+                  "operational": [
+                    "iterated"
                   ]
                 }
               }
@@ -10614,7 +10774,7 @@
               "evaluation_scale": "raw_level",
               "experiment_unit": "single_target_single_generator",
               "failure_policy": "fail_fast",
-              "feature_builder": "autoreg_lagged_target",
+              "feature_builder": "target_lag_features",
               "feature_selection_policy": "none",
               "forecast_object": "point_mean",
               "forecast_type": "iterated",
@@ -10666,7 +10826,7 @@
             "variation_axes": [],
             "varying_design": {
               "feature_recipes": [
-                "autoreg_lagged_target"
+                "target_lag_features"
               ],
               "horizons": [
                 "h1"
@@ -12168,39 +12328,39 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_predictor_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "fixed_x_lags"
+                "value": "fixed_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "variable_specific_x_lags"
+                "value": "variable_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "category_specific_x_lags"
+                "value": "category_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_selected_x_lags"
+                "value": "cv_selected_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_x_lags"
+                "value": "custom_predictor_lags"
               }
             ],
             "selected": null
@@ -12390,18 +12550,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_selected_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_with_blocks"
+                "value": "replace_with_selected_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_x'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_base_x"
+                "value": "append_to_base_predictors"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_target_lags'",
@@ -12418,11 +12578,11 @@
                 "value": "concatenate_named_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_combiner'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_feature_combiner'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_combiner"
+                "value": "custom_feature_combiner"
               }
             ],
             "selected": null
@@ -12447,11 +12607,11 @@
                 "value": "correlation_filter"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_select'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_selection'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "lasso_select"
+                "value": "lasso_selection"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'mutual_information_screen'",
@@ -12490,11 +12650,11 @@
                 "value": "select_after_factor"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_feature_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "select_after_custom_blocks"
+                "value": "select_after_custom_feature_blocks"
               }
             ],
             "selected": null
@@ -12541,18 +12701,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'autoreg_lagged_target'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'target_lag_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "autoreg_lagged_target"
+                "value": "target_lag_features"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_AR'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_target_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factors_plus_AR"
+                "value": "factors_plus_target_lags"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_feature_panel'",
@@ -12562,18 +12722,18 @@
                 "value": "raw_feature_panel"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_X_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_predictors_only'",
                 "disabled_reason": "model_family=ar is target-lag/autoreg only; raw-panel Z is incompatible",
                 "enabled": false,
                 "status": "operational",
-                "value": "raw_X_only"
+                "value": "raw_predictors_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factor_pca'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'pca_factor_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factor_pca"
+                "value": "pca_factor_features"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'sequence_tensor'",
@@ -12583,7 +12743,7 @@
                 "value": "sequence_tensor"
               }
             ],
-            "selected": "autoreg_lagged_target"
+            "selected": "target_lag_features"
           },
           {
             "axis": "model_family",
@@ -15781,7 +15941,7 @@
               "dimensionality_reduction_policy": "none",
               "evaluation_scale": "raw_level",
               "factor_feature_block": "none",
-              "feature_block_combination": "replace_with_blocks",
+              "feature_block_combination": "replace_with_selected_blocks",
               "feature_selection_policy": "none",
               "horizon_target_construction": "future_target_level_t_plus_h",
               "inverse_transform_policy": "target_only",
@@ -15844,7 +16004,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -15893,7 +16053,7 @@
               "dimensionality_reduction_policy": "none",
               "evaluation_scale": "raw_level",
               "factor_feature_block": "none",
-              "feature_block_combination": "replace_with_blocks",
+              "feature_block_combination": "replace_with_selected_blocks",
               "feature_selection_policy": "none",
               "horizon_target_construction": "future_target_level_t_plus_h",
               "inverse_transform_policy": "target_only",
@@ -16000,7 +16160,7 @@
             "export_format": "json",
             "factor_feature_block": "none",
             "failure_policy": "fail_fast",
-            "feature_block_combination": "replace_with_blocks",
+            "feature_block_combination": "replace_with_selected_blocks",
             "feature_builder": "raw_feature_panel",
             "feature_selection_policy": "none",
             "forecast_object": "point_mean",
@@ -16265,14 +16425,14 @@
                     "raw_feature_panel": "AR runtime consumes target-lag-only representation"
                   },
                   "operational": [
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 },
                 "default_non_ar": {
                   "blocked": {},
                   "operational": [
                     "raw_feature_panel",
-                    "autoreg_lagged_target"
+                    "target_lag_features"
                   ]
                 }
               },
@@ -16306,15 +16466,6 @@
                 }
               },
               "forecast_type": {
-                "autoreg_lagged_target": {
-                  "blocked": {
-                    "direct": "direct target-lag-only runtime is not implemented"
-                  },
-                  "default": "iterated",
-                  "operational": [
-                    "iterated"
-                  ]
-                },
                 "raw_feature_panel": {
                   "blocked": {
                     "iterated": "raw-panel iterated runtime requires an explicit future-X scenario"
@@ -16333,6 +16484,15 @@
                   "default": "direct",
                   "operational": [
                     "direct"
+                  ]
+                },
+                "target_lag_features": {
+                  "blocked": {
+                    "direct": "direct target-lag-only runtime is not implemented"
+                  },
+                  "default": "iterated",
+                  "operational": [
+                    "iterated"
                   ]
                 }
               }
@@ -16427,7 +16587,7 @@
               "export_format": "json",
               "factor_feature_block": "none",
               "failure_policy": "fail_fast",
-              "feature_block_combination": "replace_with_blocks",
+              "feature_block_combination": "replace_with_selected_blocks",
               "feature_builder": "raw_feature_panel",
               "feature_selection_policy": "none",
               "forecast_object": "point_mean",
@@ -18004,39 +18164,39 @@
                 "value": "none"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'fixed_predictor_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "fixed_x_lags"
+                "value": "fixed_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'variable_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "variable_specific_x_lags"
+                "value": "variable_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'category_specific_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "category_specific_x_lags"
+                "value": "category_specific_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'cv_selected_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "cv_selected_x_lags"
+                "value": "cv_selected_predictor_lags"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_x_lags'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.x_lag_feature_block = 'custom_predictor_lags'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_x_lags"
+                "value": "custom_predictor_lags"
               }
             ],
             "selected": "none"
@@ -18226,18 +18386,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'replace_with_selected_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_with_blocks"
+                "value": "replace_with_selected_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_x'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_base_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_base_x"
+                "value": "append_to_base_predictors"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'append_to_target_lags'",
@@ -18254,14 +18414,14 @@
                 "value": "concatenate_named_blocks"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_combiner'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_block_combination = 'custom_feature_combiner'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "custom_combiner"
+                "value": "custom_feature_combiner"
               }
             ],
-            "selected": "replace_with_blocks"
+            "selected": "replace_with_selected_blocks"
           },
           {
             "axis": "feature_selection_policy",
@@ -18283,11 +18443,11 @@
                 "value": "correlation_filter"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_select'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'lasso_selection'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "lasso_select"
+                "value": "lasso_selection"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_policy = 'mutual_information_screen'",
@@ -18326,11 +18486,11 @@
                 "value": "select_after_factor"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_blocks'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_selection_semantics = 'select_after_custom_feature_blocks'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "select_after_custom_blocks"
+                "value": "select_after_custom_feature_blocks"
               }
             ],
             "selected": null
@@ -18377,18 +18537,18 @@
             "layer_label": "Layer 2: representation construction",
             "options": [
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'autoreg_lagged_target'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'target_lag_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "autoreg_lagged_target"
+                "value": "target_lag_features"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_AR'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factors_plus_target_lags'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factors_plus_AR"
+                "value": "factors_plus_target_lags"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_feature_panel'",
@@ -18398,18 +18558,18 @@
                 "value": "raw_feature_panel"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_X_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'raw_predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_X_only"
+                "value": "raw_predictors_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'factor_pca'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'pca_factor_features'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "factor_pca"
+                "value": "pca_factor_features"
               },
               {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.feature_builder = 'sequence_tensor'",
@@ -21742,7 +21902,7 @@
     },
     "model_groups": {
       "autoreg_builders": [
-        "autoreg_lagged_target"
+        "target_lag_features"
       ],
       "deep_sequence_models": [
         "gru",
@@ -21769,8 +21929,8 @@
         "ridge"
       ],
       "raw_panel_builders": [
-        "raw_X_only",
-        "raw_feature_panel"
+        "raw_feature_panel",
+        "raw_predictors_only"
       ],
       "tree_models": [
         "catboost",

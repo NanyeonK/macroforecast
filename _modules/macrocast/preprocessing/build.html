@@ -156,14 +156,14 @@
 <span class="n">_FEATURE_SELECTION</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;none&quot;</span><span class="p">,</span>
     <span class="s2">&quot;correlation_filter&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;lasso_select&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lasso_selection&quot;</span><span class="p">,</span>
     <span class="s2">&quot;mutual_information_screen&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_FEATURE_SELECTION_SEMANTICS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span>
     <span class="s2">&quot;select_after_factor&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select_after_custom_feature_blocks&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_ORDER</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;none&quot;</span><span class="p">,</span>
@@ -227,11 +227,11 @@
     <span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_X_LAG</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;variable_specific_lags&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;category_specific_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cv_selected_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;variable_specific_predictor_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;category_specific_predictor_lags&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_FEATURE_GROUPING</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;none&quot;</span><span class="p">,</span>
@@ -268,7 +268,7 @@
     <span class="n">target_domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unconstrained&quot;</span><span class="p">,</span>
     <span class="n">scaling_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;columnwise&quot;</span><span class="p">,</span>
     <span class="n">additional_preprocessing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-    <span class="n">x_lag_creation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+    <span class="n">x_lag_creation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
     <span class="n">feature_grouping</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessContract</span><span class="p">:</span>
     <span class="n">allowed_map</span> <span class="o">=</span> <span class="p">{</span>
@@ -342,7 +342,7 @@
             <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
             <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">feature_selection_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
             <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
-            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">,</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
 
@@ -361,7 +361,7 @@
         <span class="s2">&quot;demean_only&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_variance_only&quot;</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">allowed_dimred</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;pca&quot;</span><span class="p">,</span> <span class="s2">&quot;static_factor&quot;</span><span class="p">}</span>
-    <span class="n">allowed_feature_selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;correlation_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso_select&quot;</span><span class="p">}</span>
+    <span class="n">allowed_feature_selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;correlation_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso_selection&quot;</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_missing_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_outlier_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -404,7 +404,7 @@
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;hp_filter&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">}:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_grouping</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -573,8 +573,8 @@
         <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support non-train global scaling scopes&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;hp_filter&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support additional_preprocessing beyond none / hp_filter&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">}:</span>
-        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support x_lag_creation beyond no_x_lags / fixed_x_lags&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_predictor_lags&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support x_lag_creation beyond no_predictor_lags / fixed_predictor_lags&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_grouping</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support feature_grouping beyond none&quot;</span><span class="p">)</span></div>
 

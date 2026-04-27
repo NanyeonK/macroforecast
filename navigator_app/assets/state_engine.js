@@ -175,7 +175,7 @@
         return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder";
       }
       if (deepModels.has(model)) {
-        if (value === "autoreg_lagged_target") return null;
+        if (value === "target_lag_features") return null;
         if (value === "sequence_tensor") return "full multivariate sequence_tensor remains gated; current deep slice is univariate target-history sequence";
         return `model_family=${model} consumes the current univariate sequence/autoreg path, not ${value}`;
       }

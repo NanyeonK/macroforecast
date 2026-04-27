@@ -94,7 +94,7 @@ path:
         target_lag_count: 2
     sweep_axes:
       target_lag_block: [none, fixed_target_lags]
-      x_lag_feature_block: [none, fixed_x_lags]
+      x_lag_feature_block: [none, fixed_predictor_lags]
   3_training:
     fixed_axes:
       framework: rolling
@@ -173,7 +173,7 @@ grid grows:
 2_preprocessing:
   sweep_axes:
     target_lag_block: [none, fixed_target_lags]
-    x_lag_feature_block: [none, fixed_x_lags]
+    x_lag_feature_block: [none, fixed_predictor_lags]
     temporal_feature_block: [none, moving_average_features, rolling_moments]
     rotation_feature_block: [none, moving_average_rotation]
 3_training:

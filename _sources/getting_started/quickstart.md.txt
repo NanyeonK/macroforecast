@@ -74,14 +74,14 @@ recipe = {
                 "target_domain": "unconstrained",
                 "scaling_scope": "columnwise",
                 "additional_preprocessing": "none",
-                "x_lag_creation": "no_x_lags",
+                "x_lag_creation": "no_predictor_lags",
                 "feature_grouping": "none",
             },
         },
         "3_training": {
             "fixed_axes": {
                 "framework": "expanding",
-                "feature_builder": "autoreg_lagged_target",
+                "feature_builder": "target_lag_features",
             },
             "sweep_axes": {
                 "model_family": ["ridge"],

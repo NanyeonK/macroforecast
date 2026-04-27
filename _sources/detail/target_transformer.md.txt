@@ -59,7 +59,7 @@ raw-panel supervised models. Raw-panel support is limited to `ols`, `ridge`,
 `lasso`, `elasticnet`, or registered custom models because those paths can keep
 the target transformer fit/inverse-transform contract aligned with each
 horizon-specific supervised target vector. Compatibility builders such as
-`factor_pca` are treated by this gate according to the feature runtime they
+`pca_factor_features` are treated by this gate according to the feature runtime they
 compile to; static-factor recipes therefore use the same raw-panel model-family
 allowlist. Non-raw-panel feature runtimes remain gated until their
 target-transformer scale contract is designed and tested.

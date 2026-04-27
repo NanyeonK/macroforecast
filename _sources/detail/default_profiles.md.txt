@@ -16,7 +16,7 @@ Current MVP profile:
 | `target_structure` | `single_target` |
 | `framework` | `expanding` |
 | `benchmark_family` | `zero_change` |
-| `feature_builder` | `autoreg_lagged_target` |
+| `feature_builder` | `target_lag_features` |
 | `model_family` | `ar` |
 | `primary_metric` | `msfe` |
 | `stat_test` | `none` |
@@ -30,7 +30,7 @@ Current MVP profile:
 | `random_seed` | `42` |
 
 This default still writes legacy-compatible
-`feature_builder=autoreg_lagged_target`; the compiler also records canonical
+`feature_builder=target_lag_features`; the compiler also records canonical
 Layer 2 block/runtime provenance. New full recipes may use explicit feature
 blocks directly.
 

@@ -204,7 +204,7 @@ cell.</p></li>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">sweep_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">x_lag_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fixed_x_lags</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">x_lag_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fixed_predictor_lags</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">target_lag_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fixed_target_lags</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">temporal_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">moving_average_features</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rolling_moments</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">rotation_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">moving_average_rotation</span><span class="p p-Indicator">]</span>
@@ -392,7 +392,7 @@ distinguish:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">marx_replace_x_basis</span></code>: raw-panel <code class="docutils literal notranslate"><span class="pre">Z</span></code> is the MARX basis itself;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">marx_append_to_x</span></code>: MARX features are concatenated as named blocks with base
 X, fixed X lags, or deterministic temporal blocks when
-<code class="docutils literal notranslate"><span class="pre">feature_block_combination=append_to_base_x</span></code> or
+<code class="docutils literal notranslate"><span class="pre">feature_block_combination=append_to_base_predictors</span></code> or
 <code class="docutils literal notranslate"><span class="pre">concatenate_named_blocks</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">marx_then_factor</span></code>: replace the X lag-polynomial basis with MARX features,
 then fit <code class="docutils literal notranslate"><span class="pre">pca_static_factors</span></code> on that rotated basis. Target lags may still
@@ -492,7 +492,7 @@ contract is implemented.</p>
 the usual model compatibility constraints:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">target_lag_block</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_target_lags</span></code>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_x_lags</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_predictor_lags</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">factor_feature_block</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">pca_static_factors</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">level_feature_block</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">target_level_addback</span></code>,
 <code class="docutils literal notranslate"><span class="pre">x_level_addback</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_level_addbacks</span></code>, <code class="docutils literal notranslate"><span class="pre">level_growth_pairs</span></code>;</p></li>

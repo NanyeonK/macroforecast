@@ -111,19 +111,19 @@ Changes:
 
 - add a compiled `layer2_representation_spec` or equivalent provenance payload;
 - translate current bridge values into explicit feature-block intent:
-  - `feature_builder=autoreg_lagged_target` ->
+  - `feature_builder=target_lag_features` ->
     `feature_block_set=target_lags_only`;
   - `feature_builder=raw_feature_panel` ->
     transformed/raw predictor panel block;
-  - `feature_builder=raw_X_only` ->
+  - `feature_builder=raw_predictors_only` ->
     predictor panel block with no target-lag block;
-  - `feature_builder=factor_pca` ->
+  - `feature_builder=pca_factor_features` ->
     `feature_block_set=factor_blocks_only` plus a static factor block;
-  - `feature_builder=factors_plus_AR` ->
+  - `feature_builder=factors_plus_target_lags` ->
     factor block plus target-lag block;
-  - `data_richness_mode=full_high_dimensional_X` ->
+  - `data_richness_mode=high_dimensional_predictors` ->
     high-dimensional predictor block;
-  - `data_richness_mode=selected_sparse_X` ->
+  - `data_richness_mode=selected_sparse_predictors` ->
     selected sparse predictor block;
 - add target-representation provenance for `horizon_target_construction`,
   `target_transform`, `target_transformer`, and `evaluation_scale`;
@@ -240,7 +240,7 @@ old `feature_builder` bridge.
 Changes:
 
 - implement `target_lag_block=fixed_target_lags`;
-- implement `x_lag_feature_block=fixed_x_lags`;
+- implement `x_lag_feature_block=fixed_predictor_lags`;
 - define stable feature names, such as `target_lag_1` and
   `{predictor}_lag_{k}`;
 - enforce train-window alignment and no lookahead;
@@ -281,7 +281,7 @@ Acceptance:
 
 - factor extraction is fit recursively or train-only;
 - factor feature names and loadings/provenance are saved;
-- old `feature_builder=factor_pca` and `factors_plus_AR` recipes translate to
+- old `feature_builder=pca_factor_features` and `factors_plus_target_lags` recipes translate to
   equivalent explicit blocks.
 
 ### Patch L2-G: Level, Rotation, And Temporal Blocks
