@@ -178,7 +178,7 @@ grid grows:
     rotation_feature_block: [none, moving_average_rotation]
 3_training:
   sweep_axes:
-    model_family: [ridge, lasso, randomforest, ar]
+    model_family: [ridge, lasso, random_forest, ar]
 ```
 
 For MARX-style rotation research, use `rotation_feature_block: marx_rotation`

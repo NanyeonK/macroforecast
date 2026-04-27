@@ -44,7 +44,7 @@ recipe = {
                 "dataset": "fred_md",
                 "information_set_type": "final_revised_data",
                 "target_structure": "single_target",
-                "benchmark_family": "ar_bic",
+                "benchmark_family": "autoregressive_bic",
                 "evaluation_scale": "raw_level",
             },
             "leaf_config": {

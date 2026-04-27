@@ -44,7 +44,7 @@ path:
       research_design: controlled_variation
   3_training:
     sweep_axes:
-      model_family: [ar, ridge, lasso, randomforest]
+      model_family: [ar, ridge, lasso, random_forest]
 ```
 
 ---

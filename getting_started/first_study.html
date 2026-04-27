@@ -103,7 +103,7 @@
 <li><p><strong>Dataset</strong>: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code> (FRED-MD monthly macro panel)</p></li>
 <li><p><strong>Information set</strong>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code> (latest available data, not real-time vintages)</p></li>
 <li><p><strong>Framework</strong>: <code class="docutils literal notranslate"><span class="pre">expanding</span></code> (expanding training window)</p></li>
-<li><p><strong>Benchmark</strong>: <code class="docutils literal notranslate"><span class="pre">ar_bic</span></code> (AR model with BIC-selected lag order)</p></li>
+<li><p><strong>Benchmark</strong>: <code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code> (AR model with BIC-selected lag order)</p></li>
 <li><p><strong>Horizons</strong>: 1, 3, 6, 12 months ahead</p></li>
 </ul>
 <p>These choices go in <code class="docutils literal notranslate"><span class="pre">0_meta</span></code>, <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code>, and the <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> of <code class="docutils literal notranslate"><span class="pre">3_training</span></code>.</p>
@@ -138,7 +138,7 @@
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
 <span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">final_revised_data</span>
 <span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target</span>
-<span class="w">      </span><span class="nt">benchmark_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ar_bic</span>
+<span class="w">      </span><span class="nt">benchmark_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">autoregressive_bic</span>
 <span class="w">      </span><span class="nt">evaluation_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_level</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>

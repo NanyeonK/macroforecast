@@ -17,7 +17,7 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 `target_family` (the old 1.4.1 axis) was dropped in PR #32 — subsumed by `target_structure`.
 **At a glance (defaults):**
-- `benchmark_family` — no default; you always pick one (most studies start with `historical_mean` or `ar_bic`).
+- `benchmark_family` — no default; you always pick one (most studies start with `historical_mean` or `autoregressive_bic`).
 - `predictor_family` — feature-builder dynamic default. target_lag_features → `target_lags_only`; raw_feature_panel → `all_macro_vars`. You rarely set it.
 - `variable_universe = all_variables` — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.
 - `deterministic_components = none` — no X augmentation. Switch to `linear_trend` / seasonals / `break_dummies` when your target needs them.
@@ -37,22 +37,22 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 |---|---|---|
 | `historical_mean` | operational | Training-set mean. Default. |
 | `zero_change` | operational | Random-walk at `y_t`. |
-| `ar_bic` | operational | AR model with BIC-selected lag order. |
-| `ar_fixed_p` | operational | AR model at a fixed lag `p` (`benchmark_config.benchmark_fixed_p`). |
-| `ardi` | operational | AR + Diffusion Index (factor) model. |
+| `autoregressive_bic` | operational | AR model with BIC-selected lag order. |
+| `autoregressive_fixed_lag` | operational | AR model at a fixed lag `p` (`benchmark_config.benchmark_fixed_p`). |
+| `autoregressive_diffusion_index` | operational | AR + Diffusion Index (factor) model. |
 | `rolling_mean` | operational | Rolling-window mean (`benchmark_config.benchmark_window_len`). |
 | `custom_benchmark` | operational | Arbitrary callable supplied in `benchmark_config.benchmark_callable`. |
 | `expert_benchmark` | operational | Callable supplied in `benchmark_config.expert_callable`. |
-| `factor_model` | operational | Single-factor OLS on the leading principal factor (v1.0 self-contained impl). |
-| `multi_benchmark_suite` | operational | Runs each member in `leaf_config.benchmark_suite: list[str]` and returns the arithmetic mean. |
+| `factor_model_benchmark` | operational | Single-factor OLS on the leading principal factor (v1.0 self-contained impl). |
+| `benchmark_suite` | operational | Runs each member in `leaf_config.benchmark_suite: list[str]` and returns the arithmetic mean. |
 | `paper_specific_benchmark` | operational | Pre-computed forecast series supplied via `leaf_config.paper_forecast_series: dict[target → Series]`. |
 | `survey_forecast` | operational | Same pattern, `leaf_config.survey_forecast_series`. |
 
 ### Functions & features
 
 - `macrocast.execution.build._run_benchmark_executor` dispatches by `benchmark_family` value.
-- `factor_model`: z-scored leading-factor regression; falls back to `historical_mean` for training windows < 6 rows.
-- `multi_benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi). Missing or unsupported members raise `CompileValidationError`.
+- `factor_model_benchmark`: z-scored leading-factor regression; falls back to `historical_mean` for training windows < 6 rows.
+- `benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, autoregressive_bic, rolling_mean, autoregressive_fixed_lag, autoregressive_diffusion_index). Missing or unsupported members raise `CompileValidationError`.
 - `paper_specific_benchmark` / `survey_forecast`: look up the forecast at `train.index[-1] + horizon` months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.
 - `expert_benchmark`: programmatic only; requires `leaf_config.benchmark_config.expert_callable`.
 
@@ -212,7 +212,7 @@ path:
 ## Benchmark & Predictor Universe (1.4) takeaways
 
 - Every value in every 1.4 axis is operational in v1.0. Zero `registry_only` entries remain.
-- `benchmark_family` gains 4 formerly-metadata variants as real implementations: `factor_model`, `multi_benchmark_suite`, `paper_specific_benchmark`, `survey_forecast`.
+- `benchmark_family` gains 4 formerly-metadata variants as real implementations: `factor_model_benchmark`, `benchmark_suite`, `paper_specific_benchmark`, `survey_forecast`.
 - `predictor_family` and `variable_universe` use the same design pattern: the user provides a pre-computed column list (or category mapping) via `leaf_config`; runtime discovery is out of scope.
 - `deterministic_components` augments the raw-panel X with classical econometric terms (trend / seasonals / break dummies) via a dedicated module.
 

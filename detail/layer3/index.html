@@ -129,6 +129,63 @@
 </tbody>
 </table>
 </section>
+<section id="current-naming-migration">
+<h2>Current naming migration<a class="headerlink" href="#current-naming-migration" title="Link to this heading"></a></h2>
+<p>Layer 3 IDs now prefer explicit model and benchmark names over glued
+abbreviations. Old recipe values are still accepted through
+<code class="docutils literal notranslate"><span class="pre">registry_naming_v1</span></code>; compiled recipes, Navigator paths, and generated YAML
+emit the canonical names below.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Legacy value</p></th>
+<th class="head"><p>Canonical value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bayesianridge</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">adaptivelasso</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">adaptive_lasso</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">randomforest</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">extratrees</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gbm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ar_bic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ar_fixed_p</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_fixed_lag</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ardi</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_diffusion_index</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">factor_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="layer-contract">
 <h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
 <p>Input:</p>

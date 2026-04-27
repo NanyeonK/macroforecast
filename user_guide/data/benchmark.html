@@ -115,7 +115,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">target_family</span></code> (the old 1.4.1 axis) was dropped in PR #32 — subsumed by <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>.
 <strong>At a glance (defaults):</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> — no default; you always pick one (most studies start with <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> or <code class="docutils literal notranslate"><span class="pre">ar_bic</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> — no default; you always pick one (most studies start with <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> or <code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> — feature-builder dynamic default. target_lag_features → <code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>; raw_feature_panel → <code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code>. You rarely set it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span> <span class="pre">=</span> <span class="pre">all_variables</span></code> — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span> <span class="pre">=</span> <span class="pre">none</span></code> — no X augmentation. Switch to <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> / seasonals / <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> when your target needs them.</p></li>
@@ -143,15 +143,15 @@
 <td><p>operational</p></td>
 <td><p>Random-walk at <code class="docutils literal notranslate"><span class="pre">y_t</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ar_bic</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>AR model with BIC-selected lag order.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ar_fixed_p</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_fixed_lag</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>AR model at a fixed lag <code class="docutils literal notranslate"><span class="pre">p</span></code> (<code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_fixed_p</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ardi</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_diffusion_index</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>AR + Diffusion Index (factor) model.</p></td>
 </tr>
@@ -167,11 +167,11 @@
 <td><p>operational</p></td>
 <td><p>Callable supplied in <code class="docutils literal notranslate"><span class="pre">benchmark_config.expert_callable</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_model</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Single-factor OLS on the leading principal factor (v1.0 self-contained impl).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Runs each member in <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite:</span> <span class="pre">list[str]</span></code> and returns the arithmetic mean.</p></td>
 </tr>
@@ -190,8 +190,8 @@
 <h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._run_benchmark_executor</span></code> dispatches by <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">factor_model</span></code>: z-scored leading-factor regression; falls back to <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> for training windows &lt; 6 rows.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code>: inline dispatch over <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite</span></code> members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi). Missing or unsupported members raise <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code>: z-scored leading-factor regression; falls back to <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> for training windows &lt; 6 rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>: inline dispatch over <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite</span></code> members (allowed set: historical_mean, zero_change, autoregressive_bic, rolling_mean, autoregressive_fixed_lag, autoregressive_diffusion_index). Missing or unsupported members raise <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code> / <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>: look up the forecast at <code class="docutils literal notranslate"><span class="pre">train.index[-1]</span> <span class="pre">+</span> <span class="pre">horizon</span></code> months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">expert_benchmark</span></code>: programmatic only; requires <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_config.expert_callable</span></code>.</p></li>
 </ul>
@@ -433,7 +433,7 @@
 <h2>Benchmark &amp; Predictor Universe (1.4) takeaways<a class="headerlink" href="#benchmark-predictor-universe-1-4-takeaways" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Every value in every 1.4 axis is operational in v1.0. Zero <code class="docutils literal notranslate"><span class="pre">registry_only</span></code> entries remain.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> gains 4 formerly-metadata variants as real implementations: <code class="docutils literal notranslate"><span class="pre">factor_model</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code>, <code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> gains 4 formerly-metadata variants as real implementations: <code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, <code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> and <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> use the same design pattern: the user provides a pre-computed column list (or category mapping) via <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>; runtime discovery is out of scope.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code> augments the raw-panel X with classical econometric terms (trend / seasonals / break dummies) via a dedicated module.</p></li>
 </ul>
