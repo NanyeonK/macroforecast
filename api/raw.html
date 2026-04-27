@@ -1,164 +1,995 @@
-<!doctype html>
-<html lang="en">
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>API: Raw - macrocast</title>
-  <style>
-    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin: 0; color: #222; background: #fff; }
-    .wrap { display: grid; grid-template-columns: 260px minmax(0,1fr); min-height: 100vh; }
-    nav { border-right: 1px solid #e5e7eb; padding: 24px 20px; background: #fafafa; }
-    nav h1 { font-size: 20px; margin: 0 0 8px; }
-    nav p { font-size: 13px; color: #666; margin: 0 0 20px; }
-    nav ul { list-style: none; padding: 0; margin: 0; }
-    nav li { margin: 0 0 10px; }
-    nav a { color: #174ea6; text-decoration: none; font-size: 14px; }
-    nav a.active { font-weight: 700; }
-    main { padding: 32px 40px; max-width: 980px; }
-    h1 { font-size: 32px; margin-top: 0; }
-    h2 { margin-top: 32px; font-size: 24px; }
-    h3 { margin-top: 24px; font-size: 18px; }
-    p, li { line-height: 1.6; font-size: 16px; }
-    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
-    pre { background: #111827; color: #f9fafb; padding: 16px; overflow-x: auto; border-radius: 8px; }
-    pre code { background: transparent; padding: 0; color: inherit; }
-    a { color: #174ea6; }
-  </style>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.raw &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=19216117"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macrocast.recipes" href="recipes.html" />
+    <link rel="prev" title="macrocast.design" href="design.html" /> 
 </head>
-<body>
-  <div class="wrap">
-    <nav>
-      <h1>macrocast</h1>
-      <p>Preview docs</p>
-      <ul><li><a href="/index.html">Home</a></li><li><a href="/stage0.html">Stage 0</a></li><li><a href="/raw.html">Raw data</a></li><li><a href="/recipes.html">Recipes</a></li><li><a href="/api/index.html">API</a></li></ul>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detailed Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../detail/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../detail/fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../detail/layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stages-2-through-7">Stages 2 through 7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/data/index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#current-operational-subset-summary">Current operational subset summary</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
     </nav>
-    <main><h1>Raw data API Reference</h1>
-<h2>Import surface</h2>
-<pre><code>
-from macrocast.raw import (
-    RawVersionRequest,
-    RawDatasetMetadata,
-    RawArtifactRecord,
-    RawLoadResult,
-    normalize_version_request,
-    list_vintages,
-    get_raw_cache_root,
-    get_manifest_path,
-    get_raw_file_path,
-    build_raw_artifact_record,
-    append_raw_manifest_entry,
-    read_raw_manifest,
-    parse_fred_csv,
-    load_fred_md,
-    load_fred_qd,
-    load_fred_sd,
-)
-</code></pre>
-<h2>Shared parser</h2>
-<h3><code>parse_fred_csv()</code></h3>
-<p>Reads the common CSV layout used by FRED-MD and FRED-QD.</p>
-<p>Returns:</p>
-<ul>
-<li>parsed pandas <code>DataFrame</code></li>
-<li>transformation-code mapping <code>dict[str, int]</code></li>
-</ul>
-<p>Accepted layouts:</p>
-<ul>
-<li>official FRED ordering: header row then transform row</li>
-<li>legacy / fixture ordering: transform row then header row</li>
-</ul>
-<h2>Dataset loaders</h2>
-<h3><code>load_fred_md()</code></h3>
-<pre><code>
-def load_fred_md(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | Path | None = None,
-    local_source: str | Path | None = None,
-    local_zip_source: str | Path | None = None,
-) -&gt; RawLoadResult:
-    ...
-</code></pre>
-<h3><code>load_fred_qd()</code></h3>
-<pre><code>
-def load_fred_qd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | Path | None = None,
-    local_source: str | Path | None = None,
-) -&gt; RawLoadResult:
-    ...
-</code></pre>
-<h3><code>load_fred_sd()</code></h3>
-<pre><code>
-def load_fred_sd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | Path | None = None,
-    local_source: str | Path | None = None,
-    states: list[str] | None = None,
-    variables: list[str] | None = None,
-) -&gt; RawLoadResult:
-    ...
-</code></pre>
-<p>Behavior:</p>
-<ul>
-<li>normalizes current versus vintage request</li>
-<li>chooses deterministic cache path with <code>.xlsx</code> suffix</li>
-<li>fetches from local source or remote workbook URL</li>
-<li>parses workbook sheets with <code>openpyxl</code></li>
-<li>optionally filters sheets and state columns</li>
-<li>emits a wide DataFrame with <code>{variable}_{state}</code> columns</li>
-<li>appends a raw manifest entry</li>
-<li>returns <code>RawLoadResult</code></li>
-</ul>
-<h2>Result and metadata objects</h2>
-<h3><code>RawVersionRequest</code></h3>
-<ul>
-<li>normalized dataset/version identity</li>
-</ul>
-<h3><code>RawDatasetMetadata</code></h3>
-<ul>
-<li>semantic dataset metadata</li>
-</ul>
-<h3><code>RawArtifactRecord</code></h3>
-<ul>
-<li>raw provenance metadata for the concrete cached artifact</li>
-</ul>
-<h3><code>RawLoadResult</code></h3>
-<ul>
-<li>canonical loader return object containing data, dataset metadata, and artifact metadata</li>
-</ul>
-<h2>Error behavior</h2>
-<p>Current meaningful failure classes include:</p>
-<ul>
-<li>invalid vintage format -&gt; <code>RawVersionFormatError</code></li>
-<li>file acquisition failure -&gt; <code>RawDownloadError</code></li>
-<li>FRED-MD parse failure after acquisition -&gt; <code>RawParseError</code></li>
-<li>FRED-SD workbook parse failure -&gt; <code>RawParseError</code></li>
-</ul>
-<h2>Example</h2>
-<pre><code>
-from macrocast.raw import load_fred_sd
 
-result = load_fred_sd(
-    local_source=&quot;tests/fixtures/fred_sd_sample.xlsx&quot;,
-    variables=[&quot;UR&quot;],
-    states=[&quot;CA&quot;, &quot;TX&quot;],
-)
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macrocast</a>
+      </nav>
 
-df = result.data
-</code></pre>
-<p>This returns a wide DataFrame with columns like:</p>
-<ul>
-<li><code>UR_CA</code></li>
-<li><code>UR_TX</code></li>
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Reference</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/api/raw.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="macrocast-raw">
+<h1><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code><a class="headerlink" href="#macrocast-raw" title="Link to this heading"></a></h1>
+<p>FRED-MD/QD/SD raw data loading, vintage management, provenance manifest.</p>
+<p>See the <a class="reference internal" href="#../user_guide/raw.md"><span class="xref myst">user guide</span></a> for conceptual background.</p>
+<dl class="py function" id="module-macrocast.raw">
+<dt class="sig sig-object py" id="macrocast.raw.normalize_version_request">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">normalize_version_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vintage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/manager.html#normalize_version_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.normalize_version_request" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
-<h2>Status note</h2>
-<p><code>load_fred_sd()</code> is intentionally provisional in the current package state. It exists as a documented package surface, but its live-source behavior should be treated as pending broader verification.</p></main>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#macrocast.raw.RawVersionRequest" title="macrocast.raw.types.RawVersionRequest"><em>RawVersionRequest</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.list_vintages">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">list_vintages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/manager.html#list_vintages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.list_vintages" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>end</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.get_raw_cache_root">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">get_raw_cache_root</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/cache.html#get_raw_cache_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.get_raw_cache_root" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.get_manifest_path">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">get_manifest_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/cache.html#get_manifest_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.get_manifest_path" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.get_raw_file_path">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">get_raw_file_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/cache.html#get_raw_file_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.get_raw_file_path" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<a class="reference internal" href="#macrocast.raw.RawVersionRequest" title="macrocast.raw.types.RawVersionRequest"><em>RawVersionRequest</em></a>)</p></li>
+<li><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>suffix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.build_raw_artifact_record">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">build_raw_artifact_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_hit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/manager.html#build_raw_artifact_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.build_raw_artifact_record" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<a class="reference internal" href="#macrocast.raw.RawVersionRequest" title="macrocast.raw.types.RawVersionRequest"><em>RawVersionRequest</em></a>)</p></li>
+<li><p><strong>source_url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a>)</p></li>
+<li><p><strong>file_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>cache_hit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#macrocast.raw.RawArtifactRecord" title="macrocast.raw.types.RawArtifactRecord"><em>RawArtifactRecord</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.append_raw_manifest_entry">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">append_raw_manifest_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/manifest.html#append_raw_manifest_entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.append_raw_manifest_entry" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference internal" href="#macrocast.raw.RawLoadResult" title="macrocast.raw.types.RawLoadResult"><em>RawLoadResult</em></a>)</p></li>
+<li><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.read_raw_manifest">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">read_raw_manifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/manifest.html#read_raw_manifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.read_raw_manifest" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.parse_fred_csv">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">parse_fred_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/datasets/shared_csv.html#parse_fred_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.parse_fred_csv" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.2)"><em>DataFrame</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.load_fred_md">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">load_fred_md</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vintage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_zip_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/datasets/fred_md.html#load_fred_md"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.load_fred_md" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>local_source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>local_zip_source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#macrocast.raw.RawLoadResult" title="macrocast.raw.types.RawLoadResult"><em>RawLoadResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.load_fred_qd">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">load_fred_qd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vintage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/datasets/fred_qd.html#load_fred_qd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.load_fred_qd" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>local_source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#macrocast.raw.RawLoadResult" title="macrocast.raw.types.RawLoadResult"><em>RawLoadResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.load_fred_sd">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">load_fred_sd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vintage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/datasets/fred_sd.html#load_fred_sd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.load_fred_sd" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>cache_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>local_source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>states</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>variables</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#macrocast.raw.RawLoadResult" title="macrocast.raw.types.RawLoadResult"><em>RawLoadResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.resolve_sd_inferred_tcode">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">resolve_sd_inferred_tcode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_statuses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/sd_inferred_tcodes.html#resolve_sd_inferred_tcode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.resolve_sd_inferred_tcode" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>allowed_statuses</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.build_sd_inferred_transform_codes">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">build_sd_inferred_transform_codes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_statuses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/sd_inferred_tcodes.html#build_sd_inferred_transform_codes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.build_sd_inferred_transform_codes" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>]</em>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>allowed_statuses</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.build_sd_variable_global_stationarity_transform_codes">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">build_sd_variable_global_stationarity_transform_codes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/sd_inferred_tcodes.html#build_sd_variable_global_stationarity_transform_codes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.build_sd_variable_global_stationarity_transform_codes" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>]</em>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.build_sd_state_series_stationarity_transform_codes">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">build_sd_state_series_stationarity_transform_codes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">audit_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/sd_inferred_tcodes.html#build_sd_state_series_stationarity_transform_codes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.build_sd_state_series_stationarity_transform_codes" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>]</em>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>code_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.14)"><em>Mapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>map_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>audit_uri</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="macrocast.raw.build_sd_transform_codes_for_policy">
+<span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">build_sd_transform_codes_for_policy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_statuses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">audit_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/macrocast/raw/sd_inferred_tcodes.html#build_sd_transform_codes_for_policy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.build_sd_transform_codes_for_policy" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>]</em>)</p></li>
+<li><p><strong>policy</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>allowed_statuses</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>code_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.14)"><em>Mapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>map_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>audit_uri</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="macrocast.raw.RawVersionRequest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">RawVersionRequest</span></span><a class="reference internal" href="../_modules/macrocast/raw/types.html#RawVersionRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.RawVersionRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>RawVersionRequest(dataset: ‘DatasetId’, mode: ‘VersionMode’, vintage: ‘str | None’)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawVersionRequest.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fred_md'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fred_qd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fred_sd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fred_md+fred_sd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'fred_qd+fred_sd'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawVersionRequest.dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawVersionRequest.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'current'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'vintage'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawVersionRequest.mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawVersionRequest.vintage">
+<span class="sig-name descname"><span class="pre">vintage</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#macrocast.raw.RawVersionRequest.vintage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="macrocast.raw.RawVersionRequest.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vintage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#macrocast.raw.RawVersionRequest.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'fred_md'</em><em>, </em><em>'fred_qd'</em><em>, </em><em>'fred_sd'</em><em>, </em><em>'fred_md+fred_sd'</em><em>, </em><em>'fred_qd+fred_sd'</em><em>]</em>)</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'current'</em><em>, </em><em>'vintage'</em><em>]</em>)</p></li>
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">RawDatasetMetadata</span></span><a class="reference internal" href="../_modules/macrocast/raw/types.html#RawDatasetMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>RawDatasetMetadata(dataset: ‘str’, source_family: ‘str’, frequency: ‘str’, version_mode: ‘VersionMode’, vintage: ‘str | None’, data_through: ‘str | None’, support_tier: ‘SupportTier’, parse_notes: ‘tuple[str, …]’ = ())</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.source_family">
+<span class="sig-name descname"><span class="pre">source_family</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.source_family" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.frequency" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.version_mode">
+<span class="sig-name descname"><span class="pre">version_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'current'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'vintage'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.version_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.vintage">
+<span class="sig-name descname"><span class="pre">vintage</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.vintage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.data_through">
+<span class="sig-name descname"><span class="pre">data_through</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.data_through" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.support_tier">
+<span class="sig-name descname"><span class="pre">support_tier</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'stable'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'provisional'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.support_tier" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.parse_notes">
+<span class="sig-name descname"><span class="pre">parse_notes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.parse_notes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="macrocast.raw.RawDatasetMetadata.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vintage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_through</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">support_tier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#macrocast.raw.RawDatasetMetadata.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>source_family</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>version_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'current'</em><em>, </em><em>'vintage'</em><em>]</em>)</p></li>
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>data_through</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>support_tier</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'stable'</em><em>, </em><em>'provisional'</em><em>]</em>)</p></li>
+<li><p><strong>parse_notes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">RawArtifactRecord</span></span><a class="reference internal" href="../_modules/macrocast/raw/types.html#RawArtifactRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.RawArtifactRecord" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>RawArtifactRecord(dataset: ‘str’, version_mode: ‘VersionMode’, vintage: ‘str | None’, source_url: ‘str’, local_path: ‘str’, file_format: ‘ArtifactFormat’, downloaded_at: ‘str’, file_sha256: ‘str’, file_size_bytes: ‘int’, cache_hit: ‘bool’, manifest_version: ‘str’)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.version_mode">
+<span class="sig-name descname"><span class="pre">version_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'current'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'vintage'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.version_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.vintage">
+<span class="sig-name descname"><span class="pre">vintage</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.vintage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.source_url">
+<span class="sig-name descname"><span class="pre">source_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.source_url" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.local_path">
+<span class="sig-name descname"><span class="pre">local_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.local_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.file_format">
+<span class="sig-name descname"><span class="pre">file_format</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'csv'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xlsx'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'mixed'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.file_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.downloaded_at">
+<span class="sig-name descname"><span class="pre">downloaded_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.downloaded_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.file_sha256">
+<span class="sig-name descname"><span class="pre">file_sha256</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.file_sha256" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.file_size_bytes">
+<span class="sig-name descname"><span class="pre">file_size_bytes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.file_size_bytes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.cache_hit">
+<span class="sig-name descname"><span class="pre">cache_hit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.cache_hit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.manifest_version">
+<span class="sig-name descname"><span class="pre">manifest_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.manifest_version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="macrocast.raw.RawArtifactRecord.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vintage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_sha256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_size_bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_hit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest_version</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#macrocast.raw.RawArtifactRecord.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>version_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'current'</em><em>, </em><em>'vintage'</em><em>]</em>)</p></li>
+<li><p><strong>vintage</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>source_url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>file_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'csv'</em><em>, </em><em>'xlsx'</em><em>, </em><em>'mixed'</em><em>]</em>)</p></li>
+<li><p><strong>downloaded_at</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>file_sha256</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>file_size_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>cache_hit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>manifest_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">macrocast.raw.</span></span><span class="sig-name descname"><span class="pre">RawLoadResult</span></span><a class="reference internal" href="../_modules/macrocast/raw/types.html#RawLoadResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#macrocast.raw.RawLoadResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>RawLoadResult(data: ‘Any’, dataset_metadata: ‘RawDatasetMetadata’, artifact: ‘RawArtifactRecord’, transform_codes: ‘dict[str, int]’ = &lt;factory&gt;)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></span><a class="headerlink" href="#macrocast.raw.RawLoadResult.data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult.dataset_metadata">
+<span class="sig-name descname"><span class="pre">dataset_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#macrocast.raw.RawDatasetMetadata" title="macrocast.raw.types.RawDatasetMetadata"><span class="pre">RawDatasetMetadata</span></a></span><a class="headerlink" href="#macrocast.raw.RawLoadResult.dataset_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult.artifact">
+<span class="sig-name descname"><span class="pre">artifact</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#macrocast.raw.RawArtifactRecord" title="macrocast.raw.types.RawArtifactRecord"><span class="pre">RawArtifactRecord</span></a></span><a class="headerlink" href="#macrocast.raw.RawLoadResult.artifact" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult.transform_codes">
+<span class="sig-name descname"><span class="pre">transform_codes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#macrocast.raw.RawLoadResult.transform_codes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="macrocast.raw.RawLoadResult.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_codes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#macrocast.raw.RawLoadResult.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>dataset_metadata</strong> (<a class="reference internal" href="#macrocast.raw.RawDatasetMetadata" title="macrocast.raw.types.RawDatasetMetadata"><em>RawDatasetMetadata</em></a>)</p></li>
+<li><p><strong>artifact</strong> (<a class="reference internal" href="#macrocast.raw.RawArtifactRecord" title="macrocast.raw.types.RawArtifactRecord"><em>RawArtifactRecord</em></a>)</p></li>
+<li><p><strong>transform_codes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="design.html" class="btn btn-neutral float-left" title="macrocast.design" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="recipes.html" class="btn btn-neutral float-right" title="macrocast.recipes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
   </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
 </body>
 </html>

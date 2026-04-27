@@ -1,0 +1,1014 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer 0 Meta Audit &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=19216117"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Layer 1 Data Task Audit" href="layer1_data_task_audit.html" />
+    <link rel="prev" title="Layer Axis Migration Plan" href="layer_axis_migration_plan.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Detailed Docs</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stages-2-through-7">Stages 2 through 7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/data/index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Detailed Docs</a></li>
+      <li class="breadcrumb-item active">Layer 0 Meta Audit</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer0_meta_audit.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="layer-0-meta-audit">
+<h1>Layer 0 Meta Audit<a class="headerlink" href="#layer-0-meta-audit" title="Link to this heading"></a></h1>
+<p>Layer 0 decides what kind of research design a recipe represents before data, preprocessing, models, metrics, or artifacts are interpreted.</p>
+<p>For the public <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> API, this layer answers one question:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Is this a single default run, a one-axis controlled comparison, a multi-axis grid, a wrapper bundle, or a replication?
+</pre></div>
+</div>
+<section id="layer-0-surfaces">
+<h2>Layer 0 Surfaces<a class="headerlink" href="#layer-0-surfaces" title="Link to this heading"></a></h2>
+<p>Layer 0 is split across two code surfaces.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Surface</p></th>
+<th class="head"><p>Files</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>registry axes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macrocast/registry/stage0/</span></code></p></td>
+<td><p>allowed values and support status</p></td>
+</tr>
+<tr class="row-odd"><td><p>design frame</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macrocast/design/</span></code></p></td>
+<td><p>derived research shape, execution posture, route owner</p></td>
+</tr>
+<tr class="row-even"><td><p>compiler lowering</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macrocast/compiler/build.py</span></code></p></td>
+<td><p>maps recipe axes into a <code class="docutils literal notranslate"><span class="pre">DesignFrame</span></code> and execution status</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="registry-axes">
+<h2>Registry Axes<a class="headerlink" href="#registry-axes" title="Link to this heading"></a></h2>
+<p>Current source axes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Public role</p></th>
+<th class="head"><p>Current default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">research_design</span></code></p></td>
+<td><p>public concept, mostly derived by <code class="docutils literal notranslate"><span class="pre">Experiment</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_path_benchmark</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code></p></td>
+<td><p>internal/advanced route selector</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
+<td><p>advanced execution control</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">serial</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
+<td><p>advanced execution control</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fail_fast</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
+<td><p>public advanced option</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code></p></td>
+<td><p>internal registry grammar</p></td>
+<td><p>not a user recipe choice</p></td>
+</tr>
+</tbody>
+</table>
+<p>Layer 0 has six active source axes. <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> is intentionally outside the
+Navigator decision tree because it describes recipe grammar (<code class="docutils literal notranslate"><span class="pre">fixed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sweep</span></code>, <code class="docutils literal notranslate"><span class="pre">nested_sweep</span></code>, <code class="docutils literal notranslate"><span class="pre">conditional</span></code>, <code class="docutils literal notranslate"><span class="pre">derived</span></code>) rather than a research
+choice.</p>
+<p>Stale note: old <code class="docutils literal notranslate"><span class="pre">study_mode</span></code> / <code class="docutils literal notranslate"><span class="pre">registry_type</span></code> pycache files may exist, but
+current source files do not define active axes for them.</p>
+</section>
+<section id="census-finding">
+<h2>2026-04-27 Census Finding<a class="headerlink" href="#census-finding" title="Link to this heading"></a></h2>
+<p>The live registry / Navigator census shows:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Finding</p></th>
+<th class="head"><p>Decision</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Active Layer 0 axes</p></td>
+<td><p>6 registry axes, 38 total values.</p></td>
+<td><p>Keep. Code docstrings now say six axes.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Primary Navigator axes</p></td>
+<td><p>5 axes: <code class="docutils literal notranslate"><span class="pre">research_design</span></code>, <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>.</p></td>
+<td><p>Keep. These affect route, reproducibility, failure handling, or compute posture.</p></td>
+</tr>
+<tr class="row-even"><td><p>Internal axis</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code>.</p></td>
+<td><p>Keep hidden from the primary Navigator tree; document it as registry grammar.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Runner handoffs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orchestrated_bundle</span></code>, <code class="docutils literal notranslate"><span class="pre">replication_override</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code>, and <code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code> are routing contracts, not direct <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code> paths.</p></td>
+<td><p>Keep direct-run guard. Dedicated runners own these routes.</p></td>
+</tr>
+<tr class="row-even"><td><p>Main open Layer 0 question</p></td>
+<td><p>Whether benchmark/ablation wrapper families should become real public simple API methods.</p></td>
+<td><p>Defer until wrapper result/artifact contracts are audited after Layers 4-6.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="full-route-contract">
+<h2>Full Route Contract<a class="headerlink" href="#full-route-contract" title="Link to this heading"></a></h2>
+<p>Layer 0 separates grammar from the runner that is allowed to execute it.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Contract</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Direct <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_run_executable</span></code></p></td>
+<td><p>one fully specified single-run recipe</p></td>
+<td><p>allowed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
+<td><p>parent recipe with sweep axes; variants run through <code class="docutils literal notranslate"><span class="pre">compile_sweep_plan</span></code> / <code class="docutils literal notranslate"><span class="pre">execute_sweep</span></code></p></td>
+<td><p>parent blocked</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wrapper_handoff</span></code></p></td>
+<td><p>wrapper-owned bundle such as full sweep, benchmark suite, ablation, or separate multi-target runs</p></td>
+<td><p>blocked</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_handoff</span></code></p></td>
+<td><p>replication-owned run; must go through <code class="docutils literal notranslate"><span class="pre">execute_replication</span></code> with source/override contract</p></td>
+<td><p>blocked</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">orchestrator_handoff</span></code></p></td>
+<td><p>future orchestrator-owned route</p></td>
+<td><p>blocked</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">not_supported_route</span></code></p></td>
+<td><p>grammar exists, but no runner contract is assigned</p></td>
+<td><p>blocked</p></td>
+</tr>
+</tbody>
+</table>
+<p>The compiler records this in <code class="docutils literal notranslate"><span class="pre">manifest[&quot;tree_context&quot;][&quot;route_contract&quot;]</span></code>.
+Only <code class="docutils literal notranslate"><span class="pre">route_owner=&quot;single_run&quot;</span></code> can be executed by <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code>.</p>
+</section>
+<section id="research-design">
+<h2>Research Design<a class="headerlink" href="#research-design" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>MVP public API</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_path_benchmark</span></code></p></td>
+<td><p>one fixed recipe path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forecast(...)</span></code> / <code class="docutils literal notranslate"><span class="pre">Experiment(...).run()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">controlled_variation</span></code></p></td>
+<td><p>one controlled comparison surface</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.compare_models(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.sweep({&quot;models&quot;:</span> <span class="pre">...})</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">orchestrated_bundle</span></code></p></td>
+<td><p>wrapper-managed bundle</p></td>
+<td><p>advanced/detail only</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_override</span></code></p></td>
+<td><p>replication-locked route</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_replication</span></code> / Replication Library route</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">Experiment</span></code> should set <code class="docutils literal notranslate"><span class="pre">research_design</span></code> automatically. Users should not need to pass this in the simple path.</p>
+</section>
+<section id="experiment-unit">
+<h2>Experiment Unit<a class="headerlink" href="#experiment-unit" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> is derived from research shape and task.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Route owner</p></th>
+<th class="head"><p>Runtime status</p></th>
+<th class="head"><p>Public role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run</span></code></p></td>
+<td><p>executable</p></td>
+<td><p>simple default</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_model_grid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run</span></code></p></td>
+<td><p>executable through sweep runner</p></td>
+<td><p>one controlled single-run axis, usually model comparison</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
+<td><p>registry_only / not_supported</p></td>
+<td><p>dropped until a wrapper runner exists</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run</span></code></p></td>
+<td><p>executable</p></td>
+<td><p>advanced after Layer 1 audit</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
+<td><p>executable wrapper path</p></td>
+<td><p>advanced after Layer 1 audit</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">replication</span></code></p></td>
+<td><p>ready_for_replication_runner</p></td>
+<td><p>replication API</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
+<td><p>registry_only / not_supported</p></td>
+<td><p>dropped until a wrapper runner exists</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ablation_study</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
+<td><p>registry_only / not_supported</p></td>
+<td><p>standalone runner only; no compiled wrapper contract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hierarchical_forecasting_run</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orchestrator</span></code></p></td>
+<td><p>future</p></td>
+<td><p>closed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">panel_forecasting_run</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">orchestrator</span></code></p></td>
+<td><p>future</p></td>
+<td><p>closed</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state_space_run</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run</span></code></p></td>
+<td><p>future</p></td>
+<td><p>closed</p></td>
+</tr>
+</tbody>
+</table>
+<p>The simple API should not expose <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> directly. It should expose clearer methods like <code class="docutils literal notranslate"><span class="pre">compare_models</span></code>, future <code class="docutils literal notranslate"><span class="pre">grid</span></code>, future <code class="docutils literal notranslate"><span class="pre">replicate</span></code>, and future <code class="docutils literal notranslate"><span class="pre">ablate</span></code>.</p>
+<p>Full contract notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">single_target_model_grid</span></code> is historical naming. In the current full contract it means one controlled single-run axis, usually <code class="docutils literal notranslate"><span class="pre">model_family</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code> is a wrapper handoff with a concrete <code class="docutils literal notranslate"><span class="pre">execute_separate_runs</span></code> runner; it is not a direct executable compiled recipe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, and <code class="docutils literal notranslate"><span class="pre">ablation_study</span></code> are wrapper handoffs without compiled-recipe runner contracts and compile as <code class="docutils literal notranslate"><span class="pre">not_supported</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code> is a replication handoff. It is consumed by <code class="docutils literal notranslate"><span class="pre">execute_replication</span></code>, not by <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code> remains a single-run executable route because <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> owns its shared-design multi-target path.</p></li>
+</ul>
+</section>
+<section id="designframe-derived-fields">
+<h2>DesignFrame Derived Fields<a class="headerlink" href="#designframe-derived-fields" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code> derives:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">design_shape</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">execution_posture</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code></p></li>
+<li><p>route owner via <code class="docutils literal notranslate"><span class="pre">resolve_route_owner</span></code></p></li>
+</ul>
+<p>Current shapes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Shape</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">one_fixed_env_one_tool_surface</span></code></p></td>
+<td><p>one fixed run</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">one_fixed_env_multi_tool_surface</span></code></p></td>
+<td><p>multiple model/tools under one fixed design</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">one_fixed_env_controlled_axis_variation</span></code></p></td>
+<td><p>one or more controlled axes varied</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">wrapper_managed_multi_run_bundle</span></code></p></td>
+<td><p>wrapper/orchestrator owns execution</p></td>
+</tr>
+</tbody>
+</table>
+<p>Current postures:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Posture</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_run_recipe</span></code></p></td>
+<td><p>direct recipe execution</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_run_with_internal_sweep</span></code></p></td>
+<td><p>sweep runner can expand variants</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wrapper_bundle_plan</span></code></p></td>
+<td><p>wrapper runtime required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_locked_plan</span></code></p></td>
+<td><p>replication runtime/contract required</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="finding-fixed-feature-recipe-was-misclassified">
+<h2>Finding: Fixed Feature Recipe Was Misclassified<a class="headerlink" href="#finding-fixed-feature-recipe-was-misclassified" title="Link to this heading"></a></h2>
+<p>Before this audit, <code class="docutils literal notranslate"><span class="pre">derive_design_shape</span></code> treated any non-empty <code class="docutils literal notranslate"><span class="pre">feature_recipes</span></code> tuple as a controlled axis. That made a single fixed feature recipe look like controlled variation.</p>
+<p>Correct behavior:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>one model + one feature recipe -&gt; one_fixed_env_one_tool_surface
+one model + multiple feature recipes -&gt; one_fixed_env_controlled_axis_variation
+multiple models + single_path_benchmark -&gt; one_fixed_env_multi_tool_surface
+controlled_variation -&gt; one_fixed_env_controlled_axis_variation
+</pre></div>
+</div>
+<p>The derivation now counts feature/preprocess/tuning axes only when they contain more than one value.
+When that produces a single-run controlled axis, Layer 0 keeps the route in
+<code class="docutils literal notranslate"><span class="pre">single_target_model_grid</span></code> until a finer-grained experiment unit is introduced.
+The name is historical; the current contract is “one controlled single-run
+axis”, not strictly “model axis only”.</p>
+</section>
+<section id="current-simple-api-mapping">
+<h2>Current Simple API Mapping<a class="headerlink" href="#current-simple-api-mapping" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>User action</p></th>
+<th class="head"><p>Layer 0 mapping</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mc.forecast(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_path_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">single_target_single_model</span></code>, <code class="docutils literal notranslate"><span class="pre">single_run_recipe</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Experiment(...).run()</span></code></p></td>
+<td><p>same as <code class="docutils literal notranslate"><span class="pre">forecast</span></code> when no sweep axes exist</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.compare_models([...])</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">controlled_variation</span></code>, <code class="docutils literal notranslate"><span class="pre">single_target_model_grid</span></code>, <code class="docutils literal notranslate"><span class="pre">single_run_with_internal_sweep</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.sweep({&quot;models&quot;:</span> <span class="pre">[...]})</span></code></p></td>
+<td><p>same as <code class="docutils literal notranslate"><span class="pre">compare_models</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>fixed <code class="docutils literal notranslate"><span class="pre">.use_preprocessor(...)</span></code></p></td>
+<td><p>still single path unless models are compared</p></td>
+</tr>
+<tr class="row-odd"><td><p>fixed <code class="docutils literal notranslate"><span class="pre">.use_target_transformer(...)</span></code></p></td>
+<td><p>still single path unless models are compared</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.use_sd_inferred_tcodes()</span></code></p></td>
+<td><p>data/preprocessing policy, not a Layer 0 design change</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="full-scenario-matrix">
+<h2>Full Scenario Matrix<a class="headerlink" href="#full-scenario-matrix" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scenario</p></th>
+<th class="head"><p>Route contract</p></th>
+<th class="head"><p>Compile status</p></th>
+<th class="head"><p>Runner</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>single default</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code> / <code class="docutils literal notranslate"><span class="pre">Experiment.run</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>model comparison parent</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ready_for_sweep_runner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_sweep</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>model comparison variant</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>feature-only comparison parent</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ready_for_sweep_runner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_sweep</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>preprocessing sweep parent</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ready_for_sweep_runner</span></code></p></td>
+<td><p>blocked in simple; Layer 2 governs variants</p></td>
+</tr>
+<tr class="row-odd"><td><p>full sweep explicit</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper_handoff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">not_supported</span></code></p></td>
+<td><p>dropped until a wrapper runner exists</p></td>
+</tr>
+<tr class="row-even"><td><p>benchmark suite</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper_handoff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">not_supported</span></code></p></td>
+<td><p>dropped until a wrapper runner exists</p></td>
+</tr>
+<tr class="row-odd"><td><p>ablation study</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper_handoff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">not_supported</span></code></p></td>
+<td><p>standalone <code class="docutils literal notranslate"><span class="pre">AblationSpec</span></code> runner only; no compiled-recipe wrapper contract</p></td>
+</tr>
+<tr class="row-even"><td><p>replication override</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">replication_handoff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ready_for_replication_runner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_replication</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>multi-target shared design</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">single_run_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>multi-target separate runs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wrapper_handoff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ready_for_wrapper_runner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_separate_runs</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code> rejects every non-<code class="docutils literal notranslate"><span class="pre">single_run</span></code> route. A runner-ready
+status means a dedicated runner can consume the recipe; <code class="docutils literal notranslate"><span class="pre">not_supported</span></code> means
+the route remains in the registry but must not be exposed as runnable.</p>
+</section>
+<section id="run-policy-axes">
+<h2>Run Policy Axes<a class="headerlink" href="#run-policy-axes" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, and <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> are policy axes. They do not change the research design by themselves.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Executable values</p></th>
+<th class="head"><p>Not-supported registry values</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">serial</span></code>, <code class="docutils literal notranslate"><span class="pre">parallel_by_model</span></code>, <code class="docutils literal notranslate"><span class="pre">parallel_by_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">parallel_by_target</span></code>, <code class="docutils literal notranslate"><span class="pre">parallel_by_oos_date</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">parallel_by_trial</span></code>, <code class="docutils literal notranslate"><span class="pre">distributed_cluster</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_failed_cell</span></code>, <code class="docutils literal notranslate"><span class="pre">skip_failed_model</span></code>, <code class="docutils literal notranslate"><span class="pre">save_partial_results</span></code>, <code class="docutils literal notranslate"><span class="pre">warn_only</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">retry_then_skip</span></code>, <code class="docutils literal notranslate"><span class="pre">fallback_to_default_hp</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code>, <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code>, <code class="docutils literal notranslate"><span class="pre">best_effort</span></code>, <code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p></td>
+<td><p>none</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code> and <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> require <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>.</p>
+</section>
+<section id="axis-grammar">
+<h2>Axis Grammar<a class="headerlink" href="#axis-grammar" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code> is registry grammar metadata, not a user-facing research-design choice.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Current meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
+<td><p>value is fixed in one recipe path</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sweep</span></code></p></td>
+<td><p>Cartesian sweep value list</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nested_sweep</span></code></p></td>
+<td><p>non-uniform dependent sweep groups expanded by <code class="docutils literal notranslate"><span class="pre">compile_sweep_plan</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">conditional</span></code></p></td>
+<td><p>conditionally active axis, represented by compiler selections</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">derived</span></code></p></td>
+<td><p>value resolved from recipe state, e.g. <code class="docutils literal notranslate"><span class="pre">experiment_unit_default</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="closed-until-later-layers">
+<h2>Closed Until Later Layers<a class="headerlink" href="#closed-until-later-layers" title="Link to this heading"></a></h2>
+<p>Layer 0 can represent more designs than simple API should expose today.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Desired public feature</p></th>
+<th class="head"><p>Layer 0 need</p></th>
+<th class="head"><p>Blocker</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>preprocessing-only sweep</p></td>
+<td><p>controlled variation with preprocessing axis recorded in <code class="docutils literal notranslate"><span class="pre">VaryingDesign</span></code></p></td>
+<td><p>fixed Layer 2 contracts execute, but public sweep governance and reporting are not finalized</p></td>
+</tr>
+<tr class="row-odd"><td><p>model x preprocessing grid</p></td>
+<td><p>explicit advanced grid, likely wrapper or advanced internal sweep</p></td>
+<td><p>governance and result interpretation not fixed</p></td>
+</tr>
+<tr class="row-even"><td><p>custom benchmark suite</p></td>
+<td><p>wrapper bundle or multi-benchmark design</p></td>
+<td><p>Layer 4 benchmark/result contract not public</p></td>
+</tr>
+<tr class="row-odd"><td><p>custom metric ranking</p></td>
+<td><p>controlled variation with metric direction metadata</p></td>
+<td><p>Layer 4 custom metric contract not public</p></td>
+</tr>
+<tr class="row-even"><td><p>replication</p></td>
+<td><p>replication-locked plan</p></td>
+<td><p>CLI/Navigator route exists; simple high-level replication API and artifact diff UX can still improve</p></td>
+</tr>
+<tr class="row-odd"><td><p>ablation</p></td>
+<td><p>wrapper bundle</p></td>
+<td><p>ablation public API and wrapper artifact contract not finalized</p></td>
+</tr>
+<tr class="row-even"><td><p>multi-target experiment</p></td>
+<td><p>shared design or separate runs</p></td>
+<td><p>shared-design and separate-run paths exist; per-target/hierarchical reporting still needs later artifact audit</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="recommendation">
+<h2>Recommendation<a class="headerlink" href="#recommendation" title="Link to this heading"></a></h2>
+<p>Keep simple Layer 0 closed to three public shapes for now:</p>
+<ol class="arabic simple">
+<li><p>single default run</p></li>
+<li><p>model comparison</p></li>
+<li><p>fixed custom extension inside either of the above</p></li>
+</ol>
+<p>After Layer 1 and Layer 2 audits, add explicit public methods instead of overloading <code class="docutils literal notranslate"><span class="pre">.sweep()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">sweep_preprocessing</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">ablate</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This keeps the simple API honest: each method names the research design it creates.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="layer_axis_migration_plan.html" class="btn btn-neutral float-left" title="Layer Axis Migration Plan" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="layer1_data_task_audit.html" class="btn btn-neutral float-right" title="Layer 1 Data Task Audit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

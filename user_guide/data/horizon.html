@@ -1,0 +1,760 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horizon &amp; Evaluation Window (1.3) &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=19216117"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Benchmark &amp; Predictor Universe (1.4)" href="benchmark.html" />
+    <link rel="prev" title="Target Structure (1.2)" href="target_structure.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detailed Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#stages-2-through-7">Stages 2 through 7</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data (Stage 1)</a></li>
+      <li class="breadcrumb-item active">Horizon &amp; Evaluation Window (1.3)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/horizon.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizon-evaluation-window-1-3">
+<h1>Horizon &amp; Evaluation Window (1.3)<a class="headerlink" href="#horizon-evaluation-window-1-3" title="Link to this heading"></a></h1>
+<p>Declares <strong>which observations count as training data, which count as OOS, and how OOS rows are filtered or aggregated</strong>. This page is the historical 1.3 user-guide entry; canonical ownership is split across later layers. <code class="docutils literal notranslate"><span class="pre">oos_period</span></code> is now a Layer 4 evaluation axis, and <code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code> is now a Layer 6 inference axis. Old Layer 1 placement is accepted only as a compatibility alias.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Section</p></th>
+<th class="head"><p>axis</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1.3.1</p></td>
+<td><p><a class="reference internal" href="#min-train-size"><code class="docutils literal notranslate"><span class="pre">min_train_size</span></code></a></p></td>
+<td><p>How the minimum training window is computed (fixed obs, years, model/target/horizon-specific)</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.3.2</p></td>
+<td><p><a class="reference internal" href="#training-start-rule"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></p></td>
+<td><p>Where the training window starts — earliest observation or a fixed calendar date</p></td>
+</tr>
+<tr class="row-even"><td><p>1.3.3</p></td>
+<td><p><a class="reference internal" href="#oos-period"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></p></td>
+<td><p>Regime filter on OOS origins (NBER recession / expansion)</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.3.4</p></td>
+<td><p><a class="reference internal" href="#overlap-handling"><code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code></a></p></td>
+<td><p>How overlapping forecast errors (h&gt;1) are handled in stat tests</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on dropped axes:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon_list</span></code> was dropped (1.3 cleanup) — redundant with <code class="docutils literal notranslate"><span class="pre">leaf_config.horizons</span></code> which already specifies the horizons list directly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warmup_rule</span></code> was dropped (1.3 cleanup) — abstract axis with no concrete v1.0 dispatch semantic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">own_target_lags</span></code> was dropped (1.3 cleanup) — redundant with <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code> (autoreg_lagged_target includes target lags, raw_feature_panel does not).
+<strong>At a glance (defaults):</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_train_size</span> <span class="pre">=</span> <span class="pre">fixed_n_obs</span></code> — your recipe’s <code class="docutils literal notranslate"><span class="pre">benchmark_config.minimum_train_size</span></code> is the observation count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_start_rule</span> <span class="pre">=</span> <span class="pre">earliest_possible</span></code> — training starts at the first feasible row. Override only for paper-replication (calendar-exact) start dates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oos_period</span> <span class="pre">=</span> <span class="pre">all_oos_data</span></code> — no regime filter. Switch to <code class="docutils literal notranslate"><span class="pre">recession_only_oos</span></code> / <code class="docutils literal notranslate"><span class="pre">expansion_only_oos</span></code> for NBER-conditioned evaluation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overlap_handling</span> <span class="pre">=</span> <span class="pre">allow_overlap</span></code> — stat tests run with their default covariance. Switch to <code class="docutils literal notranslate"><span class="pre">evaluate_with_hac</span></code> only with an HAC-capable Layer 6 test and h &gt; 1.</p></li>
+</ul>
+<p><strong>Most research runs leave all four at the default.</strong></p>
+<hr class="docutils" />
+<section id="min-train-size">
+<h2>1.3.1 <code class="docutils literal notranslate"><span class="pre">min_train_size</span></code><a class="headerlink" href="#min-train-size" title="Link to this heading"></a></h2>
+<p><strong>Selects the rule for computing the minimum training window size.</strong> Every value is operational in v1.0, wired via <code class="docutils literal notranslate"><span class="pre">macrocast.raw.windowing._resolve_min_train_obs</span></code>.</p>
+<section id="value-catalog">
+<h3>Value catalog<a class="headerlink" href="#value-catalog" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fixed_n_obs</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. Use <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_config.minimum_train_size</span></code> verbatim as the observation count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed_years</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Multiply the base by 12 — the scalar is interpreted as years (monthly data).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_specific_min_train</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max(base,</span> <span class="pre">floor_for_model)</span></code> — per-family floors: ridge=60, lasso=80, linear_regression=30.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_min_train</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max(base,</span> <span class="pre">floor_for_target)</span></code> — per-target floors: INDPRO=60, PAYEMS=80, CPIAUCSL=100.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon_specific_min_train</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">base</span> <span class="pre">+</span> <span class="pre">6</span> <span class="pre">*</span> <span class="pre">max(0,</span> <span class="pre">horizon</span> <span class="pre">-</span> <span class="pre">1)</span></code> — longer horizons demand more history.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-features">
+<h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.raw.windowing._resolve_min_train_obs(spec,</span> <span class="pre">model_family,</span> <span class="pre">target,</span> <span class="pre">horizon)</span></code> — the dispatch implementation, re-used from the windowing module (previously dead code; live in v1.0).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._minimum_train_size(recipe,</span> <span class="pre">*,</span> <span class="pre">horizon=None)</span></code> — the execution-layer entry point. Falls back to the largest recipe horizon when an explicit horizon is not supplied (conservative).</p></li>
+</ul>
+</section>
+<section id="recipe-usage">
+<h3>Recipe usage<a class="headerlink" href="#recipe-usage" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use a 5-year minimum training window (monthly data, base 5 -&gt; 60 obs)</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">min_train_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fixed_years</span>
+<span class="w">  </span><span class="nt">5_output_provenance</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">benchmark_config</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">minimum_train_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">        </span><span class="c1"># interpreted as 5 years</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="training-start-rule">
+<h2>1.3.2 <code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code><a class="headerlink" href="#training-start-rule" title="Link to this heading"></a></h2>
+<p><strong>Selects where the training window begins.</strong> Two operational values.</p>
+<section id="id1">
+<h3>Value catalog<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">earliest_possible</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. Training starts at the first observation that is at least <code class="docutils literal notranslate"><span class="pre">minimum_train_size</span></code> rows before the first OOS origin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed_start</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Training starts no earlier than <code class="docutils literal notranslate"><span class="pre">leaf_config.training_start_date</span></code>. Required leaf_config field — compiler blocks if missing.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="compatibility-guard-v1-0">
+<h3>Compatibility guard (v1.0)<a class="headerlink" href="#compatibility-guard-v1-0" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">training_start_rule</span> <span class="pre">=</span> <span class="pre">fixed_start</span></code> without <code class="docutils literal notranslate"><span class="pre">leaf_config.training_start_date</span></code> → <code class="docutils literal notranslate"><span class="pre">blocked_by_incompatibility</span></code>.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>Functions &amp; features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Compiler-side validation in <code class="docutils literal notranslate"><span class="pre">macrocast.compiler.build</span></code>’s <code class="docutils literal notranslate"><span class="pre">_execution_status</span></code> emits the guard.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._build_predictions</span></code> resolves the date to an index floor via <code class="docutils literal notranslate"><span class="pre">target_series.index.searchsorted</span></code>, then applies it as a <code class="docutils literal notranslate"><span class="pre">max(base_start_idx,</span> <span class="pre">fixed_start_idx)</span></code> in <code class="docutils literal notranslate"><span class="pre">_rows_for_horizon</span></code>.</p></li>
+</ul>
+</section>
+<section id="dropped-values">
+<h3>Dropped values<a class="headerlink" href="#dropped-values" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rolling_train_start</span></code>: duplicated <code class="docutils literal notranslate"><span class="pre">framework=rolling</span></code> which already sets the rolling start via <code class="docutils literal notranslate"><span class="pre">rolling_window_size</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">post_warmup_start</span></code>: depended on the now-dropped <code class="docutils literal notranslate"><span class="pre">warmup_rule</span></code> axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">post_break_start</span></code>: depended on <code class="docutils literal notranslate"><span class="pre">structural_break_segmentation</span></code> which is not v1.0-operational.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Recipe usage<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replication of a paper using a 1965 sample start</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fixed_start</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
+<span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">training_start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1965-01-01&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="oos-period">
+<h2>1.3.3 <code class="docutils literal notranslate"><span class="pre">oos_period</span></code><a class="headerlink" href="#oos-period" title="Link to this heading"></a></h2>
+<p><strong>Selects an NBER business-cycle regime filter on OOS origins.</strong> Three operational values.</p>
+<section id="id4">
+<h3>Value catalog<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all_oos_data</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. No filter — every OOS origin from <code class="docutils literal notranslate"><span class="pre">_rows_for_horizon</span></code> is kept.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">recession_only_oos</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Keep only origins whose date falls within an NBER recession interval.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expansion_only_oos</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Keep only origins whose date falls OUTSIDE every NBER recession interval.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h3>Functions &amp; features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.nber.NBER_RECESSIONS</span></code> — frozen fixture of 12 recessions from 1948 to 2020 (NBER Business Cycle Dating Committee).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.nber.is_recession(date)</span></code> / <code class="docutils literal notranslate"><span class="pre">is_expansion(date)</span></code> — scalar membership helpers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.nber.filter_origins_by_regime(origin_plan,</span> <span class="pre">index,</span> <span class="pre">regime)</span></code> — filters an <code class="docutils literal notranslate"><span class="pre">_rows_for_horizon</span></code> origin plan in place.</p></li>
+<li><p>The filter is applied after <code class="docutils literal notranslate"><span class="pre">origin_plan</span></code> is finalised and before per-origin computation, so refit_policy state is unaffected.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Dropped values<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">single_oos_block</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_origin</span></code>: duplicated <code class="docutils literal notranslate"><span class="pre">framework=expanding</span></code> / <code class="docutils literal notranslate"><span class="pre">framework=rolling</span></code> — those framework values already drive the base OOS block shape.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_oos_blocks</span></code>: multi-window OOS evaluation; niche, no v1.0/v1.1 demand.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">event_window_oos</span></code>: event-based OOS; niche, no v1.0/v1.1 demand.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Recipe usage<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Giacomini-White-style recession-only evaluation</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">4_evaluation</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">oos_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">recession_only_oos</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="overlap-handling">
+<h2>1.3.4 <code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code><a class="headerlink" href="#overlap-handling" title="Link to this heading"></a></h2>
+<p><strong>Selects how the correlation in overlapping forecast errors (h&gt;1) is handled at the stat test layer.</strong> Two operational values. Canonical placement is <code class="docutils literal notranslate"><span class="pre">path.6_stat_tests.fixed_axes.overlap_handling</span></code>.</p>
+<section id="id8">
+<h3>Value catalog<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">allow_overlap</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default, no-op. Stat tests receive loss differentials with no HAC adjustment (they may still apply it internally).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate_with_hac</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Compile-time gate that requires HAC-capable split Layer 6 tests such as <code class="docutils literal notranslate"><span class="pre">equal_predictive=dm_hln</span></code>, <code class="docutils literal notranslate"><span class="pre">equal_predictive=dm_modified</span></code>, <code class="docutils literal notranslate"><span class="pre">nested=cw</span></code>, <code class="docutils literal notranslate"><span class="pre">nested=enc_new</span></code>, <code class="docutils literal notranslate"><span class="pre">nested=mse_t</span></code>, <code class="docutils literal notranslate"><span class="pre">cpa_instability=cpa</span></code>, <code class="docutils literal notranslate"><span class="pre">multiple_model=spa</span></code>, or <code class="docutils literal notranslate"><span class="pre">multiple_model=mcs</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id9">
+<h3>Compatibility guard (v1.0)<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">overlap_handling</span> <span class="pre">=</span> <span class="pre">evaluate_with_hac</span></code> + any active test not in the HAC-compatible set → <code class="docutils literal notranslate"><span class="pre">blocked_by_incompatibility</span></code>.</p></li>
+<li><p>Legacy <code class="docutils literal notranslate"><span class="pre">stat_test</span></code> values are still accepted and routed into the split axis before this guard runs.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>Functions &amp; features<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Compiler-side guard in <code class="docutils literal notranslate"><span class="pre">macrocast.compiler.build._execution_status</span></code>.</p></li>
+<li><p>Stat test HAC path already implemented in <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._compute_dm_hln_test</span></code> / <code class="docutils literal notranslate"><span class="pre">_compute_dm_modified_test</span></code> with <code class="docutils literal notranslate"><span class="pre">dependence_correction=&quot;nw_hac&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="id11">
+<h3>Dropped values<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluate_with_block_bootstrap</span></code>: block-bootstrap SEs; requires bootstrap infrastructure not in v1.0 scope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">non_overlapping_subsample</span></code>: subsample every h-th row to avoid overlap; niche.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon_specific_subsample</span></code>: per-horizon subsample variant; niche.</p></li>
+</ul>
+</section>
+<section id="id12">
+<h3>Recipe usage<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># h&gt;1 forecast + HAC-adjusted DM test</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
+<span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">12</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">6_stat_tests</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">overlap_handling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">evaluate_with_hac</span>
+<span class="w">      </span><span class="nt">equal_predictive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dm_hln</span>
+<span class="w">      </span><span class="nt">dependence_correction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nw_hac</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="horizon-evaluation-window-1-3-takeaways">
+<h2>Horizon &amp; Evaluation Window (1.3) takeaways<a class="headerlink" href="#horizon-evaluation-window-1-3-takeaways" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Every value in every 1.3 axis listed here is operational in v1.0. <code class="docutils literal notranslate"><span class="pre">oos_period</span></code> is operational through the Layer 4 <code class="docutils literal notranslate"><span class="pre">evaluation_spec</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_train_size</span></code> exposes the five rules already implemented in <code class="docutils literal notranslate"><span class="pre">raw.windowing</span></code>, now live in the main execution path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_start_rule</span> <span class="pre">=</span> <span class="pre">fixed_start</span></code> unlocks calendar-exact replication of published paper samples via <code class="docutils literal notranslate"><span class="pre">leaf_config.training_start_date</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oos_period</span></code> delivers NBER regime conditioning without recipe-side date bookkeeping. Use <code class="docutils literal notranslate"><span class="pre">path.4_evaluation.fixed_axes.oos_period</span></code>; the compiler still accepts the old Layer 1 placement as a compatibility alias.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overlap_handling</span> <span class="pre">=</span> <span class="pre">evaluate_with_hac</span></code> wires the HAC requirement into compile-time validation rather than leaving it implicit in stat-test choice. Use <code class="docutils literal notranslate"><span class="pre">path.6_stat_tests.fixed_axes.overlap_handling</span></code>; old Layer 1 placement remains a compatibility alias.</p></li>
+</ul>
+<p>Next group: 1.4 Benchmark &amp; predictor universe (coming).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="target_structure.html" class="btn btn-neutral float-left" title="Target Structure (1.2)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="benchmark.html" class="btn btn-neutral float-right" title="Benchmark &amp; Predictor Universe (1.4)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

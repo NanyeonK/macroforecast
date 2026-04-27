@@ -1,0 +1,828 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmark &amp; Predictor Universe (1.4) &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=19216117"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data Handling Policies (1.5)" href="policies.html" />
+    <link rel="prev" title="Horizon &amp; Evaluation Window (1.3)" href="horizon.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detailed Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#stages-2-through-7">Stages 2 through 7</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data (Stage 1)</a></li>
+      <li class="breadcrumb-item active">Benchmark &amp; Predictor Universe (1.4)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/benchmark.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="benchmark-predictor-universe-1-4">
+<h1>Benchmark &amp; Predictor Universe (1.4)<a class="headerlink" href="#benchmark-predictor-universe-1-4" title="Link to this heading"></a></h1>
+<p>Declares <strong>which benchmark to compare against, which predictors the model sees, which raw variables are even in play, and which deterministic features augment the X panel</strong>. Four axes in v1.0 — every value operational via a leaf_config input channel or a simple in-code filter.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Section</p></th>
+<th class="head"><p>axis</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1.4.1</p></td>
+<td><p><a class="reference internal" href="#benchmark-family"><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></a></p></td>
+<td><p>The reference forecast used for relative metrics</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.4.2</p></td>
+<td><p><a class="reference internal" href="#predictor-family"><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code></a></p></td>
+<td><p>Which columns of the raw panel are fed to the model</p></td>
+</tr>
+<tr class="row-even"><td><p>1.4.3</p></td>
+<td><p><a class="reference internal" href="#variable-universe"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></p></td>
+<td><p>Which columns of the raw panel are available in the first place</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.4.4</p></td>
+<td><p><a class="reference internal" href="#deterministic-components"><code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code></a></p></td>
+<td><p>Deterministic features appended to X (trend, seasonals, break dummies)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on dropped values:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family.text_only</span></code> / <code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code> — require NN/text embeddings stack (v2).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_universe.feature_selection_dynamic_subset</span></code> — CV-in-training feature selection loop; deferred to v1.1 tuning-engine extension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components.trend_and_quadratic</span></code> — redundant with <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> + a future <code class="docutils literal notranslate"><span class="pre">leaf_config.trend_order</span></code> channel.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">target_family</span></code> (the old 1.4.1 axis) was dropped in PR #32 — subsumed by <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>.
+<strong>At a glance (defaults):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> — no default; you always pick one (most studies start with <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> or <code class="docutils literal notranslate"><span class="pre">ar_bic</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> — feature-builder dynamic default. autoreg_lagged_target → <code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>; raw_feature_panel → <code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code>. You rarely set it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span> <span class="pre">=</span> <span class="pre">all_variables</span></code> — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span> <span class="pre">=</span> <span class="pre">none</span></code> — no X augmentation. Switch to <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> / seasonals / <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> when your target needs them.</p></li>
+</ul>
+<p><strong>Most research runs pick <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> and leave the other three at the default.</strong></p>
+<hr class="docutils" />
+<section id="benchmark-family">
+<h2>1.4.1 <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code><a class="headerlink" href="#benchmark-family" title="Link to this heading"></a></h2>
+<p><strong>Selects the reference forecast for relative metrics.</strong> All 12 kept values are operational in v1.0. Values that require user-supplied inputs are validated at compile time.</p>
+<section id="value-catalog">
+<h3>Value catalog<a class="headerlink" href="#value-catalog" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">historical_mean</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Training-set mean. Default.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zero_change</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Random-walk at <code class="docutils literal notranslate"><span class="pre">y_t</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ar_bic</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR model with BIC-selected lag order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ar_fixed_p</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR model at a fixed lag <code class="docutils literal notranslate"><span class="pre">p</span></code> (<code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_fixed_p</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ardi</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR + Diffusion Index (factor) model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Rolling-window mean (<code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_window_len</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Arbitrary callable supplied in <code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_callable</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expert_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Callable supplied in <code class="docutils literal notranslate"><span class="pre">benchmark_config.expert_callable</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_model</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Single-factor OLS on the leading principal factor (v1.0 self-contained impl).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Runs each member in <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite:</span> <span class="pre">list[str]</span></code> and returns the arithmetic mean.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Pre-computed forecast series supplied via <code class="docutils literal notranslate"><span class="pre">leaf_config.paper_forecast_series:</span> <span class="pre">dict[target</span> <span class="pre">→</span> <span class="pre">Series]</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Same pattern, <code class="docutils literal notranslate"><span class="pre">leaf_config.survey_forecast_series</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-features">
+<h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._run_benchmark_executor</span></code> dispatches by <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">factor_model</span></code>: z-scored leading-factor regression; falls back to <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> for training windows &lt; 6 rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code>: inline dispatch over <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite</span></code> members (allowed set: historical_mean, zero_change, ar_bic, rolling_mean, ar_fixed_p, ardi). Missing or unsupported members raise <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code> / <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>: look up the forecast at <code class="docutils literal notranslate"><span class="pre">train.index[-1]</span> <span class="pre">+</span> <span class="pre">horizon</span></code> months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">expert_benchmark</span></code>: programmatic only; requires <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_config.expert_callable</span></code>.</p></li>
+</ul>
+</section>
+<section id="recipe-usage">
+<h3>Recipe usage<a class="headerlink" href="#recipe-usage" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Paper-replication: compare against the paper&#39;s published forecast</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">paper_forecast_series</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w">   </span><span class="c1"># pd.Series keyed by date</span>
+<span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">benchmark_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">paper_specific_benchmark</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="predictor-family">
+<h2>1.4.2 <code class="docutils literal notranslate"><span class="pre">predictor_family</span></code><a class="headerlink" href="#predictor-family" title="Link to this heading"></a></h2>
+<p><strong>Selects which columns of the raw panel become model predictors.</strong> 6 operational values.</p>
+<section id="id1">
+<h3>Value catalog<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Only the target’s own lags (forces <code class="docutils literal notranslate"><span class="pre">feature_builder=autoreg_lagged_target</span></code>). Default for autoreg recipes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Every column except the target. Default for raw-panel recipes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_based</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied category mapping: <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns:</span> <span class="pre">dict[str,</span> <span class="pre">list[str]]</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">factor_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Columns whose name starts with <code class="docutils literal notranslate"><span class="pre">F_</span></code> (factor outputs).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns:</span> <span class="pre">list[str]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id2">
+<h3>Functions &amp; features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._raw_panel_columns(frame,</span> <span class="pre">target,</span> <span class="pre">predictor_family,</span> <span class="pre">spec)</span></code> dispatches on the rule.</p></li>
+<li><p>Target column is always excluded from the predictor set.</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_based</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></li>
+</ul>
+</section>
+<section id="dropped-values">
+<h3>Dropped values<a class="headerlink" href="#dropped-values" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">text_only</span></code>: requires text-embedding / NN domain stack — deferred to v2 (Transformer scope).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code>: multi-block NN architecture — deferred to v2.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Recipe usage<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">predictor_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">handpicked_set</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">handpicked_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">feature_builder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_feature_panel</span>
+<span class="w">      </span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="variable-universe">
+<h2>1.4.3 <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code><a class="headerlink" href="#variable-universe" title="Link to this heading"></a></h2>
+<p><strong>Selects which columns of the raw panel survive dataset filtering before any training begins.</strong> 8 operational values.</p>
+<section id="id4">
+<h3>Value catalog<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all_variables</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. No filter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preselected_core</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>FRED-MD core macro variables (<code class="docutils literal notranslate"><span class="pre">_PRESELECTED_CORE</span></code> set).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns:</span> <span class="pre">list[str]</span></code>. Consolidates the former paper_replication / expert_curated / stability_filtered / correlation_screened subsets — all four had identical runtime semantics (drop_duplicate cleanup, 2026-04-21).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_subset</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns:</span> <span class="pre">dict[str,</span> <span class="pre">list[str]]</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_subset</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns:</span> <span class="pre">dict[target,</span> <span class="pre">list[str]]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h3>Functions &amp; features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_variable_universe(raw_result,</span> <span class="pre">rule,</span> <span class="pre">spec,</span> <span class="pre">target)</span></code> is called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></li>
+<li><p>Target and date columns are always preserved after filtering.</p></li>
+<li><p>Runtime discovery (stability / correlation) is out of scope — users supply the subset.</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_subset</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>; <code class="docutils literal notranslate"><span class="pre">target_specific_subset</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code> entries for the current target(s).</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Dropped values<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_selection_dynamic_subset</span></code>: CV-in-training feature selection loop requires a tuning-engine extension — deferred to v1.1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paper_replication_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">expert_curated_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">stability_filtered_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">correlation_screened_subset</span></code> (2026-04-21): four labels shared identical runtime semantics (single <code class="docutils literal notranslate"><span class="pre">list[str]</span></code> input + column filter). Consolidated into <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code>.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Recipe usage<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># target-specific subset</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_specific_subset</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target_specific_columns</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">PAYEMS</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">AWHMAN</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># hand-picked column list</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">handpicked_set</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="deterministic-components">
+<h2>1.4.4 <code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code><a class="headerlink" href="#deterministic-components" title="Link to this heading"></a></h2>
+<p><strong>Appends deterministic feature columns to the X matrix.</strong> 6 operational values.</p>
+<section id="id8">
+<h3>Value catalog<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. No augmentation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constant_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Explicit column of 1s (redundant with <code class="docutils literal notranslate"><span class="pre">fit_intercept=True</span></code> default, but records the intent).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">linear_trend</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds a <code class="docutils literal notranslate"><span class="pre">_dc_trend</span></code> column (0, 1, …, n-1).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">monthly_seasonal</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds 11 monthly dummies (<code class="docutils literal notranslate"><span class="pre">_dc_month_01</span></code> … <code class="docutils literal notranslate"><span class="pre">_dc_month_11</span></code>; December is the reference).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quarterly_seasonal</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds 3 quarterly dummies (<code class="docutils literal notranslate"><span class="pre">_dc_q1</span></code> … <code class="docutils literal notranslate"><span class="pre">_dc_q3</span></code>; Q4 reference).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">break_dummies</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>One 0/1 dummy per date in <code class="docutils literal notranslate"><span class="pre">leaf_config.break_dates</span></code>; value is 1 from the break onward.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id9">
+<h3>Functions &amp; features<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.deterministic</span></code> — <code class="docutils literal notranslate"><span class="pre">augment_frame(df,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index=None,</span> <span class="pre">break_dates=None)</span></code> + <code class="docutils literal notranslate"><span class="pre">augment_array(X,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index,</span> <span class="pre">break_dates=None)</span></code>.</p></li>
+<li><p>Wired into <code class="docutils literal notranslate"><span class="pre">_build_raw_panel_training_data</span></code> after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">monthly_seasonal</span></code> / <code class="docutils literal notranslate"><span class="pre">quarterly_seasonal</span></code> require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></li>
+<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> requires non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.break_dates</span></code>.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>Dropped values<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">trend_and_quadratic</span></code>: redundant with <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> + a future <code class="docutils literal notranslate"><span class="pre">leaf_config.trend_order</span></code> channel. The quadratic / higher-order polynomial trend will re-enter as a trend-order parameter when needed rather than a separate axis value.</p></li>
+</ul>
+</section>
+<section id="id11">
+<h3>Recipe usage<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">deterministic_components</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">break_dummies</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">break_dates</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;2008-09-01&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;2020-03-01&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">feature_builder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_feature_panel</span>
+<span class="w">      </span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="benchmark-predictor-universe-1-4-takeaways">
+<h2>Benchmark &amp; Predictor Universe (1.4) takeaways<a class="headerlink" href="#benchmark-predictor-universe-1-4-takeaways" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Every value in every 1.4 axis is operational in v1.0. Zero <code class="docutils literal notranslate"><span class="pre">registry_only</span></code> entries remain.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> gains 4 formerly-metadata variants as real implementations: <code class="docutils literal notranslate"><span class="pre">factor_model</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_benchmark_suite</span></code>, <code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> and <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> use the same design pattern: the user provides a pre-computed column list (or category mapping) via <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>; runtime discovery is out of scope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code> augments the raw-panel X with classical econometric terms (trend / seasonals / break dummies) via a dedicated module.</p></li>
+</ul>
+<p>Next group: 1.5 Data handling policies (coming).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizon.html" class="btn btn-neutral float-left" title="Horizon &amp; Evaluation Window (1.3)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="policies.html" class="btn btn-neutral float-right" title="Data Handling Policies (1.5)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

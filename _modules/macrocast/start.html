@@ -1,0 +1,1187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.start &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=19216117"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detailed Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../detail/fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../detail/layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/index.html#stages-2-through-7">Stages 2 through 7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/data/index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.start</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.start</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompileValidationError</span><span class="p">,</span> <span class="n">compile_recipe_dict</span><span class="p">,</span> <span class="n">compile_recipe_yaml</span><span class="p">,</span> <span class="n">load_recipe_yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.execution.importance_dispatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">IMPORTANCE_FILE_NAMES</span><span class="p">,</span> <span class="n">active_importance_methods</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_axis_registry_entry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry.stage0.experiment_unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">derive_experiment_unit_default</span><span class="p">,</span> <span class="n">experiment_unit_options_for_wizard</span>
+
+<span class="n">_AVAILABLE_STAGES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;route_preview&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compile_preview&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tree_context&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;runs_preview&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;manifest_preview&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_WIZARD_KEYS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;research_design&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;experiment_unit&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;framework&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;benchmark_plugin_path&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;benchmark_callable_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;scaling_policy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;preprocess_order&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model_path_mode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model_family&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;primary_metric&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;manifest_mode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;stat_test&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;importance_method&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_stages</span><span class="p">(</span><span class="n">stages</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">stages</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_AVAILABLE_STAGES</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stages</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span><span class="n">stages</span><span class="p">]</span>
+    <span class="n">normalized</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">stages</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">stage</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_AVAILABLE_STAGES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown stage </span><span class="si">{</span><span class="n">stage</span><span class="si">!r}</span><span class="s2">; valid stages: </span><span class="si">{</span><span class="n">_AVAILABLE_STAGES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">normalized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stage</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tree_context_summary</span><span class="p">(</span><span class="n">tree_context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">fixed_names</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">,</span> <span class="p">{})))</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">sweep_names</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sweep_axes&quot;</span><span class="p">,</span> <span class="p">{})))</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">conditional_names</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;conditional_axes&quot;</span><span class="p">,</span> <span class="p">{})))</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;route_owner=</span><span class="si">{</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;route_owner&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;execution_posture=</span><span class="si">{</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;execution_posture&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;fixed_axes=[</span><span class="si">{</span><span class="n">fixed_names</span><span class="si">}</span><span class="s2">]; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;sweep_axes=[</span><span class="si">{</span><span class="n">sweep_names</span><span class="si">}</span><span class="s2">]; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;conditional_axes=[</span><span class="si">{</span><span class="n">conditional_names</span><span class="si">}</span><span class="s2">]&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">recipe</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;leaf_config&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">recipe</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recipe_sweep</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">recipe</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;sweep_axes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;benchmark_config&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_choice_option_details</span><span class="p">(</span><span class="n">axis_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">get_axis_registry_entry</span><span class="p">(</span><span class="n">axis_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">details</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">details</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">current_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="n">details</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;1_data_task&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fixed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_structure&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">fixed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;task&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;1_data_task&quot;</span><span class="p">)</span>
+    <span class="n">fixed</span><span class="p">[</span><span class="s2">&quot;target_structure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">fixed</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;task&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_planned_branch_message</span><span class="p">(</span><span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">planned_hits</span> <span class="o">=</span> <span class="p">[</span><span class="n">warning</span> <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">warnings</span> <span class="k">if</span> <span class="s2">&quot;status=planned&quot;</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">planned_hits</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="s2">&quot;Planned branch selected. Current YAML parses, but this branch is not executable in the current single-run runtime.&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_single_run_extension_message</span><span class="p">(</span><span class="n">tree_context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">sweep_axes</span> <span class="o">=</span> <span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sweep_axes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">sweep_axes</span> <span class="ow">and</span> <span class="s2">&quot;feature_builder&quot;</span> <span class="ow">in</span> <span class="n">sweep_axes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Full model/feature sweep is not a single-run preview. Use the sweep runtime only if the compiler reports ready_for_sweep_runner; otherwise drop this route.&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">sweep_axes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Model grid selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe.&quot;</span>
+    <span class="k">return</span> <span class="n">_planned_branch_message</span><span class="p">(</span><span class="n">warnings</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Sweep route selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe.&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;research_design&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;research_design&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">:</span>
+        <span class="n">explicit</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">explicit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">explicit</span>
+        <span class="n">training</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+        <span class="n">training_sweep</span> <span class="o">=</span> <span class="n">_recipe_sweep</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">derive_experiment_unit_default</span><span class="p">(</span>
+            <span class="n">research_design</span><span class="o">=</span><span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;research_design&quot;</span><span class="p">,</span> <span class="s2">&quot;single_path_benchmark&quot;</span><span class="p">),</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span>
+            <span class="n">model_axis_mode</span><span class="o">=</span><span class="s2">&quot;sweep&quot;</span> <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">training_sweep</span> <span class="k">else</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+            <span class="n">feature_axis_mode</span><span class="o">=</span><span class="s2">&quot;sweep&quot;</span> <span class="k">if</span> <span class="s2">&quot;feature_builder&quot;</span> <span class="ow">in</span> <span class="n">training_sweep</span> <span class="k">else</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+            <span class="n">wrapper_family</span><span class="o">=</span><span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;1_data_task&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;model_path_mode&quot;</span><span class="p">:</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+        <span class="n">sweep</span> <span class="o">=</span> <span class="n">_recipe_sweep</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">sweep</span> <span class="ow">and</span> <span class="s2">&quot;feature_builder&quot;</span> <span class="ow">in</span> <span class="n">sweep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;full_sweep&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">sweep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;model_grid&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;single_model&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;framework&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span> <span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;scaling_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_order&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;2_preprocessing&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;primary_metric&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;4_evaluation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;manifest_mode&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;stat_test&quot;</span><span class="p">,</span> <span class="s2">&quot;dependence_correction&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;6_stat_tests&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;importance_method&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;7_importance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;benchmark_plugin_path&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plugin_path&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;benchmark_callable_name&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;callable_name&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;research_design&quot;</span><span class="p">:</span>
+        <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;research_design&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span>
+    <span class="n">leaf</span> <span class="o">=</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;1_data_task&quot;</span><span class="p">)</span>
+    <span class="n">preprocess</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;2_preprocessing&quot;</span><span class="p">)</span>
+    <span class="n">training</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+    <span class="n">training_sweep</span> <span class="o">=</span> <span class="n">_recipe_sweep</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">}:</span>
+        <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;targets&quot;</span> <span class="ow">in</span> <span class="n">leaf</span><span class="p">:</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">leaf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">targets</span><span class="p">:</span>
+                    <span class="n">leaf</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">:</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span>
+        <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">output_leaf</span> <span class="o">=</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;replication_recipe&quot;</span><span class="p">:</span>
+            <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;research_design&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;replication_override&quot;</span>
+            <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;benchmark_suite&quot;</span><span class="p">,</span> <span class="s2">&quot;ablation_study&quot;</span><span class="p">}:</span>
+            <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;research_design&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;orchestrated_bundle&quot;</span>
+            <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
+            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;multi_target_separate_runs&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_target_shared_design&quot;</span><span class="p">}:</span>
+            <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;research_design&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;orchestrated_bundle&quot;</span>
+            <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="s2">&quot;RPI&quot;</span><span class="p">])</span>
+            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;research_design&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_path_benchmark&quot;</span>
+        <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">)</span>
+        <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
+        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_single_model&quot;</span><span class="p">:</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;ar&quot;</span><span class="p">)</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_model_grid&quot;</span><span class="p">:</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">]</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_full_sweep&quot;</span><span class="p">:</span>
+            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">]</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">]</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span>
+        <span class="n">leaf</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="n">leaf</span><span class="p">[</span><span class="s2">&quot;targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;model_path_mode&quot;</span><span class="p">:</span>
+        <span class="n">current_model</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;ar&quot;</span><span class="p">)</span>
+        <span class="n">current_feature</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_model&quot;</span><span class="p">:</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_model</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_feature</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_single_model&quot;</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;model_grid&quot;</span><span class="p">:</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_feature</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">]</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_model_grid&quot;</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;full_sweep&quot;</span><span class="p">:</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">]</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">]</span>
+            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_full_sweep&quot;</span>
+            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_full_sweep&quot;</span>
+            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="s2">&quot;single-target-full-sweep&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;framework&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span> <span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">}:</span>
+        <span class="n">training</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">}:</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;benchmark_family&quot;</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="s2">&quot;custom_benchmark&quot;</span><span class="p">:</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;plugin_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;callable_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;primary_metric&quot;</span><span class="p">:</span>
+        <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;4_evaluation&quot;</span><span class="p">)[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;manifest_mode&quot;</span><span class="p">:</span>
+        <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;stat_test&quot;</span><span class="p">,</span> <span class="s2">&quot;dependence_correction&quot;</span><span class="p">}:</span>
+        <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;6_stat_tests&quot;</span><span class="p">)[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;importance_method&quot;</span><span class="p">:</span>
+        <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;7_importance&quot;</span><span class="p">)[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;scaling_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_order&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">}:</span>
+        <span class="n">preprocess</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;x_missing_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;scaling_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;preprocess_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;not_applicable&quot;</span>
+            <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">:</span>
+                <span class="n">preprocess</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;x_missing_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;em_impute&quot;</span><span class="p">)</span>
+                <span class="n">preprocess</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;scaling_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">)</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;preprocess_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;extra_only&quot;</span>
+                <span class="n">preprocess</span><span class="p">[</span><span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;train_only&quot;</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;benchmark_plugin_path&quot;</span><span class="p">:</span>
+        <span class="n">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">)[</span><span class="s2">&quot;plugin_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;benchmark_callable_name&quot;</span><span class="p">:</span>
+        <span class="n">_benchmark_config</span><span class="p">(</span><span class="n">recipe</span><span class="p">)[</span><span class="s2">&quot;callable_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_wizard_choice_stack</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="n">target_key</span> <span class="o">=</span> <span class="s2">&quot;targets&quot;</span> <span class="k">if</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span> <span class="k">else</span> <span class="s2">&quot;target&quot;</span>
+    <span class="n">benchmark_family</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span> <span class="s2">&quot;zero_change&quot;</span><span class="p">)</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;research_design&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Study mode&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;single_path_benchmark&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;controlled_variation&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Target structure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Experiment unit&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">experiment_unit_options_for_wizard</span><span class="p">(</span>
+                <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;research_design&quot;</span><span class="p">,</span> <span class="s2">&quot;single_path_benchmark&quot;</span><span class="p">),</span>
+                <span class="n">target_structure</span><span class="p">,</span>
+            <span class="p">)),</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">target_key</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Targets&quot;</span> <span class="k">if</span> <span class="n">target_key</span> <span class="o">==</span> <span class="s2">&quot;targets&quot;</span> <span class="k">else</span> <span class="s2">&quot;Target&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">target_key</span> <span class="o">==</span> <span class="s2">&quot;targets&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="s2">&quot;RPI&quot;</span><span class="p">,</span> <span class="s2">&quot;UNRATE&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;framework&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Framework&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="s2">&quot;rolling&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Benchmark family&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zero_change&quot;</span><span class="p">,</span> <span class="s2">&quot;ar_bic&quot;</span><span class="p">,</span> <span class="s2">&quot;historical_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_benchmark&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">benchmark_family</span> <span class="o">==</span> <span class="s2">&quot;custom_benchmark&quot;</span><span class="p">:</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;benchmark_plugin_path&quot;</span><span class="p">,</span> <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Benchmark plugin path&quot;</span><span class="p">,</span> <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;benchmark_callable_name&quot;</span><span class="p">,</span> <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Benchmark callable name&quot;</span><span class="p">,</span> <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[]},</span>
+        <span class="p">])</span>
+    <span class="n">stack</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;T-code policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;raw_only&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;X missing policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;em_impute&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;scaling_policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Scaling policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;robust&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;preprocess_order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Preprocess order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_only&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Preprocess fit scope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;not_applicable&quot;</span><span class="p">,</span> <span class="s2">&quot;train_only&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;model_path_mode&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Model path mode&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;single_model&quot;</span><span class="p">,</span> <span class="s2">&quot;model_grid&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;model_family&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Model family&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;randomforest&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature builder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;factor_pca&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_metric&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Primary metric&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;msfe&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_msfe&quot;</span><span class="p">,</span> <span class="s2">&quot;oos_r2&quot;</span><span class="p">,</span> <span class="s2">&quot;csfe&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;manifest_mode&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Manifest mode&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;full&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;stat_test&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Stat test&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;dm_hln&quot;</span><span class="p">,</span> <span class="s2">&quot;dm_modified&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;enc_new&quot;</span><span class="p">,</span> <span class="s2">&quot;mse_f&quot;</span><span class="p">,</span> <span class="s2">&quot;mse_t&quot;</span><span class="p">,</span> <span class="s2">&quot;cpa&quot;</span><span class="p">,</span> <span class="s2">&quot;rossi&quot;</span><span class="p">,</span> <span class="s2">&quot;rolling_dm&quot;</span><span class="p">,</span> <span class="s2">&quot;reality_check&quot;</span><span class="p">,</span> <span class="s2">&quot;spa&quot;</span><span class="p">,</span> <span class="s2">&quot;mincer_zarnowitz&quot;</span><span class="p">,</span> <span class="s2">&quot;ljung_box&quot;</span><span class="p">,</span> <span class="s2">&quot;arch_lm&quot;</span><span class="p">,</span> <span class="s2">&quot;bias_test&quot;</span><span class="p">,</span> <span class="s2">&quot;pesaran_timmermann&quot;</span><span class="p">,</span> <span class="s2">&quot;binomial_hit&quot;</span><span class="p">,</span> <span class="s2">&quot;diagnostics_full&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;importance_method&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Importance method&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;minimal_importance&quot;</span><span class="p">,</span> <span class="s2">&quot;tree_shap&quot;</span><span class="p">,</span> <span class="s2">&quot;kernel_shap&quot;</span><span class="p">,</span> <span class="s2">&quot;linear_shap&quot;</span><span class="p">,</span> <span class="s2">&quot;permutation_importance&quot;</span><span class="p">,</span> <span class="s2">&quot;lime&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_ablation&quot;</span><span class="p">,</span> <span class="s2">&quot;pdp&quot;</span><span class="p">,</span> <span class="s2">&quot;ice&quot;</span><span class="p">,</span> <span class="s2">&quot;ale&quot;</span><span class="p">,</span> <span class="s2">&quot;grouped_permutation&quot;</span><span class="p">,</span> <span class="s2">&quot;importance_stability&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">])</span>
+    <span class="n">filtered_stack</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">model_path_mode</span> <span class="o">=</span> <span class="n">_read_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;model_path_mode&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">model_path_mode</span> <span class="o">!=</span> <span class="s2">&quot;single_model&quot;</span> <span class="ow">and</span> <span class="n">choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">}:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">choice</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]:</span>
+            <span class="n">axis_name</span> <span class="o">=</span> <span class="n">choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;benchmark_plugin_path&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_callable_name&quot;</span><span class="p">,</span> <span class="s2">&quot;manifest_mode&quot;</span><span class="p">,</span> <span class="s2">&quot;model_path_mode&quot;</span><span class="p">}:</span>
+                <span class="n">choice</span><span class="p">[</span><span class="s2">&quot;option_details&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_choice_option_details</span><span class="p">(</span><span class="n">axis_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">choice</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]))</span>
+        <span class="n">filtered_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">filtered_stack</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_route_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">tree_context</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tree_context&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="n">route_owner</span> <span class="o">=</span> <span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;route_owner&quot;</span><span class="p">,</span> <span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_spec&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;route_owner&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">))</span>
+    <span class="n">execution_status</span> <span class="o">=</span> <span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;execution_status&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+    <span class="n">blocked_reasons</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;blocked_reasons&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+    <span class="k">if</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;executable&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;implemented&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route remains inside the current executable single-run surface.&quot;</span>
+    <span class="k">elif</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;ready_for_sweep_runner&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;sweep_runner_ready&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">_single_run_extension_message</span><span class="p">(</span><span class="n">tree_context</span><span class="p">,</span> <span class="n">warnings</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;ready_for_wrapper_runner&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_runner_ready&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; single-run previews stop here.&quot;</span>
+    <span class="k">elif</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;ready_for_replication_runner&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;replication_runner_ready&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is replication-owned and has a runner contract. Use execute_replication; single-run previews stop here.&quot;</span>
+    <span class="k">elif</span> <span class="n">route_owner</span> <span class="o">==</span> <span class="s2">&quot;wrapper&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_not_supported&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is wrapper-owned but has no executable wrapper runner contract in the current runtime.&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;blocked_or_nonexecutable&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">_planned_branch_message</span><span class="p">(</span><span class="n">warnings</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocked_reasons</span> <span class="ow">or</span> <span class="n">warnings</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Route is not executable in the current single-run surface.&quot;</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;route_owner&quot;</span><span class="p">:</span> <span class="n">route_owner</span><span class="p">,</span>
+        <span class="s2">&quot;execution_status&quot;</span><span class="p">:</span> <span class="n">execution_status</span><span class="p">,</span>
+        <span class="s2">&quot;wizard_status&quot;</span><span class="p">:</span> <span class="n">wizard_status</span><span class="p">,</span>
+        <span class="s2">&quot;continue_in_single_run&quot;</span><span class="p">:</span> <span class="n">continue_in_single_run</span><span class="p">,</span>
+        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+        <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="n">warnings</span><span class="p">,</span>
+        <span class="s2">&quot;blocked_reasons&quot;</span><span class="p">:</span> <span class="n">blocked_reasons</span><span class="p">,</span>
+        <span class="s2">&quot;tree_context_summary&quot;</span><span class="p">:</span> <span class="n">_tree_context_summary</span><span class="p">(</span><span class="n">tree_context</span><span class="p">)</span> <span class="k">if</span> <span class="n">tree_context</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;wrapper_handoff&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wrapper_handoff&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_draft_route_preview</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">error</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">research_design</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;research_design&quot;</span><span class="p">,</span> <span class="s2">&quot;single_path_benchmark&quot;</span><span class="p">)</span>
+    <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="n">explicit_unit</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">)</span>
+    <span class="n">route_owner</span> <span class="o">=</span> <span class="s2">&quot;wrapper&quot;</span> <span class="k">if</span> <span class="n">research_design</span> <span class="o">==</span> <span class="s2">&quot;orchestrated_bundle&quot;</span> <span class="k">else</span> <span class="s2">&quot;single_run&quot;</span>
+    <span class="k">if</span> <span class="n">explicit_unit</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;single_target_full_sweep&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_target_separate_runs&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_target_shared_design&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_suite&quot;</span><span class="p">,</span> <span class="s2">&quot;ablation_study&quot;</span><span class="p">}:</span>
+        <span class="n">route_owner</span> <span class="o">=</span> <span class="s2">&quot;wrapper&quot;</span>
+    <span class="k">elif</span> <span class="n">explicit_unit</span> <span class="o">==</span> <span class="s2">&quot;replication_recipe&quot;</span><span class="p">:</span>
+        <span class="n">route_owner</span> <span class="o">=</span> <span class="s2">&quot;replication&quot;</span>
+    <span class="k">if</span> <span class="n">route_owner</span> <span class="o">==</span> <span class="s2">&quot;wrapper&quot;</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_not_supported&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Wrapper-owned route chosen, but no executable wrapper runner contract is available for this draft.&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;draft_incomplete&quot;</span>
+        <span class="n">continue_in_single_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">error</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;route_owner&quot;</span><span class="p">:</span> <span class="n">route_owner</span><span class="p">,</span>
+        <span class="s2">&quot;execution_status&quot;</span><span class="p">:</span> <span class="s2">&quot;draft_incomplete&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;wizard_status&quot;</span><span class="p">:</span> <span class="n">wizard_status</span><span class="p">,</span>
+        <span class="s2">&quot;continue_in_single_run&quot;</span><span class="p">:</span> <span class="n">continue_in_single_run</span><span class="p">,</span>
+        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+        <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">error</span><span class="p">],</span>
+        <span class="s2">&quot;blocked_reasons&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;tree_context_summary&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;route_owner=</span><span class="si">{</span><span class="n">route_owner</span><span class="si">}</span><span class="s2">; research_design=</span><span class="si">{</span><span class="n">research_design</span><span class="si">}</span><span class="s2">; target_structure=</span><span class="si">{</span><span class="n">target_structure</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;wrapper_handoff&quot;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preview_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">compile_result</span> <span class="o">=</span> <span class="n">compile_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CompileValidationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;compile_preview&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;tree_context&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;route_preview&quot;</span><span class="p">:</span> <span class="n">_draft_route_preview</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)),</span>
+        <span class="p">}</span>
+    <span class="n">compile_manifest</span> <span class="o">=</span> <span class="n">compile_result</span><span class="o">.</span><span class="n">manifest</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;compile_preview&quot;</span><span class="p">:</span> <span class="n">compile_manifest</span><span class="p">,</span>
+        <span class="s2">&quot;tree_context&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tree_context&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+        <span class="s2">&quot;route_preview&quot;</span><span class="p">:</span> <span class="n">_route_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_runs_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">run_spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">[</span><span class="s2">&quot;run_spec&quot;</span><span class="p">])</span>
+    <span class="n">artifact_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_root</span><span class="p">)</span> <span class="o">/</span> <span class="n">run_spec</span><span class="p">[</span><span class="s2">&quot;artifact_subdir&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;output_root&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">output_root</span><span class="p">)),</span>
+        <span class="s2">&quot;artifact_subdir&quot;</span><span class="p">:</span> <span class="n">run_spec</span><span class="p">[</span><span class="s2">&quot;artifact_subdir&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;artifact_dir_preview&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact_dir</span><span class="p">),</span>
+        <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="n">run_spec</span><span class="p">[</span><span class="s2">&quot;run_id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;route_owner&quot;</span><span class="p">:</span> <span class="n">run_spec</span><span class="p">[</span><span class="s2">&quot;route_owner&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_manifest_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">tree_context</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tree_context&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="n">leaf_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tree_context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;leaf_config&quot;</span><span class="p">,</span> <span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;leaf_config&quot;</span><span class="p">,</span> <span class="p">{})))</span>
+    <span class="n">stat_test</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stat_test_spec&quot;</span><span class="p">,</span> <span class="p">{}))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stat_test&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+    <span class="n">importance_spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;importance_spec&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="n">importance_methods</span> <span class="o">=</span> <span class="n">active_importance_methods</span><span class="p">(</span><span class="n">importance_spec</span><span class="p">)</span>
+    <span class="n">expected_artifacts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;manifest.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;summary.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_preview.csv&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;predictions.csv&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;metrics.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;comparison_summary.json&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;dm_hln&quot;</span><span class="p">):</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_&quot;</span> <span class="o">+</span> <span class="n">stat_test</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;cw&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_cw.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;enc_new&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_enc_new.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;mincer_zarnowitz&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_mincer_zarnowitz.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;ljung_box&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_ljung_box.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;arch_lm&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_arch_lm.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;bias_test&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_bias_test.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;pesaran_timmermann&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_pesaran_timmermann.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;binomial_hit&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_binomial_hit.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stat_test</span> <span class="o">==</span> <span class="s2">&quot;diagnostics_full&quot;</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;stat_test_diagnostics_bundle.json&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">importance_methods</span><span class="p">:</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;importance_artifacts.json&quot;</span><span class="p">)</span>
+        <span class="n">expected_artifacts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">IMPORTANCE_FILE_NAMES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;importance_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">importance_methods</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_id&quot;</span><span class="p">:</span> <span class="n">compile_manifest</span><span class="p">[</span><span class="s2">&quot;recipe_id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="n">compile_manifest</span><span class="p">[</span><span class="s2">&quot;run_spec&quot;</span><span class="p">][</span><span class="s2">&quot;run_id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;artifact_dir_preview&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">output_root</span><span class="p">)</span> <span class="o">/</span> <span class="n">compile_manifest</span><span class="p">[</span><span class="s2">&quot;run_spec&quot;</span><span class="p">][</span><span class="s2">&quot;artifact_subdir&quot;</span><span class="p">]),</span>
+        <span class="s2">&quot;route_owner&quot;</span><span class="p">:</span> <span class="n">compile_manifest</span><span class="p">[</span><span class="s2">&quot;run_spec&quot;</span><span class="p">][</span><span class="s2">&quot;route_owner&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="p">[])),</span>
+        <span class="s2">&quot;horizons&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;horizons&quot;</span><span class="p">,</span> <span class="p">[])),</span>
+        <span class="s2">&quot;benchmark_spec&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;benchmark_spec&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+        <span class="s2">&quot;model_spec&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_spec&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+        <span class="s2">&quot;preprocess_contract&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preprocess_contract&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+        <span class="s2">&quot;tree_context&quot;</span><span class="p">:</span> <span class="n">tree_context</span><span class="p">,</span>
+        <span class="s2">&quot;expected_artifacts&quot;</span><span class="p">:</span> <span class="n">expected_artifacts</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_recipe_yaml</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">yaml_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_interactive_wizard</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">recipe_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">yaml_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">recipe</span> <span class="o">=</span> <span class="n">load_recipe_yaml</span><span class="p">(</span><span class="n">recipe_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">yaml_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">yaml_path</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;YAML file path to write [custom_recipe.yaml]: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;custom_recipe.yaml&quot;</span>
+    <span class="n">recipe</span><span class="p">[</span><span class="s2">&quot;recipe_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+    <span class="n">write_path</span> <span class="o">=</span> <span class="n">_write_recipe_yaml</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">yaml_path</span><span class="p">)</span>
+
+    <span class="n">completed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">stop_reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">current_choice</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">preview</span> <span class="o">=</span> <span class="n">_preview_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+    <span class="n">step_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="n">_wizard_choice_stack</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="p">[</span><span class="n">choice</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">stack</span> <span class="k">if</span> <span class="n">choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">}]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="n">current_choice</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">break</span>
+        <span class="n">current_choice</span> <span class="o">=</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">max_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">step_count</span> <span class="o">&gt;=</span> <span class="n">max_steps</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="n">current</span> <span class="o">=</span> <span class="n">_read_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">current_choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">])</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">current_choice</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">option_details</span> <span class="o">=</span> <span class="n">current_choice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;option_details&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">option</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="n">option_details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span>
+                <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; [</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="k">if</span> <span class="n">status</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">!=</span> <span class="s2">&quot;operational&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">option</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_choice</span><span class="p">[</span><span class="s1">&#39;prompt&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prompt</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; [current=</span><span class="si">{</span><span class="n">current</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="n">prompt</span> <span class="o">+=</span> <span class="s2">&quot;: &quot;</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span>
+            <span class="n">stop_reason</span> <span class="o">=</span> <span class="s2">&quot;Wizard stopped by user.&quot;</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">answer</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="k">elif</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">answer</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">answer</span>
+        <span class="k">elif</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">answer</span>
+        <span class="k">if</span> <span class="n">selected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_apply_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">current_choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="n">selected</span><span class="p">)</span>
+        <span class="n">write_path</span> <span class="o">=</span> <span class="n">_write_recipe_yaml</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">write_path</span><span class="p">)</span>
+        <span class="n">step_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">completed</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">current_choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">_read_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">current_choice</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">])})</span>
+        <span class="n">preview</span> <span class="o">=</span> <span class="n">_preview_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;route_preview&quot;</span><span class="p">][</span><span class="s2">&quot;continue_in_single_run&quot;</span><span class="p">]:</span>
+            <span class="n">stop_reason</span> <span class="o">=</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;route_preview&quot;</span><span class="p">][</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+            <span class="n">current_choice</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">break</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;selected_stages&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;wizard&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;interactive&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;yaml_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">write_path</span><span class="p">),</span>
+        <span class="s2">&quot;recipe_dict&quot;</span><span class="p">:</span> <span class="n">recipe</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_yaml&quot;</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;completed_choices&quot;</span><span class="p">:</span> <span class="n">completed</span><span class="p">,</span>
+        <span class="s2">&quot;current_choice&quot;</span><span class="p">:</span> <span class="n">current_choice</span><span class="p">,</span>
+        <span class="s2">&quot;route_preview&quot;</span><span class="p">:</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;route_preview&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;stop_reason&quot;</span><span class="p">:</span> <span class="n">stop_reason</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;compile_preview&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;compile_preview&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;compile_preview&quot;</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;tree_context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preview</span><span class="p">[</span><span class="s2">&quot;tree_context&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="macrocast_single_run">
+<a class="viewcode-back" href="../../api/start.html#macrocast.start.macrocast_single_run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">macrocast_single_run</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">yaml_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stages</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;/tmp/macrocast_single_run_preview&quot;</span><span class="p">,</span>
+    <span class="n">recipe_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;examples/recipes/model-benchmark.yaml&quot;</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">yaml_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_interactive_wizard</span><span class="p">(</span><span class="n">recipe_path</span><span class="o">=</span><span class="n">recipe_path</span><span class="p">,</span> <span class="n">yaml_path</span><span class="o">=</span><span class="n">yaml_path</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">)</span>
+
+    <span class="n">selected</span> <span class="o">=</span> <span class="n">_normalize_stages</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span>
+    <span class="n">compile_result</span> <span class="o">=</span> <span class="n">compile_recipe_yaml</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">)</span>
+    <span class="n">compile_manifest</span> <span class="o">=</span> <span class="n">compile_result</span><span class="o">.</span><span class="n">manifest</span>
+    <span class="n">route_preview</span> <span class="o">=</span> <span class="n">_route_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">)</span>
+
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;selected_stages&quot;</span><span class="p">:</span> <span class="n">selected</span><span class="p">,</span>
+        <span class="s2">&quot;input_yaml_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">)),</span>
+        <span class="s2">&quot;route_preview&quot;</span><span class="p">:</span> <span class="n">route_preview</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="s2">&quot;compile_preview&quot;</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;compile_preview&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">compile_manifest</span>
+    <span class="k">if</span> <span class="s2">&quot;tree_context&quot;</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;tree_context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compile_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tree_context&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+
+    <span class="n">blocked_preview_stages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">compile_result</span><span class="o">.</span><span class="n">compiled</span><span class="o">.</span><span class="n">execution_status</span> <span class="o">!=</span> <span class="s2">&quot;executable&quot;</span><span class="p">:</span>
+        <span class="n">blocked_preview_stages</span> <span class="o">=</span> <span class="p">[</span><span class="n">stage</span> <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">selected</span> <span class="k">if</span> <span class="n">stage</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;runs_preview&quot;</span><span class="p">,</span> <span class="s2">&quot;manifest_preview&quot;</span><span class="p">}]</span>
+        <span class="k">if</span> <span class="n">blocked_preview_stages</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;blocked_preview_stages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blocked_preview_stages</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;blocked_preview_reason&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_preview</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">if</span> <span class="s2">&quot;runs_preview&quot;</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;runs_preview&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_runs_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">,</span> <span class="n">output_root</span><span class="o">=</span><span class="n">output_root</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;manifest_preview&quot;</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;manifest_preview&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_manifest_preview</span><span class="p">(</span><span class="n">compile_manifest</span><span class="p">,</span> <span class="n">output_root</span><span class="o">=</span><span class="n">output_root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

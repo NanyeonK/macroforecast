@@ -1,0 +1,1025 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer Contract Ledger &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=19216117"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Package Runtime Gap Audit" href="package_runtime_gap_audit.html" />
+    <link rel="prev" title="Layer Boundary Contract" href="layer_boundary_contract.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Detailed Docs</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/index.html#stages-2-through-7">Stages 2 through 7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/data/index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Detailed Docs</a></li>
+      <li class="breadcrumb-item active">Layer Contract Ledger</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer_contract_ledger.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="layer-contract-ledger">
+<h1>Layer Contract Ledger<a class="headerlink" href="#layer-contract-ledger" title="Link to this heading"></a></h1>
+<p>Date: 2026-04-26</p>
+<p>This page is the canonical ledger for layer handoff, method-extension,
+generator, payload, and artifact contracts. Other detail pages may explain why
+a contract exists, but this page owns the status table and the producer /
+consumer split.</p>
+<p>Use this ledger when opening a new Layer 2 or Layer 3 runtime cell. A value
+should not move from gated to operational until its contract has a producer, a
+consumer, compiler validation, runtime validation, and at least one regression
+test.</p>
+<section id="status-taxonomy">
+<h2>Status Taxonomy<a class="headerlink" href="#status-taxonomy" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Status</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Runtime writes or consumes the contract in supported cells.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Runtime works for a named slice, but broader use remains gated.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gated_named</span></code></p></td>
+<td><p>Contract name and required semantics are known, but runtime is closed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">future_design</span></code></p></td>
+<td><p>Design intent exists, but field schema is not stable enough for runtime gates.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">legacy_implicit</span></code></p></td>
+<td><p>Runtime behavior exists, but no exported contract constant/schema owns it yet.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="layer-3-view-taxonomy">
+<h2>Layer 3 View Taxonomy<a class="headerlink" href="#layer-3-view-taxonomy" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer 3 view</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>Layer 3 defines and produces this contract. Changes are Layer 3 work unless they require producer handoff changes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>Layer 3 consumes this contract but another layer owns its construction. Layer 3 can validate compatibility, not redefine it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">future_dependency</span></code></p></td>
+<td><p>Layer 3 cannot open the related runtime cell until this contract exists or becomes operational.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>Contract belongs to another layer and is not a direct Layer 3 handoff. It may still affect compatibility through the final representation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="core-layer-handoffs">
+<h2>Core Layer Handoffs<a class="headerlink" href="#core-layer-handoffs" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Contract</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>Layer 3 view</p></th>
+<th class="head"><p>Producer</p></th>
+<th class="head"><p>Consumer</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code></p></td>
+<td><p>Layer 1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>raw/source adapters and official transform stage</p></td>
+<td><p>Layer 2 representation builders</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Execution writes <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code> for every run and records <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_contract</span></code> plus a compact <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_summary</span></code> in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>. Covers official frame shape/index/columns, target identity, horizons, information-set provenance, raw missing/outlier policy, missing-availability/release-lag/variable-universe choices, official transform/T-code reports, raw artifact provenance, and dataset metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Layer2Representation</span></code> tabular handoff</p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>supported Layer 2 tabular builders</p></td>
+<td><p>Layer 3 tabular generators</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Public runtime contract <code class="docutils literal notranslate"><span class="pre">layer2_representation_v1</span></code>. Contains <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>, <code class="docutils literal notranslate"><span class="pre">Z_pred</span></code>, feature names, block order/roles, fit state, alignment, leakage contract, runtime provenance, and contract metadata. Current Layer 3 capability matrix is built around this handoff.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_native_frequency_block_payload_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>FRED-SD mixed-frequency representation builder</p></td>
+<td><p>registered custom Layer 3 models, <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">midasr</span></code>, and <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Emitted when <code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_representation=native_frequency_block_payload</span></code> or <code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code>. Groups selected FRED-SD columns by inferred native frequency and records <code class="docutils literal notranslate"><span class="pre">block_order</span></code>, <code class="docutils literal notranslate"><span class="pre">blocks</span></code>, and <code class="docutils literal notranslate"><span class="pre">column_to_native_frequency</span></code>. Requires FRED-SD data, raw-panel feature runtime, direct forecasts, and a registered custom model, <code class="docutils literal notranslate"><span class="pre">model_family=midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">model_family=midasr</span></code>, or <code class="docutils literal notranslate"><span class="pre">model_family=midasr_nealmon</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_model_adapter_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>registered custom mixed-frequency model adapter, <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">midasr</span></code>, or <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code></p></td>
+<td><p>artifact writer / manifest</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Adapter route over <code class="docutils literal notranslate"><span class="pre">fred_sd_native_frequency_block_payload_v1</span></code>. Current built-in slices are <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, a ridge-regularized Almon distributed-lag direct executor; <code class="docutils literal notranslate"><span class="pre">midasr</span></code>, a Python restricted-NLS slice aligned to R <code class="docutils literal notranslate"><span class="pre">midasr::midas_r</span></code> with <code class="docutils literal notranslate"><span class="pre">nealmon</span></code>, <code class="docutils literal notranslate"><span class="pre">almonp</span></code>, <code class="docutils literal notranslate"><span class="pre">nbeta</span></code>, <code class="docutils literal notranslate"><span class="pre">genexp</span></code>, and <code class="docutils literal notranslate"><span class="pre">harstep</span></code> weights; and <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code>, the compatibility alias for the <code class="docutils literal notranslate"><span class="pre">nealmon</span></code> branch. Regularized group MIDAS and state-space estimators remain future.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>scalar forecast generators</p></td>
+<td><p>execution artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Public scalar payload with <code class="docutils literal notranslate"><span class="pre">y_pred</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_bic</span></code>, <code class="docutils literal notranslate"><span class="pre">tuning_payload</span></code>, and <code class="docutils literal notranslate"><span class="pre">contract_version</span></code>. Legacy executor dictionaries are coerced into this shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sequence_representation_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">future_dependency</span></code></p></td>
+<td><p>current univariate sequence adapter; future sequence/tensor representation builders</p></td>
+<td><p>current deep autoreg generators; future Layer 3 sequence/tensor generators</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Operational for the current univariate target-history LSTM/GRU/TCN autoreg path: it records sample/window axis, lookback axis, channel names, target alignment, and leakage metadata. Full multivariate <code class="docutils literal notranslate"><span class="pre">sequence_tensor</span></code> Layer 2 handoff remains gated before sequence/tensor models enter full grids.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">exogenous_x_path_contract_v1</span></code></p></td>
+<td><p>Layer 1/2 boundary plus Layer 3 scenario setup</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">future_dependency</span></code></p></td>
+<td><p>future scenario or future-X provider</p></td>
+<td><p>raw-panel iterated forecast generators</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>, <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code> with <code class="docutils literal notranslate"><span class="pre">recursive_x_model_family='ar1'</span></code> are operational explicit path kinds. <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code> is an oracle/ex-post path and must be marked in provenance. <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code> replaces only configured known-future predictor columns from future rows while holding other predictors at the origin row. The <code class="docutils literal notranslate"><span class="pre">ar1</span></code> recursive-X slice forecasts each predictor from origin-available own history and does not consume observed future X. Unavailable X, other recursive-X families, and broader vintage/release-lag variants remain gated until they have path-specific tests.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="layer-1-official-frame-handoff">
+<h3>Layer 1 Official Frame Handoff<a class="headerlink" href="#layer-1-official-frame-handoff" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code> is the handoff from Layer 1 data-task/runtime
+cleaning into Layer 2 representation building. It is intentionally a metadata
+contract, not a copy of the data frame.</p>
+<p>The contract records:</p>
+<ul class="simple">
+<li><p>source identity: dataset, source family, frequency, version mode, vintage,
+data-through date, support tier, raw artifact, and parser notes;</p></li>
+<li><p>task identity: target, targets, horizons, forecast object, forecast type,
+dataset adapter, information set, sample split, and benchmark;</p></li>
+<li><p>official frame boundary: row/column shape, index start/end, columns,
+target columns available, predictor columns, and transform-code coverage;</p></li>
+<li><p>Layer 1 choices: raw missing policy, raw outlier policy,
+missing-availability rule, release-lag rule, variable universe, separation
+rule, min-train rule, and training-start rule;</p></li>
+<li><p>official transform evidence: policy, scope, policy source, scope source,
+transform-code report, data warnings, and data reports.</p></li>
+</ul>
+<p>Layer 2 must treat this file as the resolved upstream frame contract. Broader
+vintage/release-lag or mixed-source work should extend this schema rather than
+relying on implicit <code class="docutils literal notranslate"><span class="pre">raw_result.data</span></code> behavior.</p>
+</section>
+</section>
+<section id="future-contract-shape-requirements">
+<h2>Future Contract Shape Requirements<a class="headerlink" href="#future-contract-shape-requirements" title="Link to this heading"></a></h2>
+<p>The Layer 3 capability matrix exposes the following requirements as
+machine-readable future-cell metadata (<code class="docutils literal notranslate"><span class="pre">schema_revision=6</span></code>). These are not
+runtime permissions; they are the checklist for moving a gated cell to
+operational.</p>
+<section id="sequence-tensor-handoff">
+<h3>Sequence/Tensor Handoff<a class="headerlink" href="#sequence-tensor-handoff" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">sequence_representation_contract_v1</span></code> is now produced by the current
+univariate sequence adapter for deep autoregressive target-history models. A
+broader Layer 2 producer is still required before multivariate
+<code class="docutils literal notranslate"><span class="pre">sequence_tensor</span></code> feature runtimes enter full grids. The contract must define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin_index</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_axis</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lookback_axis</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">channel_names</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_alignment</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit_state</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">leakage_metadata</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missing_release_lag_handling</span></code>.</p></li>
+</ul>
+<p>The current univariate slice has runtime acceptance coverage. Required gates
+before opening the broader multivariate Layer 2 handoff:</p>
+<ul class="simple">
+<li><p>sample/origin alignment test;</p></li>
+<li><p>lookback no-future-leakage test;</p></li>
+<li><p>channel-name schema test;</p></li>
+<li><p>generator payload-shape test.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">sequence_forecast_payload_v1</span></code> is produced by Layer 3 and consumed by the
+artifact writer and evaluation layer. It must define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin_index</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_or_vector_payload</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_rows</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aggregation_rule</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">payload_metrics</span></code>.</p></li>
+</ul>
+</section>
+<section id="raw-panel-iterated-forecasting">
+<h3>Raw-Panel Iterated Forecasting<a class="headerlink" href="#raw-panel-iterated-forecasting" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">exogenous_x_path_contract_v1</span></code> is the producer-side scenario contract consumed
+by raw-panel iterated generators. It must define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path_kind</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">origin_index</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon_steps</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_names</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_path_frame_or_assumption</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">availability_mask</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vintage_cutoff</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">release_lag_policy</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">no_lookahead_evidence</span></code>.</p></li>
+</ul>
+<p>Allowed path kinds are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unavailable</span></code>.</p></li>
+</ul>
+<p>The first operational raw-panel iterated slices use
+<code class="docutils literal notranslate"><span class="pre">path_kind='hold_last_observed'</span></code>, <code class="docutils literal notranslate"><span class="pre">path_kind='observed_future_x'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">path_kind='scheduled_known_future_x'</span></code>, and <code class="docutils literal notranslate"><span class="pre">path_kind='recursive_x_model'</span></code>
+with <code class="docutils literal notranslate"><span class="pre">recursive_x_model_family='ar1'</span></code>. <code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code> is an explicit
+deterministic scenario. <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code> is an oracle or ex-post analysis
+path and must not be presented as real-time available information.
+<code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code> is a partial future-X path: configured known-future
+predictor columns are read from future rows, while all other predictors stay at
+their origin-available values. The first <code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code> slice forecasts
+each predictor recursively with a per-predictor AR(1) fit on origin-available
+history. Later slices can add richer recursive-X model families.</p>
+<p><code class="docutils literal notranslate"><span class="pre">multi_step_raw_panel_payload_v1</span></code> is the Layer 3 artifact payload produced by
+the iterated generator. It must define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin_index</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_predictions</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final_horizon_prediction</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_history_updates</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exogenous_x_path_ref</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recursive_state_trace</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">payload_metrics</span></code>.</p></li>
+</ul>
+<p>Required gates before opening:</p>
+<ul class="simple">
+<li><p>future-X availability test;</p></li>
+<li><p>release-lag mask test;</p></li>
+<li><p>origin-index alignment test;</p></li>
+<li><p>scenario-assumption manifest test;</p></li>
+<li><p>step-trace schema test;</p></li>
+<li><p>final-prediction projection test;</p></li>
+<li><p>recursive target-history test;</p></li>
+<li><p>JSONL schema test.</p></li>
+</ul>
+</section>
+</section>
+<section id="layer-2-method-extension-contracts">
+<h2>Layer 2 Method-Extension Contracts<a class="headerlink" href="#layer-2-method-extension-contracts" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Contract</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>Layer 3 view</p></th>
+<th class="head"><p>Producer</p></th>
+<th class="head"><p>Consumer</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_scale_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>target-scale compiler/runtime adapter</p></td>
+<td><p>Layer 3 execution, inverse transform, evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Records target transform policy, normalization, evaluation scale, inversion support, and blockers. Interval/density wrappers currently require raw-level target scale, no target normalization, and no custom target transformer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set_public_axis_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>registry and compiler Layer 2 representation grammar</p></td>
+<td><p>Layer 2 block composer, sweep planner, Navigator</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">feature_block_set</span></code> is now a public representation-family sweep axis, not only bridge provenance. Directly supported values remain constrained by compatible sub-block axes: for example <code class="docutils literal notranslate"><span class="pre">transformed_x_lags</span></code> requires an X-lag block, <code class="docutils literal notranslate"><span class="pre">level_augmented_x</span></code> requires a level block, <code class="docutils literal notranslate"><span class="pre">rotation_augmented_x</span></code> requires a rotation block, <code class="docutils literal notranslate"><span class="pre">selected_sparse_x</span></code> requires feature selection, <code class="docutils literal notranslate"><span class="pre">mixed_blocks</span></code> requires at least two active block sources, and <code class="docutils literal notranslate"><span class="pre">custom_blocks</span></code> requires a registered custom block or combiner.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_feature_block_callable_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>registered custom temporal, rotation, factor, or other feature block</p></td>
+<td><p>Layer 2 block composer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Block-local custom method contract. Requires train/pred feature frames, stable names, fit state, leakage metadata, and provenance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_feature_combiner_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>registered custom combiner</p></td>
+<td><p>Layer 2 final <code class="docutils literal notranslate"><span class="pre">Z</span></code> composer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Combines already-built named blocks into final <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>/<code class="docutils literal notranslate"><span class="pre">Z_pred</span></code>. Must preserve names, block roles, row alignment, fit state, and leakage evidence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_final_z_selection_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>registered or built-in selector over final <code class="docutils literal notranslate"><span class="pre">Z</span></code></p></td>
+<td><p>Layer 2 final representation writer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Records candidate, selected, and dropped feature names plus supervised/unsupervised selector fit state. Operational for supported registered custom block/combiner outputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_polynomial_rotation_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>MARX lag-polynomial rotation composer</p></td>
+<td><p>Layer 2 raw-panel representation builder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Defines predictor-major lag-polynomial feature names, runtime names, alignment, basis replacement, duplicate-base policy, and initial-lag fill policy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_score_history_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>factor-to-rotation runtime fit state</p></td>
+<td><p>Layer 2 factor-score rotation composers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Operational for static-PCA <code class="docutils literal notranslate"><span class="pre">factor_then_marx</span></code> and MAF slices. Broader factor blocks need the same history/alignment evidence before opening.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">factor_score_rotation_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>compiler metadata for MAF rotation</p></td>
+<td><p>Layer 2/runtime provenance readers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Companion metadata for factor-score moving-average rotation. It should stay aligned with <code class="docutils literal notranslate"><span class="pre">factor_score_history_contract_v1</span></code>; broader rotation contracts should avoid introducing another parallel name without a migration note.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">supervised_factor_block_contract_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outside_layer3</span></code></p></td>
+<td><p>supervised factor block compiler/runtime</p></td>
+<td><p>Layer 2 representation builder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Used for supported supervised factor slices. Broader custom/supervised factor families still need explicit fit-state and leakage coverage.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Custom inverse transform contract</p></td>
+<td><p>Layer 2/evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>future registered inverse callable</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">future_design</span></code></p></td>
+<td><p>Needed before custom inverse policies become operational. Must define model-scale payload input, original-scale output, failure behavior, and scale-specific metrics.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="layer-3-generator-contracts">
+<h2>Layer 3 Generator Contracts<a class="headerlink" href="#layer-3-generator-contracts" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Contract</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>Layer 3 view</p></th>
+<th class="head"><p>Producer</p></th>
+<th class="head"><p>Consumer</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_model_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>registered custom model adapter</p></td>
+<td><p>Layer 3 execution loop</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Custom models receive tabular Layer 2 representation context, training spec, seed context, auxiliary Layer 2 payloads, and representation provenance. Operational for direct tabular paths, FRED-SD native-frequency block/adapter routes, target-lag recursive paths, and the raw-panel iterated <code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>, <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code>/<code class="docutils literal notranslate"><span class="pre">ar1</span></code> narrow slices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">midas_almon_direct_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>built-in <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code> executor</p></td>
+<td><p>execution artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Consumes the FRED-SD native-frequency block/adapter route, constructs Almon polynomial distributed-lag basis features over selected raw-panel predictors, and fits a ridge direct forecast. Requires <code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_representation</span></code> to be <code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code> or <code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code>, raw-panel features, and direct forecasts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">midasr_restricted_direct_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>built-in <code class="docutils literal notranslate"><span class="pre">midasr</span></code> executor</p></td>
+<td><p>execution artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Consumes the FRED-SD native-frequency block/adapter route, constructs raw lag tensors over selected raw-panel predictors, and fits a restricted nonlinear least-squares MIDAS direct forecast. Runtime <code class="docutils literal notranslate"><span class="pre">midasr_weight_family</span></code> values <code class="docutils literal notranslate"><span class="pre">nealmon</span></code>, <code class="docutils literal notranslate"><span class="pre">almonp</span></code>, <code class="docutils literal notranslate"><span class="pre">nbeta</span></code>, <code class="docutils literal notranslate"><span class="pre">genexp</span></code>, and <code class="docutils literal notranslate"><span class="pre">harstep</span></code> are operational-narrow. <code class="docutils literal notranslate"><span class="pre">harstep</span></code> follows the R <code class="docutils literal notranslate"><span class="pre">midasr</span></code> HAR(3)-RV 20-lag shape and requires <code class="docutils literal notranslate"><span class="pre">midas_max_lag=20</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">midasr_nealmon_direct_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>built-in <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code> executor</p></td>
+<td><p>execution artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Compatibility contract for <code class="docutils literal notranslate"><span class="pre">model_family=midasr_nealmon</span></code>, equivalent to <code class="docutils literal notranslate"><span class="pre">model_family=midasr</span></code> with <code class="docutils literal notranslate"><span class="pre">midasr_weight_family=nealmon</span></code>. Mirrors the R <code class="docutils literal notranslate"><span class="pre">midasr</span></code> <code class="docutils literal notranslate"><span class="pre">midas_r</span> <span class="pre">+</span> <span class="pre">nealmon</span></code> surface for this direct route.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state_space_mixed_frequency_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>future state-space nowcasting executor</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gated_named</span></code></p></td>
+<td><p>Reserved contract for mixed-frequency state-space likelihoods. Before runtime opens, the package needs an upstream observation-equation schema, missing-observation handling policy, state/filter/smoother output payload, forecast-origin update semantics, and regression tests against a known implementation. Current <code class="docutils literal notranslate"><span class="pre">experiment_unit=state_space_run</span></code> remains a future design marker, not executable permission.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Direct tabular generator protocol</p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>tabular point/quantile generators</p></td>
+<td><p>execution artifact writer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">legacy_implicit</span></code></p></td>
+<td><p>Operational for current scalar direct forecasts. Should become an explicit generator protocol if more generator families are added.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">path_average_target_protocol_v1</span></code></p></td>
+<td><p>Layer 2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>path-average target construction</p></td>
+<td><p>Layer 3 path-average stepwise executor</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Layer 2 defines step targets and aggregation semantics; Layer 3 executes stepwise fits and writes path artifacts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">path_average_stepwise_execution_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>path-average executor</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Executes one supported scalar generator per step <code class="docutils literal notranslate"><span class="pre">1..h</span></code>, aggregates equal-weight path-average predictions, and writes <code class="docutils literal notranslate"><span class="pre">path_average_steps.csv</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Sequence/tensor generator contract</p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>current deep autoreg executors; future sequence/tensor executors</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Current LSTM/GRU/TCN autoreg executors consume the univariate <code class="docutils literal notranslate"><span class="pre">sequence_representation_contract_v1</span></code> and record training backend, seed, lookback, channel, and alignment metadata in the scalar point payload. Full <code class="docutils literal notranslate"><span class="pre">sequence_forecast_payload_v1</span></code> for vector/path outputs remains gated.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Raw-panel iterated execution contract</p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>raw-panel iterated generators</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Operational for explicit <code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>, oracle/ex-post <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>, configured <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code> with <code class="docutils literal notranslate"><span class="pre">recursive_x_model_family='ar1'</span></code> paths plus fixed target-lag recursive target-history updates. Built-in scalar tabular generators and registered <code class="docutils literal notranslate"><span class="pre">custom_model_v1</span></code> adapters can consume these slices. Other recursively forecast future-X families remain gated.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="forecast-payload-and-artifact-contracts">
+<h2>Forecast Payload And Artifact Contracts<a class="headerlink" href="#forecast-payload-and-artifact-contracts" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Contract</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>Layer 3 view</p></th>
+<th class="head"><p>Producer</p></th>
+<th class="head"><p>Consumer</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">direction_forecast_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>scalar payload wrapper</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_payloads.jsonl</span></code>, metrics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Converts scalar forecasts into direction labels and probabilities relative to the current threshold and records direction hit metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interval_forecast_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>scalar payload wrapper</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_payloads.jsonl</span></code>, metrics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Builds symmetric Gaussian train-std intervals around scalar forecasts. This is a baseline interval wrapper, not a model-specific interval estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">density_forecast_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>scalar payload wrapper</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_payloads.jsonl</span></code>, metrics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Builds Gaussian train-std density payloads and log-score columns around scalar forecasts. This is a baseline density wrapper, not a full distributional model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sequence_forecast_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>future sequence/tensor generators</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gated_named</span></code></p></td>
+<td><p>Must define path/vector payload shape, step-level versus horizon-level rows, metric aggregation, and JSONL schema.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_step_raw_panel_payload_v1</span></code></p></td>
+<td><p>Layer 3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owned</span></code></p></td>
+<td><p>raw-panel iterated generators</p></td>
+<td><p>artifact writer and evaluation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational_narrow</span></code></p></td>
+<td><p>Operational for <code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>, <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">recursive_x_model</span></code>/<code class="docutils literal notranslate"><span class="pre">ar1</span></code> raw-panel iterated point forecasts. It distinguishes step predictions, final horizon predictions, recursive target-history state, assumed, observed, scheduled, or recursively forecast future-X path, configured scheduled-known columns, recursive-X model family, raw-level evaluation mapped to <code class="docutils literal notranslate"><span class="pre">original_target_scale</span></code>, and path-level metrics. Transformed/normalized target-scale composition remains gated.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prediction_row_schema_v1</span></code></p></td>
+<td><p>Layer 5/evaluation boundary</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>execution artifact writer</p></td>
+<td><p>evaluation, studies, downstream users</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code> now writes <code class="docutils literal notranslate"><span class="pre">prediction_row_schema.json</span></code> and records <code class="docutils literal notranslate"><span class="pre">prediction_row_schema_contract</span></code> in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>. The schema lists required base columns, observed columns, optional payload groups, dtypes, payload families, and forecast objects. Payload-family columns should not be added without updating this schema.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_payloads.jsonl</span></code> schema</p></td>
+<td><p>Layer 5/evaluation boundary</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">consumed</span></code></p></td>
+<td><p>execution artifact writer</p></td>
+<td><p>downstream payload consumers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code></p></td>
+<td><p>Stores typed payload objects for scalar point, direction, interval, and density families. Future sequence/raw-panel payloads must extend this schema explicitly.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="validation-checklist">
+<h2>Validation Checklist<a class="headerlink" href="#validation-checklist" title="Link to this heading"></a></h2>
+<p>Before marking a contract <code class="docutils literal notranslate"><span class="pre">operational</span></code>, add or identify:</p>
+<ul class="simple">
+<li><p>compiler acceptance and rejection tests;</p></li>
+<li><p>runtime fit/apply or fit/predict tests;</p></li>
+<li><p>artifact schema assertions;</p></li>
+<li><p>manifest/provenance assertions;</p></li>
+<li><p>no-lookahead or alignment tests when the producer learns state;</p></li>
+<li><p>sweep invalid-cell behavior under <code class="docutils literal notranslate"><span class="pre">failure_policy=skip_failed_cell</span></code>;</p></li>
+<li><p>docs that state owner, producer, consumer, and current limits.</p></li>
+</ul>
+</section>
+<section id="current-backlog">
+<h2>Current Backlog<a class="headerlink" href="#current-backlog" title="Link to this heading"></a></h2>
+<p>Highest-priority contract cleanup:</p>
+<ol class="arabic simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code> as the stable extension point for deeper
+vintage, release-lag, and mixed-source runtime widening. Do not open those
+cells by mutating implicit <code class="docutils literal notranslate"><span class="pre">raw_result.data</span></code> behavior without extending the
+contract and adding path-specific tests.</p></li>
+<li><p>Keep package/runtime support ahead of additional Navigator UI work: registry
+status, compiler pruning, runtime dispatch, and checked-in UI data must agree
+before a branch is promoted as selectable.</p></li>
+<li><p>Extend <code class="docutils literal notranslate"><span class="pre">sequence_representation_contract_v1</span></code> from the current univariate
+deep-autoreg slice to a Layer 2 multivariate <code class="docutils literal notranslate"><span class="pre">sequence_tensor</span></code> handoff
+before opening sequence/tensor models in full grids.</p></li>
+<li><p>Broaden raw-panel iterated forecasting beyond the current
+<code class="docutils literal notranslate"><span class="pre">hold_last_observed</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_future_x</span></code>, <code class="docutils literal notranslate"><span class="pre">scheduled_known_future_x</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">recursive_x_model(ar1)</span></code> narrow slices only after additional path-specific
+future-X and target-scale tests exist.</p></li>
+<li><p>Version direct tabular generator protocol if additional generator families
+require a richer fit/predict handoff than <code class="docutils literal notranslate"><span class="pre">forecast_payload_v1</span></code>.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="layer_boundary_contract.html" class="btn btn-neutral float-left" title="Layer Boundary Contract" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="package_runtime_gap_audit.html" class="btn btn-neutral float-right" title="Package Runtime Gap Audit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

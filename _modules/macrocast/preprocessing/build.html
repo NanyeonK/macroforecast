@@ -1,0 +1,998 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.preprocessing.build &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=19216117"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#verify-installation">Verify installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#optional-dependencies">Optional dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../install.html#the-deep-extra">The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../install.html#core-dependencies-automatically-installed">Core dependencies (automatically installed)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../navigator/index.html#recommended-flow">Recommended Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../navigator/index.html#boundary">Boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../simple/index.html">Simple Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/quickstart.html">Quickstart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/quickstart.html#data-frequency">Data Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/run_experiment.html">Run An Experiment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/run_experiment.html#single-run-or-sweep">Single Run Or Sweep</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/compare_models.html">Compare Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/fred_sd.html">FRED-SD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#frequency">Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#state-and-variable-selection">State And Variable Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#mixed-frequency-representation">Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#inferred-transforms">Inferred Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#empirical-transforms">Empirical Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#bpprivsa-and-sthpi">BPPRIVSA And STHPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../simple/fred_sd.html#defaults">Defaults</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../simple/read_results.html">Read Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detail/index.html">Detailed Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/terminology.html">Terminology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/terminology.html#target-versus-y">Target Versus Y</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/terminology.html#current-compatibility-names">Current Compatibility Names</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/experiment_object.html">Experiment Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/default_profiles.html">Default Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/recipe_layers.html">Recipe Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/recipe_layers.html#canonical-layer-order">Canonical Layer Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/recipe_layers.html#boundary-rules">Boundary Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer_boundary_contract.html">Layer Boundary Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-0-study-design">Layer 0: Study Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-1-official-data-frame">Layer 1: Official Data Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-2-research-preprocessing-feature-representation">Layer 2: Research Preprocessing / Feature Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-3-forecast-generator">Layer 3: Forecast Generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-4-evaluation">Layer 4: Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-5-artifacts">Layer 5: Artifacts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-6-inference">Layer 6: Inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#layer-7-interpretation">Layer 7: Interpretation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_boundary_contract.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer_contract_ledger.html">Layer Contract Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#status-taxonomy">Status Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#layer-3-view-taxonomy">Layer 3 View Taxonomy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#core-layer-handoffs">Core Layer Handoffs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#future-contract-shape-requirements">Future Contract Shape Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#layer-2-method-extension-contracts">Layer 2 Method-Extension Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#layer-3-generator-contracts">Layer 3 Generator Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#forecast-payload-and-artifact-contracts">Forecast Payload And Artifact Contracts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#validation-checklist">Validation Checklist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_contract_ledger.html#current-backlog">Current Backlog</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html">Package Runtime Gap Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#current-finding-after-pr-92">Current Finding After PR #92</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#previous-finding-layer-1-handoff">Previous Finding: Layer 1 Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#previous-finding-feature-block-set">Previous Finding: Feature-Block Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#layer-2-representation-family-surface">Layer 2 Representation-Family Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#remaining-operational-narrow-audit">Remaining Operational-Narrow Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/package_runtime_gap_audit.html#next-runtime-queue">Next Runtime Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer_axis_census.html">Layer Axis Census</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_census.html#how-to-read-this">How To Read This</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_census.html#summary">Summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_census.html#operational-narrow-contract-queue">Operational-Narrow Contract Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_census.html#layer-detail">Layer Detail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_census.html#first-review-queue-after-this-census">First Review Queue After This Census</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/post_pr70_runtime_roadmap.html">Post-PR70 Runtime Roadmap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/post_pr70_runtime_roadmap.html#current-clean-state">Current Clean State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/post_pr70_runtime_roadmap.html#priority-order">Priority Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/post_pr70_runtime_roadmap.html#first-runtime-widening-slice">First Runtime Widening Slice</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/raw_panel_iterated_contract.html">Raw-Panel Iterated Forecasting Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/raw_panel_iterated_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/raw_panel_iterated_contract.html#exogenous-x-path-contract">Exogenous-X Path Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/raw_panel_iterated_contract.html#multi-step-payload-contract">Multi-Step Payload Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/raw_panel_iterated_contract.html#opening-checklist">Opening Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer_axis_migration_plan.html">Layer Axis Migration Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_migration_plan.html#migrated-in-this-pass">Migrated In This Pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_migration_plan.html#still-to-migrate">Still To Migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_migration_plan.html#feature-block-grammar-introduced">Feature-Block Grammar Introduced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer_axis_migration_plan.html#compatibility-policy">Compatibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer0_meta_audit.html">Layer 0 Meta Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#layer-0-surfaces">Layer 0 Surfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#registry-axes">Registry Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#census-finding">2026-04-27 Census Finding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#full-route-contract">Full Route Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#research-design">Research Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#experiment-unit">Experiment Unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#designframe-derived-fields">DesignFrame Derived Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#finding-fixed-feature-recipe-was-misclassified">Finding: Fixed Feature Recipe Was Misclassified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#current-simple-api-mapping">Current Simple API Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#full-scenario-matrix">Full Scenario Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#run-policy-axes">Run Policy Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#axis-grammar">Axis Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#closed-until-later-layers">Closed Until Later Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer0_meta_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html">Layer 1 Data Task Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html#result">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html#canonical-layer-1-after-migration">Canonical Layer 1 After Migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html#full-contract-decisions">Full Contract Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html#simple-contract">Simple Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer1_data_task_audit.html#regression-checks-added">Regression Checks Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/registry_axes.html">Registry Axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/registry_axes.html#status-rule">Status Rule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/registry_axes.html#migration-rule">Migration Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_feature_representation.html">Layer 2 Feature Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#what-layer-2-owns">What Layer 2 Owns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#representation-handoff">Representation Handoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#feature-block-grammar">Feature-Block Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#fred-sd-mixed-frequency-representation">FRED-SD Mixed-Frequency Representation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#target-scale-contract">Target Scale Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#target-representation-grammar">Target Representation Grammar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#mapping-from-existing-bridge-names">Mapping From Existing Bridge Names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#boundary-cases">Boundary Cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_feature_representation.html#implementation-order">Implementation Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html">Layer 2 Closure Ledger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html#operational">Operational</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html#contract-defined-gated">Contract-Defined Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html#compatibility-only">Compatibility-Only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html#sweep-governance">Sweep Governance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_closure_ledger.html#next-build-order">Next Build Order</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html">Layer 2 And Layer 3 Detailed Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#design-goals">Design Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#current-closed-contract">Current Closed Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#layer-2-detailed-design">Layer 2 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#layer-3-detailed-design">Layer 3 Detailed Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#sweep-semantics">Sweep Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#full-versus-simple">Full Versus Simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#recommended-implementation-order">Recommended Implementation Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_detailed_design.html#test-and-documentation-requirements">Test And Documentation Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html">Layer 2 And Layer 3 Sweep Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#core-goal">Core Goal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#boundary">Boundary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#terms">Terms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#sweep-model">Sweep Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#layer-2-representation-contract">Layer 2 Representation Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#block-semantics">Block Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#layer-3-obligations">Layer 3 Obligations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#current-operational-sweep-surface">Current Operational Sweep Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#still-gated">Still Gated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#acceptance-tests">Acceptance Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_sweep_contract.html#implementation-roadmap">Implementation Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html">Layer 2 And Layer 3 Full Grid Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html#what-belongs-in-the-grid">What Belongs In The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html#minimal-runnable-grid">Minimal Runnable Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html#running-the-grid">Running The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html#extending-the-grid">Extending The Grid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_layer3_grid_examples.html#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer2_revision_plan.html">Layer 2 Revision Plan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#target-state">Target State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#current-bridge">Current Bridge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#revision-principles">Revision Principles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#patch-queue">Patch Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#test-matrix">Test Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#status-tracking">Status Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer2_revision_plan.html#layer-2-closure">Layer 2 Closure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer3_training_audit.html">Layer 3 Forecast Generator Boundary Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#canonical-role">Canonical Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#non-ownership">Non-Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#boundary-splits">Boundary Splits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#current-design-state">Current Design State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#current-layer-3-axes">Current Layer 3 Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#compatibility-debt">Compatibility Debt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/layer3_training_audit.html#full-versus-simple">Full Versus Simple</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/execution_engine.html">Execution Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/artifacts_and_manifest.html">Artifacts And Manifest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/artifacts_and_manifest.html#output-spec">Output Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/custom_extensions.html">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#extension-map">Extension Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-2-custom-feature-blocks">Layer 2: Custom Feature Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-2-custom-feature-combiners">Layer 2: Custom Feature Combiners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-2-final-z-selection-after-custom-blocks">Layer 2: Final-Z Selection After Custom Blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-2-matrix-preprocessors">Layer 2: Matrix Preprocessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-2-target-transformers">Layer 2: Target Transformers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#layer-3-custom-models">Layer 3: Custom Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#method-comparison-sweeps">Method Comparison Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/custom_extensions.html#fair-comparison-checklist">Fair Comparison Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/target_transformer.html">Target Transformer Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/target_transformer.html#why-this-is-separate">Why This Is Separate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/target_transformer.html#mvp-contract">MVP Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/target_transformer.html#runtime-rules">Runtime Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/target_transformer.html#relationship-to-existing-axes">Relationship To Existing Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/target_transformer.html#current-behavior">Current Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html">Preprocessing Layer Audit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#canonical-layer-2-role">Canonical Layer 2 Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#layer-2-decision-space">Layer 2 Decision Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#current-implementation-surface">Current Implementation Surface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#full-closure-status">Full Closure Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#current-default">Current Default</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#executable-contract-classes">Executable Contract Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#registry-status-cleanup">Registry Status Cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#custom-preprocessor">Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#why-simple-preprocessing-sweeps-stay-blocked">Why Simple Preprocessing Sweeps Stay Blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#required-work-before-opening-preprocessing-sweeps">Required Work Before Opening Preprocessing Sweeps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/preprocessing_layer_audit.html#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html">FRED-SD Transform Policy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#policy">Policy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#policy-choices">Policy Choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#review-status">Review Status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#manifest-contract">Manifest Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#frequency-specific-rules">Frequency-Specific Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#state-level-stationarity-audit">State-Level Stationarity Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#runtime-order">Runtime Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_transform_policy.html#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#contract">Contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#candidate-table">Candidate Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#validation-protocol">Validation Protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#scoring">Scoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#confidence-labels">Confidence Labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcodes.html#runtime-policy">Runtime Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#review-rules">Review Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#pipeline-checks">Pipeline Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#summary-decision-table">Summary Decision Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#targeted-diagnostic-audit">Targeted Diagnostic Audit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#accepted-direct-analogs">Accepted Direct Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#provisional-medium-analogs">Provisional Medium Analogs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#frequency-specific-decisions">Frequency-Specific Decisions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#semantic-review-group">Semantic Review Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#rejected-for-v0-1">Rejected For v0.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#proposed-v0-1-output-map">Proposed v0.1 Output Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../detail/fred_sd_inferred_tcode_review_v0_1.html#next-actions">Next Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detail/layer_audit.html">Layer Audit Checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting_started/index.html#learning-path">Learning path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting_started/index.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting_started/index.html#the-30-second-mental-model">The 30-second mental model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting_started/index.html#key-promise-defaults-match-research-practice">Key promise: defaults match research practice</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../getting_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../getting_started/first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../getting_started/understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../getting_started/stages_reference.html">Stages Reference (0 and 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../user_guide/index.html#stage-0-design">Stage 0 — Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../user_guide/index.html#stage-1-data">Stage 1 — Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../user_guide/index.html#stages-2-through-7">Stages 2 through 7</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/design.html">Design (Stage 0)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/data/index.html">Data (Stage 1)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/index.html#package-surfaces">Package surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/index.html#current-operational-subset-summary">Current operational subset summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/design.html"><code class="docutils literal notranslate"><span class="pre">macrocast.design</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/raw.html"><code class="docutils literal notranslate"><span class="pre">macrocast.raw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/recipes.html"><code class="docutils literal notranslate"><span class="pre">macrocast.recipes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/preprocessing.html"><code class="docutils literal notranslate"><span class="pre">macrocast.preprocessing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/registry.html"><code class="docutils literal notranslate"><span class="pre">macrocast.registry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compiler.html"><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/execution.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/start.html"><code class="docutils literal notranslate"><span class="pre">macrocast.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/sweep_runner.html">Sweep Runner API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/models/deep.html"><code class="docutils literal notranslate"><span class="pre">macrocast.execution.models.deep</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/decomposition.html"><code class="docutils literal notranslate"><span class="pre">macrocast.decomposition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../CONVENTIONS.html#r1-per-axis-page-structure">R1 — Per-axis page structure</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.preprocessing.build</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.preprocessing.build</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessContract</span>
+
+<span class="n">_TARGET</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_target_transform&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_X</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_x_transform&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_TCODE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_transform_pipeline&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_REPRESENTATION_POLICY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom_transform_only&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_TCODE_APPLICATION_SCOPE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_MISSING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;drop&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;em_impute&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mean_impute&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;median_impute&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ffill&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;interpolate_linear&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;drop_rows&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;drop_columns&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;drop_if_above_threshold&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;missing_indicator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_OUTLIER</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;clip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outlier_to_nan&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;winsorize&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trim&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;iqr_clip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mad_clip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zscore_clip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;outlier_to_missing&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_SCALING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;robust&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;minmax&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;demean_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;unit_variance_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rank_scale&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_DIMRED</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pca&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;static_factor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_FEATURE_SELECTION</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;correlation_filter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lasso_select&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mutual_information_screen&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_FEATURE_SELECTION_SEMANTICS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select_after_factor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select_after_custom_blocks&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_ORDER</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_FIT_SCOPE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;not_applicable&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;train_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;expanding_train_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rolling_train_only&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_INVERSE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;forecast_scale_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_EVAL_SCALE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;original_scale&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;transformed_scale&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;both&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_TARGET_TRANSFORM</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;level&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;difference&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;log&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;log_difference&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;growth_rate&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_TARGET_NORMALIZATION</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zscore_train_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;robust_zscore&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;minmax&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;unit_variance&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_TARGET_DOMAIN</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;unconstrained&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;nonnegative&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bounded_0_1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;integer_count&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;probability_target&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_SCALING_SCOPE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;columnwise&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;datewise_cross_sectional&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;groupwise&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;categorywise&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;global_train_only&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_ADDITIONAL</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;smoothing_ma&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ema&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hp_filter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_X_LAG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cv_selected_x_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;variable_specific_lags&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;category_specific_lags&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_FEATURE_GROUPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fred_category_group&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;economic_theme_group&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lag_group&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;factor_group&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="build_preprocess_contract">
+<a class="viewcode-back" href="../../../api/preprocessing.html#macrocast.preprocessing.build_preprocess_contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_preprocess_contract</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_transform_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">x_transform_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tcode_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_missing_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">x_missing_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_outlier_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">x_outlier_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">scaling_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">dimensionality_reduction_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">feature_selection_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">preprocess_order</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">preprocess_fit_scope</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">inverse_transform_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">evaluation_scale</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">feature_selection_semantics</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span>
+    <span class="n">representation_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
+    <span class="n">tcode_application_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">,</span>
+    <span class="n">target_transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;level&quot;</span><span class="p">,</span>
+    <span class="n">target_normalization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">target_domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unconstrained&quot;</span><span class="p">,</span>
+    <span class="n">scaling_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;columnwise&quot;</span><span class="p">,</span>
+    <span class="n">additional_preprocessing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">x_lag_creation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span>
+    <span class="n">feature_grouping</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessContract</span><span class="p">:</span>
+    <span class="n">allowed_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="n">_TARGET</span><span class="p">,</span>
+        <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="n">_X</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="n">_TCODE</span><span class="p">,</span>
+        <span class="s2">&quot;target_missing_policy&quot;</span><span class="p">:</span> <span class="n">_MISSING</span><span class="p">,</span>
+        <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">:</span> <span class="n">_MISSING</span><span class="p">,</span>
+        <span class="s2">&quot;target_outlier_policy&quot;</span><span class="p">:</span> <span class="n">_OUTLIER</span><span class="p">,</span>
+        <span class="s2">&quot;x_outlier_policy&quot;</span><span class="p">:</span> <span class="n">_OUTLIER</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_policy&quot;</span><span class="p">:</span> <span class="n">_SCALING</span><span class="p">,</span>
+        <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">:</span> <span class="n">_DIMRED</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="n">_FEATURE_SELECTION</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">:</span> <span class="n">_FEATURE_SELECTION_SEMANTICS</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="n">_ORDER</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">:</span> <span class="n">_FIT_SCOPE</span><span class="p">,</span>
+        <span class="s2">&quot;inverse_transform_policy&quot;</span><span class="p">:</span> <span class="n">_INVERSE</span><span class="p">,</span>
+        <span class="s2">&quot;evaluation_scale&quot;</span><span class="p">:</span> <span class="n">_EVAL_SCALE</span><span class="p">,</span>
+        <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="n">_REPRESENTATION_POLICY</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="n">_TCODE_APPLICATION_SCOPE</span><span class="p">,</span>
+        <span class="s2">&quot;target_transform&quot;</span><span class="p">:</span> <span class="n">_TARGET_TRANSFORM</span><span class="p">,</span>
+        <span class="s2">&quot;target_normalization&quot;</span><span class="p">:</span> <span class="n">_TARGET_NORMALIZATION</span><span class="p">,</span>
+        <span class="s2">&quot;target_domain&quot;</span><span class="p">:</span> <span class="n">_TARGET_DOMAIN</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_scope&quot;</span><span class="p">:</span> <span class="n">_SCALING_SCOPE</span><span class="p">,</span>
+        <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="n">_ADDITIONAL</span><span class="p">,</span>
+        <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="n">_X_LAG</span><span class="p">,</span>
+        <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="n">_FEATURE_GROUPING</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="n">target_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="n">x_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="n">tcode_policy</span><span class="p">,</span>
+        <span class="s2">&quot;target_missing_policy&quot;</span><span class="p">:</span> <span class="n">target_missing_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">:</span> <span class="n">x_missing_policy</span><span class="p">,</span>
+        <span class="s2">&quot;target_outlier_policy&quot;</span><span class="p">:</span> <span class="n">target_outlier_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_outlier_policy&quot;</span><span class="p">:</span> <span class="n">x_outlier_policy</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_policy&quot;</span><span class="p">:</span> <span class="n">scaling_policy</span><span class="p">,</span>
+        <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">:</span> <span class="n">dimensionality_reduction_policy</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="n">feature_selection_policy</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">:</span> <span class="n">feature_selection_semantics</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="n">preprocess_order</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">:</span> <span class="n">preprocess_fit_scope</span><span class="p">,</span>
+        <span class="s2">&quot;inverse_transform_policy&quot;</span><span class="p">:</span> <span class="n">inverse_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;evaluation_scale&quot;</span><span class="p">:</span> <span class="n">evaluation_scale</span><span class="p">,</span>
+        <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="n">representation_policy</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="n">tcode_application_scope</span><span class="p">,</span>
+        <span class="s2">&quot;target_transform&quot;</span><span class="p">:</span> <span class="n">target_transform</span><span class="p">,</span>
+        <span class="s2">&quot;target_normalization&quot;</span><span class="p">:</span> <span class="n">target_normalization</span><span class="p">,</span>
+        <span class="s2">&quot;target_domain&quot;</span><span class="p">:</span> <span class="n">target_domain</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_scope&quot;</span><span class="p">:</span> <span class="n">scaling_scope</span><span class="p">,</span>
+        <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="n">additional_preprocessing</span><span class="p">,</span>
+        <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="n">x_lag_creation</span><span class="p">,</span>
+        <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="n">feature_grouping</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selected</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_map</span><span class="p">[</span><span class="n">field_name</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown </span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">PreprocessContract</span><span class="p">(</span><span class="o">**</span><span class="n">selected</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_extra_preprocessing</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">value</span> <span class="o">!=</span> <span class="n">neutral</span>
+        <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">neutral</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_missing_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_missing_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_outlier_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_outlier_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">scaling_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">feature_selection_policy</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">,</span> <span class="s2">&quot;no_x_lags&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_supported_train_only_extra</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">allowed_x_missing</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;em_impute&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_impute&quot;</span><span class="p">,</span> <span class="s2">&quot;median_impute&quot;</span><span class="p">,</span> <span class="s2">&quot;ffill&quot;</span><span class="p">,</span> <span class="s2">&quot;interpolate_linear&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="s2">&quot;drop_rows&quot;</span><span class="p">,</span> <span class="s2">&quot;drop_columns&quot;</span><span class="p">,</span> <span class="s2">&quot;drop_if_above_threshold&quot;</span><span class="p">,</span> <span class="s2">&quot;missing_indicator&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">allowed_x_outlier</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;winsorize&quot;</span><span class="p">,</span> <span class="s2">&quot;iqr_clip&quot;</span><span class="p">,</span> <span class="s2">&quot;zscore_clip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trim&quot;</span><span class="p">,</span> <span class="s2">&quot;mad_clip&quot;</span><span class="p">,</span> <span class="s2">&quot;outlier_to_missing&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">allowed_scaling</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;robust&quot;</span><span class="p">,</span> <span class="s2">&quot;minmax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;demean_only&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_variance_only&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">allowed_dimred</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;pca&quot;</span><span class="p">,</span> <span class="s2">&quot;static_factor&quot;</span><span class="p">}</span>
+    <span class="n">allowed_feature_selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;correlation_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso_select&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_missing_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_outlier_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_extra_preprocessing</span><span class="p">(</span><span class="n">contract</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">!=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_only&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+        <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="o">!=</span> <span class="s2">&quot;train_only&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">inverse_transform_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;forecast_scale_only&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">evaluation_scale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span> <span class="s2">&quot;original_scale&quot;</span><span class="p">,</span> <span class="s2">&quot;transformed_scale&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_scope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;columnwise&quot;</span><span class="p">,</span> <span class="s2">&quot;global_train_only&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;hp_filter&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_grouping</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;difference&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;log_difference&quot;</span><span class="p">,</span> <span class="s2">&quot;growth_rate&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_normalization</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;zscore_train_only&quot;</span><span class="p">,</span> <span class="s2">&quot;robust_zscore&quot;</span><span class="p">,</span> <span class="s2">&quot;minmax&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_variance&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_domain</span> <span class="o">!=</span> <span class="s2">&quot;unconstrained&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_missing_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_x_missing</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_outlier_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_x_outlier</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_scaling</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_dimred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_selection_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_feature_selection</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">,</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_FEATURE_SELECTION_SEMANTICS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="is_operational_preprocess_contract">
+<a class="viewcode-back" href="../../../api/preprocessing.html#macrocast.preprocessing.is_operational_preprocess_contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_operational_preprocess_contract</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span> <span class="k">as</span> <span class="n">_replace</span>
+    <span class="n">raw_only</span> <span class="o">=</span> <span class="n">build_preprocess_contract</span><span class="p">(</span>
+        <span class="n">target_transform_policy</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+        <span class="n">x_transform_policy</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+        <span class="n">tcode_policy</span><span class="o">=</span><span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
+        <span class="n">target_missing_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">x_missing_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">target_outlier_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">x_outlier_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">scaling_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">dimensionality_reduction_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">feature_selection_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">preprocess_order</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">preprocess_fit_scope</span><span class="o">=</span><span class="s2">&quot;not_applicable&quot;</span><span class="p">,</span>
+        <span class="n">inverse_transform_policy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">evaluation_scale</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Normalize evaluation_scale: original_scale and raw_level are aliases for back-compat (Phase 3 rename).</span>
+    <span class="n">eval_norm</span> <span class="o">=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">evaluation_scale</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span> <span class="s2">&quot;original_scale&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="n">contract</span><span class="o">.</span><span class="n">evaluation_scale</span>
+    <span class="n">contract_norm</span> <span class="o">=</span> <span class="n">_replace</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="n">evaluation_scale</span><span class="o">=</span><span class="n">eval_norm</span><span class="p">)</span>
+    <span class="n">raw_only_norm</span> <span class="o">=</span> <span class="n">_replace</span><span class="p">(</span><span class="n">raw_only</span><span class="p">,</span> <span class="n">evaluation_scale</span><span class="o">=</span><span class="n">eval_norm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">contract_norm</span> <span class="o">==</span> <span class="n">raw_only_norm</span> <span class="ow">or</span> <span class="n">_is_official_tcode_only_contract</span><span class="p">(</span><span class="n">contract_norm</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_supported_train_only_extra</span><span class="p">(</span><span class="n">contract</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_official_tcode_only_contract</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">_has_extra_preprocessing</span><span class="p">(</span><span class="n">contract</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="o">!=</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">inverse_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">evaluation_scale</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;raw_level&quot;</span><span class="p">,</span> <span class="s2">&quot;original_scale&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+    <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="check_preprocess_governance">
+<a class="viewcode-back" href="../../../api/preprocessing.html#macrocast.preprocessing.check_preprocess_governance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_preprocess_governance</span><span class="p">(</span>
+    <span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">preprocessing_sweep</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">model_sweep</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">extra_present</span> <span class="o">=</span> <span class="n">_has_extra_preprocessing</span><span class="p">(</span><span class="n">contract</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">!=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only representation requires tcode_application_scope=&#39;apply_tcode_to_none&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only requires raw-level target and x representation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only representation cannot pair with tcode_only ordering&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation requires a non-empty official transform scope&quot;</span><span class="p">)</span>
+        <span class="n">target_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+        <span class="n">x_expected</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">target_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation target policy must match tcode_application_scope&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x_expected</span> <span class="o">!=</span> <span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation x policy must match tcode_application_scope&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only representation requires explicit tcode ordering semantics&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;apply_tcode_to_none cannot use tcode-transformed representation&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only requires raw-level target and x representation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only requires preprocess_order=&#39;none&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra_present</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;raw_only cannot carry extra preprocessing&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_level&quot;</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only requires at least one tcode-transformed side&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_only&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only requires preprocess_order=&#39;tcode_only&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra_present</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_only cannot carry extra preprocessing&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;tcode_then_extra&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires preprocess_order=&#39;tcode_then_extra&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;tcode_then_extra_preprocess requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_only&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires preprocess_order=&#39;extra_only&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode cannot use tcode-transformed representation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span> <span class="o">!=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires tcode_application_scope=&#39;apply_tcode_to_none&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_preprocess_without_tcode requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span> <span class="o">==</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span> <span class="o">!=</span> <span class="s2">&quot;extra_then_tcode&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires preprocess_order=&#39;extra_then_tcode&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="ow">or</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span> <span class="o">!=</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires tcode-transformed target and x representation&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra_then_tcode requires at least one extra preprocessing policy&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">extra_present</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="o">!=</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;preprocess_fit_scope can be non-trivial only when extra preprocessing is explicit&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">extra_present</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="o">==</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;extra preprocessing requires explicit preprocess_fit_scope&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_policy</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;train_only&quot;</span><span class="p">,</span> <span class="s2">&quot;expanding_train_only&quot;</span><span class="p">,</span> <span class="s2">&quot;rolling_train_only&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;scaling requires explicit train-only fit scope&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_missing_policy</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;em_impute&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_impute&quot;</span><span class="p">,</span> <span class="s2">&quot;median_impute&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;train_only&quot;</span><span class="p">,</span> <span class="s2">&quot;expanding_train_only&quot;</span><span class="p">,</span> <span class="s2">&quot;rolling_train_only&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;imputation requires explicit train-only fit scope&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">preprocessing_sweep</span> <span class="ow">and</span> <span class="n">model_sweep</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;do not co-sweep model and preprocessing in ordinary baseline comparison&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;datewise_cross_sectional&quot;</span><span class="p">,</span> <span class="s2">&quot;groupwise&quot;</span><span class="p">,</span> <span class="s2">&quot;categorywise&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support non-train global scaling scopes&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;hp_filter&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support additional_preprocessing beyond none / hp_filter&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;no_x_lags&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed_x_lags&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support x_lag_creation beyond no_x_lags / fixed_x_lags&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_grouping</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessValidationError</span><span class="p">(</span><span class="s2">&quot;current runtime slice does not support feature_grouping beyond none&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="preprocess_to_dict">
+<a class="viewcode-back" href="../../../api/preprocessing.html#macrocast.preprocessing.preprocess_to_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">preprocess_to_dict</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_policy</span><span class="p">,</span>
+        <span class="s2">&quot;target_missing_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_missing_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_missing_policy</span><span class="p">,</span>
+        <span class="s2">&quot;target_outlier_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_outlier_policy</span><span class="p">,</span>
+        <span class="s2">&quot;x_outlier_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_outlier_policy</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_policy</span><span class="p">,</span>
+        <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">dimensionality_reduction_policy</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_selection_policy</span><span class="p">,</span>
+        <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_selection_semantics</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_order</span><span class="p">,</span>
+        <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">preprocess_fit_scope</span><span class="p">,</span>
+        <span class="s2">&quot;inverse_transform_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">inverse_transform_policy</span><span class="p">,</span>
+        <span class="s2">&quot;evaluation_scale&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">evaluation_scale</span><span class="p">,</span>
+        <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">representation_policy</span><span class="p">,</span>
+        <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">tcode_application_scope</span><span class="p">,</span>
+        <span class="s2">&quot;target_transform&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_transform</span><span class="p">,</span>
+        <span class="s2">&quot;target_normalization&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_normalization</span><span class="p">,</span>
+        <span class="s2">&quot;target_domain&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">target_domain</span><span class="p">,</span>
+        <span class="s2">&quot;scaling_scope&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">scaling_scope</span><span class="p">,</span>
+        <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">additional_preprocessing</span><span class="p">,</span>
+        <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">x_lag_creation</span><span class="p">,</span>
+        <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="n">contract</span><span class="o">.</span><span class="n">feature_grouping</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="preprocess_summary">
+<a class="viewcode-back" href="../../../api/preprocessing.html#macrocast.preprocessing.preprocess_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">preprocess_summary</span><span class="p">(</span><span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">preprocess_to_dict</span><span class="p">(</span><span class="n">contract</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
