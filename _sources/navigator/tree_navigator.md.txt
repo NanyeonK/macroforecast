@@ -30,6 +30,32 @@ The default view shows Layers 0-7. Downstream layers are part of the same path c
 | Layer 6 | legacy `stat_test`, split test-family axes, test scope, dependence correction, overlap handling |
 | Layer 7 | importance method, scope, model-native/agnostic families, SHAP, local surrogate, partial dependence, grouped/stability/temporal/gradient outputs |
 
+The interactive app shows these as separate layer tabs. Layer 4, Layer 5, Layer 6, and Layer 7 are not collapsed into one downstream view because each layer has its own order and its own contracts.
+
+## Layer Order and Tree Path
+
+Within a layer, the app follows the canonical axis order from `navigator_ui_data.tree_axes`. The Tree Path panel should be read from top to bottom:
+
+1. the step number is the decision order within the selected layer;
+2. the title is a human label, not just the registry key;
+3. the selected branch is shown with a human label plus the raw `axis = value`;
+4. contract notes explain when a value is user-selected, derived, or constrained by another layer;
+5. disabled or blocked branches stay visible with the reason;
+6. the YAML effect shows the exact canonical path field that will change;
+7. the detailed-docs link opens the source documentation for that axis.
+
+Layer 0 currently exports the first presentation contract:
+
+| Step | Registry axis | Human label | Contract |
+|---|---|---|---|
+| 1 | `research_design` | Study route | User-facing runner route. Affects executor family, sweep interpretation, and artifact shape. |
+| 2 | `experiment_unit` | Runner unit | Usually compiler-derived from study route, target structure, and sweep shape. Explicit values must match runner constraints. |
+| 3 | `failure_policy` | Failure handling | Runtime failure behavior for single runs and sweeps. |
+| 4 | `reproducibility_mode` | Reproducibility | Seed and determinism policy applied before stochastic model code runs. |
+| 5 | `compute_mode` | Compute layout | Serial or parallel execution request; unsupported modes and singleton work units degrade to serial/no-op behavior. |
+
+The same presentation contract should be extended layer by layer so each choice has a label, question, contract note, detailed-docs route, and value descriptions.
+
 ## Python
 
 ```python
