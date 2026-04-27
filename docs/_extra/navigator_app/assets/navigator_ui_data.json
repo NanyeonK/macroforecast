@@ -1772,6 +1772,7 @@
         "factor_augmented_linear",
         "quantile_linear",
         "midas_almon",
+        "midasr_nealmon",
         "randomforest",
         "extratrees",
         "gbm",
@@ -1804,6 +1805,7 @@
         "lightgbm": "operational",
         "lstm": "operational",
         "midas_almon": "operational_narrow",
+        "midasr_nealmon": "operational_narrow",
         "mlp": "operational",
         "ols": "operational",
         "pcr": "operational",
@@ -3393,7 +3395,7 @@
       "required_companions": [
         "dataset includes fred_sd",
         "feature_builder=raw_feature_panel",
-        "registered custom model_family or model_family=midas_almon",
+        "registered custom model_family or built-in MIDAS model_family",
         "forecast_type=direct",
         "mixed_frequency_model_adapter additionally records fred_sd_mixed_frequency_model_adapter_v1"
       ],
@@ -6356,10 +6358,17 @@
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
-                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
                 "status": "operational_narrow",
                 "value": "midas_almon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr_nealmon"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
@@ -12026,10 +12035,17 @@
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
-                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
                 "status": "operational_narrow",
                 "value": "midas_almon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr_nealmon"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
@@ -17812,10 +17828,17 @@
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midas_almon'",
-                "disabled_reason": "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
                 "enabled": false,
                 "status": "operational_narrow",
                 "value": "midas_almon"
+              },
+              {
+                "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'midasr_nealmon'",
+                "disabled_reason": "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation",
+                "enabled": false,
+                "status": "operational_narrow",
+                "value": "midasr_nealmon"
               },
               {
                 "canonical_path_effect": "path.3_training.fixed_axes.model_family = 'randomforest'",
@@ -20958,7 +20981,8 @@
         "tcn"
       ],
       "fred_sd_mixed_frequency_builtin_models": [
-        "midas_almon"
+        "midas_almon",
+        "midasr_nealmon"
       ],
       "linear_models": [
         "adaptivelasso",

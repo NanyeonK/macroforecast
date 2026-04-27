@@ -3178,6 +3178,7 @@ def _execution_status(
         "native_frequency_block_payload",
         "mixed_frequency_model_adapter",
     }
+    fred_sd_builtin_mixed_frequency_models = {"midas_almon", "midasr_nealmon"}
     if fred_sd_mixed_frequency_representation in fred_sd_advanced_mixed_frequency_representations:
         if feature_runtime != "raw_feature_panel":
             blocked.append(
@@ -3186,11 +3187,11 @@ def _execution_status(
             )
         if model_family is None or (
             not is_custom_model(model_family)
-            and model_family != "midas_almon"
+            and model_family not in fred_sd_builtin_mixed_frequency_models
         ):
             blocked.append(
                 f"fred_sd_mixed_frequency_representation={fred_sd_mixed_frequency_representation!r} "
-                "requires a registered custom Layer 3 model or model_family='midas_almon'"
+                "requires a registered custom Layer 3 model or model_family in ['midas_almon', 'midasr_nealmon']"
             )
         if forecast_type != "direct":
             blocked.append(
@@ -3198,11 +3199,11 @@ def _execution_status(
                 "currently supports forecast_type='direct' only"
             )
     if (
-        model_family == "midas_almon"
+        model_family in fred_sd_builtin_mixed_frequency_models
         and fred_sd_mixed_frequency_representation not in fred_sd_advanced_mixed_frequency_representations
     ):
         blocked.append(
-            "model_family='midas_almon' is an operational-narrow FRED-SD mixed-frequency executor; "
+            f"model_family={model_family!r} is an operational-narrow FRED-SD mixed-frequency executor; "
             "set fred_sd_mixed_frequency_representation to 'native_frequency_block_payload' "
             "or 'mixed_frequency_model_adapter'"
         )

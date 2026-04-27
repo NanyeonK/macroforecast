@@ -269,7 +269,7 @@ OPERATIONAL_NARROW_CONTRACTS = (
         "required_companions": (
             "dataset includes fred_sd",
             "feature_builder=raw_feature_panel",
-            "registered custom model_family or model_family=midas_almon",
+            "registered custom model_family or built-in MIDAS model_family",
             "forecast_type=direct",
             "mixed_frequency_model_adapter additionally records fred_sd_mixed_frequency_model_adapter_v1",
         ),
@@ -323,7 +323,7 @@ _LINEAR_MODELS = frozenset(
     }
 )
 _DEEP_SEQUENCE_MODELS = frozenset({"lstm", "gru", "tcn"})
-_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = frozenset({"midas_almon"})
+_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = frozenset({"midas_almon", "midasr_nealmon"})
 _BUILTIN_MODELS = frozenset(
     {
         "ar",
@@ -567,12 +567,12 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         and model in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
         and value not in _FRED_SD_ADVANCED_MIXED_FREQUENCY
     ):
-        return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation"
+        return "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation"
     if axis_name == "fred_sd_mixed_frequency_representation" and value in _FRED_SD_ADVANCED_MIXED_FREQUENCY:
         if feature_builder != "raw_feature_panel":
             return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder"
         if model in _BUILTIN_MODELS and model not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS:
-            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon"
+            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or built-in MIDAS model"
         if forecast_type != "direct":
             return "advanced FRED-SD mixed-frequency representation currently supports forecast_type=direct only"
 
@@ -592,13 +592,13 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             value in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
             and fred_sd_mixed_frequency not in _FRED_SD_ADVANCED_MIXED_FREQUENCY
         ):
-            return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation"
+            return "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation"
         if (
             fred_sd_mixed_frequency in _FRED_SD_ADVANCED_MIXED_FREQUENCY
             and value in _BUILTIN_MODELS
             and value not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
         ):
-            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon"
+            return "advanced FRED-SD mixed-frequency representation requires a registered custom model or built-in MIDAS model"
         if feature_builder in _RAW_PANEL_BUILDERS and value == "ar":
             return "raw-panel feature builders cannot feed the AR-BIC target-lag generator"
         if feature_builder == "sequence_tensor" and value not in _DEEP_SEQUENCE_MODELS:

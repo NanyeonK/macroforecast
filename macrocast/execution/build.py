@@ -140,6 +140,12 @@ _DEFAULT_MAX_AR_LAG = 3
 _LAG_SELECTION = "bic"
 _MIDAS_ALMON_MODEL_FAMILY = "midas_almon"
 _MIDAS_ALMON_RUNTIME_CONTRACT_VERSION = "midas_almon_direct_v1"
+_MIDASR_NEALMON_MODEL_FAMILY = "midasr_nealmon"
+_MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION = "midasr_nealmon_direct_v1"
+_FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = {
+    _MIDAS_ALMON_MODEL_FAMILY,
+    _MIDASR_NEALMON_MODEL_FAMILY,
+}
 _TARGET_TRANSFORMER_FEATURE_RUNTIMES = {"autoreg_lagged_target", "raw_feature_panel"}
 _TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
 _RAW_PANEL_FEATURE_BUILDERS = {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}
@@ -2170,7 +2176,7 @@ def _requires_fred_sd_mixed_frequency_custom_model(recipe: RecipeSpec) -> bool:
     return (
         _fred_sd_mixed_frequency_representation_policy(recipe)
         in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
-        and _model_family(recipe) != _MIDAS_ALMON_MODEL_FAMILY
+        and _model_family(recipe) not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
     )
 
 
@@ -2185,10 +2191,10 @@ def _validate_fred_sd_mixed_frequency_model_route(recipe: RecipeSpec) -> None:
             f"fred_sd_mixed_frequency_representation={policy!r} requires "
             "feature_runtime_builder='raw_feature_panel'"
         )
-    if not is_custom_model(model_family) and model_family != _MIDAS_ALMON_MODEL_FAMILY:
+    if not is_custom_model(model_family) and model_family not in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS:
         raise ExecutionError(
             f"fred_sd_mixed_frequency_representation={policy!r} requires a registered "
-            "custom model or model_family='midas_almon'"
+            "custom model or model_family in ['midas_almon', 'midasr_nealmon']"
         )
     if _forecast_type(recipe) != "direct":
         raise ExecutionError(
@@ -2205,17 +2211,17 @@ def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe
             if policy == "mixed_frequency_model_adapter"
             else "fred_sd_native_frequency_block_payload_v1"
         )
-        if model_family == _MIDAS_ALMON_MODEL_FAMILY:
-            return f"midas_almon:{suffix}"
+        if model_family in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS:
+            return f"{model_family}:{suffix}"
         if is_custom_model(model_family):
             return f"custom_model:{model_family}:{suffix}"
         raise ExecutionError(
             f"fred_sd_mixed_frequency_representation={policy!r} requires a registered custom model "
-            "or model_family='midas_almon'"
+            "or model_family in ['midas_almon', 'midasr_nealmon']"
         )
-    if model_family == _MIDAS_ALMON_MODEL_FAMILY:
+    if model_family in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS:
         raise ExecutionError(
-            "model_family='midas_almon' requires fred_sd_mixed_frequency_representation "
+            f"model_family={model_family!r} requires fred_sd_mixed_frequency_representation "
             "to be 'native_frequency_block_payload' or 'mixed_frequency_model_adapter'"
         )
     if feature_runtime_builder == "autoreg_lagged_target":
@@ -2294,9 +2300,18 @@ def _model_spec(recipe: RecipeSpec) -> dict[str, object]:
         "fred_sd_mixed_frequency_representation": _fred_sd_mixed_frequency_representation_policy(recipe),
         "fred_sd_mixed_frequency_custom_model_required": _requires_fred_sd_mixed_frequency_custom_model(recipe),
         "fred_sd_mixed_frequency_builtin_model": (
-            model_family == _MIDAS_ALMON_MODEL_FAMILY
+            model_family in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
             and _fred_sd_mixed_frequency_representation_policy(recipe)
             in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+        ),
+        "fred_sd_mixed_frequency_builtin_model_family": (
+            model_family
+            if (
+                model_family in _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS
+                and _fred_sd_mixed_frequency_representation_policy(recipe)
+                in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+            )
+            else None
         ),
         "framework": recipe.stage0.fixed_design.sample_split,
         "lag_selection": _LAG_SELECTION if model_family == "ar" else "fixed_lag_feature_builder",
@@ -3040,6 +3055,12 @@ def _get_model_executor(recipe: RecipeSpec):
         and _fred_sd_mixed_frequency_representation_policy(recipe) in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
     ):
         return _run_midas_almon_raw_panel_executor
+    if (
+        model_family == _MIDASR_NEALMON_MODEL_FAMILY
+        and feature_runtime_builder == "raw_feature_panel"
+        and _fred_sd_mixed_frequency_representation_policy(recipe) in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
+    ):
+        return _run_midasr_nealmon_raw_panel_executor
     if feature_runtime_builder == "autoreg_lagged_target":
         dispatch = {
             "ar": _run_ar_model_executor,
@@ -6566,6 +6587,260 @@ def _run_midas_almon_raw_panel_executor(
     )
     return {
         "y_pred": float(model.predict(representation.Z_pred)[0]),
+        "selected_lag": int(config["midas_max_lag"]),
+        "selected_bic": math.nan,
+        "tuning_payload": tuning_payload,
+    }
+
+
+def _midasr_nealmon_config(recipe: RecipeSpec) -> dict[str, object]:
+    raw = {
+        **dict(getattr(recipe, "data_task_spec", {}) or {}),
+        **dict(getattr(recipe, "training_spec", {}) or {}),
+    }
+    max_lag = int(raw.get("midas_max_lag", 3))
+    degree = int(raw.get("midasr_nealmon_degree", 2))
+    max_terms = int(raw.get("midasr_max_terms", 12))
+    max_nfev = int(raw.get("midasr_max_nfev", 500))
+    if max_lag < 1:
+        raise ExecutionError("model_family='midasr_nealmon' requires midas_max_lag >= 1")
+    if degree < 1:
+        raise ExecutionError("model_family='midasr_nealmon' requires midasr_nealmon_degree >= 1")
+    if max_terms < 1:
+        raise ExecutionError("model_family='midasr_nealmon' requires midasr_max_terms >= 1")
+    if max_nfev < 1:
+        raise ExecutionError("model_family='midasr_nealmon' requires midasr_max_nfev >= 1")
+    return {
+        "midas_max_lag": max_lag,
+        "midasr_nealmon_degree": degree,
+        "midasr_max_terms": max_terms,
+        "midasr_max_nfev": max_nfev,
+    }
+
+
+def _midasr_nealmon_lag_names(predictors: Sequence[str], max_lag: int) -> tuple[str, ...]:
+    return tuple(
+        f"{column}__midasr_lag{lag}"
+        for column in predictors
+        for lag in range(max_lag)
+    )
+
+
+def _midasr_nealmon_lag_row(
+    source: pd.DataFrame,
+    *,
+    row_idx: int,
+    predictors: Sequence[str],
+    max_lag: int,
+) -> np.ndarray:
+    return np.asarray(
+        [
+            [float(source[str(column)].iloc[row_idx - lag]) for lag in range(max_lag)]
+            for column in predictors
+        ],
+        dtype=float,
+    )
+
+
+def _build_midasr_nealmon_representation(
+    raw_frame: pd.DataFrame,
+    recipe: RecipeSpec,
+    horizon: int,
+    start_idx: int,
+    origin_idx: int,
+    *,
+    target_window: pd.Series,
+) -> tuple[Layer2Representation, np.ndarray, np.ndarray]:
+    config = _midasr_nealmon_config(recipe)
+    max_lag = int(config["midas_max_lag"])
+    degree = int(config["midasr_nealmon_degree"])
+    max_terms = int(config["midasr_max_terms"])
+    spec = _layer2_runtime_spec(recipe)
+    predictors = _raw_panel_columns(
+        raw_frame,
+        recipe.target,
+        predictor_family=_predictor_family(recipe),
+        spec=spec,
+    )
+    if origin_idx - horizon < start_idx + max_lag - 1:
+        raise ExecutionError(
+            "model_family='midasr_nealmon' produced empty direct training rows; "
+            "increase the training window or reduce midas_max_lag"
+        )
+
+    predictor_names = [str(column) for column in predictors]
+    if not predictor_names:
+        raise ExecutionError("model_family='midasr_nealmon' requires at least one raw-panel predictor")
+    if len(predictor_names) > max_terms:
+        raise ExecutionError(
+            "model_family='midasr_nealmon' is an operational-narrow NLS slice; "
+            f"selected {len(predictor_names)} predictors but midasr_max_terms={max_terms}. "
+            "Use Layer 2 selection/grouping or raise midasr_max_terms explicitly."
+        )
+
+    source = raw_frame[predictors].astype(float).copy()
+    source.columns = predictor_names
+    source = source.ffill().fillna(0.0)
+    feature_names = _midasr_nealmon_lag_names(predictor_names, max_lag)
+
+    lag_rows: list[np.ndarray] = []
+    y_values: list[float] = []
+    train_index = []
+    first_row = start_idx + max_lag - 1
+    last_row = origin_idx - int(horizon)
+    for row_idx in range(first_row, last_row + 1):
+        target_offset = (row_idx - start_idx) + int(horizon)
+        y_value = float(target_window.iloc[target_offset])
+        if not math.isfinite(y_value):
+            continue
+        lag_rows.append(
+            _midasr_nealmon_lag_row(
+                source,
+                row_idx=row_idx,
+                predictors=predictor_names,
+                max_lag=max_lag,
+            )
+        )
+        y_values.append(y_value)
+        train_index.append(raw_frame.index[row_idx])
+
+    if not lag_rows:
+        raise ExecutionError("model_family='midasr_nealmon' has no finite target rows to fit")
+
+    lag_tensor = np.stack(lag_rows, axis=0)
+    y_train = np.asarray(y_values, dtype=float)
+    pred_lag_tensor = _midasr_nealmon_lag_row(
+        source,
+        row_idx=origin_idx,
+        predictors=predictor_names,
+        max_lag=max_lag,
+    )
+    X_train = lag_tensor.reshape(lag_tensor.shape[0], -1)
+    X_pred = pred_lag_tensor.reshape(1, -1)
+    block_payload = _fred_sd_representation_auxiliary_payloads(raw_frame).get(
+        "fred_sd_native_frequency_block_payload",
+        {},
+    )
+    column_to_frequency = (
+        dict(block_payload.get("column_to_native_frequency", {}) or {})
+        if isinstance(block_payload, Mapping)
+        else {}
+    )
+    block_roles: dict[str, str] = {}
+    for column in predictor_names:
+        frequency = _normalized_frequency_name(column_to_frequency.get(column, "unknown"))
+        for lag in range(max_lag):
+            block_roles[f"{column}__midasr_lag{lag}"] = f"midasr_nealmon:{frequency}"
+    block_order = tuple(dict.fromkeys(block_roles.values())) or ("midasr_nealmon",)
+    alignment = {
+        "representation_runtime": "fred_sd_midasr_nealmon",
+        "forecast_protocol": "direct",
+        "midasr_nealmon_contract": _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION,
+        "midasr_reference_package": "midasr",
+        "midasr_reference_function": "midas_r + nealmon",
+        "midas_max_lag": max_lag,
+        "midasr_nealmon_degree": degree,
+        "midas_lag_basis": "midasr_nealmon_normalized_exponential_almon",
+        "train_row_count": int(X_train.shape[0]),
+        "train_start_date": train_index[0].strftime("%Y-%m-%d") if train_index else None,
+        "train_end_date": train_index[-1].strftime("%Y-%m-%d") if train_index else None,
+    }
+    alignment.update(_fred_sd_representation_alignment_payload(raw_frame))
+    fit_state = (
+        {
+            "block": "midasr_nealmon",
+            "contract_version": _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION,
+            **config,
+            "source_feature_count": len(predictor_names),
+            "lag_feature_count": len(feature_names),
+            "source_columns": predictor_names,
+        },
+    )
+    return (
+        Layer2Representation(
+            Z_train=X_train,
+            y_train=y_train,
+            Z_pred=X_pred,
+            feature_names=feature_names,
+            block_order=block_order,
+            block_roles=block_roles,
+            fit_state=fit_state,
+            alignment=alignment,
+            auxiliary_payloads=_fred_sd_representation_auxiliary_payloads(raw_frame),
+            leakage_contract="forecast_origin_only_with_midasr_nealmon_lag_weights",
+            feature_builder=_feature_runtime_builder(recipe),
+            feature_runtime_builder=_feature_runtime_builder(recipe),
+            legacy_feature_builder=_feature_builder(recipe),
+        ),
+        lag_tensor,
+        pred_lag_tensor,
+    )
+
+
+def _run_midasr_nealmon_raw_panel_executor(
+    train: pd.Series,
+    horizon: int,
+    recipe: RecipeSpec,
+    contract: PreprocessContract,
+    raw_frame: pd.DataFrame | None = None,
+    origin_idx: int | None = None,
+    start_idx: int = 0,
+) -> dict[str, object]:
+    del contract
+    assert raw_frame is not None and origin_idx is not None
+    from .models.midasr import fit_midasr_nealmon_direct
+
+    representation, lag_tensor, pred_lag_tensor = _build_midasr_nealmon_representation(
+        raw_frame,
+        recipe,
+        horizon,
+        start_idx,
+        origin_idx,
+        target_window=train,
+    )
+    config = _midasr_nealmon_config(recipe)
+    try:
+        fit = fit_midasr_nealmon_direct(
+            lag_tensor,
+            representation.y_train,
+            pred_lag_tensor,
+            degree=int(config["midasr_nealmon_degree"]),
+            max_nfev=int(config["midasr_max_nfev"]),
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise ExecutionError(f"model_family='midasr_nealmon' failed: {exc}") from exc
+    if not fit.success:
+        raise ExecutionError(
+            "model_family='midasr_nealmon' nonlinear least-squares fit did not converge: "
+            f"{fit.message}"
+        )
+    source_columns = list(representation.latest_fit_state.get("source_columns", [])) if representation.latest_fit_state else []
+    weights_by_column = {
+        str(column): [float(value) for value in weights]
+        for column, weights in zip(source_columns, fit.weights_by_term)
+    }
+    params_by_column = {
+        str(column): [float(value) for value in params]
+        for column, params in zip(source_columns, fit.params_by_term)
+    }
+    tuning_payload = _merge_layer2_representation_payload(
+        {
+            "midasr_nealmon_contract": _MIDASR_NEALMON_RUNTIME_CONTRACT_VERSION,
+            "midasr_reference_package": "midasr",
+            "midasr_reference_function": "midas_r + nealmon",
+            **config,
+            "intercept": float(fit.intercept),
+            "residual_ss": float(fit.residual_ss),
+            "converged": bool(fit.success),
+            "optimizer_message": fit.message,
+            "optimizer_nfev": int(fit.nfev),
+            "weights_by_column": weights_by_column,
+            "params_by_column": params_by_column,
+        },
+        representation,
+    )
+    return {
+        "y_pred": float(fit.prediction),
         "selected_lag": int(config["midas_max_lag"]),
         "selected_bic": math.nan,
         "tuning_payload": tuning_payload,

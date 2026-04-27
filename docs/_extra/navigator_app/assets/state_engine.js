@@ -162,11 +162,11 @@
       fredSdMixedFrequencyBuiltinModels.has(model) &&
       !advancedFredSdMixedFrequency.has(value)
     ) {
-      return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation";
+      return "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation";
     }
     if (axisName === "fred_sd_mixed_frequency_representation" && advancedFredSdMixedFrequency.has(value)) {
       if (featureBuilder !== "raw_feature_panel") return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder";
-      if (builtinModels.has(model) && !fredSdMixedFrequencyBuiltinModels.has(model)) return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon";
+      if (builtinModels.has(model) && !fredSdMixedFrequencyBuiltinModels.has(model)) return "advanced FRED-SD mixed-frequency representation requires a registered custom model or built-in MIDAS model";
       if (forecastType !== "direct") return "advanced FRED-SD mixed-frequency representation currently supports forecast_type=direct only";
     }
 
@@ -186,10 +186,10 @@
 
     if (axisName === "model_family") {
       if (fredSdMixedFrequencyBuiltinModels.has(value) && !advancedFredSdMixedFrequency.has(fredSdMixedFrequency)) {
-        return "model_family=midas_almon requires an advanced FRED-SD mixed-frequency representation";
+        return "selected built-in MIDAS model requires an advanced FRED-SD mixed-frequency representation";
       }
       if (advancedFredSdMixedFrequency.has(fredSdMixedFrequency) && builtinModels.has(value) && !fredSdMixedFrequencyBuiltinModels.has(value)) {
-        return "advanced FRED-SD mixed-frequency representation requires a registered custom model or model_family=midas_almon";
+        return "advanced FRED-SD mixed-frequency representation requires a registered custom model or built-in MIDAS model";
       }
       if (rawPanelBuilders.has(featureBuilder) && value === "ar") return "raw-panel feature builders cannot feed the AR-BIC target-lag generator";
       if (featureBuilder === "sequence_tensor" && !deepModels.has(value)) return "sequence_tensor is reserved for sequence/tensor generators";

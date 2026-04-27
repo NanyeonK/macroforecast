@@ -98,13 +98,14 @@ Useful choices:
 - `drop_non_target_native_frequency`: keep only FRED-SD columns matching the
   experiment frequency.
 - `native_frequency_block_payload`: keep the panel and give a registered
-  custom model or `midas_almon` monthly/quarterly/unknown block metadata.
+  custom model, `midas_almon`, or `midasr_nealmon`
+  monthly/quarterly/unknown block metadata.
 - `mixed_frequency_model_adapter`: same block payload plus a mixed-frequency
   adapter contract.
 
 The last two choices require `feature_builder="raw_feature_panel"`, a
-registered custom `model_family` or `model_family="midas_almon"`, and direct
-forecasts. Runtime writes
+registered custom `model_family`, `model_family="midas_almon"`, or
+`model_family="midasr_nealmon"`, and direct forecasts. Runtime writes
 `fred_sd_mixed_frequency_representation.json`; block runs also write
 `fred_sd_native_frequency_block_payload.json`, and adapter runs write
 `fred_sd_mixed_frequency_model_adapter.json`.
@@ -113,6 +114,13 @@ Use `model_family="midas_almon"` for the built-in narrow MIDAS-style baseline.
 It constructs Almon distributed-lag basis features from the selected FRED-SD
 raw panel and fits a ridge direct forecast. Full MIDAS/state-space estimator
 families remain future work.
+
+Use `model_family="midasr_nealmon"` when you want the package-owned Python
+slice aligned to the R `midasr` package's `midas_r + nealmon` restricted-NLS
+surface. It builds lag tensors from the selected FRED-SD raw panel and fits
+normalized exponential Almon weights by nonlinear least squares. This is still
+an operational-narrow research route, so keep the selected predictor set
+explicit.
 
 ## Inferred Transforms
 
