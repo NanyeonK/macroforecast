@@ -24,15 +24,147 @@ This is a runtime discipline axis. It does not change the statistical model. It 
 
 ## Choices
 
-| Choice | Status | What It Does | Current Runtime Behavior |
-|---|---:|---|---|
-| `fail_fast` | operational | Stop at the first failure. | Default. Direct recipe and sweep execution re-raise the first error. |
-| `skip_failed_cell` | operational | Continue after a failed sweep cell or variant. | Sweep runner records failed variants in `study_manifest.json` and continues. Best for large controlled variation sweeps. |
-| `skip_failed_model` | operational | Continue after a model-branch failure. | Direct recipe runtime can continue past target/model prediction-build failures and record failed components. |
-| `retry_then_skip` | registry_only | Reserved policy: retry a failed unit, then skip if it still fails. | Not supported by the current runtime slice. Compiler reports not-supported if selected. |
-| `fallback_to_default_hp` | registry_only | Reserved policy: if tuning fails, fall back to default hyperparameters. | Not supported by the current runtime slice. |
-| `save_partial_results` | operational | Preserve completed artifacts even when later components fail. | Direct recipe and sweep paths treat it as a continue-on-failure policy where supported and record failure metadata. |
-| `warn_only` | operational | Continue and emit warnings for recoverable failures. | Direct recipe and sweep paths emit `RuntimeWarning` while recording failed units. |
+Read this axis as the run's error-handling policy. It does not change the model; it changes whether the runtime stops or records failed units and continues.
+
+### Quick Map
+
+| Choice | Current State | Best Use |
+|---|---|---|
+| `fail_fast` | runnable | debugging, replication |
+| `skip_failed_cell` | runnable | large sweeps |
+| `skip_failed_model` | runnable | multi-model direct runs |
+| `save_partial_results` | runnable | long runs where partial artifacts matter |
+| `warn_only` | runnable | exploratory runs |
+| `retry_then_skip` | reserved | planned retry policy |
+| `fallback_to_default_hp` | reserved | planned tuning fallback |
+
+### `fail_fast`
+
+Use this when a failure should stop the run immediately.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: fail_fast
+```
+
+Runtime behavior:
+
+```text
+direct recipe = re-raise first error
+sweep runner  = stop at first failed variant
+```
+
+### `skip_failed_cell`
+
+Use this for large controlled sweeps where some cells may be invalid.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+      failure_policy: skip_failed_cell
+```
+
+Runtime behavior:
+
+```text
+sweep runner = record failed variant in study_manifest.json
+next step    = continue with remaining variants
+```
+
+### `skip_failed_model`
+
+Use this when one model branch may fail but other target/model branches should still run.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: skip_failed_model
+```
+
+Runtime behavior:
+
+```text
+direct recipe = continue past recoverable model/prediction failures
+artifact      = record failed components
+```
+
+### `save_partial_results`
+
+Use this when completed artifacts are valuable even if a later component fails.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: save_partial_results
+```
+
+Runtime behavior:
+
+```text
+direct recipe = preserve completed outputs where supported
+sweep runner  = preserve completed variants and failure metadata
+```
+
+### `warn_only`
+
+Use this for exploratory runs where recoverable failures should be visible but not fatal.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: warn_only
+```
+
+Runtime behavior:
+
+```text
+warning type = RuntimeWarning
+artifact     = failed units recorded
+run status   = continues where recoverable
+```
+
+### `retry_then_skip`
+
+This is reserved policy grammar. It describes retrying a failed unit and skipping it if retry also fails.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: retry_then_skip
+```
+
+Current status:
+
+```text
+status = registry_only
+compiler = reports not-supported for runnable recipes
+```
+
+### `fallback_to_default_hp`
+
+This is reserved policy grammar for tuning failures.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      failure_policy: fallback_to_default_hp
+```
+
+Current status:
+
+```text
+status = registry_only
+runtime = no current fallback executor
+```
 
 ## Failure Scope
 

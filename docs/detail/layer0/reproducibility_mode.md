@@ -24,12 +24,103 @@ It is applied before model execution. It affects Python, NumPy, optional torch, 
 
 ## Choices
 
-| Choice | Status | What It Does | Seed Rule |
-|---|---:|---|---|
-| `strict_reproducible` | operational | Pin Python, NumPy, torch, cuDNN, torch deterministic algorithms, and CUBLAS workspace where possible. Warns if `PYTHONHASHSEED` is not set before Python starts. | `resolve_seed()` derives a deterministic per-variant seed from `(recipe_id, variant_id, model_family)`. |
-| `seeded_reproducible` | operational | Pin Python, NumPy, and torch seeds, but do not force strict backend deterministic flags. | Uses one base seed for the run. |
-| `best_effort` | operational | Same install-time behavior as `seeded_reproducible`, but explicitly marks the run as non-strict. | Uses one base seed for the run. |
-| `exploratory` | operational | Do not reset global RNG state. Use this only when reproducibility is intentionally waived. | `current_seed()` receives a fresh non-deterministic seed from NumPy's current RNG state. |
+Read this axis as the seed and determinism policy. The stricter modes require `leaf_config.random_seed`; `exploratory` intentionally waives reproducibility.
+
+### Quick Map
+
+| Choice | Current State | Determinism Level |
+|---|---|---|
+| `strict_reproducible` | runnable | strongest |
+| `seeded_reproducible` | runnable | normal seeded |
+| `best_effort` | runnable | seeded, non-strict label |
+| `exploratory` | runnable | intentionally non-deterministic |
+
+### `strict_reproducible`
+
+Use this for replication and CI-sensitive runs.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: strict_reproducible
+    leaf_config:
+      random_seed: 42
+```
+
+Runtime behavior:
+
+```text
+seed source = deterministic per variant
+seed key    = recipe_id | variant_id | model_family
+backend     = torch/cuDNN deterministic flags where available
+```
+
+This mode also warns if `PYTHONHASHSEED` was not set before Python started.
+
+### `seeded_reproducible`
+
+Use this as the normal research default.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: seeded_reproducible
+    leaf_config:
+      random_seed: 42
+```
+
+Runtime behavior:
+
+```text
+seed source = recipe base seed
+backend     = Python / NumPy / torch seeds set
+strict flags = not forced
+```
+
+This is reproducible enough for ordinary package runs, but it does not claim bit-identical backend behavior across all library/hardware combinations.
+
+### `best_effort`
+
+Use this when you want seeded behavior but do not want the run classified as strict.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: best_effort
+    leaf_config:
+      random_seed: 42
+```
+
+Runtime behavior:
+
+```text
+install-time behavior = same as seeded_reproducible
+semantic label        = non-strict
+```
+
+This is useful when deterministic flags are too costly or not meaningful for the backend.
+
+### `exploratory`
+
+Use this only for ad-hoc exploration where results should not be treated as reproducible evidence.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      reproducibility_mode: exploratory
+```
+
+Runtime behavior:
+
+```text
+global RNG reset = no
+current_seed()   = fresh seed from NumPy's current RNG state
+random_seed      = not required
+```
 
 ## Compiler Contract
 

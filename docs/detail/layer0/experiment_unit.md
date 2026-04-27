@@ -27,19 +27,224 @@ In most recipes, users should let the compiler derive it. Pin it only when writi
 
 ## Choices
 
-| Choice | Status | Route Owner | What It Means | Runtime Contract |
-|---|---:|---|---|---|
-| `single_target_single_model` | operational | `single_run` | One target, one model path, one representation path. | Normal direct recipe execution through `execute_recipe`. |
-| `single_target_model_grid` | operational | `single_run` | One target with a controlled model or feature comparison. | Can be a single-run internal comparison or a sweep-runner route depending on axis placement. |
-| `single_target_full_sweep` | registry_only | `wrapper` | Reserved grammar for a wider single-target sweep managed by a wrapper. | Compiler can name the unit, but current runtime does not expose a general executable wrapper contract for it. |
-| `multi_target_separate_runs` | operational | `wrapper` | Multi-target fan-out: each target runs as a separate single-target run with its own output directory. | Runner is `macrocast.studies.multi_target:execute_separate_runs`; direct `execute_recipe` is not the owner. |
-| `multi_target_shared_design` | operational | `single_run` | Multi-target shared-design run: one compiled recipe evaluates all targets under the same design. | Handled by the multi-target path inside `execute_recipe`; outputs are aggregated. |
-| `hierarchical_forecasting_run` | future | `orchestrator` | Reserved for hierarchy-aware forecasting. | No current executable runtime contract. |
-| `panel_forecasting_run` | future | `orchestrator` | Reserved for panel-oriented forecasting. | No current executable runtime contract. |
-| `state_space_run` | future | `single_run` | Reserved for state-space forecasting. | Registry placeholder; not opened as a runnable route. |
-| `replication_recipe` | operational | `replication` | Replication-locked unit. | Runner is `macrocast.studies.replication:execute_replication`; compiler reports replication ownership rather than ordinary direct run ownership. |
-| `benchmark_suite` | registry_only | `wrapper` | Reserved wrapper-managed benchmark suite grammar. | No executable compiled-recipe wrapper contract in current runtime. |
-| `ablation_study` | registry_only | `wrapper` | Reserved ablation route. | Standalone ablation runner exists as `macrocast.studies.ablation:execute_ablation`, but this is not yet a compiled-recipe wrapper contract. |
+Read this axis as the execution owner. In most recipes, do not choose it directly; let the compiler derive it from `research_design`, target structure, and swept axes. Pin it only when you want Full mode to reject mismatches.
+
+### Quick Map
+
+| Choice | Owner | Current State |
+|---|---|---|
+| `single_target_single_model` | `single_run` | runnable |
+| `single_target_model_grid` | `single_run` | runnable / sweep-aware |
+| `multi_target_shared_design` | `single_run` | runnable |
+| `multi_target_separate_runs` | `wrapper` | runnable through wrapper |
+| `replication_recipe` | `replication` | runnable through replication runner |
+| `single_target_full_sweep` | `wrapper` | reserved grammar |
+| `benchmark_suite` | `wrapper` | reserved grammar |
+| `ablation_study` | `wrapper` | standalone runner only |
+| `hierarchical_forecasting_run` | `orchestrator` | future |
+| `panel_forecasting_run` | `orchestrator` | future |
+| `state_space_run` | `single_run` | future |
+
+### Runnable Direct Units
+
+#### `single_target_single_model`
+
+This is the smallest ordinary execution unit.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: single_path_benchmark
+      experiment_unit: single_target_single_model
+```
+
+The direct runner owns it:
+
+```text
+route_owner = single_run
+runner      = execute_recipe
+```
+
+#### `single_target_model_grid`
+
+Use this when one target is evaluated across a controlled model or feature comparison.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+      experiment_unit: single_target_model_grid
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
+```
+
+Runtime ownership depends on how the variation is compiled:
+
+```text
+small/internal grid = execute_recipe
+parent sweep        = compile_sweep_plan / execute_sweep
+```
+
+#### `multi_target_shared_design`
+
+Use this when several targets share one design and should be evaluated in one compiled recipe.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: single_path_benchmark
+      experiment_unit: multi_target_shared_design
+  1_data_task:
+    fixed_axes:
+      target_structure: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI]
+```
+
+The direct runner handles the shared design and writes aggregated outputs:
+
+```text
+route_owner = single_run
+runner      = execute_recipe
+target mode = shared design
+```
+
+### Runnable Handoff Units
+
+#### `multi_target_separate_runs`
+
+Use this when each target should run as a separate single-target job with its own output directory.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: orchestrated_bundle
+      experiment_unit: multi_target_separate_runs
+  1_data_task:
+    fixed_axes:
+      target_structure: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI]
+```
+
+The wrapper runner owns the fan-out:
+
+```text
+route_owner = wrapper
+runner      = macrocast.studies.multi_target:execute_separate_runs
+```
+
+#### `replication_recipe`
+
+Use this when the route is replication-locked and should preserve paper-style provenance.
+
+```yaml
+recipe_id: goulet-coulombe-2021-fred-md-ridge
+path:
+  0_meta:
+    fixed_axes:
+      research_design: replication_override
+      experiment_unit: replication_recipe
+```
+
+The replication runner owns it:
+
+```text
+route_owner = replication
+runner      = macrocast.studies.replication:execute_replication
+```
+
+### Reserved Or Future Units
+
+#### `single_target_full_sweep`
+
+This is reserved grammar for a wider single-target sweep managed by a wrapper.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+      experiment_unit: single_target_full_sweep
+```
+
+Current status:
+
+```text
+status = registry_only
+runtime = no general executable wrapper contract yet
+```
+
+#### `benchmark_suite`
+
+This is reserved grammar for a wrapper-managed benchmark suite.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: orchestrated_bundle
+      experiment_unit: benchmark_suite
+```
+
+Current status:
+
+```text
+status = registry_only
+runtime = no compiled-recipe benchmark-suite wrapper yet
+```
+
+#### `ablation_study`
+
+This is reserved grammar for ablation routes.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: orchestrated_bundle
+      experiment_unit: ablation_study
+```
+
+Current status:
+
+```text
+status = registry_only
+standalone runner = macrocast.studies.ablation:execute_ablation
+compiled wrapper = not opened yet
+```
+
+#### `hierarchical_forecasting_run`
+
+Reserved for hierarchy-aware forecasting.
+
+```text
+status = future
+runtime = no current executable contract
+```
+
+#### `panel_forecasting_run`
+
+Reserved for panel-oriented forecasting.
+
+```text
+status = future
+runtime = no current executable contract
+```
+
+#### `state_space_run`
+
+Reserved for state-space forecasting.
+
+```text
+status = future
+runtime = registry placeholder; not opened as runnable route
+```
 
 ## Derivation Rules
 

@@ -27,12 +27,106 @@ The axis is not an executor function by itself. It is a route selector. The comp
 
 ## Choices
 
-| Choice | Status | What It Means | Main Effect |
-|---|---|---|---|
-| `single_path_benchmark` | operational | One resolved study path. This is the normal default for a single target, fixed representation, fixed model route. | Usually derives `experiment_unit=single_target_single_model`; if model or feature axes are swept, the compiler may derive `single_target_model_grid` or `single_target_full_sweep`. |
-| `controlled_variation` | operational | A comparison where one or more axes vary while the rest of the path is fixed. | `derive_design_shape()` returns a controlled-axis variation shape; `derive_experiment_unit_default()` usually derives `single_target_model_grid`. Runner-managed sweep routes should be executed with `compile_sweep_plan` / `execute_sweep` when the compiler reports `ready_for_sweep_runner`. |
-| `orchestrated_bundle` | operational route grammar | A higher-level wrapper route, such as a benchmark suite, ablation study, or multi-target fan-out. | `derive_execution_posture()` routes to `wrapper_bundle_plan`; direct `execute_recipe` is not the owner. The compiler records wrapper handoff metadata when a concrete wrapper family is supplied. |
-| `replication_override` | operational route grammar | A replication-locked route. Use when a known recipe path should preserve paper-style provenance and deviations. | Derives `experiment_unit=replication_recipe`; route owner becomes `replication`; direct single-run execution is not the owner. |
+Read this axis as a route decision. Pick the block that matches the study you want, copy the YAML shape, then let `experiment_unit` derive unless you need to pin it.
+
+### Quick Map
+
+| Choice | Route Type | Default Owner |
+|---|---|---|
+| `single_path_benchmark` | one resolved path | direct recipe |
+| `controlled_variation` | controlled comparison | direct recipe or sweep runner |
+| `orchestrated_bundle` | wrapper bundle grammar | wrapper runner |
+| `replication_override` | replication route | replication runner |
+
+### `single_path_benchmark`
+
+Use this for the ordinary one-path case: one target design, one representation, one model family, one evaluation route.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: single_path_benchmark
+```
+
+Typical compiler result:
+
+```text
+research_design = single_path_benchmark
+experiment_unit = single_target_single_model
+route_owner     = single_run
+```
+
+If downstream model or feature axes are swept, the compiler may derive `single_target_model_grid` or `single_target_full_sweep` instead.
+
+### `controlled_variation`
+
+Use this when the point of the study is a controlled comparison. One axis, or a small set of axes, varies while the rest of the recipe stays fixed.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
+```
+
+Typical compiler result:
+
+```text
+research_design = controlled_variation
+design_shape    = one_fixed_env_controlled_axis_variation
+experiment_unit = single_target_model_grid
+```
+
+If the variation is represented as a parent sweep, the compiler reports `ready_for_sweep_runner`. In that case, run through `compile_sweep_plan` / `execute_sweep`, not as one ordinary leaf recipe.
+
+### `orchestrated_bundle`
+
+Use this when a higher-level wrapper owns the run. Examples are benchmark suites, ablation studies, or multi-target fan-out recipes.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: orchestrated_bundle
+    leaf_config:
+      wrapper_family: benchmark_suite
+```
+
+Typical compiler result:
+
+```text
+research_design   = orchestrated_bundle
+execution_posture = wrapper_bundle_plan
+route_owner       = wrapper
+```
+
+Direct `execute_recipe` is not the owner. The compiler records wrapper handoff metadata when a concrete wrapper family is supplied.
+
+### `replication_override`
+
+Use this when the recipe is anchored to a paper or known replication path and deviations must be explicit.
+
+```yaml
+recipe_id: goulet-coulombe-2021-fred-md-ridge
+path:
+  0_meta:
+    fixed_axes:
+      research_design: replication_override
+```
+
+Typical compiler result:
+
+```text
+research_design = replication_override
+experiment_unit = replication_recipe
+route_owner     = replication
+```
+
+Direct single-run execution is not the owner. The replication runner preserves replication provenance and records deviations from the original recipe.
 
 ## Selection Order
 

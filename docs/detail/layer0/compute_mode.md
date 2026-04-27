@@ -24,15 +24,169 @@ It is an execution-layout contract, not a modeling choice. It does not change ta
 
 ## Choices
 
-| Choice | Status | Work Unit | Current Runtime Behavior |
-|---|---:|---|---|
-| `serial` | operational | none | Default. Runs one unit at a time. |
-| `parallel_by_model` | operational | sweep variants whose swept axis includes `model_family` | `execute_sweep()` uses `ThreadPoolExecutor`, capped at 4 workers, when the parent recipe selected `parallel_by_model` and there is more than one model-family variant. |
-| `parallel_by_horizon` | operational | forecast horizons | `execute_recipe()` parallelizes horizon rows in `_build_predictions()` when there is more than one horizon. Capped at 4 workers. |
-| `parallel_by_target` | operational | targets | `execute_recipe()` parallelizes target jobs when the recipe has more than one target. Capped at 4 workers. |
-| `parallel_by_oos_date` | operational | OOS origin dates | `_build_predictions()` parallelizes origin-date model/benchmark fits after refit-policy state is computed serially. Capped at 4 workers. |
-| `parallel_by_trial` | registry_only | tuning or trial units | Reserved. Not supported by the current runtime slice. |
-| `distributed_cluster` | registry_only | external cluster tasks | Reserved. Not supported by the current runtime slice. |
+Read this axis as an execution layout request. Parallel modes only help when the selected work unit has more than one item.
+
+### Quick Map
+
+| Choice | Work Unit | Current State |
+|---|---|---|
+| `serial` | none | runnable |
+| `parallel_by_model` | model variants | runnable for model-family sweeps |
+| `parallel_by_horizon` | horizons | runnable for multi-horizon runs |
+| `parallel_by_target` | targets | runnable for multi-target runs |
+| `parallel_by_oos_date` | OOS origin dates | runnable for long pseudo-OOS loops |
+| `parallel_by_trial` | tuning trials | reserved |
+| `distributed_cluster` | external cluster tasks | reserved |
+
+### `serial`
+
+Use this for debugging, replication, and ordinary small runs.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: serial
+```
+
+Runtime behavior:
+
+```text
+runner = execute one unit at a time
+parallel workers = none
+```
+
+### `parallel_by_model`
+
+Use this when the recipe sweeps model families.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: controlled_variation
+      compute_mode: parallel_by_model
+  3_training:
+    sweep_axes:
+      model_family: [ridge, lasso, random_forest]
+```
+
+Runtime behavior:
+
+```text
+runner = execute_sweep
+work unit = model-family variant
+executor = ThreadPoolExecutor, capped at 4 workers
+```
+
+If there is no `model_family` sweep, this behaves like serial sweep execution.
+
+### `parallel_by_horizon`
+
+Use this when horizons are independent and numerous.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_horizon
+  1_data_task:
+    leaf_config:
+      horizons: [1, 3, 6, 12]
+```
+
+Runtime behavior:
+
+```text
+runner = execute_recipe
+work unit = forecast horizon
+executor = ThreadPoolExecutor, capped at 4 workers
+```
+
+If there is only one horizon, this is a no-op.
+
+### `parallel_by_target`
+
+Use this for multi-target recipes.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_target
+  1_data_task:
+    fixed_axes:
+      target_structure: multi_target_point_forecast
+    leaf_config:
+      targets: [INDPRO, RPI]
+```
+
+Runtime behavior:
+
+```text
+runner = execute_recipe
+work unit = target
+executor = ThreadPoolExecutor, capped at 4 workers
+```
+
+If there is only one target, this is a no-op.
+
+### `parallel_by_oos_date`
+
+Use this when pseudo-OOS origin-date fits dominate runtime.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_oos_date
+```
+
+Runtime behavior:
+
+```text
+runner = execute_recipe
+work unit = OOS origin date
+executor = ThreadPoolExecutor, capped at 4 workers
+```
+
+Refit-policy state is computed serially before origin-date model/benchmark fits are parallelized.
+
+### `parallel_by_trial`
+
+Reserved for tuning or trial-level parallelism.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: parallel_by_trial
+```
+
+Current status:
+
+```text
+status = registry_only
+runtime = not supported by current slice
+```
+
+### `distributed_cluster`
+
+Reserved for external cluster execution.
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      compute_mode: distributed_cluster
+```
+
+Current status:
+
+```text
+status = registry_only
+runtime = not supported by current slice
+```
 
 ## Compiler Contract
 
