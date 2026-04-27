@@ -1,7 +1,7 @@
 """v0.9.2 Group B: preprocessing contract relaxations + runtime branches.
 
 This batch adds two genuine runtime implementations. More Group-B axes
-(tcode_application_scope, representation_policy:tcode_only, cv_select_lags)
+(tcode_application_scope, representation_policy:official_tcode_only, cv_select_lags)
 require deeper infrastructure and land in a follow-up batch.
 """
 from __future__ import annotations
@@ -36,7 +36,7 @@ def _contract(**overrides) -> PreprocessContract:
     base = dict(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="none",
         target_outlier_policy="none",

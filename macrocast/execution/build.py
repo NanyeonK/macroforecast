@@ -191,7 +191,7 @@ _OFFICIAL_TRANSFORM_SCOPES = {
     "predictors_only",
     "target_and_predictors",
 }
-_RUNTIME_TCODE_CONTRACT_POLICIES = {"tcode_only", "tcode_then_extra_preprocess"}
+_RUNTIME_TCODE_CONTRACT_POLICIES = {"official_tcode_only", "official_tcode_then_extra_preprocess"}
 
 
 def _data_task_axis(recipe, axis_name: str) -> str:

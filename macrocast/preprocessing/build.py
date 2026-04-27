@@ -5,25 +5,25 @@ from .types import PreprocessContract
 
 _TARGET = {
     "raw_level",
-    "tcode_transformed",
+    "official_tcode_transformed",
     "custom_target_transform",
 }
 _X = {
     "raw_level",
-    "apply_official_tcode_transformed",
+    "official_tcode_transformed",
     "custom_x_transform",
 }
 _TCODE = {
     "raw_only",
-    "tcode_only",
-    "tcode_then_extra_preprocess",
-    "extra_preprocess_without_tcode",
-    "extra_then_tcode",
-    "custom_transform_pipeline",
+    "official_tcode_only",
+    "official_tcode_then_extra_preprocess",
+    "extra_preprocess_only",
+    "extra_preprocess_then_official_tcode",
+    "custom_transform_sequence",
 }
 _REPRESENTATION_POLICY = {
     "raw_only",
-    "tcode_only",
+    "official_tcode_only",
     "custom_transform_only",
 }
 _TCODE_APPLICATION_SCOPE = {
@@ -88,10 +88,10 @@ _FEATURE_SELECTION_SEMANTICS = {
 }
 _ORDER = {
     "none",
-    "tcode_only",
+    "official_tcode_only",
     "extra_only",
-    "tcode_then_extra",
-    "extra_then_tcode",
+    "official_tcode_then_extra",
+    "extra_preprocess_then_official_tcode",
     "custom",
 }
 _FIT_SCOPE = {
@@ -287,7 +287,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
     if not _has_extra_preprocessing(contract):
         return False
 
-    if contract.tcode_policy == "extra_preprocess_without_tcode":
+    if contract.tcode_policy == "extra_preprocess_only":
         if contract.representation_policy != "raw_only":
             return False
         if contract.tcode_application_scope != "none":
@@ -296,18 +296,18 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
             return False
         if contract.target_transform_policy != "raw_level" or contract.x_transform_policy != "raw_level":
             return False
-    elif contract.tcode_policy == "tcode_then_extra_preprocess":
-        if contract.representation_policy != "tcode_only":
+    elif contract.tcode_policy == "official_tcode_then_extra_preprocess":
+        if contract.representation_policy != "official_tcode_only":
             return False
         if contract.tcode_application_scope == "none":
             return False
-        if contract.preprocess_order != "tcode_then_extra":
+        if contract.preprocess_order != "official_tcode_then_extra":
             return False
         target_expected = contract.tcode_application_scope in {"target_only", "target_and_predictors"}
         x_expected = contract.tcode_application_scope in {"predictors_only", "target_and_predictors"}
-        if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+        if target_expected != (contract.target_transform_policy == "official_tcode_transformed"):
             return False
-        if x_expected != (contract.x_transform_policy == "apply_official_tcode_transformed"):
+        if x_expected != (contract.x_transform_policy == "official_tcode_transformed"):
             return False
     else:
         return False
@@ -373,11 +373,11 @@ def is_operational_preprocess_contract(contract: PreprocessContract) -> bool:
 
 
 def _is_official_tcode_only_contract(contract: PreprocessContract) -> bool:
-    if contract.tcode_policy != "tcode_only":
+    if contract.tcode_policy != "official_tcode_only":
         return False
-    if contract.preprocess_order != "tcode_only":
+    if contract.preprocess_order != "official_tcode_only":
         return False
-    if contract.representation_policy != "tcode_only":
+    if contract.representation_policy != "official_tcode_only":
         return False
     if contract.tcode_application_scope == "none":
         return False
@@ -391,9 +391,9 @@ def _is_official_tcode_only_contract(contract: PreprocessContract) -> bool:
         return False
     target_expected = contract.tcode_application_scope in {"target_only", "target_and_predictors"}
     x_expected = contract.tcode_application_scope in {"predictors_only", "target_and_predictors"}
-    if target_expected != (contract.target_transform_policy == "tcode_transformed"):
+    if target_expected != (contract.target_transform_policy == "official_tcode_transformed"):
         return False
-    if x_expected != (contract.x_transform_policy == "apply_official_tcode_transformed"):
+    if x_expected != (contract.x_transform_policy == "official_tcode_transformed"):
         return False
     return True
 
@@ -411,23 +411,23 @@ def check_preprocess_governance(
             raise PreprocessValidationError("raw_only representation requires tcode_application_scope='none'")
         if contract.target_transform_policy != "raw_level" or contract.x_transform_policy != "raw_level":
             raise PreprocessValidationError("raw_only requires raw-level target and x representation")
-        if contract.tcode_policy == "tcode_only":
-            raise PreprocessValidationError("raw_only representation cannot pair with tcode_only ordering")
+        if contract.tcode_policy == "official_tcode_only":
+            raise PreprocessValidationError("raw_only representation cannot pair with official_tcode_only ordering")
 
-    if contract.representation_policy == "tcode_only":
+    if contract.representation_policy == "official_tcode_only":
         if contract.tcode_application_scope == "none":
-            raise PreprocessValidationError("tcode_only representation requires a non-empty official transform scope")
+            raise PreprocessValidationError("official_tcode_only representation requires a non-empty official transform scope")
         target_expected = contract.tcode_application_scope in {"target_only", "target_and_predictors"}
         x_expected = contract.tcode_application_scope in {"predictors_only", "target_and_predictors"}
-        if target_expected != (contract.target_transform_policy == "tcode_transformed"):
-            raise PreprocessValidationError("tcode_only representation target policy must match tcode_application_scope")
-        if x_expected != (contract.x_transform_policy == "apply_official_tcode_transformed"):
-            raise PreprocessValidationError("tcode_only representation x policy must match tcode_application_scope")
-        if contract.tcode_policy not in {"tcode_only", "tcode_then_extra_preprocess", "extra_then_tcode"}:
-            raise PreprocessValidationError("tcode_only representation requires explicit tcode ordering semantics")
+        if target_expected != (contract.target_transform_policy == "official_tcode_transformed"):
+            raise PreprocessValidationError("official_tcode_only representation target policy must match tcode_application_scope")
+        if x_expected != (contract.x_transform_policy == "official_tcode_transformed"):
+            raise PreprocessValidationError("official_tcode_only representation x policy must match tcode_application_scope")
+        if contract.tcode_policy not in {"official_tcode_only", "official_tcode_then_extra_preprocess", "extra_preprocess_then_official_tcode"}:
+            raise PreprocessValidationError("official_tcode_only representation requires explicit tcode ordering semantics")
 
     if contract.tcode_application_scope == "none":
-        if contract.target_transform_policy == "tcode_transformed" or contract.x_transform_policy == "apply_official_tcode_transformed":
+        if contract.target_transform_policy == "official_tcode_transformed" or contract.x_transform_policy == "official_tcode_transformed":
             raise PreprocessValidationError("none cannot use tcode-transformed representation")
 
     if contract.tcode_policy == "raw_only":
@@ -438,39 +438,39 @@ def check_preprocess_governance(
         if extra_present:
             raise PreprocessValidationError("raw_only cannot carry extra preprocessing")
 
-    if contract.tcode_policy == "tcode_only":
+    if contract.tcode_policy == "official_tcode_only":
         if contract.target_transform_policy == "raw_level" and contract.x_transform_policy == "raw_level":
-            raise PreprocessValidationError("tcode_only requires at least one tcode-transformed side")
-        if contract.preprocess_order != "tcode_only":
-            raise PreprocessValidationError("tcode_only requires preprocess_order='tcode_only'")
+            raise PreprocessValidationError("official_tcode_only requires at least one tcode-transformed side")
+        if contract.preprocess_order != "official_tcode_only":
+            raise PreprocessValidationError("official_tcode_only requires preprocess_order='official_tcode_only'")
         if extra_present:
-            raise PreprocessValidationError("tcode_only cannot carry extra preprocessing")
+            raise PreprocessValidationError("official_tcode_only cannot carry extra preprocessing")
 
-    if contract.tcode_policy == "tcode_then_extra_preprocess":
-        if contract.preprocess_order != "tcode_then_extra":
-            raise PreprocessValidationError("tcode_then_extra_preprocess requires preprocess_order='tcode_then_extra'")
-        if contract.target_transform_policy != "tcode_transformed" or contract.x_transform_policy != "apply_official_tcode_transformed":
-            raise PreprocessValidationError("tcode_then_extra_preprocess requires tcode-transformed target and x representation")
+    if contract.tcode_policy == "official_tcode_then_extra_preprocess":
+        if contract.preprocess_order != "official_tcode_then_extra":
+            raise PreprocessValidationError("official_tcode_then_extra_preprocess requires preprocess_order='official_tcode_then_extra'")
+        if contract.target_transform_policy != "official_tcode_transformed" or contract.x_transform_policy != "official_tcode_transformed":
+            raise PreprocessValidationError("official_tcode_then_extra_preprocess requires tcode-transformed target and x representation")
         if not extra_present:
-            raise PreprocessValidationError("tcode_then_extra_preprocess requires at least one extra preprocessing policy")
+            raise PreprocessValidationError("official_tcode_then_extra_preprocess requires at least one extra preprocessing policy")
 
-    if contract.tcode_policy == "extra_preprocess_without_tcode":
+    if contract.tcode_policy == "extra_preprocess_only":
         if contract.preprocess_order != "extra_only":
-            raise PreprocessValidationError("extra_preprocess_without_tcode requires preprocess_order='extra_only'")
-        if contract.target_transform_policy == "tcode_transformed" or contract.x_transform_policy == "apply_official_tcode_transformed":
-            raise PreprocessValidationError("extra_preprocess_without_tcode cannot use tcode-transformed representation")
+            raise PreprocessValidationError("extra_preprocess_only requires preprocess_order='extra_only'")
+        if contract.target_transform_policy == "official_tcode_transformed" or contract.x_transform_policy == "official_tcode_transformed":
+            raise PreprocessValidationError("extra_preprocess_only cannot use tcode-transformed representation")
         if contract.tcode_application_scope != "none":
-            raise PreprocessValidationError("extra_preprocess_without_tcode requires tcode_application_scope='none'")
+            raise PreprocessValidationError("extra_preprocess_only requires tcode_application_scope='none'")
         if not extra_present:
-            raise PreprocessValidationError("extra_preprocess_without_tcode requires at least one extra preprocessing policy")
+            raise PreprocessValidationError("extra_preprocess_only requires at least one extra preprocessing policy")
 
-    if contract.tcode_policy == "extra_then_tcode":
-        if contract.preprocess_order != "extra_then_tcode":
-            raise PreprocessValidationError("extra_then_tcode requires preprocess_order='extra_then_tcode'")
-        if contract.target_transform_policy != "tcode_transformed" or contract.x_transform_policy != "apply_official_tcode_transformed":
-            raise PreprocessValidationError("extra_then_tcode requires tcode-transformed target and x representation")
+    if contract.tcode_policy == "extra_preprocess_then_official_tcode":
+        if contract.preprocess_order != "extra_preprocess_then_official_tcode":
+            raise PreprocessValidationError("extra_preprocess_then_official_tcode requires preprocess_order='extra_preprocess_then_official_tcode'")
+        if contract.target_transform_policy != "official_tcode_transformed" or contract.x_transform_policy != "official_tcode_transformed":
+            raise PreprocessValidationError("extra_preprocess_then_official_tcode requires tcode-transformed target and x representation")
         if not extra_present:
-            raise PreprocessValidationError("extra_then_tcode requires at least one extra preprocessing policy")
+            raise PreprocessValidationError("extra_preprocess_then_official_tcode requires at least one extra preprocessing policy")
 
     if not extra_present and contract.preprocess_fit_scope != "not_applicable":
         raise PreprocessValidationError("preprocess_fit_scope can be non-trivial only when extra preprocessing is explicit")

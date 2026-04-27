@@ -182,9 +182,9 @@ def test_forecast_default_runs_and_records_default_profile(tmp_path: Path) -> No
     assert manifest["data_task_spec"]["sample_end_date"] == FIXTURE_END
     assert manifest["data_task_spec"]["official_transform_policy"] == "apply_official_tcode"
     assert manifest["data_task_spec"]["official_transform_scope"] == "target_and_predictors"
-    assert manifest["preprocess_contract"]["tcode_policy"] == "tcode_only"
-    assert manifest["preprocess_contract"]["target_transform_policy"] == "tcode_transformed"
-    assert manifest["preprocess_contract"]["x_transform_policy"] == "apply_official_tcode_transformed"
+    assert manifest["preprocess_contract"]["tcode_policy"] == "official_tcode_only"
+    assert manifest["preprocess_contract"]["target_transform_policy"] == "official_tcode_transformed"
+    assert manifest["preprocess_contract"]["x_transform_policy"] == "official_tcode_transformed"
     layer2_spec = manifest["layer2_representation_spec"]
     assert layer2_spec["runtime_effect"] == "provenance_plus_runtime_block_dispatch"
     assert layer2_spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"

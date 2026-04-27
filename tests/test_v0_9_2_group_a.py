@@ -21,7 +21,7 @@ def _contract(**over) -> PreprocessContract:
     base = dict(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="none",
         target_outlier_policy="none",

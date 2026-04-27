@@ -1297,7 +1297,6 @@
     "horizon_target_construction": {
       "allowed_values": [
         "future_target_level_t_plus_h",
-        "future_level_y_t_plus_h",
         "future_diff",
         "future_logdiff",
         "average_growth_1_to_h",
@@ -1315,7 +1314,6 @@
         "average_growth_1_to_h": "operational",
         "average_log_growth_1_to_h": "operational",
         "future_diff": "operational",
-        "future_level_y_t_plus_h": "operational",
         "future_logdiff": "operational",
         "future_target_level_t_plus_h": "operational",
         "path_average_difference_1_to_h": "operational",
@@ -2072,10 +2070,10 @@
     "preprocess_order": {
       "allowed_values": [
         "none",
-        "tcode_only",
+        "official_tcode_only",
         "extra_only",
-        "tcode_then_extra",
-        "extra_then_tcode",
+        "official_tcode_then_extra",
+        "extra_preprocess_then_official_tcode",
         "custom"
       ],
       "axis_name": "preprocess_order",
@@ -2084,10 +2082,10 @@
       "current_status": {
         "custom": "external_plugin",
         "extra_only": "operational",
-        "extra_then_tcode": "registry_only",
+        "extra_preprocess_then_official_tcode": "registry_only",
         "none": "operational",
-        "tcode_only": "operational",
-        "tcode_then_extra": "operational"
+        "official_tcode_only": "operational",
+        "official_tcode_then_extra": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2382,7 +2380,7 @@
     "representation_policy": {
       "allowed_values": [
         "raw_only",
-        "tcode_only",
+        "official_tcode_only",
         "custom_transform_only"
       ],
       "axis_name": "representation_policy",
@@ -2390,8 +2388,8 @@
       "compatible_with": {},
       "current_status": {
         "custom_transform_only": "registry_only",
-        "raw_only": "operational",
-        "tcode_only": "operational"
+        "official_tcode_only": "operational",
+        "raw_only": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2980,7 +2978,7 @@
     "target_transform_policy": {
       "allowed_values": [
         "raw_level",
-        "tcode_transformed",
+        "official_tcode_transformed",
         "custom_target_transform"
       ],
       "axis_name": "target_transform_policy",
@@ -2988,8 +2986,8 @@
       "compatible_with": {},
       "current_status": {
         "custom_target_transform": "external_plugin",
-        "raw_level": "operational",
-        "tcode_transformed": "operational"
+        "official_tcode_transformed": "operational",
+        "raw_level": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3032,22 +3030,22 @@
     "tcode_policy": {
       "allowed_values": [
         "raw_only",
-        "tcode_only",
-        "tcode_then_extra_preprocess",
-        "extra_preprocess_without_tcode",
-        "extra_then_tcode",
-        "custom_transform_pipeline"
+        "official_tcode_only",
+        "official_tcode_then_extra_preprocess",
+        "extra_preprocess_only",
+        "extra_preprocess_then_official_tcode",
+        "custom_transform_sequence"
       ],
       "axis_name": "tcode_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "custom_transform_pipeline": "external_plugin",
-        "extra_preprocess_without_tcode": "operational",
-        "extra_then_tcode": "registry_only",
-        "raw_only": "operational",
-        "tcode_only": "operational",
-        "tcode_then_extra_preprocess": "operational"
+        "custom_transform_sequence": "external_plugin",
+        "extra_preprocess_only": "operational",
+        "extra_preprocess_then_official_tcode": "registry_only",
+        "official_tcode_only": "operational",
+        "official_tcode_then_extra_preprocess": "operational",
+        "raw_only": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3346,15 +3344,15 @@
     "x_transform_policy": {
       "allowed_values": [
         "raw_level",
-        "apply_official_tcode_transformed",
+        "official_tcode_transformed",
         "custom_x_transform"
       ],
       "axis_name": "x_transform_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "apply_official_tcode_transformed": "operational",
         "custom_x_transform": "external_plugin",
+        "official_tcode_transformed": "operational",
         "raw_level": "operational"
       },
       "default_policy": "fixed",
@@ -3802,6 +3800,21 @@
         "legacy_id": "handpicked_set"
       },
       {
+        "axis": "preprocess_order",
+        "canonical_id": "extra_preprocess_then_official_tcode",
+        "legacy_id": "extra_then_tcode"
+      },
+      {
+        "axis": "preprocess_order",
+        "canonical_id": "official_tcode_only",
+        "legacy_id": "tcode_only"
+      },
+      {
+        "axis": "preprocess_order",
+        "canonical_id": "official_tcode_then_extra",
+        "legacy_id": "tcode_then_extra"
+      },
+      {
         "axis": "raw_missing_policy",
         "canonical_id": "drop_raw_missing_rows",
         "legacy_id": "drop_rows_with_raw_missing"
@@ -3820,6 +3833,11 @@
         "axis": "raw_outlier_policy",
         "canonical_id": "set_raw_outliers_to_missing",
         "legacy_id": "raw_outlier_to_missing"
+      },
+      {
+        "axis": "representation_policy",
+        "canonical_id": "official_tcode_only",
+        "legacy_id": "tcode_only"
       },
       {
         "axis": "research_design",
@@ -3847,6 +3865,11 @@
         "legacy_id": "single_target_point_forecast"
       },
       {
+        "axis": "target_transform_policy",
+        "canonical_id": "official_tcode_transformed",
+        "legacy_id": "tcode_transformed"
+      },
+      {
         "axis": "tcode_application_scope",
         "canonical_id": "predictors_only",
         "legacy_id": "apply_tcode_to_X"
@@ -3865,6 +3888,31 @@
         "axis": "tcode_application_scope",
         "canonical_id": "target_only",
         "legacy_id": "apply_tcode_to_target"
+      },
+      {
+        "axis": "tcode_policy",
+        "canonical_id": "custom_transform_sequence",
+        "legacy_id": "custom_transform_pipeline"
+      },
+      {
+        "axis": "tcode_policy",
+        "canonical_id": "extra_preprocess_only",
+        "legacy_id": "extra_preprocess_without_tcode"
+      },
+      {
+        "axis": "tcode_policy",
+        "canonical_id": "extra_preprocess_then_official_tcode",
+        "legacy_id": "extra_then_tcode"
+      },
+      {
+        "axis": "tcode_policy",
+        "canonical_id": "official_tcode_only",
+        "legacy_id": "tcode_only"
+      },
+      {
+        "axis": "tcode_policy",
+        "canonical_id": "official_tcode_then_extra_preprocess",
+        "legacy_id": "tcode_then_extra_preprocess"
       },
       {
         "axis": "variable_universe",
@@ -3888,7 +3936,12 @@
       },
       {
         "axis": "x_transform_policy",
-        "canonical_id": "apply_official_tcode_transformed",
+        "canonical_id": "official_tcode_transformed",
+        "legacy_id": "apply_official_tcode_transformed"
+      },
+      {
+        "axis": "x_transform_policy",
+        "canonical_id": "official_tcode_transformed",
         "legacy_id": "dataset_tcode_transformed"
       }
     ],
@@ -3907,7 +3960,7 @@
         "0_meta.research_design=single_forecast_run",
         "1_data_task.dataset=fred_md",
         "1_data_task.official_transform_policy=apply_official_tcode",
-        "2_preprocessing.tcode_policy=tcode_then_extra_preprocess",
+        "2_preprocessing.tcode_policy=official_tcode_then_extra_preprocess",
         "2_preprocessing.scaling_policy=standard",
         "3_training.feature_builder=raw_feature_panel",
         "3_training.model_family=ridge",
@@ -3976,19 +4029,19 @@
               "inverse_transform_policy": "target_only",
               "level_feature_block": "none",
               "preprocess_fit_scope": "train_only",
-              "preprocess_order": "tcode_then_extra",
+              "preprocess_order": "official_tcode_then_extra",
               "rotation_feature_block": "none",
               "scaling_policy": "standard",
               "target_lag_block": "none",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_transform_policy": "tcode_transformed",
-              "tcode_policy": "tcode_then_extra_preprocess",
+              "target_transform_policy": "official_tcode_transformed",
+              "tcode_policy": "official_tcode_then_extra_preprocess",
               "temporal_feature_block": "none",
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "apply_official_tcode_transformed"
+              "x_transform_policy": "official_tcode_transformed"
             }
           },
           "3_training": {
@@ -4033,7 +4086,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: apply_official_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "FRED-MD style macro forecasting path with official transformations, raw-panel ridge generator, AR-BIC benchmark, and MSFE evaluation."
     },
     {
@@ -5911,13 +5964,6 @@
                 "value": "future_target_level_t_plus_h"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_level_y_t_plus_h'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "future_level_y_t_plus_h"
-              },
-              {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_diff'",
                 "disabled_reason": null,
                 "enabled": true,
@@ -5989,39 +6035,39 @@
                 "value": "raw_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_only"
+                "value": "official_tcode_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_then_extra_preprocess'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_then_extra_preprocess'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_then_extra_preprocess"
+                "value": "official_tcode_then_extra_preprocess"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_without_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "extra_preprocess_without_tcode"
+                "value": "extra_preprocess_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_then_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_then_official_tcode'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "extra_then_tcode"
+                "value": "extra_preprocess_then_official_tcode"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_pipeline'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_sequence'",
                 "disabled_reason": "requires a registered external plugin/callable",
                 "enabled": false,
                 "status": "external_plugin",
-                "value": "custom_transform_pipeline"
+                "value": "custom_transform_sequence"
               }
             ],
             "selected": "raw_only"
@@ -11638,13 +11684,6 @@
                 "value": "future_target_level_t_plus_h"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_level_y_t_plus_h'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "future_level_y_t_plus_h"
-              },
-              {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_diff'",
                 "disabled_reason": null,
                 "enabled": true,
@@ -11716,39 +11755,39 @@
                 "value": "raw_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_only"
+                "value": "official_tcode_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_then_extra_preprocess'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_then_extra_preprocess'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_then_extra_preprocess"
+                "value": "official_tcode_then_extra_preprocess"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_without_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "extra_preprocess_without_tcode"
+                "value": "extra_preprocess_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_then_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_then_official_tcode'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "extra_then_tcode"
+                "value": "extra_preprocess_then_official_tcode"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_pipeline'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_sequence'",
                 "disabled_reason": "requires a registered external plugin/callable",
                 "enabled": false,
                 "status": "external_plugin",
-                "value": "custom_transform_pipeline"
+                "value": "custom_transform_sequence"
               }
             ],
             "selected": "raw_only"
@@ -15748,19 +15787,19 @@
               "inverse_transform_policy": "target_only",
               "level_feature_block": "none",
               "preprocess_fit_scope": "train_only",
-              "preprocess_order": "tcode_then_extra",
+              "preprocess_order": "official_tcode_then_extra",
               "rotation_feature_block": "none",
               "scaling_policy": "standard",
               "target_lag_block": "none",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_transform_policy": "tcode_transformed",
-              "tcode_policy": "tcode_then_extra_preprocess",
+              "target_transform_policy": "official_tcode_transformed",
+              "tcode_policy": "official_tcode_then_extra_preprocess",
               "temporal_feature_block": "none",
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "apply_official_tcode_transformed"
+              "x_transform_policy": "official_tcode_transformed"
             }
           },
           "3_training": {
@@ -15805,7 +15844,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: apply_official_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -15860,19 +15899,19 @@
               "inverse_transform_policy": "target_only",
               "level_feature_block": "none",
               "preprocess_fit_scope": "train_only",
-              "preprocess_order": "tcode_then_extra",
+              "preprocess_order": "official_tcode_then_extra",
               "rotation_feature_block": "none",
               "scaling_policy": "standard",
               "target_lag_block": "none",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_transform_policy": "tcode_transformed",
-              "tcode_policy": "tcode_then_extra_preprocess",
+              "target_transform_policy": "official_tcode_transformed",
+              "tcode_policy": "official_tcode_then_extra_preprocess",
               "temporal_feature_block": "none",
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "apply_official_tcode_transformed"
+              "x_transform_policy": "official_tcode_transformed"
             },
             "label": "Layer 2: representation construction",
             "leaf_config": {},
@@ -16006,7 +16045,7 @@
             "overlap_handling": "allow_overlap",
             "point_metrics": "MSFE",
             "preprocess_fit_scope": "train_only",
-            "preprocess_order": "tcode_then_extra",
+            "preprocess_order": "official_tcode_then_extra",
             "primary_metric": "msfe",
             "provenance_fields": "full",
             "random_seed": 42,
@@ -16033,15 +16072,15 @@
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
             "target_structure": "single_target",
-            "target_transform_policy": "tcode_transformed",
-            "tcode_policy": "tcode_then_extra_preprocess",
+            "target_transform_policy": "official_tcode_transformed",
+            "tcode_policy": "official_tcode_then_extra_preprocess",
             "temporal_feature_block": "none",
             "test_scope": "per_target",
             "variable_universe": "all_variables",
             "x_lag_feature_block": "none",
             "x_missing_policy": "none",
             "x_outlier_policy": "none",
-            "x_transform_policy": "apply_official_tcode_transformed"
+            "x_transform_policy": "official_tcode_transformed"
           }
         },
         "compile_preview": {
@@ -16405,7 +16444,7 @@
               "official_transform_policy": "apply_official_tcode",
               "official_transform_scope": "target_and_predictors",
               "preprocess_fit_scope": "train_only",
-              "preprocess_order": "tcode_then_extra",
+              "preprocess_order": "official_tcode_then_extra",
               "primary_metric": "msfe",
               "provenance_fields": "full",
               "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
@@ -16421,14 +16460,14 @@
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
               "target_structure": "single_target",
-              "target_transform_policy": "tcode_transformed",
-              "tcode_policy": "tcode_then_extra_preprocess",
+              "target_transform_policy": "official_tcode_transformed",
+              "tcode_policy": "official_tcode_then_extra_preprocess",
               "temporal_feature_block": "none",
               "variable_universe": "all_variables",
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "apply_official_tcode_transformed"
+              "x_transform_policy": "official_tcode_transformed"
             },
             "fixed_design": {
               "benchmark": "ar_bic",
@@ -17481,13 +17520,6 @@
                 "value": "future_target_level_t_plus_h"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_level_y_t_plus_h'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "future_level_y_t_plus_h"
-              },
-              {
                 "canonical_path_effect": "path.2_preprocessing.fixed_axes.horizon_target_construction = 'future_diff'",
                 "disabled_reason": null,
                 "enabled": true,
@@ -17559,42 +17591,42 @@
                 "value": "raw_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_only'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_only"
+                "value": "official_tcode_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'tcode_then_extra_preprocess'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'official_tcode_then_extra_preprocess'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "tcode_then_extra_preprocess"
+                "value": "official_tcode_then_extra_preprocess"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_without_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "extra_preprocess_without_tcode"
+                "value": "extra_preprocess_only"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_then_tcode'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'extra_preprocess_then_official_tcode'",
                 "disabled_reason": "registered in the grammar, but no current runtime cell is open",
                 "enabled": false,
                 "status": "registry_only",
-                "value": "extra_then_tcode"
+                "value": "extra_preprocess_then_official_tcode"
               },
               {
-                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_pipeline'",
+                "canonical_path_effect": "path.2_preprocessing.fixed_axes.tcode_policy = 'custom_transform_sequence'",
                 "disabled_reason": "requires a registered external plugin/callable",
                 "enabled": false,
                 "status": "external_plugin",
-                "value": "custom_transform_pipeline"
+                "value": "custom_transform_sequence"
               }
             ],
-            "selected": "tcode_then_extra_preprocess"
+            "selected": "official_tcode_then_extra_preprocess"
           },
           {
             "axis": "x_missing_policy",

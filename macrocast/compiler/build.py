@@ -539,7 +539,7 @@ _LEGACY_OFFICIAL_TRANSFORM_BRIDGE_AXES = {
     "representation_policy",
     "tcode_application_scope",
 }
-_OFFICIAL_TCODE_POLICIES = {"tcode_only", "tcode_then_extra_preprocess", "extra_then_tcode"}
+_OFFICIAL_TCODE_POLICIES = {"official_tcode_only", "official_tcode_then_extra_preprocess", "extra_preprocess_then_official_tcode"}
 
 
 def _has_legacy_official_transform_bridge(selection_map: dict[str, AxisSelection]) -> bool:
@@ -549,8 +549,8 @@ def _has_legacy_official_transform_bridge(selection_map: dict[str, AxisSelection
 def _legacy_official_transform_scope(selection_map: dict[str, AxisSelection]) -> str:
     if "tcode_application_scope" in selection_map:
         return _selection_value(selection_map, "tcode_application_scope")
-    target_tcode = _selection_value(selection_map, "target_transform_policy", default="raw_level") == "tcode_transformed"
-    x_tcode = _selection_value(selection_map, "x_transform_policy", default="raw_level") == "apply_official_tcode_transformed"
+    target_tcode = _selection_value(selection_map, "target_transform_policy", default="raw_level") == "official_tcode_transformed"
+    x_tcode = _selection_value(selection_map, "x_transform_policy", default="raw_level") == "official_tcode_transformed"
     if target_tcode and x_tcode:
         return "target_and_predictors"
     if target_tcode:
@@ -569,8 +569,8 @@ def _legacy_official_transform_policy(selection_map: dict[str, AxisSelection]) -
     scope = _legacy_official_transform_scope(selection_map)
     if (
         tcode_policy in _OFFICIAL_TCODE_POLICIES
-        or target_policy == "tcode_transformed"
-        or x_policy == "apply_official_tcode_transformed"
+        or target_policy == "official_tcode_transformed"
+        or x_policy == "official_tcode_transformed"
         or scope != "none"
     ):
         return "apply_official_tcode"
@@ -691,20 +691,20 @@ def _official_preprocess_bridge_defaults(selection_map: dict[str, AxisSelection]
         return {
             "target_transform_policy": "raw_level",
             "x_transform_policy": "raw_level",
-            "tcode_policy": "extra_preprocess_without_tcode" if extra_requested else "raw_only",
+            "tcode_policy": "extra_preprocess_only" if extra_requested else "raw_only",
             "preprocess_order": "extra_only" if extra_requested else "none",
             "representation_policy": "raw_only",
             "tcode_application_scope": "none",
         }
 
-    target_policy = "tcode_transformed" if scope in {"target_only", "target_and_predictors"} else "raw_level"
-    x_policy = "apply_official_tcode_transformed" if scope in {"predictors_only", "target_and_predictors"} else "raw_level"
+    target_policy = "official_tcode_transformed" if scope in {"target_only", "target_and_predictors"} else "raw_level"
+    x_policy = "official_tcode_transformed" if scope in {"predictors_only", "target_and_predictors"} else "raw_level"
     return {
         "target_transform_policy": target_policy,
         "x_transform_policy": x_policy,
-        "tcode_policy": "tcode_then_extra_preprocess" if extra_requested else "tcode_only",
-        "preprocess_order": "tcode_then_extra" if extra_requested else "tcode_only",
-        "representation_policy": "tcode_only",
+        "tcode_policy": "official_tcode_then_extra_preprocess" if extra_requested else "official_tcode_only",
+        "preprocess_order": "official_tcode_then_extra" if extra_requested else "official_tcode_only",
+        "representation_policy": "official_tcode_only",
         "tcode_application_scope": scope,
     }
 

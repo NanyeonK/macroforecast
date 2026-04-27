@@ -29,9 +29,9 @@ path:
   2_preprocessing:
     fixed_axes:
       horizon_target_construction: future_target_level_t_plus_h
-      target_transform_policy: tcode_transformed
-      x_transform_policy: apply_official_tcode_transformed
-      tcode_policy: tcode_then_extra_preprocess
+      target_transform_policy: official_tcode_transformed
+      x_transform_policy: official_tcode_transformed
+      tcode_policy: official_tcode_then_extra_preprocess
       target_missing_policy: none
       x_missing_policy: none
       target_outlier_policy: none
@@ -39,7 +39,7 @@ path:
       scaling_policy: standard
       dimensionality_reduction_policy: none
       feature_selection_policy: none
-      preprocess_order: tcode_then_extra
+      preprocess_order: official_tcode_then_extra
       preprocess_fit_scope: train_only
       inverse_transform_policy: target_only
       evaluation_scale: raw_level

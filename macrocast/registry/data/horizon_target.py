@@ -16,12 +16,6 @@ AXIS_DEFINITION = AxisDefinition(
             priority='A',
         ),
         EnumRegistryEntry(
-            id='future_level_y_t_plus_h',
-            description='legacy alias for future target level at t plus h',
-            status='operational',
-            priority='B',
-        ),
-        EnumRegistryEntry(
             id='future_diff',
             description='future diff',
             status='operational',

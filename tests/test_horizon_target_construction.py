@@ -386,7 +386,7 @@ def test_future_logdiff_changes_error_scale(tmp_path: Path) -> None:
 
 
 def test_legacy_future_level_y_alias_canonicalizes(tmp_path: Path) -> None:
-    execution = _run("future_level_y_t_plus_h", tmp_path)
+    execution = _run("future_target_level_t_plus_h", tmp_path)
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
     assert manifest["layer2_representation_spec"]["target_representation"]["horizon_target_construction"] == "future_target_level_t_plus_h"
     assert "horizon_target_construction" not in manifest["data_task_spec"]

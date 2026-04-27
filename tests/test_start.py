@@ -120,14 +120,14 @@ def test_macrocast_single_run_interactive_tcode_switch_normalizes_preprocess(mon
         "",  # target
         "",  # framework
         "",  # benchmark_family
-        "2", # tcode_policy -> extra_preprocess_without_tcode
+        "2", # tcode_policy -> extra_preprocess_only
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=7)
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     preprocess = payload["path"]["2_preprocessing"]["fixed_axes"]
-    assert out["completed_choices"][-1] == {"key": "tcode_policy", "value": "extra_preprocess_without_tcode"}
-    assert preprocess["tcode_policy"] == "extra_preprocess_without_tcode"
+    assert out["completed_choices"][-1] == {"key": "tcode_policy", "value": "extra_preprocess_only"}
+    assert preprocess["tcode_policy"] == "extra_preprocess_only"
     assert preprocess["preprocess_order"] == "extra_only"
     assert preprocess["preprocess_fit_scope"] == "train_only"
 

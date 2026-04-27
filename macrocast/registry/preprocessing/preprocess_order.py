@@ -16,7 +16,7 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id='tcode_only',
+            id='official_tcode_only',
             description='tcode only',
             status='operational',
             priority="A",
@@ -28,13 +28,13 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id='tcode_then_extra',
+            id='official_tcode_then_extra',
             description='tcode then extra',
             status='operational',
             priority="A",
         ),
         EnumRegistryEntry(
-            id='extra_then_tcode',
+            id='extra_preprocess_then_official_tcode',
             description='extra then tcode',
             status='registry_only',
             priority="A",

@@ -126,7 +126,7 @@ def _preprocess_train_only_robust():
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="em_impute",
         target_outlier_policy="none",
@@ -145,7 +145,7 @@ def _preprocess_target_zscore_both_scales():
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -1347,7 +1347,7 @@ def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> N
     preprocess = build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="none",
         target_outlier_policy="none",
@@ -1686,7 +1686,7 @@ def _preprocess_mean_impute_minmax_winsor() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -1705,7 +1705,7 @@ def _preprocess_pca_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="median_impute",
         target_outlier_policy="none",
@@ -1724,7 +1724,7 @@ def _preprocess_lasso_select_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -1743,7 +1743,7 @@ def _preprocess_pca_lasso_select_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",
@@ -1762,7 +1762,7 @@ def _preprocess_pca_lasso_select_after_factor_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
-        tcode_policy="extra_preprocess_without_tcode",
+        tcode_policy="extra_preprocess_only",
         target_missing_policy="none",
         x_missing_policy="mean_impute",
         target_outlier_policy="none",

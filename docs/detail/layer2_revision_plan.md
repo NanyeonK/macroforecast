@@ -71,7 +71,7 @@ The current fixed full support surface is:
 
 | Runtime profile | Status | Meaning |
 |---|---|---|
-| `apply_official_tcode_only` | executable | Layer 1 applies official dataset transforms; Layer 2 adds no extra preprocessing. |
+| `official_tcode_only` | executable | Layer 1 applies official dataset transforms; Layer 2 adds no extra preprocessing. |
 | `raw_only` | executable | Raw panel path with no official transforms and no extra preprocessing. |
 | `raw_train_only_extra` | executable | Raw panel path plus train-only Layer 2 extra preprocessing. |
 | `apply_official_tcode_then_train_only_extra` | executable | Layer 1 official transforms first, then supported train-only Layer 2 extra preprocessing. |

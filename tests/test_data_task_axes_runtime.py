@@ -289,7 +289,7 @@ def test_tcode_preprocessing_marks_legacy_contract_fallback_source():
         'RPI': [10.0, 20.0, 40.0],
     }).set_index('date')
     raw = _StubRaw(df, transform_codes={'INDPRO': 2, 'RPI': 2})
-    contract = SimpleNamespace(tcode_policy='tcode_only', tcode_application_scope='predictors_only')
+    contract = SimpleNamespace(tcode_policy='official_tcode_only', tcode_application_scope='predictors_only')
 
     out = _apply_tcode_preprocessing(raw, _recipe_with(), contract, target='INDPRO')
 

@@ -110,7 +110,7 @@ def test_model_raw_panel_executes(model, tmp_path):
     })
     # Need preprocessing for raw panel
     recipe["path"]["2_preprocessing"]["fixed_axes"].update({
-        "tcode_policy": "extra_preprocess_without_tcode",
+        "tcode_policy": "extra_preprocess_only",
         "x_missing_policy": "em_impute",
         "scaling_policy": "standard",
         "preprocess_order": "extra_only",
@@ -132,7 +132,7 @@ def test_model_factor_executes(model, tmp_path):
         "sweep_axes": {"model_family": [model]},
     })
     recipe["path"]["2_preprocessing"]["fixed_axes"].update({
-        "tcode_policy": "extra_preprocess_without_tcode",
+        "tcode_policy": "extra_preprocess_only",
         "x_missing_policy": "em_impute",
         "scaling_policy": "standard",
         "preprocess_order": "extra_only",
@@ -211,7 +211,7 @@ def test_importance_method_executes(method, model, tmp_path):
         overrides_7={"importance_method": method},
     )
     recipe["path"]["2_preprocessing"]["fixed_axes"].update({
-        "tcode_policy": "extra_preprocess_without_tcode",
+        "tcode_policy": "extra_preprocess_only",
         "x_missing_policy": "em_impute",
         "scaling_policy": "standard",
         "preprocess_order": "extra_only",
