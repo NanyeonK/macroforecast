@@ -1,40 +1,94 @@
-# Getting Started
+# 0. Getting Started
 
-macrocast lets you run a complete forecasting study from a YAML recipe. Most recipes are a dozen lines because the defaults match what empirical-macro papers actually do.
+This page is intentionally small. Install the package, then choose one of three usage paths.
 
-## Learning path
+## Install
 
-| Step | Time | What you will learn |
-|------|------|---------------------|
-| 1. [Quickstart](quickstart.md) | 5 min | Run your first forecast with defaults. |
-| 2. [Your First Study](first_study.md) | 20 min | Add one axis deviation — your first research choice. |
-| 3. [Understanding Output](understanding_output.md) | 10 min | Read `predictions.csv`, `metrics.json`, and `manifest.json`. |
-| 4. [Stages Reference](stages_reference.md) | reference | Every operational value on every axis for Stages 0 + 1. |
+For active development, install from the repository:
 
-## Prerequisites
+```bash
+git clone https://github.com/NanyeonK/macrocast.git
+cd macrocast
+pip install -e .
+```
 
-- Python 3.10+ with macrocast installed ([Installation](../install.md)).
-- Basic familiarity with pandas DataFrames.
-- Basic knowledge of macroeconomic forecasting (what FRED-MD is, what out-of-sample evaluation means).
+Verify the import:
 
-## The 30-second mental model
+```python
+import macrocast
+print("macrocast imported")
+```
 
-- **Recipe** — a YAML file that fully specifies one forecasting study. Data + preprocessing + model + benchmark + metrics, in one place.
-- **Stage 0 (Design)** — the study grammar. Decides runner, sweep shape, reproducibility. Six axes. Mostly auto-derived. [Deep dive](../user_guide/design.md).
-- **Stage 1 (Data)** — everything about the dataset, target structure, evaluation window, benchmark, predictors, and data-handling policies. Twenty axes. Most have sensible defaults. [Deep dive](../user_guide/data/index.md).
-- **Compiler** — validates your recipe and decides if it can execute in the current runtime.
-- **Execution** — runs the forecast, writes predictions + metrics + a complete `manifest.json` that records every resolved choice.
+For optional model and interpretation backends, see [Installation](../install.md).
 
-## Key promise: defaults match research practice
+## Three usage paths
 
-If you only set `dataset`, `target`, and `horizons` in your leaf_config, you get a reasonable benchmark run: AR(BIC) benchmark, monthly FRED-MD, pseudo-OOS rolling origin, one model per horizon. No hidden knobs.
+| Path | Use when | Start with |
+|---|---|---|
+| Navigator path | You want to see valid choices, disabled branches, and YAML before running anything. | [Open Navigator App](../navigator_app/index.html) |
+| Simple code | You want a quick forecast, model comparison, or small sweep from Python. | [Simple Docs](../simple/index.md) |
+| Detail code / YAML | You need exact layer control, custom methods, replication, or auditable contracts. | [Detail Docs](../detail/index.md) |
 
-Want to deviate? Each axis has exactly one documentation page that tells you:
+## Path 1: Navigator to YAML to CLI
 
-- **Selection question** — what research question does this axis answer?
-- **Default** — which research convention sits at the default?
-- **Value catalog** — every operational value with *when to use* and *verify* columns.
-- **Recipe usage** — minimal YAML showing the non-default.
+1. Open the [Navigator App](../navigator_app/index.html).
+2. Choose each layer in order.
+3. Inspect disabled branches and compatibility messages.
+4. Export the YAML recipe.
+5. Run the recipe:
+
+```bash
+macrocast-navigate resolve recipe.yaml
+macrocast-navigate run recipe.yaml --output-root results/my-run
+```
+
+## Path 2: Simple Python code
+
+```python
+import macrocast as mc
+
+result = mc.forecast(
+    dataset="fred_md",
+    target="INDPRO",
+    start="1980-01",
+    end="2019-12",
+    horizons=[1, 3, 6],
+)
+```
+
+For comparisons:
+
+```python
+exp = mc.Experiment(
+    dataset="fred_md",
+    target="INDPRO",
+    start="1980-01",
+    end="2019-12",
+    horizons=[1, 3, 6],
+)
+
+result = exp.compare_models(["ar", "ridge", "lasso"]).run()
+```
+
+## Path 3: Detail code / YAML
+
+Use the full layer grammar when you need exact decisions:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      research_design: single_path_benchmark
+  1_data_task:
+    fixed_axes:
+      dataset: fred_md
+      target_structure: single_target_point_forecast
+  3_training:
+    fixed_axes:
+      model_family: ridge
+```
+
+The full contract is documented layer by layer in [Detail Docs](../detail/index.md).
 
 ```{toctree}
 :hidden:
@@ -44,4 +98,5 @@ quickstart
 first_study
 understanding_output
 stages_reference
+../install
 ```
