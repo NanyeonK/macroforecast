@@ -71,11 +71,12 @@ h2 {
 
 .layer-rail {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(104px, 1fr));
   gap: 10px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--line);
   background: #eef2f7;
+  overflow-x: auto;
 }
 
 .layer-rail button {
@@ -336,6 +337,26 @@ input {
   line-height: 1.4;
 }
 
+.option-code {
+  display: inline-block;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #fff;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.option-summary {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .muted {
   color: var(--muted);
   font-size: 13px;
@@ -368,7 +389,7 @@ input {
   overflow: auto;
 }
 
-.tree-path-item button {
+.tree-path-card {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 10px;
@@ -382,13 +403,18 @@ input {
   cursor: pointer;
 }
 
-.tree-path-item button:hover,
-.tree-path-item button:focus-visible {
+.tree-path-card:hover,
+.tree-path-card:focus-visible {
   border-color: var(--accent);
   outline: none;
 }
 
-.tree-path-item.blocked button {
+.tree-path-item.active .tree-path-card {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tree-path-item.blocked .tree-path-card {
   border-color: #ffd0c8;
   background: var(--danger-soft);
 }
@@ -420,6 +446,13 @@ input {
   overflow-wrap: anywhere;
 }
 
+.path-question {
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .path-value {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -428,6 +461,17 @@ input {
   color: var(--text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.path-raw {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #fff;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 
@@ -441,6 +485,8 @@ input {
 }
 
 .path-effect,
+.path-summary,
+.path-contract,
 .path-reason {
   width: 100%;
   font-size: 12px;
@@ -451,6 +497,27 @@ input {
 .path-effect {
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.path-summary {
+  color: var(--text);
+}
+
+.path-contract {
+  color: var(--muted);
+}
+
+.path-docs {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .path-reason {

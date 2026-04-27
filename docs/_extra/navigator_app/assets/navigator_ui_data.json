@@ -3382,6 +3382,195 @@
       "layer": "3_training"
     }
   },
+  "axis_presentation": {
+    "compute_mode": {
+      "contract": "Execution parallelism contract. Unsupported modes or singleton work units degrade to serial/no-op behavior.",
+      "docs_url": "../user_guide/design.html#compute-mode",
+      "label": "Compute layout",
+      "order": 5,
+      "question": "Where should parallel work be attempted?",
+      "selection_kind": "user_choice",
+      "summary": "Requests serial or parallel execution across models, horizons, targets, OOS dates, or trials.",
+      "values": {
+        "distributed_cluster": {
+          "label": "Distributed cluster",
+          "summary": "Reserved route for cluster-managed execution."
+        },
+        "parallel_by_horizon": {
+          "label": "Parallel by horizon",
+          "summary": "Parallelize across forecast horizons when multiple horizons exist."
+        },
+        "parallel_by_model": {
+          "label": "Parallel by model",
+          "summary": "Parallelize across model-family variants when a model sweep exists."
+        },
+        "parallel_by_oos_date": {
+          "label": "Parallel by OOS date",
+          "summary": "Parallelize across origin dates in a long pseudo-OOS window."
+        },
+        "parallel_by_target": {
+          "label": "Parallel by target",
+          "summary": "Parallelize across targets in a multi-target run."
+        },
+        "parallel_by_trial": {
+          "label": "Parallel by trial",
+          "summary": "Reserved route for trial-level parallelism."
+        },
+        "serial": {
+          "label": "Serial execution",
+          "summary": "Run one unit of work at a time."
+        }
+      }
+    },
+    "experiment_unit": {
+      "contract": "Derived runner contract. Explicit values must match target and sweep constraints.",
+      "docs_url": "../user_guide/design.html#experiment-unit",
+      "label": "Runner unit",
+      "order": 2,
+      "question": "Which execution unit owns this recipe?",
+      "selection_kind": "usually_derived",
+      "summary": "Usually derived by the compiler from study route, target structure, and sweep shape.",
+      "values": {
+        "ablation_study": {
+          "label": "Ablation study",
+          "summary": "Reserved route for ablation-oriented execution."
+        },
+        "benchmark_suite": {
+          "label": "Benchmark suite",
+          "summary": "Reserved route for a bundled benchmark suite."
+        },
+        "hierarchical_forecasting_run": {
+          "label": "Hierarchical forecasting run",
+          "summary": "Reserved route for hierarchy-aware forecast execution."
+        },
+        "multi_target_separate_runs": {
+          "label": "Multi-target separate runs",
+          "summary": "Each target runs independently and writes separate run outputs."
+        },
+        "multi_target_shared_design": {
+          "label": "Multi-target shared design",
+          "summary": "Targets share the same data and representation design."
+        },
+        "panel_forecasting_run": {
+          "label": "Panel forecasting run",
+          "summary": "Reserved route for panel-oriented forecast execution."
+        },
+        "replication_recipe": {
+          "label": "Replication recipe",
+          "summary": "Execution unit derived for replication routes."
+        },
+        "single_target_full_sweep": {
+          "label": "Single target full sweep",
+          "summary": "Reserved grammar for wider sweep orchestration."
+        },
+        "single_target_model_grid": {
+          "label": "Single target model grid",
+          "summary": "One target with model-family variants."
+        },
+        "single_target_single_model": {
+          "label": "Single target, single model",
+          "summary": "Default unit for one target with no model sweep."
+        },
+        "state_space_run": {
+          "label": "State-space run",
+          "summary": "Reserved route for state-space forecast execution."
+        }
+      }
+    },
+    "failure_policy": {
+      "contract": "Runtime failure contract. Sweep-compatible modes decide whether invalid variants stop or are skipped.",
+      "docs_url": "../user_guide/design.html#failure-policy",
+      "label": "Failure handling",
+      "order": 3,
+      "question": "What should happen when a variant or cell fails?",
+      "selection_kind": "user_choice",
+      "summary": "Controls whether the run stops immediately, skips failed cells, or preserves partial results.",
+      "values": {
+        "fail_fast": {
+          "label": "Stop on first failure",
+          "summary": "Abort immediately so the first error can be investigated."
+        },
+        "fallback_to_default_hp": {
+          "label": "Fallback hyperparameters",
+          "summary": "Reserved policy for using default hyperparameters after tuning failure."
+        },
+        "retry_then_skip": {
+          "label": "Retry, then skip",
+          "summary": "Reserved policy for retryable cells before skipping."
+        },
+        "save_partial_results": {
+          "label": "Save partial results",
+          "summary": "Persist completed artifacts before aborting or reporting failure."
+        },
+        "skip_failed_cell": {
+          "label": "Skip failed cell",
+          "summary": "Continue a sweep while recording the failed variant status."
+        },
+        "skip_failed_model": {
+          "label": "Skip failed model",
+          "summary": "Continue after failures scoped to a model-family branch."
+        },
+        "warn_only": {
+          "label": "Warn only",
+          "summary": "Emit warnings and continue when failures are recoverable."
+        }
+      }
+    },
+    "reproducibility_mode": {
+      "contract": "Seed and determinism contract applied before stochastic model code runs.",
+      "docs_url": "../user_guide/design.html#reproducibility-mode",
+      "label": "Reproducibility",
+      "order": 4,
+      "question": "How strictly should stochastic components be pinned?",
+      "selection_kind": "user_choice",
+      "summary": "Controls seeds and deterministic-library settings before model execution.",
+      "values": {
+        "best_effort": {
+          "label": "Best effort",
+          "summary": "Apply available seeds and mark the run as non-strict."
+        },
+        "exploratory": {
+          "label": "Exploratory",
+          "summary": "Do not force deterministic behavior."
+        },
+        "seeded_reproducible": {
+          "label": "Seeded reproducibility",
+          "summary": "Seed Python, numpy, and optional torch without strict backend flags."
+        },
+        "strict_reproducible": {
+          "label": "Strict reproducibility",
+          "summary": "Use deterministic-library settings for replication-grade reruns."
+        }
+      }
+    },
+    "research_design": {
+      "contract": "User-facing runner route. This affects executor family, sweep interpretation, and artifact shape.",
+      "docs_url": "../user_guide/design.html#research-design",
+      "label": "Study route",
+      "order": 1,
+      "question": "What kind of forecasting study is this?",
+      "selection_kind": "user_choice",
+      "summary": "Selects the top-level runner route: single run, controlled comparison, wrapper bundle, or replication.",
+      "values": {
+        "controlled_variation": {
+          "label": "Controlled comparison",
+          "summary": "One or more axes vary while the rest of the path is held fixed."
+        },
+        "orchestrated_bundle": {
+          "label": "Wrapper bundle",
+          "summary": "Routes through a higher-level bundle runner when that runner has a concrete contract."
+        },
+        "replication_override": {
+          "label": "Replication route",
+          "summary": "Reruns a known recipe route and records replication-oriented provenance."
+        },
+        "single_path_benchmark": {
+          "label": "Single recipe run",
+          "summary": "One chosen path produces forecasts, metrics, and artifacts."
+        }
+      }
+    }
+  },
   "layer_labels": {
     "0_meta": "Layer 0: study design / execution grammar",
     "1_data_task": "Layer 1: official data frame",

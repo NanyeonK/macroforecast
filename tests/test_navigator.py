@@ -203,6 +203,16 @@ def test_navigator_ui_data_tree_includes_output_layer():
     assert {"export_format", "saved_objects", "provenance_fields", "artifact_granularity"}.issubset(tree_axes)
 
 
+def test_navigator_ui_data_exports_layer0_presentation_contract():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    presentation = payload["axis_presentation"]
+
+    assert presentation["research_design"]["label"] == "Study route"
+    assert presentation["research_design"]["docs_url"].endswith("#research-design")
+    assert presentation["experiment_unit"]["selection_kind"] == "usually_derived"
+    assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallel by model"
+
+
 def test_navigation_disables_tree_shap_for_non_tree_model():
     recipe = _recipe()
     recipe["path"]["7_importance"]["fixed_axes"]["importance_method"] = "tree_shap"

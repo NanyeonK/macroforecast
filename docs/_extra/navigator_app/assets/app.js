@@ -69,7 +69,6 @@ function allAxes() {
 }
 
 function axisMatchesLayer(axis) {
-  if (state.layerFilter === "downstream") return !["0_meta", "1_data_task", "2_preprocessing", "3_training"].includes(axis.layer);
   return axis.layer === state.layerFilter;
 }
 
@@ -79,9 +78,57 @@ function layerLabel(layer) {
     "1_data_task": "L1 Data task",
     "2_preprocessing": "L2 Representation",
     "3_training": "L3 Generator",
-    downstream: "L4-7 Evaluate",
+    "4_evaluation": "L4 Evaluation",
+    "5_output_provenance": "L5 Outputs",
+    "6_stat_tests": "L6 Tests",
+    "7_importance": "L7 Interpretation",
   };
-  return labels[layer] || layer || "Layer";
+  return labels[layer] || (state.data && state.data.layer_labels && state.data.layer_labels[layer]) || layer || "Layer";
+}
+
+function humanizeToken(value) {
+  return String(value || "")
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function axisPresentation(axisName) {
+  return ((state.data && state.data.axis_presentation) || {})[axisName] || {};
+}
+
+function valuePresentation(axisName, value) {
+  const presentation = axisPresentation(axisName);
+  return ((presentation.values || {})[value]) || {};
+}
+
+function axisDisplayName(axis) {
+  const presentation = axisPresentation(axis.axis);
+  return presentation.label || humanizeToken(axis.axis);
+}
+
+function axisQuestion(axis) {
+  const presentation = axisPresentation(axis.axis);
+  return presentation.question || `Choose ${humanizeToken(axis.axis).toLowerCase()}.`;
+}
+
+function axisSummary(axis) {
+  const presentation = axisPresentation(axis.axis);
+  return presentation.summary || axis.layer_label || layerLabel(axis.layer);
+}
+
+function valueDisplayName(axisName, value) {
+  const presentation = valuePresentation(axisName, value);
+  return presentation.label || humanizeToken(value);
+}
+
+function valueSummary(axisName, value) {
+  return valuePresentation(axisName, value).summary || "";
+}
+
+function docsLink(axisName) {
+  return axisPresentation(axisName).docs_url || "";
 }
 
 function filteredAxes() {
@@ -131,10 +178,11 @@ function renderAxisList() {
       const disabled = axis.options.filter((option) => !option.enabled).length;
       const active = axis.axis === state.activeAxis ? " active" : "";
       const edited = axis.edited ? " | edited" : "";
+      const selectedLabel = valueDisplayName(axis.axis, axis.selected);
       return `
         <button type="button" class="axis-button${active}" data-axis="${escapeHtml(axis.axis)}">
-          <span class="axis-name">${escapeHtml(axis.axis)}</span>
-          <span class="axis-meta">${escapeHtml(axis.layer)} | selected: ${escapeHtml(axis.selected ?? "-")} | disabled: ${disabled}${edited}</span>
+          <span class="axis-name">${escapeHtml(axisDisplayName(axis))}</span>
+          <span class="axis-meta">${escapeHtml(layerLabel(axis.layer))} | selected: ${escapeHtml(selectedLabel || "-")} | key: ${escapeHtml(axis.axis)} | disabled: ${disabled}${edited}</span>
         </button>
       `;
     })
@@ -150,21 +198,24 @@ function renderOptions() {
     els.optionList.innerHTML = "";
     return;
   }
-  els.axisTitle.textContent = axis.axis;
-  els.axisLayer.textContent = axis.layer_label || axis.layer;
-  els.axisSelected.textContent = `selected: ${axis.selected ?? "-"}`;
+  els.axisTitle.textContent = axisDisplayName(axis);
+  els.axisLayer.textContent = axisQuestion(axis);
+  els.axisSelected.textContent = `selected: ${valueDisplayName(axis.axis, axis.selected) || "-"}`;
   els.optionList.innerHTML = axis.options
     .map((option) => {
       const stateClass = option.enabled ? "enabled" : "disabled";
       const selected = option.value === axis.selected ? " selected" : "";
       const reason = option.disabled_reason ? `<p class="reason">${escapeHtml(option.disabled_reason)}</p>` : "";
       const disabledAttr = option.enabled ? "" : " disabled";
+      const summary = valueSummary(axis.axis, option.value);
       return `
         <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
-            <span>${escapeHtml(option.value)}</span>
+            <span>${escapeHtml(valueDisplayName(axis.axis, option.value))}</span>
             <span class="status">${escapeHtml(option.status)}</span>
           </div>
+          <div class="option-code">${escapeHtml(option.value)}</div>
+          ${summary ? `<p class="option-summary">${escapeHtml(summary)}</p>` : ""}
           ${reason}
           <div class="effect">${escapeHtml(option.canonical_path_effect)}</div>
         </button>
@@ -189,19 +240,32 @@ function renderTreePath() {
           ? selectedOption.canonical_path_effect
           : `selected: ${axis.selected ?? "-"}`;
         const blocked = disabledReason ? " blocked" : "";
+        const active = axis.axis === state.activeAxis ? " active" : "";
         const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
+        const docs = docsLink(axis.axis);
+        const valueLabel = valueDisplayName(axis.axis, axis.selected);
+        const selectedSummary = valueSummary(axis.axis, axis.selected);
+        const presentation = axisPresentation(axis.axis);
+        const contract = presentation.contract ? `<span class="path-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</span>` : "";
+        const status = selectedOption && selectedOption.status ? `<span class="status">${escapeHtml(selectedOption.status)}</span>` : "";
         return `
-          <li class="tree-path-item${blocked}" data-tree-axis="${escapeHtml(axis.axis)}">
-            <button type="button">
+          <li class="tree-path-item${blocked}${active}">
+            <div class="tree-path-card" data-tree-axis="${escapeHtml(axis.axis)}" tabindex="0" role="button">
               <span class="path-step">${idx + 1}</span>
               <span class="path-body">
-                <span class="path-axis">${escapeHtml(axis.axis)}</span>
-                <span class="path-value">${escapeHtml(axis.selected ?? "-")}</span>
+                <span class="path-axis">${escapeHtml(axisDisplayName(axis))}</span>
+                <span class="path-question">${escapeHtml(axisQuestion(axis))}</span>
+                <span class="path-value">${escapeHtml(valueLabel || "-")}</span>
+                <span class="path-raw">${escapeHtml(axis.axis)} = ${escapeHtml(axis.selected ?? "-")}</span>
                 ${edited}
-                <span class="path-effect">${escapeHtml(pathEffect)}</span>
+                ${status}
+                <span class="path-summary">${escapeHtml(selectedSummary || axisSummary(axis))}</span>
+                ${contract}
+                <span class="path-effect">YAML: ${escapeHtml(pathEffect)}</span>
+                ${docs ? `<a class="path-docs" href="${escapeHtml(docs)}">Detailed docs</a>` : ""}
                 ${disabledReason ? `<span class="path-reason">${escapeHtml(disabledReason)}</span>` : ""}
               </span>
-            </button>
+            </div>
           </li>
         `;
       }).join("")}
@@ -360,8 +424,19 @@ function bindEvents() {
   });
 
   els.treePath.addEventListener("click", (event) => {
+    if (event.target.closest("a")) return;
     const item = event.target.closest("[data-tree-axis]");
     if (!item) return;
+    state.activeAxis = item.dataset.treeAxis;
+    render();
+  });
+
+  els.treePath.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.target.closest("a")) return;
+    const item = event.target.closest("[data-tree-axis]");
+    if (!item) return;
+    event.preventDefault();
     state.activeAxis = item.dataset.treeAxis;
     render();
   });
