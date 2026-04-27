@@ -11,9 +11,9 @@ target series.
 
 Values:
 
-- `single_target_point_forecast`: one target series. Requires
+- `single_target`: one target series. Requires
   `leaf_config.target`.
-- `multi_target_point_forecast`: two or more target series. Requires
+- `multi_target`: two or more target series. Requires
   `leaf_config.targets`.
 
 Compatibility:
@@ -26,9 +26,9 @@ Layer 0 connection:
 
 - `experiment_unit` is derived from `target_structure` plus the sweep shape.
 - Multi-target `experiment_unit` values require
-  `target_structure=multi_target_point_forecast`.
+  `target_structure=multi_target`.
 - Single-target `experiment_unit` values require
-  `target_structure=single_target_point_forecast`.
+  `target_structure=single_target`.
 
 Recipe usage:
 
@@ -36,7 +36,7 @@ Recipe usage:
 path:
   1_data_task:
     fixed_axes:
-      target_structure: multi_target_point_forecast
+      target_structure: multi_target
     leaf_config:
       targets: [INDPRO, UNRATE, CPIAUCSL]
       horizons: [1, 3, 6]
@@ -48,7 +48,7 @@ Single-target usage:
 path:
   1_data_task:
     fixed_axes:
-      target_structure: single_target_point_forecast
+      target_structure: single_target
     leaf_config:
       target: INDPRO
       horizons: [1, 3, 6]

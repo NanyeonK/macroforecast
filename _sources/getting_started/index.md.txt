@@ -82,7 +82,7 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      target_structure: single_target_point_forecast
+      target_structure: single_target
   3_training:
     fixed_axes:
       model_family: ridge

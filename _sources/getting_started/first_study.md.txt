@@ -11,7 +11,7 @@ This walkthrough designs a complete forecasting comparison study from scratch. B
 The **fixed design** defines the comparison environment. Everything here stays constant across models:
 
 - **Dataset**: `fred_md` (FRED-MD monthly macro panel)
-- **Information set**: `revised` (latest available data, not real-time vintages)
+- **Information set**: `final_revised_data` (latest available data, not real-time vintages)
 - **Framework**: `expanding` (expanding training window)
 - **Benchmark**: `ar_bic` (AR model with BIC-selected lag order)
 - **Horizons**: 1, 3, 6, 12 months ahead
@@ -45,8 +45,8 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      information_set_type: revised
-      target_structure: single_target_point_forecast
+      information_set_type: final_revised_data
+      target_structure: single_target
       benchmark_family: ar_bic
       evaluation_scale: raw_level
     leaf_config:
@@ -69,7 +69,7 @@ path:
       preprocess_fit_scope: train_only
       inverse_transform_policy: none
       representation_policy: raw_only
-      tcode_application_scope: apply_tcode_to_none
+      tcode_application_scope: none
       target_transform: level
       target_normalization: none
       target_domain: unconstrained

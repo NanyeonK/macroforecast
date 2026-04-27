@@ -51,24 +51,24 @@ This census is generated from the live registry and Navigator tree after PR #92.
 
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
-| `contemporaneous_x_rule` | - | `enum` | `fixed` | operational=2 | `operational`: `allow_contemporaneous`, `forbid_contemporaneous` |
+| `contemporaneous_x_rule` | - | `enum` | `fixed` | operational=2 | `operational`: `allow_same_period_predictors`, `forbid_same_period_predictors` |
 | `dataset` | - | `enum` | `fixed` | operational=5 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` |
 | `fred_sd_frequency_policy` | - | `enum` | `fixed` | operational=4 | `operational`: `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` |
 | `fred_sd_state_group` | - | `enum` | `fixed` | operational=16 | `operational`: `all_states`, `census_region_northeast`, `census_region_midwest`, `census_region_south`, `census_region_west`, `census_division_new_england`, `census_division_middle_atlantic`, `census_division_east_north_central`, `census_division_west_north_central`, `census_division_south_atlantic`, `census_division_east_south_central`, `census_division_west_south_central`, `census_division_mountain`, `census_division_pacific`, `contiguous_48_plus_dc`, `custom_state_group` |
 | `fred_sd_variable_group` | - | `enum` | `fixed` | operational=12 | `operational`: `all_sd_variables`, `labor_market_core`, `employment_sector`, `gsp_output`, `housing`, `trade`, `income`, `direct_analog_high_confidence`, `provisional_analog_medium`, `semantic_review_outputs`, `no_reliable_analog`, `custom_sd_variable_group` |
 | `frequency` | - | `enum` | `fixed` | operational=2 | `operational`: `monthly`, `quarterly` |
-| `information_set_type` | - | `enum` | `fixed` | operational=2 | `operational`: `revised`, `pseudo_oos_revised` |
-| `missing_availability` | - | `enum` | `fixed` | operational=4 | `operational`: `complete_case_only`, `available_case`, `x_impute_only`, `zero_fill_before_start` |
-| `official_transform_policy` | - | `enum` | `fixed` | operational=2 | `operational`: `dataset_tcode`, `raw_official_frame` |
-| `official_transform_scope` | - | `enum` | `fixed` | operational=4 | `operational`: `apply_tcode_to_target`, `apply_tcode_to_X`, `apply_tcode_to_both`, `apply_tcode_to_none` |
-| `raw_missing_policy` | - | `enum` | `fixed` | operational=4 | `operational`: `preserve_raw_missing`, `zero_fill_leading_x_before_tcode`, `x_impute_raw`, `drop_rows_with_raw_missing` |
-| `raw_outlier_policy` | - | `enum` | `fixed` | operational=6 | `operational`: `preserve_raw_outliers`, `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, `raw_outlier_to_missing` |
+| `information_set_type` | - | `enum` | `fixed` | operational=2 | `operational`: `final_revised_data`, `pseudo_oos_on_revised_data` |
+| `missing_availability` | - | `enum` | `fixed` | operational=4 | `operational`: `require_complete_rows`, `keep_available_rows`, `impute_predictors_only`, `zero_fill_leading_predictor_gaps` |
+| `official_transform_policy` | - | `enum` | `fixed` | operational=2 | `operational`: `apply_official_tcode`, `keep_official_raw_scale` |
+| `official_transform_scope` | - | `enum` | `fixed` | operational=4 | `operational`: `target_only`, `predictors_only`, `target_and_predictors`, `none` |
+| `raw_missing_policy` | - | `enum` | `fixed` | operational=4 | `operational`: `preserve_raw_missing`, `zero_fill_leading_predictor_missing_before_tcode`, `impute_raw_predictors`, `drop_raw_missing_rows` |
+| `raw_outlier_policy` | - | `enum` | `fixed` | operational=6 | `operational`: `preserve_raw_outliers`, `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, `set_raw_outliers_to_missing` |
 | `release_lag_rule` | - | `enum` | `fixed` | operational=3 | `operational`: `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` |
 | `sd_variable_selection` | - | `enum` | `fixed` | operational=2 | `operational`: `all_sd_variables`, `selected_sd_variables` |
 | `source_adapter` | - | `enum` | `fixed` | operational=5 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` |
 | `state_selection` | - | `enum` | `fixed` | operational=2 | `operational`: `all_states`, `selected_states` |
-| `target_structure` | - | `enum` | `fixed` | operational=2 | `operational`: `single_target_point_forecast`, `multi_target_point_forecast` |
-| `variable_universe` | - | `enum` | `fixed` | operational=5 | `operational`: `all_variables`, `preselected_core`, `category_subset`, `target_specific_subset`, `handpicked_set` |
+| `target_structure` | - | `enum` | `fixed` | operational=2 | `operational`: `single_target`, `multi_target` |
+| `variable_universe` | - | `enum` | `fixed` | operational=5 | `operational`: `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` |
 
 ### Layer 2: preprocessing and representation construction
 
@@ -93,7 +93,7 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | `horizon_target_construction` | - | `enum` | `fixed` | operational=10 | `operational`: `future_target_level_t_plus_h`, `future_level_y_t_plus_h`, `future_diff`, `future_logdiff`, `average_growth_1_to_h`, `path_average_growth_1_to_h`, `average_difference_1_to_h`, `path_average_difference_1_to_h`, `average_log_growth_1_to_h`, `path_average_log_growth_1_to_h` |
 | `inverse_transform_policy` | - | `enum` | `fixed` | operational=3, external_plugin=1 | `operational`: `none`, `target_only`, `forecast_scale_only`<br>`external_plugin`: `custom` |
 | `level_feature_block` | feature_representation | `enum` | `fixed` | operational=5 | `operational`: `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` |
-| `predictor_family` | feature_representation | `enum` | `fixed` | operational=5 | `operational`: `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` |
+| `predictor_family` | feature_representation | `enum` | `fixed` | operational=5 | `operational`: `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `explicit_variable_list` |
 | `preprocess_fit_scope` | - | `enum` | `fixed` | operational=2, registry_only=2 | `operational`: `not_applicable`, `train_only`<br>`registry_only`: `expanding_train_only`, `rolling_train_only` |
 | `preprocess_order` | - | `enum` | `fixed` | operational=4, external_plugin=1, registry_only=1 | `operational`: `none`, `tcode_only`, `extra_only`, `tcode_then_extra`<br>`external_plugin`: `custom`<br>`registry_only`: `extra_then_tcode` |
 | `representation_policy` | - | `enum` | `fixed` | operational=2, registry_only=1 | `operational`: `raw_only`, `tcode_only`<br>`registry_only`: `custom_transform_only` |
@@ -111,14 +111,14 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | `target_transform` | - | `enum` | `fixed` | operational=5 | `operational`: `level`, `difference`, `log`, `log_difference`, `growth_rate` |
 | `target_transform_policy` | preprocessing | `enum` | `fixed` | operational=2, external_plugin=1 | `operational`: `raw_level`, `tcode_transformed`<br>`external_plugin`: `custom_target_transform` |
 | `target_transformer` | preprocessing | `plugin` | `fixed` | operational=1 | `operational`: `none` |
-| `tcode_application_scope` | - | `enum` | `fixed` | operational=4 | `operational`: `apply_tcode_to_target`, `apply_tcode_to_X`, `apply_tcode_to_both`, `apply_tcode_to_none` |
+| `tcode_application_scope` | - | `enum` | `fixed` | operational=4 | `operational`: `target_only`, `predictors_only`, `target_and_predictors`, `none` |
 | `tcode_policy` | preprocessing | `enum` | `fixed` | operational=4, external_plugin=1, registry_only=1 | `operational`: `raw_only`, `tcode_only`, `tcode_then_extra_preprocess`, `extra_preprocess_without_tcode`<br>`external_plugin`: `custom_transform_pipeline`<br>`registry_only`: `extra_then_tcode` |
 | `temporal_feature_block` | feature_representation | `enum` | `fixed` | operational=5, registry_only=1 | `operational`: `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features`<br>`registry_only`: `custom_temporal_features` |
 | `x_lag_creation` | - | `enum` | `fixed` | operational=2, registry_only=3 | `operational`: `no_x_lags`, `fixed_x_lags`<br>`registry_only`: `cv_selected_x_lags`, `variable_specific_lags`, `category_specific_lags` |
 | `x_lag_feature_block` | feature_representation | `enum` | `fixed` | operational=2, registry_only=4 | `operational`: `none`, `fixed_x_lags`<br>`registry_only`: `variable_specific_x_lags`, `category_specific_x_lags`, `cv_selected_x_lags`, `custom_x_lags` |
 | `x_missing_policy` | - | `enum` | `fixed` | operational=10, external_plugin=1, registry_only=1 | `operational`: `none`, `em_impute`, `mean_impute`, `median_impute`, `ffill`, `interpolate_linear`, `drop_rows`, `drop_columns`, `drop_if_above_threshold`, `missing_indicator`<br>`external_plugin`: `custom`<br>`registry_only`: `drop` |
 | `x_outlier_policy` | - | `enum` | `fixed` | operational=7, external_plugin=1, registry_only=2 | `operational`: `none`, `winsorize`, `trim`, `iqr_clip`, `mad_clip`, `zscore_clip`, `outlier_to_missing`<br>`external_plugin`: `custom`<br>`registry_only`: `clip`, `outlier_to_nan` |
-| `x_transform_policy` | preprocessing | `enum` | `fixed` | operational=2, external_plugin=1 | `operational`: `raw_level`, `dataset_tcode_transformed`<br>`external_plugin`: `custom_x_transform` |
+| `x_transform_policy` | preprocessing | `enum` | `fixed` | operational=2, external_plugin=1 | `operational`: `raw_level`, `apply_official_tcode_transformed`<br>`external_plugin`: `custom_x_transform` |
 
 ### Layer 3: forecast generation and runtime discipline
 

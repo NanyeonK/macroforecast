@@ -47,11 +47,11 @@ The first row of `current.csv` encodes the recommended stationarity transform fo
 
 In macrocast these codes are part of the Layer 1 official-frame decision:
 
-- `official_transform_policy: raw_official_frame` with
-  `official_transform_scope: apply_tcode_to_none` → ignore T-codes and keep raw
+- `official_transform_policy: keep_official_raw_scale` with
+  `official_transform_scope: none` → ignore T-codes and keep raw
   levels.
-- `official_transform_policy: dataset_tcode` with
-  `official_transform_scope: apply_tcode_to_both` → apply the CSV's per-series
+- `official_transform_policy: apply_official_tcode` with
+  `official_transform_scope: target_and_predictors` → apply the CSV's per-series
   transform before Layer 2 researcher preprocessing.
 - Legacy `tcode_policy` bridge fields are still accepted for old recipes, but
   new recipes should express official transforms through the Layer 1 axes.
@@ -77,7 +77,7 @@ The authoritative change log is maintained by the St. Louis Fed in the appendix 
 ## Known limitations in macrocast v1.0
 
 - **No variable-level metadata surface** — the package does not expose each FRED ID's description / units / source URL. Users who want that enrichment should query FRED's REST API directly.
-- **No automated T-code validation** — if St. Louis Fed changes a T-code in a new vintage, `official_transform_policy: dataset_tcode` will use the new code silently. For strict reproducibility pin the vintage.
+- **No automated T-code validation** — if St. Louis Fed changes a T-code in a new vintage, `official_transform_policy: apply_official_tcode` will use the new code silently. For strict reproducibility pin the vintage.
 - **`data_vintage` required** for `information_set_type=real_time_vintage`; bare `fred_md` assumes `information_set_type=revised` (latest available revision).
 
 ## See also

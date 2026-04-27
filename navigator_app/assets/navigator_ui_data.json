@@ -296,15 +296,15 @@
     },
     "contemporaneous_x_rule": {
       "allowed_values": [
-        "allow_contemporaneous",
-        "forbid_contemporaneous"
+        "allow_same_period_predictors",
+        "forbid_same_period_predictors"
       ],
       "axis_name": "contemporaneous_x_rule",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "allow_contemporaneous": "operational",
-        "forbid_contemporaneous": "operational"
+        "allow_same_period_predictors": "operational",
+        "forbid_same_period_predictors": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1614,15 +1614,15 @@
     },
     "information_set_type": {
       "allowed_values": [
-        "revised",
-        "pseudo_oos_revised"
+        "final_revised_data",
+        "pseudo_oos_on_revised_data"
       ],
       "axis_name": "information_set_type",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "pseudo_oos_revised": "operational",
-        "revised": "operational"
+        "final_revised_data": "operational",
+        "pseudo_oos_on_revised_data": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1761,19 +1761,19 @@
     },
     "missing_availability": {
       "allowed_values": [
-        "complete_case_only",
-        "available_case",
-        "x_impute_only",
-        "zero_fill_before_start"
+        "require_complete_rows",
+        "keep_available_rows",
+        "impute_predictors_only",
+        "zero_fill_leading_predictor_gaps"
       ],
       "axis_name": "missing_availability",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "available_case": "operational",
-        "complete_case_only": "operational",
-        "x_impute_only": "operational",
-        "zero_fill_before_start": "operational"
+        "impute_predictors_only": "operational",
+        "keep_available_rows": "operational",
+        "require_complete_rows": "operational",
+        "zero_fill_leading_predictor_gaps": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1901,15 +1901,15 @@
     },
     "official_transform_policy": {
       "allowed_values": [
-        "dataset_tcode",
-        "raw_official_frame"
+        "apply_official_tcode",
+        "keep_official_raw_scale"
       ],
       "axis_name": "official_transform_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "dataset_tcode": "operational",
-        "raw_official_frame": "operational"
+        "apply_official_tcode": "operational",
+        "keep_official_raw_scale": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -1917,19 +1917,19 @@
     },
     "official_transform_scope": {
       "allowed_values": [
-        "apply_tcode_to_target",
-        "apply_tcode_to_X",
-        "apply_tcode_to_both",
-        "apply_tcode_to_none"
+        "target_only",
+        "predictors_only",
+        "target_and_predictors",
+        "none"
       ],
       "axis_name": "official_transform_scope",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "apply_tcode_to_X": "operational",
-        "apply_tcode_to_both": "operational",
-        "apply_tcode_to_none": "operational",
-        "apply_tcode_to_target": "operational"
+        "none": "operational",
+        "predictors_only": "operational",
+        "target_and_predictors": "operational",
+        "target_only": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2033,7 +2033,7 @@
         "all_macro_vars",
         "category_based",
         "factor_only",
-        "handpicked_set"
+        "explicit_variable_list"
       ],
       "axis_name": "predictor_family",
       "axis_type": "enum",
@@ -2041,8 +2041,8 @@
       "current_status": {
         "all_macro_vars": "operational",
         "category_based": "operational",
+        "explicit_variable_list": "operational",
         "factor_only": "operational",
-        "handpicked_set": "operational",
         "target_lags_only": "operational"
       },
       "default_policy": "fixed",
@@ -2168,18 +2168,18 @@
     "raw_missing_policy": {
       "allowed_values": [
         "preserve_raw_missing",
-        "zero_fill_leading_x_before_tcode",
-        "x_impute_raw",
-        "drop_rows_with_raw_missing"
+        "zero_fill_leading_predictor_missing_before_tcode",
+        "impute_raw_predictors",
+        "drop_raw_missing_rows"
       ],
       "axis_name": "raw_missing_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "drop_rows_with_raw_missing": "operational",
+        "drop_raw_missing_rows": "operational",
+        "impute_raw_predictors": "operational",
         "preserve_raw_missing": "operational",
-        "x_impute_raw": "operational",
-        "zero_fill_leading_x_before_tcode": "operational"
+        "zero_fill_leading_predictor_missing_before_tcode": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -2192,7 +2192,7 @@
         "iqr_clip_raw",
         "mad_clip_raw",
         "zscore_clip_raw",
-        "raw_outlier_to_missing"
+        "set_raw_outliers_to_missing"
       ],
       "axis_name": "raw_outlier_policy",
       "axis_type": "enum",
@@ -2201,7 +2201,7 @@
         "iqr_clip_raw": "operational",
         "mad_clip_raw": "operational",
         "preserve_raw_outliers": "operational",
-        "raw_outlier_to_missing": "operational",
+        "set_raw_outliers_to_missing": "operational",
         "winsorize_raw": "operational",
         "zscore_clip_raw": "operational"
       },
@@ -2941,15 +2941,15 @@
     },
     "target_structure": {
       "allowed_values": [
-        "single_target_point_forecast",
-        "multi_target_point_forecast"
+        "single_target",
+        "multi_target"
       ],
       "axis_name": "target_structure",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "multi_target_point_forecast": "operational",
-        "single_target_point_forecast": "operational"
+        "multi_target": "operational",
+        "single_target": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3011,19 +3011,19 @@
     },
     "tcode_application_scope": {
       "allowed_values": [
-        "apply_tcode_to_target",
-        "apply_tcode_to_X",
-        "apply_tcode_to_both",
-        "apply_tcode_to_none"
+        "target_only",
+        "predictors_only",
+        "target_and_predictors",
+        "none"
       ],
       "axis_name": "tcode_application_scope",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "apply_tcode_to_X": "operational",
-        "apply_tcode_to_both": "operational",
-        "apply_tcode_to_none": "operational",
-        "apply_tcode_to_target": "operational"
+        "none": "operational",
+        "predictors_only": "operational",
+        "target_and_predictors": "operational",
+        "target_only": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3210,20 +3210,20 @@
     "variable_universe": {
       "allowed_values": [
         "all_variables",
-        "preselected_core",
-        "category_subset",
-        "target_specific_subset",
-        "handpicked_set"
+        "core_variables",
+        "category_variables",
+        "target_specific_variables",
+        "explicit_variable_list"
       ],
       "axis_name": "variable_universe",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
         "all_variables": "operational",
-        "category_subset": "operational",
-        "handpicked_set": "operational",
-        "preselected_core": "operational",
-        "target_specific_subset": "operational"
+        "category_variables": "operational",
+        "core_variables": "operational",
+        "explicit_variable_list": "operational",
+        "target_specific_variables": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3346,15 +3346,15 @@
     "x_transform_policy": {
       "allowed_values": [
         "raw_level",
-        "dataset_tcode_transformed",
+        "apply_official_tcode_transformed",
         "custom_x_transform"
       ],
       "axis_name": "x_transform_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
+        "apply_official_tcode_transformed": "operational",
         "custom_x_transform": "external_plugin",
-        "dataset_tcode_transformed": "operational",
         "raw_level": "operational"
       },
       "default_policy": "fixed",
@@ -3712,6 +3712,16 @@
     ],
     "axis_value_aliases": [
       {
+        "axis": "contemporaneous_x_rule",
+        "canonical_id": "allow_same_period_predictors",
+        "legacy_id": "allow_contemporaneous"
+      },
+      {
+        "axis": "contemporaneous_x_rule",
+        "canonical_id": "forbid_same_period_predictors",
+        "legacy_id": "forbid_contemporaneous"
+      },
+      {
         "axis": "experiment_unit",
         "canonical_id": "single_target_generator_grid",
         "legacy_id": "single_target_model_grid"
@@ -3727,6 +3737,91 @@
         "legacy_id": "future_level_y_t_plus_h"
       },
       {
+        "axis": "information_set_type",
+        "canonical_id": "pseudo_oos_on_revised_data",
+        "legacy_id": "pseudo_oos_revised"
+      },
+      {
+        "axis": "information_set_type",
+        "canonical_id": "final_revised_data",
+        "legacy_id": "revised"
+      },
+      {
+        "axis": "missing_availability",
+        "canonical_id": "keep_available_rows",
+        "legacy_id": "available_case"
+      },
+      {
+        "axis": "missing_availability",
+        "canonical_id": "require_complete_rows",
+        "legacy_id": "complete_case_only"
+      },
+      {
+        "axis": "missing_availability",
+        "canonical_id": "impute_predictors_only",
+        "legacy_id": "x_impute_only"
+      },
+      {
+        "axis": "missing_availability",
+        "canonical_id": "zero_fill_leading_predictor_gaps",
+        "legacy_id": "zero_fill_before_start"
+      },
+      {
+        "axis": "official_transform_policy",
+        "canonical_id": "apply_official_tcode",
+        "legacy_id": "dataset_tcode"
+      },
+      {
+        "axis": "official_transform_policy",
+        "canonical_id": "keep_official_raw_scale",
+        "legacy_id": "raw_official_frame"
+      },
+      {
+        "axis": "official_transform_scope",
+        "canonical_id": "predictors_only",
+        "legacy_id": "apply_tcode_to_X"
+      },
+      {
+        "axis": "official_transform_scope",
+        "canonical_id": "target_and_predictors",
+        "legacy_id": "apply_tcode_to_both"
+      },
+      {
+        "axis": "official_transform_scope",
+        "canonical_id": "none",
+        "legacy_id": "apply_tcode_to_none"
+      },
+      {
+        "axis": "official_transform_scope",
+        "canonical_id": "target_only",
+        "legacy_id": "apply_tcode_to_target"
+      },
+      {
+        "axis": "predictor_family",
+        "canonical_id": "explicit_variable_list",
+        "legacy_id": "handpicked_set"
+      },
+      {
+        "axis": "raw_missing_policy",
+        "canonical_id": "drop_raw_missing_rows",
+        "legacy_id": "drop_rows_with_raw_missing"
+      },
+      {
+        "axis": "raw_missing_policy",
+        "canonical_id": "impute_raw_predictors",
+        "legacy_id": "x_impute_raw"
+      },
+      {
+        "axis": "raw_missing_policy",
+        "canonical_id": "zero_fill_leading_predictor_missing_before_tcode",
+        "legacy_id": "zero_fill_leading_x_before_tcode"
+      },
+      {
+        "axis": "raw_outlier_policy",
+        "canonical_id": "set_raw_outliers_to_missing",
+        "legacy_id": "raw_outlier_to_missing"
+      },
+      {
         "axis": "research_design",
         "canonical_id": "study_bundle",
         "legacy_id": "orchestrated_bundle"
@@ -3740,6 +3835,61 @@
         "axis": "research_design",
         "canonical_id": "single_forecast_run",
         "legacy_id": "single_path_benchmark"
+      },
+      {
+        "axis": "target_structure",
+        "canonical_id": "multi_target",
+        "legacy_id": "multi_target_point_forecast"
+      },
+      {
+        "axis": "target_structure",
+        "canonical_id": "single_target",
+        "legacy_id": "single_target_point_forecast"
+      },
+      {
+        "axis": "tcode_application_scope",
+        "canonical_id": "predictors_only",
+        "legacy_id": "apply_tcode_to_X"
+      },
+      {
+        "axis": "tcode_application_scope",
+        "canonical_id": "target_and_predictors",
+        "legacy_id": "apply_tcode_to_both"
+      },
+      {
+        "axis": "tcode_application_scope",
+        "canonical_id": "none",
+        "legacy_id": "apply_tcode_to_none"
+      },
+      {
+        "axis": "tcode_application_scope",
+        "canonical_id": "target_only",
+        "legacy_id": "apply_tcode_to_target"
+      },
+      {
+        "axis": "variable_universe",
+        "canonical_id": "category_variables",
+        "legacy_id": "category_subset"
+      },
+      {
+        "axis": "variable_universe",
+        "canonical_id": "explicit_variable_list",
+        "legacy_id": "handpicked_set"
+      },
+      {
+        "axis": "variable_universe",
+        "canonical_id": "core_variables",
+        "legacy_id": "preselected_core"
+      },
+      {
+        "axis": "variable_universe",
+        "canonical_id": "target_specific_variables",
+        "legacy_id": "target_specific_subset"
+      },
+      {
+        "axis": "x_transform_policy",
+        "canonical_id": "apply_official_tcode_transformed",
+        "legacy_id": "dataset_tcode_transformed"
       }
     ],
     "version": "registry_naming_v1"
@@ -3756,7 +3906,7 @@
       "exact_tree_path": [
         "0_meta.research_design=single_forecast_run",
         "1_data_task.dataset=fred_md",
-        "1_data_task.official_transform_policy=dataset_tcode",
+        "1_data_task.official_transform_policy=apply_official_tcode",
         "2_preprocessing.tcode_policy=tcode_then_extra_preprocess",
         "2_preprocessing.scaling_policy=standard",
         "3_training.feature_builder=raw_feature_panel",
@@ -3791,18 +3941,18 @@
           },
           "1_data_task": {
             "fixed_axes": {
-              "contemporaneous_x_rule": "forbid_contemporaneous",
+              "contemporaneous_x_rule": "forbid_same_period_predictors",
               "dataset": "fred_md",
               "frequency": "monthly",
-              "information_set_type": "revised",
-              "missing_availability": "zero_fill_before_start",
-              "official_transform_policy": "dataset_tcode",
-              "official_transform_scope": "apply_tcode_to_both",
-              "raw_missing_policy": "zero_fill_leading_x_before_tcode",
+              "information_set_type": "final_revised_data",
+              "missing_availability": "zero_fill_leading_predictor_gaps",
+              "official_transform_policy": "apply_official_tcode",
+              "official_transform_scope": "target_and_predictors",
+              "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
             "leaf_config": {
@@ -3838,7 +3988,7 @@
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "dataset_tcode_transformed"
+              "x_transform_policy": "apply_official_tcode_transformed"
             }
           },
           "3_training": {
@@ -3883,7 +4033,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n      variable_universe: all_variables\n      missing_availability: zero_fill_before_start\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_contemporaneous\n      official_transform_policy: dataset_tcode\n      official_transform_scope: apply_tcode_to_both\n      raw_missing_policy: zero_fill_leading_x_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: dataset_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: apply_official_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "FRED-MD style macro forecasting path with official transformations, raw-panel ridge generator, AR-BIC benchmark, and MSFE evaluation."
     },
     {
@@ -3925,9 +4075,9 @@
           "1_data_task": {
             "fixed_axes": {
               "dataset": "fred_md",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast"
+              "target_structure": "single_target"
             },
             "leaf_config": {
               "horizons": [
@@ -3990,7 +4140,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Small fixture-safe replication route used to verify recipe lowering and artifact contracts."
     },
     {
@@ -4040,12 +4190,12 @@
               "dataset": "fred_sd",
               "fred_sd_frequency_policy": "report_only",
               "frequency": "monthly",
-              "information_set_type": "revised",
-              "official_transform_policy": "raw_official_frame",
+              "information_set_type": "final_revised_data",
+              "official_transform_policy": "keep_official_raw_scale",
               "raw_missing_policy": "preserve_raw_missing",
               "raw_outlier_policy": "preserve_raw_outliers",
               "source_adapter": "fred_sd",
-              "target_structure": "single_target_point_forecast"
+              "target_structure": "single_target"
             },
             "leaf_config": {
               "horizons": [
@@ -4120,7 +4270,7 @@
         },
         "recipe_id": "fred-sd-midasr-almonp-direct"
       },
-      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: raw_official_frame\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_x\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_x\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
@@ -4139,8 +4289,8 @@
           "1_data_task": {
             "fixed_axes": {
               "dataset": "fred_md",
-              "information_set_type": "revised",
-              "target_structure": "single_target_point_forecast"
+              "information_set_type": "final_revised_data",
+              "target_structure": "single_target"
             },
             "leaf_config": {
               "horizons": [
@@ -4202,7 +4352,7 @@
         },
         "recipe_id": "model-benchmark-ar-vs-zero-change"
       },
-      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -4216,8 +4366,8 @@
           "1_data_task": {
             "fixed_axes": {
               "dataset": "fred_md",
-              "information_set_type": "revised",
-              "target_structure": "single_target_point_forecast"
+              "information_set_type": "final_revised_data",
+              "target_structure": "single_target"
             },
             "label": "Layer 1: official data frame",
             "leaf_config": {
@@ -4348,7 +4498,7 @@
             "importance_shap": "none",
             "importance_stability": "none",
             "importance_temporal": "static_snapshot",
-            "information_set_type": "revised",
+            "information_set_type": "final_revised_data",
             "inverse_transform_policy": "none",
             "manifest_mode": "full",
             "model_family": "ar",
@@ -4376,7 +4526,7 @@
             "target": "INDPRO",
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
-            "target_structure": "single_target_point_forecast",
+            "target_structure": "single_target",
             "target_transform_policy": "raw_level",
             "tcode_policy": "raw_only",
             "test_scope": "per_target",
@@ -4698,7 +4848,7 @@
               "feature_selection_policy": "none",
               "framework": "expanding",
               "importance_method": "none",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "inverse_transform_policy": "none",
               "model_family": "ar",
               "preprocess_fit_scope": "not_applicable",
@@ -4708,7 +4858,7 @@
               "scaling_policy": "none",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "target_transform_policy": "raw_level",
               "tcode_policy": "raw_only",
               "x_missing_policy": "none",
@@ -4719,7 +4869,7 @@
               "benchmark": "zero_change",
               "dataset_adapter": "fred_md",
               "evaluation_protocol": "point_forecast_core",
-              "forecast_task": "single_target_point_forecast",
+              "forecast_task": "single_target",
               "information_set": "revised_monthly",
               "sample_split": "expanding_window_oos"
             },
@@ -5145,21 +5295,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "revised"
+                "value": "final_revised_data"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_on_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "pseudo_oos_revised"
+                "value": "pseudo_oos_on_revised_data"
               }
             ],
-            "selected": "revised"
+            "selected": "final_revised_data"
           },
           {
             "axis": "fred_sd_frequency_policy",
@@ -5415,21 +5565,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "single_target_point_forecast"
+                "value": "single_target"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "multi_target_point_forecast"
+                "value": "multi_target"
               }
             ],
-            "selected": "single_target_point_forecast"
+            "selected": "single_target"
           },
           {
             "axis": "variable_universe",
@@ -5444,32 +5594,32 @@
                 "value": "all_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'preselected_core'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'core_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "preselected_core"
+                "value": "core_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "category_subset"
+                "value": "category_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "target_specific_subset"
+                "value": "target_specific_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'handpicked_set'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'explicit_variable_list'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "handpicked_set"
+                "value": "explicit_variable_list"
               }
             ],
             "selected": null
@@ -5480,32 +5630,32 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'complete_case_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "complete_case_only"
+                "value": "require_complete_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'available_case'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'keep_available_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "available_case"
+                "value": "keep_available_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'x_impute_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'impute_predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_only"
+                "value": "impute_predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_before_start'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_leading_predictor_gaps'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_before_start"
+                "value": "zero_fill_leading_predictor_gaps"
               }
             ],
             "selected": null
@@ -5545,18 +5695,18 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "allow_contemporaneous"
+                "value": "allow_same_period_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "forbid_contemporaneous"
+                "value": "forbid_same_period_predictors"
               }
             ],
             "selected": null
@@ -5574,25 +5724,25 @@
                 "value": "preserve_raw_missing"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_x_before_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_predictor_missing_before_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_leading_x_before_tcode"
+                "value": "zero_fill_leading_predictor_missing_before_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'x_impute_raw'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'impute_raw_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_raw"
+                "value": "impute_raw_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_rows_with_raw_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_raw_missing_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "drop_rows_with_raw_missing"
+                "value": "drop_raw_missing_rows"
               }
             ],
             "selected": null
@@ -5638,11 +5788,11 @@
                 "value": "zscore_clip_raw"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'raw_outlier_to_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'set_raw_outliers_to_missing'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_outlier_to_missing"
+                "value": "set_raw_outliers_to_missing"
               }
             ],
             "selected": null
@@ -5653,18 +5803,18 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'dataset_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "dataset_tcode"
+                "value": "apply_official_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'raw_official_frame'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'keep_official_raw_scale'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_official_frame"
+                "value": "keep_official_raw_scale"
               }
             ],
             "selected": null
@@ -5675,32 +5825,32 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_target'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_target"
+                "value": "target_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_X'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_X"
+                "value": "predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_both'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_and_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_both"
+                "value": "target_and_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_none'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_none"
+                "value": "none"
               }
             ],
             "selected": null
@@ -9838,9 +9988,9 @@
           "1_data_task": {
             "fixed_axes": {
               "dataset": "fred_md",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast"
+              "target_structure": "single_target"
             },
             "leaf_config": {
               "horizons": [
@@ -9903,7 +10053,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: autoreg_lagged_target\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -9923,9 +10073,9 @@
           "1_data_task": {
             "fixed_axes": {
               "dataset": "fred_md",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast"
+              "target_structure": "single_target"
             },
             "label": "Layer 1: official data frame",
             "leaf_config": {
@@ -10059,7 +10209,7 @@
             "importance_shap": "none",
             "importance_stability": "none",
             "importance_temporal": "static_snapshot",
-            "information_set_type": "revised",
+            "information_set_type": "final_revised_data",
             "inverse_transform_policy": "none",
             "manifest_mode": "full",
             "model_family": "ar",
@@ -10090,7 +10240,7 @@
             "target": "INDPRO",
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
-            "target_structure": "single_target_point_forecast",
+            "target_structure": "single_target",
             "target_transform_policy": "raw_level",
             "tcode_policy": "raw_only",
             "test_scope": "per_target",
@@ -10424,7 +10574,7 @@
               "forecast_type": "iterated",
               "framework": "expanding",
               "importance_method": "none",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "inverse_transform_policy": "none",
               "model_family": "ar",
               "preprocess_fit_scope": "not_applicable",
@@ -10436,7 +10586,7 @@
               "source_adapter": "fred_md",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "target_transform_policy": "raw_level",
               "tcode_policy": "raw_only",
               "x_missing_policy": "none",
@@ -10447,7 +10597,7 @@
               "benchmark": "zero_change",
               "dataset_adapter": "fred_md",
               "evaluation_protocol": "point_forecast_core",
-              "forecast_task": "single_target_point_forecast",
+              "forecast_task": "single_target",
               "information_set": "revised_monthly",
               "sample_split": "expanding_window_oos"
             },
@@ -10872,21 +11022,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "revised"
+                "value": "final_revised_data"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_on_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "pseudo_oos_revised"
+                "value": "pseudo_oos_on_revised_data"
               }
             ],
-            "selected": "revised"
+            "selected": "final_revised_data"
           },
           {
             "axis": "fred_sd_frequency_policy",
@@ -11142,21 +11292,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "single_target_point_forecast"
+                "value": "single_target"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "multi_target_point_forecast"
+                "value": "multi_target"
               }
             ],
-            "selected": "single_target_point_forecast"
+            "selected": "single_target"
           },
           {
             "axis": "variable_universe",
@@ -11171,32 +11321,32 @@
                 "value": "all_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'preselected_core'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'core_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "preselected_core"
+                "value": "core_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "category_subset"
+                "value": "category_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "target_specific_subset"
+                "value": "target_specific_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'handpicked_set'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'explicit_variable_list'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "handpicked_set"
+                "value": "explicit_variable_list"
               }
             ],
             "selected": null
@@ -11207,32 +11357,32 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'complete_case_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "complete_case_only"
+                "value": "require_complete_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'available_case'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'keep_available_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "available_case"
+                "value": "keep_available_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'x_impute_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'impute_predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_only"
+                "value": "impute_predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_before_start'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_leading_predictor_gaps'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_before_start"
+                "value": "zero_fill_leading_predictor_gaps"
               }
             ],
             "selected": null
@@ -11272,18 +11422,18 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "allow_contemporaneous"
+                "value": "allow_same_period_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "forbid_contemporaneous"
+                "value": "forbid_same_period_predictors"
               }
             ],
             "selected": null
@@ -11301,25 +11451,25 @@
                 "value": "preserve_raw_missing"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_x_before_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_predictor_missing_before_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_leading_x_before_tcode"
+                "value": "zero_fill_leading_predictor_missing_before_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'x_impute_raw'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'impute_raw_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_raw"
+                "value": "impute_raw_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_rows_with_raw_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_raw_missing_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "drop_rows_with_raw_missing"
+                "value": "drop_raw_missing_rows"
               }
             ],
             "selected": null
@@ -11365,11 +11515,11 @@
                 "value": "zscore_clip_raw"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'raw_outlier_to_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'set_raw_outliers_to_missing'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_outlier_to_missing"
+                "value": "set_raw_outliers_to_missing"
               }
             ],
             "selected": null
@@ -11380,18 +11530,18 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'dataset_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "dataset_tcode"
+                "value": "apply_official_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'raw_official_frame'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'keep_official_raw_scale'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_official_frame"
+                "value": "keep_official_raw_scale"
               }
             ],
             "selected": null
@@ -11402,32 +11552,32 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_target'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_target"
+                "value": "target_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_X'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_X"
+                "value": "predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_both'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_and_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_both"
+                "value": "target_and_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_none'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_none"
+                "value": "none"
               }
             ],
             "selected": null
@@ -15563,18 +15713,18 @@
           },
           "1_data_task": {
             "fixed_axes": {
-              "contemporaneous_x_rule": "forbid_contemporaneous",
+              "contemporaneous_x_rule": "forbid_same_period_predictors",
               "dataset": "fred_md",
               "frequency": "monthly",
-              "information_set_type": "revised",
-              "missing_availability": "zero_fill_before_start",
-              "official_transform_policy": "dataset_tcode",
-              "official_transform_scope": "apply_tcode_to_both",
-              "raw_missing_policy": "zero_fill_leading_x_before_tcode",
+              "information_set_type": "final_revised_data",
+              "missing_availability": "zero_fill_leading_predictor_gaps",
+              "official_transform_policy": "apply_official_tcode",
+              "official_transform_scope": "target_and_predictors",
+              "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
             "leaf_config": {
@@ -15610,7 +15760,7 @@
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "dataset_tcode_transformed"
+              "x_transform_policy": "apply_official_tcode_transformed"
             }
           },
           "3_training": {
@@ -15655,7 +15805,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: revised\n      target_structure: single_target_point_forecast\n      variable_universe: all_variables\n      missing_availability: zero_fill_before_start\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_contemporaneous\n      official_transform_policy: dataset_tcode\n      official_transform_scope: apply_tcode_to_both\n      raw_missing_policy: zero_fill_leading_x_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: dataset_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: tcode_transformed\n      x_transform_policy: apply_official_tcode_transformed\n      tcode_policy: tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: ar_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -15673,18 +15823,18 @@
           },
           "1_data_task": {
             "fixed_axes": {
-              "contemporaneous_x_rule": "forbid_contemporaneous",
+              "contemporaneous_x_rule": "forbid_same_period_predictors",
               "dataset": "fred_md",
               "frequency": "monthly",
-              "information_set_type": "revised",
-              "missing_availability": "zero_fill_before_start",
-              "official_transform_policy": "dataset_tcode",
-              "official_transform_scope": "apply_tcode_to_both",
-              "raw_missing_policy": "zero_fill_leading_x_before_tcode",
+              "information_set_type": "final_revised_data",
+              "missing_availability": "zero_fill_leading_predictor_gaps",
+              "official_transform_policy": "apply_official_tcode",
+              "official_transform_scope": "target_and_predictors",
+              "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
               "source_adapter": "fred_md",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
             "label": "Layer 1: official data frame",
@@ -15722,7 +15872,7 @@
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "dataset_tcode_transformed"
+              "x_transform_policy": "apply_official_tcode_transformed"
             },
             "label": "Layer 2: representation construction",
             "leaf_config": {},
@@ -15794,7 +15944,7 @@
             "benchmark_scope": "same_for_all",
             "benchmark_window": "expanding",
             "compute_mode": "serial",
-            "contemporaneous_x_rule": "forbid_contemporaneous",
+            "contemporaneous_x_rule": "forbid_same_period_predictors",
             "cpa_instability": "none",
             "dataset": "fred_md",
             "decomposition_order": "marginal_effect_only",
@@ -15842,16 +15992,16 @@
             "importance_shap": "none",
             "importance_stability": "none",
             "importance_temporal": "static_snapshot",
-            "information_set_type": "revised",
+            "information_set_type": "final_revised_data",
             "inverse_transform_policy": "target_only",
             "level_feature_block": "none",
             "manifest_mode": "full",
-            "missing_availability": "zero_fill_before_start",
+            "missing_availability": "zero_fill_leading_predictor_gaps",
             "model_family": "ridge",
             "multiple_model": "none",
             "nested": "none",
-            "official_transform_policy": "dataset_tcode",
-            "official_transform_scope": "apply_tcode_to_both",
+            "official_transform_policy": "apply_official_tcode",
+            "official_transform_scope": "target_and_predictors",
             "oos_period": "all_oos_data",
             "overlap_handling": "allow_overlap",
             "point_metrics": "MSFE",
@@ -15861,7 +16011,7 @@
             "provenance_fields": "full",
             "random_seed": 42,
             "ranking": "mean_metric_rank",
-            "raw_missing_policy": "zero_fill_leading_x_before_tcode",
+            "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
             "raw_outlier_policy": "preserve_raw_outliers",
             "recursive_x_model_family": "none",
             "regime_definition": "none",
@@ -15882,7 +16032,7 @@
             "target_lag_block": "none",
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
-            "target_structure": "single_target_point_forecast",
+            "target_structure": "single_target",
             "target_transform_policy": "tcode_transformed",
             "tcode_policy": "tcode_then_extra_preprocess",
             "temporal_feature_block": "none",
@@ -15891,7 +16041,7 @@
             "x_lag_feature_block": "none",
             "x_missing_policy": "none",
             "x_outlier_policy": "none",
-            "x_transform_policy": "dataset_tcode_transformed"
+            "x_transform_policy": "apply_official_tcode_transformed"
           }
         },
         "compile_preview": {
@@ -16230,7 +16380,7 @@
               "artifact_granularity": "aggregated",
               "benchmark_family": "ar_bic",
               "compute_mode": "serial",
-              "contemporaneous_x_rule": "forbid_contemporaneous",
+              "contemporaneous_x_rule": "forbid_same_period_predictors",
               "dataset": "fred_md",
               "dimensionality_reduction_policy": "none",
               "equal_predictive": "dm",
@@ -16247,18 +16397,18 @@
               "frequency": "monthly",
               "horizon_target_construction": "future_target_level_t_plus_h",
               "importance_method": "none",
-              "information_set_type": "revised",
+              "information_set_type": "final_revised_data",
               "inverse_transform_policy": "target_only",
               "level_feature_block": "none",
-              "missing_availability": "zero_fill_before_start",
+              "missing_availability": "zero_fill_leading_predictor_gaps",
               "model_family": "ridge",
-              "official_transform_policy": "dataset_tcode",
-              "official_transform_scope": "apply_tcode_to_both",
+              "official_transform_policy": "apply_official_tcode",
+              "official_transform_scope": "target_and_predictors",
               "preprocess_fit_scope": "train_only",
               "preprocess_order": "tcode_then_extra",
               "primary_metric": "msfe",
               "provenance_fields": "full",
-              "raw_missing_policy": "zero_fill_leading_x_before_tcode",
+              "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
               "reproducibility_mode": "seeded_reproducible",
@@ -16270,7 +16420,7 @@
               "target_lag_block": "none",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
-              "target_structure": "single_target_point_forecast",
+              "target_structure": "single_target",
               "target_transform_policy": "tcode_transformed",
               "tcode_policy": "tcode_then_extra_preprocess",
               "temporal_feature_block": "none",
@@ -16278,13 +16428,13 @@
               "x_lag_feature_block": "none",
               "x_missing_policy": "none",
               "x_outlier_policy": "none",
-              "x_transform_policy": "dataset_tcode_transformed"
+              "x_transform_policy": "apply_official_tcode_transformed"
             },
             "fixed_design": {
               "benchmark": "ar_bic",
               "dataset_adapter": "fred_md",
               "evaluation_protocol": "point_forecast_core",
-              "forecast_task": "single_target_point_forecast",
+              "forecast_task": "single_target",
               "information_set": "revised_monthly",
               "sample_split": "expanding_window_oos"
             },
@@ -16715,21 +16865,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "revised"
+                "value": "final_revised_data"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_revised'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'pseudo_oos_on_revised_data'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "pseudo_oos_revised"
+                "value": "pseudo_oos_on_revised_data"
               }
             ],
-            "selected": "revised"
+            "selected": "final_revised_data"
           },
           {
             "axis": "fred_sd_frequency_policy",
@@ -16985,21 +17135,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "single_target_point_forecast"
+                "value": "single_target"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target_point_forecast'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'multi_target'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "multi_target_point_forecast"
+                "value": "multi_target"
               }
             ],
-            "selected": "single_target_point_forecast"
+            "selected": "single_target"
           },
           {
             "axis": "variable_universe",
@@ -17014,32 +17164,32 @@
                 "value": "all_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'preselected_core'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'core_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "preselected_core"
+                "value": "core_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'category_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "category_subset"
+                "value": "category_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_subset'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'target_specific_variables'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "target_specific_subset"
+                "value": "target_specific_variables"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'handpicked_set'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'explicit_variable_list'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "handpicked_set"
+                "value": "explicit_variable_list"
               }
             ],
             "selected": "all_variables"
@@ -17050,35 +17200,35 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'complete_case_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "complete_case_only"
+                "value": "require_complete_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'available_case'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'keep_available_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "available_case"
+                "value": "keep_available_rows"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'x_impute_only'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'impute_predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_only"
+                "value": "impute_predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_before_start'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'zero_fill_leading_predictor_gaps'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_before_start"
+                "value": "zero_fill_leading_predictor_gaps"
               }
             ],
-            "selected": "zero_fill_before_start"
+            "selected": "zero_fill_leading_predictor_gaps"
           },
           {
             "axis": "release_lag_rule",
@@ -17115,21 +17265,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "allow_contemporaneous"
+                "value": "allow_same_period_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_contemporaneous'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'forbid_same_period_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "forbid_contemporaneous"
+                "value": "forbid_same_period_predictors"
               }
             ],
-            "selected": "forbid_contemporaneous"
+            "selected": "forbid_same_period_predictors"
           },
           {
             "axis": "raw_missing_policy",
@@ -17144,28 +17294,28 @@
                 "value": "preserve_raw_missing"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_x_before_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'zero_fill_leading_predictor_missing_before_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "zero_fill_leading_x_before_tcode"
+                "value": "zero_fill_leading_predictor_missing_before_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'x_impute_raw'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'impute_raw_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "x_impute_raw"
+                "value": "impute_raw_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_rows_with_raw_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'drop_raw_missing_rows'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "drop_rows_with_raw_missing"
+                "value": "drop_raw_missing_rows"
               }
             ],
-            "selected": "zero_fill_leading_x_before_tcode"
+            "selected": "zero_fill_leading_predictor_missing_before_tcode"
           },
           {
             "axis": "raw_outlier_policy",
@@ -17208,11 +17358,11 @@
                 "value": "zscore_clip_raw"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'raw_outlier_to_missing'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'set_raw_outliers_to_missing'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_outlier_to_missing"
+                "value": "set_raw_outliers_to_missing"
               }
             ],
             "selected": "preserve_raw_outliers"
@@ -17223,21 +17373,21 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'dataset_tcode'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "dataset_tcode"
+                "value": "apply_official_tcode"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'raw_official_frame'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'keep_official_raw_scale'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "raw_official_frame"
+                "value": "keep_official_raw_scale"
               }
             ],
-            "selected": "dataset_tcode"
+            "selected": "apply_official_tcode"
           },
           {
             "axis": "official_transform_scope",
@@ -17245,35 +17395,35 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_target'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_target"
+                "value": "target_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_X'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'predictors_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_X"
+                "value": "predictors_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_both'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_and_predictors'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_both"
+                "value": "target_and_predictors"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'apply_tcode_to_none'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'none'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "apply_tcode_to_none"
+                "value": "none"
               }
             ],
-            "selected": "apply_tcode_to_both"
+            "selected": "target_and_predictors"
           },
           {
             "axis": "fred_sd_mixed_frequency_representation",

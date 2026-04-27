@@ -100,7 +100,7 @@ path:
       experiment_unit: multi_target_shared_design
   1_data_task:
     fixed_axes:
-      target_structure: multi_target_point_forecast
+      target_structure: multi_target
     leaf_config:
       targets: [INDPRO, RPI]
 ```
@@ -127,7 +127,7 @@ path:
       experiment_unit: multi_target_separate_runs
   1_data_task:
     fixed_axes:
-      target_structure: multi_target_point_forecast
+      target_structure: multi_target
     leaf_config:
       targets: [INDPRO, RPI]
 ```
@@ -254,7 +254,7 @@ runtime = registry placeholder; not opened as runnable route
 |---|---|
 | `research_design=replication_recipe` | `replication_recipe` |
 | `leaf_config.wrapper_family` names a known unit | that wrapper family |
-| `target_structure=multi_target_point_forecast` | `multi_target_shared_design` |
+| `target_structure=multi_target` | `multi_target_shared_design` |
 | `research_design=study_bundle` | `benchmark_suite` unless a wrapper family overrides it |
 | both `model_family` and `feature_builder` are swept | `single_target_full_sweep` |
 | either `model_family` or `feature_builder` is swept | `single_target_generator_grid` |
@@ -295,7 +295,7 @@ path:
       experiment_unit: multi_target_shared_design
   1_data_task:
     fixed_axes:
-      target_structure: multi_target_point_forecast
+      target_structure: multi_target
     leaf_config:
       targets: [INDPRO, RPI]
 ```

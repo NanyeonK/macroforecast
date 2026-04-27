@@ -111,17 +111,17 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | schema loaded/merged → `raw_result.data.columns`; standalone FRED-SD requires explicit `frequency` |
 | `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | which loader fires (`_load_raw_for_recipe`), `manifest.raw_artifact`; legacy `dataset_source` is accepted as an alias |
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
-| `information_set_type` | `revised`, `pseudo_oos_revised` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
-| `target_structure` | `single_target_point_forecast`, `multi_target_point_forecast` | target cardinality; legacy `task` is accepted as an alias; Layer 0 derives `experiment_unit` from this plus sweep shape |
+| `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
+| `target_structure` | `single_target`, `multi_target` | target cardinality; legacy `task` is accepted as an alias; Layer 0 derives `experiment_unit` from this plus sweep shape |
 | `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` | FRED-SD selected-panel native-frequency gate; strict modes consume `fred_sd_frequency_report_v1` before Layer 2 |
 | `fred_sd_state_group` | `all_states`, Census regions/divisions, `contiguous_48_plus_dc`, `custom_state_group` | FRED-SD recipe-level state bundle; non-default values resolve to `state_selection=selected_states` before loading |
 | `fred_sd_variable_group` | `all_sd_variables`, economic/t-code-review groups, `custom_sd_variable_group` | FRED-SD recipe-level workbook-variable bundle; non-default values resolve to `sd_variable_selection=selected_sd_variables` before loading |
 | `state_selection` | `all_states`, `selected_states` | FRED-SD source-load state selector; `selected_states` reads `leaf_config.sd_states` |
 | `sd_variable_selection` | `all_sd_variables`, `selected_sd_variables` | FRED-SD source-load workbook-sheet selector; `selected_sd_variables` reads `leaf_config.sd_variables` |
-| `variable_universe` | `all_variables`, `preselected_core`, `category_subset`, `target_specific_subset`, `handpicked_set` | `_apply_variable_universe`; `handpicked_set` reads `leaf_config.variable_universe_columns`; target + date columns always preserved |
-| `missing_availability` | `zero_fill_before_start`, `complete_case_only`, `available_case`, `x_impute_only` | default `zero_fill_before_start` reports/fills predictor leading gaps; `x_impute_only` requires `leaf_config.x_imputation` ∈ {mean, median, ffill, bfill} |
+| `variable_universe` | `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` | `_apply_variable_universe`; `explicit_variable_list` reads `leaf_config.variable_universe_columns`; target + date columns always preserved |
+| `missing_availability` | `zero_fill_leading_predictor_gaps`, `require_complete_rows`, `keep_available_rows`, `impute_predictors_only` | default `zero_fill_leading_predictor_gaps` reports/fills predictor leading gaps; `impute_predictors_only` requires `leaf_config.x_imputation` ∈ {mean, median, ffill, bfill} |
 | `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | `_apply_release_lag`; `series_specific_lag` requires `leaf_config.release_lag_per_series: dict[str, int]` |
-| `contemporaneous_x_rule` | `allow_contemporaneous`, `forbid_contemporaneous` | affects `_build_raw_panel_training_data` X alignment (forbid: X_t paired with y_{t+h}; allow: X_{t+h} oracle benchmark) |
+| `contemporaneous_x_rule` | `allow_same_period_predictors`, `forbid_same_period_predictors` | affects `_build_raw_panel_training_data` X alignment (forbid: X_t paired with y_{t+h}; allow: X_{t+h} oracle benchmark) |
 
 Layer 2 FRED-SD follow-up:
 

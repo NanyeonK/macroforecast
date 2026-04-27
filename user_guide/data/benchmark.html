@@ -241,7 +241,7 @@
 <td><p>operational</p></td>
 <td><p>Columns whose name starts with <code class="docutils literal notranslate"><span class="pre">F_</span></code> (factor outputs).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns:</span> <span class="pre">list[str]</span></code>.</p></td>
 </tr>
@@ -253,7 +253,7 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._raw_panel_columns(frame,</span> <span class="pre">target,</span> <span class="pre">predictor_family,</span> <span class="pre">spec)</span></code> dispatches on the rule.</p></li>
 <li><p>Target column is always excluded from the predictor set.</p></li>
-<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_based</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_based</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></li>
 </ul>
 </section>
 <section id="dropped-values">
@@ -268,7 +268,7 @@
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">predictor_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">handpicked_set</span>
+<span class="w">      </span><span class="nt">predictor_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explicit_variable_list</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">handpicked_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
 <span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
@@ -297,19 +297,19 @@
 <td><p>operational</p></td>
 <td><p>Default. No filter.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preselected_core</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">core_variables</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>FRED-MD core macro variables (<code class="docutils literal notranslate"><span class="pre">_PRESELECTED_CORE</span></code> set).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns:</span> <span class="pre">list[str]</span></code>. Consolidates the former paper_replication / expert_curated / stability_filtered / correlation_screened subsets — all four had identical runtime semantics (drop_duplicate cleanup, 2026-04-21).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_subset</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_variables</span></code></p></td>
 <td><p>operational</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns:</span> <span class="pre">dict[str,</span> <span class="pre">list[str]]</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_subset</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code></p></td>
 <td><p>operational</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns:</span> <span class="pre">dict[target,</span> <span class="pre">list[str]]</span></code>.</p></td>
 </tr>
@@ -322,14 +322,14 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_variable_universe(raw_result,</span> <span class="pre">rule,</span> <span class="pre">spec,</span> <span class="pre">target)</span></code> is called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></li>
 <li><p>Target and date columns are always preserved after filtering.</p></li>
 <li><p>Runtime discovery (stability / correlation) is out of scope — users supply the subset.</p></li>
-<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_subset</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>; <code class="docutils literal notranslate"><span class="pre">target_specific_subset</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code> entries for the current target(s).</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>; <code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code> entries for the current target(s).</p></li>
 </ul>
 </section>
 <section id="id6">
 <h3>Dropped values<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">feature_selection_dynamic_subset</span></code>: CV-in-training feature selection loop requires a tuning-engine extension — deferred to v1.1.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">paper_replication_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">expert_curated_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">stability_filtered_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">correlation_screened_subset</span></code> (2026-04-21): four labels shared identical runtime semantics (single <code class="docutils literal notranslate"><span class="pre">list[str]</span></code> input + column filter). Consolidated into <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paper_replication_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">expert_curated_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">stability_filtered_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">correlation_screened_subset</span></code> (2026-04-21): four labels shared identical runtime semantics (single <code class="docutils literal notranslate"><span class="pre">list[str]</span></code> input + column filter). Consolidated into <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code>.</p></li>
 </ul>
 </section>
 <section id="id7">
@@ -338,7 +338,7 @@
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_specific_subset</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_specific_variables</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target_specific_columns</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
@@ -349,7 +349,7 @@
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">handpicked_set</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explicit_variable_list</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">variable_universe_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
 </pre></div>

@@ -20,12 +20,12 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 - `vintage_policy` — dropped as a separate axis. Current real-time vintage control is handled by `information_set_type` plus `leaf_config.data_vintage`, including FRED-SD vintages.
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
 **At a glance (defaults):**
-- `missing_availability = zero_fill_before_start` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `complete_case_only`, `available_case`, or `x_impute_only` only when a specific missing-data treatment matters.
+- `missing_availability = zero_fill_leading_predictor_gaps` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `require_complete_rows`, `keep_available_rows`, or `impute_predictors_only` only when a specific missing-data treatment matters.
 - `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
 - `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before official transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
 - `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
 - `structural_break_segmentation = none` — no break dummies. Switch to `pre_post_crisis` / `pre_post_covid` to add a single NBER-dated break dummy.
-- `contemporaneous_x_rule = forbid_contemporaneous` — realistic real-time constraint. Switch to `allow_contemporaneous` only for oracle / data-leak benchmarks.
+- `contemporaneous_x_rule = forbid_same_period_predictors` — realistic real-time constraint. Switch to `allow_same_period_predictors` only for oracle / data-leak benchmarks.
 
 **Most research runs leave all six at the default.**
 
@@ -40,18 +40,18 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 
 | Value | Status | What it does |
 |---|---|---|
-| `zero_fill_before_start` | operational | Default. Within the selected sample period, predictor leading missing values are filled with 0. Fully missing predictors are also filled with 0 and warned. Target leading missing dates are reported; target mid-sample missing blocks execution. |
-| `complete_case_only` | operational | No panel-level filter; downstream executors handle NaNs per their own policy. |
-| `available_case` | operational | Drop rows where any non-date column has NaN before training. Aggressive but legitimate on short fixture windows. |
-| `x_impute_only` | operational | Impute predictor (non-target) columns using `leaf_config.x_imputation` ∈ {`mean`, `median`, `ffill`, `bfill`}. Target column retains NaNs so the OOS loop still sees target missingness. |
+| `zero_fill_leading_predictor_gaps` | operational | Default. Within the selected sample period, predictor leading missing values are filled with 0. Fully missing predictors are also filled with 0 and warned. Target leading missing dates are reported; target mid-sample missing blocks execution. |
+| `require_complete_rows` | operational | No panel-level filter; downstream executors handle NaNs per their own policy. |
+| `keep_available_rows` | operational | Drop rows where any non-date column has NaN before training. Aggressive but legitimate on short fixture windows. |
+| `impute_predictors_only` | operational | Impute predictor (non-target) columns using `leaf_config.x_imputation` ∈ {`mean`, `median`, `ffill`, `bfill`}. Target column retains NaNs so the OOS loop still sees target missingness. |
 
 ### Functions & features
 
-- Sample-period availability path: `macrocast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_before_start` and records `data_reports["availability"]`.
+- Sample-period availability path: `macrocast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_leading_predictor_gaps` and records `data_reports["availability"]`.
 - General missing policy path: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
 - Called during dataset loading in `execute_recipe` after official transforms
   have produced the selected frame and before researcher preprocessing runs.
-- Compile guard: `x_impute_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
+- Compile guard: `impute_predictors_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
 
 ### Dropped values
 
@@ -64,7 +64,7 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 path:
   1_data_task:
     fixed_axes:
-      missing_availability: x_impute_only
+      missing_availability: impute_predictors_only
     leaf_config:
       x_imputation: ffill
 ```
@@ -80,15 +80,15 @@ path:
 | Value | Status | What it does |
 |---|---|---|
 | `preserve_raw_missing` | operational | Default. Leave raw-source missing values untouched before official transforms/T-codes. |
-| `zero_fill_leading_x_before_tcode` | operational | Within the selected sample period, fill predictor leading missing values with 0 before official transforms/T-codes. |
-| `x_impute_raw` | operational | Impute raw predictor columns before official transforms/T-codes using `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}. |
-| `drop_rows_with_raw_missing` | operational | Drop rows with any raw-source missing value before official transforms/T-codes. Aggressive; use only for explicit full-mode designs. |
+| `zero_fill_leading_predictor_missing_before_tcode` | operational | Within the selected sample period, fill predictor leading missing values with 0 before official transforms/T-codes. |
+| `impute_raw_predictors` | operational | Impute raw predictor columns before official transforms/T-codes using `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}. |
+| `drop_raw_missing_rows` | operational | Drop rows with any raw-source missing value before official transforms/T-codes. Aggressive; use only for explicit full-mode designs. |
 
 ### Functions & features
 
 - Runtime path: `macrocast.execution.build._apply_raw_missing_policy(raw_result, rule, *, target, spec)`.
 - Called before `macrocast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
-- Compile guard: `x_impute_raw` without valid `leaf_config.raw_x_imputation` raises `CompileValidationError`.
+- Compile guard: `impute_raw_predictors` without valid `leaf_config.raw_x_imputation` raises `CompileValidationError`.
 - Provenance: runtime records `data_reports["raw_missing"]` with `before_official_transform: true`.
 
 ### Recipe usage
@@ -98,7 +98,7 @@ path:
 path:
   1_data_task:
     fixed_axes:
-      raw_missing_policy: x_impute_raw
+      raw_missing_policy: impute_raw_predictors
     leaf_config:
       raw_x_imputation: ffill
 ```
@@ -118,7 +118,7 @@ path:
 | `iqr_clip_raw` | operational | Clip raw numeric columns by 1.5 IQR fences. |
 | `mad_clip_raw` | operational | Clip raw numeric columns by 3 MAD fences. |
 | `zscore_clip_raw` | operational | Clip raw numeric columns by 3 standard deviations. |
-| `raw_outlier_to_missing` | operational | Convert values outside the 1st and 99th percentiles to missing before official transforms/T-codes. |
+| `set_raw_outliers_to_missing` | operational | Convert values outside the 1st and 99th percentiles to missing before official transforms/T-codes. |
 
 ### Functions & features
 
@@ -224,8 +224,8 @@ path:
 
 | Value | Status | What it does |
 |---|---|---|
-| `forbid_contemporaneous` | operational | Default. `X_pred` is taken at the forecast origin `t` (no contemporaneous observation of y_{t+h}). Realistic real-time forecasting. |
-| `allow_contemporaneous` | operational | `X_pred` is taken at the target date `t+h`, aligned with `y_{t+h}`. Oracle / data-leak benchmark used in some comparisons. |
+| `forbid_same_period_predictors` | operational | Default. `X_pred` is taken at the forecast origin `t` (no contemporaneous observation of y_{t+h}). Realistic real-time forecasting. |
+| `allow_same_period_predictors` | operational | `X_pred` is taken at the target date `t+h`, aligned with `y_{t+h}`. Oracle / data-leak benchmark used in some comparisons. |
 
 ### Functions & features
 
@@ -239,7 +239,7 @@ path:
 path:
   1_data_task:
     fixed_axes:
-      contemporaneous_x_rule: allow_contemporaneous
+      contemporaneous_x_rule: allow_same_period_predictors
   3_training:
     fixed_axes:
       feature_builder: raw_feature_panel

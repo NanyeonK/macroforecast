@@ -78,7 +78,7 @@ The package-native route uses:
 
 ```text
 1_data_task.dataset=fred_md
-1_data_task.official_transform_policy=dataset_tcode
+1_data_task.official_transform_policy=apply_official_tcode
 2_preprocessing.tcode_policy=tcode_then_extra_preprocess
 2_preprocessing.scaling_policy=standard
 3_training.feature_builder=raw_feature_panel

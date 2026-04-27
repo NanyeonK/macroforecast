@@ -12,8 +12,8 @@ Current MVP profile:
 
 | Choice | Value |
 |--------|-------|
-| `information_set_type` | `revised` |
-| `target_structure` | `single_target_point_forecast` |
+| `information_set_type` | `final_revised_data` |
+| `target_structure` | `single_target` |
 | `framework` | `expanding` |
 | `benchmark_family` | `zero_change` |
 | `feature_builder` | `autoreg_lagged_target` |

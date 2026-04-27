@@ -261,7 +261,7 @@ parent sweep        = compile_sweep_plan / execute_sweep
 <span class="w">      </span><span class="nt">experiment_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_shared_design</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_point_forecast</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">INDPRO</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">RPI</span><span class="p p-Indicator">]</span>
 </pre></div>
@@ -286,7 +286,7 @@ target mode = shared design
 <span class="w">      </span><span class="nt">experiment_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_separate_runs</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_point_forecast</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">INDPRO</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">RPI</span><span class="p p-Indicator">]</span>
 </pre></div>
@@ -408,7 +408,7 @@ runtime = registry placeholder; not opened as runnable route
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.wrapper_family</span></code> names a known unit</p></td>
 <td><p>that wrapper family</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure=multi_target_point_forecast</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure=multi_target</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">research_design=study_bundle</span></code></p></td>
@@ -454,7 +454,7 @@ runtime = registry placeholder; not opened as runnable route
 <span class="w">      </span><span class="nt">experiment_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_shared_design</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target_point_forecast</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">INDPRO</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">RPI</span><span class="p p-Indicator">]</span>
 </pre></div>

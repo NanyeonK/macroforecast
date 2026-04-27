@@ -14,7 +14,7 @@ Declares **where the data comes from and which information-set regime applies**.
 - `dataset` — no default; you pick one of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`.
 - `source_adapter` — mirrors `dataset` automatically (canonical FRED loader). Override only for `custom_csv` / `custom_parquet`.
 - `frequency` — derived from `dataset` for MD/QD/composites. Standalone `fred_sd` requires an explicit monthly/quarterly choice.
-- `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_revised` only when you want synthetic release-lag masking.
+- `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_on_revised_data` only when you want synthetic release-lag masking.
 
 **Most research runs need only `dataset` + `information_set_type`.** The other two auto-derive.
 
@@ -178,8 +178,8 @@ Usually omitted for MD/QD/composites because the dataset implies the frequency. 
 
 | Value | Status | Contract |
 |---|---|---|
-| `revised` | operational | Latest revised values (post-revision truth). Default. |
-| `pseudo_oos_revised` | operational | Pseudo out-of-sample: latest revised values but masked according to (fake) release-lag discipline. |
+| `final_revised_data` | operational | Latest revised values (post-revision truth). Default. |
+| `pseudo_oos_on_revised_data` | operational | Pseudo out-of-sample: latest revised values but masked according to (fake) release-lag discipline. |
 
 ### Functions & features
 
@@ -199,7 +199,7 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      information_set_type: revised
+      information_set_type: final_revised_data
     leaf_config:
       target: INDPRO
 
@@ -208,7 +208,7 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      information_set_type: pseudo_oos_revised
+      information_set_type: pseudo_oos_on_revised_data
 ```
 
 ---

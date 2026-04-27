@@ -116,7 +116,7 @@ path:
       compute_mode: parallel_by_target
   1_data_task:
     fixed_axes:
-      target_structure: multi_target_point_forecast
+      target_structure: multi_target
     leaf_config:
       targets: [INDPRO, RPI]
 ```

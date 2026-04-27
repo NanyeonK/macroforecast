@@ -147,11 +147,11 @@
 </table>
 <p>In macrocast these codes are part of the Layer 1 official-frame decision:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">raw_official_frame</span></code> with
-<code class="docutils literal notranslate"><span class="pre">official_transform_scope:</span> <span class="pre">apply_tcode_to_none</span></code> → ignore T-codes and keep raw
+<li><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">keep_official_raw_scale</span></code> with
+<code class="docutils literal notranslate"><span class="pre">official_transform_scope:</span> <span class="pre">none</span></code> → ignore T-codes and keep raw
 levels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">dataset_tcode</span></code> with
-<code class="docutils literal notranslate"><span class="pre">official_transform_scope:</span> <span class="pre">apply_tcode_to_both</span></code> → apply the CSV’s per-series
+<li><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">apply_official_tcode</span></code> with
+<code class="docutils literal notranslate"><span class="pre">official_transform_scope:</span> <span class="pre">target_and_predictors</span></code> → apply the CSV’s per-series
 transform before Layer 2 researcher preprocessing.</p></li>
 <li><p>Legacy <code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code> bridge fields are still accepted for old recipes, but
 new recipes should express official transforms through the Layer 1 axes.</p></li>
@@ -181,7 +181,7 @@ new recipes should express official transforms through the Layer 1 axes.</p></li
 <h2>Known limitations in macrocast v1.0<a class="headerlink" href="#known-limitations-in-macrocast-v1-0" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><strong>No variable-level metadata surface</strong> — the package does not expose each FRED ID’s description / units / source URL. Users who want that enrichment should query FRED’s REST API directly.</p></li>
-<li><p><strong>No automated T-code validation</strong> — if St. Louis Fed changes a T-code in a new vintage, <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">dataset_tcode</span></code> will use the new code silently. For strict reproducibility pin the vintage.</p></li>
+<li><p><strong>No automated T-code validation</strong> — if St. Louis Fed changes a T-code in a new vintage, <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">apply_official_tcode</span></code> will use the new code silently. For strict reproducibility pin the vintage.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">data_vintage</span></code> required</strong> for <code class="docutils literal notranslate"><span class="pre">information_set_type=real_time_vintage</span></code>; bare <code class="docutils literal notranslate"><span class="pre">fred_md</span></code> assumes <code class="docutils literal notranslate"><span class="pre">information_set_type=revised</span></code> (latest available revision).</p></li>
 </ul>
 </section>

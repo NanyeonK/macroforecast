@@ -84,13 +84,13 @@ path:
 | `all_macro_vars` | operational | Every column except the target. Default for raw-panel recipes. |
 | `category_based` | operational | User-supplied category mapping: `leaf_config.predictor_category_columns: dict[str, list[str]]` + `leaf_config.predictor_category`. |
 | `factor_only` | operational | Columns whose name starts with `F_` (factor outputs). |
-| `handpicked_set` | operational | User-supplied column list: `leaf_config.handpicked_columns: list[str]`. |
+| `explicit_variable_list` | operational | User-supplied column list: `leaf_config.handpicked_columns: list[str]`. |
 
 ### Functions & features
 
 - `macrocast.execution.build._raw_panel_columns(frame, target, predictor_family, spec)` dispatches on the rule.
 - Target column is always excluded from the predictor set.
-- Compile guards: `handpicked_set` requires `leaf_config.handpicked_columns`; `category_based` requires `leaf_config.predictor_category_columns` and `leaf_config.predictor_category`.
+- Compile guards: `explicit_variable_list` requires `leaf_config.handpicked_columns`; `category_based` requires `leaf_config.predictor_category_columns` and `leaf_config.predictor_category`.
 
 ### Dropped values
 
@@ -103,7 +103,7 @@ path:
 path:
   1_data_task:
     fixed_axes:
-      predictor_family: handpicked_set
+      predictor_family: explicit_variable_list
     leaf_config:
       handpicked_columns: [RPI, UNRATE, CPIAUCSL]
   3_training:
@@ -123,22 +123,22 @@ path:
 | Value | Status | What it does |
 |---|---|---|
 | `all_variables` | operational | Default. No filter. |
-| `preselected_core` | operational | FRED-MD core macro variables (`_PRESELECTED_CORE` set). |
-| `handpicked_set` | operational | User-supplied column list: `leaf_config.variable_universe_columns: list[str]`. Consolidates the former paper_replication / expert_curated / stability_filtered / correlation_screened subsets — all four had identical runtime semantics (drop_duplicate cleanup, 2026-04-21). |
-| `category_subset` | operational | `leaf_config.variable_universe_category_columns: dict[str, list[str]]` + `leaf_config.variable_universe_category`. |
-| `target_specific_subset` | operational | `leaf_config.target_specific_columns: dict[target, list[str]]`. |
+| `core_variables` | operational | FRED-MD core macro variables (`_PRESELECTED_CORE` set). |
+| `explicit_variable_list` | operational | User-supplied column list: `leaf_config.variable_universe_columns: list[str]`. Consolidates the former paper_replication / expert_curated / stability_filtered / correlation_screened subsets — all four had identical runtime semantics (drop_duplicate cleanup, 2026-04-21). |
+| `category_variables` | operational | `leaf_config.variable_universe_category_columns: dict[str, list[str]]` + `leaf_config.variable_universe_category`. |
+| `target_specific_variables` | operational | `leaf_config.target_specific_columns: dict[target, list[str]]`. |
 
 ### Functions & features
 
 - `macrocast.execution.build._apply_variable_universe(raw_result, rule, spec, target)` is called during dataset loading in `execute_recipe`.
 - Target and date columns are always preserved after filtering.
 - Runtime discovery (stability / correlation) is out of scope — users supply the subset.
-- Compile guards: `handpicked_set` requires `leaf_config.variable_universe_columns`; `category_subset` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`; `target_specific_subset` requires `leaf_config.target_specific_columns` entries for the current target(s).
+- Compile guards: `explicit_variable_list` requires `leaf_config.variable_universe_columns`; `category_variables` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`; `target_specific_variables` requires `leaf_config.target_specific_columns` entries for the current target(s).
 
 ### Dropped values
 
 - `feature_selection_dynamic_subset`: CV-in-training feature selection loop requires a tuning-engine extension — deferred to v1.1.
-- `paper_replication_subset`, `expert_curated_subset`, `stability_filtered_subset`, `correlation_screened_subset` (2026-04-21): four labels shared identical runtime semantics (single `list[str]` input + column filter). Consolidated into `handpicked_set`.
+- `paper_replication_subset`, `expert_curated_subset`, `stability_filtered_subset`, `correlation_screened_subset` (2026-04-21): four labels shared identical runtime semantics (single `list[str]` input + column filter). Consolidated into `explicit_variable_list`.
 
 ### Recipe usage
 
@@ -147,7 +147,7 @@ path:
 path:
   1_data_task:
     fixed_axes:
-      variable_universe: target_specific_subset
+      variable_universe: target_specific_variables
     leaf_config:
       target_specific_columns:
         INDPRO: [RPI, UNRATE, CPIAUCSL]
@@ -159,7 +159,7 @@ path:
 path:
   1_data_task:
     fixed_axes:
-      variable_universe: handpicked_set
+      variable_universe: explicit_variable_list
     leaf_config:
       variable_universe_columns: [RPI, UNRATE, CPIAUCSL]
 ```

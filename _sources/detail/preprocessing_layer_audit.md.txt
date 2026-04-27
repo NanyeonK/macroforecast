@@ -41,7 +41,7 @@ feature-representation bridge axes. The canonical decision groups are:
 | Legacy representation bridge | `target_transform_policy`, `x_transform_policy`, `tcode_policy`, `representation_policy`, `tcode_application_scope` | Compatibility fields that still help the runtime `PreprocessContract` represent raw vs official T-code frames. They are not the canonical place to choose official transforms in new recipes. |
 
 The natural full Layer 2 profile is
-`dataset_tcode_then_train_only_extra`: Layer 1 applies official FRED-MD/QD
+`apply_official_tcode_then_train_only_extra`: Layer 1 applies official FRED-MD/QD
 transforms/T-codes, then Layer 2 applies researcher-selected imputation,
 scaling, filtering, dimensionality reduction, feature selection, or custom
 preprocessing under train-only fit discipline. That profile is the current
@@ -69,7 +69,7 @@ records what the current runtime can execute today.
 | `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed `target_t` / `target_origin`; X-level add-back appends raw-level `H` predictor values preserved before official transforms/T-codes; selected subset add-back restricts those columns via `leaf_config.selected_level_addback_columns`; level-growth pairs record existing transformed predictor columns with raw-level counterparts from `leaf_config.level_growth_pair_columns`. |
 | `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features`, registered `custom_temporal_features` | Moving-average, rolling-moment, local-temporal-factor, and volatility temporal features are executable for raw-panel feature runtimes with trailing 3-period `{predictor}_ma3`, `{predictor}_mean3` / `{predictor}_var3`, deterministic `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, and `{predictor}_vol3` features. Registered custom temporal callables execute under `custom_feature_block_callable_v1`. They can compose with fixed X lags, `moving_average_rotation`, and MARX append mode. |
 | Other feature-block primitive axes | `rotation_feature_block=none`, `moving_average_rotation`, `marx_rotation`, `maf_rotation`, registered `custom_rotation` | Non-rotated feature representation is executable and records explicit no-rotation provenance when selected. `moving_average_rotation` is executable for raw-panel feature runtimes as deterministic trailing 3- and 6-period rotations of each active predictor and can compose with fixed X lags plus deterministic temporal append blocks. `marx_rotation` is executable for raw-panel feature runtimes when `leaf_config.marx_max_lag` is set; it builds `lag_polynomial_rotation_contract_v1` features, replaces the source X lag-polynomial basis, supports `marx_then_factor`, supports `factor_then_marx` via `factor_rotation_order=factor_then_rotation`, and supports append/concatenate composition with fixed X lags or deterministic temporal blocks through `feature_block_combination=append_to_base_x` / `concatenate_named_blocks`. `maf_rotation` is executable as a factor-score moving-average composer for `pca_static_factors`. Registered custom rotations execute under `custom_feature_block_callable_v1`. `feature_block_set=factor_blocks_only` records static-factor-only representation; unknown old bridge recipes may still use `legacy_feature_builder_bridge` as compatibility provenance. |
-| `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `handpicked_set` | Canonical Layer 2 owner; runtime support is constrained by the selected feature runtime and explicit block composer coverage. |
+| `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `explicit_variable_list` | Canonical Layer 2 owner; runtime support is constrained by the selected feature runtime and explicit block composer coverage. |
 | `data_richness_mode` | `target_lags_only`, `factor_plus_lags`, `full_high_dimensional_X`, `selected_sparse_X` | Canonical Layer 2 owner; `mixed_mode` remains registry-only. |
 | `factor_count` | `fixed`, `cv_select`, `BaiNg_rule` | Canonical Layer 2 owner for factor representation dimensions. `variance_explained_rule` and `model_specific` remain registry-only. |
 
@@ -102,13 +102,13 @@ that request `feature_builder` are normalized to `feature_representation`.
 
 Current runtime profiles:
 
-- `dataset_tcode_only`: executable default. Layer 1 chooses official transforms;
+- `apply_official_tcode_only`: executable default. Layer 1 chooses official transforms;
   compiler derives a runtime bridge contract with no extra Layer 2 preprocessing.
 - `raw_only`: executable non-default path with no official T-code and no extra
   preprocessing.
 - `raw_train_only_extra`: executable for raw-panel style feature builders using
   train-only X-side extra preprocessing.
-- `dataset_tcode_then_train_only_extra`: executable for raw-panel style feature
+- `apply_official_tcode_then_train_only_extra`: executable for raw-panel style feature
   builders when Layer 1 applies dataset t-codes first and Layer 2 applies
   supported train-only X-side extra preprocessing.
 
@@ -136,8 +136,8 @@ implementation task.
 Layer 2 is closed for fixed full recipes under the current runtime scope:
 
 - all Layer 2 axes have canonical ownership and honest registry status;
-- `dataset_tcode_only`, `raw_only`, `raw_train_only_extra`, and
-  `dataset_tcode_then_train_only_extra` compile and execute where their
+- `apply_official_tcode_only`, `raw_only`, `raw_train_only_extra`, and
+  `apply_official_tcode_then_train_only_extra` compile and execute where their
   constraints are satisfied;
 - representable-but-not-executable values remain in the grammar as
   `registry_only`, not `operational`;
@@ -156,13 +156,13 @@ runtime integration and acceptance tests.
 
 | Axis | Default |
 |------|---------|
-| `official_transform_policy` | `dataset_tcode` |
-| `official_transform_scope` | `apply_tcode_to_both` |
+| `official_transform_policy` | `apply_official_tcode` |
+| `official_transform_scope` | `target_and_predictors` |
 | `target_transform_policy` | `tcode_transformed` |
-| `x_transform_policy` | `dataset_tcode_transformed` |
+| `x_transform_policy` | `apply_official_tcode_transformed` |
 | `tcode_policy` | `tcode_only` |
 | `representation_policy` | `tcode_only` |
-| `tcode_application_scope` | `apply_tcode_to_both` |
+| `tcode_application_scope` | `target_and_predictors` |
 | `preprocess_order` | `tcode_only` |
 | `preprocess_fit_scope` | `not_applicable` |
 | extra preprocessing axes | `none` |
@@ -216,10 +216,10 @@ Status: executable and default.
 Contract:
 
 - `target_transform_policy='tcode_transformed'`
-- `x_transform_policy='dataset_tcode_transformed'`
+- `x_transform_policy='apply_official_tcode_transformed'`
 - `tcode_policy='tcode_only'`
 - `representation_policy='tcode_only'`
-- `tcode_application_scope='apply_tcode_to_both'`
+- `tcode_application_scope='target_and_predictors'`
 - no missing, outlier, scaling, dimensionality reduction, or feature selection extras
 
 Runtime path:
@@ -275,9 +275,9 @@ This is the natural contract researchers expect for "official FRED transform,
 then scale/impute/select features." The public recipe should express the
 official transform through Layer 1 axes:
 
-- `official_transform_policy='dataset_tcode'`
-- `official_transform_scope` in `apply_tcode_to_target`, `apply_tcode_to_X`, or
-  `apply_tcode_to_both`
+- `official_transform_policy='apply_official_tcode'`
+- `official_transform_scope` in `target_only`, `predictors_only`, or
+  `target_and_predictors`
 
 When a supported Layer 2 extra-preprocessing axis is non-neutral, the compiler
 derives the runtime bridge:
@@ -352,8 +352,8 @@ The simple API now blocks preprocessing sweeps before execution.
 
 Reasons:
 
-1. Default preprocessing is still `dataset_tcode_only`.
-2. `dataset_tcode_then_train_only_extra` is executable only as a fixed
+1. Default preprocessing is still `apply_official_tcode_only`.
+2. `apply_official_tcode_then_train_only_extra` is executable only as a fixed
    preprocessing contract, not as a public simple sweep.
 3. Co-sweeping model and preprocessing is explicitly rejected by governance for
    ordinary baseline comparison.
@@ -363,7 +363,7 @@ Reasons:
 Therefore, the executable MVP is:
 
 - default `tcode_only`
-- fixed `dataset_tcode_then_train_only_extra` for supported raw-panel paths
+- fixed `apply_official_tcode_then_train_only_extra` for supported raw-panel paths
 - model sweeps
 - fixed custom model
 - fixed custom preprocessor
@@ -379,9 +379,9 @@ The blocked MVP surface is:
 ## Required Work Before Opening Preprocessing Sweeps
 
 1. Decide the public preprocessing profiles:
-   - `dataset_tcode_only`
+   - `apply_official_tcode_only`
    - `raw_train_only_extra`
-   - `dataset_tcode_then_train_only_extra`
+   - `apply_official_tcode_then_train_only_extra`
 
 2. Keep registry statuses aligned with runtime:
    - keep representable-but-not-executable values as `registry_only`

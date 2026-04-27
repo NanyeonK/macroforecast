@@ -123,12 +123,12 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code> — dropped as a separate axis. Current real-time vintage control is handled by <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code> plus <code class="docutils literal notranslate"><span class="pre">leaf_config.data_vintage</span></code>, including FRED-SD vintages.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">x_map_policy</span></code> — single-op non-axis; multi-target X mapping is owned by <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> (0.2).
 <strong>At a glance (defaults):</strong></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span> <span class="pre">=</span> <span class="pre">zero_fill_before_start</span></code> — after the selected sample period is sliced, predictor leading missing values before each column’s first valid observation are filled with zero and recorded in provenance. Switch to <code class="docutils literal notranslate"><span class="pre">complete_case_only</span></code>, <code class="docutils literal notranslate"><span class="pre">available_case</span></code>, or <code class="docutils literal notranslate"><span class="pre">x_impute_only</span></code> only when a specific missing-data treatment matters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span> <span class="pre">=</span> <span class="pre">zero_fill_leading_predictor_gaps</span></code> — after the selected sample period is sliced, predictor leading missing values before each column’s first valid observation are filled with zero and recorded in provenance. Switch to <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>, or <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code> only when a specific missing-data treatment matters.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span> <span class="pre">=</span> <span class="pre">preserve_raw_missing</span></code> — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span> <span class="pre">=</span> <span class="pre">preserve_raw_outliers</span></code> — leave raw-source outliers unchanged before official transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span> <span class="pre">=</span> <span class="pre">ignore_release_lag</span></code> — every column is available at its nominal date. Switch to <code class="docutils literal notranslate"><span class="pre">fixed_lag_all_series</span></code> / <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code> when you need to simulate a publication lag.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">structural_break_segmentation</span> <span class="pre">=</span> <span class="pre">none</span></code> — no break dummies. Switch to <code class="docutils literal notranslate"><span class="pre">pre_post_crisis</span></code> / <code class="docutils literal notranslate"><span class="pre">pre_post_covid</span></code> to add a single NBER-dated break dummy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span> <span class="pre">=</span> <span class="pre">forbid_contemporaneous</span></code> — realistic real-time constraint. Switch to <code class="docutils literal notranslate"><span class="pre">allow_contemporaneous</span></code> only for oracle / data-leak benchmarks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span> <span class="pre">=</span> <span class="pre">forbid_same_period_predictors</span></code> — realistic real-time constraint. Switch to <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code> only for oracle / data-leak benchmarks.</p></li>
 </ul>
 <p><strong>Most research runs leave all six at the default.</strong></p>
 <hr class="docutils" />
@@ -145,19 +145,19 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_before_start</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Default. Within the selected sample period, predictor leading missing values are filled with 0. Fully missing predictors are also filled with 0 and warned. Target leading missing dates are reported; target mid-sample missing blocks execution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">complete_case_only</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>No panel-level filter; downstream executors handle NaNs per their own policy.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_case</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Drop rows where any non-date column has NaN before training. Aggressive but legitimate on short fixture windows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x_impute_only</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Impute predictor (non-target) columns using <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code> ∈ {<code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill</span></code>, <code class="docutils literal notranslate"><span class="pre">bfill</span></code>}. Target column retains NaNs so the OOS loop still sees target missingness.</p></td>
 </tr>
@@ -167,11 +167,11 @@
 <section id="functions-features">
 <h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Sample-period availability path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_sample_period_and_availability(raw_result,</span> <span class="pre">recipe,</span> <span class="pre">*,</span> <span class="pre">target)</span></code> implements <code class="docutils literal notranslate"><span class="pre">zero_fill_before_start</span></code> and records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;availability&quot;]</span></code>.</p></li>
+<li><p>Sample-period availability path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_sample_period_and_availability(raw_result,</span> <span class="pre">recipe,</span> <span class="pre">*,</span> <span class="pre">target)</span></code> implements <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code> and records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;availability&quot;]</span></code>.</p></li>
 <li><p>General missing policy path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_missing_availability(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
 <li><p>Called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> after official transforms
 have produced the selected frame and before researcher preprocessing runs.</p></li>
-<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">x_impute_only</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 </ul>
 </section>
 <section id="dropped-values">
@@ -186,7 +186,7 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">missing_availability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">x_impute_only</span>
+<span class="w">      </span><span class="nt">missing_availability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">impute_predictors_only</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">x_imputation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ffill</span>
 </pre></div>
@@ -211,15 +211,15 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <td><p>operational</p></td>
 <td><p>Default. Leave raw-source missing values untouched before official transforms/T-codes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_x_before_tcode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Within the selected sample period, fill predictor leading missing values with 0 before official transforms/T-codes.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">x_impute_raw</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Impute raw predictor columns before official transforms/T-codes using <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> in {<code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill</span></code>, <code class="docutils literal notranslate"><span class="pre">bfill</span></code>}.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">drop_rows_with_raw_missing</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Drop rows with any raw-source missing value before official transforms/T-codes. Aggressive; use only for explicit full-mode designs.</p></td>
 </tr>
@@ -231,7 +231,7 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <ul class="simple">
 <li><p>Runtime path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_raw_missing_policy(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
 <li><p>Called before <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_tcode_preprocessing(...)</span></code>, so any changes affect T-code construction.</p></li>
-<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">x_impute_raw</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 <li><p>Provenance: runtime records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;raw_missing&quot;]</span></code> with <code class="docutils literal notranslate"><span class="pre">before_official_transform:</span> <span class="pre">true</span></code>.</p></li>
 </ul>
 </section>
@@ -241,7 +241,7 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">raw_missing_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">x_impute_raw</span>
+<span class="w">      </span><span class="nt">raw_missing_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">impute_raw_predictors</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">raw_x_imputation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ffill</span>
 </pre></div>
@@ -282,7 +282,7 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <td><p>operational</p></td>
 <td><p>Clip raw numeric columns by 3 standard deviations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_to_missing</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Convert values outside the 1st and 99th percentiles to missing before official transforms/T-codes.</p></td>
 </tr>
@@ -440,11 +440,11 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forbid_contemporaneous</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Default. <code class="docutils literal notranslate"><span class="pre">X_pred</span></code> is taken at the forecast origin <code class="docutils literal notranslate"><span class="pre">t</span></code> (no contemporaneous observation of y_{t+h}). Realistic real-time forecasting.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">allow_contemporaneous</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code></p></td>
 <td><p>operational</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">X_pred</span></code> is taken at the target date <code class="docutils literal notranslate"><span class="pre">t+h</span></code>, aligned with <code class="docutils literal notranslate"><span class="pre">y_{t+h}</span></code>. Oracle / data-leak benchmark used in some comparisons.</p></td>
 </tr>
@@ -464,7 +464,7 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">contemporaneous_x_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">allow_contemporaneous</span>
+<span class="w">      </span><span class="nt">contemporaneous_x_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">allow_same_period_predictors</span>
 <span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">feature_builder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_feature_panel</span>

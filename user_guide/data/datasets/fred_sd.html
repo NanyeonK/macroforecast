@@ -161,7 +161,7 @@ likelihoods and regularized group MIDAS remain research-extension work.</p>
 <p>FRED-SD is explicitly designed as a <em>real-time</em> database — each <code class="docutils literal notranslate"><span class="pre">.xlsx</span></code> file is the dataset as known at a specific publication month. This matters for studies that want to avoid contaminating forecasts with data revisions:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">information_set_type:</span> <span class="pre">real_time_vintage</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.data_vintage:</span> <span class="pre">&quot;2022-03&quot;</span></code> loads the March-2022 vintage exactly.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type:</span> <span class="pre">revised</span></code> (default) loads the latest official <strong>Data by Series</strong> workbook discovered from the St. Louis Fed landing page.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type:</span> <span class="pre">final_revised_data</span></code> (default) loads the latest official <strong>Data by Series</strong> workbook discovered from the St. Louis Fed landing page.</p></li>
 </ul>
 <p>The authors emphasise in the 2022 paper that some state-level series see substantial revisions (especially GDP by state), so real-time studies on FRED-SD generally should pin a vintage.</p>
 </section>
@@ -511,7 +511,7 @@ MIDAS remain future extensions.</p>
 <code class="docutils literal notranslate"><span class="pre">sd_states</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variables</span></code> before loading. They are not post-load
 <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> filters.</p></li>
 <li><p><strong>Generic <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> is post-load</strong> — use <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> for workbook-sheet selection and <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> for loaded <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> columns.</p></li>
-<li><p><strong>No official T-code row</strong> — <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">dataset_tcode</span></code> has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.</p></li>
+<li><p><strong>No official T-code row</strong> — <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">apply_official_tcode</span></code> has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.</p></li>
 <li><p><strong>Mixed-frequency estimator scope is narrow</strong> — <code class="docutils literal notranslate"><span class="pre">support_tier</span></code> is stable
 for FRED-SD loading and metadata, but advanced mixed-frequency estimators
 remain operational-narrow unless explicitly documented as built-in runtime

@@ -101,8 +101,8 @@ The following axes were moved out of Layer 1 ownership:
 
 - Layer 1 `target_structure` only records whether the official frame has one
   target or multiple targets.
-- `single_target_point_forecast` requires `leaf_config.target`.
-- `multi_target_point_forecast` requires `leaf_config.targets`.
+- `single_target` requires `leaf_config.target`.
+- `multi_target` requires `leaf_config.targets`.
 - Layer 0 owns the execution shape derived from target cardinality through
   `experiment_unit`.
 - `forecast_type` remains dynamic by the Layer 2 feature runtime: autoregressive paths default to `iterated`, raw/factor panel paths default to `direct`.
@@ -131,10 +131,10 @@ Kept values that require extra user inputs are now compile-time contracts:
 - `paper_specific_benchmark` requires `leaf_config.paper_forecast_series` entries for the current target(s).
 - `survey_forecast` requires `leaf_config.survey_forecast_series` entries for the current target(s).
 - `expert_benchmark` requires `leaf_config.benchmark_config.expert_callable`.
-- `variable_universe=handpicked_set` requires `leaf_config.variable_universe_columns`.
-- `variable_universe=category_subset` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`.
-- `variable_universe=target_specific_subset` requires `leaf_config.target_specific_columns` entries for the current target(s).
-- `predictor_family=handpicked_set` requires `leaf_config.handpicked_columns`.
+- `variable_universe=explicit_variable_list` requires `leaf_config.variable_universe_columns`.
+- `variable_universe=category_variables` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`.
+- `variable_universe=target_specific_variables` requires `leaf_config.target_specific_columns` entries for the current target(s).
+- `predictor_family=explicit_variable_list` requires `leaf_config.handpicked_columns`.
 - `predictor_family=category_based` requires `leaf_config.predictor_category_columns` and `leaf_config.predictor_category`.
 - `deterministic_components=break_dummies` requires `leaf_config.break_dates`.
 - New compiled specs write `predictor_family` and `contemporaneous_x_rule`
@@ -158,16 +158,16 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 - The source-availability contract has deterministic coverage for local-source
   current/vintage runs, cache-hit remote-source simulations that do not touch
   the network, and composite component source contracts.
-- `missing_availability=zero_fill_before_start` is the default policy in the compiler and public experiment defaults.
-- `zero_fill_before_start` is sample-period aware: predictor leading missing values are zero-filled, fully missing predictors are zero-filled with warnings, predictor mid-sample missing values are reported, target leading missing values are reported, and target mid-sample missing values block execution.
-- `missing_availability=x_impute_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.
-- `missing_availability=available_case` and `missing_availability=x_impute_only` now write `data_reports.missing_availability` in `layer1_official_frame_v1`, including row-drop counts or predictor-imputation counts.
+- `missing_availability=zero_fill_leading_predictor_gaps` is the default policy in the compiler and public experiment defaults.
+- `zero_fill_leading_predictor_gaps` is sample-period aware: predictor leading missing values are zero-filled, fully missing predictors are zero-filled with warnings, predictor mid-sample missing values are reported, target leading missing values are reported, and target mid-sample missing values block execution.
+- `missing_availability=impute_predictors_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.
+- `missing_availability=keep_available_rows` and `missing_availability=impute_predictors_only` now write `data_reports.missing_availability` in `layer1_official_frame_v1`, including row-drop counts or predictor-imputation counts.
 - `raw_missing_policy=preserve_raw_missing` is the default raw-source missing policy.
-- `raw_missing_policy=zero_fill_leading_x_before_tcode` fills predictor leading missing values in the raw source panel before official transforms/T-codes.
-- `raw_missing_policy=x_impute_raw` requires `leaf_config.raw_x_imputation` in `{mean, median, ffill, bfill}` and imputes raw predictors before official transforms/T-codes.
-- `raw_missing_policy=drop_rows_with_raw_missing` drops rows with any raw-source missing value before official transforms/T-codes.
+- `raw_missing_policy=zero_fill_leading_predictor_missing_before_tcode` fills predictor leading missing values in the raw source panel before official transforms/T-codes.
+- `raw_missing_policy=impute_raw_predictors` requires `leaf_config.raw_x_imputation` in `{mean, median, ffill, bfill}` and imputes raw predictors before official transforms/T-codes.
+- `raw_missing_policy=drop_raw_missing_rows` drops rows with any raw-source missing value before official transforms/T-codes.
 - `raw_outlier_policy=preserve_raw_outliers` is the default raw-source outlier policy.
-- `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `raw_outlier_to_missing` operate on raw numeric columns before official transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
+- `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `set_raw_outliers_to_missing` operate on raw numeric columns before official transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
 - `release_lag_rule=series_specific_lag` requires non-empty `leaf_config.release_lag_per_series`.
 - `release_lag_rule=fixed_lag_all_series` and `release_lag_rule=series_specific_lag` now write `data_reports.release_lag` in `layer1_official_frame_v1`, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.
 - `structural_break_segmentation` remains executable through fixed built-in dates; user-supplied break dates are owned by `deterministic_components=break_dummies`.
@@ -192,7 +192,7 @@ Full-mode interpretation:
   differencing endpoints, and model-input preprocessing artifacts. The numerical
   difference can be small in many empirical settings, but full mode must record
   the phase and order.
-- `x_impute_only` remains accepted for migration compatibility. Conceptually,
+- `impute_predictors_only` remains accepted for migration compatibility. Conceptually,
   imputation applied after the official frame exists belongs to Layer 2.
 - Layer 1 now exposes this raw-before-T-code decision through
   `raw_missing_policy` and `raw_outlier_policy`. Layer 2 `x_missing_policy` and
@@ -208,7 +208,7 @@ The simple API remains narrower than the full contract:
 - MD+SD and QD+SD choose monthly/quarterly automatically.
 - Default official transform policy is dataset T-code on both target and
   predictors.
-- Default missing policy is `zero_fill_before_start`.
+- Default missing policy is `zero_fill_leading_predictor_gaps`.
 - Custom model and custom preprocessor extension points remain the intended first user-facing sweep examples.
 - FRED-SD state and workbook-variable selectors are canonical Layer 1 axes:
   `state_selection=selected_states` reads `leaf_config.sd_states`, and

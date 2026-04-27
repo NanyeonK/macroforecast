@@ -280,7 +280,7 @@ deterministic-component, or structural-break columns.
 ### Level Blocks
 
 Level blocks add raw-level values preserved from Layer 1 before official
-transforms. They require `contemporaneous_x_rule=forbid_contemporaneous` so the
+transforms. They require `contemporaneous_x_rule=forbid_same_period_predictors` so the
 feature row uses information available at the forecast origin.
 
 ### Temporal Blocks

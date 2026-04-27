@@ -285,7 +285,7 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">allow_contemporaneous</span></code>, <code class="docutils literal notranslate"><span class="pre">forbid_contemporaneous</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
 <td><p>-</p></td>
@@ -327,42 +327,42 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">revised</span></code>, <code class="docutils literal notranslate"><span class="pre">pseudo_oos_revised</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code>, <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">complete_case_only</span></code>, <code class="docutils literal notranslate"><span class="pre">available_case</span></code>, <code class="docutils literal notranslate"><span class="pre">x_impute_only</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_before_start</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">dataset_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_official_frame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_target</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_X</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_both</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_none</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_x_before_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">x_impute_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_rows_with_raw_missing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=6</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_to_missing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
 <td><p>-</p></td>
@@ -397,14 +397,14 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">single_target_point_forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target_point_forecast</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">single_target</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=5</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">preselected_core</span></code>, <code class="docutils literal notranslate"><span class="pre">category_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">target_specific_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">core_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">category_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -560,7 +560,7 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=5</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code>, <code class="docutils literal notranslate"><span class="pre">category_based</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_only</span></code>, <code class="docutils literal notranslate"><span class="pre">handpicked_set</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>, <code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code>, <code class="docutils literal notranslate"><span class="pre">category_based</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_only</span></code>, <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_fit_scope</span></code></p></td>
 <td><p>-</p></td>
@@ -686,7 +686,7 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_target</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_X</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_both</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_tcode_to_none</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code></p></td>
 <td><p>preprocessing</p></td>
@@ -735,7 +735,7 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2, external_plugin=1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">raw_level</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_tcode_transformed</span></code><br><code class="docutils literal notranslate"><span class="pre">external_plugin</span></code>: <code class="docutils literal notranslate"><span class="pre">custom_x_transform</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">raw_level</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_official_tcode_transformed</span></code><br><code class="docutils literal notranslate"><span class="pre">external_plugin</span></code>: <code class="docutils literal notranslate"><span class="pre">custom_x_transform</span></code></p></td>
 </tr>
 </tbody>
 </table>

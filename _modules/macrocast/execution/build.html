@@ -252,7 +252,7 @@
 
 <span class="n">_PHASE3_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;release_lag_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;ignore_release_lag&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;missing_availability&quot;</span><span class="p">:</span> <span class="s2">&quot;complete_case_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;missing_availability&quot;</span><span class="p">:</span> <span class="s2">&quot;require_complete_rows&quot;</span><span class="p">,</span>
     <span class="s2">&quot;raw_missing_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;preserve_raw_missing&quot;</span><span class="p">,</span>
     <span class="s2">&quot;raw_outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;preserve_raw_outliers&quot;</span><span class="p">,</span>
     <span class="s2">&quot;variable_universe&quot;</span><span class="p">:</span> <span class="s2">&quot;all_variables&quot;</span><span class="p">,</span>
@@ -263,12 +263,12 @@
     <span class="s2">&quot;min_train_size&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_n_obs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;training_start_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;earliest_possible&quot;</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">_OFFICIAL_TRANSFORM_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;raw_official_frame&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset_tcode&quot;</span><span class="p">}</span>
+<span class="n">_OFFICIAL_TRANSFORM_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;keep_official_raw_scale&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_official_tcode&quot;</span><span class="p">}</span>
 <span class="n">_OFFICIAL_TRANSFORM_SCOPES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_RUNTIME_TCODE_CONTRACT_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;tcode_then_extra_preprocess&quot;</span><span class="p">}</span>
 
@@ -925,9 +925,9 @@
     <span class="n">policy</span> <span class="o">=</span> <span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;official_transform_policy&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">policy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">policy</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;dataset_tcode&quot;</span>
+            <span class="s2">&quot;apply_official_tcode&quot;</span>
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_RUNTIME_TCODE_CONTRACT_POLICIES</span>
-            <span class="k">else</span> <span class="s2">&quot;raw_official_frame&quot;</span>
+            <span class="k">else</span> <span class="s2">&quot;keep_official_raw_scale&quot;</span>
         <span class="p">)</span>
         <span class="n">policy_source</span> <span class="o">=</span> <span class="s2">&quot;legacy_preprocess_contract&quot;</span>
     <span class="k">else</span><span class="p">:</span>
@@ -938,7 +938,7 @@
 
     <span class="n">scope</span> <span class="o">=</span> <span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;official_transform_scope&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">scope</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">)</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">)</span>
         <span class="n">scope_source</span> <span class="o">=</span> <span class="s2">&quot;legacy_preprocess_contract&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">scope_source</span> <span class="o">=</span> <span class="s2">&quot;data_task_spec&quot;</span>
@@ -966,7 +966,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_tcode_preprocessing</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">,</span> <span class="n">contract</span><span class="p">:</span> <span class="n">PreprocessContract</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
     <span class="n">policy</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">source_payload</span> <span class="o">=</span> <span class="n">_official_transform_runtime_axes</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">contract</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raw_official_frame&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;keep_official_raw_scale&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw_result</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -978,7 +978,7 @@
     <span class="n">frame</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="p">{}))</span>
     <span class="n">_attach_level_source</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">level_source</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">tcodes</span><span class="p">:</span>
-        <span class="n">_append_frame_warning</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="s2">&quot;official_transform_policy=&#39;dataset_tcode&#39; requested but no dataset transform codes were available; data left unchanged&quot;</span><span class="p">)</span>
+        <span class="n">_append_frame_warning</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="s2">&quot;official_transform_policy=&#39;apply_official_tcode&#39; requested but no dataset transform codes were available; data left unchanged&quot;</span><span class="p">)</span>
         <span class="n">_append_frame_report</span><span class="p">(</span>
             <span class="n">frame</span><span class="p">,</span>
             <span class="s2">&quot;tcode&quot;</span><span class="p">,</span>
@@ -995,11 +995,11 @@
     <span class="n">applied</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">is_target</span> <span class="o">=</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">col</span> <span class="o">==</span> <span class="n">target</span>
-        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_target&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_target</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;target_only&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_target</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_X&quot;</span> <span class="ow">and</span> <span class="n">is_target</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;predictors_only&quot;</span> <span class="ow">and</span> <span class="n">is_target</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="n">code</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tcodes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">frame</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">_fred_tcode_transform</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">code</span><span class="p">)</span>
@@ -1152,8 +1152,8 @@
     <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sample period start=</span><span class="si">{</span><span class="n">start</span><span class="si">!r}</span><span class="s2">, end=</span><span class="si">{</span><span class="n">end</span><span class="si">!r}</span><span class="s2"> produced no observations&quot;</span><span class="p">)</span>
 
-    <span class="n">rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="s2">&quot;complete_case_only&quot;</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">!=</span> <span class="s2">&quot;zero_fill_before_start&quot;</span><span class="p">:</span>
+    <span class="n">rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="s2">&quot;require_complete_rows&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">!=</span> <span class="s2">&quot;zero_fill_leading_predictor_gaps&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
@@ -1300,22 +1300,22 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply missing_availability rule to the raw panel.</span>
 
 <span class="sd">    v1.0 operational rules:</span>
-<span class="sd">    - ``complete_case_only`` (default): no-op; downstream code drops NaNs per its own policy.</span>
-<span class="sd">    - ``available_case``: keep only rows where every non-date column is non-NaN.</span>
+<span class="sd">    - ``require_complete_rows`` (default): no-op; downstream code drops NaNs per its own policy.</span>
+<span class="sd">    - ``keep_available_rows``: keep only rows where every non-date column is non-NaN.</span>
 <span class="sd">      Target rows with NaN outside this filter are kept (they will be skipped</span>
 <span class="sd">      later by the evaluator); X columns are also required complete per row.</span>
-<span class="sd">    - ``x_impute_only``: impute predictor columns (non-target, non-date) using the</span>
+<span class="sd">    - ``impute_predictors_only``: impute predictor columns (non-target, non-date) using the</span>
 <span class="sd">      strategy declared in ``spec[&#39;x_imputation&#39;]`` (one of &#39;mean&#39;, &#39;median&#39;, &#39;ffill&#39;, &#39;bfill&#39;).</span>
 <span class="sd">      Target column is left untouched so target NaNs remain visible to the OOS loop.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">rule</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;complete_case_only&#39;</span><span class="p">,</span> <span class="s1">&#39;zero_fill_before_start&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">}</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rule</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;require_complete_rows&#39;</span><span class="p">,</span> <span class="s1">&#39;zero_fill_leading_predictor_gaps&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">}</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rule</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw_result</span>
     <span class="n">data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw_result</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span>
 
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;available_case&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;keep_available_rows&#39;</span><span class="p">:</span>
         <span class="c1"># Complete-case filter across the whole panel; legitimate in short</span>
         <span class="c1"># fixture windows, aggressive for long panels.</span>
         <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -1339,12 +1339,12 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">new_data</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;x_impute_only&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;impute_predictors_only&#39;</span><span class="p">:</span>
         <span class="n">strategy</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x_imputation&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">strategy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;missing_availability=&#39;x_impute_only&#39; requires leaf_config.x_imputation (one of &#39;mean&#39; / &#39;median&#39; / &#39;ffill&#39; / &#39;bfill&#39;)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;missing_availability=&#39;impute_predictors_only&#39; requires leaf_config.x_imputation (one of &#39;mean&#39; / &#39;median&#39; / &#39;ffill&#39; / &#39;bfill&#39;)&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;median&#39;</span><span class="p">,</span> <span class="s1">&#39;ffill&#39;</span><span class="p">,</span> <span class="s1">&#39;bfill&#39;</span><span class="p">}:</span>
-            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing_availability=&#39;x_impute_only&#39;: unsupported leaf_config.x_imputation=</span><span class="si">{</span><span class="n">strategy</span><span class="si">!r}</span><span class="s2">; allowed: mean / median / ffill / bfill&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing_availability=&#39;impute_predictors_only&#39;: unsupported leaf_config.x_imputation=</span><span class="si">{</span><span class="n">strategy</span><span class="si">!r}</span><span class="s2">; allowed: mean / median / ffill / bfill&quot;</span><span class="p">)</span>
         <span class="n">x_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="n">target</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="p">{}))</span>
@@ -1426,7 +1426,7 @@
     <span class="n">frame</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">frame</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="p">{}))</span>
 
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;drop_rows_with_raw_missing&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;drop_raw_missing_rows&quot;</span><span class="p">:</span>
         <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="p">{}))</span>
@@ -1442,16 +1442,16 @@
         <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
 
     <span class="n">x_cols</span> <span class="o">=</span> <span class="n">_raw_predictor_columns</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;x_impute_raw&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;impute_raw_predictors&quot;</span><span class="p">:</span>
         <span class="n">strategy</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;raw_x_imputation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">strategy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
-                <span class="s2">&quot;raw_missing_policy=&#39;x_impute_raw&#39; requires leaf_config.raw_x_imputation &quot;</span>
+                <span class="s2">&quot;raw_missing_policy=&#39;impute_raw_predictors&#39; requires leaf_config.raw_x_imputation &quot;</span>
                 <span class="s2">&quot;(one of &#39;mean&#39; / &#39;median&#39; / &#39;ffill&#39; / &#39;bfill&#39;)&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;ffill&quot;</span><span class="p">,</span> <span class="s2">&quot;bfill&quot;</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
-                <span class="s2">&quot;raw_missing_policy=&#39;x_impute_raw&#39;: unsupported &quot;</span>
+                <span class="s2">&quot;raw_missing_policy=&#39;impute_raw_predictors&#39;: unsupported &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;leaf_config.raw_x_imputation=</span><span class="si">{</span><span class="n">strategy</span><span class="si">!r}</span><span class="s2">; allowed: mean / median / ffill / bfill&quot;</span>
             <span class="p">)</span>
         <span class="n">missing_before</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">x_cols</span> <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()}</span>
@@ -1479,7 +1479,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;zero_fill_leading_x_before_tcode&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;zero_fill_leading_predictor_missing_before_tcode&quot;</span><span class="p">:</span>
         <span class="n">window_index</span> <span class="o">=</span> <span class="n">_raw_policy_window_index</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
         <span class="n">filled</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">x_cols</span><span class="p">:</span>
@@ -1548,7 +1548,7 @@
         <span class="n">std</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">lower</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">std</span>
         <span class="n">upper</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">std</span>
-    <span class="k">elif</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raw_outlier_to_missing&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;set_raw_outliers_to_missing&quot;</span><span class="p">:</span>
         <span class="n">lower</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
         <span class="n">upper</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.99</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1556,7 +1556,7 @@
 
     <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="n">lower</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">values</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">)</span>
     <span class="n">changed</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())}</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raw_outlier_to_missing&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;set_raw_outliers_to_missing&quot;</span><span class="p">:</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="n">upper</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -1574,7 +1574,7 @@
 
 
 <span class="n">_VARIABLE_UNIVERSE_SUBSET_FIELD</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;handpicked_set&#39;</span><span class="p">:</span> <span class="s1">&#39;variable_universe_columns&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;explicit_variable_list&#39;</span><span class="p">:</span> <span class="s1">&#39;variable_universe_columns&#39;</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -1592,7 +1592,7 @@
         <span class="k">return</span> <span class="n">raw_result</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span>
 
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;preselected_core&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;core_variables&#39;</span><span class="p">:</span>
         <span class="n">keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">_PRESELECTED_CORE</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
@@ -1606,22 +1606,22 @@
         <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">head</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">anchors</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">anchors</span> <span class="o">+</span> <span class="n">head</span> <span class="o">+</span> <span class="n">rest</span>
 
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;category_subset&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;category_variables&#39;</span><span class="p">:</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;variable_universe_category_columns&#39;</span><span class="p">)</span>
         <span class="n">category</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;variable_universe_category&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
             <span class="n">keep</span> <span class="o">=</span> <span class="n">_keep_with_anchors</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">category</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;variable_universe=&#39;category_subset&#39; requires leaf_config.variable_universe_category_columns (dict) + leaf_config.variable_universe_category&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;variable_universe=&#39;category_variables&#39; requires leaf_config.variable_universe_category_columns (dict) + leaf_config.variable_universe_category&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;target_specific_subset&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s1">&#39;target_specific_variables&#39;</span><span class="p">:</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;target_specific_columns&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
             <span class="n">keep</span> <span class="o">=</span> <span class="n">_keep_with_anchors</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">target</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">_replace_raw_data</span><span class="p">(</span><span class="n">raw_result</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;variable_universe=&#39;target_specific_subset&#39; requires leaf_config.target_specific_columns (dict[target, list])&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;variable_universe=&#39;target_specific_variables&#39; requires leaf_config.target_specific_columns (dict[target, list])&quot;</span><span class="p">)</span>
 
     <span class="n">field</span> <span class="o">=</span> <span class="n">_VARIABLE_UNIVERSE_SUBSET_FIELD</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -3567,7 +3567,7 @@
 <span class="sd">    - ``target_lags_only``         : empty predictor set — raw panel degrades to target-lag-only; compiler guards already tie this value to the autoregressive feature runtime, so this branch should not normally be reached.</span>
 <span class="sd">    - ``category_based``           : user supplies a mapping (spec[&#39;predictor_category_columns&#39;][spec[&#39;predictor_category&#39;]]).</span>
 <span class="sd">    - ``factor_only``              : columns whose name starts with &#39;F_&#39; (convention for factor outputs of factor_pca / factor_augmented_linear builders).</span>
-<span class="sd">    - ``handpicked_set``           : spec[&#39;handpicked_columns&#39;] list.</span>
+<span class="sd">    - ``explicit_variable_list``           : spec[&#39;handpicked_columns&#39;] list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">all_except_target</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="n">target</span><span class="p">]</span>
@@ -3585,10 +3585,10 @@
             <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;predictor_family=&#39;category_based&#39; requires leaf_config.predictor_category_columns (dict) and leaf_config.predictor_category&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;factor_only&quot;</span><span class="p">:</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_except_target</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;F_&quot;</span><span class="p">)]</span>
-    <span class="k">elif</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;handpicked_set&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;explicit_variable_list&quot;</span><span class="p">:</span>
         <span class="n">handpicked</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;handpicked_columns&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">handpicked</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">handpicked</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;predictor_family=&#39;handpicked_set&#39; requires leaf_config.handpicked_columns (list[str])&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;predictor_family=&#39;explicit_variable_list&#39; requires leaf_config.handpicked_columns (list[str])&quot;</span><span class="p">)</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">handpicked</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="n">target</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unsupported predictor_family=</span><span class="si">{</span><span class="n">predictor_family</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -5175,13 +5175,13 @@
     <span class="n">spec</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fit_state</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
-    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">))</span>
+    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">))</span>
     <span class="n">alignment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;representation_runtime&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span>
         <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">:</span> <span class="n">contemp_rule</span><span class="p">,</span>
         <span class="s2">&quot;x_observation_timing&quot;</span><span class="p">:</span> <span class="p">(</span>
             <span class="s2">&quot;target_date_x&quot;</span>
-            <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_contemporaneous&quot;</span>
+            <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_same_period_predictors&quot;</span>
             <span class="k">else</span> <span class="s2">&quot;forecast_origin_x&quot;</span>
         <span class="p">),</span>
     <span class="p">}</span>
@@ -5214,9 +5214,9 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_raw_panel_leakage_contract</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_contemporaneous&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;allow_contemporaneous_oracle_x&quot;</span>
+    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_same_period_predictors&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;allow_same_period_predictors_oracle_x&quot;</span>
     <span class="k">return</span> <span class="s2">&quot;forecast_origin_only&quot;</span>
 
 
@@ -5346,23 +5346,23 @@
     <span class="c1"># 1.5 contemporaneous_x_rule: default forbid (X at origin + train pairs X_t with y_{t+h});</span>
     <span class="c1"># allow uses X aligned to the target date (X_{t+h} with y_{t+h}) — the oracle / data-leak</span>
     <span class="c1"># benchmark variant.</span>
-    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;moving_average_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;marx_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;maf_rotation&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">contemp_rule</span> <span class="o">!=</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">:</span>
+    <span class="n">contemp_rule</span> <span class="o">=</span> <span class="p">(</span><span class="n">spec</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;moving_average_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;marx_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;maf_rotation&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">contemp_rule</span> <span class="o">!=</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;rotation_feature_block=</span><span class="si">{</span><span class="n">rotation_feature_block</span><span class="si">!r}</span><span class="s2"> requires &quot;</span>
-            <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_contemporaneous&#39;&quot;</span>
+            <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_same_period_predictors&#39;&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">level_feature_block</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_level_addback&quot;</span><span class="p">,</span> <span class="s2">&quot;x_level_addback&quot;</span><span class="p">,</span> <span class="s2">&quot;selected_level_addbacks&quot;</span><span class="p">,</span> <span class="s2">&quot;level_growth_pairs&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">contemp_rule</span> <span class="o">!=</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">level_feature_block</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_level_addback&quot;</span><span class="p">,</span> <span class="s2">&quot;x_level_addback&quot;</span><span class="p">,</span> <span class="s2">&quot;selected_level_addbacks&quot;</span><span class="p">,</span> <span class="s2">&quot;level_growth_pairs&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">contemp_rule</span> <span class="o">!=</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;level_feature_block=</span><span class="si">{</span><span class="n">level_feature_block</span><span class="si">!r}</span><span class="s2"> requires &quot;</span>
-            <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_contemporaneous&#39;&quot;</span>
+            <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_same_period_predictors&#39;&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_contemporaneous&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">contemp_rule</span> <span class="o">==</span> <span class="s2">&quot;allow_same_period_predictors&quot;</span><span class="p">:</span>
         <span class="n">X_train</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">predictors</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">horizon</span> <span class="p">:</span> <span class="n">origin_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">y_train</span> <span class="o">=</span> <span class="n">_target_values</span><span class="p">()</span>
         <span class="n">pred_idx</span> <span class="o">=</span> <span class="n">origin_idx</span> <span class="o">+</span> <span class="n">horizon</span>
         <span class="k">if</span> <span class="n">pred_idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule=&#39;allow_contemporaneous&#39; requires X observed at the target date; target falls beyond the available index&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;contemporaneous_x_rule=&#39;allow_same_period_predictors&#39; requires X observed at the target date; target falls beyond the available index&quot;</span><span class="p">)</span>
         <span class="n">X_pred</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">predictors</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">pred_idx</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">X_train</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">predictors</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">origin_idx</span> <span class="o">-</span> <span class="n">horizon</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

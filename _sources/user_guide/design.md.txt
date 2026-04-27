@@ -72,8 +72,8 @@ The compiler calls `derive_experiment_unit_default(research_design, target_struc
 
 ### Compatibility guards
 
-- `experiment_unit.requires_multi_target == True` (e.g. `multi_target_separate_runs`, `multi_target_shared_design`) requires `target_structure = multi_target_point_forecast`; else `blocked_by_incompatibility`.
-- `experiment_unit.requires_multi_target == False` with `target_structure = multi_target_point_forecast` is also blocked.
+- `experiment_unit.requires_multi_target == True` (e.g. `multi_target_separate_runs`, `multi_target_shared_design`) requires `target_structure = multi_target`; else `blocked_by_incompatibility`.
+- `experiment_unit.requires_multi_target == False` with `target_structure = multi_target` is also blocked.
 
 ### Functions & features
 

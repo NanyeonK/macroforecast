@@ -370,7 +370,7 @@
         <span class="n">_sv</span><span class="p">(</span><span class="s2">&quot;target_structure&quot;</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_structure&quot;</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;task&quot;</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="s2">&quot;single_target_point_forecast&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;single_target&quot;</span>
     <span class="p">)</span>
     <span class="n">model_sel</span> <span class="o">=</span> <span class="n">selection_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">)</span>
     <span class="n">feature_sel</span> <span class="o">=</span> <span class="n">selection_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">)</span>
@@ -609,7 +609,7 @@
     <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">combiner_name</span> <span class="ow">and</span> <span class="n">is_custom_feature_combiner</span><span class="p">(</span><span class="n">combiner_name</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_target_structure</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_structure</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span>
 
 
@@ -632,16 +632,16 @@
     <span class="k">if</span> <span class="s2">&quot;tcode_application_scope&quot;</span> <span class="ow">in</span> <span class="n">selection_map</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">)</span>
     <span class="n">target_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span>
-    <span class="n">x_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span>
+    <span class="n">x_tcode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_level&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span>
     <span class="k">if</span> <span class="n">target_tcode</span> <span class="ow">and</span> <span class="n">x_tcode</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_and_predictors&quot;</span>
     <span class="k">if</span> <span class="n">target_tcode</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;apply_tcode_to_target&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_only&quot;</span>
     <span class="k">if</span> <span class="n">x_tcode</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;apply_tcode_to_X&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;predictors_only&quot;</span>
     <span class="k">if</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;tcode_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;raw_only&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_OFFICIAL_TCODE_POLICIES</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;target_and_predictors&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;none&quot;</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_legacy_official_transform_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -652,11 +652,11 @@
     <span class="k">if</span> <span class="p">(</span>
         <span class="n">tcode_policy</span> <span class="ow">in</span> <span class="n">_OFFICIAL_TCODE_POLICIES</span>
         <span class="ow">or</span> <span class="n">target_policy</span> <span class="o">==</span> <span class="s2">&quot;tcode_transformed&quot;</span>
-        <span class="ow">or</span> <span class="n">x_policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span>
-        <span class="ow">or</span> <span class="n">scope</span> <span class="o">!=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span>
+        <span class="ow">or</span> <span class="n">x_policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span>
+        <span class="ow">or</span> <span class="n">scope</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span>
     <span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;dataset_tcode&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;raw_official_frame&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;apply_official_tcode&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;keep_official_raw_scale&quot;</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_official_transform_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -699,13 +699,13 @@
 
     <span class="n">policy</span> <span class="o">=</span> <span class="n">_official_transform_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="n">scope</span> <span class="o">=</span> <span class="n">_official_transform_scope</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raw_official_frame&quot;</span> <span class="ow">and</span> <span class="n">scope</span> <span class="o">!=</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;keep_official_raw_scale&quot;</span> <span class="ow">and</span> <span class="n">scope</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-            <span class="s2">&quot;official_transform_policy=&#39;raw_official_frame&#39; requires official_transform_scope=&#39;apply_tcode_to_none&#39;&quot;</span>
+            <span class="s2">&quot;official_transform_policy=&#39;keep_official_raw_scale&#39; requires official_transform_scope=&#39;none&#39;&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;dataset_tcode&quot;</span> <span class="ow">and</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;apply_official_tcode&quot;</span> <span class="ow">and</span> <span class="n">scope</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-            <span class="s2">&quot;official_transform_policy=&#39;dataset_tcode&#39; requires an official_transform_scope other than &#39;apply_tcode_to_none&#39;&quot;</span>
+            <span class="s2">&quot;official_transform_policy=&#39;apply_official_tcode&#39; requires an official_transform_scope other than &#39;none&#39;&quot;</span>
         <span class="p">)</span>
 
     <span class="n">has_legacy_bridge</span> <span class="o">=</span> <span class="n">_has_legacy_official_transform_bridge</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
@@ -769,18 +769,18 @@
     <span class="n">policy</span> <span class="o">=</span> <span class="n">_official_transform_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="n">scope</span> <span class="o">=</span> <span class="n">_official_transform_scope</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="n">extra_requested</span> <span class="o">=</span> <span class="n">_extra_preprocessing_requested</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;raw_official_frame&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;keep_official_raw_scale&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
             <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
             <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;extra_preprocess_without_tcode&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
             <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="s2">&quot;extra_only&quot;</span> <span class="k">if</span> <span class="n">extra_requested</span> <span class="k">else</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
             <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;apply_tcode_to_none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="n">target_policy</span> <span class="o">=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_target&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
-    <span class="n">x_policy</span> <span class="o">=</span> <span class="s2">&quot;dataset_tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;apply_tcode_to_X&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_tcode_to_both&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
+    <span class="n">target_policy</span> <span class="o">=</span> <span class="s2">&quot;tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;target_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
+    <span class="n">x_policy</span> <span class="o">=</span> <span class="s2">&quot;apply_official_tcode_transformed&quot;</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;predictors_only&quot;</span><span class="p">,</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;raw_level&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="n">target_policy</span><span class="p">,</span>
         <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="n">x_policy</span><span class="p">,</span>
@@ -1036,7 +1036,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_targets_for_layer1_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_target_structure</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
         <span class="n">targets</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_non_empty_sequence</span><span class="p">(</span><span class="n">targets</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">()</span>
@@ -1183,36 +1183,36 @@
             <span class="p">)</span>
 
     <span class="n">variable_universe</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;variable_universe&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;all_variables&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;handpicked_set&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;explicit_variable_list&quot;</span><span class="p">:</span>
         <span class="n">_require_non_empty_sequence</span><span class="p">(</span>
             <span class="n">leaf_config</span><span class="p">,</span>
             <span class="s2">&quot;variable_universe_columns&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;variable_universe=&#39;handpicked_set&#39;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variable_universe=&#39;explicit_variable_list&#39;&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;category_subset&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;category_variables&quot;</span><span class="p">:</span>
         <span class="n">_require_non_empty_mapping</span><span class="p">(</span>
             <span class="n">leaf_config</span><span class="p">,</span>
             <span class="s2">&quot;variable_universe_category_columns&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;variable_universe=&#39;category_subset&#39;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variable_universe=&#39;category_variables&#39;&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variable_universe_category&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;variable_universe=&#39;category_subset&#39; requires leaf_config.variable_universe_category&quot;</span>
+                <span class="s2">&quot;variable_universe=&#39;category_variables&#39; requires leaf_config.variable_universe_category&quot;</span>
             <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;target_specific_subset&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">variable_universe</span> <span class="o">==</span> <span class="s2">&quot;target_specific_variables&quot;</span><span class="p">:</span>
         <span class="n">_require_mapping_entries_for_targets</span><span class="p">(</span>
             <span class="n">leaf_config</span><span class="p">,</span>
             <span class="s2">&quot;target_specific_columns&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;variable_universe=&#39;target_specific_subset&#39;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variable_universe=&#39;target_specific_variables&#39;&quot;</span><span class="p">,</span>
             <span class="n">targets</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="n">predictor_family</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;predictor_family&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;target_lags_only&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;handpicked_set&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;explicit_variable_list&quot;</span><span class="p">:</span>
         <span class="n">_require_non_empty_sequence</span><span class="p">(</span>
             <span class="n">leaf_config</span><span class="p">,</span>
             <span class="s2">&quot;handpicked_columns&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;predictor_family=&#39;handpicked_set&#39;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;predictor_family=&#39;explicit_variable_list&#39;&quot;</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">predictor_family</span> <span class="o">==</span> <span class="s2">&quot;category_based&quot;</span><span class="p">:</span>
         <span class="n">_require_non_empty_mapping</span><span class="p">(</span>
@@ -1265,21 +1265,21 @@
                 <span class="s2">&quot;benchmark_family=&#39;expert_benchmark&#39; requires leaf_config.benchmark_config.expert_callable&quot;</span>
             <span class="p">)</span>
 
-    <span class="n">missing_availability</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;zero_fill_before_start&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">missing_availability</span> <span class="o">==</span> <span class="s2">&quot;x_impute_only&quot;</span><span class="p">:</span>
+    <span class="n">missing_availability</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;zero_fill_leading_predictor_gaps&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">missing_availability</span> <span class="o">==</span> <span class="s2">&quot;impute_predictors_only&quot;</span><span class="p">:</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x_imputation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_X_IMPUTATION_METHODS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;missing_availability=&#39;x_impute_only&#39; requires leaf_config.x_imputation &quot;</span>
+                <span class="s2">&quot;missing_availability=&#39;impute_predictors_only&#39; requires leaf_config.x_imputation &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;in </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_X_IMPUTATION_METHODS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
     <span class="n">raw_missing_policy</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;raw_missing_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;preserve_raw_missing&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">raw_missing_policy</span> <span class="o">==</span> <span class="s2">&quot;x_impute_raw&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">raw_missing_policy</span> <span class="o">==</span> <span class="s2">&quot;impute_raw_predictors&quot;</span><span class="p">:</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;raw_x_imputation&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_X_IMPUTATION_METHODS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;raw_missing_policy=&#39;x_impute_raw&#39; requires leaf_config.raw_x_imputation &quot;</span>
+                <span class="s2">&quot;raw_missing_policy=&#39;impute_raw_predictors&#39; requires leaf_config.raw_x_imputation &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;in </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_X_IMPUTATION_METHODS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
@@ -1351,9 +1351,9 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_data_task_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_md&quot;</span><span class="p">)</span>
     <span class="n">source_adapter</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;source_adapter&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
-    <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target_point_forecast&quot;</span><span class="p">)</span>
+    <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span>
     <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span><span class="p">)</span>
-    <span class="n">information_set_type</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;information_set_type&quot;</span><span class="p">,</span> <span class="s2">&quot;revised&quot;</span><span class="p">)</span>
+    <span class="n">information_set_type</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;information_set_type&quot;</span><span class="p">,</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">)</span>
     <span class="n">fred_sd_selectors</span> <span class="o">=</span> <span class="n">_resolve_fred_sd_selector_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">custom_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -1432,7 +1432,7 @@
         <span class="c1"># Keep it in data_task_spec for older runtime/readers until the</span>
         <span class="c1"># migration window closes, but treat evaluation_spec as canonical.</span>
         <span class="s2">&quot;oos_period&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;oos_period&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;all_oos_data&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;missing_availability&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;zero_fill_before_start&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;missing_availability&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;missing_availability&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;zero_fill_leading_predictor_gaps&quot;</span><span class="p">),</span>
         <span class="s2">&quot;raw_missing_policy&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;raw_missing_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;preserve_raw_missing&quot;</span><span class="p">),</span>
         <span class="s2">&quot;raw_outlier_policy&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;raw_outlier_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;preserve_raw_outliers&quot;</span><span class="p">),</span>
         <span class="s2">&quot;release_lag_rule&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;release_lag_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;ignore_release_lag&quot;</span><span class="p">),</span>
@@ -2862,7 +2862,7 @@
     <span class="n">feature_runtime</span> <span class="o">=</span> <span class="n">_feature_runtime_for_validation</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">fallback_feature_builder</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">feature_builder</span><span class="p">))</span>
     <span class="n">predictor_family_default</span> <span class="o">=</span> <span class="s2">&quot;target_lags_only&quot;</span> <span class="k">if</span> <span class="n">feature_runtime</span> <span class="o">==</span> <span class="s2">&quot;autoreg_lagged_target&quot;</span> <span class="k">else</span> <span class="s2">&quot;all_macro_vars&quot;</span>
     <span class="n">predictor_family</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;predictor_family&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">predictor_family_default</span><span class="p">)</span>
-    <span class="n">contemporaneous_x_rule</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">)</span>
+    <span class="n">contemporaneous_x_rule</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">)</span>
     <span class="n">deterministic_components</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;deterministic_components&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
     <span class="n">structural_break_segmentation</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;structural_break_segmentation&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
     <span class="n">y_lag_count</span> <span class="o">=</span> <span class="n">training_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y_lag_count&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed&quot;</span><span class="p">)</span>
@@ -3083,9 +3083,9 @@
     <span class="n">feature_builders</span> <span class="o">=</span> <span class="n">feature_axis</span><span class="o">.</span><span class="n">selected_values</span>
     <span class="n">wrapper_family</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span><span class="s2">&quot;target_structure=&#39;multi_target_point_forecast&#39; requires leaf_config.targets with at least two entries&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span><span class="s2">&quot;target_structure=&#39;multi_target&#39; requires leaf_config.targets with at least two entries&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span><span class="s2">&quot;single-target recipes require leaf_config.target&quot;</span><span class="p">)</span>
@@ -3105,13 +3105,13 @@
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">experiment_unit</span><span class="si">!r}</span><span class="s2"> conflicts with current recipe shape; implied unit is </span><span class="si">{</span><span class="n">derived_experiment_unit</span><span class="si">!r}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">target_structure</span> <span class="o">!=</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">target_structure</span> <span class="o">!=</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">experiment_unit</span><span class="si">!r}</span><span class="s2"> requires target_structure=&#39;multi_target_point_forecast&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">experiment_unit</span><span class="si">!r}</span><span class="s2"> requires target_structure=&#39;multi_target&#39;&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">target_structure</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">experiment_unit</span><span class="si">!r}</span><span class="s2"> is incompatible with target_structure=&#39;multi_target_point_forecast&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">experiment_unit</span><span class="si">!r}</span><span class="s2"> is incompatible with target_structure=&#39;multi_target&#39;&quot;</span>
             <span class="p">)</span>
 
     <span class="n">sample_split</span> <span class="o">=</span> <span class="p">{</span>
@@ -3119,8 +3119,8 @@
         <span class="s2">&quot;rolling&quot;</span><span class="p">:</span> <span class="s2">&quot;rolling_window_oos&quot;</span><span class="p">,</span>
     <span class="p">}[</span><span class="n">framework</span><span class="p">]</span>
     <span class="n">info_set_token</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;revised&quot;</span><span class="p">:</span> <span class="s2">&quot;revised_monthly&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pseudo_oos_revised&quot;</span><span class="p">:</span> <span class="s2">&quot;pseudo_oos_revised&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;final_revised_data&quot;</span><span class="p">:</span> <span class="s2">&quot;revised_monthly&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pseudo_oos_on_revised_data&quot;</span><span class="p">:</span> <span class="s2">&quot;pseudo_oos_on_revised_data&quot;</span><span class="p">,</span>
     <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">information_set_type</span><span class="p">,</span> <span class="n">information_set_type</span><span class="p">)</span>
 
     <span class="n">stage0</span> <span class="o">=</span> <span class="n">build_design_frame</span><span class="p">(</span>
@@ -3462,12 +3462,12 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">level_block_active</span>
-            <span class="ow">and</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">)</span>
-            <span class="o">!=</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span>
+            <span class="ow">and</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">)</span>
+            <span class="o">!=</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;level_feature_block=</span><span class="si">{</span><span class="n">level_feature_block</span><span class="si">!r}</span><span class="s2"> requires &quot;</span>
-                <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_contemporaneous&#39; so level features are observed at the forecast origin&quot;</span>
+                <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_same_period_predictors&#39; so level features are observed at the forecast origin&quot;</span>
             <span class="p">)</span>
         <span class="n">temporal_feature_block</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;temporal_feature_block&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
         <span class="n">temporal_block_active</span> <span class="o">=</span> <span class="n">temporal_feature_block</span> <span class="ow">in</span> <span class="p">{</span>
@@ -3518,12 +3518,12 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">rotation_block_active</span>
-            <span class="ow">and</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_contemporaneous&quot;</span><span class="p">)</span>
-            <span class="o">!=</span> <span class="s2">&quot;forbid_contemporaneous&quot;</span>
+            <span class="ow">and</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;contemporaneous_x_rule&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forbid_same_period_predictors&quot;</span><span class="p">)</span>
+            <span class="o">!=</span> <span class="s2">&quot;forbid_same_period_predictors&quot;</span>
         <span class="p">):</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;rotation_feature_block=</span><span class="si">{</span><span class="n">rotation_feature_block</span><span class="si">!r}</span><span class="s2"> requires &quot;</span>
-                <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_contemporaneous&#39; so rotation features use forecast-origin history&quot;</span>
+                <span class="s2">&quot;contemporaneous_x_rule=&#39;forbid_same_period_predictors&#39; so rotation features use forecast-origin history&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">rotation_feature_block</span> <span class="o">==</span> <span class="s2">&quot;marx_rotation&quot;</span> <span class="ow">and</span> <span class="n">temporal_block_active</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">marx_append_mode</span><span class="p">:</span>
             <span class="n">not_supported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -3881,7 +3881,7 @@
         <span class="n">selection_map</span> <span class="o">=</span> <span class="n">_selection_map</span><span class="p">(</span><span class="n">selections</span><span class="p">)</span>
     <span class="n">target_structure_value</span> <span class="o">=</span> <span class="n">_target_structure</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
     <span class="n">experiment_unit_explicit</span> <span class="o">=</span> <span class="s2">&quot;experiment_unit&quot;</span> <span class="ow">in</span> <span class="n">selection_map</span>
-    <span class="k">if</span> <span class="n">target_structure_value</span> <span class="o">==</span> <span class="s2">&quot;multi_target_point_forecast&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">target_structure_value</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="s2">&quot;targets&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">leaf_config</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span><span class="s2">&quot;recipe leaf_config missing &#39;targets&#39;&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

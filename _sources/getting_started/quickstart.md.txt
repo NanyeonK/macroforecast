@@ -42,8 +42,8 @@ recipe = {
         "1_data_task": {
             "fixed_axes": {
                 "dataset": "fred_md",
-                "information_set_type": "revised",
-                "target_structure": "single_target_point_forecast",
+                "information_set_type": "final_revised_data",
+                "target_structure": "single_target",
                 "benchmark_family": "ar_bic",
                 "evaluation_scale": "raw_level",
             },
@@ -68,7 +68,7 @@ recipe = {
                 "preprocess_fit_scope": "not_applicable",
                 "inverse_transform_policy": "none",
                 "representation_policy": "raw_only",
-                "tcode_application_scope": "apply_tcode_to_none",
+                "tcode_application_scope": "none",
                 "target_transform": "level",
                 "target_normalization": "none",
                 "target_domain": "unconstrained",

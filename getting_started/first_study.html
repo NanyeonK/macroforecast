@@ -101,7 +101,7 @@
 <p>The <strong>fixed design</strong> defines the comparison environment. Everything here stays constant across models:</p>
 <ul class="simple">
 <li><p><strong>Dataset</strong>: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code> (FRED-MD monthly macro panel)</p></li>
-<li><p><strong>Information set</strong>: <code class="docutils literal notranslate"><span class="pre">revised</span></code> (latest available data, not real-time vintages)</p></li>
+<li><p><strong>Information set</strong>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code> (latest available data, not real-time vintages)</p></li>
 <li><p><strong>Framework</strong>: <code class="docutils literal notranslate"><span class="pre">expanding</span></code> (expanding training window)</p></li>
 <li><p><strong>Benchmark</strong>: <code class="docutils literal notranslate"><span class="pre">ar_bic</span></code> (AR model with BIC-selected lag order)</p></li>
 <li><p><strong>Horizons</strong>: 1, 3, 6, 12 months ahead</p></li>
@@ -136,8 +136,8 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">revised</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target_point_forecast</span>
+<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">final_revised_data</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target</span>
 <span class="w">      </span><span class="nt">benchmark_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ar_bic</span>
 <span class="w">      </span><span class="nt">evaluation_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_level</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
@@ -160,7 +160,7 @@
 <span class="w">      </span><span class="nt">preprocess_fit_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">train_only</span>
 <span class="w">      </span><span class="nt">inverse_transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 <span class="w">      </span><span class="nt">representation_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_only</span>
-<span class="w">      </span><span class="nt">tcode_application_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">apply_tcode_to_none</span>
+<span class="w">      </span><span class="nt">tcode_application_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 <span class="w">      </span><span class="nt">target_transform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
 <span class="w">      </span><span class="nt">target_normalization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 <span class="w">      </span><span class="nt">target_domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unconstrained</span>

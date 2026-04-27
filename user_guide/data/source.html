@@ -112,7 +112,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> — no default; you pick one of <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">source_adapter</span></code> — mirrors <code class="docutils literal notranslate"><span class="pre">dataset</span></code> automatically (canonical FRED loader). Override only for <code class="docutils literal notranslate"><span class="pre">custom_csv</span></code> / <code class="docutils literal notranslate"><span class="pre">custom_parquet</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code> — derived from <code class="docutils literal notranslate"><span class="pre">dataset</span></code> for MD/QD/composites. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> requires an explicit monthly/quarterly choice.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span> <span class="pre">=</span> <span class="pre">revised</span></code> — post-revision truth. Pick <code class="docutils literal notranslate"><span class="pre">pseudo_oos_revised</span></code> only when you want synthetic release-lag masking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span> <span class="pre">=</span> <span class="pre">revised</span></code> — post-revision truth. Pick <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code> only when you want synthetic release-lag masking.</p></li>
 </ul>
 <p><strong>Most research runs need only <code class="docutils literal notranslate"><span class="pre">dataset</span></code> + <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>.</strong> The other two auto-derive.</p>
 <hr class="docutils" />
@@ -350,11 +350,11 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">revised</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Latest revised values (post-revision truth). Default.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pseudo_oos_revised</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code></p></td>
 <td><p>operational</p></td>
 <td><p>Pseudo out-of-sample: latest revised values but masked according to (fake) release-lag discipline.</p></td>
 </tr>
@@ -382,7 +382,7 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">revised</span>
+<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">final_revised_data</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
 
@@ -391,7 +391,7 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pseudo_oos_revised</span>
+<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pseudo_oos_on_revised_data</span>
 </pre></div>
 </div>
 </section>

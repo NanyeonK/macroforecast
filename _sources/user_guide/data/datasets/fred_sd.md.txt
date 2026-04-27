@@ -83,7 +83,7 @@ likelihoods and regularized group MIDAS remain research-extension work.
 FRED-SD is explicitly designed as a *real-time* database — each `.xlsx` file is the dataset as known at a specific publication month. This matters for studies that want to avoid contaminating forecasts with data revisions:
 
 - `information_set_type: real_time_vintage` + `leaf_config.data_vintage: "2022-03"` loads the March-2022 vintage exactly.
-- `information_set_type: revised` (default) loads the latest official **Data by Series** workbook discovered from the St. Louis Fed landing page.
+- `information_set_type: final_revised_data` (default) loads the latest official **Data by Series** workbook discovered from the St. Louis Fed landing page.
 
 The authors emphasise in the 2022 paper that some state-level series see substantial revisions (especially GDP by state), so real-time studies on FRED-SD generally should pin a vintage.
 
@@ -415,7 +415,7 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
    `sd_states` / `sd_variables` before loading. They are not post-load
    `variable_universe` filters.
 3. **Generic `variable_universe` is post-load** — use `sd_variable_selection` for workbook-sheet selection and `variable_universe` for loaded `VARIABLE_STATE` columns.
-4. **No official T-code row** — `official_transform_policy: dataset_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
+4. **No official T-code row** — `official_transform_policy: apply_official_tcode` has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.
 5. **Mixed-frequency estimator scope is narrow** — `support_tier` is stable
    for FRED-SD loading and metadata, but advanced mixed-frequency estimators
    remain operational-narrow unless explicitly documented as built-in runtime
