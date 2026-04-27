@@ -7416,20 +7416,20 @@ def _evaluation_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
     return dict(compiler.get("evaluation_spec", {
         "primary_metric": "msfe",
-        "point_metrics": "MSFE",
-        "relative_metrics": "relative_MSFE",
+        "point_metrics": "msfe",
+        "relative_metrics": "relative_msfe",
         "direction_metrics": "directional_accuracy",
         "density_metrics": "pinball_loss",
         "economic_metrics": "utility_gain",
         "benchmark_window": "expanding",
         "benchmark_scope": "same_for_all",
-        "agg_time": "full_oos_average",
+        "agg_time": "full_out_of_sample_average",
         "agg_horizon": "equal_weight",
         "agg_target": "report_separately_only",
         "ranking": "mean_metric_rank",
         "report_style": "tidy_dataframe",
         "regime_definition": "none",
-        "regime_use": "eval_only",
+        "regime_use": "evaluation_only",
         "regime_metrics": "all_main_metrics_by_regime",
         "decomposition_target": "preprocessing_effect",
         "decomposition_order": "marginal_effect_only",
@@ -7931,7 +7931,7 @@ def _compute_pit_uniformity(predictions: pd.DataFrame) -> dict[str, object]:
     pit, _hits, sigma, _alpha = _compute_density_interval_helpers(predictions)
     res = kstest(pit, "uniform")
     return {
-        "stat_test": "PIT_uniformity",
+        "stat_test": "pit_uniformity",
         "n": int(len(pit)),
         "ks_statistic": float(res.statistic),
         "p_value": float(res.pvalue),
@@ -8491,7 +8491,7 @@ def _compute_binomial_hit_test(predictions: pd.DataFrame, threshold: float = 0.0
 
 def _compute_diagnostics_bundle(predictions: pd.DataFrame) -> dict[str, object]:
     return {
-        "stat_test": "diagnostics_full",
+        "stat_test": "full_residual_diagnostics",
         "mincer_zarnowitz": _compute_mincer_zarnowitz(predictions),
         "ljung_box": _compute_ljung_box_test(predictions),
         "arch_lm": _compute_arch_lm_test(predictions),
@@ -9691,19 +9691,19 @@ _PRIMARY_METRIC_MAP: dict[str, tuple[str, str | None, str]] = {
 
 _EVALUATION_AXIS_METRIC_KEYS: dict[str, dict[str, str]] = {
     "point_metrics": {
-        "MSE": "msfe",
-        "MSFE": "msfe",
-        "RMSE": "rmse",
-        "MAE": "mae",
-        "MAPE": "mape",
+        "mse": "msfe",
+        "msfe": "msfe",
+        "rmse": "rmse",
+        "mae": "mae",
+        "mape": "mape",
     },
     "relative_metrics": {
-        "relative_MSFE": "relative_msfe",
-        "relative_RMSE": "relative_rmse",
-        "relative_MAE": "relative_mae",
-        "oos_R2": "oos_r2",
+        "relative_msfe": "relative_msfe",
+        "relative_rmse": "relative_rmse",
+        "relative_mae": "relative_mae",
+        "oos_r2": "oos_r2",
         "benchmark_win_rate": "benchmark_win_rate",
-        "CSFE_difference": "csfe",
+        "csfe_difference": "csfe",
     },
     "direction_metrics": {
         "directional_accuracy": "directional_accuracy",
@@ -9766,7 +9766,7 @@ def _selected_metric_availability(metrics_by_horizon: Mapping[str, Mapping[str, 
 
 def _evaluation_aggregation_payload(evaluation_spec: Mapping[str, object]) -> dict[str, object]:
     return {
-        "agg_time": evaluation_spec.get("agg_time", "full_oos_average"),
+        "agg_time": evaluation_spec.get("agg_time", "full_out_of_sample_average"),
         "agg_horizon": evaluation_spec.get("agg_horizon", "equal_weight"),
         "agg_target": evaluation_spec.get("agg_target", "report_separately_only"),
         "ranking": evaluation_spec.get("ranking", "mean_metric_rank"),
@@ -10044,7 +10044,7 @@ def _regime_indicator(predictions: pd.DataFrame, evaluation_spec: dict[str, obje
     dates = pd.to_datetime(predictions["target_date"])
     if regime_definition == "none":
         return pd.Series(False, index=predictions.index)
-    if regime_definition == "NBER_recession":
+    if regime_definition == "nber_recession":
         indicator = _recession_indicator(pd.DatetimeIndex(dates))
         indicator.index = predictions.index
         return indicator.astype(bool)
@@ -10058,18 +10058,18 @@ def _regime_indicator(predictions: pd.DataFrame, evaluation_spec: dict[str, obje
 
 
 def _compute_regime_summary(predictions: pd.DataFrame, recipe: RecipeSpec, evaluation_spec: dict[str, object]) -> dict[str, object]:
-    if str(evaluation_spec.get("regime_use", "eval_only")) != "eval_only":
-        raise ExecutionError("only regime_use='eval_only' is executable in current runtime slice")
+    if str(evaluation_spec.get("regime_use", "evaluation_only")) != "evaluation_only":
+        raise ExecutionError("only regime_use='evaluation_only' is executable in current runtime slice")
     indicator = _regime_indicator(predictions, evaluation_spec)
     if str(evaluation_spec.get("regime_definition", "none")) == "none":
         return {
             "regime_definition": "none",
-            "regime_use": evaluation_spec.get("regime_use", "eval_only"),
+            "regime_use": evaluation_spec.get("regime_use", "evaluation_only"),
             "regime_metrics": evaluation_spec.get("regime_metrics", "all_main_metrics_by_regime"),
         }
     payload = {
         "regime_definition": evaluation_spec.get("regime_definition"),
-        "regime_use": evaluation_spec.get("regime_use", "eval_only"),
+        "regime_use": evaluation_spec.get("regime_use", "evaluation_only"),
         "regime_metrics": evaluation_spec.get("regime_metrics", "all_main_metrics_by_regime"),
         "target": recipe.target,
         "raw_dataset": recipe.raw_dataset,
@@ -10633,7 +10633,7 @@ def execute_recipe(
     # Write structured metrics/comparison/regime based on export_format
     metrics_files = {}
     comparison_files = {}
-    if write_metrics and export_format in ('json', 'json+csv', 'all'):
+    if write_metrics and export_format in ('json', 'json_csv', 'all'):
         _write_json(run_dir / 'metrics.json', metrics)
         _write_json(run_dir / 'comparison_summary.json', comparison_summary)
         _record_artifact("metrics.json", artifact_type="metrics", layer="4_evaluation", file_format="json")
@@ -10645,7 +10645,7 @@ def execute_recipe(
         )
         metrics_files['json'] = 'metrics.json'
         comparison_files['json'] = 'comparison_summary.json'
-    if write_metrics and export_format in ('csv', 'json+csv', 'all'):
+    if write_metrics and export_format in ('csv', 'json_csv', 'all'):
         _write_csv(run_dir / 'metrics.csv', [metrics])
         _write_csv(run_dir / 'comparison_summary.csv', [comparison_summary])
         _record_artifact("metrics.csv", artifact_type="metrics", layer="4_evaluation", file_format="csv")
@@ -10691,11 +10691,11 @@ def execute_recipe(
     if write_metrics and evaluation_spec.get('regime_definition', 'none') != 'none':
         regime_summary = _compute_regime_summary(predictions, recipe, evaluation_spec)
         regime_files = {}
-        if export_format in ('json', 'json+csv', 'all'):
+        if export_format in ('json', 'json_csv', 'all'):
             _write_json(run_dir / 'regime_summary.json', regime_summary)
             _record_artifact("regime_summary.json", artifact_type="regime_summary", layer="4_evaluation", file_format="json")
             regime_files['json'] = 'regime_summary.json'
-        if export_format in ('csv', 'json+csv', 'all'):
+        if export_format in ('csv', 'json_csv', 'all'):
             _write_csv(run_dir / 'regime_summary.csv', [regime_summary])
             _record_artifact("regime_summary.csv", artifact_type="regime_summary", layer="4_evaluation", file_format="csv")
             regime_files['csv'] = 'regime_summary.csv'

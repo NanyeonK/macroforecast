@@ -10,7 +10,7 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(id='nonlinearity_effect', description='nonlinearity effect', status='registry_only', priority='B'),
         EnumRegistryEntry(id='regularization_effect', description='regularization effect', status='registry_only', priority='B'),
-        EnumRegistryEntry(id='cv_scheme_effect', description='cv scheme effect', status='registry_only', priority='B'),
+        EnumRegistryEntry(id='validation_scheme_effect', description='cv scheme effect', status='registry_only', priority='B'),
         EnumRegistryEntry(id='loss_function_effect', description='loss function effect', status='registry_only', priority='B'),
         EnumRegistryEntry(id='preprocessing_effect', description='preprocessing effect', status="operational", priority='A'),
         EnumRegistryEntry(id='feature_representation_effect', description='feature representation effect', status="operational", priority='A'),

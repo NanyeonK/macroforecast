@@ -42,8 +42,8 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     ("ranking", "mean_metric_rank"),
     ("ranking", "median_metric_rank"),
     ("ranking", "win_count"),
-    ("ranking", "benchmark_beat_freq"),
-    ("ranking", "MCS_inclusion_priority"),
+    ("ranking", "benchmark_beat_frequency"),
+    ("ranking", "mcs_inclusion_priority"),
 )
 
 

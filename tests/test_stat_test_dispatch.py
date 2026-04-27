@@ -138,7 +138,7 @@ def test_legacy_to_new_covers_all_20_operational() -> None:
         "cpa", "rossi", "rolling_dm",
         "reality_check", "spa", "mcs",
         "pesaran_timmermann", "binomial_hit",
-        "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "diagnostics_full",
+        "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "full_residual_diagnostics",
     }
     assert set(LEGACY_TO_NEW.keys()) == expected
 

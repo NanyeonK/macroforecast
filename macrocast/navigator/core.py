@@ -164,19 +164,19 @@ _DEFAULT_SELECTIONS = {
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
     "primary_metric": "msfe",
-    "point_metrics": "MSFE",
-    "relative_metrics": "relative_MSFE",
+    "point_metrics": "msfe",
+    "relative_metrics": "relative_msfe",
     "direction_metrics": "directional_accuracy",
     "density_metrics": "pinball_loss",
     "benchmark_window": "expanding",
     "benchmark_scope": "same_for_all",
-    "agg_time": "full_oos_average",
+    "agg_time": "full_out_of_sample_average",
     "agg_horizon": "equal_weight",
     "agg_target": "report_separately_only",
     "ranking": "mean_metric_rank",
     "report_style": "tidy_dataframe",
     "regime_definition": "none",
-    "regime_use": "eval_only",
+    "regime_use": "evaluation_only",
     "regime_metrics": "all_main_metrics_by_regime",
     "decomposition_target": "preprocessing_effect",
     "decomposition_order": "marginal_effect_only",
@@ -367,7 +367,7 @@ _DIRECTION_STATS = frozenset({"none", "pesaran_timmermann", "binomial_hit"})
 _DENSITY_INTERVAL_STATS = frozenset(
     {
         "none",
-        "PIT_uniformity",
+        "pit_uniformity",
         "berkowitz",
         "kupiec",
         "christoffersen_unconditional",
@@ -408,7 +408,8 @@ _LEGACY_STAT_TEST_TO_SPLIT = {
     "ljung_box": ("residual_diagnostics", "ljung_box"),
     "arch_lm": ("residual_diagnostics", "arch_lm"),
     "bias_test": ("residual_diagnostics", "bias_test"),
-    "diagnostics_full": ("residual_diagnostics", "diagnostics_full"),
+    "diagnostics_full": ("residual_diagnostics", "full_residual_diagnostics"),
+    "full_residual_diagnostics": ("residual_diagnostics", "full_residual_diagnostics"),
 }
 _HAC_COMPATIBLE_STAT_TESTS = frozenset(
     {"dm_hln", "dm_modified", "cw", "enc_new", "mse_t", "cpa", "spa", "mcs"}
@@ -823,7 +824,7 @@ def compatibility_view(recipe: Mapping[str, Any]) -> dict[str, Any]:
     if str(selected.get("export_format", "json")) in {"parquet", "all"}:
         recommendations.append("Parquet output writes sidecar artifact files in addition to the always-written CSV prediction table.")
     if str(selected.get("regime_definition", "none")) != "none":
-        recommendations.append("Regime evaluation is post-forecast evaluation filtering; regime_use beyond eval_only remains a separate runtime gate.")
+        recommendations.append("Regime evaluation is post-forecast evaluation filtering; regime_use beyond evaluation_only remains a separate runtime gate.")
     if forecast_type == "iterated" and feature_builder in _RAW_PANEL_BUILDERS:
         active_rules.append(
             {

@@ -3292,9 +3292,9 @@ def test_axis_governance_table_marks_stage4_eval_axes_operational() -> None:
     assert by_name["primary_metric"]["current_status"]["rmse"] == "operational"
     assert by_name["primary_metric"]["current_status"]["mae"] == "operational"
     assert by_name["primary_metric"]["current_status"]["mape"] == "operational"
-    assert by_name["relative_metrics"]["current_status"]["relative_RMSE"] == "operational"
+    assert by_name["relative_metrics"]["current_status"]["relative_rmse"] == "operational"
     assert by_name["direction_metrics"]["current_status"]["directional_accuracy"] == "operational"
-    assert by_name["regime_definition"]["current_status"]["NBER_recession"] == "operational"
+    assert by_name["regime_definition"]["current_status"]["nber_recession"] == "operational"
     assert by_name["regime_definition"]["current_status"]["user_defined_regime"] == "operational"
 
 
@@ -3302,7 +3302,7 @@ def test_compiled_manifest_records_stage4_evaluation_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     spec = compile_result.manifest["evaluation_spec"]
     assert spec["primary_metric"] == "msfe"
-    assert spec["relative_metrics"] == "relative_MSFE"
+    assert spec["relative_metrics"] == "relative_msfe"
     assert spec["direction_metrics"] == "directional_accuracy"
     assert spec["regime_definition"] == "none"
     assert spec["oos_period"] == "all_oos_data"

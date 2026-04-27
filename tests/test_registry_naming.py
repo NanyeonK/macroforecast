@@ -136,6 +136,26 @@ def test_layer3_training_legacy_aliases_canonicalize() -> None:
     assert canonical_axis_value("benchmark_family", "multi_benchmark_suite") == "benchmark_suite"
 
 
+def test_layer4_to_layer7_legacy_aliases_canonicalize() -> None:
+    assert canonical_axis_value("point_metrics", "MSFE") == "msfe"
+    assert canonical_axis_value("point_metrics", "MedAE") == "median_absolute_error"
+    assert canonical_axis_value("relative_metrics", "relative_MSFE") == "relative_msfe"
+    assert canonical_axis_value("relative_metrics", "oos_R2") == "oos_r2"
+    assert canonical_axis_value("density_metrics", "CRPS") == "crps"
+    assert canonical_axis_value("direction_metrics", "Brier_score") == "brier_score"
+    assert canonical_axis_value("agg_time", "full_oos_average") == "full_out_of_sample_average"
+    assert canonical_axis_value("agg_target", "scale_adjusted_weight") == "scale_adjusted_weighting"
+    assert canonical_axis_value("regime_definition", "NBER_recession") == "nber_recession"
+    assert canonical_axis_value("regime_use", "eval_only") == "evaluation_only"
+    assert canonical_axis_value("export_format", "json+csv") == "json_csv"
+    assert canonical_axis_value("density_interval", "PIT_uniformity") == "pit_uniformity"
+    assert (
+        canonical_axis_value("residual_diagnostics", "diagnostics_full")
+        == "full_residual_diagnostics"
+    )
+    assert canonical_axis_value("stat_test", "diagnostics_full") == "full_residual_diagnostics"
+
+
 def test_canonicalize_recipe_path_rewrites_legacy_stage0_values() -> None:
     recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "single_path_benchmark"
@@ -228,6 +248,31 @@ def test_legacy_layer3_training_recipe_compiles_to_canonical_ids() -> None:
     assert result.manifest["benchmark_spec"]["benchmark_family"] == "autoregressive_bic"
 
 
+def test_legacy_layer4_to_layer7_recipe_compiles_to_canonical_ids() -> None:
+    recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
+    recipe["path"]["4_evaluation"]["fixed_axes"]["point_metrics"] = "MSFE"
+    recipe["path"]["4_evaluation"]["fixed_axes"]["relative_metrics"] = "relative_MSFE"
+    recipe["path"]["4_evaluation"]["fixed_axes"]["agg_time"] = "full_oos_average"
+    recipe["path"]["4_evaluation"]["fixed_axes"]["regime_definition"] = "NBER_recession"
+    recipe["path"]["4_evaluation"]["fixed_axes"]["regime_use"] = "eval_only"
+    recipe["path"]["5_output_provenance"].setdefault("fixed_axes", {})["export_format"] = "json+csv"
+    recipe["path"]["6_stat_tests"]["fixed_axes"]["stat_test"] = "diagnostics_full"
+    recipe["path"]["6_stat_tests"]["fixed_axes"]["density_interval"] = "PIT_uniformity"
+    recipe["path"]["6_stat_tests"]["fixed_axes"]["residual_diagnostics"] = "diagnostics_full"
+
+    result = compile_recipe_dict(recipe)
+
+    assert result.manifest["evaluation_spec"]["point_metrics"] == "msfe"
+    assert result.manifest["evaluation_spec"]["relative_metrics"] == "relative_msfe"
+    assert result.manifest["evaluation_spec"]["agg_time"] == "full_out_of_sample_average"
+    assert result.manifest["evaluation_spec"]["regime_definition"] == "nber_recession"
+    assert result.manifest["evaluation_spec"]["regime_use"] == "evaluation_only"
+    assert result.manifest["output_spec"]["export_format"] == "json_csv"
+    assert result.manifest["stat_test_spec"]["stat_test"] == "full_residual_diagnostics"
+    assert result.manifest["stat_test_spec"]["density_interval"] == "pit_uniformity"
+    assert result.manifest["stat_test_spec"]["residual_diagnostics"] == "full_residual_diagnostics"
+
+
 def test_rename_ledger_lists_stage0_aliases() -> None:
     aliases = {
         (item["axis"], item["legacy_id"]): item["canonical_id"]
@@ -276,3 +321,18 @@ def test_rename_ledger_lists_layer3_training_aliases() -> None:
     assert aliases[("benchmark_family", "ar_bic")] == "autoregressive_bic"
     assert aliases[("benchmark_family", "ar_fixed_p")] == "autoregressive_fixed_lag"
     assert aliases[("benchmark_family", "ardi")] == "autoregressive_diffusion_index"
+
+
+def test_rename_ledger_lists_layer4_to_layer7_aliases() -> None:
+    aliases = {
+        (item["axis"], item["legacy_id"]): item["canonical_id"]
+        for item in rename_ledger()["axis_value_aliases"]
+    }
+
+    assert aliases[("point_metrics", "MSFE")] == "msfe"
+    assert aliases[("relative_metrics", "relative_MSFE")] == "relative_msfe"
+    assert aliases[("agg_time", "full_oos_average")] == "full_out_of_sample_average"
+    assert aliases[("regime_use", "eval_only")] == "evaluation_only"
+    assert aliases[("export_format", "json+csv")] == "json_csv"
+    assert aliases[("density_interval", "PIT_uniformity")] == "pit_uniformity"
+    assert aliases[("stat_test", "diagnostics_full")] == "full_residual_diagnostics"

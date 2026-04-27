@@ -381,7 +381,7 @@
     if (selected.forecast_object === "direction") recommendations.push("Use direction-family tests such as pesaran_timmermann or binomial_hit.");
     if (selected.forecast_object === "interval" || selected.forecast_object === "density") recommendations.push("Use density_interval tests; interval/density payloads are baseline wrappers over scalar generators.");
     if (["parquet", "all"].includes(String(selected.export_format || "json"))) recommendations.push("Parquet output writes sidecar artifact files in addition to the always-written CSV prediction table.");
-    if (String(selected.regime_definition || "none") !== "none") recommendations.push("Regime evaluation is post-forecast evaluation filtering; regime_use beyond eval_only remains a separate runtime gate.");
+    if (String(selected.regime_definition || "none") !== "none") recommendations.push("Regime evaluation is post-forecast evaluation filtering; regime_use beyond evaluation_only remains a separate runtime gate.");
     if (selected.forecast_type === "iterated" && rawPanelBuilders.has(String(selected.feature_builder || ""))) {
       rules.push({ rule: "raw_panel_iterated_future_x_path", effect: "leaf_config.exogenous_x_path_policy selects hold, observed, scheduled-known, or recursive-X/ar1 path" });
     }

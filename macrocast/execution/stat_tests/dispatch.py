@@ -14,6 +14,8 @@ from typing import Any, Callable
 
 import pandas as pd
 
+from macrocast.registry.naming import canonical_axis_value
+
 
 STAT_TEST_AXIS_NAMES: tuple[str, ...] = (
     "equal_predictive",
@@ -72,7 +74,7 @@ LEGACY_TO_NEW: dict[str, tuple[str, str]] = {
     "ljung_box":        ("residual_diagnostics", "ljung_box"),
     "arch_lm":          ("residual_diagnostics", "arch_lm"),
     "bias_test":        ("residual_diagnostics", "bias_test"),
-    "diagnostics_full": ("residual_diagnostics", "diagnostics_full"),
+    "full_residual_diagnostics": ("residual_diagnostics", "full_residual_diagnostics"),
 }
 
 
@@ -83,7 +85,7 @@ def canonicalize_stat_test_spec(raw_spec: dict[str, Any] | None) -> dict[str, st
     if raw_spec:
         for key in spec:
             if key in raw_spec:
-                spec[key] = str(raw_spec[key])
+                spec[key] = canonical_axis_value(key, str(raw_spec[key]))
     legacy = spec.get("stat_test", "none")
     if legacy != "none" and legacy in LEGACY_TO_NEW:
         axis, value = LEGACY_TO_NEW[legacy]
@@ -192,11 +194,13 @@ def _build_handlers(
             "arch_lm":                       lambda: _compute_arch_lm_test(predictions),
             "bias_test":                     lambda: _compute_bias_test(predictions),
             "diagnostics_full":              lambda: _compute_diagnostics_bundle(predictions),
+            "full_residual_diagnostics":     lambda: _compute_diagnostics_bundle(predictions),
             "autocorrelation_of_errors":     lambda: _compute_autocorrelation_of_errors(predictions),
             "serial_dependence_loss_diff":   lambda: _compute_serial_dependence_loss_diff(predictions),
         },
         "density_interval": {
             "PIT_uniformity":              lambda: _compute_pit_uniformity(predictions),
+            "pit_uniformity":              lambda: _compute_pit_uniformity(predictions),
             "berkowitz":                   lambda: _compute_berkowitz(predictions),
             "kupiec":                      lambda: _compute_kupiec(predictions),
             "christoffersen_unconditional": lambda: _compute_christoffersen_unconditional(predictions),

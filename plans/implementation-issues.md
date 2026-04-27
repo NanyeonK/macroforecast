@@ -1039,7 +1039,7 @@ pri:medium | size:M | deps: 0-4
 ### Implementation for A-tier
 - NBER recession dates lookup table
 - Metric computation conditional on regime indicator
-- Current operational slice: `regime_definition='NBER_recession'`, `regime_use='eval_only'`, regime summary artifact with state-dependent OOS R² and crisis-period gain by horizon
+- Current operational slice: `regime_definition='nber_recession'`, `regime_use='evaluation_only'`, regime summary artifact with state-dependent OOS R² and crisis-period gain by horizon
 - Follow-up operational slice: `regime_definition='user_defined_regime'` with explicit `evaluation_spec.regime_start` and `evaluation_spec.regime_end`
 
 ---

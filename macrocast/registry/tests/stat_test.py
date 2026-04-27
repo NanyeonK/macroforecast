@@ -29,7 +29,7 @@ AXIS_DEFINITION = AxisDefinition(
         EnumRegistryEntry(id="bias_test", description="Forecast-bias t-test", status="operational", priority="A"),
         EnumRegistryEntry(id="pesaran_timmermann", description="Pesaran-Timmermann directional-accuracy test", status="operational", priority="A"),
         EnumRegistryEntry(id="binomial_hit", description="Binomial hit-rate test for directional accuracy", status="operational", priority="A"),
-        EnumRegistryEntry(id="diagnostics_full", description="Residual diagnostic bundle: Mincer-Zarnowitz, Ljung-Box, ARCH-LM, bias test", status="operational", priority="A"),
+        EnumRegistryEntry(id="full_residual_diagnostics", description="Residual diagnostic bundle: Mincer-Zarnowitz, Ljung-Box, ARCH-LM, bias test", status="operational", priority="A"),
     ),
     compatible_with={},
     incompatible_with={},

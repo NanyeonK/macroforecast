@@ -1603,7 +1603,7 @@ Generated against server1 registry snapshot at `~/project/macroforecast/macrocas
 
 - Layer 5.1 `saved_objects` registry currently uses a *profile-style* enum (`none/predictions_only/predictions_and_metrics/full_bundle/models_only/data_only`) rather than the per-artifact flags in the spec (`raw_predictions/fold_predictions/...`). Ledger rows are mapped conceptually (which profile already contains each artifact). A refactor to flag-style is expected around Phase 3 wiring; not tracked as a separate row here.
 - Layer 5.2 `provenance_fields` registry uses bundle-levels (`none/minimal/standard/full`). Spec-level fields mapped to the bundle that currently surfaces them.
-- Layer 5.3 `export_format` registry exposes `json+csv` and `all` composite enums in addition to singletons; not enumerated separately in the ledger.
+- Layer 5.3 `export_format` registry exposes `json_csv` and `all` composite enums in addition to singletons; not enumerated separately in the ledger.
 - Layer 4 `primary_metric` axis (7 operational values: msfe/relative_msfe/oos_r2/csfe/rmse/mae/mape) is a *selector* axis drawn from 4.1.1/4.1.2 and is not re-listed as a separate row group.
 - Part 2 values universe counts the per-spec values as authored; registry coverage (47 files across training/evaluation/output) is narrower than spec since several spec values (poos_cv, BIC_selection, walk_forward_validation, event_retrain, benchmark_model entries, historical_mean benchmark, statsmodels_adapter, etc.) are marked `absent` until their phase lands.
 
@@ -1896,7 +1896,7 @@ Current `importance_method` axis has 13 operational entries (none, minimal_impor
 
 ## Grand Summary
 
-Counts aggregated across Parts 1-3 (Layer 0-7). Each row in each Part's tables counts once. Bundle rows (e.g. `diagnostics_full`, `importance_stability`) are counted separately from their component entries. Approximate totals:
+Counts aggregated across Parts 1-3 (Layer 0-7). Each row in each Part's tables counts once. Bundle rows (e.g. `full_residual_diagnostics`, `importance_stability`) are counted separately from their component entries. Approximate totals:
 
 | Bucket | Count | % of universe |
 |--------|:-----:|:---:|

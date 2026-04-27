@@ -941,11 +941,11 @@ def test_execute_recipe_stage4_metrics_include_relative_and_direction_fields(tmp
             "compiler": {
                 "evaluation_spec": {
                     "primary_metric": "msfe",
-                    "point_metrics": "RMSE",
-                    "relative_metrics": "relative_RMSE",
+                    "point_metrics": "rmse",
+                    "relative_metrics": "relative_rmse",
                     "direction_metrics": "directional_accuracy",
                     "regime_definition": "none",
-                    "regime_use": "eval_only",
+                    "regime_use": "evaluation_only",
                     "regime_metrics": "all_main_metrics_by_regime",
                 }
             }
@@ -955,7 +955,7 @@ def test_execute_recipe_stage4_metrics_include_relative_and_direction_fields(tmp
     manifest = json.loads((run_dir / "manifest.json").read_text())
     metrics = json.loads((run_dir / "metrics.json").read_text())
     h1 = metrics["metrics_by_horizon"]["h1"]
-    assert manifest["evaluation_spec"]["relative_metrics"] == "relative_RMSE"
+    assert manifest["evaluation_spec"]["relative_metrics"] == "relative_rmse"
     assert "relative_rmse" in h1
     assert "relative_mae" in h1
     assert "benchmark_win_rate" in h1
@@ -973,20 +973,20 @@ def test_execute_recipe_writes_layer4_evaluation_summary_and_report(tmp_path: Pa
             "compiler": {
                 "evaluation_spec": {
                     "primary_metric": "rmse",
-                    "point_metrics": "RMSE",
-                    "relative_metrics": "relative_RMSE",
+                    "point_metrics": "rmse",
+                    "relative_metrics": "relative_rmse",
                     "direction_metrics": "directional_accuracy",
                     "density_metrics": "pinball_loss",
                     "economic_metrics": "utility_gain",
                     "benchmark_window": "expanding",
                     "benchmark_scope": "same_for_all",
-                    "agg_time": "full_oos_average",
+                    "agg_time": "full_out_of_sample_average",
                     "agg_horizon": "equal_weight",
                     "agg_target": "report_separately_only",
                     "ranking": "mean_metric_rank",
                     "report_style": "markdown_table",
                     "regime_definition": "none",
-                    "regime_use": "eval_only",
+                    "regime_use": "evaluation_only",
                     "regime_metrics": "all_main_metrics_by_regime",
                     "decomposition_target": "preprocessing_effect",
                     "decomposition_order": "marginal_effect_only",
@@ -1031,7 +1031,7 @@ def test_execute_recipe_reads_oos_period_from_evaluation_spec(tmp_path: Path, mo
                     "primary_metric": "msfe",
                     "oos_period": "recession_only_oos",
                     "regime_definition": "none",
-                    "regime_use": "eval_only",
+                    "regime_use": "evaluation_only",
                     "regime_metrics": "all_main_metrics_by_regime",
                 }
             }
@@ -1052,11 +1052,11 @@ def test_execute_recipe_writes_regime_summary_for_nber_slice(tmp_path: Path) -> 
             "compiler": {
                 "evaluation_spec": {
                     "primary_metric": "msfe",
-                    "point_metrics": "MSFE",
-                    "relative_metrics": "relative_MSFE",
+                    "point_metrics": "msfe",
+                    "relative_metrics": "relative_msfe",
                     "direction_metrics": "directional_accuracy",
-                    "regime_definition": "NBER_recession",
-                    "regime_use": "eval_only",
+                    "regime_definition": "nber_recession",
+                    "regime_use": "evaluation_only",
                     "regime_metrics": "all_main_metrics_by_regime",
                 }
             }
@@ -1066,7 +1066,7 @@ def test_execute_recipe_writes_regime_summary_for_nber_slice(tmp_path: Path) -> 
     manifest = json.loads((run_dir / "manifest.json").read_text())
     regime = json.loads((run_dir / "regime_summary.json").read_text())
     assert manifest["regime_file"] == "regime_summary.json"
-    assert regime["regime_definition"] == "NBER_recession"
+    assert regime["regime_definition"] == "nber_recession"
     assert "h1" in regime["by_horizon"]
 
 
@@ -1081,11 +1081,11 @@ def test_execute_recipe_writes_regime_summary_for_user_defined_slice(tmp_path: P
             "compiler": {
                 "evaluation_spec": {
                     "primary_metric": "msfe",
-                    "point_metrics": "MSFE",
-                    "relative_metrics": "relative_MSFE",
+                    "point_metrics": "msfe",
+                    "relative_metrics": "relative_msfe",
                     "direction_metrics": "directional_accuracy",
                     "regime_definition": "user_defined_regime",
-                    "regime_use": "eval_only",
+                    "regime_use": "evaluation_only",
                     "regime_metrics": "all_main_metrics_by_regime",
                     "regime_start": "1900-01-01",
                     "regime_end": "2100-12-31",
@@ -2162,7 +2162,7 @@ def test_execute_recipe_json_csv_export_writes_sidecar_files(tmp_path: Path) -> 
         provenance_payload={
             "compiler": {
                 "output_spec": {
-                    "export_format": "json+csv",
+                    "export_format": "json_csv",
                     "saved_objects": "full_bundle",
                     "provenance_fields": "full",
                     "artifact_granularity": "aggregated",
@@ -2175,7 +2175,7 @@ def test_execute_recipe_json_csv_export_writes_sidecar_files(tmp_path: Path) -> 
 
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
-    assert manifest["output_spec"]["export_format"] == "json+csv"
+    assert manifest["output_spec"]["export_format"] == "json_csv"
     assert manifest["metrics_file"] == "metrics.json"
     assert manifest["metrics_files"]["csv"] == "metrics.csv"
     artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
@@ -2356,7 +2356,7 @@ def test_execute_recipe_stage6_extended_stat_tests(tmp_path: Path) -> None:
         ("rolling_dm", "stat_test_rolling_dm.json", {}),
         ("reality_check", "stat_test_reality_check.json", {"dependence_correction": "block_bootstrap"}),
         ("spa", "stat_test_spa.json", {"dependence_correction": "block_bootstrap"}),
-        ("diagnostics_full", "stat_test_diagnostics_full.json", {}),
+        ("full_residual_diagnostics", "stat_test_full_residual_diagnostics.json", {}),
         ("pesaran_timmermann", "stat_test_pesaran_timmermann.json", {}),
         ("binomial_hit", "stat_test_binomial_hit.json", {}),
     ]
