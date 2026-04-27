@@ -11,7 +11,7 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(id='none', description='none', status='operational', priority="A"),
         EnumRegistryEntry(id='correlation_filter', description='correlation filter', status='operational', priority="A"),
-        EnumRegistryEntry(id='lasso_select', description='lasso select', status='operational', priority="A"),
+        EnumRegistryEntry(id='lasso_selection', description='lasso feature selection', status='operational', priority="A"),
         EnumRegistryEntry(id='mutual_information_screen', description='mutual information screen', status='registry_only', priority="A"),
         EnumRegistryEntry(id='custom', description='custom', status='external_plugin', priority="A"),
     ),

@@ -31,7 +31,7 @@ path:
     fixed_axes:
       framework: expanding
       benchmark_family: zero_change
-      feature_builder: autoreg_lagged_target
+      feature_builder: target_lag_features
       model_family: ar
   4_evaluation:
     fixed_axes:

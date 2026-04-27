@@ -80,7 +80,7 @@ _GOULET_COULOMBE_2021_RECIPE: dict[str, Any] = {
                 "level_feature_block": "none",
                 "temporal_feature_block": "none",
                 "rotation_feature_block": "none",
-                "feature_block_combination": "replace_with_blocks",
+                "feature_block_combination": "replace_with_selected_blocks",
             }
         },
         "3_training": {
@@ -152,7 +152,7 @@ _SYNTHETIC_REPLICATION_RECIPE: dict[str, Any] = {
             "fixed_axes": {
                 "framework": "expanding",
                 "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target",
+                "feature_builder": "target_lag_features",
                 "model_family": "ar",
                 "forecast_type": "iterated",
                 "forecast_object": "point_mean",
@@ -210,7 +210,7 @@ _FRED_SD_MIDASR_ALMONP_RECIPE: dict[str, Any] = {
                 "preprocess_fit_scope": "not_applicable",
                 "inverse_transform_policy": "none",
                 "evaluation_scale": "raw_level",
-                "feature_block_set": "transformed_x",
+                "feature_block_set": "transformed_predictors",
             }
         },
         "3_training": {
@@ -302,7 +302,7 @@ _ENTRIES: dict[str, ReplicationEntry] = {
             "0_meta.experiment_unit=single_target_single_generator",
             "1_data_task.dataset=fred_md",
             "2_preprocessing.tcode_policy=raw_only",
-            "3_training.feature_builder=autoreg_lagged_target",
+            "3_training.feature_builder=target_lag_features",
             "3_training.model_family=ar",
         ),
         recipe_yaml=_dump_recipe(_SYNTHETIC_REPLICATION_RECIPE),

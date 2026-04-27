@@ -230,7 +230,7 @@ path:
 ### Functions & features
 
 - Wired inside `macrocast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with the target.
-- Applies to raw-panel recipes only (autoreg_lagged_target uses target lags, so the axis is irrelevant there).
+- Applies to raw-panel recipes only (target_lag_features uses target lags, so the axis is irrelevant there).
 
 ### Recipe usage
 

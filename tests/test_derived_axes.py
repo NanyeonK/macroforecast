@@ -115,8 +115,8 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
         ),
         "feature_builder": AxisSelection(
             axis_name="feature_builder", layer="2_preprocessing", selection_mode="fixed",
-            selected_values=("autoreg_lagged_target",),
-            selected_status={"autoreg_lagged_target": "operational"},
+            selected_values=("target_lag_features",),
+            selected_status={"target_lag_features": "operational"},
         ),
     }
     leaf_config = {"task": "single_target"}
@@ -138,8 +138,8 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() ->
         ),
         "feature_builder": AxisSelection(
             axis_name="feature_builder", layer="2_preprocessing", selection_mode="sweep",
-            selected_values=("autoreg_lagged_target", "raw_feature_panel"),
-            selected_status={"autoreg_lagged_target": "operational", "raw_feature_panel": "operational"},
+            selected_values=("target_lag_features", "raw_feature_panel"),
+            selected_status={"target_lag_features": "operational", "raw_feature_panel": "operational"},
         ),
     }
     leaf_config = {"task": "single_target"}

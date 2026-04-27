@@ -10,7 +10,7 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(
-            id="legacy_feature_builder_bridge",
+            id="feature_builder_compatibility_bridge",
             description="bridge to the current feature_builder based recipes",
             status="registry_only",
             priority="A",
@@ -22,13 +22,13 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id="transformed_x",
+            id="transformed_predictors",
             description="current transformed predictor panel",
             status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
-            id="transformed_x_lags",
+            id="transformed_predictor_lags",
             description="transformed predictor panel plus X lags",
             status="operational_narrow",
             priority="A",
@@ -46,37 +46,37 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id="high_dimensional_x",
+            id="high_dimensional_predictors",
             description="high dimensional transformed predictor panel",
             status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
-            id="selected_sparse_x",
+            id="selected_sparse_predictors",
             description="selected sparse predictor block",
             status="operational_narrow",
             priority="A",
         ),
         EnumRegistryEntry(
-            id="level_augmented_x",
+            id="level_augmented_predictors",
             description="transformed predictor panel augmented with level features",
             status="operational_narrow",
             priority="B",
         ),
         EnumRegistryEntry(
-            id="rotation_augmented_x",
+            id="rotation_augmented_predictors",
             description="predictor panel augmented with rotated features",
             status="operational_narrow",
             priority="B",
         ),
         EnumRegistryEntry(
-            id="mixed_blocks",
+            id="mixed_feature_blocks",
             description="multiple named feature blocks composed into Z",
             status="operational_narrow",
             priority="B",
         ),
         EnumRegistryEntry(
-            id="custom_blocks",
+            id="custom_feature_blocks",
             description="researcher supplied feature-block set",
             status="operational_narrow",
             priority="B",

@@ -11,14 +11,14 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 **Note on dropped values:**
 
-- `predictor_family.text_only` / `mixed_blocks` — require NN/text embeddings stack (v2).
+- `predictor_family.text_only` / `mixed_feature_blocks` — require NN/text embeddings stack (v2).
 - `variable_universe.feature_selection_dynamic_subset` — CV-in-training feature selection loop; deferred to v1.1 tuning-engine extension.
 - `deterministic_components.trend_and_quadratic` — redundant with `linear_trend` + a future `leaf_config.trend_order` channel.
 
 `target_family` (the old 1.4.1 axis) was dropped in PR #32 — subsumed by `target_structure`.
 **At a glance (defaults):**
 - `benchmark_family` — no default; you always pick one (most studies start with `historical_mean` or `ar_bic`).
-- `predictor_family` — feature-builder dynamic default. autoreg_lagged_target → `target_lags_only`; raw_feature_panel → `all_macro_vars`. You rarely set it.
+- `predictor_family` — feature-builder dynamic default. target_lag_features → `target_lags_only`; raw_feature_panel → `all_macro_vars`. You rarely set it.
 - `variable_universe = all_variables` — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.
 - `deterministic_components = none` — no X augmentation. Switch to `linear_trend` / seasonals / `break_dummies` when your target needs them.
 
@@ -80,7 +80,7 @@ path:
 
 | Value | Status | What it does |
 |---|---|---|
-| `target_lags_only` | operational | Only the target's own lags (forces `feature_builder=autoreg_lagged_target`). Default for autoreg recipes. |
+| `target_lags_only` | operational | Only the target's own lags (forces `feature_builder=target_lag_features`). Default for autoreg recipes. |
 | `all_macro_vars` | operational | Every column except the target. Default for raw-panel recipes. |
 | `category_based` | operational | User-supplied category mapping: `leaf_config.predictor_category_columns: dict[str, list[str]]` + `leaf_config.predictor_category`. |
 | `factor_only` | operational | Columns whose name starts with `F_` (factor outputs). |
@@ -95,7 +95,7 @@ path:
 ### Dropped values
 
 - `text_only`: requires text-embedding / NN domain stack — deferred to v2 (Transformer scope).
-- `mixed_blocks`: multi-block NN architecture — deferred to v2.
+- `mixed_feature_blocks`: multi-block NN architecture — deferred to v2.
 
 ### Recipe usage
 

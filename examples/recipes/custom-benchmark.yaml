@@ -32,7 +32,7 @@ path:
       framework: expanding
       benchmark_family: custom_benchmark
       model_family: ar
-      feature_builder: autoreg_lagged_target
+      feature_builder: target_lag_features
   4_evaluation:
     fixed_axes:
       primary_metric: msfe

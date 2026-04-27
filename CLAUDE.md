@@ -29,7 +29,7 @@ python3 -c "import macrocast"          # verify package import
 - **Importance (12):** minimal_importance, tree_shap, kernel_shap, linear_shap, permutation_importance, lime, feature_ablation, pdp, ice, ale, grouped_permutation, importance_stability
 - **Benchmarks (4):** historical_mean, zero_change, ar_bic, custom_benchmark
 - **Frameworks:** expanding, rolling, anchored_rolling
-- **Feature builders (5):** autoreg_lagged_target, raw_feature_panel, raw_X_only, factors_plus_AR, factor_pca
+- **Feature builders (5):** target_lag_features, raw_feature_panel, raw_predictors_only, factors_plus_target_lags, pca_factor_features
 - **Tuning (4):** grid_search, random_search, bayesian_optimization, genetic_algorithm
 - **Export:** json, csv, parquet, json+csv, all
 

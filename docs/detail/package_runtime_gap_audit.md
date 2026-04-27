@@ -93,17 +93,17 @@ The patched contract is:
 | `feature_block_set` value | Status | Required companion choices |
 |---|---|---|
 | `target_lags_only` | `operational` | Target-lag runtime; bridge defaults can derive the fixed target-lag block. |
-| `transformed_x` | `operational` | Raw-panel feature runtime. |
-| `high_dimensional_x` | `operational` | Raw-panel feature runtime. |
+| `transformed_predictors` | `operational` | Raw-panel feature runtime. |
+| `high_dimensional_predictors` | `operational` | Raw-panel feature runtime. |
 | `factor_blocks_only` | `operational` | Executable factor block, currently static PCA/PLS or equivalent bridge. |
 | `factors_plus_target_lags` | `operational` | Executable factor block plus target-lag block. |
-| `transformed_x_lags` | `operational_narrow` | `x_lag_feature_block=fixed_x_lags` or legacy fixed X-lag creation. |
-| `selected_sparse_x` | `operational_narrow` | Operational `feature_selection_policy`. |
-| `level_augmented_x` | `operational_narrow` | Non-none executable `level_feature_block`. |
-| `rotation_augmented_x` | `operational_narrow` | Non-none executable `rotation_feature_block`. |
-| `mixed_blocks` | `operational_narrow` | At least two active block sources. |
-| `custom_blocks` | `operational_narrow` | Registered custom block or custom combiner contract. |
-| `legacy_feature_builder_bridge` | `registry_only` | Compatibility provenance only. |
+| `transformed_predictor_lags` | `operational_narrow` | `x_lag_feature_block=fixed_predictor_lags` or legacy fixed X-lag creation. |
+| `selected_sparse_predictors` | `operational_narrow` | Operational `feature_selection_policy`. |
+| `level_augmented_predictors` | `operational_narrow` | Non-none executable `level_feature_block`. |
+| `rotation_augmented_predictors` | `operational_narrow` | Non-none executable `rotation_feature_block`. |
+| `mixed_feature_blocks` | `operational_narrow` | At least two active block sources. |
+| `custom_feature_blocks` | `operational_narrow` | Registered custom block or custom combiner contract. |
+| `feature_builder_compatibility_bridge` | `registry_only` | Compatibility provenance only. |
 
 ## Remaining Operational-Narrow Audit
 
@@ -113,7 +113,7 @@ static Navigator, docs, and compiler audit use the same contract list.
 
 | Axis / contract | Narrow values | Required companions | Enforcement surface |
 |---|---|---|---|
-| `feature_block_set` / `feature_block_set_public_axis_v1` | `transformed_x_lags`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks` | Matching Layer 2 sub-blocks: fixed X lags, non-none selection/level/rotation block, at least two active block sources, or a registered custom block/combiner. | Compiler blocked reasons, sweep skipped-cell manifests, Navigator status catalog. |
+| `feature_block_set` / `feature_block_set_public_axis_v1` | `transformed_predictor_lags`, `selected_sparse_predictors`, `level_augmented_predictors`, `rotation_augmented_predictors`, `mixed_feature_blocks`, `custom_feature_blocks` | Matching Layer 2 sub-blocks: fixed X lags, non-none selection/level/rotation block, at least two active block sources, or a registered custom block/combiner. | Compiler blocked reasons, sweep skipped-cell manifests, Navigator status catalog. |
 | `fred_sd_mixed_frequency_representation` / `fred_sd_native_frequency_block_payload_v1` | `native_frequency_block_payload`, `mixed_frequency_model_adapter` | Dataset includes FRED-SD, `feature_builder=raw_feature_panel`, `forecast_type=direct`, and a registered custom model or built-in MIDAS model. The adapter route also emits `fred_sd_mixed_frequency_model_adapter_v1`. | Navigator compatibility, compiler blocked reasons, runtime route guards, artifact sidecars. |
 | `exogenous_x_path_policy` / `exogenous_x_path_contract_v1` | `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, `recursive_x_model` | `forecast_type=iterated`, raw-panel feature runtime, `target_lag_block=fixed_target_lags`; scheduled paths require `scheduled_known_future_x_columns`; recursive paths require `recursive_x_model_family=ar1`. | Layer 3 capability matrix, compiler blocked reasons, Navigator virtual-axis status and compatibility reasons. |
 | `recursive_x_model_family` / `exogenous_x_path_contract_v1` | `ar1` | `exogenous_x_path_policy=recursive_x_model` and the raw-panel iterated point-forecast slice. | Compiler blocked reasons and Navigator compatibility reasons. |

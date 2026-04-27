@@ -406,7 +406,7 @@ def test_build_preprocess_contract_accepts_select_after_factor_semantics() -> No
         x_outlier_policy="none",
         scaling_policy="standard",
         dimensionality_reduction_policy="pca",
-        feature_selection_policy="lasso_select",
+        feature_selection_policy="lasso_selection",
         preprocess_order="extra_only",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",

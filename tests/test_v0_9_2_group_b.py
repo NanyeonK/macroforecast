@@ -75,15 +75,15 @@ def test_layer2_blocks_drive_raw_panel_runtime_dispatch_without_legacy_feature_r
     recipe = _dispatch_recipe(
         model_family="ridge",
         blocks={
-            "feature_block_set": {"value": "high_dimensional_x"},
-            "x_lag_feature_block": {"value": "fixed_x_lags"},
+            "feature_block_set": {"value": "high_dimensional_predictors"},
+            "x_lag_feature_block": {"value": "fixed_predictor_lags"},
         },
     )
 
     spec = _model_spec(recipe)
 
     assert _feature_runtime_builder(recipe) == "raw_feature_panel"
-    assert spec["feature_builder"] == "autoreg_lagged_target"
+    assert spec["feature_builder"] == "target_lag_features"
     assert spec["feature_runtime_builder"] == "raw_feature_panel"
     assert spec["feature_runtime"] == "raw_panel_v1"
     assert spec["executor_name"] == "ridge_raw_feature_panel_v0"
@@ -100,9 +100,9 @@ def test_layer2_target_lag_block_drives_autoreg_runtime_dispatch():
 
     spec = _model_spec(recipe)
 
-    assert _feature_runtime_builder(recipe) == "autoreg_lagged_target"
-    assert spec["feature_runtime_builder"] == "autoreg_lagged_target"
-    assert spec["feature_runtime"] == "autoreg_lagged_target_v1"
+    assert _feature_runtime_builder(recipe) == "target_lag_features"
+    assert spec["feature_runtime_builder"] == "target_lag_features"
+    assert spec["feature_runtime"] == "target_lag_features_v1"
     assert spec["executor_name"] == "ar_bic_autoreg_v0"
 
 
@@ -129,10 +129,10 @@ def test_target_transformer_gate_uses_layer2_feature_runtime_not_legacy_bridge()
     )
     recipe = _dispatch_recipe(
         model_family="ridge",
-        feature_recipes=("factor_pca",),
+        feature_recipes=("pca_factor_features",),
         blocks={
-            "feature_block_set": {"value": "high_dimensional_x"},
-            "x_lag_feature_block": {"value": "fixed_x_lags"},
+            "feature_block_set": {"value": "high_dimensional_predictors"},
+            "x_lag_feature_block": {"value": "fixed_predictor_lags"},
         },
     )
     recipe.training_spec = {"target_transformer": "identity_target_runtime_gate"}
@@ -153,7 +153,7 @@ def test_target_transformer_gate_uses_layer2_feature_runtime_not_legacy_bridge()
 
 def test_target_lag_block_lag_order_matches_legacy_max_ar_lag():
     train = pd.Series([1.0, 1.2, 1.1, 1.5, 1.7, 1.8])
-    legacy = _dispatch_recipe(model_family="ridge", feature_recipes=("autoreg_lagged_target",))
+    legacy = _dispatch_recipe(model_family="ridge", feature_recipes=("target_lag_features",))
     legacy.benchmark_config = {"max_ar_lag": 2}
     explicit = _dispatch_recipe(
         model_family="ridge",
@@ -210,7 +210,7 @@ def test_target_lag_representation_bundle_tracks_alignment_and_roles():
         "target_lag_1": "target_lag",
         "target_lag_2": "target_lag",
     }
-    assert bundle.alignment["representation_runtime"] == "autoreg_lagged_target"
+    assert bundle.alignment["representation_runtime"] == "target_lag_features"
     assert bundle.alignment["lag_order"] == 2
     assert bundle.leakage_contract == "forecast_origin_only"
 
@@ -224,10 +224,10 @@ def test_importance_feature_names_follow_runtime_feature_blocks():
     )
     recipe = _dispatch_recipe(
         model_family="ridge",
-        feature_recipes=("autoreg_lagged_target",),
+        feature_recipes=("target_lag_features",),
         blocks={
-            "feature_block_set": {"value": "high_dimensional_x"},
-            "x_lag_feature_block": {"value": "fixed_x_lags"},
+            "feature_block_set": {"value": "high_dimensional_predictors"},
+            "x_lag_feature_block": {"value": "fixed_predictor_lags"},
         },
     )
     recipe.benchmark_config = {"minimum_train_size": 5, "rolling_window_size": 5}
@@ -283,10 +283,10 @@ def test_minimal_importance_uses_runtime_feature_builder_metadata():
     )
     recipe = _dispatch_recipe(
         model_family="ridge",
-        feature_recipes=("autoreg_lagged_target",),
+        feature_recipes=("target_lag_features",),
         blocks={
-            "feature_block_set": {"value": "high_dimensional_x"},
-            "x_lag_feature_block": {"value": "fixed_x_lags"},
+            "feature_block_set": {"value": "high_dimensional_predictors"},
+            "x_lag_feature_block": {"value": "fixed_predictor_lags"},
         },
     )
     recipe.benchmark_config = {"minimum_train_size": 5, "rolling_window_size": 5}
@@ -295,15 +295,15 @@ def test_minimal_importance_uses_runtime_feature_builder_metadata():
 
     assert payload["feature_builder"] == "raw_feature_panel"
     assert payload["feature_runtime_builder"] == "raw_feature_panel"
-    assert payload["legacy_feature_builder"] == "autoreg_lagged_target"
+    assert payload["legacy_feature_builder"] == "target_lag_features"
     assert payload["feature_dispatch_source"] == "layer2_feature_blocks"
     assert {item["feature"] for item in payload["feature_importance"]} == {"a", "a_lag_1"}
 
 
-def test_fixed_x_lags_adds_lag1_columns():
+def test_fixed_predictor_lags_adds_lag1_columns():
     X = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0, 5.0], "b": [10.0, 20.0, 30.0, 40.0, 50.0]})
     Xp = pd.DataFrame({"a": [6.0], "b": [60.0]})
-    c = _contract(x_lag_creation="fixed_x_lags")
+    c = _contract(x_lag_creation="fixed_predictor_lags")
     Xt, Xp2 = _apply_x_lag_creation(X, Xp, c)
     assert {"a", "b", "a__lag1", "b__lag1"}.issubset(set(Xt.columns))
     assert Xt["a__lag1"].iloc[1] == 1.0
@@ -319,7 +319,7 @@ def test_raw_panel_fixed_x_lag_prediction_uses_origin_history():
             "a": [1.0, 2.0, 3.0, 4.0, 5.0],
         }
     )
-    c = _contract(x_lag_creation="fixed_x_lags")
+    c = _contract(x_lag_creation="fixed_predictor_lags")
 
     X_train, y_train, X_pred = _build_raw_panel_training_data(
         frame,
@@ -350,7 +350,7 @@ def test_raw_panel_x_lag_feature_block_matches_legacy_bridge():
         horizon=1,
         start_idx=0,
         origin_idx=3,
-        contract=_contract(x_lag_creation="fixed_x_lags"),
+        contract=_contract(x_lag_creation="fixed_predictor_lags"),
         predictor_family="all_macro_vars",
     )
     explicit = _build_raw_panel_training_data(
@@ -359,16 +359,16 @@ def test_raw_panel_x_lag_feature_block_matches_legacy_bridge():
         horizon=1,
         start_idx=0,
         origin_idx=3,
-        contract=_contract(x_lag_creation="no_x_lags"),
+        contract=_contract(x_lag_creation="no_predictor_lags"),
         predictor_family="all_macro_vars",
-        x_lag_feature_block="fixed_x_lags",
+        x_lag_feature_block="fixed_predictor_lags",
     )
 
     for legacy_arr, explicit_arr in zip(legacy, explicit):
         assert np.allclose(legacy_arr, explicit_arr)
 
 
-def test_raw_panel_target_lag_block_composes_with_fixed_x_lags():
+def test_raw_panel_target_lag_block_composes_with_fixed_predictor_lags():
     frame = pd.DataFrame(
         {
             "target": [10.0, 11.0, 12.0, 13.0, 14.0],
@@ -382,9 +382,9 @@ def test_raw_panel_target_lag_block_composes_with_fixed_x_lags():
         horizon=1,
         start_idx=0,
         origin_idx=3,
-        contract=_contract(x_lag_creation="no_x_lags"),
+        contract=_contract(x_lag_creation="no_predictor_lags"),
         predictor_family="all_macro_vars",
-        x_lag_feature_block="fixed_x_lags",
+        x_lag_feature_block="fixed_predictor_lags",
         target_lag_block="fixed_target_lags",
         target_lag_order=2,
     )
@@ -842,14 +842,14 @@ def test_raw_panel_moving_average_rotation_uses_trailing_origin_history():
     assert np.allclose(X_pred, [[7.0, 14.0, 6.0, 12.0, 4.5, 9.0]])
 
 
-def test_raw_panel_append_blocks_compose_with_fixed_x_lags():
+def test_raw_panel_append_blocks_compose_with_fixed_predictor_lags():
     frame = pd.DataFrame(
         {
             "target": [10.0, 11.0, 12.0, 13.0, 14.0, 15.0],
             "a": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         }
     )
-    c = _contract(x_lag_creation="fixed_x_lags")
+    c = _contract(x_lag_creation="fixed_predictor_lags")
 
     X_train, y_train, X_pred = _build_raw_panel_training_data(
         frame,
@@ -876,7 +876,7 @@ def test_raw_panel_append_blocks_compose_with_fixed_x_lags():
     assert np.allclose(X_pred, [[5.0, 4.0, 4.0, 4.0, 3.0]])
 
 
-def test_raw_panel_feature_names_order_fixed_x_lags_before_append_blocks():
+def test_raw_panel_feature_names_order_fixed_predictor_lags_before_append_blocks():
     frame = pd.DataFrame(
         {
             "target": [10.0, 11.0, 12.0],
@@ -885,7 +885,7 @@ def test_raw_panel_feature_names_order_fixed_x_lags_before_append_blocks():
     )
     recipe = SimpleNamespace(
         data_task_spec={"predictor_family": "all_macro_vars"},
-        preprocess_contract=_contract(x_lag_creation="fixed_x_lags"),
+        preprocess_contract=_contract(x_lag_creation="fixed_predictor_lags"),
         layer2_representation_spec={
             "feature_blocks": {
                 "temporal_feature_block": {"value": "moving_average_features"},
@@ -913,10 +913,10 @@ def test_raw_panel_feature_names_prefer_explicit_x_lag_block_over_bridge():
     )
     recipe = SimpleNamespace(
         data_task_spec={"predictor_family": "all_macro_vars"},
-        preprocess_contract=_contract(x_lag_creation="no_x_lags"),
+        preprocess_contract=_contract(x_lag_creation="no_predictor_lags"),
         layer2_representation_spec={
             "feature_blocks": {
-                "x_lag_feature_block": {"value": "fixed_x_lags"},
+                "x_lag_feature_block": {"value": "fixed_predictor_lags"},
                 "temporal_feature_block": {"value": "none"},
                 "rotation_feature_block": {"value": "none"},
                 "level_feature_block": {"value": "none"},
@@ -1061,7 +1061,7 @@ def test_raw_panel_local_temporal_factors_use_trailing_origin_history():
     assert np.allclose(X_pred, [[5.0, 10.0, 6.0, 2.0]])
 
 
-def test_no_x_lags_is_identity():
+def test_no_predictor_lags_is_identity():
     X = pd.DataFrame({"a": [1.0, 2.0]})
     Xp = pd.DataFrame({"a": [3.0]})
     c = _contract()
@@ -1102,7 +1102,7 @@ def test_registry_promotions_are_operational():
         return next(e.status for e in defs[axis].entries if e.id == value)
 
     assert _status("additional_preprocessing", "hp_filter") == "operational"
-    assert _status("x_lag_creation", "fixed_x_lags") == "operational"
+    assert _status("x_lag_creation", "fixed_predictor_lags") == "operational"
 
 
 def test_contract_accepts_hp_filter():
@@ -1112,8 +1112,8 @@ def test_contract_accepts_hp_filter():
     assert is_operational_preprocess_contract(c)
 
 
-def test_contract_accepts_fixed_x_lags():
+def test_contract_accepts_fixed_predictor_lags():
     from macrocast.preprocessing.build import is_operational_preprocess_contract
 
-    c = _contract(x_lag_creation="fixed_x_lags")
+    c = _contract(x_lag_creation="fixed_predictor_lags")
     assert is_operational_preprocess_contract(c)

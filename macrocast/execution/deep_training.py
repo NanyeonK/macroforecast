@@ -420,7 +420,7 @@ def build_factor_panel(
         return F_train, F_pred
     lag_order = _target_lag_order(training_spec)
     if len(y_train) <= lag_order:
-        raise ValueError("insufficient target history for factors_plus_AR")
+        raise ValueError("insufficient target history for factors_plus_target_lags")
     y_lags = []
     for idx in range(lag_order, len(y_train)):
         y_lags.append(y_train[idx - lag_order : idx][::-1])
@@ -470,7 +470,7 @@ def fit_factor_model(
         return float(model.predict(X_pred)[0]), payload
     X_train, X_pred = build_factor_panel(X_train_df, y_train, X_pred_df, training_spec, include_ar_lags=include_ar_lags, fit_state_sink=fit_state)
     y_used = y_train[lag_order:] if include_ar_lags else y_train
-    base_family = "ols" if model_family == "factor_pca" else model_family
+    base_family = "ols" if model_family == "pca_factor_features" else model_family
     model, tuning = fit_with_optional_tuning(base_family, X_train, y_used, training_spec)
     pred = model.predict(X_pred)
     payload = {"tuning": tuning}

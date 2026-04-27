@@ -545,7 +545,7 @@ def test_execute_recipe_runs_raw_panel_iterated_hold_last_observed(tmp_path: Pat
         benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "mixed_blocks"},
+                "feature_block_set": {"value": "mixed_feature_blocks"},
                 "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
@@ -611,7 +611,7 @@ def test_execute_recipe_runs_raw_panel_iterated_observed_future_x(tmp_path: Path
         benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "mixed_blocks"},
+                "feature_block_set": {"value": "mixed_feature_blocks"},
                 "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
@@ -655,7 +655,7 @@ def test_execute_recipe_runs_raw_panel_iterated_scheduled_known_future_x(tmp_pat
         benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "mixed_blocks"},
+                "feature_block_set": {"value": "mixed_feature_blocks"},
                 "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
@@ -699,7 +699,7 @@ def test_execute_recipe_runs_raw_panel_iterated_recursive_x_model(tmp_path: Path
         benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "mixed_blocks"},
+                "feature_block_set": {"value": "mixed_feature_blocks"},
                 "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
@@ -761,7 +761,7 @@ def test_execute_recipe_runs_custom_raw_panel_iterated_hold_last_observed(tmp_pa
             benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5},
             layer2_representation_spec={
                 "feature_blocks": {
-                    "feature_block_set": {"value": "mixed_blocks"},
+                    "feature_block_set": {"value": "mixed_feature_blocks"},
                     "target_lag_block": {"value": "fixed_target_lags", "lag_orders": [1, 2]},
                     "x_lag_feature_block": {"value": "none"},
                     "factor_feature_block": {"value": "none"},
@@ -858,7 +858,7 @@ def test_execute_recipe_runs_custom_benchmark_plugin(tmp_path: Path) -> None:
     )
     recipe = _recipe(
         model_family="ar",
-        feature_builder="autoreg_lagged_target",
+        feature_builder="target_lag_features",
         benchmark="custom_benchmark",
         framework="expanding",
         benchmark_config={
@@ -891,7 +891,7 @@ def test_execute_recipe_rejects_custom_benchmark_without_plugin_contract(tmp_pat
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     recipe = _recipe(
         model_family="ar",
-        feature_builder="autoreg_lagged_target",
+        feature_builder="target_lag_features",
         benchmark="custom_benchmark",
         framework="expanding",
         benchmark_config={"minimum_train_size": 5},
@@ -1168,7 +1168,7 @@ def test_execute_recipe_runs_registered_custom_temporal_feature_block(tmp_path: 
         data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "custom_blocks"},
+                "feature_block_set": {"value": "custom_feature_blocks"},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
                 "level_feature_block": {"value": "none"},
@@ -1236,7 +1236,7 @@ def test_execute_recipe_runs_custom_l2_block_with_custom_l3_model(tmp_path: Path
         data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "custom_blocks"},
+                "feature_block_set": {"value": "custom_feature_blocks"},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
                 "level_feature_block": {"value": "none"},
@@ -1297,13 +1297,13 @@ def test_execute_recipe_runs_registered_custom_feature_combiner(tmp_path: Path) 
         data_task_spec={**recipe.data_task_spec, "custom_feature_combiner": "sum_first_two"},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "custom_blocks"},
+                "feature_block_set": {"value": "custom_feature_blocks"},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
                 "level_feature_block": {"value": "none"},
                 "rotation_feature_block": {"value": "none"},
                 "temporal_feature_block": {"value": "none"},
-                "feature_block_combination": {"value": "custom_combiner"},
+                "feature_block_combination": {"value": "custom_feature_combiner"},
             }
         },
     )
@@ -1355,7 +1355,7 @@ def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> N
         scaling_policy="none",
         dimensionality_reduction_policy="none",
         feature_selection_policy="correlation_filter",
-        feature_selection_semantics="select_after_custom_blocks",
+        feature_selection_semantics="select_after_custom_feature_blocks",
         preprocess_order="extra_only",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
@@ -1372,7 +1372,7 @@ def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> N
         data_task_spec={**recipe.data_task_spec, "custom_temporal_feature_block": "temporal_spread"},
         layer2_representation_spec={
             "feature_blocks": {
-                "feature_block_set": {"value": "custom_blocks"},
+                "feature_block_set": {"value": "custom_feature_blocks"},
                 "x_lag_feature_block": {"value": "none"},
                 "factor_feature_block": {"value": "none"},
                 "level_feature_block": {"value": "none"},
@@ -1394,7 +1394,7 @@ def test_execute_recipe_selects_after_custom_feature_blocks(tmp_path: Path) -> N
     fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
 
     assert manifest["prediction_rows"] > 0
-    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_custom_blocks"
+    assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_custom_feature_blocks"
     assert fit_state["block"] == "custom_final_z_selection"
     assert fit_state["contract_version"] == "custom_final_z_selection_v1"
     assert "custom_spread" in fit_state["candidate_feature_names"]
@@ -1440,7 +1440,7 @@ def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
             "benchmark_policy": "identical",
             "evaluation_policy": "identical",
         },
-        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+        varying_design={"model_families": ("ar",), "feature_recipes": ("target_lag_features",), "horizons": ("h1",)},
     )
     recipe = build_recipe_spec(
         recipe_id="fred_md_multi_ar",
@@ -1486,7 +1486,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
             "benchmark_policy": "identical",
             "evaluation_policy": "identical",
         },
-        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+        varying_design={"model_families": ("ar",), "feature_recipes": ("target_lag_features",), "horizons": ("h1",)},
     )
     recipe = build_recipe_spec(
         recipe_id="fred_md_tree_context",
@@ -1513,7 +1513,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
             },
             "varying_design": {
                 "model_families": ["ar"],
-                "feature_recipes": ["autoreg_lagged_target"],
+                "feature_recipes": ["target_lag_features"],
                 "preprocess_variants": [],
                 "tuning_variants": [],
                 "horizons": ["h1", "h3"],
@@ -1568,7 +1568,7 @@ def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Pat
             "benchmark_policy": "identical",
             "evaluation_policy": "identical",
         },
-        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+        varying_design={"model_families": ("ar",), "feature_recipes": ("target_lag_features",), "horizons": ("h1",)},
     )
     recipe = build_recipe_spec(
         recipe_id="fred_md_multi_skip_failure",
@@ -1600,7 +1600,7 @@ def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Pat
 def test_execute_recipe_save_partial_results_keeps_metrics_when_optional_artifact_fails(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="ar", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="ar", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -1656,7 +1656,7 @@ def test_execute_recipe_parallel_by_target_runs_multi_target_slice(tmp_path: Pat
             "benchmark_policy": "identical",
             "evaluation_policy": "identical",
         },
-        varying_design={"model_families": ("ar",), "feature_recipes": ("autoreg_lagged_target",), "horizons": ("h1",)},
+        varying_design={"model_families": ("ar",), "feature_recipes": ("target_lag_features",), "horizons": ("h1",)},
     )
     recipe = build_recipe_spec(
         recipe_id="fred_md_multi_parallel_target",
@@ -1720,7 +1720,7 @@ def _preprocess_pca_contract() -> PreprocessContract:
     )
 
 
-def _preprocess_lasso_select_contract() -> PreprocessContract:
+def _preprocess_lasso_selection_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -1731,7 +1731,7 @@ def _preprocess_lasso_select_contract() -> PreprocessContract:
         x_outlier_policy="zscore_clip",
         scaling_policy="standard",
         dimensionality_reduction_policy="none",
-        feature_selection_policy="lasso_select",
+        feature_selection_policy="lasso_selection",
         preprocess_order="extra_only",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
@@ -1739,7 +1739,7 @@ def _preprocess_lasso_select_contract() -> PreprocessContract:
     )
 
 
-def _preprocess_pca_lasso_select_contract() -> PreprocessContract:
+def _preprocess_pca_lasso_selection_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -1750,7 +1750,7 @@ def _preprocess_pca_lasso_select_contract() -> PreprocessContract:
         x_outlier_policy="zscore_clip",
         scaling_policy="standard",
         dimensionality_reduction_policy="pca",
-        feature_selection_policy="lasso_select",
+        feature_selection_policy="lasso_selection",
         preprocess_order="extra_only",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
@@ -1758,7 +1758,7 @@ def _preprocess_pca_lasso_select_contract() -> PreprocessContract:
     )
 
 
-def _preprocess_pca_lasso_select_after_factor_contract() -> PreprocessContract:
+def _preprocess_pca_lasso_selection_after_factor_contract() -> PreprocessContract:
     return build_preprocess_contract(
         target_transform_policy="raw_level",
         x_transform_policy="raw_level",
@@ -1769,7 +1769,7 @@ def _preprocess_pca_lasso_select_after_factor_contract() -> PreprocessContract:
         x_outlier_policy="zscore_clip",
         scaling_policy="standard",
         dimensionality_reduction_policy="pca",
-        feature_selection_policy="lasso_select",
+        feature_selection_policy="lasso_selection",
         preprocess_order="extra_only",
         preprocess_fit_scope="train_only",
         inverse_transform_policy="none",
@@ -1817,13 +1817,13 @@ def test_execute_recipe_supports_lasso_feature_selection_path(tmp_path: Path) ->
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
         recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
-        preprocess=_preprocess_lasso_select_contract(),
+        preprocess=_preprocess_lasso_selection_contract(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
-    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_selection"
     assert manifest["prediction_rows"] > 0
 
 
@@ -1831,7 +1831,7 @@ def test_execute_recipe_supports_select_before_factor_path(tmp_path: Path) -> No
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
         recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
-        preprocess=_preprocess_pca_lasso_select_contract(),
+        preprocess=_preprocess_pca_lasso_selection_contract(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
@@ -1839,9 +1839,9 @@ def test_execute_recipe_supports_select_before_factor_path(tmp_path: Path) -> No
     manifest = json.loads((run_dir / "manifest.json").read_text())
     fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
     assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
-    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_selection"
     assert fit_state["block"] == "pca_static_factors"
-    assert fit_state["feature_selection_policy"] == "lasso_select"
+    assert fit_state["feature_selection_policy"] == "lasso_selection"
     assert fit_state["feature_selection_semantics"] == "select_before_factor"
     assert fit_state["selected_source_feature_count"] == len(fit_state["selected_source_feature_names"])
     assert set(fit_state["selected_source_feature_names"]) == set(fit_state["loadings"][fit_state["feature_names"][0]].keys())
@@ -1852,7 +1852,7 @@ def test_execute_recipe_supports_select_after_factor_path(tmp_path: Path) -> Non
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
         recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
-        preprocess=_preprocess_pca_lasso_select_after_factor_contract(),
+        preprocess=_preprocess_pca_lasso_selection_after_factor_contract(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
@@ -1860,7 +1860,7 @@ def test_execute_recipe_supports_select_after_factor_path(tmp_path: Path) -> Non
     manifest = json.loads((run_dir / "manifest.json").read_text())
     fit_state = json.loads((run_dir / "feature_representation_fit_state.json").read_text())
     assert manifest["preprocess_contract"]["dimensionality_reduction_policy"] == "pca"
-    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_select"
+    assert manifest["preprocess_contract"]["feature_selection_policy"] == "lasso_selection"
     assert manifest["preprocess_contract"]["feature_selection_semantics"] == "select_after_factor"
     assert fit_state["block"] == "pca_static_factors"
     assert fit_state["feature_selection_semantics"] == "select_after_factor"
@@ -1875,7 +1875,7 @@ def test_execute_recipe_supports_select_after_factor_with_deterministic_append(t
     recipe.data_task_spec["deterministic_components"] = "linear_trend"
     result = execute_recipe(
         recipe=recipe,
-        preprocess=_preprocess_pca_lasso_select_after_factor_contract(),
+        preprocess=_preprocess_pca_lasso_selection_after_factor_contract(),
         output_root=tmp_path,
         local_raw_source=fixture,
     )
@@ -1894,7 +1894,7 @@ def test_execute_recipe_supports_select_after_factor_with_deterministic_append(t
 def test_execute_recipe_supports_ols_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="ols", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="ols", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -1920,7 +1920,7 @@ def test_execute_recipe_supports_xgboost_raw_panel_model(tmp_path: Path) -> None
 def test_execute_recipe_supports_xgboost_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="xgboost", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="xgboost", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -1933,7 +1933,7 @@ def test_execute_recipe_supports_xgboost_autoreg_model(tmp_path: Path) -> None:
 def test_execute_recipe_supports_quantile_linear_autoreg_point_median(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="quantile_linear", feature_builder="autoreg_lagged_target", forecast_object="point_median", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="quantile_linear", feature_builder="target_lag_features", forecast_object="point_median", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -1973,7 +1973,7 @@ def test_execute_recipe_supports_lightgbm_raw_panel_model(tmp_path: Path) -> Non
 def test_execute_recipe_supports_adaptivelasso_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="adaptivelasso", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="adaptivelasso", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -2012,7 +2012,7 @@ def test_execute_recipe_supports_svr_rbf_raw_panel_model(tmp_path: Path) -> None
 def test_execute_recipe_supports_huber_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="huber", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="huber", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -2052,7 +2052,7 @@ def test_execute_recipe_supports_adaptivelasso_raw_panel_model(tmp_path: Path) -
 def test_execute_recipe_supports_svr_linear_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="svr_linear", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="svr_linear", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -2065,7 +2065,7 @@ def test_execute_recipe_supports_svr_linear_autoreg_model(tmp_path: Path) -> Non
 def test_execute_recipe_supports_svr_rbf_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="svr_rbf", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="svr_rbf", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -2091,7 +2091,7 @@ def test_execute_recipe_supports_huber_raw_panel_model(tmp_path: Path) -> None:
 def test_execute_recipe_supports_catboost_autoreg_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     result = execute_recipe(
-        recipe=_recipe(model_family="catboost", feature_builder="autoreg_lagged_target", benchmark_config={"minimum_train_size": 5}),
+        recipe=_recipe(model_family="catboost", feature_builder="target_lag_features", benchmark_config={"minimum_train_size": 5}),
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
@@ -2104,7 +2104,7 @@ def test_execute_recipe_supports_catboost_autoreg_model(tmp_path: Path) -> None:
 
 def test_execute_recipe_supports_pcr_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    recipe = _recipe(model_family="pcr", feature_builder="factor_pca", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    recipe = _recipe(model_family="pcr", feature_builder="pca_factor_features", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
     recipe = __import__("dataclasses").replace(
         recipe,
         training_spec={**recipe.training_spec, "fixed_factor_count": 4},
@@ -2132,7 +2132,7 @@ def test_execute_recipe_supports_pcr_raw_panel_model(tmp_path: Path) -> None:
 
 def test_execute_recipe_supports_pls_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    recipe = _recipe(model_family="pls", feature_builder="factor_pca", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
+    recipe = _recipe(model_family="pls", feature_builder="pca_factor_features", benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5})
     recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2})
     result = execute_recipe(recipe=recipe, preprocess=_preprocess_raw_only(), output_root=tmp_path, local_raw_source=fixture)
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
@@ -2142,7 +2142,7 @@ def test_execute_recipe_supports_pls_raw_panel_model(tmp_path: Path) -> None:
 
 def test_execute_recipe_supports_factor_augmented_linear_raw_panel_model(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
-    recipe = _recipe(model_family="factor_augmented_linear", feature_builder="factors_plus_AR", benchmark_config={"minimum_train_size": 7, "rolling_window_size": 7})
+    recipe = _recipe(model_family="factor_augmented_linear", feature_builder="factors_plus_target_lags", benchmark_config={"minimum_train_size": 7, "rolling_window_size": 7})
     recipe = __import__("dataclasses").replace(recipe, training_spec={**recipe.training_spec, "fixed_factor_count": 2, "target_lag_count": 2})
     result = execute_recipe(recipe=recipe, preprocess=_preprocess_raw_only(), output_root=tmp_path, local_raw_source=fixture)
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())

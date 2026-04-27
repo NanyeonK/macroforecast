@@ -92,7 +92,7 @@ DimensionalityReductionPolicy = Literal[
 FeatureSelectionPolicy = Literal[
     "none",
     "correlation_filter",
-    "lasso_select",
+    "lasso_selection",
     "mutual_information_screen",
     "custom",
 ]
@@ -168,11 +168,11 @@ AdditionalPreprocessing = Literal[
 ]
 
 XLagCreation = Literal[
-    "no_x_lags",
-    "fixed_x_lags",
-    "cv_selected_x_lags",
-    "variable_specific_lags",
-    "category_specific_lags",
+    "no_predictor_lags",
+    "fixed_predictor_lags",
+    "cv_selected_predictor_lags",
+    "variable_specific_predictor_lags",
+    "category_specific_predictor_lags",
 ]
 
 FeatureGrouping = Literal[
@@ -186,7 +186,7 @@ FeatureGrouping = Literal[
 FeatureSelectionSemantics = Literal[
     "select_before_factor",
     "select_after_factor",
-    "select_after_custom_blocks",
+    "select_after_custom_feature_blocks",
 ]
 
 RecipeMode = Literal[
@@ -222,5 +222,5 @@ class PreprocessContract:
     target_domain: str = "unconstrained"
     scaling_scope: str = "columnwise"
     additional_preprocessing: str = "none"
-    x_lag_creation: str = "no_x_lags"
+    x_lag_creation: str = "no_predictor_lags"
     feature_grouping: str = "none"

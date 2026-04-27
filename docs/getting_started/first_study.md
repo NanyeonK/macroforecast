@@ -75,7 +75,7 @@ path:
       target_domain: unconstrained
       scaling_scope: columnwise
       additional_preprocessing: none
-      x_lag_creation: no_x_lags
+      x_lag_creation: no_predictor_lags
       feature_grouping: none
 
   3_training:

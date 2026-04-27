@@ -31,11 +31,11 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
                 "tcode_application_scope": "none",
                 "target_transform": "level", "target_normalization": "none",
                 "target_domain": "unconstrained", "scaling_scope": "columnwise",
-                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags",
+                "additional_preprocessing": "none", "x_lag_creation": "no_predictor_lags",
                 "feature_grouping": "none",
             }},
             "3_training": {
-                "fixed_axes": {"framework": "expanding", "feature_builder": "autoreg_lagged_target"},
+                "fixed_axes": {"framework": "expanding", "feature_builder": "target_lag_features"},
                 "sweep_axes": {"model_family": ["ar"]},
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -121,14 +121,14 @@ def test_model_raw_panel_executes(model, tmp_path):
 
 
 # ============================================================
-# Factor model path (factors_plus_AR / factor_pca)
+# Factor model path (factors_plus_target_lags / pca_factor_features)
 # ============================================================
 FACTOR_MODELS = ["pcr", "pls", "factor_augmented_linear"]
 
 @pytest.mark.parametrize("model", FACTOR_MODELS)
 def test_model_factor_executes(model, tmp_path):
     recipe = _base_recipe(overrides_3={
-        "fixed_axes": {"feature_builder": "factors_plus_AR"},
+        "fixed_axes": {"feature_builder": "factors_plus_target_lags"},
         "sweep_axes": {"model_family": [model]},
     })
     recipe["path"]["2_preprocessing"]["fixed_axes"].update({

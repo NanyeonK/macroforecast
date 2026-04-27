@@ -10,13 +10,13 @@ AXIS_DEFINITION = AxisDefinition(
     default_policy="fixed",
     entries=(
         EnumRegistryEntry(
-            id="replace_with_blocks",
+            id="replace_with_selected_blocks",
             description="replace the base predictor panel with the selected blocks",
             status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
-            id="append_to_base_x",
+            id="append_to_base_predictors",
             description="append selected blocks to the base predictor panel",
             status="operational",
             priority="A",
@@ -34,7 +34,7 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id="custom_combiner",
+            id="custom_feature_combiner",
             description="researcher supplied feature-block combiner",
             status="registry_only",
             priority="B",

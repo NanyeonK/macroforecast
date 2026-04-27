@@ -58,7 +58,7 @@ def test_build_stage0_frame_single_fixed_model_and_feature_is_one_tool_surface()
             benchmark_policy="identical",
             evaluation_policy="identical",
         ),
-        varying_design=VaryingDesign(model_families=("ar",), feature_recipes=("autoreg_lagged_target",), horizons=("h1",)),
+        varying_design=VaryingDesign(model_families=("ar",), feature_recipes=("target_lag_features",), horizons=("h1",)),
     )
 
     assert stage0.design_shape == "one_fixed_env_one_tool_surface"
@@ -85,7 +85,7 @@ def test_build_stage0_frame_multiple_feature_recipes_is_controlled_variation() -
         ),
         varying_design=VaryingDesign(
             model_families=("ridge",),
-            feature_recipes=("autoreg_lagged_target", "raw_feature_panel"),
+            feature_recipes=("target_lag_features", "raw_feature_panel"),
             horizons=("h1",),
         ),
     )

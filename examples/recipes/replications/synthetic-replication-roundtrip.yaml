@@ -38,7 +38,7 @@ path:
     fixed_axes:
       framework: expanding
       benchmark_family: zero_change
-      feature_builder: autoreg_lagged_target
+      feature_builder: target_lag_features
       model_family: ar
       forecast_type: iterated
       forecast_object: point_mean

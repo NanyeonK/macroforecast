@@ -48,7 +48,7 @@ def _base_recipe(overrides_1_data_task: dict[str, str] | None = None) -> dict:
             "3_training": {"fixed_axes": {
                 "framework": "expanding",
                 "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target",
+                "feature_builder": "target_lag_features",
                 "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},

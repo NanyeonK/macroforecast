@@ -21,7 +21,7 @@ def test_macrocast_single_run_sweep_runner_route_blocks_run_manifest() -> None:
     assert out["route_preview"]["route_owner"] == "single_run"
     assert out["route_preview"]["wizard_status"] == "sweep_runner_ready"
     assert out["compile_preview"]["execution_status"] == "ready_for_sweep_runner"
-    assert out["tree_context"]["sweep_axes"]["feature_builder"] == ["autoreg_lagged_target", "raw_feature_panel"]
+    assert out["tree_context"]["sweep_axes"]["feature_builder"] == ["target_lag_features", "raw_feature_panel"]
     assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
     assert "execute_sweep" in out["blocked_preview_reason"]
 
@@ -42,7 +42,7 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -175,7 +175,7 @@ def test_macrocast_single_run_current_choice_exposes_planned_option_details(monk
     out = macrocast_single_run(max_steps=13)
     choice = out["current_choice"]
     assert choice["key"] == "feature_builder"
-    assert choice["option_details"]["factor_pca"]["status"] == "operational"
+    assert choice["option_details"]["pca_factor_features"]["status"] == "operational"
 
 
 def test_macrocast_single_run_planned_feature_builder_stops_with_explicit_message(monkeypatch, tmp_path: Path) -> None:
@@ -185,7 +185,7 @@ def test_macrocast_single_run_planned_feature_builder_stops_with_explicit_messag
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=14)
-    assert out["completed_choices"][-1] == {"key": "feature_builder", "value": "factor_pca"}
+    assert out["completed_choices"][-1] == {"key": "feature_builder", "value": "pca_factor_features"}
     assert out["route_preview"]["wizard_status"] in {"implemented", "blocked_or_nonexecutable"}
     assert out["route_preview"]["route_owner"] == "single_run"
 

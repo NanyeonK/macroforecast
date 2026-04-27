@@ -95,15 +95,15 @@ silently lowering them to a different representation.
 
 | Axis | Values | Meaning |
 |---|---|---|
-| `feature_block_set` | `target_lags_only`, `transformed_x`, `transformed_x_lags`, `factor_blocks_only`, `factors_plus_target_lags`, `high_dimensional_x`, `selected_sparse_x`, `level_augmented_x`, `rotation_augmented_x`, `mixed_blocks`, `custom_blocks`, `legacy_feature_builder_bridge` | Top-level recipe for which blocks should form `Z`. `legacy_feature_builder_bridge` is retained only as a compatibility value for unknown old bridge recipes. |
+| `feature_block_set` | `target_lags_only`, `transformed_predictors`, `transformed_predictor_lags`, `factor_blocks_only`, `factors_plus_target_lags`, `high_dimensional_predictors`, `selected_sparse_predictors`, `level_augmented_predictors`, `rotation_augmented_predictors`, `mixed_feature_blocks`, `custom_feature_blocks`, `feature_builder_compatibility_bridge` | Top-level recipe for which blocks should form `Z`. `feature_builder_compatibility_bridge` is retained only as a compatibility value for unknown old bridge recipes. |
 | `target_lag_block` | `none`, `fixed_target_lags`, `ic_selected_target_lags`, `horizon_specific_target_lags`, `custom_target_lags` | Target-history features built from the target series. |
 | `target_lag_selection` | `none`, `fixed`, `ic_select`, `cv_select`, `horizon_specific`, `custom` | Target-language replacement for public Layer 2 lag-selection provenance; legacy `y_lag_count` remains accepted for Layer 3/model-order compatibility. |
-| `x_lag_feature_block` | `none`, `fixed_x_lags`, `variable_specific_x_lags`, `category_specific_x_lags`, `cv_selected_x_lags`, `custom_x_lags` | Lagged predictor features built from `X`. |
+| `x_lag_feature_block` | `none`, `fixed_predictor_lags`, `variable_specific_predictor_lags`, `category_specific_predictor_lags`, `cv_selected_predictor_lags`, `custom_predictor_lags` | Lagged predictor features built from `X`. |
 | `factor_feature_block` | `none`, `pca_static_factors`, `pca_factor_lags`, `supervised_factors`, `custom_factors` | Reduced-rank/factor features built from `X`. |
 | `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level or level-growth add-back features built from `H` and target history. |
 | `rotation_feature_block` | `none`, `marx_rotation`, `maf_rotation`, `moving_average_rotation`, `custom_rotation` | Rotated features such as moving-average rotations of `X` or factors. |
 | `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features`, `custom_temporal_features` | Local time-series features built within each training window. |
-| `feature_block_combination` | `replace_with_blocks`, `append_to_base_x`, `append_to_target_lags`, `concatenate_named_blocks`, `custom_combiner` | How selected blocks are assembled into `Z`. |
+| `feature_block_combination` | `replace_with_selected_blocks`, `append_to_base_predictors`, `append_to_target_lags`, `concatenate_named_blocks`, `custom_feature_combiner` | How selected blocks are assembled into `Z`. |
 
 ## FRED-SD Mixed-Frequency Representation
 
@@ -137,13 +137,13 @@ Layer 3 generator is explicitly custom and block-aware or is the package-owned
 
 Operational support is currently narrow:
 
-- `feature_block_set=target_lags_only`, `transformed_x`,
-  `factors_plus_target_lags`, `factor_blocks_only`, and `high_dimensional_x`
+- `feature_block_set=target_lags_only`, `transformed_predictors`,
+  `factors_plus_target_lags`, `factor_blocks_only`, and `high_dimensional_predictors`
   are operational representation-family selectors.
-  `transformed_x_lags`, `selected_sparse_x`, `level_augmented_x`,
-  `rotation_augmented_x`, `mixed_blocks`, and `custom_blocks` are
+  `transformed_predictor_lags`, `selected_sparse_predictors`, `level_augmented_predictors`,
+  `rotation_augmented_predictors`, `mixed_feature_blocks`, and `custom_feature_blocks` are
   `operational_narrow`: they require compatible sub-block axes such as
-  `x_lag_feature_block=fixed_x_lags`, an operational
+  `x_lag_feature_block=fixed_predictor_lags`, an operational
   `feature_selection_policy`, a non-none level/rotation block, at least two
   named blocks, or registered custom block/combiner contracts.
 - `target_lag_block=none` and `fixed_target_lags` are operational. Fixed
@@ -153,7 +153,7 @@ Operational support is currently narrow:
   `target_lag_count` in `layer2_representation_spec.target_lag_config`.
 - `target_lag_selection=none` and `fixed` are operational Layer 2 names; IC,
   CV, horizon-specific, and custom lag selection remain registry-only.
-- `x_lag_feature_block=none` and `fixed_x_lags` are operational. Fixed X-lag
+- `x_lag_feature_block=none` and `fixed_predictor_lags` are operational. Fixed X-lag
   matrix composition reads `x_lag_feature_block` directly; legacy
   `x_lag_creation` remains accepted as fallback. Variable, category, CV, and
   custom X-lag blocks remain registry-only.
@@ -169,7 +169,7 @@ Operational support is currently narrow:
   appends lagged factor-score blocks; `supervised_factors` uses train-window PLS
   factors; registered custom factor blocks use `custom_feature_block_callable_v1`.
   Old
-  `feature_builder=factor_pca` / `factors_plus_AR` and raw-panel
+  `feature_builder=pca_factor_features` / `factors_plus_target_lags` and raw-panel
   `dimensionality_reduction_policy=pca` / `static_factor` remain accepted
   compatibility paths. Runtime writes a factor fit-state artifact containing
   stable factor/loadings provenance.
@@ -216,7 +216,7 @@ Operational support is currently narrow:
   final `Z` by default. It now also supports `marx_then_factor`, where static
   PCA factors are fit on the MARX basis before any target-lag append, plus
   append composition with fixed X lags or deterministic temporal blocks via
-  `feature_block_combination=append_to_base_x` /
+  `feature_block_combination=append_to_base_predictors` /
   `concatenate_named_blocks`.
 - Advanced rotation values are explicit boundaries, not aliases for the generic
   primitive. `maf_rotation` is operational only as a factor-score rotation:
@@ -243,7 +243,7 @@ Operational support is currently narrow:
   raw-panel direct `Z` paths. Target lag columns become the anchor block, and
   selected factor/raw-panel blocks are concatenated after them with stable
   feature-name order.
-- `feature_block_combination=custom_combiner` is executable when the recipe
+- `feature_block_combination=custom_feature_combiner` is executable when the recipe
   supplies a registered `custom_feature_combiner`. The combiner receives named
   train/pred block frames plus the final candidate `Z`, then returns final
   `Z_train`, `Z_pred`, stable public feature names, block roles, fit state,
@@ -257,7 +257,7 @@ Operational support is currently narrow:
   `select_after_factor` first estimates the static factor block, optionally
   appends target lags and deterministic/break columns in the final `Z`, and
   then selects among the composed final columns. Custom-block final-`Z`
-  selection is operational through `select_after_custom_blocks`, which records
+  selection is operational through `select_after_custom_feature_blocks`, which records
   `custom_final_z_selection_v1` candidate, selected, and dropped feature names.
 
 ## Target Scale Contract
@@ -312,15 +312,15 @@ The current coarse names map to the new language as follows:
 
 | Current bridge | Feature-block interpretation |
 |---|---|
-| `feature_builder=autoreg_lagged_target` | target-lag block only; fixed target-lag construction now drives the supervised target-lag matrix path, with legacy fields retained as fallback/provenance. |
+| `feature_builder=target_lag_features` | target-lag block only; fixed target-lag construction now drives the supervised target-lag matrix path, with legacy fields retained as fallback/provenance. |
 | `feature_builder=raw_feature_panel` | transformed or raw predictor panel block, chosen after Layer 1 official-frame policy and `predictor_family`. |
-| `feature_builder=raw_X_only` | predictor panel block without target-lag features. |
-| `feature_builder=factor_pca` | `feature_block_set=factor_blocks_only` plus a static factor feature block from the predictor panel. |
-| `feature_builder=factors_plus_AR` | factor feature block plus target-lag block. |
+| `feature_builder=raw_predictors_only` | predictor panel block without target-lag features. |
+| `feature_builder=pca_factor_features` | `feature_block_set=factor_blocks_only` plus a static factor feature block from the predictor panel. |
+| `feature_builder=factors_plus_target_lags` | factor feature block plus target-lag block. |
 | `data_richness_mode=target_lags_only` | `feature_block_set=target_lags_only`. |
-| `data_richness_mode=factor_plus_lags` | `feature_block_set=factors_plus_target_lags`. |
-| `data_richness_mode=full_high_dimensional_X` | `feature_block_set=high_dimensional_x`. |
-| `data_richness_mode=selected_sparse_X` | `feature_block_set=selected_sparse_x`. |
+| `data_richness_mode=factors_plus_target_lags` | `feature_block_set=factors_plus_target_lags`. |
+| `data_richness_mode=high_dimensional_predictors` | `feature_block_set=high_dimensional_predictors`. |
+| `data_richness_mode=selected_sparse_predictors` | `feature_block_set=selected_sparse_predictors`. |
 
 This mapping is partly executable. Fixed target-lag, fixed X-lag, and static
 PCA factor blocks can be selected directly in their supported runtime slices.

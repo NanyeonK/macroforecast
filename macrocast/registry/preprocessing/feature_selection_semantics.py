@@ -11,7 +11,7 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(
             id="select_before_factor",
-            description="select raw predictor X before fitting factor blocks",
+            description="select raw predictors before fitting factor blocks",
             status="operational",
             priority="A",
         ),
@@ -22,8 +22,8 @@ AXIS_DEFINITION = AxisDefinition(
             priority="A",
         ),
         EnumRegistryEntry(
-            id="select_after_custom_blocks",
-            description="select among final Z columns after custom blocks or a custom combiner",
+            id="select_after_custom_feature_blocks",
+            description="select among final Z columns after custom feature blocks or a custom combiner",
             status="operational",
             priority="B",
         ),

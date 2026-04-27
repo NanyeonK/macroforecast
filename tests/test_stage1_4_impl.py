@@ -57,7 +57,7 @@ def _recipe(**axes_1_extras) -> dict:
             "3_training": {"fixed_axes": {
                 "framework": "expanding",
                 "benchmark_family": "historical_mean",
-                "feature_builder": "autoreg_lagged_target",
+                "feature_builder": "target_lag_features",
                 "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -122,7 +122,7 @@ def test_benchmark_family_survey_forecast_compiles() -> None:
 @pytest.mark.parametrize("value", ["category_based", "factor_only", "explicit_variable_list"])
 def test_predictor_family_compiles(value: str) -> None:
     recipe = _recipe(predictor_family=value)
-    # These values expect feature_builder != autoreg_lagged_target
+    # These values expect feature_builder != target_lag_features
     recipe["path"]["3_training"]["fixed_axes"]["feature_builder"] = "raw_feature_panel"
     recipe["path"]["3_training"]["fixed_axes"]["model_family"] = "ridge"
     if value == "category_based":

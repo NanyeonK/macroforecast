@@ -157,7 +157,7 @@ This is already the right unit for adding individual Layer 2 methods.
 
 ### Custom Combiner
 
-`feature_block_combination=custom_combiner` is the broader Layer 2 extension.
+`feature_block_combination=custom_feature_combiner` is the broader Layer 2 extension.
 It is not a block. It owns how already-built blocks are combined into final
 `Z`.
 
@@ -220,7 +220,7 @@ Required behavior:
 - selected/dropped custom feature names remain traceable to the source custom
   block or custom combiner.
 
-Use `feature_selection_semantics=select_after_custom_blocks` when custom
+Use `feature_selection_semantics=select_after_custom_feature_blocks` when custom
 representation columns should participate in the same selection sweeps as
 built-ins.
 

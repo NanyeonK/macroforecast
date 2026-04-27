@@ -91,7 +91,7 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "expanding", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -137,7 +137,7 @@ def test_legacy_dataset_source_alias_compiles_to_source_adapter(tmp_path: Path) 
             }},
             "3_training": {"fixed_axes": {
                 "framework": "expanding", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -184,7 +184,7 @@ def test_dataset_source_alias_conflicts_with_source_adapter() -> None:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "expanding", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},

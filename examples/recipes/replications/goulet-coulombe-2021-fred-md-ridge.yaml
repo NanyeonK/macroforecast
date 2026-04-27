@@ -49,7 +49,7 @@ path:
       level_feature_block: none
       temporal_feature_block: none
       rotation_feature_block: none
-      feature_block_combination: replace_with_blocks
+      feature_block_combination: replace_with_selected_blocks
   3_training:
     fixed_axes:
       framework: expanding

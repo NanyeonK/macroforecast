@@ -33,7 +33,7 @@ path:
       benchmark_family: zero_change
       model_family: ridge
     sweep_axes:
-      feature_builder: [autoreg_lagged_target, raw_feature_panel]
+      feature_builder: [target_lag_features, raw_feature_panel]
   4_evaluation:
     fixed_axes:
       primary_metric: msfe

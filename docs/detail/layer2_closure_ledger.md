@@ -39,7 +39,7 @@ Target-side scale:
 Feature blocks:
 
 - `target_lag_block=none`, `fixed_target_lags`
-- `x_lag_feature_block=none`, `fixed_x_lags`
+- `x_lag_feature_block=none`, `fixed_predictor_lags`
 - `factor_feature_block=none`, `pca_static_factors`
 - `feature_selection_semantics=select_before_factor`, `select_after_factor`
   with static PCA factor blocks
@@ -50,11 +50,11 @@ Feature blocks:
 - `rotation_feature_block=moving_average_rotation`, `marx_rotation`
 - MARX basis replacement, `marx_then_factor`, and named-block append
   composition with fixed X lags or deterministic temporal blocks via
-  `feature_block_combination=append_to_base_x` / `concatenate_named_blocks`
+  `feature_block_combination=append_to_base_predictors` / `concatenate_named_blocks`
 - `factor_feature_block=pca_factor_lags`, `supervised_factors`
 - registered `custom_feature_block_callable_v1` temporal, rotation, and factor
   blocks
-- `feature_block_combination=replace_with_blocks`, `append_to_base_x`,
+- `feature_block_combination=replace_with_selected_blocks`, `append_to_base_predictors`,
   `append_to_target_lags`, `concatenate_named_blocks`
 
 ## Contract-Defined Gated
@@ -74,19 +74,19 @@ Custom feature methods without a registered callable:
 - `temporal_feature_block=custom_temporal_features`
 - `rotation_feature_block=custom_rotation`
 - `factor_feature_block=custom_factors`
-- `feature_block_combination=custom_combiner`
+- `feature_block_combination=custom_feature_combiner`
 
 Block-local values use `custom_feature_block_callable_v1`. A registered
 callable is executable when the recipe names it through `custom_feature_blocks`
 or the block-specific field such as `custom_temporal_feature_block`.
-`feature_block_combination=custom_combiner` uses
+`feature_block_combination=custom_feature_combiner` uses
 `custom_feature_combiner_v1` and is executable when the recipe names a
 registered `custom_feature_combiner`. The existing `custom_preprocessor` hook
 is broader and does not replace these Layer 2 representation contracts.
 
 Custom-block final-`Z` selection:
 
-- `feature_selection_semantics=select_after_custom_blocks`
+- `feature_selection_semantics=select_after_custom_feature_blocks`
 
 This records `custom_final_z_selection_v1` and is executable when an
 operational feature-selection policy is applied after registered custom blocks

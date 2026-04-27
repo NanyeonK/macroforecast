@@ -135,7 +135,7 @@ For example, a full recipe may sweep:
 path:
   2_preprocessing:
     sweep_axes:
-      x_lag_feature_block: [none, fixed_x_lags]
+      x_lag_feature_block: [none, fixed_predictor_lags]
       target_lag_block: [none, fixed_target_lags]
       temporal_feature_block: [none, moving_average_features, rolling_moments]
       rotation_feature_block: [none, moving_average_rotation]
@@ -307,7 +307,7 @@ The current runtime opens all four modes:
 - `marx_replace_x_basis`: raw-panel `Z` is the MARX basis itself;
 - `marx_append_to_x`: MARX features are concatenated as named blocks with base
   X, fixed X lags, or deterministic temporal blocks when
-  `feature_block_combination=append_to_base_x` or
+  `feature_block_combination=append_to_base_predictors` or
   `concatenate_named_blocks`;
 - `marx_then_factor`: replace the X lag-polynomial basis with MARX features,
   then fit `pca_static_factors` on that rotated basis. Target lags may still
@@ -402,7 +402,7 @@ The current runtime can sweep these Layer 2 choices in full recipes, subject to
 the usual model compatibility constraints:
 
 - `target_lag_block`: `none`, `fixed_target_lags`;
-- `x_lag_feature_block`: `none`, `fixed_x_lags`;
+- `x_lag_feature_block`: `none`, `fixed_predictor_lags`;
 - `factor_feature_block`: `none`, `pca_static_factors`;
 - `level_feature_block`: `none`, `target_level_addback`,
   `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs`;

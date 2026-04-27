@@ -59,7 +59,7 @@ exogenous_x_path_policy=unavailable -> disabled for executable raw-panel iterate
 
 ```text
 fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter
-feature_builder=autoreg_lagged_target -> disabled: FRED-SD adapter payloads require raw_feature_panel
+feature_builder=target_lag_features -> disabled: FRED-SD adapter payloads require raw_feature_panel
 ```
 
 ```text

@@ -224,11 +224,11 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         output_leaf.pop("bundle_label", None)
         if value == "single_target_single_generator":
             training["model_family"] = training.get("model_family", "ar")
-            training["feature_builder"] = training.get("feature_builder", "autoreg_lagged_target")
+            training["feature_builder"] = training.get("feature_builder", "target_lag_features")
             training_sweep.pop("model_family", None)
             training_sweep.pop("feature_builder", None)
         elif value == "single_target_generator_grid":
-            training["feature_builder"] = training.get("feature_builder", "autoreg_lagged_target")
+            training["feature_builder"] = training.get("feature_builder", "target_lag_features")
             training.pop("model_family", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
             training_sweep.pop("feature_builder", None)
@@ -238,7 +238,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             training.pop("model_family", None)
             training.pop("feature_builder", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
-            training_sweep["feature_builder"] = ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"]
+            training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
         return
     if key == "target":
         leaf["target"] = str(value)
@@ -251,7 +251,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         return
     if key == "model_path_mode":
         current_model = training.get("model_family", "ar")
-        current_feature = training.get("feature_builder", "autoreg_lagged_target")
+        current_feature = training.get("feature_builder", "target_lag_features")
         if value == "single_model":
             training["model_family"] = current_model
             training["feature_builder"] = current_feature
@@ -268,7 +268,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             training.pop("model_family", None)
             training.pop("feature_builder", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "randomforest"]
-            training_sweep["feature_builder"] = ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"]
+            training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
             _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_full_sweep"
             _recipe_leaf(recipe, "5_output_provenance")["wrapper_family"] = "single_target_full_sweep"
             _recipe_leaf(recipe, "5_output_provenance").setdefault("bundle_label", "single-target-full-sweep")
@@ -406,7 +406,7 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "key": "feature_builder",
             "prompt": "Feature builder",
-            "options": ["autoreg_lagged_target", "raw_feature_panel", "factor_pca"],
+            "options": ["target_lag_features", "raw_feature_panel", "pca_factor_features"],
         },
         {
             "key": "primary_metric",

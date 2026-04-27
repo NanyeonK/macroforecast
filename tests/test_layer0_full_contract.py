@@ -6,7 +6,7 @@ from macrocast.compiler import CompileValidationError, compile_recipe_dict, comp
 from macrocast.defaults import build_default_recipe_dict
 
 
-def _base_recipe(recipe_id: str = "layer0-base", *, model_families=("ar",), feature_builder: str = "autoreg_lagged_target") -> dict:
+def _base_recipe(recipe_id: str = "layer0-base", *, model_families=("ar",), feature_builder: str = "target_lag_features") -> dict:
     return build_default_recipe_dict(
         dataset="fred_md",
         target="INDPRO",
@@ -67,7 +67,7 @@ def test_model_comparison_parent_requires_sweep_runner_but_variants_are_executab
 def test_feature_only_controlled_variation_is_sweep_runner_contract() -> None:
     recipe = _base_recipe("feature-comparison", model_families=("ridge",))
     _set_meta(recipe, research_design="controlled_variation")
-    _fixed_to_sweep(recipe, "3_training", "feature_builder", ["autoreg_lagged_target", "raw_feature_panel"])
+    _fixed_to_sweep(recipe, "3_training", "feature_builder", ["target_lag_features", "raw_feature_panel"])
 
     compiled = compile_recipe_dict(recipe).compiled
 

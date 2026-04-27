@@ -2,12 +2,12 @@
 
 v1.0 semantics:
 - `forecast_type` default is feature-builder dynamic:
-  autoreg_lagged_target -> "iterated" (matches the existing recursive path),
+  target_lag_features -> "iterated" (matches the existing recursive path),
   raw_feature_panel     -> "direct"   (matches the existing h-step path).
-- `forecast_type=iterated` + feature_builder=autoreg_lagged_target   : executable.
+- `forecast_type=iterated` + feature_builder=target_lag_features   : executable.
 - `forecast_type=iterated` + feature_builder=raw_feature_panel       : executable only for the
   explicit hold-last-observed narrow slice; otherwise blocked_by_incompatibility.
-- `forecast_type=direct`   + feature_builder=autoreg_lagged_target   : blocked_by_incompatibility.
+- `forecast_type=direct`   + feature_builder=target_lag_features   : blocked_by_incompatibility.
 - `forecast_type=direct`   + feature_builder=raw_feature_panel       : executable.
 
 - `forecast_object=quantile` + `model_family=quantile_linear`         : executable (quantile level via training_spec.hp.quantile, default 0.5).
@@ -26,7 +26,7 @@ from macrocast.compiler.build import compile_recipe_dict, run_compiled_recipe
 
 def _recipe(
     *,
-    feature_builder: str = "autoreg_lagged_target",
+    feature_builder: str = "target_lag_features",
     model_family: str = "ar",
     forecast_type: str | None = None,
     forecast_object: str | None = None,

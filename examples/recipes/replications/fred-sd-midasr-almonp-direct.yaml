@@ -41,7 +41,7 @@ path:
       preprocess_fit_scope: not_applicable
       inverse_transform_policy: none
       evaluation_scale: raw_level
-      feature_block_set: transformed_x
+      feature_block_set: transformed_predictors
   3_training:
     fixed_axes:
       framework: expanding

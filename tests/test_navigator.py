@@ -127,7 +127,7 @@ console.log(JSON.stringify({
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
     sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
     sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency"),
-    sd_mixed_blocks: option("fred_sd_mixed_frequency_representation", "native_frequency_block_payload"),
+    sd_mixed_feature_blocks: option("fred_sd_mixed_frequency_representation", "native_frequency_block_payload"),
     sd_mixed_adapter: option("fred_sd_mixed_frequency_representation", "mixed_frequency_model_adapter")
   },
   selected_disabled: E.selectedDisabledReasons(data, state),
@@ -262,10 +262,10 @@ def test_navigation_quantile_forecast_restricts_model_family():
 
 
 def test_navigation_shows_current_deep_sequence_gate():
-    view = build_navigation_view(_recipe(model_family="lstm", feature_builder="autoreg_lagged_target"))
+    view = build_navigation_view(_recipe(model_family="lstm", feature_builder="target_lag_features"))
     feature_axis = _axis(view, "feature_builder")
 
-    assert _option(feature_axis, "autoreg_lagged_target")["enabled"] is True
+    assert _option(feature_axis, "target_lag_features")["enabled"] is True
     assert _option(feature_axis, "sequence_tensor")["enabled"] is False
     assert "sequence_tensor remains gated" in _option(feature_axis, "sequence_tensor")["disabled_reason"]
 
@@ -425,7 +425,7 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"
     )["enabled"]
-    assert js["options"]["sd_mixed_blocks"]["enabled"] == _option(
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
     )["enabled"]
     assert "fred_sd" in js["options"]["sd_state_west"]["disabled_reason"]
@@ -446,10 +446,10 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"
     )["enabled"]
-    assert js["options"]["sd_mixed_blocks"]["enabled"] == _option(
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
     )["enabled"]
-    assert "custom model" in js["options"]["sd_mixed_blocks"]["disabled_reason"]
+    assert "custom model" in js["options"]["sd_mixed_feature_blocks"]["disabled_reason"]
     assert "custom model" in js["options"]["sd_mixed_adapter"]["disabled_reason"]
 
     midas_recipe = _recipe(model_family="midas_almon")
@@ -457,13 +457,13 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     python_view = build_navigation_view(midas_recipe)
     js = _js_state_snapshot(tmp_path, midas_recipe, [])
 
-    assert js["options"]["sd_mixed_blocks"]["enabled"] == _option(
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
     )["enabled"]
     assert js["options"]["sd_mixed_adapter"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "mixed_frequency_model_adapter"
     )["enabled"]
-    assert js["options"]["sd_mixed_blocks"]["enabled"] is True
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] is True
     assert js["options"]["sd_mixed_adapter"]["enabled"] is True
     assert "advanced FRED-SD" in js["options"]["sd_mixed_drop_non_target"]["disabled_reason"]
 
@@ -479,7 +479,7 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
         _axis(python_view, "midasr_weight_family"), "almonp"
     )["enabled"]
     assert js["options"]["midasr_weight_almonp"]["enabled"] is True
-    assert js["options"]["sd_mixed_blocks"]["enabled"] is True
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] is True
     assert js["options"]["sd_mixed_adapter"]["enabled"] is True
 
     midasr_recipe = _recipe(model_family="midasr_nealmon")
@@ -487,11 +487,11 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     python_view = build_navigation_view(midasr_recipe)
     js = _js_state_snapshot(tmp_path, midasr_recipe, [])
 
-    assert js["options"]["sd_mixed_blocks"]["enabled"] == _option(
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
     )["enabled"]
     assert js["options"]["sd_mixed_adapter"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "mixed_frequency_model_adapter"
     )["enabled"]
-    assert js["options"]["sd_mixed_blocks"]["enabled"] is True
+    assert js["options"]["sd_mixed_feature_blocks"]["enabled"] is True
     assert js["options"]["sd_mixed_adapter"]["enabled"] is True

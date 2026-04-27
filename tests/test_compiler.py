@@ -317,7 +317,7 @@ def test_compile_recipe_rejects_incompatible_preprocessing_without_silent_fallba
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
@@ -420,7 +420,7 @@ def test_compile_custom_benchmark_recipe_is_executable(tmp_path: Path) -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "custom_benchmark", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "custom_benchmark", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "plugin_path": str(plugin_path), "callable_name": "custom_benchmark"}}},
@@ -456,7 +456,7 @@ def test_compile_custom_benchmark_recipe_requires_plugin_contract() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "custom_benchmark", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "custom_benchmark", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -541,7 +541,7 @@ def test_compile_apply_official_tcode_then_train_only_extra_is_executable(tmp_pa
                 "target_missing_policy": "none", "x_missing_policy": "mean_impute", "target_outlier_policy": "none", "x_outlier_policy": "winsorize",
                 "scaling_policy": "standard", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
-                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none",
+                "additional_preprocessing": "none", "x_lag_creation": "no_predictor_lags", "feature_grouping": "none",
             }},
             "3_training": {"fixed_axes": {
                 "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"
@@ -624,7 +624,7 @@ def test_compile_wrapper_bundle_requires_wrapper_metadata() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -652,7 +652,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -689,7 +689,7 @@ def test_compile_multi_target_recipe_requires_targets() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -717,7 +717,7 @@ def test_compile_multi_target_recipe_is_executable(tmp_path: Path) -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -753,7 +753,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {
-                "fixed_axes": {"framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target"},
+                "fixed_axes": {"framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features"},
                 "sweep_axes": {"model_family": ["ar", "ridge"]},
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -802,7 +802,7 @@ def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -843,7 +843,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
                     "framework": "expanding", "benchmark_family": "zero_change", "model_family": "ar"
                 },
                 "sweep_axes": {
-                    "feature_builder": ["autoreg_lagged_target", "raw_feature_panel"]
+                    "feature_builder": ["target_lag_features", "raw_feature_panel"]
                 },
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -881,7 +881,7 @@ def test_compile_seeded_reproducible_requires_random_seed() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -909,7 +909,7 @@ def test_compile_reproducibility_spec_preserved_in_manifest() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -947,7 +947,7 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -977,7 +977,7 @@ def test_compile_warn_only_is_now_executable() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -1014,7 +1014,7 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -1051,7 +1051,7 @@ def test_compile_compute_mode_spec_defaults_to_serial() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -1080,7 +1080,7 @@ def test_compile_parallel_by_model_is_executable() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -1118,7 +1118,7 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "ar"
+                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -1147,7 +1147,7 @@ def test_compile_recipe_accepts_legacy_info_set_alias() -> None:
                 "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
-            "3_training": {"fixed_axes": {"framework": "expanding", "benchmark_family": "historical_mean", "feature_builder": "autoreg_lagged_target", "model_family": "ar"}},
+            "3_training": {"fixed_axes": {"framework": "expanding", "benchmark_family": "historical_mean", "feature_builder": "target_lag_features", "model_family": "ar"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
             "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
@@ -1206,7 +1206,7 @@ def test_compiled_manifest_records_stage1_data_task_defaults() -> None:
     assert "contemporaneous_x_rule" not in spec
     assert "deterministic_components" not in spec
     assert "structural_break_segmentation" not in spec
-    assert compile_result.manifest["training_spec"]["forecast_type"] == "iterated"  # dynamic default for autoreg_lagged_target
+    assert compile_result.manifest["training_spec"]["forecast_type"] == "iterated"  # dynamic default for target_lag_features
     layer2 = compile_result.manifest["layer2_representation_spec"]
     assert layer2["target_representation"]["horizon_target_construction"] == "future_target_level_t_plus_h"
     assert layer2["input_panel"]["predictor_family"] == "target_lags_only"
@@ -1236,7 +1236,7 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
                 "preprocess_order": "extra_only", "preprocess_fit_scope": "train_only", "inverse_transform_policy": "none", "evaluation_scale": "raw_level",
                 "representation_policy": "raw_only", "tcode_application_scope": "none",
                 "target_transform": "level", "target_normalization": "none", "target_domain": "unconstrained", "scaling_scope": "columnwise",
-                "additional_preprocessing": "none", "x_lag_creation": "no_x_lags", "feature_grouping": "none",
+                "additional_preprocessing": "none", "x_lag_creation": "no_predictor_lags", "feature_grouping": "none",
             }},
             "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
@@ -1267,8 +1267,8 @@ def test_compiled_manifest_records_layer2_representation_provenance() -> None:
     assert spec["runtime_effect"] == "provenance_plus_runtime_block_dispatch"
     assert spec["compatibility_source"]["source_kind"] == "legacy_bridge"
     assert spec["compatibility_source"]["legacy_manifest_alias"] == "source_bridge"
-    assert spec["compatibility_source"]["feature_builder"] == "autoreg_lagged_target"
-    assert spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"
+    assert spec["compatibility_source"]["feature_builder"] == "target_lag_features"
+    assert spec["source_bridge"]["feature_builder"] == "target_lag_features"
     assert spec["source_bridge"]["data_richness_mode"] == "target_lags_only"
     assert spec["source_bridge"]["target_lag_selection"] == "ic_select"
     assert spec["source_bridge"]["legacy_y_lag_count"] == "IC_select"
@@ -1322,7 +1322,7 @@ def test_layer2_path_average_protocol_records_layer3_runtime() -> None:
                 "fixed_axes": {
                     "framework": "expanding",
                     "benchmark_family": "zero_change",
-                    "feature_builder": "autoreg_lagged_target",
+                    "feature_builder": "target_lag_features",
                     "model_family": "ar",
                 }
             },
@@ -1385,7 +1385,7 @@ def test_layer2_path_average_gates_non_raw_target_scale() -> None:
                 "fixed_axes": {
                     "framework": "expanding",
                     "benchmark_family": "zero_change",
-                    "feature_builder": "autoreg_lagged_target",
+                    "feature_builder": "target_lag_features",
                     "model_family": "ar",
                 }
             },
@@ -1451,11 +1451,11 @@ def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -
         }
 
     cases = [
-        ("autoreg_lagged_target", "ar", {}, "target_lags_only", "ic_selected_target_lags", "none"),
-        ("raw_feature_panel", "ridge", {}, "high_dimensional_x", "none", "none"),
-        ("raw_X_only", "ridge", {"data_richness_mode": "selected_sparse_X"}, "selected_sparse_x", "none", "none"),
-        ("factor_pca", "pcr", {}, "factor_blocks_only", "none", "pca_static_factors"),
-        ("factors_plus_AR", "factor_augmented_linear", {}, "factors_plus_target_lags", "fixed_target_lags", "pca_static_factors"),
+        ("target_lag_features", "ar", {}, "target_lags_only", "ic_selected_target_lags", "none"),
+        ("raw_feature_panel", "ridge", {}, "high_dimensional_predictors", "none", "none"),
+        ("raw_predictors_only", "ridge", {"data_richness_mode": "selected_sparse_predictors"}, "selected_sparse_predictors", "none", "none"),
+        ("pca_factor_features", "pcr", {}, "factor_blocks_only", "none", "pca_static_factors"),
+        ("factors_plus_target_lags", "factor_augmented_linear", {}, "factors_plus_target_lags", "fixed_target_lags", "pca_static_factors"),
     ]
     for feature_builder, model_family, axes, block_set, target_lag_block, factor_block in cases:
         result = compile_recipe_dict(_recipe(feature_builder, model_family, **axes))
@@ -1497,7 +1497,7 @@ def _explicit_feature_block_set_recipe(
         "target_domain": "unconstrained",
         "scaling_scope": "columnwise",
         "additional_preprocessing": "none",
-        "x_lag_creation": "no_x_lags",
+        "x_lag_creation": "no_predictor_lags",
         "feature_grouping": "none",
         "feature_block_set": feature_block_set,
     }
@@ -1546,11 +1546,11 @@ def test_layer2_explicit_feature_block_set_survives_bridge_derivation() -> None:
 
 
 def test_layer2_feature_block_set_prunes_missing_required_sub_block() -> None:
-    result = compile_recipe_dict(_explicit_feature_block_set_recipe("transformed_x_lags"))
+    result = compile_recipe_dict(_explicit_feature_block_set_recipe("transformed_predictor_lags"))
 
     assert result.compiled.execution_status == "not_supported"
     assert any(
-        "feature_block_set='transformed_x_lags' requires x_lag_feature_block='fixed_x_lags'"
+        "feature_block_set='transformed_predictor_lags' requires x_lag_feature_block='fixed_predictor_lags'"
         in warning
         for warning in result.compiled.warnings
     )
@@ -1559,21 +1559,21 @@ def test_layer2_feature_block_set_prunes_missing_required_sub_block() -> None:
 def test_layer2_feature_block_set_accepts_compatible_sub_blocks() -> None:
     result = compile_recipe_dict(
         _explicit_feature_block_set_recipe(
-            "mixed_blocks",
+            "mixed_feature_blocks",
             preprocessing_axes={
                 "tcode_policy": "extra_preprocess_only",
                 "preprocess_order": "extra_only",
                 "preprocess_fit_scope": "train_only",
                 "target_lag_block": "fixed_target_lags",
-                "x_lag_feature_block": "fixed_x_lags",
-                "x_lag_creation": "fixed_x_lags",
+                "x_lag_feature_block": "fixed_predictor_lags",
+                "x_lag_creation": "fixed_predictor_lags",
             },
         )
     )
 
     assert result.compiled.execution_status == "executable"
     spec = result.manifest["layer2_representation_spec"]
-    assert spec["feature_blocks"]["feature_block_set"]["value"] == "mixed_blocks"
+    assert spec["feature_blocks"]["feature_block_set"]["value"] == "mixed_feature_blocks"
     assert spec["feature_blocks"]["feature_block_set"]["runtime_status"] == "operational_narrow"
 
 
@@ -1617,7 +1617,7 @@ def test_layer2_target_lag_selection_axis_records_target_language_provenance() -
                 "fixed_axes": {
                     "framework": "expanding",
                     "benchmark_family": "zero_change",
-                    "feature_builder": "factors_plus_AR",
+                    "feature_builder": "factors_plus_target_lags",
                     "model_family": "factor_augmented_linear",
                 }
             },
@@ -1682,7 +1682,7 @@ def test_layer2_explicit_target_lag_block_lowers_to_ar_bridge() -> None:
                 "fixed_axes": {
                     "framework": "expanding",
                     "benchmark_family": "zero_change",
-                    "feature_builder": "autoreg_lagged_target",
+                    "feature_builder": "target_lag_features",
                     "model_family": "ar",
                 }
             },
@@ -1694,7 +1694,7 @@ def test_layer2_explicit_target_lag_block_lowers_to_ar_bridge() -> None:
     }
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "executable"
-    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "no_x_lags"
+    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "no_predictor_lags"
     assert "target_lag_selection" not in result.manifest["training_spec"]
     assert "target_lag_count" not in result.manifest["training_spec"]
     assert result.manifest["layer2_representation_spec"]["target_lag_config"]["selection"] == "fixed"
@@ -1763,7 +1763,7 @@ def test_layer2_explicit_target_lag_block_can_omit_feature_builder_bridge() -> N
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "executable"
-    assert result.manifest["model_spec"]["feature_builder"] == "autoreg_lagged_target"
+    assert result.manifest["model_spec"]["feature_builder"] == "target_lag_features"
     assert result.manifest["layer2_representation_spec"]["feature_blocks"]["target_lag_block"]["value"] == "fixed_target_lags"
 
 
@@ -1796,7 +1796,7 @@ def test_layer2_explicit_raw_block_can_omit_feature_builder_bridge() -> None:
                     "preprocess_fit_scope": "train_only",
                     "inverse_transform_policy": "none",
                     "evaluation_scale": "raw_level",
-                    "x_lag_feature_block": "fixed_x_lags",
+                    "x_lag_feature_block": "fixed_predictor_lags",
                 }
             },
             "3_training": {
@@ -1817,7 +1817,7 @@ def test_layer2_explicit_raw_block_can_omit_feature_builder_bridge() -> None:
 
     assert result.compiled.execution_status == "executable"
     assert result.manifest["model_spec"]["feature_builder"] == "raw_feature_panel"
-    assert result.manifest["layer2_representation_spec"]["feature_blocks"]["x_lag_feature_block"]["value"] == "fixed_x_lags"
+    assert result.manifest["layer2_representation_spec"]["feature_blocks"]["x_lag_feature_block"]["value"] == "fixed_predictor_lags"
 
 
 def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
@@ -1852,7 +1852,7 @@ def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
                     "preprocess_fit_scope": "train_only",
                     "inverse_transform_policy": "none",
                     "evaluation_scale": "raw_level",
-                    "x_lag_feature_block": "fixed_x_lags",
+                    "x_lag_feature_block": "fixed_predictor_lags",
                 }
             },
             "3_training": {
@@ -1871,10 +1871,10 @@ def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
     }
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "executable"
-    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "fixed_x_lags"
+    assert result.manifest["preprocess_contract"]["x_lag_creation"] == "fixed_predictor_lags"
     blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
     assert blocks["x_lag_feature_block"]["source_axis"] == "x_lag_feature_block"
-    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_x_lags"}
+    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_predictor_lags"}
     assert blocks["x_lag_feature_block"]["alignment"]["lookahead"] == "forbidden"
 
 
@@ -1963,7 +1963,7 @@ def test_layer2_explicit_level_growth_pairs_require_columns() -> None:
 
 def test_layer2_explicit_level_block_requires_raw_panel_bridge() -> None:
     result = compile_recipe_dict(
-        _layer2_level_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
+        _layer2_level_block_recipe(feature_builder="target_lag_features", model_family="ar")
     )
     assert result.compiled.execution_status == "blocked_by_incompatibility"
     assert any("raw_feature_panel is not compatible with model_family='ar'" in reason for reason in result.compiled.blocked_reasons)
@@ -2400,7 +2400,7 @@ def test_layer2_explicit_marx_rotation_rejects_x_lag_composition() -> None:
         _layer2_temporal_block_recipe(
             temporal_feature_block="none",
             rotation_feature_block="marx_rotation",
-            x_lag_feature_block="fixed_x_lags",
+            x_lag_feature_block="fixed_predictor_lags",
             marx_max_lag=3,
         )
     )
@@ -2425,13 +2425,13 @@ def test_layer2_marx_rotation_can_append_with_temporal_block(tmp_path: Path) -> 
         rotation_feature_block="marx_rotation",
         marx_max_lag=2,
     )
-    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_predictors"
 
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "executable"
     combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
-    assert combination["value"] == "append_to_base_x"
+    assert combination["value"] == "append_to_base_predictors"
     execution = run_compiled_recipe(
         result.compiled,
         output_root=tmp_path,
@@ -2441,14 +2441,14 @@ def test_layer2_marx_rotation_can_append_with_temporal_block(tmp_path: Path) -> 
     assert manifest["prediction_rows"] > 0
 
 
-def test_layer2_marx_rotation_can_append_with_fixed_x_lags(tmp_path: Path) -> None:
+def test_layer2_marx_rotation_can_append_with_fixed_predictor_lags(tmp_path: Path) -> None:
     recipe = _layer2_temporal_block_recipe(
         temporal_feature_block="none",
         rotation_feature_block="marx_rotation",
-        x_lag_feature_block="fixed_x_lags",
+        x_lag_feature_block="fixed_predictor_lags",
         marx_max_lag=2,
     )
-    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_x"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "append_to_base_predictors"
 
     result = compile_recipe_dict(recipe)
 
@@ -2535,24 +2535,24 @@ def test_layer2_registered_custom_temporal_block_is_executable() -> None:
     clear_custom_extensions()
 
 
-def test_layer2_custom_combiner_records_callable_contract() -> None:
+def test_layer2_custom_feature_combiner_records_callable_contract() -> None:
     recipe = _layer2_temporal_block_recipe(
         temporal_feature_block="none",
         rotation_feature_block="none",
     )
-    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_feature_combiner"
 
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "not_supported"
     combination = result.manifest["layer2_representation_spec"]["feature_blocks"]["feature_block_combination"]
-    assert combination["value"] == "custom_combiner"
+    assert combination["value"] == "custom_feature_combiner"
     assert combination["runtime_status"] == "registry_only"
     assert combination["required_runtime_contract"] == "custom_feature_combiner_v1"
     assert combination["callable_contract"]["schema_version"] == "custom_feature_combiner_v1"
 
 
-def test_layer2_registered_custom_combiner_is_executable() -> None:
+def test_layer2_registered_custom_feature_combiner_is_executable() -> None:
     clear_custom_extensions()
 
     @custom_feature_combiner("sum_two")
@@ -2564,7 +2564,7 @@ def test_layer2_registered_custom_combiner_is_executable() -> None:
         rotation_feature_block="none",
     )
     recipe["path"]["1_data_task"]["leaf_config"]["custom_feature_combiner"] = "sum_two"
-    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_combiner"
+    recipe["path"]["2_preprocessing"]["fixed_axes"]["feature_block_combination"] = "custom_feature_combiner"
 
     result = compile_recipe_dict(recipe)
 
@@ -2576,7 +2576,7 @@ def test_layer2_registered_custom_combiner_is_executable() -> None:
     clear_custom_extensions()
 
 
-def test_layer2_select_after_custom_blocks_requires_custom_surface() -> None:
+def test_layer2_select_after_custom_feature_blocks_requires_custom_surface() -> None:
     recipe = _layer2_temporal_block_recipe(
         temporal_feature_block="none",
         rotation_feature_block="none",
@@ -2587,20 +2587,20 @@ def test_layer2_select_after_custom_blocks_requires_custom_surface() -> None:
             "preprocess_order": "extra_only",
             "preprocess_fit_scope": "train_only",
             "feature_selection_policy": "correlation_filter",
-            "feature_selection_semantics": "select_after_custom_blocks",
+            "feature_selection_semantics": "select_after_custom_feature_blocks",
         }
     )
 
     result = compile_recipe_dict(recipe)
 
     assert result.compiled.execution_status == "not_supported"
-    assert any("select_after_custom_blocks" in warning for warning in result.compiled.warnings)
+    assert any("select_after_custom_feature_blocks" in warning for warning in result.compiled.warnings)
 
 
 def test_layer2_explicit_rotation_block_requires_raw_panel_bridge() -> None:
     result = compile_recipe_dict(
         _layer2_temporal_block_recipe(
-            feature_builder="autoreg_lagged_target",
+            feature_builder="target_lag_features",
             model_family="ar",
             temporal_feature_block="none",
             rotation_feature_block="moving_average_rotation",
@@ -2628,7 +2628,7 @@ def test_layer2_explicit_moving_average_rotation_allows_temporal_composition() -
 
 def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:
     result = compile_recipe_dict(
-        _layer2_temporal_block_recipe(feature_builder="autoreg_lagged_target", model_family="ar")
+        _layer2_temporal_block_recipe(feature_builder="target_lag_features", model_family="ar")
     )
     assert result.compiled.execution_status == "blocked_by_incompatibility"
     assert any("raw_feature_panel is not compatible with model_family='ar'" in reason for reason in result.compiled.blocked_reasons)
@@ -2636,12 +2636,12 @@ def test_layer2_explicit_temporal_block_requires_raw_panel_bridge() -> None:
 
 def test_layer2_explicit_temporal_block_allows_fixed_x_lag_composition() -> None:
     result = compile_recipe_dict(
-        _layer2_temporal_block_recipe(x_lag_feature_block="fixed_x_lags")
+        _layer2_temporal_block_recipe(x_lag_feature_block="fixed_predictor_lags")
     )
     assert result.compiled.execution_status == "executable"
     blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
-    assert blocks["x_lag_feature_block"]["value"] == "fixed_x_lags"
-    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_x_lags"}
+    assert blocks["x_lag_feature_block"]["value"] == "fixed_predictor_lags"
+    assert blocks["x_lag_feature_block"]["runtime_bridge"] == {"x_lag_creation": "fixed_predictor_lags"}
     assert blocks["temporal_feature_block"]["value"] == "moving_average_features"
     assert blocks["temporal_feature_block"]["runtime_bridge"] == {
         "raw_panel_temporal_features": "moving_average_features"
@@ -2682,7 +2682,7 @@ def test_layer2_explicit_target_and_x_lag_blocks_execute_with_raw_panel_composer
                     "inverse_transform_policy": "none",
                     "evaluation_scale": "raw_level",
                     "target_lag_block": "fixed_target_lags",
-                    "x_lag_feature_block": "fixed_x_lags",
+                    "x_lag_feature_block": "fixed_predictor_lags",
                 }
             },
             "3_training": {
@@ -2703,7 +2703,7 @@ def test_layer2_explicit_target_and_x_lag_blocks_execute_with_raw_panel_composer
     assert result.compiled.execution_status == "executable"
     blocks = result.manifest["layer2_representation_spec"]["feature_blocks"]
     assert blocks["target_lag_block"]["value"] == "fixed_target_lags"
-    assert blocks["x_lag_feature_block"]["value"] == "fixed_x_lags"
+    assert blocks["x_lag_feature_block"]["value"] == "fixed_predictor_lags"
     assert blocks["target_lag_block"]["alignment"]["train_row_t_uses"] == "target_{origin_t-k+1}"
     execution = run_compiled_recipe(
         result.compiled,
@@ -2806,8 +2806,8 @@ def test_layer2_explicit_x_lag_block_rejects_conflicting_legacy_bridge() -> None
                     "preprocess_fit_scope": "not_applicable",
                     "inverse_transform_policy": "none",
                     "evaluation_scale": "raw_level",
-                    "x_lag_feature_block": "fixed_x_lags",
-                    "x_lag_creation": "no_x_lags",
+                    "x_lag_feature_block": "fixed_predictor_lags",
+                    "x_lag_creation": "no_predictor_lags",
                 }
             },
             "3_training": {
@@ -2865,7 +2865,7 @@ def test_layer2_explicit_target_lag_block_rejects_conflicting_selection() -> Non
                 "fixed_axes": {
                     "framework": "expanding",
                     "benchmark_family": "zero_change",
-                    "feature_builder": "autoreg_lagged_target",
+                    "feature_builder": "target_lag_features",
                     "model_family": "ar",
                 }
             },
@@ -3037,7 +3037,7 @@ def test_layer2_factor_block_accepts_select_before_factor_mix() -> None:
                     "x_outlier_policy": "none",
                     "scaling_policy": "standard",
                     "dimensionality_reduction_policy": "pca",
-                    "feature_selection_policy": "lasso_select",
+                    "feature_selection_policy": "lasso_selection",
                     "preprocess_order": "extra_only",
                     "preprocess_fit_scope": "train_only",
                     "inverse_transform_policy": "none",
@@ -3063,7 +3063,7 @@ def test_layer2_factor_block_accepts_select_before_factor_mix() -> None:
     assert result.compiled.execution_status == "executable"
     block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
     interaction = block["feature_selection_interaction"]
-    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["feature_selection_policy"] == "lasso_selection"
     assert interaction["active_semantic"] == "select_before_factor"
     assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
 
@@ -3092,7 +3092,7 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
                     "x_outlier_policy": "none",
                     "scaling_policy": "standard",
                     "dimensionality_reduction_policy": "pca",
-                    "feature_selection_policy": "lasso_select",
+                    "feature_selection_policy": "lasso_selection",
                     "feature_selection_semantics": "select_after_factor",
                     "preprocess_order": "extra_only",
                     "preprocess_fit_scope": "train_only",
@@ -3119,10 +3119,10 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
     assert result.compiled.execution_status == "executable"
     block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
     interaction = block["feature_selection_interaction"]
-    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["feature_selection_policy"] == "lasso_selection"
     assert interaction["active_semantic"] == "select_after_factor"
     assert interaction["supported_semantics"] == ["select_before_factor", "select_after_factor"]
-    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
+    assert interaction["gated_semantics"] == ["select_after_custom_feature_blocks"]
 
 
 @pytest.mark.parametrize("factor_block", ["pca_factor_lags", "supervised_factors"])
@@ -3134,7 +3134,7 @@ def test_layer2_non_pca_factor_blocks_accept_selection_semantics(factor_block: s
     recipe["path"]["2_preprocessing"]["fixed_axes"].update(
         {
             "factor_feature_block": factor_block,
-            "feature_selection_policy": "lasso_select",
+            "feature_selection_policy": "lasso_selection",
             "feature_selection_semantics": "select_after_factor",
             "tcode_policy": "extra_preprocess_only",
             "preprocess_order": "extra_only",
@@ -3148,9 +3148,9 @@ def test_layer2_non_pca_factor_blocks_accept_selection_semantics(factor_block: s
     assert result.compiled.execution_status == "executable"
     block = result.manifest["layer2_representation_spec"]["feature_blocks"]["factor_feature_block"]
     interaction = block["feature_selection_interaction"]
-    assert interaction["feature_selection_policy"] == "lasso_select"
+    assert interaction["feature_selection_policy"] == "lasso_selection"
     assert interaction["active_semantic"] == "select_after_factor"
-    assert interaction["gated_semantics"] == ["select_after_custom_blocks"]
+    assert interaction["gated_semantics"] == ["select_after_custom_feature_blocks"]
 
 
 def test_layer2_target_representation_records_scale_contract() -> None:
@@ -3220,7 +3220,7 @@ def test_compile_recipe_accepts_stage3_training_axes() -> None:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "expanding", "outer_window": "expanding", "refit_policy": "refit_every_step", "benchmark_family": "historical_mean",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ols", "search_algorithm": "grid_search", "seed_policy": "fixed_seed"
+                "feature_builder": "target_lag_features", "model_family": "ols", "search_algorithm": "grid_search", "seed_policy": "fixed_seed"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
@@ -3267,7 +3267,7 @@ def test_compile_quantile_linear_point_median_recipe_is_executable(tmp_path: Pat
                 "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
             }},
             "3_training": {"fixed_axes": {
-                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "autoreg_lagged_target", "model_family": "quantile_linear"
+                "framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "quantile_linear"
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
@@ -3390,7 +3390,7 @@ def test_compile_stage6_split_stat_test_manifest() -> None:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "expanding", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
@@ -3450,7 +3450,7 @@ def test_multi_target_derives_shared_design_experiment_unit() -> None:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "rolling", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
@@ -3512,7 +3512,7 @@ def _study_mode_recipe_base() -> dict:
             }},
             "3_training": {"fixed_axes": {
                 "framework": "rolling", "benchmark_family": "zero_change",
-                "feature_builder": "autoreg_lagged_target", "model_family": "ar",
+                "feature_builder": "target_lag_features", "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},

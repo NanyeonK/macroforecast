@@ -88,6 +88,41 @@ def test_shared_tcode_and_predictor_legacy_aliases_canonicalize() -> None:
     assert canonical_axis_value("predictor_family", "handpicked_set") == "explicit_variable_list"
 
 
+def test_layer2_feature_composer_legacy_aliases_canonicalize() -> None:
+    assert canonical_axis_value("feature_builder", "autoreg_lagged_target") == "target_lag_features"
+    assert canonical_axis_value("feature_builder", "factors_plus_AR") == "factors_plus_target_lags"
+    assert canonical_axis_value("feature_builder", "raw_X_only") == "raw_predictors_only"
+    assert canonical_axis_value("feature_builder", "factor_pca") == "pca_factor_features"
+    assert (
+        canonical_axis_value("data_richness_mode", "full_high_dimensional_X")
+        == "high_dimensional_predictors"
+    )
+    assert canonical_axis_value("data_richness_mode", "selected_sparse_X") == "selected_sparse_predictors"
+    assert (
+        canonical_axis_value("feature_block_set", "legacy_feature_builder_bridge")
+        == "feature_builder_compatibility_bridge"
+    )
+    assert canonical_axis_value("feature_block_set", "transformed_x") == "transformed_predictors"
+    assert canonical_axis_value("feature_block_set", "transformed_x_lags") == "transformed_predictor_lags"
+    assert canonical_axis_value("feature_block_set", "custom_blocks") == "custom_feature_blocks"
+    assert canonical_axis_value("x_lag_creation", "no_x_lags") == "no_predictor_lags"
+    assert canonical_axis_value("x_lag_creation", "fixed_x_lags") == "fixed_predictor_lags"
+    assert canonical_axis_value("x_lag_feature_block", "fixed_x_lags") == "fixed_predictor_lags"
+    assert (
+        canonical_axis_value("x_lag_feature_block", "cv_selected_x_lags")
+        == "cv_selected_predictor_lags"
+    )
+    assert (
+        canonical_axis_value("feature_block_combination", "append_to_base_x")
+        == "append_to_base_predictors"
+    )
+    assert canonical_axis_value("feature_selection_policy", "lasso_select") == "lasso_selection"
+    assert (
+        canonical_axis_value("feature_selection_semantics", "select_after_custom_blocks")
+        == "select_after_custom_feature_blocks"
+    )
+
+
 def test_canonicalize_recipe_path_rewrites_legacy_stage0_values() -> None:
     recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
     recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "single_path_benchmark"
@@ -144,6 +179,30 @@ def test_legacy_stage1_recipe_compiles_to_canonical_ids() -> None:
     assert spec["raw_outlier_policy"] == "set_raw_outliers_to_missing"
 
 
+def test_legacy_layer2_feature_composer_recipe_compiles_to_canonical_ids() -> None:
+    recipe = build_default_recipe_dict(dataset="fred_md", target="INDPRO", start="1960-01-01", end="1970-01-01")
+    axes = recipe["path"]["2_preprocessing"]["fixed_axes"]
+    axes["data_richness_mode"] = "full_high_dimensional_X"
+    axes["feature_block_set"] = "transformed_x_lags"
+    axes["x_lag_creation"] = "fixed_x_lags"
+    axes["x_lag_feature_block"] = "fixed_x_lags"
+    axes["feature_block_combination"] = "append_to_base_x"
+    axes["preprocess_fit_scope"] = "train_only"
+    recipe["path"]["3_training"]["fixed_axes"]["feature_builder"] = "factors_plus_AR"
+    recipe["path"]["3_training"]["fixed_axes"]["model_family"] = "factor_augmented_linear"
+    recipe["path"]["3_training"]["fixed_axes"]["forecast_type"] = "direct"
+
+    result = compile_recipe_dict(recipe)
+    layer2 = result.manifest["layer2_representation_spec"]
+
+    assert result.manifest["model_spec"]["feature_builder"] == "factors_plus_target_lags"
+    assert layer2["source_bridge"]["feature_builder"] == "factors_plus_target_lags"
+    assert layer2["source_bridge"]["data_richness_mode"] == "high_dimensional_predictors"
+    assert layer2["feature_blocks"]["feature_block_set"]["value"] == "transformed_predictor_lags"
+    assert layer2["feature_blocks"]["x_lag_feature_block"]["value"] == "fixed_predictor_lags"
+    assert layer2["feature_blocks"]["feature_block_combination"]["value"] == "append_to_base_predictors"
+
+
 def test_rename_ledger_lists_stage0_aliases() -> None:
     aliases = {
         (item["axis"], item["legacy_id"]): item["canonical_id"]
@@ -164,3 +223,17 @@ def test_rename_ledger_lists_stage1_aliases() -> None:
     assert aliases[("target_structure", "single_target_point_forecast")] == "single_target"
     assert aliases[("official_transform_scope", "apply_tcode_to_X")] == "predictors_only"
     assert aliases[("variable_universe", "handpicked_set")] == "explicit_variable_list"
+
+
+def test_rename_ledger_lists_layer2_feature_composer_aliases() -> None:
+    aliases = {
+        (item["axis"], item["legacy_id"]): item["canonical_id"]
+        for item in rename_ledger()["axis_value_aliases"]
+    }
+
+    assert aliases[("feature_builder", "autoreg_lagged_target")] == "target_lag_features"
+    assert aliases[("feature_builder", "factors_plus_AR")] == "factors_plus_target_lags"
+    assert aliases[("feature_block_set", "transformed_x_lags")] == "transformed_predictor_lags"
+    assert aliases[("x_lag_creation", "fixed_x_lags")] == "fixed_predictor_lags"
+    assert aliases[("feature_block_combination", "append_to_base_x")] == "append_to_base_predictors"
+    assert aliases[("feature_selection_semantics", "select_after_custom_blocks")] == "select_after_custom_feature_blocks"

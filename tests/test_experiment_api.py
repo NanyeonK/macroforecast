@@ -187,7 +187,7 @@ def test_forecast_default_runs_and_records_default_profile(tmp_path: Path) -> No
     assert manifest["preprocess_contract"]["x_transform_policy"] == "official_tcode_transformed"
     layer2_spec = manifest["layer2_representation_spec"]
     assert layer2_spec["runtime_effect"] == "provenance_plus_runtime_block_dispatch"
-    assert layer2_spec["source_bridge"]["feature_builder"] == "autoreg_lagged_target"
+    assert layer2_spec["source_bridge"]["feature_builder"] == "target_lag_features"
     assert layer2_spec["feature_blocks"]["feature_block_set"]["value"] == "target_lags_only"
     assert manifest["compiler"]["layer2_representation_spec"] == layer2_spec
     assert manifest["data_reports"]["tcode"]["applied"] is True
@@ -1279,7 +1279,7 @@ def test_custom_model_runs_as_single_experiment(tmp_path: Path) -> None:
     manifest = json.loads((Path(result.artifact_dir) / "manifest.json").read_text())
     assert manifest["model_spec"]["model_family"] == "last_lag_custom"
     assert manifest["model_spec"]["custom_model"] is True
-    assert manifest["forecast_engine"] == "custom_model:last_lag_custom:autoreg_lagged_target_v0"
+    assert manifest["forecast_engine"] == "custom_model:last_lag_custom:target_lag_features_v0"
 
 
 def test_custom_model_can_compare_with_builtin_model(tmp_path: Path) -> None:
@@ -1452,7 +1452,7 @@ def test_target_transformer_compile_uses_feature_runtime_for_factor_bridge() -> 
             end=FIXTURE_END,
             horizons=[1],
             model_family="ridge",
-            feature_builder="factor_pca",
+            feature_builder="pca_factor_features",
         )
         .use_target_transformer("identity_target_factor_bridge")
         .to_recipe_dict()

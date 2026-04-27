@@ -77,14 +77,14 @@ _DIMRED = {
 _FEATURE_SELECTION = {
     "none",
     "correlation_filter",
-    "lasso_select",
+    "lasso_selection",
     "mutual_information_screen",
     "custom",
 }
 _FEATURE_SELECTION_SEMANTICS = {
     "select_before_factor",
     "select_after_factor",
-    "select_after_custom_blocks",
+    "select_after_custom_feature_blocks",
 }
 _ORDER = {
     "none",
@@ -148,11 +148,11 @@ _ADDITIONAL = {
     "bandpass_filter",
 }
 _X_LAG = {
-    "no_x_lags",
-    "fixed_x_lags",
-    "cv_selected_x_lags",
-    "variable_specific_lags",
-    "category_specific_lags",
+    "no_predictor_lags",
+    "fixed_predictor_lags",
+    "cv_selected_predictor_lags",
+    "variable_specific_predictor_lags",
+    "category_specific_predictor_lags",
 }
 _FEATURE_GROUPING = {
     "none",
@@ -187,7 +187,7 @@ def build_preprocess_contract(
     target_domain: str = "unconstrained",
     scaling_scope: str = "columnwise",
     additional_preprocessing: str = "none",
-    x_lag_creation: str = "no_x_lags",
+    x_lag_creation: str = "no_predictor_lags",
     feature_grouping: str = "none",
 ) -> PreprocessContract:
     allowed_map = {
@@ -260,7 +260,7 @@ def _has_extra_preprocessing(contract: PreprocessContract) -> bool:
             (contract.dimensionality_reduction_policy, "none"),
             (contract.feature_selection_policy, "none"),
             (contract.additional_preprocessing, "none"),
-            (contract.x_lag_creation, "no_x_lags"),
+            (contract.x_lag_creation, "no_predictor_lags"),
         )
     )
 
@@ -279,7 +279,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         "demean_only", "unit_variance_only",
     }
     allowed_dimred = {"none", "pca", "static_factor"}
-    allowed_feature_selection = {"none", "correlation_filter", "lasso_select"}
+    allowed_feature_selection = {"none", "correlation_filter", "lasso_selection"}
     if contract.target_missing_policy != "none":
         return False
     if contract.target_outlier_policy != "none":
@@ -322,7 +322,7 @@ def _supported_train_only_extra(contract: PreprocessContract) -> bool:
         return False
     if contract.additional_preprocessing not in {"none", "hp_filter"}:
         return False
-    if contract.x_lag_creation not in {"no_x_lags", "fixed_x_lags"}:
+    if contract.x_lag_creation not in {"no_predictor_lags", "fixed_predictor_lags"}:
         return False
     if contract.feature_grouping != "none":
         return False
@@ -486,8 +486,8 @@ def check_preprocess_governance(
         raise PreprocessValidationError("current runtime slice does not support non-train global scaling scopes")
     if contract.additional_preprocessing not in {"none", "hp_filter"}:
         raise PreprocessValidationError("current runtime slice does not support additional_preprocessing beyond none / hp_filter")
-    if contract.x_lag_creation not in {"no_x_lags", "fixed_x_lags"}:
-        raise PreprocessValidationError("current runtime slice does not support x_lag_creation beyond no_x_lags / fixed_x_lags")
+    if contract.x_lag_creation not in {"no_predictor_lags", "fixed_predictor_lags"}:
+        raise PreprocessValidationError("current runtime slice does not support x_lag_creation beyond no_predictor_lags / fixed_predictor_lags")
     if contract.feature_grouping != "none":
         raise PreprocessValidationError("current runtime slice does not support feature_grouping beyond none")
 

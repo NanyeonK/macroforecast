@@ -143,7 +143,7 @@ class Experiment:
         model_family: str = "ar",
         framework: str = "expanding",
         benchmark_family: str = "zero_change",
-        feature_builder: str = "autoreg_lagged_target",
+        feature_builder: str = "target_lag_features",
         primary_metric: str = "msfe",
         random_seed: int = 42,
         benchmark_config: dict[str, Any] | None = None,

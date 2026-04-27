@@ -102,13 +102,13 @@ def my_combiner(context):
     )
 ```
 
-Select it with `feature_block_combination=custom_combiner` plus
+Select it with `feature_block_combination=custom_feature_combiner` plus
 `custom_feature_combiner=<registered name>` in the Layer 1 leaf config or
 `custom_feature_blocks.combiner=<registered name>`.
 
 ## Layer 2: Final-Z Selection After Custom Blocks
 
-`feature_selection_semantics=select_after_custom_blocks` applies an operational
+`feature_selection_semantics=select_after_custom_feature_blocks` applies an operational
 feature-selection policy after custom blocks or a custom combiner have produced
 final `Z` candidates. The runtime records `custom_final_z_selection_v1` with
 candidate names, selected names, dropped names, policy, fit state, and leakage
@@ -291,7 +291,7 @@ path:
     nested_sweep_axes:
       feature_block_combination:
         concatenate_named_blocks: {}
-        custom_combiner:
+        custom_feature_combiner:
           leaf_config.custom_feature_combiner:
             - my_combiner
 ```

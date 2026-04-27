@@ -240,22 +240,22 @@ OPERATIONAL_NARROW_CONTRACTS = (
     {
         "axis": "feature_block_set",
         "values": (
-            "transformed_x_lags",
-            "selected_sparse_x",
-            "level_augmented_x",
-            "rotation_augmented_x",
-            "mixed_blocks",
-            "custom_blocks",
+            "transformed_predictor_lags",
+            "selected_sparse_predictors",
+            "level_augmented_predictors",
+            "rotation_augmented_predictors",
+            "mixed_feature_blocks",
+            "custom_feature_blocks",
         ),
         "owner_layer": "2_preprocessing",
         "contract": "feature_block_set_public_axis_v1",
         "required_companions": (
-            "x_lag_feature_block=fixed_x_lags for transformed_x_lags",
-            "non-none feature_selection_policy for selected_sparse_x",
-            "non-none level_feature_block for level_augmented_x",
-            "non-none rotation_feature_block for rotation_augmented_x",
-            "at least two active block sources for mixed_blocks",
-            "registered custom block or custom combiner for custom_blocks",
+            "x_lag_feature_block=fixed_predictor_lags for transformed_predictor_lags",
+            "non-none feature_selection_policy for selected_sparse_predictors",
+            "non-none level_feature_block for level_augmented_predictors",
+            "non-none rotation_feature_block for rotation_augmented_predictors",
+            "at least two active block sources for mixed_feature_blocks",
+            "registered custom block or custom combiner for custom_feature_blocks",
         ),
         "pruning_surface": "compiler blocked_reasons and skip_failed_cell manifests",
     },
@@ -360,8 +360,8 @@ _BUILTIN_MODELS = frozenset(
 _FRED_SD_ADVANCED_MIXED_FREQUENCY = frozenset(
     {"native_frequency_block_payload", "mixed_frequency_model_adapter"}
 )
-_RAW_PANEL_BUILDERS = frozenset({"raw_feature_panel", "raw_X_only"})
-_AUTOREG_BUILDERS = frozenset({"autoreg_lagged_target"})
+_RAW_PANEL_BUILDERS = frozenset({"raw_feature_panel", "raw_predictors_only"})
+_AUTOREG_BUILDERS = frozenset({"target_lag_features"})
 _QUANTILE_STATS = frozenset({"none", "dm", "dm_hln", "dm_modified"})
 _DIRECTION_STATS = frozenset({"none", "pesaran_timmermann", "binomial_hit"})
 _DENSITY_INTERVAL_STATS = frozenset(
@@ -583,7 +583,7 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         if fred_sd_mixed_frequency in _FRED_SD_ADVANCED_MIXED_FREQUENCY and value != "raw_feature_panel":
             return "advanced FRED-SD mixed-frequency representation requires a raw-panel feature builder"
         if model in _DEEP_SEQUENCE_MODELS:
-            if value == "autoreg_lagged_target":
+            if value == "target_lag_features":
                 return None
             if value == "sequence_tensor":
                 return "full multivariate sequence_tensor remains gated; current deep slice is univariate target-history sequence"

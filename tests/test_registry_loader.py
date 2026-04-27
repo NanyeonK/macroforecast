@@ -66,7 +66,7 @@ def test_axis_governance_table_matches_discovered_registry() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["importance_method"]["current_status"]["minimal_importance"] == "operational"
-    assert by_name["feature_builder"]["current_status"]["factor_pca"] == "operational"
+    assert by_name["feature_builder"]["current_status"]["pca_factor_features"] == "operational"
     assert (
         by_name["fred_sd_mixed_frequency_representation"]["current_status"][
             "native_frequency_block_payload"
@@ -340,10 +340,10 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     }
     assert all(registry[axis].layer == "2_preprocessing" for axis in block_axes)
     assert registry["feature_block_set"].current_status["target_lags_only"] == "operational"
-    assert registry["feature_block_set"].current_status["transformed_x"] == "operational"
+    assert registry["feature_block_set"].current_status["transformed_predictors"] == "operational"
     assert registry["feature_block_set"].current_status["factor_blocks_only"] == "operational"
-    assert registry["feature_block_set"].current_status["mixed_blocks"] == "operational_narrow"
-    assert registry["feature_block_set"].current_status["legacy_feature_builder_bridge"] == "registry_only"
+    assert registry["feature_block_set"].current_status["mixed_feature_blocks"] == "operational_narrow"
+    assert registry["feature_block_set"].current_status["feature_builder_compatibility_bridge"] == "registry_only"
     assert registry["rotation_feature_block"].current_status["none"] == "operational"
     assert registry["rotation_feature_block"].current_status["moving_average_rotation"] == "operational"
     assert registry["rotation_feature_block"].current_status["marx_rotation"] == "operational"
@@ -363,11 +363,11 @@ def test_registry_loader_defines_layer2_feature_block_grammar() -> None:
     assert registry["temporal_feature_block"].current_status["volatility_features"] == "operational"
     assert registry["temporal_feature_block"].current_status["local_temporal_factors"] == "operational"
     assert registry["temporal_feature_block"].current_status["custom_temporal_features"] == "registry_only"
-    assert registry["feature_block_combination"].current_status["replace_with_blocks"] == "operational"
-    assert registry["feature_block_combination"].current_status["append_to_base_x"] == "operational"
+    assert registry["feature_block_combination"].current_status["replace_with_selected_blocks"] == "operational"
+    assert registry["feature_block_combination"].current_status["append_to_base_predictors"] == "operational"
     assert registry["feature_block_combination"].current_status["append_to_target_lags"] == "operational"
     assert registry["feature_block_combination"].current_status["concatenate_named_blocks"] == "operational"
-    assert registry["feature_block_combination"].current_status["custom_combiner"] == "registry_only"
+    assert registry["feature_block_combination"].current_status["custom_feature_combiner"] == "registry_only"
     assert registry["target_lag_selection"].current_status["ic_select"] == "registry_only"
 
 
@@ -388,10 +388,10 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
     assert dimred.current_status["pca"] == "operational"
     assert dimred.current_status["static_factor"] == "operational"
     assert feature_selection.current_status["correlation_filter"] == "operational"
-    assert feature_selection.current_status["lasso_select"] == "operational"
+    assert feature_selection.current_status["lasso_selection"] == "operational"
     assert feature_selection_semantics.current_status["select_before_factor"] == "operational"
     assert feature_selection_semantics.current_status["select_after_factor"] == "operational"
-    assert feature_selection_semantics.current_status["select_after_custom_blocks"] == "operational"
+    assert feature_selection_semantics.current_status["select_after_custom_feature_blocks"] == "operational"
     assert tcode_policy.current_status["official_tcode_then_extra_preprocess"] == "operational"
     assert preprocess_order.current_status["official_tcode_then_extra"] == "operational"
     target_construction = get_axis_registry_entry("horizon_target_construction")
@@ -409,7 +409,7 @@ def test_registry_loader_expands_stage2_operational_values() -> None:
     assert target_lag_selection.current_status["none"] == "operational"
     assert target_lag_selection.current_status["fixed"] == "operational"
     assert x_lag_feature_block.current_status["none"] == "operational"
-    assert x_lag_feature_block.current_status["fixed_x_lags"] == "operational"
+    assert x_lag_feature_block.current_status["fixed_predictor_lags"] == "operational"
     assert factor_feature_block.current_status["none"] == "operational"
     assert factor_feature_block.current_status["pca_static_factors"] == "operational"
     assert factor_feature_block.current_status["pca_factor_lags"] == "operational"
@@ -430,7 +430,7 @@ def test_registry_loader_marks_remaining_stage2_non_executable_values() -> None:
 
     assert target_missing.current_status["em_impute"] == "registry_only"
     assert set(dimred.current_status) == {"none", "pca", "static_factor", "custom"}
-    assert x_lag.current_status["cv_selected_x_lags"] == "registry_only"
+    assert x_lag.current_status["cv_selected_predictor_lags"] == "registry_only"
     assert feature_grouping.current_status["fred_category_group"] == "registry_only"
     assert feature_grouping.current_status["lag_group"] == "registry_only"
     assert separation_rule.current_status["shared_transform_then_split"] == "registry_only"
@@ -442,7 +442,7 @@ def test_registry_loader_marks_remaining_stage2_non_executable_values() -> None:
     assert target_lag_block.current_status["ic_selected_target_lags"] == "registry_only"
     assert target_lag_block.current_status["custom_target_lags"] == "registry_only"
     assert target_lag_selection.current_status["ic_select"] == "registry_only"
-    assert x_lag_feature_block.current_status["cv_selected_x_lags"] == "registry_only"
+    assert x_lag_feature_block.current_status["cv_selected_predictor_lags"] == "registry_only"
 
 
 

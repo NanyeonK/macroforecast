@@ -96,7 +96,7 @@ def test_empty_components_is_clean_noop(tmp_path: Path):
 
 def test_legacy_feature_builder_component_alias_normalizes_to_feature_representation(tmp_path: Path):
     variants = []
-    for feature, value in [("autoreg_lagged_target", 1.0), ("raw_feature_panel", 3.0)]:
+    for feature, value in [("target_lag_features", 1.0), ("raw_feature_panel", 3.0)]:
         variants.append(
             {
                 "variant_id": f"v-{feature}",

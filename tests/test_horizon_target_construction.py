@@ -73,7 +73,7 @@ def _recipe(construction: str, *, horizons: list[int] | None = None) -> dict:
             "3_training": {"fixed_axes": {
                 "framework": "expanding",
                 "benchmark_family": "historical_mean",
-                "feature_builder": "autoreg_lagged_target",
+                "feature_builder": "target_lag_features",
                 "model_family": "ar",
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},

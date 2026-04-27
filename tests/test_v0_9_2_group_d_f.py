@@ -23,8 +23,8 @@ METADATA_FLIPS = (
     # training + meta
     ("embargo_gap", "fixed_gap"),
     ("embargo_gap", "horizon_gap"),
-    ("data_richness_mode", "factor_plus_lags"),
-    ("data_richness_mode", "selected_sparse_X"),
+    ("data_richness_mode", "factors_plus_target_lags"),
+    ("data_richness_mode", "selected_sparse_predictors"),
     ("y_lag_count", "cv_select"),
     # data_task rules
 )

@@ -155,20 +155,20 @@ _FRED_SD_MIXED_FREQUENCY_BUILTIN_MODELS = {
     _MIDASR_MODEL_FAMILY,
     _MIDASR_NEALMON_MODEL_FAMILY,
 }
-_TARGET_TRANSFORMER_FEATURE_RUNTIMES = {"autoreg_lagged_target", "raw_feature_panel"}
+_TARGET_TRANSFORMER_FEATURE_RUNTIMES = {"target_lag_features", "raw_feature_panel"}
 _TARGET_TRANSFORMER_RAW_PANEL_MODELS = {"ols", "ridge", "lasso", "elasticnet"}
-_RAW_PANEL_FEATURE_BUILDERS = {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}
+_RAW_PANEL_FEATURE_BUILDERS = {"raw_feature_panel", "raw_predictors_only", "pca_factor_features", "factors_plus_target_lags"}
 _RAW_PANEL_FEATURE_BLOCK_SETS = {
-    "transformed_x",
-    "transformed_x_lags",
+    "transformed_predictors",
+    "transformed_predictor_lags",
     "factors_plus_target_lags",
     "factor_blocks_only",
-    "high_dimensional_x",
-    "selected_sparse_x",
-    "level_augmented_x",
-    "rotation_augmented_x",
-    "mixed_blocks",
-    "custom_blocks",
+    "high_dimensional_predictors",
+    "selected_sparse_predictors",
+    "level_augmented_predictors",
+    "rotation_augmented_predictors",
+    "mixed_feature_blocks",
+    "custom_feature_blocks",
 }
 
 _PHASE3_DEFAULTS = {
@@ -1931,7 +1931,7 @@ def _model_family(recipe: RecipeSpec) -> str:
 def _feature_builder(recipe: RecipeSpec) -> str:
     if recipe.stage0.varying_design.feature_recipes:
         return recipe.stage0.varying_design.feature_recipes[0]
-    return "autoreg_lagged_target"
+    return "target_lag_features"
 
 
 def _layer2_feature_blocks(recipe: RecipeSpec | None) -> dict[str, object]:
@@ -1981,7 +1981,7 @@ def _feature_runtime_builder(recipe: RecipeSpec) -> str:
         return "raw_feature_panel"
     target_lag_block = _layer2_block_value(blocks, "target_lag_block")
     if block_set == "target_lags_only" or target_lag_block != "none":
-        return "autoreg_lagged_target"
+        return "target_lag_features"
 
     legacy_feature_builder = _feature_builder(recipe)
     if legacy_feature_builder in _RAW_PANEL_FEATURE_BUILDERS:
@@ -1993,8 +1993,8 @@ def _feature_runtime_name(recipe: RecipeSpec) -> str:
     runtime_builder = _feature_runtime_builder(recipe)
     if runtime_builder == "raw_feature_panel":
         return "raw_panel_v1"
-    if runtime_builder == "autoreg_lagged_target":
-        return "autoreg_lagged_target_v1"
+    if runtime_builder == "target_lag_features":
+        return "target_lag_features_v1"
     return f"{runtime_builder}_v1"
 
 
@@ -2077,8 +2077,8 @@ def _factor_runtime_training_spec(recipe: RecipeSpec) -> dict[str, object]:
 
 def _feature_block_combination(recipe: RecipeSpec | None) -> str:
     if recipe is None:
-        return "replace_with_blocks"
-    return _layer2_block_value(_layer2_feature_blocks(recipe), "feature_block_combination", "replace_with_blocks")
+        return "replace_with_selected_blocks"
+    return _layer2_block_value(_layer2_feature_blocks(recipe), "feature_block_combination", "replace_with_selected_blocks")
 
 
 def _factor_rotation_active_semantic(recipe: RecipeSpec | None) -> str:
@@ -2238,9 +2238,9 @@ def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe
             f"model_family={model_family!r} requires fred_sd_mixed_frequency_representation "
             "to be 'native_frequency_block_payload' or 'mixed_frequency_model_adapter'"
         )
-    if feature_runtime_builder == "autoreg_lagged_target":
+    if feature_runtime_builder == "target_lag_features":
         if is_custom_model(model_family):
-            return f"custom_model:{model_family}:autoreg_lagged_target_v0"
+            return f"custom_model:{model_family}:target_lag_features_v0"
         return {
             "ar": "ar_bic_autoreg_v0",
             "ols": "ols_autoreg_v0",
@@ -2267,7 +2267,7 @@ def _model_executor_name(model_family: str, feature_runtime_builder: str, recipe
             "factor_augmented_linear": "factor_augmented_linear_autoreg_v0",
             "quantile_linear": "quantile_linear_autoreg_v0",
         }[model_family]
-    if feature_runtime_builder in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
+    if feature_runtime_builder in {"raw_feature_panel", "raw_predictors_only", "pca_factor_features", "factors_plus_target_lags"}:
         if is_custom_model(model_family):
             return f"custom_model:{model_family}:raw_feature_panel_v0"
         return {
@@ -3059,7 +3059,7 @@ def _get_model_executor(recipe: RecipeSpec):
     model_family = _model_family(recipe)
     feature_runtime_builder = _feature_runtime_builder(recipe)
     _validate_fred_sd_mixed_frequency_model_route(recipe)
-    if is_custom_model(model_family) and feature_runtime_builder == "autoreg_lagged_target":
+    if is_custom_model(model_family) and feature_runtime_builder == "target_lag_features":
         return _run_custom_autoreg_executor
     if is_custom_model(model_family) and feature_runtime_builder == "raw_feature_panel":
         return _run_custom_raw_panel_executor
@@ -3075,7 +3075,7 @@ def _get_model_executor(recipe: RecipeSpec):
         and _fred_sd_mixed_frequency_representation_policy(recipe) in _FRED_SD_NATIVE_FREQUENCY_BLOCK_POLICIES
     ):
         return _run_midasr_raw_panel_executor
-    if feature_runtime_builder == "autoreg_lagged_target":
+    if feature_runtime_builder == "target_lag_features":
         dispatch = {
             "ar": _run_ar_model_executor,
             "ols": _run_ols_autoreg_executor,
@@ -3107,7 +3107,7 @@ def _get_model_executor(recipe: RecipeSpec):
         }
         if model_family in dispatch:
             return dispatch[model_family]
-    if feature_runtime_builder in {"raw_feature_panel", "raw_X_only", "factor_pca", "factors_plus_AR"}:
+    if feature_runtime_builder in {"raw_feature_panel", "raw_predictors_only", "pca_factor_features", "factors_plus_target_lags"}:
         dispatch = {
             "ols": _run_ols_raw_panel_executor,
             "ridge": _run_ridge_raw_panel_executor,
@@ -3423,7 +3423,7 @@ def _build_target_lag_representation(
         block_order=("target_lag",),
         block_roles={name: "target_lag" for name in feature_names},
         alignment={
-            "representation_runtime": "autoreg_lagged_target",
+            "representation_runtime": "target_lag_features",
             "lag_order": int(lag_order),
             "target_lag_timing": "recursive_target_history_reversed_most_recent_first",
         },
@@ -3484,7 +3484,7 @@ def _raw_panel_columns(frame: pd.DataFrame, target: str, *, predictor_family: st
     - ``all_macro_vars`` (default) : every column except the target.
     - ``target_lags_only``         : empty predictor set — raw panel degrades to target-lag-only; compiler guards already tie this value to the autoregressive feature runtime, so this branch should not normally be reached.
     - ``category_based``           : user supplies a mapping (spec['predictor_category_columns'][spec['predictor_category']]).
-    - ``factor_only``              : columns whose name starts with 'F_' (convention for factor outputs of factor_pca / factor_augmented_linear builders).
+    - ``factor_only``              : columns whose name starts with 'F_' (convention for factor outputs of pca_factor_features / factor_augmented_linear builders).
     - ``explicit_variable_list``           : spec['handpicked_columns'] list.
     """
     spec = dict(spec or {})
@@ -3643,9 +3643,9 @@ def _apply_x_lag_creation(
     contract: PreprocessContract,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     policy = contract.x_lag_creation
-    if policy == "no_x_lags":
+    if policy == "no_predictor_lags":
         return X_train, X_pred
-    if policy == "fixed_x_lags":
+    if policy == "fixed_predictor_lags":
         return _fixed_x_lag_frame(X_train), _fixed_x_lag_frame(X_pred)
     raise ExecutionError(f"x_lag_creation {policy!r} is not executable in current runtime slice")
 
@@ -3670,23 +3670,23 @@ def _x_lag_creation_for_feature_names(recipe: RecipeSpec) -> str:
         runtime_bridge = block.get("runtime_bridge", {})
         if isinstance(runtime_bridge, dict) and runtime_bridge.get("x_lag_creation") is not None:
             return str(runtime_bridge["x_lag_creation"])
-        if block.get("value") == "fixed_x_lags":
-            return "fixed_x_lags"
+        if block.get("value") == "fixed_predictor_lags":
+            return "fixed_predictor_lags"
         if block.get("value") == "none":
-            return "no_x_lags"
+            return "no_predictor_lags"
     contract = getattr(recipe, "preprocess_contract", None)
     if contract is not None:
-        return str(getattr(contract, "x_lag_creation", "no_x_lags"))
-    return "no_x_lags"
+        return str(getattr(contract, "x_lag_creation", "no_predictor_lags"))
+    return "no_predictor_lags"
 
 
 def _x_lag_creation_from_feature_block(value: str | None, fallback: str) -> str:
     if value is None:
         return fallback
     if value == "none":
-        return "no_x_lags"
-    if value == "fixed_x_lags":
-        return "fixed_x_lags"
+        return "no_predictor_lags"
+    if value == "fixed_predictor_lags":
+        return "fixed_predictor_lags"
     raise ExecutionError(f"x_lag_feature_block {value!r} is not executable in current runtime slice")
 
 
@@ -3760,7 +3760,7 @@ def _apply_feature_selection_policy(
         corrs = X_train.apply(lambda col: abs(pd.Series(col).corr(pd.Series(y_train))), axis=0).fillna(0.0)
         keep = corrs.sort_values(ascending=False).head(max(1, min(10, len(corrs)))).index.tolist()
         return X_train[keep].copy(), X_pred[keep].copy()
-    if policy == "lasso_select":
+    if policy == "lasso_selection":
         model = Lasso(alpha=1e-3, max_iter=10000)
         model.fit(X_train.to_numpy(dtype=float), y_train)
         coef = np.abs(model.coef_)
@@ -4030,7 +4030,7 @@ def _apply_raw_panel_preprocessing(
                 contract.dimensionality_reduction_policy != "none"
                 and feature_selection_semantics == "select_after_factor"
             )
-            or feature_selection_semantics == "select_after_custom_blocks"
+            or feature_selection_semantics == "select_after_custom_feature_blocks"
         )
     ):
         X_train, X_pred = _apply_feature_selection_policy(
@@ -4211,16 +4211,16 @@ def _local_temporal_factor_features(source: pd.DataFrame) -> pd.DataFrame:
 
 def _custom_feature_block_name(recipe: RecipeSpec, block_kind: str, axis_value: str) -> str:
     spec = dict(getattr(recipe, "data_task_spec", {}) or {})
-    custom_blocks = spec.get("custom_feature_blocks", {})
-    if not isinstance(custom_blocks, Mapping):
-        custom_blocks = {}
+    custom_feature_blocks = spec.get("custom_feature_blocks", {})
+    if not isinstance(custom_feature_blocks, Mapping):
+        custom_feature_blocks = {}
     for key in (
         block_kind,
         f"{block_kind}_feature_block",
         f"custom_{block_kind}_feature_block",
         f"custom_{block_kind}_block",
     ):
-        value = custom_blocks.get(key)
+        value = custom_feature_blocks.get(key)
         if value:
             return str(value)
     for key in (
@@ -4352,19 +4352,19 @@ def _apply_custom_feature_block(
 
 def _custom_feature_combiner_name(recipe: RecipeSpec) -> str:
     spec = dict(getattr(recipe, "data_task_spec", {}) or {})
-    custom_blocks = spec.get("custom_feature_blocks", {})
-    if not isinstance(custom_blocks, Mapping):
-        custom_blocks = {}
-    for key in ("combiner", "feature_combiner", "custom_combiner", "custom_feature_combiner"):
-        value = custom_blocks.get(key)
+    custom_feature_blocks = spec.get("custom_feature_blocks", {})
+    if not isinstance(custom_feature_blocks, Mapping):
+        custom_feature_blocks = {}
+    for key in ("combiner", "feature_combiner", "custom_feature_combiner", "custom_feature_combiner"):
+        value = custom_feature_blocks.get(key)
         if value:
             return str(value)
-    for key in ("custom_feature_combiner", "custom_combiner", "custom_feature_block_combiner"):
+    for key in ("custom_feature_combiner", "custom_feature_combiner", "custom_feature_block_combiner"):
         value = spec.get(key)
         if value:
             return str(value)
     raise ExecutionError(
-        "feature_block_combination='custom_combiner' requires "
+        "feature_block_combination='custom_feature_combiner' requires "
         "data_task_spec['custom_feature_combiner'] or data_task_spec['custom_feature_blocks']['combiner']"
     )
 
@@ -4593,7 +4593,7 @@ def _apply_rotation_feature_block(
     pred_idx: int,
     rotation_feature_block: str,
     marx_max_lag: int | None = None,
-    feature_block_combination: str = "replace_with_blocks",
+    feature_block_combination: str = "replace_with_selected_blocks",
     fit_state_sink: list[dict[str, object]] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if rotation_feature_block == "none":
@@ -4619,7 +4619,7 @@ def _apply_rotation_feature_block(
         rotated = _build_marx_rotation_frame(source, max_lag=int(marx_max_lag))
         rotated_train = rotated.loc[X_train.index].copy()
         rotated_pred = rotated.loc[X_pred.index].copy()
-        if feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}:
+        if feature_block_combination in {"append_to_base_predictors", "concatenate_named_blocks"}:
             overlap = set(map(str, X_train.columns)) & set(map(str, rotated_train.columns))
             if overlap:
                 raise ExecutionError(f"MARX rotation produced duplicate feature names while appending: {sorted(overlap)}")
@@ -4627,7 +4627,7 @@ def _apply_rotation_feature_block(
                 pd.concat([X_train.copy(), rotated_train], axis=1),
                 pd.concat([X_pred.copy(), rotated_pred], axis=1),
             )
-        if feature_block_combination != "replace_with_blocks":
+        if feature_block_combination != "replace_with_selected_blocks":
             raise ExecutionError(
                 f"feature_block_combination={feature_block_combination!r} is not supported with marx_rotation"
             )
@@ -4660,7 +4660,7 @@ def _condition_raw_history_before_factor(
     X_train, X_history = _apply_scaling_policy(X_train, X_history, contract)
     if not (
         feature_selection_policy != "none"
-        and feature_selection_semantics in {"select_after_factor", "select_after_custom_blocks"}
+        and feature_selection_semantics in {"select_after_factor", "select_after_custom_feature_blocks"}
     ):
         X_train, X_history = _apply_feature_selection_policy(
             X_train,
@@ -4755,8 +4755,8 @@ def _apply_factor_then_rotation_feature_block(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if active_semantic not in {"factor_then_marx", "factor_then_maf"}:
         return X_train, X_pred
-    if str(contract.x_lag_creation) != "no_x_lags":
-        raise ExecutionError("factor-then-rotation requires x_lag_creation='no_x_lags'")
+    if str(contract.x_lag_creation) != "no_predictor_lags":
+        raise ExecutionError("factor-then-rotation requires x_lag_creation='no_predictor_lags'")
     factor_policy = str(contract.dimensionality_reduction_policy)
     if factor_policy not in {"pca", "static_factor"}:
         raise ExecutionError(
@@ -4844,7 +4844,7 @@ def _raw_panel_feature_names(
         spec=_layer2_runtime_spec(recipe),
     )
     base_names = tuple(names)
-    if _x_lag_creation_for_feature_names(recipe) == "fixed_x_lags":
+    if _x_lag_creation_for_feature_names(recipe) == "fixed_predictor_lags":
         names.extend(_fixed_x_lag_public_feature_names(base_names))
     temporal_feature_block = _temporal_feature_block(recipe)
     if temporal_feature_block == "moving_average_features":
@@ -4871,7 +4871,7 @@ def _raw_panel_feature_names(
             for column in base_names
             for rotation_order in range(1, int(marx_max_lag) + 1)
         ]
-        if _feature_block_combination(recipe) in {"append_to_base_x", "concatenate_named_blocks"}:
+        if _feature_block_combination(recipe) in {"append_to_base_predictors", "concatenate_named_blocks"}:
             names.extend(marx_names)
         else:
             names = marx_names
@@ -5068,7 +5068,7 @@ def _raw_panel_block_order(
         order.append("factor")
     else:
         order.append("base_x")
-        if _x_lag_creation_for_feature_names(recipe) == "fixed_x_lags":
+        if _x_lag_creation_for_feature_names(recipe) == "fixed_predictor_lags":
             order.append("x_lag")
         if _temporal_feature_block(recipe) != "none":
             order.append("temporal")
@@ -5105,7 +5105,7 @@ def _raw_panel_alignment(
     }
     if _feature_runtime_builder(recipe) == "raw_feature_panel" and _target_lag_feature_block(recipe) == "fixed_target_lags":
         alignment["target_lag_timing"] = "target_lag_1_equals_target_observed_at_forecast_origin"
-    if _x_lag_creation_for_feature_names(recipe) == "fixed_x_lags":
+    if _x_lag_creation_for_feature_names(recipe) == "fixed_predictor_lags":
         alignment["x_lag_timing"] = "origin_aligned_trailing_x_history"
     if _temporal_feature_block(recipe) != "none":
         alignment["temporal_timing"] = "origin_aligned_trailing_window"
@@ -5244,7 +5244,7 @@ def _build_raw_panel_training_data(
     target_lag_order: int | None = None,
     target_lag_feature_names: Sequence[str] | None = None,
     marx_max_lag: int | None = None,
-    feature_block_combination: str = "replace_with_blocks",
+    feature_block_combination: str = "replace_with_selected_blocks",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     predictors = _raw_panel_columns(frame, target, predictor_family=predictor_family, spec=spec)
     if origin_idx - horizon < start_idx:
@@ -5297,15 +5297,15 @@ def _build_raw_panel_training_data(
         factor_feature_block,
         fallback=str(contract.dimensionality_reduction_policy),
     )
-    marx_append_mode = feature_block_combination in {"append_to_base_x", "concatenate_named_blocks"}
+    marx_append_mode = feature_block_combination in {"append_to_base_predictors", "concatenate_named_blocks"}
     if rotation_feature_block == "marx_rotation" and temporal_feature_block != "none" and not marx_append_mode:
         raise ExecutionError(
-            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_x' "
+            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_predictors' "
             "or 'concatenate_named_blocks' when combined with temporal_feature_block"
         )
-    if rotation_feature_block == "marx_rotation" and x_lag_creation != "no_x_lags" and not marx_append_mode:
+    if rotation_feature_block == "marx_rotation" and x_lag_creation != "no_predictor_lags" and not marx_append_mode:
         raise ExecutionError(
-            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_x' "
+            "rotation_feature_block='marx_rotation' requires feature_block_combination='append_to_base_predictors' "
             "or 'concatenate_named_blocks' when combined with x_lag_creation"
         )
     factor_rotation_semantic = _factor_rotation_active_semantic(recipe)
@@ -5319,15 +5319,15 @@ def _build_raw_panel_training_data(
             raise ExecutionError("factor-then-rotation cannot yet be combined with temporal_feature_block")
         if level_feature_block != "none":
             raise ExecutionError("factor-then-rotation cannot yet be combined with level_feature_block")
-        if x_lag_creation != "no_x_lags":
+        if x_lag_creation != "no_predictor_lags":
             raise ExecutionError("factor-then-rotation currently requires x_lag_feature_block='none'")
     preprocessing_contract = contract
-    if x_lag_creation == "fixed_x_lags":
+    if x_lag_creation == "fixed_predictor_lags":
         lag_source = frame[predictors].iloc[start_idx : pred_idx + 1].astype(float).copy()
         lagged_source = _fixed_x_lag_frame(lag_source)
         X_train = lagged_source.loc[X_train.index].copy()
         X_pred = lagged_source.loc[X_pred.index].copy()
-        preprocessing_contract = replace(contract, x_lag_creation="no_x_lags")
+        preprocessing_contract = replace(contract, x_lag_creation="no_predictor_lags")
     if dimensionality_reduction_policy != preprocessing_contract.dimensionality_reduction_policy:
         preprocessing_contract = replace(
             preprocessing_contract,
@@ -5510,7 +5510,7 @@ def _build_raw_panel_training_data(
             )
         return names
 
-    if feature_block_combination == "custom_combiner":
+    if feature_block_combination == "custom_feature_combiner":
         candidate_feature_names = _candidate_feature_names_for_current_matrix()
         X_train_arr, X_pred_arr, custom_combined_feature_names = _apply_custom_feature_combiner(
             X_train_arr,
@@ -5523,7 +5523,7 @@ def _build_raw_panel_training_data(
             horizon=horizon,
             fit_state_sink=fit_state_sink,
         )
-        if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_blocks":
+        if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_feature_blocks":
             X_train_arr, X_pred_arr, _selected_custom_names = _apply_custom_final_z_selection(
                 X_train_arr,
                 y_train,
@@ -5534,7 +5534,7 @@ def _build_raw_panel_training_data(
             )
         return X_train_arr, y_train, X_pred_arr
 
-    if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_blocks":
+    if feature_selection_policy != "none" and feature_selection_semantics == "select_after_custom_feature_blocks":
         candidate_feature_names = _candidate_feature_names_for_current_matrix()
         X_train_arr, X_pred_arr, _selected_custom_names = _apply_custom_final_z_selection(
             X_train_arr,
@@ -8579,7 +8579,7 @@ def _importance_feature_names(recipe: RecipeSpec, raw_frame: pd.DataFrame, targe
             contract,
         )
         return list(representation.feature_names), representation.Z_train, representation.y_train, representation.Z_pred
-    if feature_runtime_builder == "autoreg_lagged_target":
+    if feature_runtime_builder == "target_lag_features":
         train = target_series.iloc[start_idx: origin_idx + 1]
         representation = _build_target_lag_representation(train, recipe, default_prefix="lag")
         return list(representation.feature_names), representation.Z_train, representation.y_train, representation.Z_pred
@@ -8929,7 +8929,7 @@ def _build_predictions(
         )
     if (
         target_transformer_spec is not None
-        and feature_runtime_builder in {"raw_feature_panel", "raw_X_only"}
+        and feature_runtime_builder in {"raw_feature_panel", "raw_predictors_only"}
         and model_family not in _TARGET_TRANSFORMER_RAW_PANEL_MODELS
         and not is_custom_model(model_family)
     ):
@@ -9066,7 +9066,7 @@ def _build_predictions(
 
         def _step_model_train_window(step: int, start_idx: int, effective_origin_idx: int) -> pd.Series:
             assert path_step_target is not None
-            if feature_runtime_builder == "autoreg_lagged_target":
+            if feature_runtime_builder == "target_lag_features":
                 return path_step_target.iloc[start_idx + 1 : effective_origin_idx + 1].dropna()
             return path_step_target.iloc[start_idx : effective_origin_idx + 1]
 
