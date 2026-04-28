@@ -13,6 +13,7 @@ const els = {
   axisSearch: document.getElementById("axis-search"),
   axisList: document.getElementById("axis-list"),
   optionList: document.getElementById("option-list"),
+  axisExplainer: document.getElementById("axis-explainer"),
   axisTitle: document.getElementById("axis-title"),
   axisLayer: document.getElementById("axis-layer"),
   axisSelected: document.getElementById("axis-selected"),
@@ -148,6 +149,18 @@ function layerNumber(layer) {
   return match ? match[1] : "";
 }
 
+function orderedLayers() {
+  return Object.keys((state.data && state.data.tree_axes) || {});
+}
+
+function axesByLayer(axes) {
+  return axes.reduce((acc, axis) => {
+    if (!acc[axis.layer]) acc[axis.layer] = [];
+    acc[axis.layer].push(axis);
+    return acc;
+  }, {});
+}
+
 function setLayerFilter(layer) {
   state.layerFilter = layer;
   document.querySelectorAll("[data-layer]").forEach((item) => {
@@ -159,7 +172,16 @@ function setLayerFilter(layer) {
 function filteredAxes() {
   const q = state.axisFilter.trim().toLowerCase();
   return allAxes().filter((axis) => {
-    const text = `${axis.axis} ${axis.layer} ${axis.selected ?? ""}`.toLowerCase();
+    const selectedLabel = valueDisplayName(axis.axis, axis.selected);
+    const text = [
+      axis.axis,
+      axis.layer,
+      axis.selected ?? "",
+      axisDisplayName(axis),
+      axisQuestion(axis),
+      axisSummary(axis),
+      selectedLabel,
+    ].join(" ").toLowerCase();
     return axisMatchesLayer(axis) && (!q || text.includes(q));
   });
 }
@@ -205,15 +227,22 @@ function renderPathHeader() {
 function renderAxisList() {
   const axes = filteredAxes();
   els.axisList.innerHTML = axes
-    .map((axis) => {
+    .map((axis, idx) => {
       const disabled = axis.options.filter((option) => !option.enabled).length;
       const active = axis.axis === state.activeAxis ? " active" : "";
-      const edited = axis.edited ? " | edited" : "";
+      const edited = axis.edited ? `<span class="axis-edited">edited</span>` : "";
       const selectedLabel = valueDisplayName(axis.axis, axis.selected);
+      const summary = axisSummary(axis);
       return `
         <button type="button" class="axis-button${active}" data-axis="${escapeHtml(axis.axis)}">
-          <span class="axis-name">${escapeHtml(axisDisplayName(axis))}</span>
-          <span class="axis-meta">${escapeHtml(layerLabel(axis.layer))} | selected: ${escapeHtml(selectedLabel || "-")} | key: ${escapeHtml(axis.axis)} | disabled: ${disabled}${edited}</span>
+          <span class="axis-step">${idx + 1}</span>
+          <span class="axis-button-body">
+            <span class="axis-name">${escapeHtml(axisDisplayName(axis))}</span>
+            <span class="axis-question">${escapeHtml(axisQuestion(axis))}</span>
+            <span class="axis-meta">selected: ${escapeHtml(selectedLabel || "-")} | disabled options: ${disabled}</span>
+            <span class="axis-summary">${escapeHtml(summary)}</span>
+            ${edited}
+          </span>
         </button>
       `;
     })
@@ -226,12 +255,31 @@ function renderOptions() {
     els.axisTitle.textContent = "No axis";
     els.axisLayer.textContent = "No matching axes";
     els.axisSelected.textContent = "selected: -";
+    els.axisExplainer.innerHTML = `<p class="muted">Select a layer step to see its decision rule and choices.</p>`;
     els.optionList.innerHTML = "";
     return;
   }
+  const layerAxes = allAxes().filter((item) => item.layer === axis.layer);
+  const stepIndex = Math.max(0, layerAxes.findIndex((item) => item.axis === axis.axis));
+  const presentation = axisPresentation(axis.axis);
+  const selectedLabel = valueDisplayName(axis.axis, axis.selected) || "-";
+  const selectedSummary = valueSummary(axis.axis, axis.selected);
+  const docs = docsLink(axis.axis);
   els.axisTitle.textContent = axisDisplayName(axis);
-  els.axisLayer.textContent = axisQuestion(axis);
-  els.axisSelected.textContent = `selected: ${valueDisplayName(axis.axis, axis.selected) || "-"}`;
+  els.axisLayer.textContent = `${layerLabel(axis.layer)} | step ${stepIndex + 1} of ${layerAxes.length}`;
+  els.axisSelected.textContent = `selected: ${selectedLabel}`;
+  els.axisExplainer.innerHTML = `
+    <p class="decision-question">${escapeHtml(axisQuestion(axis))}</p>
+    <p class="decision-summary">${escapeHtml(axisSummary(axis))}</p>
+    <div class="decision-meta">
+      <span><strong>Current selection:</strong> ${escapeHtml(selectedLabel)}</span>
+      <span><strong>YAML key:</strong> ${escapeHtml(axis.axis)}</span>
+      ${presentation.selection_kind ? `<span><strong>Selection type:</strong> ${escapeHtml(presentation.selection_kind)}</span>` : ""}
+    </div>
+    ${selectedSummary ? `<p class="decision-selected">${escapeHtml(selectedSummary)}</p>` : ""}
+    ${presentation.contract ? `<p class="decision-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</p>` : ""}
+    ${docs ? `<a class="decision-docs" href="${escapeHtml(docs)}">Open detailed docs</a>` : ""}
+  `;
   els.optionList.innerHTML = axis.options
     .map((option) => {
       const stateClass = option.enabled ? "enabled" : "disabled";
@@ -239,16 +287,18 @@ function renderOptions() {
       const reason = option.disabled_reason ? `<p class="reason">${escapeHtml(option.disabled_reason)}</p>` : "";
       const disabledAttr = option.enabled ? "" : " disabled";
       const summary = valueSummary(axis.axis, option.value);
+      const optionLabel = valueDisplayName(axis.axis, option.value);
       return `
         <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
-            <span>${escapeHtml(valueDisplayName(axis.axis, option.value))}</span>
+            <span>${escapeHtml(optionLabel)}</span>
             <span class="status">${escapeHtml(option.status)}</span>
           </div>
-          <div class="option-code">${escapeHtml(option.value)}</div>
+          <div class="option-code">YAML value: ${escapeHtml(option.value)}</div>
           ${summary ? `<p class="option-summary">${escapeHtml(summary)}</p>` : ""}
           ${reason}
-          <div class="effect">${escapeHtml(option.canonical_path_effect)}</div>
+          <div class="effect">Path records: ${escapeHtml(axisDisplayName(axis))} -> ${escapeHtml(optionLabel)}</div>
+          <div class="effect-code">${escapeHtml(option.canonical_path_effect)}</div>
         </button>
       `;
     })
@@ -261,25 +311,23 @@ function renderTreePath() {
     els.treePath.innerHTML = `<p class="muted">No path axes available.</p>`;
     return;
   }
-  const axesByLayer = axes.reduce((acc, axis) => {
-    if (!acc[axis.layer]) acc[axis.layer] = [];
-    acc[axis.layer].push(axis);
-    return acc;
-  }, {});
-  const layers = Object.keys(state.data.tree_axes || {});
+  const groupedAxes = axesByLayer(axes);
+  const layers = orderedLayers();
+  const currentLayerIndex = Math.max(0, layers.indexOf(state.layerFilter));
   els.treePath.innerHTML = `
-    <div class="path-flow" aria-label="Full tree path">
-      ${layers.map((layer, layerIdx) => {
-        const layerAxes = axesByLayer[layer] || [];
+    <div class="path-flow" aria-label="Selected path so far">
+      ${layers.slice(0, currentLayerIndex + 1).map((layer) => {
+        const layerAxes = groupedAxes[layer] || [];
+        const activeAxisIndex = Math.max(0, layerAxes.findIndex((axis) => axis.axis === state.activeAxis));
+        const visibleAxes = layer === state.layerFilter ? layerAxes.slice(0, activeAxisIndex + 1) : layerAxes;
         const activeLayer = layer === state.layerFilter ? " active" : "";
         const blockedCount = layerAxes.reduce((count, axis) => {
           const selectedOption = axis.options.find((option) => option.value === axis.selected);
           return count + (selectedOption && selectedOption.disabled_reason ? 1 : 0);
         }, 0);
         const editedCount = layerAxes.filter((axis) => axis.edited).length;
-        const compact = layer !== state.layerFilter ? " compact" : "";
         return `
-          <section class="path-layer${activeLayer}${compact}" data-tree-layer="${escapeHtml(layer)}" tabindex="0" role="button">
+          <section class="path-layer${activeLayer}" data-tree-layer="${escapeHtml(layer)}" tabindex="0" role="button">
             <div class="path-layer-marker">${escapeHtml(layerNumber(layer))}</div>
             <div class="path-layer-card">
               <div class="path-layer-head">
@@ -288,13 +336,13 @@ function renderTreePath() {
                   <h3>${escapeHtml((state.data.layer_labels && state.data.layer_labels[layer]) || layerLabel(layer))}</h3>
                 </div>
                 <div class="path-layer-stats">
-                  <span>${layerAxes.length} axes</span>
+                  <span>${visibleAxes.length}/${layerAxes.length} steps shown</span>
                   ${blockedCount ? `<span class="danger-chip">${blockedCount} blocked</span>` : ""}
                   ${editedCount ? `<span class="path-edited">${editedCount} edited</span>` : ""}
                 </div>
               </div>
               <div class="path-axis-grid">
-                ${layerAxes.map((axis, axisIdx) => renderPathAxis(axis, axisIdx, layer === state.layerFilter)).join("")}
+                ${visibleAxes.map((axis, axisIdx) => renderPathAxis(axis, axisIdx, axis.axis === state.activeAxis)).join("")}
               </div>
             </div>
           </section>
@@ -304,12 +352,9 @@ function renderTreePath() {
   `;
 }
 
-function renderPathAxis(axis, axisIdx, expanded) {
+function renderPathAxis(axis, axisIdx, current) {
   const selectedOption = axis.options.find((option) => option.value === axis.selected);
   const disabledReason = selectedOption && selectedOption.disabled_reason;
-  const pathEffect = selectedOption && selectedOption.canonical_path_effect
-    ? selectedOption.canonical_path_effect
-    : `selected: ${axis.selected ?? "-"}`;
   const blocked = disabledReason ? " blocked" : "";
   const active = axis.axis === state.activeAxis ? " active" : "";
   const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
@@ -319,13 +364,13 @@ function renderPathAxis(axis, axisIdx, expanded) {
   const presentation = axisPresentation(axis.axis);
   const contract = presentation.contract ? `<span class="path-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</span>` : "";
   const status = selectedOption && selectedOption.status ? `<span class="status">${escapeHtml(selectedOption.status)}</span>` : "";
-  const detail = expanded
+  const detail = current
     ? `
       <span class="path-question">${escapeHtml(axisQuestion(axis))}</span>
       ${status}
       <span class="path-summary">${escapeHtml(selectedSummary || axisSummary(axis))}</span>
       ${contract}
-      <span class="path-effect">YAML: ${escapeHtml(pathEffect)}</span>
+      <span class="path-effect">Current decision step</span>
       ${docs ? `<a class="path-docs" href="${escapeHtml(docs)}">Detailed docs</a>` : ""}
       ${disabledReason ? `<span class="path-reason">${escapeHtml(disabledReason)}</span>` : ""}
     `
@@ -336,7 +381,7 @@ function renderPathAxis(axis, axisIdx, expanded) {
       <span class="path-body">
         <span class="path-axis">${escapeHtml(axisDisplayName(axis))}</span>
         <span class="path-value">${escapeHtml(valueLabel || "-")}</span>
-        <span class="path-raw">${escapeHtml(axis.axis)} = ${escapeHtml(axis.selected ?? "-")}</span>
+        <span class="path-raw">YAML: ${escapeHtml(axis.axis)} = ${escapeHtml(axis.selected ?? "-")}</span>
         ${edited}
         ${detail}
       </span>

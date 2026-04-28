@@ -53,10 +53,10 @@
     </nav>
 
     <main class="layout">
-      <section class="panel path-overview" aria-label="Recipe path overview">
+      <section class="panel path-overview" aria-label="Current navigator state">
         <div class="path-toolbar">
           <div class="recipe-picker">
-            <label for="sample-select">Recipe path</label>
+            <label for="sample-select">Starting recipe</label>
             <select id="sample-select"></select>
             <p id="path-source" class="source-note">sample: -</p>
             <div class="action-row">
@@ -66,7 +66,7 @@
             </div>
           </div>
           <div class="layer-context">
-            <p class="eyebrow" id="active-layer-kicker">Selected layer</p>
+            <p class="eyebrow" id="active-layer-kicker">Active layer</p>
             <h2 id="active-layer-title">Layer</h2>
             <p id="active-layer-description" class="source-note"></p>
           </div>
@@ -85,12 +85,19 @@
             </div>
           </div>
         </div>
+        <div class="path-record-heading">
+          <div>
+            <p class="eyebrow">Path so far</p>
+            <h2>Selected Decisions</h2>
+          </div>
+          <p class="source-note">Only completed layers and the current decision step are shown. Later choices stay hidden until that layer or step is active.</p>
+        </div>
         <div id="tree-path" class="tree-path"></div>
       </section>
 
       <section class="panel controls" aria-label="Navigator controls">
-        <label for="axis-search">Filter axes</label>
-        <input id="axis-search" type="search" placeholder="model, tcode, forecast..." />
+        <label for="axis-search">Current layer steps</label>
+        <input id="axis-search" type="search" placeholder="search within this layer..." />
 
         <div id="axis-list" class="axis-list"></div>
       </section>
@@ -103,6 +110,7 @@
           </div>
           <span id="axis-selected" class="pill">selected: -</span>
         </div>
+        <div id="axis-explainer" class="axis-explainer"></div>
         <div id="option-list" class="option-list"></div>
       </section>
 
