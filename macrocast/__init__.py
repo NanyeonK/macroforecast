@@ -13,7 +13,7 @@ from typing import Any
 __version__ = "0.0.0+local"
 
 _LAZY_EXPORTS = {
-    "macrocast_single_run": ".start",
+    "macrocast_preview": ".start",
     "NAVIGATOR_SCHEMA_VERSION": ".navigator",
     "REPLICATION_LIBRARY_VERSION": ".navigator",
     "build_navigation_view": ".navigator",
@@ -186,7 +186,7 @@ _LAZY_EXPORTS = {
 }
 
 __all__ = [
-    "macrocast_single_run",
+    "macrocast_preview",
     "NAVIGATOR_SCHEMA_VERSION",
     "REPLICATION_LIBRARY_VERSION",
     "build_navigation_view",
