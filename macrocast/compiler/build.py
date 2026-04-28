@@ -287,7 +287,6 @@ def _rule_experiment_unit_default(
     task = (
         _sv("target_structure")
         or leaf_config.get("target_structure")
-        or leaf_config.get("task")
         or "single_target"
     )
     model_sel = selection_map.get("model_family")
@@ -378,7 +377,7 @@ def _ensure_unique_axis_selections(selections: tuple[AxisSelection, ...]) -> Non
             previous = seen[selection.axis_name]
             if previous.selected_values != selection.selected_values or previous.selection_mode != selection.selection_mode or previous.layer != selection.layer:
                 raise CompileValidationError(
-                    f"axis {selection.axis_name!r} was specified more than once through canonical/legacy aliases"
+                    f"axis {selection.axis_name!r} was specified more than once with conflicting values"
                 )
         else:
             seen[selection.axis_name] = selection
@@ -3036,7 +3035,7 @@ def _build_stage0_and_recipe(
         "expanding": "expanding_window_oos",
         "rolling": "rolling_window_oos",
     }[framework]
-    info_set_token = {
+    design_information_set = {
         "final_revised_data": "revised_monthly",
         "pseudo_oos_on_revised_data": "pseudo_oos_on_revised_data",
     }.get(information_set_type, information_set_type)
@@ -3046,7 +3045,7 @@ def _build_stage0_and_recipe(
         experiment_unit=experiment_unit if experiment_unit_explicit else None,
         fixed_design={
             "dataset_adapter": dataset,
-            "information_set": info_set_token,
+            "information_set": design_information_set,
             "sample_split": sample_split,
             "benchmark": benchmark,
             "evaluation_protocol": "point_forecast_core",
@@ -3767,8 +3766,6 @@ def _build_wrapper_handoff(
 
 
 def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
-    from macrocast.compiler.migrations import migrate_legacy_stat_test
-    recipe_dict = migrate_legacy_stat_test(recipe_dict)
     if not recipe_dict.get("recipe_id"):
         raise CompileValidationError("recipe_id is required")
     selections = _build_axis_selections(recipe_dict)
@@ -3879,7 +3876,6 @@ def _output_spec(selection_map):
 
 def _stat_test_spec(selection_map: dict[str, AxisSelection]) -> dict[str, str]:
     raw = {
-        "stat_test": _selection_value(selection_map, "stat_test", default="none"),
         "test_scope": _selection_value(selection_map, "test_scope", default="per_target"),
         "dependence_correction": _selection_value(selection_map, "dependence_correction", default="none"),
         "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),

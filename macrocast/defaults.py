@@ -31,7 +31,6 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "feature_builder": "target_lag_features",
     "model_family": "ar",
     "primary_metric": "msfe",
-    "stat_test": "none",
     "importance_method": "none",
     "reproducibility_mode": "seeded_reproducible",
     "failure_policy": "fail_fast",
@@ -144,7 +143,6 @@ def build_default_recipe_dict(
     model_family: str = "ar",
     model_families: Iterable[str] | None = None,
     primary_metric: str = "msfe",
-    stat_test: str = "none",
     importance_method: str = "none",
     reproducibility_mode: str = "seeded_reproducible",
     failure_policy: str = "fail_fast",
@@ -237,7 +235,7 @@ def build_default_recipe_dict(
                     "benchmark_config": resolved_benchmark_config,
                 }
             },
-            "6_stat_tests": {"fixed_axes": {"stat_test": stat_test}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": importance_method}},
         },
     }

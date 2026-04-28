@@ -90,7 +90,7 @@ Per-horizon evaluation metrics:
 | `mae` | Mean absolute error | Robust to outliers |
 | `mape` | Mean absolute percentage error | Scale-independent |
 | `relative_msfe` | MSFE_model / MSFE_benchmark | < 1 means model beats benchmark |
-| `oos_r2` | 1 - relative_MSFE | > 0 means model beats benchmark |
+| `oos_r2` | 1 - relative MSFE | > 0 means model beats benchmark |
 | `csfe` | Cumulative squared forecast error | Time-aggregated loss |
 | `benchmark_win_rate` | Fraction of dates where model < benchmark | Higher is better |
 | `directional_accuracy` | Fraction of correct direction forecasts | Higher is better |

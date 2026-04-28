@@ -109,10 +109,10 @@ blocked. Layers 3+ are outside this quick-reference page.
 | Axis | Op values | Check / observe |
 |---|---|---|
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | schema loaded/merged → `raw_result.data.columns`; standalone FRED-SD requires explicit `frequency` |
-| `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | which loader fires (`_load_raw_for_recipe`), `manifest.raw_artifact`; legacy `dataset_source` is accepted as an alias |
+| `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | which loader fires (`_load_raw_for_recipe`), `manifest.raw_artifact`; this is the sole source-dispatch axis |
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
-| `target_structure` | `single_target`, `multi_target` | target cautoregressive_diffusion_indexnality; legacy `task` is accepted as an alias; Layer 0 derives `experiment_unit` from this plus sweep shape |
+| `target_structure` | `single_target`, `multi_target` | target cardinality; Layer 0 derives `experiment_unit` from this plus sweep shape |
 | `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` | FRED-SD selected-panel native-frequency gate; strict modes consume `fred_sd_frequency_report_v1` before Layer 2 |
 | `fred_sd_state_group` | `all_states`, Census regions/divisions, `contiguous_48_plus_dc`, `custom_state_group` | FRED-SD recipe-level state bundle; non-default values resolve to `state_selection=selected_states` before loading |
 | `fred_sd_variable_group` | `all_sd_variables`, economic/t-code-review groups, `custom_sd_variable_group` | FRED-SD recipe-level workbook-variable bundle; non-default values resolve to `sd_variable_selection=selected_sd_variables` before loading |

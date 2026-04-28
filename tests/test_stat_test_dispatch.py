@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from macrocast.execution.stat_tests import AXIS_NAMES, LEGACY_TO_NEW, dispatch_stat_tests
+from macrocast.execution.stat_tests import AXIS_NAMES, dispatch_stat_tests
 
 
 @pytest.fixture
@@ -101,7 +101,7 @@ def test_test_scope_axis_records_scope_without_running_test(
 def test_legacy_stat_test_key_auto_routes(predictions: pd.DataFrame) -> None:
     result = dispatch_stat_tests(
         predictions=predictions,
-        stat_test_spec={"stat_test": "dm"},
+        stat_test_spec={"equal_predictive": "dm"},
         dependence_correction="none",
     )
     assert "equal_predictive" in result
@@ -130,17 +130,6 @@ def test_determinism(predictions: pd.DataFrame) -> None:
         assert r1[k].get("statistic") == r2[k].get("statistic")
         assert r1[k].get("p_value") == r2[k].get("p_value")
 
-
-def test_legacy_to_new_covers_all_20_operational() -> None:
-    expected = {
-        "dm", "dm_hln", "dm_modified",
-        "cw", "enc_new", "mse_f", "mse_t",
-        "cpa", "rossi", "rolling_dm",
-        "reality_check", "spa", "mcs",
-        "pesaran_timmermann", "binomial_hit",
-        "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "full_residual_diagnostics",
-    }
-    assert set(LEGACY_TO_NEW.keys()) == expected
 
 
 def test_axis_names_contains_eight_entries() -> None:

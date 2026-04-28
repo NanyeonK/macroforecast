@@ -46,7 +46,7 @@ def test_macrocast_single_run_wrapper_route_blocks_run_manifest(tmp_path: Path) 
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -152,7 +152,7 @@ def test_macrocast_single_run_interactive_stat_test_follows_manifest_mode(monkey
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_single_run(max_steps=17)
-    assert out["completed_choices"][-1] == {"key": "stat_test", "value": "dm"}
+    assert out["completed_choices"][-1] == {"key": "equal_predictive", "value": "dm"}
     assert out["current_choice"]["key"] == "importance_method"
 
 

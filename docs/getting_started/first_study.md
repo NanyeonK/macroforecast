@@ -91,7 +91,7 @@ path:
 
   6_stat_tests:
     fixed_axes:
-      stat_test: dm
+      equal_predictive: dm
 
   7_importance:
     fixed_axes:
@@ -139,7 +139,7 @@ print(pred.groupby("horizon")[["squared_error", "benchmark_squared_error"]].mean
 # Metrics
 metrics = json.load(open(f"{art}/metrics.json"))
 for h, m in metrics["metrics_by_horizon"].items():
-    print(f"{h}: MSFE={m['msfe']:.4f}, relative_MSFE={m['relative_msfe']:.4f}, OOS_R2={m['oos_r2']:.4f}")
+    print(f"{h}: MSFE={m['msfe']:.4f}, relative MSFE={m['relative_msfe']:.4f}, OOS_R2={m['oos_r2']:.4f}")
 
 # DM test
 dm = json.load(open(f"{art}/stat_test_dm.json"))

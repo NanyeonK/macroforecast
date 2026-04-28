@@ -4,7 +4,7 @@ Covers:
 - training_start_rule=fixed_start + leaf_config.training_start_date (+ missing-date guard).
 - min_train_size axis dispatch via raw/windowing.py (5 rules).
 - oos_period=recession_only_oos / expansion_only_oos filters via NBER fixture.
-- overlap_handling=evaluate_with_hac compatibility gate (non-HAC stat_test blocked).
+- overlap_handling=evaluate_with_hac compatibility gate (non-HAC Layer 6 test blocked).
 """
 from __future__ import annotations
 
@@ -25,21 +25,25 @@ def _recipe(
     min_train_size: str | None = None,
     oos_period: str | None = None,
     overlap_handling: str | None = None,
-    stat_test: str = "none",
+    stat_test: str | None = None,
 ) -> dict:
     axes_1 = {
         "dataset": "fred_md",
-        "info_set": "final_revised_data",
-        "task": "single_target",
+        "information_set_type": "final_revised_data",
+        "target_structure": "single_target",
     }
     if training_start_rule is not None:
         axes_1["training_start_rule"] = training_start_rule
     if min_train_size is not None:
         axes_1["min_train_size"] = min_train_size
-    if overlap_handling is not None:
-        axes_1["overlap_handling"] = overlap_handling
 
     axes_4 = {"primary_metric": "msfe"}
+    axes_6: dict[str, str] = {}
+    if overlap_handling is not None:
+        axes_6["overlap_handling"] = overlap_handling
+    if stat_test and stat_test != "none":
+        stat_axis = {"dm": "equal_predictive", "dm_hln": "equal_predictive", "mse_f": "nested"}[stat_test]
+        axes_6[stat_axis] = stat_test
     if oos_period is not None:
         axes_4["oos_period"] = oos_period
 
@@ -79,7 +83,7 @@ def _recipe(
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5},
             }},
-            "6_stat_tests": {"fixed_axes": {"stat_test": stat_test}},
+            "6_stat_tests": {"fixed_axes": axes_6},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -212,10 +216,10 @@ def test_legacy_layer1_oos_period_still_compiles_as_compatibility_alias() -> Non
 def test_evaluate_with_hac_blocks_non_hac_stat_test() -> None:
     r = compile_recipe_dict(_recipe(
         overlap_handling="evaluate_with_hac",
-        stat_test="dm",
+        stat_test="mse_f",
     ))
     assert r.compiled.execution_status == "blocked_by_incompatibility"
-    assert any("evaluate_with_hac" in msg and "dm" in msg
+    assert any("evaluate_with_hac" in msg and "mse_f" in msg
                for msg in r.manifest.get("blocked_reasons", []))
 
 
@@ -227,7 +231,7 @@ def test_evaluate_with_hac_allows_dm_hln() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_evaluate_with_hac_allows_none_stat_test() -> None:
+def test_evaluate_with_hac_allows_no_stat_test() -> None:
     """No stat test -> no HAC needed; the gate should not block."""
     r = compile_recipe_dict(_recipe(
         overlap_handling="evaluate_with_hac",
@@ -236,7 +240,7 @@ def test_evaluate_with_hac_allows_none_stat_test() -> None:
     assert r.compiled.execution_status == "executable"
 
 
-def test_allow_overlap_default_with_any_stat_test() -> None:
+def test_allow_overlap_default_with_any_layer6_test() -> None:
     r = compile_recipe_dict(_recipe(stat_test="dm"))
     assert r.compiled.execution_status == "executable"
     assert r.manifest["data_task_spec"]["overlap_handling"] == "allow_overlap"

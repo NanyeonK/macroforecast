@@ -19,8 +19,8 @@ from macrocast.compiler.build import compile_recipe_dict
 def _recipe(**data_task_axes) -> dict:
     axes_1 = {
         "dataset": "fred_md",
-        "info_set": "final_revised_data",
-        "task": "single_target",
+        "information_set_type": "final_revised_data",
+        "target_structure": "single_target",
     }
     leaf_extras = data_task_axes.pop("_leaf", {})
     for k, v in data_task_axes.items():
@@ -61,7 +61,7 @@ def _recipe(**data_task_axes) -> dict:
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5},
             }},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

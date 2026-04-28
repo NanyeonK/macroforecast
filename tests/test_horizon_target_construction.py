@@ -42,8 +42,8 @@ OPERATIONAL_CONSTRUCTIONS = (
 def _recipe(construction: str, *, horizons: list[int] | None = None) -> dict:
     axes_1 = {
         "dataset": "fred_md",
-        "info_set": "final_revised_data",
-        "task": "single_target",
+        "information_set_type": "final_revised_data",
+        "target_structure": "single_target",
         "horizon_target_construction": construction,
     }
     return {
@@ -81,7 +81,7 @@ def _recipe(construction: str, *, horizons: list[int] | None = None) -> dict:
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5},
             }},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

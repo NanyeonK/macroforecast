@@ -79,7 +79,7 @@ def _layer2_level_block_recipe(
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -147,7 +147,7 @@ def _layer2_temporal_block_recipe(
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -159,7 +159,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Pat
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -173,7 +173,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_ridge(tmp_path: Pat
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }
@@ -198,7 +198,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_random_forest(tmp_p
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -212,7 +212,7 @@ def test_compile_minimal_importance_recipe_is_executable_for_random_forest(tmp_p
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }
@@ -236,7 +236,7 @@ def test_compile_stage7_split_importance_axis_is_manifested() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -250,7 +250,7 @@ def test_compile_stage7_split_importance_axis_is_manifested() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_shap": "tree_shap"}},
         },
     }
@@ -267,7 +267,7 @@ def test_compile_stage7_blocks_incompatible_split_importance_axis() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -281,7 +281,7 @@ def test_compile_stage7_blocks_incompatible_split_importance_axis() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_shap": "tree_shap"}},
         },
     }
@@ -307,7 +307,7 @@ def test_compile_recipe_rejects_incompatible_preprocessing_without_silent_fallba
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -321,7 +321,7 @@ def test_compile_recipe_rejects_incompatible_preprocessing_without_silent_fallba
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }
@@ -352,7 +352,7 @@ def test_canonical_layer_order_is_fixed() -> None:
 def test_axis_governance_table_marks_cw_operational() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
-    assert by_name["stat_test"]["current_status"]["cw"] == "operational"
+    assert by_name["nested"]["current_status"]["cw"] == "operational"
 
 
 def test_compile_cw_recipe_is_executable_and_writes_artifact(tmp_path: Path) -> None:
@@ -361,7 +361,7 @@ def test_compile_cw_recipe_is_executable_and_writes_artifact(tmp_path: Path) -> 
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -375,7 +375,7 @@ def test_compile_cw_recipe_is_executable_and_writes_artifact(tmp_path: Path) -> 
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "cw"}},
+            "6_stat_tests": {"fixed_axes": {"nested": "cw"}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -387,7 +387,7 @@ def test_compile_cw_recipe_is_executable_and_writes_artifact(tmp_path: Path) -> 
         local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
     )
     manifest = json.loads((Path(execution.artifact_dir) / "manifest.json").read_text())
-    assert manifest["stat_test_spec"]["stat_test"] == "cw"
+    assert "stat_test" not in manifest["stat_test_spec"]
     assert manifest["stat_test_spec"]["nested"] == "cw"
     assert manifest["stat_test_file"] == "stat_test_cw.json"
 
@@ -410,7 +410,7 @@ def test_compile_custom_benchmark_recipe_is_executable(tmp_path: Path) -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -424,7 +424,7 @@ def test_compile_custom_benchmark_recipe_is_executable(tmp_path: Path) -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "plugin_path": str(plugin_path), "callable_name": "custom_benchmark"}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -446,7 +446,7 @@ def test_compile_custom_benchmark_recipe_requires_plugin_contract() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -460,7 +460,7 @@ def test_compile_custom_benchmark_recipe_requires_plugin_contract() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -493,7 +493,7 @@ def test_compile_robust_scaling_recipe_is_executable(tmp_path: Path) -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -507,7 +507,7 @@ def test_compile_robust_scaling_recipe_is_executable(tmp_path: Path) -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -548,7 +548,7 @@ def test_compile_apply_official_tcode_then_train_only_extra_is_executable(tmp_pa
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -576,7 +576,7 @@ def test_compile_lasso_minimal_importance_recipe_is_executable(tmp_path: Path) -
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -590,7 +590,7 @@ def test_compile_lasso_minimal_importance_recipe_is_executable(tmp_path: Path) -
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }
@@ -614,7 +614,7 @@ def test_compile_wrapper_bundle_requires_wrapper_metadata() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "study_bundle"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -628,7 +628,7 @@ def test_compile_wrapper_bundle_requires_wrapper_metadata() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -642,7 +642,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "study_bundle"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -656,7 +656,7 @@ def test_compile_wrapper_bundle_emits_handoff_contract() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -679,7 +679,7 @@ def test_compile_multi_target_recipe_requires_targets() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "multi_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "multi_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -693,7 +693,7 @@ def test_compile_multi_target_recipe_requires_targets() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -707,7 +707,7 @@ def test_compile_multi_target_recipe_is_executable(tmp_path: Path) -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "multi_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "multi_target"},
                 "leaf_config": {"targets": ["INDPRO", "RPI"], "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -721,7 +721,7 @@ def test_compile_multi_target_recipe_is_executable(tmp_path: Path) -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -743,7 +743,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -758,7 +758,7 @@ def test_compile_tree_context_groups_fixed_and_sweep_axes() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -792,7 +792,7 @@ def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
                 "experiment_unit": "single_target_single_generator",
             }},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -806,7 +806,7 @@ def test_compile_recipe_preserves_explicit_experiment_unit() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -829,7 +829,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -848,7 +848,7 @@ def test_compile_warns_when_fixed_policy_axis_is_placed_in_sweep_axes() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -871,7 +871,7 @@ def test_compile_seeded_reproducible_requires_random_seed() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "reproducibility_mode": "seeded_reproducible"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -885,7 +885,7 @@ def test_compile_seeded_reproducible_requires_random_seed() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -899,7 +899,7 @@ def test_compile_reproducibility_spec_preserved_in_manifest() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "reproducibility_mode": "seeded_reproducible"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3], "random_seed": 42},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -913,7 +913,7 @@ def test_compile_reproducibility_spec_preserved_in_manifest() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -937,7 +937,7 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "failure_policy": "fail_fast"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -951,7 +951,7 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -967,7 +967,7 @@ def test_compile_warn_only_is_now_executable() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "failure_policy": "warn_only"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -981,7 +981,7 @@ def test_compile_warn_only_is_now_executable() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1004,7 +1004,7 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "failure_policy": "skip_failed_model"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1018,7 +1018,7 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1041,7 +1041,7 @@ def test_compile_compute_mode_spec_defaults_to_serial() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1055,7 +1055,7 @@ def test_compile_compute_mode_spec_defaults_to_serial() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1070,7 +1070,7 @@ def test_compile_parallel_by_model_is_executable() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "compute_mode": "parallel_by_model"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1084,7 +1084,7 @@ def test_compile_parallel_by_model_is_executable() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1108,7 +1108,7 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "compute_mode": "parallel_by_model"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1122,7 +1122,7 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1132,13 +1132,13 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
 
 
 
-def test_compile_recipe_accepts_legacy_info_set_alias() -> None:
+def test_compile_recipe_rejects_legacy_info_set_alias() -> None:
     recipe = {
         "recipe_id": "legacy-info-set-alias",
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1150,7 +1150,7 @@ def test_compile_recipe_accepts_legacy_info_set_alias() -> None:
             "3_training": {"fixed_axes": {"framework": "expanding", "benchmark_family": "historical_mean", "feature_builder": "target_lag_features", "model_family": "ar"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1169,7 +1169,7 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "information_set_type": "final_revised_data",
-                    "task": "single_target",
+                    "target_structure": "single_target",
                     "predictor_family": "target_lags_only",
                 },
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
@@ -1183,7 +1183,7 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
             "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1226,7 +1226,7 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -1241,7 +1241,7 @@ def test_compile_recipe_accepts_stage2_preprocess_axes() -> None:
             "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1328,7 +1328,7 @@ def test_layer2_path_average_protocol_records_layer3_runtime() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1391,7 +1391,7 @@ def test_layer2_path_average_gates_non_raw_target_scale() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1445,7 +1445,7 @@ def test_layer2_representation_provenance_maps_feature_builder_bridge_values() -
                 "3_training": {"fixed_axes": training_axes},
                 "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
                 "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-                "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+                "6_stat_tests": {"fixed_axes": {}},
                 "7_importance": {"fixed_axes": {"importance_method": "none"}},
             },
         }
@@ -1524,7 +1524,7 @@ def _explicit_feature_block_set_recipe(
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1623,7 +1623,7 @@ def test_layer2_target_lag_selection_axis_records_target_language_provenance() -
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1688,7 +1688,7 @@ def test_layer2_explicit_target_lag_block_lowers_to_ar_bridge() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1755,7 +1755,7 @@ def test_layer2_explicit_target_lag_block_can_omit_feature_builder_bridge() -> N
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1808,7 +1808,7 @@ def test_layer2_explicit_raw_block_can_omit_feature_builder_bridge() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -1865,7 +1865,7 @@ def test_layer2_explicit_x_lag_block_lowers_to_raw_panel_bridge() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2695,7 +2695,7 @@ def test_layer2_explicit_target_and_x_lag_blocks_execute_with_raw_panel_composer
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2760,7 +2760,7 @@ def test_layer2_explicit_target_lag_and_static_factor_blocks_execute(tmp_path) -
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2820,7 +2820,7 @@ def test_layer2_explicit_x_lag_block_rejects_conflicting_legacy_bridge() -> None
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2871,7 +2871,7 @@ def test_layer2_explicit_target_lag_block_rejects_conflicting_selection() -> Non
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2926,7 +2926,7 @@ def test_layer2_explicit_factor_block_lowers_to_dimred_bridge() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -2997,7 +2997,7 @@ def test_layer2_factor_block_lowers_without_dimred_bridge() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3055,7 +3055,7 @@ def test_layer2_factor_block_accepts_select_before_factor_mix() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3111,7 +3111,7 @@ def test_layer2_factor_block_accepts_select_after_factor_mix() -> None:
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3209,7 +3209,7 @@ def test_compile_recipe_accepts_stage3_training_axes() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -3224,7 +3224,7 @@ def test_compile_recipe_accepts_stage3_training_axes() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3257,7 +3257,7 @@ def test_compile_quantile_linear_point_median_recipe_is_executable(tmp_path: Pat
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target", "forecast_object": "point_median"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target", "forecast_object": "point_median"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -3271,7 +3271,7 @@ def test_compile_quantile_linear_point_median_recipe_is_executable(tmp_path: Pat
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3314,7 +3314,7 @@ def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -3326,7 +3326,7 @@ def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
             "3_training": {"fixed_axes": {"framework": "rolling", "benchmark_family": "zero_change", "feature_builder": "raw_feature_panel", "model_family": "ridge"}},
             "4_evaluation": {"fixed_axes": {"primary_metric": "rmse"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3352,7 +3352,6 @@ def test_compile_extended_stage6_stat_test_manifest() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     stat_test_spec = compile_result.manifest["stat_test_spec"]
     assert stat_test_spec == {
-        "stat_test": "none",
         "equal_predictive": "none",
         "nested": "none",
         "cpa_instability": "none",
@@ -3406,7 +3405,7 @@ def test_compile_stage6_split_stat_test_manifest() -> None:
     compile_result = compile_recipe_dict(recipe)
     stat_test_spec = compile_result.manifest["stat_test_spec"]
     assert compile_result.compiled.execution_status == "executable"
-    assert stat_test_spec["stat_test"] == "none"
+    assert "stat_test" not in stat_test_spec
     assert stat_test_spec["equal_predictive"] == "dm_hln"
     assert stat_test_spec["dependence_correction"] == "nw_hac"
     assert stat_test_spec["overlap_handling"] == "evaluate_with_hac"
@@ -3434,8 +3433,8 @@ def test_multi_target_derives_shared_design_experiment_unit() -> None:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "info_set": "final_revised_data",
-                    "task": "multi_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "multi_target",
                 },
                 "leaf_config": {"targets": ["INDPRO", "RPI"], "horizons": [1]},
             },
@@ -3454,7 +3453,7 @@ def test_multi_target_derives_shared_design_experiment_unit() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -3498,7 +3497,7 @@ def _study_mode_recipe_base() -> dict:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "PLACEHOLDER"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "info_set": "final_revised_data", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -3516,7 +3515,7 @@ def _study_mode_recipe_base() -> dict:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

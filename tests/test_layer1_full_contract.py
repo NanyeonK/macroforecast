@@ -15,7 +15,7 @@ def _recipe() -> dict:
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "information_set_type": "final_revised_data",
-                    "task": "single_target",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
@@ -46,7 +46,7 @@ def _recipe() -> dict:
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5},
             }},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

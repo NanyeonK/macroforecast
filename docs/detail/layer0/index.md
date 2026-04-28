@@ -54,21 +54,9 @@ Output:
 - resolved or derived `experiment_unit`;
 - failure/reproducibility/compute policies recorded in manifest and runner context.
 
-## Naming migration
+## Canonical names
 
-Layer 0 now uses clearer canonical IDs. Older recipe IDs are still accepted at
-compile time and normalized before registry validation:
-
-| Legacy ID | Canonical ID |
-|---|---|
-| `single_path_benchmark` | `single_forecast_run` |
-| `orchestrated_bundle` | `study_bundle` |
-| `replication_override` | `replication_recipe` |
-| `single_target_single_model` | `single_target_single_generator` |
-| `single_target_model_grid` | `single_target_generator_grid` |
-
-New docs and generated Navigator data use the canonical IDs. Keep legacy IDs
-only for old recipes that have not yet been rewritten.
+Layer 0 is canonical-only in generated recipes and Navigator paths. The compiler validates the route, runner, and policy IDs listed in this section; retired IDs are rejected instead of silently rewritten.
 
 ## YAML shape
 

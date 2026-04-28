@@ -91,7 +91,7 @@ recipe = {
             "fixed_axes": {"primary_metric": "msfe"},
         },
         "6_stat_tests": {
-            "fixed_axes": {"stat_test": "dm"},
+            "fixed_axes": {"equal_predictive": "dm"},
         },
         "7_importance": {
             "fixed_axes": {"importance_method": "none"},

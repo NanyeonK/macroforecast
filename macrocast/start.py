@@ -7,6 +7,7 @@ import yaml
 
 from .compiler import CompileValidationError, compile_recipe_dict, compile_recipe_yaml, load_recipe_yaml
 from .execution.importance_dispatch import IMPORTANCE_FILE_NAMES, active_importance_methods
+from .execution.stat_tests import active_stat_test_axes
 from .registry import get_axis_registry_entry
 from .registry.stage0.experiment_unit import derive_experiment_unit_default, experiment_unit_options_for_wizard
 
@@ -38,7 +39,7 @@ _WIZARD_KEYS = (
     "feature_builder",
     "primary_metric",
     "manifest_mode",
-    "stat_test",
+    "equal_predictive",
     "importance_method",
 )
 
@@ -98,13 +99,12 @@ def _choice_option_details(axis_name: str, options: list[str]) -> dict[str, dict
 
 def _target_structure_value(recipe: dict[str, Any]) -> str:
     fixed = _recipe_fixed(recipe, "1_data_task")
-    return fixed.get("target_structure") or fixed.get("task", "single_target")
+    return fixed.get("target_structure", "single_target")
 
 
 def _set_target_structure(recipe: dict[str, Any], value: str) -> None:
     fixed = _recipe_fixed(recipe, "1_data_task")
     fixed["target_structure"] = value
-    fixed.pop("task", None)
 
 
 def _planned_branch_message(warnings: list[str]) -> str | None:
@@ -126,7 +126,7 @@ def _single_run_extension_message(tree_context: dict[str, Any], warnings: list[s
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
     if key == "research_design":
         return _recipe_fixed(recipe, "0_meta").get("research_design")
-    if key in {"target_structure", "task"}:
+    if key == "target_structure":
         return _target_structure_value(recipe)
     if key == "experiment_unit":
         explicit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
@@ -159,8 +159,8 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         return _recipe_fixed(recipe, "4_evaluation").get(key)
     if key == "manifest_mode":
         return _recipe_leaf(recipe, "5_output_provenance").get(key)
-    if key in {"stat_test", "dependence_correction"}:
-        return _recipe_fixed(recipe, "6_stat_tests").get(key)
+    if key in {"equal_predictive", "dependence_correction"}:
+        return _recipe_fixed(recipe, "6_stat_tests").get(key, "none")
     if key == "importance_method":
         return _recipe_fixed(recipe, "7_importance").get(key)
     if key == "benchmark_plugin_path":
@@ -178,7 +178,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
     preprocess = _recipe_fixed(recipe, "2_preprocessing")
     training = _recipe_fixed(recipe, "3_training")
     training_sweep = _recipe_sweep(recipe, "3_training")
-    if key in {"target_structure", "task"}:
+    if key == "target_structure":
         _set_target_structure(recipe, str(value))
         if value == "multi_target":
             leaf.pop("target", None)
@@ -288,7 +288,7 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
     if key == "manifest_mode":
         _recipe_leaf(recipe, "5_output_provenance")[key] = value
         return
-    if key in {"stat_test", "dependence_correction"}:
+    if key in {"equal_predictive", "dependence_correction"}:
         _recipe_fixed(recipe, "6_stat_tests")[key] = value
         return
     if key == "importance_method":
@@ -419,9 +419,9 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
             "options": ["full"],
         },
         {
-            "key": "stat_test",
-            "prompt": "Stat test",
-            "options": ["none", "dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t", "cpa", "rossi", "rolling_dm", "reality_check", "spa", "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "pesaran_timmermann", "binomial_hit", "full_residual_diagnostics"],
+            "key": "equal_predictive",
+            "prompt": "Equal predictive test",
+            "options": ["none", "dm", "dm_hln", "dm_modified"],
         },
         {
             "key": "importance_method",
@@ -549,7 +549,8 @@ def _runs_preview(compile_manifest: dict[str, Any], *, output_root: str | Path) 
 def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Path) -> dict[str, Any]:
     tree_context = dict(compile_manifest.get("tree_context", {}))
     leaf_config = dict(tree_context.get("leaf_config", compile_manifest.get("leaf_config", {})))
-    stat_test = dict(compile_manifest.get("stat_test_spec", {})).get("stat_test", "none")
+    stat_test_spec = dict(compile_manifest.get("stat_test_spec", {}))
+    active_stat_tests = active_stat_test_axes(stat_test_spec)
     importance_spec = dict(compile_manifest.get("importance_spec", {}))
     importance_methods = active_importance_methods(importance_spec)
     expected_artifacts = [
@@ -560,26 +561,8 @@ def _manifest_preview(compile_manifest: dict[str, Any], *, output_root: str | Pa
         "metrics.json",
         "comparison_summary.json",
     ]
-    if stat_test in ("dm", "dm_hln"):
-        expected_artifacts.append("stat_test_" + stat_test.replace("_", "") + ".json")
-    if stat_test == "cw":
-        expected_artifacts.append("stat_test_cw.json")
-    if stat_test == "enc_new":
-        expected_artifacts.append("stat_test_enc_new.json")
-    if stat_test == "mincer_zarnowitz":
-        expected_artifacts.append("stat_test_mincer_zarnowitz.json")
-    if stat_test == "ljung_box":
-        expected_artifacts.append("stat_test_ljung_box.json")
-    if stat_test == "arch_lm":
-        expected_artifacts.append("stat_test_arch_lm.json")
-    if stat_test == "bias_test":
-        expected_artifacts.append("stat_test_bias_test.json")
-    if stat_test == "pesaran_timmermann":
-        expected_artifacts.append("stat_test_pesaran_timmermann.json")
-    if stat_test == "binomial_hit":
-        expected_artifacts.append("stat_test_binomial_hit.json")
-    if stat_test == "full_residual_diagnostics":
-        expected_artifacts.append("stat_test_full_residual_diagnostics.json")
+    for stat_test in active_stat_tests.values():
+        expected_artifacts.append(f"stat_test_{stat_test}.json")
     if importance_methods:
         expected_artifacts.append("importance_artifacts.json")
         expected_artifacts.extend(IMPORTANCE_FILE_NAMES.get(method, f"importance_{method}.json") for method in importance_methods)

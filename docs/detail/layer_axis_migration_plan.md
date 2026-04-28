@@ -26,8 +26,8 @@ describes the registry layer after migration.
 | `overlap_handling` | 1_data_task | 6_stat_tests | HAC/overlap handling is inference over dependent forecast errors. |
 | `official_transform_policy` | split from Layer 2 t-code axes | 1_data_task | Official dataset transformations define the official frame, before researcher preprocessing. |
 | `official_transform_scope` | split from `tcode_application_scope` | 1_data_task | Target/X official transform scope is part of official frame construction. |
-| `source_adapter` | `dataset_source` | 1_data_task | Loader dispatch is an adapter choice; `dataset` remains the schema identity. |
-| `target_structure` | `task` | 1_data_task | Layer 1 records target cautoregressive_diffusion_indexnality; Layer 0 owns runner grammar. |
+| `source_adapter` | source-dispatch alias | 1_data_task | Loader dispatch is an adapter choice; `dataset` remains the schema identity. |
+| `target_structure` | target-shape alias | 1_data_task | Layer 1 records target cardinality; Layer 0 owns runner grammar. |
 
 ## Still To Migrate
 
@@ -65,42 +65,10 @@ tests.
 
 ## Compatibility Policy
 
-- Do not break old recipes in this pass.
-- Registry `layer` is canonical for docs/governance.
-- Compiler continues to accept migrated axes at old recipe paths.
-- Compiler now records Layer 1 `official_transform_policy` and
-  `official_transform_scope` in `data_task_spec`, deriving them from legacy
-  Layer 2 t-code fields when old recipes omit the new canonical axes.
-- Generated default recipes no longer need to place official t-code bridge
-  fields in `2_preprocessing`; the compiler derives the runtime
-  `PreprocessContract` bridge from Layer 1 official-transform axes.
-- Runtime official dataset transformation now reads `data_task_spec` first.
-  Legacy `PreprocessContract.tcode_*` fields remain only as fallback for older
-  compiled specs.
-- Compiled manifests include `data_task_spec["official_transform_source"]`;
-  runtime t-code reports include the matching source/fallback marker. This keeps
-  the bridge visible without making `PreprocessContract` the owner of the
-  official-transform choice.
-- `dataset_source` remains accepted as a legacy recipe alias for
-  `source_adapter`. New compiled specs and manifests write
-  `data_task_spec["source_adapter"]`; execution falls back to old
-  `data_task_spec["dataset_source"]` only for previously compiled specs.
-- `task` remains accepted as a legacy recipe alias for `target_structure`.
-  New compiled specs and manifests write `data_task_spec["target_structure"]`.
-- Generated recipes should be updated gradually after tests lock the canonical layers.
-- Runtime dispatch reads explicit Layer 2 feature blocks first and keeps
-  `feature_builder`, `predictor_family`, `data_richness_mode`, and
-  `factor_count` from compiled specs as compatibility/provenance fields. The
-  registry layer records their canonical ownership as Layer 2. Explicit Layer 2
-  block recipes can omit the legacy `feature_builder` input; the compiler
-  derives the bridge internally for Stage 0 and old runtime dispatch.
-- Layer 2 cleanup is closed for supported fixed full/runtime slices. Generic
-  `Z` unification is a Layer 2 representation-handoff task, while Layer 3 stays
-  a forecast-generator consumer. The current cleanup frontier is making that
-  Layer 3 boundary explicit. The first implementation pass now writes
-  target-lag and custom-hook Layer 2 choices into
-  `layer2_representation_spec`; old `training_spec` readers remain as
-  compatibility fallbacks. Factor-count, factor-lag, target construction,
-  input-panel, and deterministic-block runtime migration are now also Layer 2
-  metadata-first. Remaining implementation debt is adding the Layer 3
-  capability matrix and removing remaining compatibility bridges.
+- Registry `layer` is canonical for docs and governance.
+- Generated recipes, Navigator paths, and docs use canonical axis names only.
+- Removed name aliases for source dispatch, information-set regime, target shape, and Layer 6 test routing are rejected by compiler and registry validation.
+- Runtime fallback fields are kept only where needed to read already compiled manifests or feed older execution internals; they are not user-facing recipe choices.
+- Official dataset transformation is a Layer 1 decision through `official_transform_policy` and `official_transform_scope`; runtime derives the lower-level transform contract from those axes.
+- Runtime dispatch reads explicit Layer 2 feature blocks first and keeps compatibility/provenance fields only as internal payloads. Explicit Layer 2 block recipes can omit bridge inputs; the compiler derives any required runtime payload internally.
+- Layer 2 cleanup is closed for supported fixed full/runtime slices. Generic `Z` unification is a Layer 2 representation-handoff task, while Layer 3 stays a forecast-generator consumer. Remaining cleanup is focused on shrinking internal fallback readers without reopening the public recipe API.

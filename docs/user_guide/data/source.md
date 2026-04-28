@@ -94,7 +94,7 @@ When `source_adapter` is `custom_csv` or `custom_parquet`:
 - `macrocast.load_custom_parquet(path, *, dataset, cache_root=None)` — direct call (requires pyarrow or fastparquet).
 - Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` checks `recipe.data_task_spec["source_adapter"]` first; falls through to the FRED-canonical path otherwise.
 - Compile guard: `source_adapter ∈ {custom_csv, custom_parquet}` + no `leaf_config.custom_data_path` → `CompileValidationError`.
-- Compatibility: legacy recipes may still use `dataset_source`; the compiler treats it as an alias for `source_adapter` and rejects conflicting old/new choices.
+- Canonical API: `_load_raw_for_recipe` reads `source_adapter`; removed source-dispatch aliases are rejected at compile time.
 
 ### Recipe usage
 
@@ -184,7 +184,7 @@ Usually omitted for MD/QD/composites because the dataset implies the frequency. 
 ### Functions & features
 
 - Runtime: loaders (`raw/datasets/fred_md.py` etc.) pick the correct data source based on the dataset axis; `information_set_type` shapes the downstream pseudo-OOS masking when set.
-- Compat mirror: the older recipe alias `info_set` is canonicalised to `information_set_type` (compiler/build.py alias map).
+- Canonical API: recipes use `information_set_type` directly; removed information-set aliases are rejected at compile time.
 
 ### Dropped values
 
@@ -216,7 +216,7 @@ path:
 ## Source & Frame (1.1) takeaways
 
 - **`dataset`** and **`information_set_type`** are the two axes the user usually decides in 1.1; standalone FRED-SD also requires `frequency`.
-- **`source_adapter`** now carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. 14 reserved third-party adapter labels dropped. Legacy `dataset_source` remains a recipe alias during the compatibility window.
+- **`source_adapter`** carries actual loader dispatch: FRED canonical (default) vs `custom_csv` vs `custom_parquet`. Removed adapter labels and source-dispatch aliases are rejected.
 - **`frequency`** is executable: it controls conversion and is compile-checked for FRED-SD composites.
 - **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).
 

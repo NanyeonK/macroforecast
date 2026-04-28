@@ -18,7 +18,6 @@ from macrocast.navigator import (
 )
 from macrocast.navigator.cli import main as navigator_main
 from macrocast.navigator.presentation import AXIS_PRESENTATION_SCHEMA_VERSION, AXIS_PRESENTATION_MAP
-from macrocast.registry.naming import NAMING_LEDGER_VERSION
 
 
 def _recipe(**training_overrides):
@@ -65,7 +64,7 @@ def _recipe(**training_overrides):
             "3_training": {"fixed_axes": training},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -124,6 +123,8 @@ console.log(JSON.stringify({
     model_quantile_linear: option("model_family", "quantile_linear"),
     equal_dm: option("equal_predictive", "dm"),
     equal_dm_hln: option("equal_predictive", "dm_hln"),
+    density_pit: option("density_interval", "pit_uniformity"),
+    direction_binomial: option("direction", "binomial_hit"),
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
     sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
     sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency"),
@@ -218,16 +219,11 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert AXIS_PRESENTATION_MAP["failure_policy"]["values"]["fail_fast"]["label"] == "Stop on First Failure"
 
 
-def test_navigator_ui_data_exports_rename_ledger():
+def test_navigator_ui_data_omits_rename_ledger():
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
-    aliases = {
-        (item["axis"], item["legacy_id"]): item["canonical_id"]
-        for item in payload["rename_ledger"]["axis_value_aliases"]
-    }
 
-    assert payload["naming_ledger_version"] == NAMING_LEDGER_VERSION
-    assert aliases[("research_design", "single_path_benchmark")] == "single_forecast_run"
-    assert aliases[("experiment_unit", "single_target_model_grid")] == "single_target_generator_grid"
+    assert "naming_ledger_version" not in payload
+    assert "rename_ledger" not in payload
 
 
 def test_navigation_disables_tree_shap_for_non_tree_model():
@@ -268,6 +264,22 @@ def test_navigation_shows_current_deep_sequence_gate():
     assert _option(feature_axis, "target_lag_features")["enabled"] is True
     assert _option(feature_axis, "sequence_tensor")["enabled"] is False
     assert "sequence_tensor remains gated" in _option(feature_axis, "sequence_tensor")["disabled_reason"]
+
+
+def test_navigation_layer6_forecast_object_family_gates(tmp_path: Path):
+    recipe = _recipe()
+    view = build_navigation_view(recipe)
+    js = _js_state_snapshot(tmp_path, recipe, [])
+
+    density_option = _option(_axis(view, "density_interval"), "pit_uniformity")
+    direction_option = _option(_axis(view, "direction"), "binomial_hit")
+
+    assert density_option["enabled"] is False
+    assert direction_option["enabled"] is False
+    assert "interval, density, or quantile" in density_option["disabled_reason"]
+    assert "forecast_object=direction" in direction_option["disabled_reason"]
+    assert js["options"]["density_pit"]["enabled"] == density_option["enabled"]
+    assert js["options"]["direction_binomial"]["enabled"] == direction_option["enabled"]
 
 
 def test_navigation_layer6_split_hac_compatibility():
@@ -318,7 +330,6 @@ def test_navigator_ui_data_export_roundtrip(tmp_path: Path):
     assert "model_family" in payload["axis_catalog"]
     assert payload["state_engine"]["schema_version"] == "navigator_state_engine_v1"
     assert payload["state_engine"]["default_selections"]["importance_scope"] == "global"
-    assert payload["state_engine"]["stat_tests"]["legacy_to_split"]["dm"]["axis"] == "equal_predictive"
     assert payload["state_engine"]["importance"]["legacy_to_axis"]["tree_shap"]["axis"] == "importance_shap"
     assert payload["operational_narrow_contracts"]
     assert payload["replications"]

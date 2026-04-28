@@ -85,17 +85,9 @@ The following axes were moved out of Layer 1 ownership:
 - `source_adapter=custom_csv/custom_parquet` remains operational but requires `leaf_config.custom_data_path`.
 - Official dataset transforms now have canonical Layer 1 axes:
   `official_transform_policy` and `official_transform_scope`.
-- Old Layer 2 t-code fields remain accepted as legacy compatibility inputs.
-  The compiler derives the Layer 1 official-transform spec from those fields
-  when old recipes omit the new axes, derives runtime `PreprocessContract`
-  fallback fields from Layer 1 for new recipes, and rejects conflicting
-  new/legacy choices.
-- Legacy `dataset_source` remains accepted as a compiler alias for canonical
-  `source_adapter`. New recipes, manifests, and docs should use
-  `source_adapter`.
-- Legacy `task` remains accepted as a compiler alias for canonical
-  `target_structure`. New recipes, manifests, and docs should use
-  `target_structure`.
+- Official transform choices are read from Layer 1 axes. The compiler derives runtime `PreprocessContract` fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.
+- `source_adapter` is the only source-dispatch axis. Removed source-dispatch aliases are rejected during registry validation.
+- `target_structure` is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through `experiment_unit`.
 
 ### 1.2 Target Structure
 

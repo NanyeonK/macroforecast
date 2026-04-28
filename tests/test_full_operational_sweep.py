@@ -17,7 +17,7 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "experiment_unit": "single_target_generator_grid"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "task": "single_target", "benchmark_family": "autoregressive_bic", "evaluation_scale": "raw_level"},
+                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target", "benchmark_family": "autoregressive_bic", "evaluation_scale": "raw_level"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {
@@ -39,7 +39,7 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
                 "sweep_axes": {"model_family": ["ar"]},
             },
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -145,6 +145,18 @@ def test_model_factor_executes(model, tmp_path):
 # ============================================================
 # Statistical tests sweep
 # ============================================================
+
+STAT_TEST_AXIS = {
+    "dm": "equal_predictive", "dm_hln": "equal_predictive", "dm_modified": "equal_predictive",
+    "cw": "nested", "enc_new": "nested", "mse_f": "nested", "mse_t": "nested",
+    "cpa": "cpa_instability", "rossi": "cpa_instability", "rolling_dm": "cpa_instability",
+    "reality_check": "multiple_model", "spa": "multiple_model", "mcs": "multiple_model",
+    "mincer_zarnowitz": "residual_diagnostics", "ljung_box": "residual_diagnostics",
+    "arch_lm": "residual_diagnostics", "bias_test": "residual_diagnostics",
+    "full_residual_diagnostics": "residual_diagnostics",
+    "pesaran_timmermann": "direction", "binomial_hit": "direction",
+}
+
 STAT_TESTS = ["dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "mse_t",
               "cpa", "rossi", "rolling_dm", "reality_check", "spa",
               "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test",
@@ -154,7 +166,7 @@ STAT_TESTS = ["dm", "dm_hln", "dm_modified", "cw", "mcs", "enc_new", "mse_f", "m
 def test_stat_test_executes(test_name, tmp_path):
     recipe = _base_recipe(
         overrides_3={"sweep_axes": {"model_family": ["ridge"]}},
-        overrides_6={"stat_test": test_name},
+        overrides_6={STAT_TEST_AXIS[test_name]: test_name},
     )
     manifest, art_dir = _compile_and_run(recipe, tmp_path)
     expected_file = f"stat_test_{test_name}.json"
@@ -172,7 +184,7 @@ DEP_CORRECTIONS = ["none", "nw_hac", "nw_hac_auto", "block_bootstrap"]
 def test_dependence_correction_executes(dep, tmp_path):
     recipe = _base_recipe(
         overrides_3={"sweep_axes": {"model_family": ["ridge"]}},
-        overrides_6={"stat_test": "dm", "dependence_correction": dep},
+        overrides_6={"equal_predictive": "dm", "dependence_correction": dep},
     )
     manifest, art_dir = _compile_and_run(recipe, tmp_path)
     assert (Path(art_dir) / "stat_test_dm.json").exists()

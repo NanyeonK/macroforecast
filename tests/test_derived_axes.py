@@ -25,8 +25,8 @@ def _base_recipe() -> dict:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "info_set": "final_revised_data",
-                    "task": "single_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
@@ -54,7 +54,7 @@ def _base_recipe() -> dict:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }
@@ -119,7 +119,7 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
             selected_status={"target_lag_features": "operational"},
         ),
     }
-    leaf_config = {"task": "single_target"}
+    leaf_config = {"target_structure": "single_target"}
     result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
     assert result == "single_target_generator_grid"
 
@@ -142,6 +142,6 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() ->
             selected_status={"target_lag_features": "operational", "raw_feature_panel": "operational"},
         ),
     }
-    leaf_config = {"task": "single_target"}
+    leaf_config = {"target_structure": "single_target"}
     result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
     assert result == "single_target_generator_grid"

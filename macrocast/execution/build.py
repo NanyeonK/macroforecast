@@ -1724,7 +1724,7 @@ def _combine_raw_results(dataset: str, target_frequency: str, components):
 
 def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapping[str, str | Path] | None, cache_root: Path):
     vintage = recipe.data_vintage
-    source_adapter = recipe.data_task_spec.get("source_adapter") or recipe.data_task_spec.get("dataset_source") or recipe.raw_dataset
+    source_adapter = recipe.data_task_spec.get("source_adapter") or recipe.raw_dataset
     if source_adapter in {"custom_csv", "custom_parquet"}:
         custom_path = local_raw_source or recipe.data_task_spec.get("custom_data_path")
         if custom_path is None:
@@ -2902,7 +2902,6 @@ def _source_availability_contract(
     source_kind = _source_url_kind(artifact_payload.get("source_url"))
     source_adapter = (
         recipe.data_task_spec.get("source_adapter")
-        or recipe.data_task_spec.get("dataset_source")
         or recipe.raw_dataset
     )
     return {

@@ -62,25 +62,11 @@
   function selectedStatTests(data, selections, overrideAxis, overrideValue) {
     const spec = data.state_engine.stat_tests || {};
     const splitAxes = spec.split_axes || [];
-    const legacyMap = spec.legacy_to_split || {};
     const values = {};
     splitAxes.forEach((axis) => {
       values[axis] = String(selections[axis] || "none");
     });
-    const legacy = String(selections.stat_test || "none");
-    if (legacy !== "none" && legacyMap[legacy]) {
-      const route = legacyMap[legacy];
-      if ((values[route.axis] || "none") === "none") values[route.axis] = route.value;
-    }
-    if (overrideAxis === "stat_test") {
-      Object.keys(values).forEach((axis) => {
-        values[axis] = "none";
-      });
-      if (overrideValue && overrideValue !== "none" && legacyMap[overrideValue]) {
-        const route = legacyMap[overrideValue];
-        values[route.axis] = route.value;
-      }
-    } else if (Object.prototype.hasOwnProperty.call(values, overrideAxis)) {
+    if (Object.prototype.hasOwnProperty.call(values, overrideAxis)) {
       values[overrideAxis] = overrideValue;
     }
     return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== "none"));
@@ -246,16 +232,6 @@
       if (xPath === "recursive_x_model" && value !== "ar1") return "only recursive_x_model_family=ar1 is currently operational";
     }
 
-    if (axisName === "stat_test") {
-      if (forecastObject === "direction" && !(forecastRules.direction_stats || []).includes(value)) return "direction forecast objects should use direction-family tests";
-      if ((forecastObject === "interval" || forecastObject === "density") && value !== "none") return "interval/density calibration tests live on the density_interval axis, not legacy stat_test";
-      if (forecastObject === "quantile" && !(forecastRules.quantile_stats || []).includes(value)) return "quantile tasks should avoid legacy point-forecast-only tests";
-      if (String(selected.overlap_handling || "allow_overlap") === "evaluate_with_hac") {
-        const activeTests = selectedStatTests(data, selected, axisName, value);
-        if (Object.values(activeTests).some((test) => !hacCompatible.has(test))) return "evaluate_with_hac requires HAC-capable Layer 6 tests";
-      }
-    }
-
     if (axisName === "density_interval" && !["interval", "density", "quantile"].includes(forecastObject) && value !== "none") {
       return "density/interval tests require interval, density, or quantile forecast objects";
     }
@@ -336,14 +312,6 @@
     } else if (importanceSplitAxes.has(axisName) && value !== "none") {
       next.selections.importance_method = "none";
       next.edits.importance_method = "none";
-    } else if (axisName === "stat_test") {
-      statSplitAxes.forEach((axis) => {
-        next.selections[axis] = "none";
-        next.edits[axis] = "none";
-      });
-    } else if (statSplitAxes.has(axisName) && value !== "none") {
-      next.selections.stat_test = "none";
-      next.edits.stat_test = "none";
     }
     next.selections[axisName] = value;
     next.edits[axisName] = value;

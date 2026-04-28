@@ -125,7 +125,6 @@ _TREE_AXES = {
         "artifact_granularity",
     ),
     "6_stat_tests": (
-        "stat_test",
         "equal_predictive",
         "nested",
         "cpa_instability",
@@ -185,7 +184,6 @@ _DEFAULT_SELECTIONS = {
     "saved_objects": "full_bundle",
     "provenance_fields": "full",
     "artifact_granularity": "aggregated",
-    "stat_test": "none",
     "equal_predictive": "none",
     "nested": "none",
     "cpa_instability": "none",
@@ -388,29 +386,6 @@ _STAT_TEST_SPLIT_AXES = (
     "direction",
     "residual_diagnostics",
 )
-_LEGACY_STAT_TEST_TO_SPLIT = {
-    "dm": ("equal_predictive", "dm"),
-    "dm_hln": ("equal_predictive", "dm_hln"),
-    "dm_modified": ("equal_predictive", "dm_modified"),
-    "cw": ("nested", "cw"),
-    "enc_new": ("nested", "enc_new"),
-    "mse_f": ("nested", "mse_f"),
-    "mse_t": ("nested", "mse_t"),
-    "cpa": ("cpa_instability", "cpa"),
-    "rossi": ("cpa_instability", "rossi"),
-    "rolling_dm": ("cpa_instability", "rolling_dm"),
-    "reality_check": ("multiple_model", "reality_check"),
-    "spa": ("multiple_model", "spa"),
-    "mcs": ("multiple_model", "mcs"),
-    "pesaran_timmermann": ("direction", "pesaran_timmermann"),
-    "binomial_hit": ("direction", "binomial_hit"),
-    "mincer_zarnowitz": ("residual_diagnostics", "mincer_zarnowitz"),
-    "ljung_box": ("residual_diagnostics", "ljung_box"),
-    "arch_lm": ("residual_diagnostics", "arch_lm"),
-    "bias_test": ("residual_diagnostics", "bias_test"),
-    "diagnostics_full": ("residual_diagnostics", "full_residual_diagnostics"),
-    "full_residual_diagnostics": ("residual_diagnostics", "full_residual_diagnostics"),
-}
 _HAC_COMPATIBLE_STAT_TESTS = frozenset(
     {"dm_hln", "dm_modified", "cw", "enc_new", "mse_t", "cpa", "spa", "mcs"}
 )
@@ -505,19 +480,7 @@ def _selected_stat_tests(
     override_value: str | None = None,
 ) -> dict[str, str]:
     values = {axis: str(selected.get(axis, "none")) for axis in _STAT_TEST_SPLIT_AXES}
-    legacy = str(selected.get("stat_test", "none"))
-    if legacy != "none" and legacy in _LEGACY_STAT_TEST_TO_SPLIT:
-        axis, value = _LEGACY_STAT_TEST_TO_SPLIT[legacy]
-        if values.get(axis, "none") == "none":
-            values[axis] = value
-    if override_axis == "stat_test":
-        if legacy != "none" and legacy in _LEGACY_STAT_TEST_TO_SPLIT:
-            axis, _ = _LEGACY_STAT_TEST_TO_SPLIT[legacy]
-            values[axis] = "none"
-        if override_value and override_value != "none" and override_value in _LEGACY_STAT_TEST_TO_SPLIT:
-            axis, value = _LEGACY_STAT_TEST_TO_SPLIT[override_value]
-            values[axis] = value
-    elif override_axis in values and override_value is not None:
+    if override_axis in values and override_value is not None:
         values[str(override_axis)] = override_value
     return {axis: value for axis, value in values.items() if value != "none"}
 
@@ -660,18 +623,6 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "recursive_x_model_family is active only for exogenous_x_path_policy=recursive_x_model"
         if x_path == "recursive_x_model" and value != "ar1":
             return "only recursive_x_model_family=ar1 is currently operational"
-    if axis_name == "stat_test":
-        if forecast_object == "direction" and value not in _DIRECTION_STATS:
-            return "direction forecast objects should use direction-family tests"
-        if forecast_object in {"interval", "density"} and value not in {"none"}:
-            return "interval/density calibration tests live on the density_interval axis, not legacy stat_test"
-        if forecast_object == "quantile" and value not in _QUANTILE_STATS:
-            return "quantile tasks should avoid legacy point-forecast-only tests"
-        if str(selected.get("overlap_handling", "allow_overlap")) == "evaluate_with_hac":
-            active_tests = _selected_stat_tests(selected, override_axis=axis_name, override_value=value)
-            incompatible = {test for test in active_tests.values() if test not in _HAC_COMPATIBLE_STAT_TESTS}
-            if incompatible:
-                return "evaluate_with_hac requires HAC-capable Layer 6 tests"
     if axis_name == "density_interval":
         if forecast_object not in {"interval", "density", "quantile"} and value != "none":
             return "density/interval tests require interval, density, or quantile forecast objects"
@@ -733,10 +684,6 @@ def navigator_state_engine_spec() -> dict[str, Any]:
         },
         "stat_tests": {
             "split_axes": list(_STAT_TEST_SPLIT_AXES),
-            "legacy_to_split": {
-                key: {"axis": axis, "value": value}
-                for key, (axis, value) in sorted(_LEGACY_STAT_TEST_TO_SPLIT.items())
-            },
             "hac_compatible": sorted(_HAC_COMPATIBLE_STAT_TESTS),
         },
         "importance": {

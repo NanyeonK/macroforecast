@@ -34,7 +34,6 @@ META_AXIS_NAMES: tuple[str, ...] = (
 AXIS_NAMES: tuple[str, ...] = STAT_TEST_AXIS_NAMES + META_AXIS_NAMES
 
 DEFAULT_STAT_TEST_SPEC: dict[str, str] = {
-    "stat_test": "none",
     "equal_predictive": "none",
     "nested": "none",
     "cpa_instability": "none",
@@ -48,49 +47,14 @@ DEFAULT_STAT_TEST_SPEC: dict[str, str] = {
 }
 
 
-LEGACY_TO_NEW: dict[str, tuple[str, str]] = {
-    # equal_predictive (3 operational)
-    "dm":          ("equal_predictive", "dm"),
-    "dm_hln":      ("equal_predictive", "dm_hln"),
-    "dm_modified": ("equal_predictive", "dm_modified"),
-    # nested (4 operational)
-    "cw":      ("nested", "cw"),
-    "enc_new": ("nested", "enc_new"),
-    "mse_f":   ("nested", "mse_f"),
-    "mse_t":   ("nested", "mse_t"),
-    # cpa_instability (3 operational)
-    "cpa":        ("cpa_instability", "cpa"),
-    "rossi":      ("cpa_instability", "rossi"),
-    "rolling_dm": ("cpa_instability", "rolling_dm"),
-    # multiple_model (3 operational)
-    "reality_check": ("multiple_model", "reality_check"),
-    "spa":           ("multiple_model", "spa"),
-    "mcs":           ("multiple_model", "mcs"),
-    # direction (2 operational)
-    "pesaran_timmermann": ("direction", "pesaran_timmermann"),
-    "binomial_hit":       ("direction", "binomial_hit"),
-    # residual_diagnostics (5 operational)
-    "mincer_zarnowitz": ("residual_diagnostics", "mincer_zarnowitz"),
-    "ljung_box":        ("residual_diagnostics", "ljung_box"),
-    "arch_lm":          ("residual_diagnostics", "arch_lm"),
-    "bias_test":        ("residual_diagnostics", "bias_test"),
-    "full_residual_diagnostics": ("residual_diagnostics", "full_residual_diagnostics"),
-}
-
-
 def canonicalize_stat_test_spec(raw_spec: dict[str, Any] | None) -> dict[str, str]:
-    """Return the Layer 6 split-axis spec with defaults and legacy routing."""
+    """Return the Layer 6 split-axis spec with defaults."""
 
     spec = dict(DEFAULT_STAT_TEST_SPEC)
     if raw_spec:
         for key in spec:
             if key in raw_spec:
                 spec[key] = canonical_axis_value(key, str(raw_spec[key]))
-    legacy = spec.get("stat_test", "none")
-    if legacy != "none" and legacy in LEGACY_TO_NEW:
-        axis, value = LEGACY_TO_NEW[legacy]
-        if spec.get(axis, "none") == "none":
-            spec[axis] = value
     return spec
 
 
@@ -193,13 +157,11 @@ def _build_handlers(
             "ljung_box":                     lambda: _compute_ljung_box_test(predictions),
             "arch_lm":                       lambda: _compute_arch_lm_test(predictions),
             "bias_test":                     lambda: _compute_bias_test(predictions),
-            "diagnostics_full":              lambda: _compute_diagnostics_bundle(predictions),
             "full_residual_diagnostics":     lambda: _compute_diagnostics_bundle(predictions),
             "autocorrelation_of_errors":     lambda: _compute_autocorrelation_of_errors(predictions),
             "serial_dependence_loss_diff":   lambda: _compute_serial_dependence_loss_diff(predictions),
         },
         "density_interval": {
-            "PIT_uniformity":              lambda: _compute_pit_uniformity(predictions),
             "pit_uniformity":              lambda: _compute_pit_uniformity(predictions),
             "berkowitz":                   lambda: _compute_berkowitz(predictions),
             "kupiec":                      lambda: _compute_kupiec(predictions),
@@ -229,8 +191,7 @@ def dispatch_stat_tests(
         predictions: long-form predictions table (see
             macrocast.execution.build._build_predictions).
         stat_test_spec: dict of layer-6 axis selections. Missing or
-            ``"none"`` axes are skipped. Legacy ``stat_test`` key is
-            auto-routed via LEGACY_TO_NEW for safety.
+            ``"none"`` axes are skipped.
         dependence_correction: HAC / Newey-West / bootstrap window identifier
             passed through to the individual test functions.
 

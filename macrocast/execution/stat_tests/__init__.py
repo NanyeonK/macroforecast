@@ -3,7 +3,6 @@
 from .dispatch import (
     AXIS_NAMES,
     DEFAULT_STAT_TEST_SPEC,
-    LEGACY_TO_NEW,
     META_AXIS_NAMES,
     STAT_TEST_AXIS_NAMES,
     active_stat_test_axes,
@@ -14,7 +13,6 @@ from .dispatch import (
 __all__ = [
     "AXIS_NAMES",
     "DEFAULT_STAT_TEST_SPEC",
-    "LEGACY_TO_NEW",
     "META_AXIS_NAMES",
     "STAT_TEST_AXIS_NAMES",
     "active_stat_test_axes",

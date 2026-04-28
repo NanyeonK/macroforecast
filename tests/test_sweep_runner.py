@@ -22,8 +22,8 @@ def _horse_race_recipe() -> dict:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "info_set": "final_revised_data",
-                    "task": "single_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
             },
@@ -63,7 +63,7 @@ def _horse_race_recipe() -> dict:
                     },
                 }
             },
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "minimal_importance"}},
         },
     }

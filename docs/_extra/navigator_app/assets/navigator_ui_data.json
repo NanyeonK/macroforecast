@@ -2719,60 +2719,6 @@
       "incompatible_with": {},
       "layer": "3_training"
     },
-    "stat_test": {
-      "allowed_values": [
-        "none",
-        "dm",
-        "dm_hln",
-        "dm_modified",
-        "cw",
-        "mcs",
-        "enc_new",
-        "mse_f",
-        "mse_t",
-        "cpa",
-        "rossi",
-        "rolling_dm",
-        "reality_check",
-        "spa",
-        "mincer_zarnowitz",
-        "ljung_box",
-        "arch_lm",
-        "bias_test",
-        "pesaran_timmermann",
-        "binomial_hit",
-        "full_residual_diagnostics"
-      ],
-      "axis_name": "stat_test",
-      "axis_type": "enum",
-      "compatible_with": {},
-      "current_status": {
-        "arch_lm": "operational",
-        "bias_test": "operational",
-        "binomial_hit": "operational",
-        "cpa": "operational",
-        "cw": "operational",
-        "dm": "operational",
-        "dm_hln": "operational",
-        "dm_modified": "operational",
-        "enc_new": "operational",
-        "full_residual_diagnostics": "operational",
-        "ljung_box": "operational",
-        "mcs": "operational",
-        "mincer_zarnowitz": "operational",
-        "mse_f": "operational",
-        "mse_t": "operational",
-        "none": "operational",
-        "pesaran_timmermann": "operational",
-        "reality_check": "operational",
-        "rolling_dm": "operational",
-        "rossi": "operational",
-        "spa": "operational"
-      },
-      "default_policy": "fixed",
-      "incompatible_with": {},
-      "layer": "6_stat_tests"
-    },
     "state_selection": {
       "allowed_values": [
         "all_states",
@@ -3618,7 +3564,6 @@
     "6_stat_tests": "Layer 6: statistical tests",
     "7_importance": "Layer 7: interpretation and importance"
   },
-  "naming_ledger_version": "registry_naming_v1",
   "navigator_schema_version": "navigator_view_v1",
   "operational_narrow_contracts": [
     {
@@ -3693,655 +3638,6 @@
       ]
     }
   ],
-  "rename_ledger": {
-    "axis_name_aliases": [
-      {
-        "canonical_id": "source_adapter",
-        "legacy_id": "dataset_source"
-      },
-      {
-        "canonical_id": "information_set_type",
-        "legacy_id": "info_set"
-      },
-      {
-        "canonical_id": "target_structure",
-        "legacy_id": "task"
-      }
-    ],
-    "axis_value_aliases": [
-      {
-        "axis": "agg_target",
-        "canonical_id": "economic_priority_weighting",
-        "legacy_id": "economic_priority_weight"
-      },
-      {
-        "axis": "agg_target",
-        "canonical_id": "scale_adjusted_weighting",
-        "legacy_id": "scale_adjusted_weight"
-      },
-      {
-        "axis": "agg_time",
-        "canonical_id": "full_out_of_sample_average",
-        "legacy_id": "full_oos_average"
-      },
-      {
-        "axis": "benchmark_family",
-        "canonical_id": "autoregressive_bic",
-        "legacy_id": "ar_bic"
-      },
-      {
-        "axis": "benchmark_family",
-        "canonical_id": "autoregressive_fixed_lag",
-        "legacy_id": "ar_fixed_p"
-      },
-      {
-        "axis": "benchmark_family",
-        "canonical_id": "autoregressive_diffusion_index",
-        "legacy_id": "ardi"
-      },
-      {
-        "axis": "benchmark_family",
-        "canonical_id": "factor_model_benchmark",
-        "legacy_id": "factor_model"
-      },
-      {
-        "axis": "benchmark_family",
-        "canonical_id": "benchmark_suite",
-        "legacy_id": "multi_benchmark_suite"
-      },
-      {
-        "axis": "contemporaneous_x_rule",
-        "canonical_id": "allow_same_period_predictors",
-        "legacy_id": "allow_contemporaneous"
-      },
-      {
-        "axis": "contemporaneous_x_rule",
-        "canonical_id": "forbid_same_period_predictors",
-        "legacy_id": "forbid_contemporaneous"
-      },
-      {
-        "axis": "data_richness_mode",
-        "canonical_id": "factors_plus_target_lags",
-        "legacy_id": "factor_plus_lags"
-      },
-      {
-        "axis": "data_richness_mode",
-        "canonical_id": "high_dimensional_predictors",
-        "legacy_id": "full_high_dimensional_X"
-      },
-      {
-        "axis": "data_richness_mode",
-        "canonical_id": "mixed_feature_blocks",
-        "legacy_id": "mixed_mode"
-      },
-      {
-        "axis": "data_richness_mode",
-        "canonical_id": "selected_sparse_predictors",
-        "legacy_id": "selected_sparse_X"
-      },
-      {
-        "axis": "decomposition_order",
-        "canonical_id": "shapley_style_effect_decomp",
-        "legacy_id": "Shapley_style_effect_decomp"
-      },
-      {
-        "axis": "decomposition_target",
-        "canonical_id": "validation_scheme_effect",
-        "legacy_id": "cv_scheme_effect"
-      },
-      {
-        "axis": "density_interval",
-        "canonical_id": "pit_uniformity",
-        "legacy_id": "PIT_uniformity"
-      },
-      {
-        "axis": "density_metrics",
-        "canonical_id": "crps",
-        "legacy_id": "CRPS"
-      },
-      {
-        "axis": "density_metrics",
-        "canonical_id": "nll",
-        "legacy_id": "NLL"
-      },
-      {
-        "axis": "density_metrics",
-        "canonical_id": "pit_based_metric",
-        "legacy_id": "PIT_based_metric"
-      },
-      {
-        "axis": "direction_metrics",
-        "canonical_id": "auc",
-        "legacy_id": "AUC"
-      },
-      {
-        "axis": "direction_metrics",
-        "canonical_id": "brier_score",
-        "legacy_id": "Brier_score"
-      },
-      {
-        "axis": "direction_metrics",
-        "canonical_id": "f1",
-        "legacy_id": "F1"
-      },
-      {
-        "axis": "experiment_unit",
-        "canonical_id": "single_target_generator_grid",
-        "legacy_id": "single_target_model_grid"
-      },
-      {
-        "axis": "experiment_unit",
-        "canonical_id": "single_target_single_generator",
-        "legacy_id": "single_target_single_model"
-      },
-      {
-        "axis": "export_format",
-        "canonical_id": "json_csv",
-        "legacy_id": "json+csv"
-      },
-      {
-        "axis": "feature_block_combination",
-        "canonical_id": "append_to_base_predictors",
-        "legacy_id": "append_to_base_x"
-      },
-      {
-        "axis": "feature_block_combination",
-        "canonical_id": "custom_feature_combiner",
-        "legacy_id": "custom_combiner"
-      },
-      {
-        "axis": "feature_block_combination",
-        "canonical_id": "replace_with_selected_blocks",
-        "legacy_id": "replace_with_blocks"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "custom_feature_blocks",
-        "legacy_id": "custom_blocks"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "high_dimensional_predictors",
-        "legacy_id": "high_dimensional_x"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "feature_builder_compatibility_bridge",
-        "legacy_id": "legacy_feature_builder_bridge"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "level_augmented_predictors",
-        "legacy_id": "level_augmented_x"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "mixed_feature_blocks",
-        "legacy_id": "mixed_blocks"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "rotation_augmented_predictors",
-        "legacy_id": "rotation_augmented_x"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "selected_sparse_predictors",
-        "legacy_id": "selected_sparse_x"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "transformed_predictors",
-        "legacy_id": "transformed_x"
-      },
-      {
-        "axis": "feature_block_set",
-        "canonical_id": "transformed_predictor_lags",
-        "legacy_id": "transformed_x_lags"
-      },
-      {
-        "axis": "feature_builder",
-        "canonical_id": "target_lag_features",
-        "legacy_id": "autoreg_lagged_target"
-      },
-      {
-        "axis": "feature_builder",
-        "canonical_id": "pca_factor_features",
-        "legacy_id": "factor_pca"
-      },
-      {
-        "axis": "feature_builder",
-        "canonical_id": "factors_plus_target_lags",
-        "legacy_id": "factors_plus_AR"
-      },
-      {
-        "axis": "feature_builder",
-        "canonical_id": "raw_predictors_only",
-        "legacy_id": "raw_X_only"
-      },
-      {
-        "axis": "feature_selection_policy",
-        "canonical_id": "lasso_selection",
-        "legacy_id": "lasso_select"
-      },
-      {
-        "axis": "feature_selection_semantics",
-        "canonical_id": "select_after_custom_feature_blocks",
-        "legacy_id": "select_after_custom_blocks"
-      },
-      {
-        "axis": "horizon_target_construction",
-        "canonical_id": "future_target_level_t_plus_h",
-        "legacy_id": "future_level_y_t_plus_h"
-      },
-      {
-        "axis": "information_set_type",
-        "canonical_id": "pseudo_oos_on_revised_data",
-        "legacy_id": "pseudo_oos_revised"
-      },
-      {
-        "axis": "information_set_type",
-        "canonical_id": "final_revised_data",
-        "legacy_id": "revised"
-      },
-      {
-        "axis": "missing_availability",
-        "canonical_id": "keep_available_rows",
-        "legacy_id": "available_case"
-      },
-      {
-        "axis": "missing_availability",
-        "canonical_id": "require_complete_rows",
-        "legacy_id": "complete_case_only"
-      },
-      {
-        "axis": "missing_availability",
-        "canonical_id": "impute_predictors_only",
-        "legacy_id": "x_impute_only"
-      },
-      {
-        "axis": "missing_availability",
-        "canonical_id": "zero_fill_leading_predictor_gaps",
-        "legacy_id": "zero_fill_before_start"
-      },
-      {
-        "axis": "model_family",
-        "canonical_id": "adaptive_lasso",
-        "legacy_id": "adaptivelasso"
-      },
-      {
-        "axis": "model_family",
-        "canonical_id": "bayesian_ridge",
-        "legacy_id": "bayesianridge"
-      },
-      {
-        "axis": "model_family",
-        "canonical_id": "extra_trees",
-        "legacy_id": "extratrees"
-      },
-      {
-        "axis": "model_family",
-        "canonical_id": "gradient_boosting",
-        "legacy_id": "gbm"
-      },
-      {
-        "axis": "model_family",
-        "canonical_id": "random_forest",
-        "legacy_id": "randomforest"
-      },
-      {
-        "axis": "official_transform_policy",
-        "canonical_id": "apply_official_tcode",
-        "legacy_id": "dataset_tcode"
-      },
-      {
-        "axis": "official_transform_policy",
-        "canonical_id": "keep_official_raw_scale",
-        "legacy_id": "raw_official_frame"
-      },
-      {
-        "axis": "official_transform_scope",
-        "canonical_id": "predictors_only",
-        "legacy_id": "apply_tcode_to_X"
-      },
-      {
-        "axis": "official_transform_scope",
-        "canonical_id": "target_and_predictors",
-        "legacy_id": "apply_tcode_to_both"
-      },
-      {
-        "axis": "official_transform_scope",
-        "canonical_id": "none",
-        "legacy_id": "apply_tcode_to_none"
-      },
-      {
-        "axis": "official_transform_scope",
-        "canonical_id": "target_only",
-        "legacy_id": "apply_tcode_to_target"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "huber_loss",
-        "legacy_id": "Huber_loss"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "mae",
-        "legacy_id": "MAE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "mape",
-        "legacy_id": "MAPE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "mase",
-        "legacy_id": "MASE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "mse",
-        "legacy_id": "MSE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "msfe",
-        "legacy_id": "MSFE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "median_absolute_error",
-        "legacy_id": "MedAE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "qlike",
-        "legacy_id": "QLIKE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "rmse",
-        "legacy_id": "RMSE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "rmsse",
-        "legacy_id": "RMSSE"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "theil_u",
-        "legacy_id": "TheilU"
-      },
-      {
-        "axis": "point_metrics",
-        "canonical_id": "smape",
-        "legacy_id": "sMAPE"
-      },
-      {
-        "axis": "predictor_family",
-        "canonical_id": "explicit_variable_list",
-        "legacy_id": "handpicked_set"
-      },
-      {
-        "axis": "preprocess_order",
-        "canonical_id": "extra_preprocess_then_official_tcode",
-        "legacy_id": "extra_then_tcode"
-      },
-      {
-        "axis": "preprocess_order",
-        "canonical_id": "official_tcode_only",
-        "legacy_id": "tcode_only"
-      },
-      {
-        "axis": "preprocess_order",
-        "canonical_id": "official_tcode_then_extra",
-        "legacy_id": "tcode_then_extra"
-      },
-      {
-        "axis": "ranking",
-        "canonical_id": "mcs_inclusion_priority",
-        "legacy_id": "MCS_inclusion_priority"
-      },
-      {
-        "axis": "ranking",
-        "canonical_id": "benchmark_beat_frequency",
-        "legacy_id": "benchmark_beat_freq"
-      },
-      {
-        "axis": "raw_missing_policy",
-        "canonical_id": "drop_raw_missing_rows",
-        "legacy_id": "drop_rows_with_raw_missing"
-      },
-      {
-        "axis": "raw_missing_policy",
-        "canonical_id": "impute_raw_predictors",
-        "legacy_id": "x_impute_raw"
-      },
-      {
-        "axis": "raw_missing_policy",
-        "canonical_id": "zero_fill_leading_predictor_missing_before_tcode",
-        "legacy_id": "zero_fill_leading_x_before_tcode"
-      },
-      {
-        "axis": "raw_outlier_policy",
-        "canonical_id": "set_raw_outliers_to_missing",
-        "legacy_id": "raw_outlier_to_missing"
-      },
-      {
-        "axis": "regime_definition",
-        "canonical_id": "markov_switching_regime",
-        "legacy_id": "Markov_switching_regime"
-      },
-      {
-        "axis": "regime_definition",
-        "canonical_id": "nber_recession",
-        "legacy_id": "NBER_recession"
-      },
-      {
-        "axis": "regime_use",
-        "canonical_id": "evaluation_only",
-        "legacy_id": "eval_only"
-      },
-      {
-        "axis": "relative_metrics",
-        "canonical_id": "csfe_difference",
-        "legacy_id": "CSFE_difference"
-      },
-      {
-        "axis": "relative_metrics",
-        "canonical_id": "oos_r2",
-        "legacy_id": "oos_R2"
-      },
-      {
-        "axis": "relative_metrics",
-        "canonical_id": "relative_mae",
-        "legacy_id": "relative_MAE"
-      },
-      {
-        "axis": "relative_metrics",
-        "canonical_id": "relative_msfe",
-        "legacy_id": "relative_MSFE"
-      },
-      {
-        "axis": "relative_metrics",
-        "canonical_id": "relative_rmse",
-        "legacy_id": "relative_RMSE"
-      },
-      {
-        "axis": "representation_policy",
-        "canonical_id": "official_tcode_only",
-        "legacy_id": "tcode_only"
-      },
-      {
-        "axis": "research_design",
-        "canonical_id": "study_bundle",
-        "legacy_id": "orchestrated_bundle"
-      },
-      {
-        "axis": "research_design",
-        "canonical_id": "replication_recipe",
-        "legacy_id": "replication_override"
-      },
-      {
-        "axis": "research_design",
-        "canonical_id": "single_forecast_run",
-        "legacy_id": "single_path_benchmark"
-      },
-      {
-        "axis": "residual_diagnostics",
-        "canonical_id": "full_residual_diagnostics",
-        "legacy_id": "diagnostics_full"
-      },
-      {
-        "axis": "stat_test",
-        "canonical_id": "full_residual_diagnostics",
-        "legacy_id": "diagnostics_full"
-      },
-      {
-        "axis": "target_structure",
-        "canonical_id": "multi_target",
-        "legacy_id": "multi_target_point_forecast"
-      },
-      {
-        "axis": "target_structure",
-        "canonical_id": "single_target",
-        "legacy_id": "single_target_point_forecast"
-      },
-      {
-        "axis": "target_transform_policy",
-        "canonical_id": "official_tcode_transformed",
-        "legacy_id": "tcode_transformed"
-      },
-      {
-        "axis": "tcode_application_scope",
-        "canonical_id": "predictors_only",
-        "legacy_id": "apply_tcode_to_X"
-      },
-      {
-        "axis": "tcode_application_scope",
-        "canonical_id": "target_and_predictors",
-        "legacy_id": "apply_tcode_to_both"
-      },
-      {
-        "axis": "tcode_application_scope",
-        "canonical_id": "none",
-        "legacy_id": "apply_tcode_to_none"
-      },
-      {
-        "axis": "tcode_application_scope",
-        "canonical_id": "target_only",
-        "legacy_id": "apply_tcode_to_target"
-      },
-      {
-        "axis": "tcode_policy",
-        "canonical_id": "custom_transform_sequence",
-        "legacy_id": "custom_transform_pipeline"
-      },
-      {
-        "axis": "tcode_policy",
-        "canonical_id": "extra_preprocess_only",
-        "legacy_id": "extra_preprocess_without_tcode"
-      },
-      {
-        "axis": "tcode_policy",
-        "canonical_id": "extra_preprocess_then_official_tcode",
-        "legacy_id": "extra_then_tcode"
-      },
-      {
-        "axis": "tcode_policy",
-        "canonical_id": "official_tcode_only",
-        "legacy_id": "tcode_only"
-      },
-      {
-        "axis": "tcode_policy",
-        "canonical_id": "official_tcode_then_extra_preprocess",
-        "legacy_id": "tcode_then_extra_preprocess"
-      },
-      {
-        "axis": "variable_universe",
-        "canonical_id": "category_variables",
-        "legacy_id": "category_subset"
-      },
-      {
-        "axis": "variable_universe",
-        "canonical_id": "explicit_variable_list",
-        "legacy_id": "handpicked_set"
-      },
-      {
-        "axis": "variable_universe",
-        "canonical_id": "core_variables",
-        "legacy_id": "preselected_core"
-      },
-      {
-        "axis": "variable_universe",
-        "canonical_id": "target_specific_variables",
-        "legacy_id": "target_specific_subset"
-      },
-      {
-        "axis": "x_lag_creation",
-        "canonical_id": "category_specific_predictor_lags",
-        "legacy_id": "category_specific_lags"
-      },
-      {
-        "axis": "x_lag_creation",
-        "canonical_id": "cv_selected_predictor_lags",
-        "legacy_id": "cv_selected_x_lags"
-      },
-      {
-        "axis": "x_lag_creation",
-        "canonical_id": "fixed_predictor_lags",
-        "legacy_id": "fixed_x_lags"
-      },
-      {
-        "axis": "x_lag_creation",
-        "canonical_id": "no_predictor_lags",
-        "legacy_id": "no_x_lags"
-      },
-      {
-        "axis": "x_lag_creation",
-        "canonical_id": "variable_specific_predictor_lags",
-        "legacy_id": "variable_specific_lags"
-      },
-      {
-        "axis": "x_lag_feature_block",
-        "canonical_id": "category_specific_predictor_lags",
-        "legacy_id": "category_specific_x_lags"
-      },
-      {
-        "axis": "x_lag_feature_block",
-        "canonical_id": "custom_predictor_lags",
-        "legacy_id": "custom_x_lags"
-      },
-      {
-        "axis": "x_lag_feature_block",
-        "canonical_id": "cv_selected_predictor_lags",
-        "legacy_id": "cv_selected_x_lags"
-      },
-      {
-        "axis": "x_lag_feature_block",
-        "canonical_id": "fixed_predictor_lags",
-        "legacy_id": "fixed_x_lags"
-      },
-      {
-        "axis": "x_lag_feature_block",
-        "canonical_id": "variable_specific_predictor_lags",
-        "legacy_id": "variable_specific_x_lags"
-      },
-      {
-        "axis": "x_transform_policy",
-        "canonical_id": "official_tcode_transformed",
-        "legacy_id": "apply_official_tcode_transformed"
-      },
-      {
-        "axis": "x_transform_policy",
-        "canonical_id": "official_tcode_transformed",
-        "legacy_id": "dataset_tcode_transformed"
-      }
-    ],
-    "version": "registry_naming_v1"
-  },
   "replication_library_version": "replication_library_v1",
   "replications": [
     {
@@ -4576,9 +3872,7 @@
             }
           },
           "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            }
+            "fixed_axes": {}
           },
           "7_importance": {
             "fixed_axes": {
@@ -4588,7 +3882,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Small fixture-safe replication route used to verify recipe lowering and artifact contracts."
     },
     {
@@ -4706,9 +4000,7 @@
             }
           },
           "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            }
+            "fixed_axes": {}
           },
           "7_importance": {
             "fixed_axes": {
@@ -4718,7 +4010,7 @@
         },
         "recipe_id": "fred-sd-midasr-almonp-direct"
       },
-      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_predictors\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_predictors\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
@@ -4788,9 +4080,7 @@
             }
           },
           "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            }
+            "fixed_axes": {}
           },
           "7_importance": {
             "fixed_axes": {
@@ -4800,7 +4090,7 @@
         },
         "recipe_id": "model-benchmark-ar-vs-zero-change"
       },
-      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: model-benchmark-ar-vs-zero-change\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -4876,14 +4166,6 @@
               },
               "manifest_mode": "full"
             },
-            "sweep_axes": {}
-          },
-          "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            },
-            "label": "Layer 6: statistical tests",
-            "leaf_config": {},
             "sweep_axes": {}
           },
           "7_importance": {
@@ -4970,7 +4252,6 @@
             "residual_diagnostics": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
-            "stat_test": "none",
             "target": "INDPRO",
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
@@ -9276,161 +8557,6 @@
             "selected": "aggregated"
           },
           {
-            "axis": "stat_test",
-            "layer": "6_stat_tests",
-            "layer_label": "Layer 6: statistical tests",
-            "options": [
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "none"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_hln'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_hln"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_modified'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_modified"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cw'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cw"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mcs'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mcs"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'enc_new'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "enc_new"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_f'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_f"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_t'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_t"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cpa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cpa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rossi'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rossi"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rolling_dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rolling_dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'reality_check'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "reality_check"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'spa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "spa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mincer_zarnowitz'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mincer_zarnowitz"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'ljung_box'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "ljung_box"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'arch_lm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "arch_lm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'bias_test'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "bias_test"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'pesaran_timmermann'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "pesaran_timmermann"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'binomial_hit'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "binomial_hit"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "full_residual_diagnostics"
-              }
-            ],
-            "selected": "none"
-          },
-          {
             "axis": "equal_predictive",
             "layer": "6_stat_tests",
             "layer_label": "Layer 6: statistical tests",
@@ -10482,9 +9608,7 @@
             }
           },
           "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            }
+            "fixed_axes": {}
           },
           "7_importance": {
             "fixed_axes": {
@@ -10494,7 +9618,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes:\n      stat_test: none\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      research_design: single_forecast_run\n      experiment_unit: single_target_single_generator\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -10578,14 +9702,6 @@
               },
               "manifest_mode": "full"
             },
-            "sweep_axes": {}
-          },
-          "6_stat_tests": {
-            "fixed_axes": {
-              "stat_test": "none"
-            },
-            "label": "Layer 6: statistical tests",
-            "leaf_config": {},
             "sweep_axes": {}
           },
           "7_importance": {
@@ -10677,7 +9793,6 @@
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
             "source_adapter": "fred_md",
-            "stat_test": "none",
             "target": "INDPRO",
             "target_missing_policy": "none",
             "target_outlier_policy": "none",
@@ -14996,161 +14111,6 @@
             "selected": "aggregated"
           },
           {
-            "axis": "stat_test",
-            "layer": "6_stat_tests",
-            "layer_label": "Layer 6: statistical tests",
-            "options": [
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "none"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_hln'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_hln"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_modified'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_modified"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cw'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cw"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mcs'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mcs"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'enc_new'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "enc_new"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_f'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_f"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_t'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_t"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cpa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cpa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rossi'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rossi"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rolling_dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rolling_dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'reality_check'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "reality_check"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'spa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "spa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mincer_zarnowitz'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mincer_zarnowitz"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'ljung_box'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "ljung_box"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'arch_lm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "arch_lm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'bias_test'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "bias_test"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'pesaran_timmermann'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "pesaran_timmermann"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'binomial_hit'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "binomial_hit"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "full_residual_diagnostics"
-              }
-            ],
-            "selected": "none"
-          },
-          {
             "axis": "equal_predictive",
             "layer": "6_stat_tests",
             "layer_label": "Layer 6: statistical tests",
@@ -16461,7 +15421,6 @@
             "saved_objects": "full_bundle",
             "scaling_policy": "standard",
             "source_adapter": "fred_md",
-            "stat_test": "none",
             "target": "INDPRO",
             "target_lag_block": "none",
             "target_missing_policy": "none",
@@ -20832,161 +19791,6 @@
             "selected": "aggregated"
           },
           {
-            "axis": "stat_test",
-            "layer": "6_stat_tests",
-            "layer_label": "Layer 6: statistical tests",
-            "options": [
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'none'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "none"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_hln'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_hln"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'dm_modified'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "dm_modified"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cw'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cw"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mcs'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mcs"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'enc_new'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "enc_new"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_f'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_f"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mse_t'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mse_t"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'cpa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "cpa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rossi'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rossi"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'rolling_dm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "rolling_dm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'reality_check'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "reality_check"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'spa'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "spa"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'mincer_zarnowitz'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "mincer_zarnowitz"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'ljung_box'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "ljung_box"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'arch_lm'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "arch_lm"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'bias_test'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "bias_test"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'pesaran_timmermann'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "pesaran_timmermann"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'binomial_hit'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "binomial_hit"
-              },
-              {
-                "canonical_path_effect": "path.6_stat_tests.fixed_axes.stat_test = 'full_residual_diagnostics'",
-                "disabled_reason": null,
-                "enabled": true,
-                "status": "operational",
-                "value": "full_residual_diagnostics"
-              }
-            ],
-            "selected": "none"
-          },
-          {
             "axis": "equal_predictive",
             "layer": "6_stat_tests",
             "layer_label": "Layer 6: statistical tests",
@@ -22020,7 +20824,6 @@
       "report_style": "tidy_dataframe",
       "residual_diagnostics": "none",
       "saved_objects": "full_bundle",
-      "stat_test": "none",
       "test_scope": "per_target"
     },
     "forecast_object_rules": {
@@ -22188,92 +20991,6 @@
         "mse_t",
         "spa"
       ],
-      "legacy_to_split": {
-        "arch_lm": {
-          "axis": "residual_diagnostics",
-          "value": "arch_lm"
-        },
-        "bias_test": {
-          "axis": "residual_diagnostics",
-          "value": "bias_test"
-        },
-        "binomial_hit": {
-          "axis": "direction",
-          "value": "binomial_hit"
-        },
-        "cpa": {
-          "axis": "cpa_instability",
-          "value": "cpa"
-        },
-        "cw": {
-          "axis": "nested",
-          "value": "cw"
-        },
-        "diagnostics_full": {
-          "axis": "residual_diagnostics",
-          "value": "full_residual_diagnostics"
-        },
-        "dm": {
-          "axis": "equal_predictive",
-          "value": "dm"
-        },
-        "dm_hln": {
-          "axis": "equal_predictive",
-          "value": "dm_hln"
-        },
-        "dm_modified": {
-          "axis": "equal_predictive",
-          "value": "dm_modified"
-        },
-        "enc_new": {
-          "axis": "nested",
-          "value": "enc_new"
-        },
-        "full_residual_diagnostics": {
-          "axis": "residual_diagnostics",
-          "value": "full_residual_diagnostics"
-        },
-        "ljung_box": {
-          "axis": "residual_diagnostics",
-          "value": "ljung_box"
-        },
-        "mcs": {
-          "axis": "multiple_model",
-          "value": "mcs"
-        },
-        "mincer_zarnowitz": {
-          "axis": "residual_diagnostics",
-          "value": "mincer_zarnowitz"
-        },
-        "mse_f": {
-          "axis": "nested",
-          "value": "mse_f"
-        },
-        "mse_t": {
-          "axis": "nested",
-          "value": "mse_t"
-        },
-        "pesaran_timmermann": {
-          "axis": "direction",
-          "value": "pesaran_timmermann"
-        },
-        "reality_check": {
-          "axis": "multiple_model",
-          "value": "reality_check"
-        },
-        "rolling_dm": {
-          "axis": "cpa_instability",
-          "value": "rolling_dm"
-        },
-        "rossi": {
-          "axis": "cpa_instability",
-          "value": "rossi"
-        },
-        "spa": {
-          "axis": "multiple_model",
-          "value": "spa"
-        }
-      },
       "split_axes": [
         "equal_predictive",
         "nested",
@@ -22387,7 +21104,6 @@
       "artifact_granularity"
     ],
     "6_stat_tests": [
-      "stat_test",
       "equal_predictive",
       "nested",
       "cpa_instability",

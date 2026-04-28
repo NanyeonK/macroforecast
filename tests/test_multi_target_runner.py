@@ -24,7 +24,7 @@ def _multi_target_recipe() -> dict:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "info_set": "final_revised_data",
+                    "information_set_type": "final_revised_data",
                     "target_structure": "multi_target",
                 },
                 "leaf_config": {"targets": ["INDPRO", "RPI"], "horizons": [1]},
@@ -44,7 +44,7 @@ def _multi_target_recipe() -> dict:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5, "rolling_window_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

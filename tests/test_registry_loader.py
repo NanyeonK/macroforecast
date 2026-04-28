@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 147
+EXPECTED_AXIS_COUNT = 146
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -512,9 +512,9 @@ def test_registry_loader_discovers_stage5_output_axes() -> None:
 def test_registry_loader_discovers_stage6_test_axes() -> None:
     registry = get_axis_registry()
     assert registry["overlap_handling"].layer == "6_stat_tests"
-    assert registry["stat_test"].current_status["mcs"] == "operational"
-    assert registry["stat_test"].current_status["spa"] == "operational"
-    assert registry["stat_test"].current_status["full_residual_diagnostics"] == "operational"
+    assert registry["multiple_model"].current_status["mcs"] == "operational"
+    assert registry["multiple_model"].current_status["spa"] == "operational"
+    assert registry["residual_diagnostics"].current_status["full_residual_diagnostics"] == "operational"
     assert registry["dependence_correction"].current_status["block_bootstrap"] == "operational"
     assert registry["test_scope"].current_status["per_target"] == "operational"
     assert registry["test_scope"].current_status["per_horizon"] == "registry_only"

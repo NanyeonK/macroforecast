@@ -24,7 +24,7 @@ def _base_recipe() -> dict:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {"scaling_policy": "standard"}},
@@ -193,7 +193,7 @@ def _nested_recipe() -> dict:
         "path": {
             "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
             "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "task": "single_target"},
+                "fixed_axes": {"dataset": "fred_md", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},
             },
             "2_preprocessing": {"fixed_axes": {"scaling_policy": "standard"}},

@@ -16,14 +16,9 @@ Layer 5 owns output format, saved objects, provenance fields, and artifact granu
 | Provenance | `provenance_fields` |
 | Granularity | `artifact_granularity` |
 
-## Naming migration
+## Canonical names
 
-Layer 5 keeps artifact choices explicit in YAML. Older punctuation-based
-format IDs still compile through `registry_naming_v1`.
-
-| Axis | Legacy value | Canonical value |
-|---|---:|---:|
-| `export_format` | `json+csv` | `json_csv` |
+Layer 5 export format IDs avoid punctuation in YAML. Use `json_csv` for the combined JSON and CSV export.
 
 ## Layer contract
 

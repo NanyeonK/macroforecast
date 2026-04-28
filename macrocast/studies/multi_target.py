@@ -78,7 +78,6 @@ def _build_single_target_recipe_dict(
     data_task = path.setdefault("1_data_task", {})
     data_task_fixed = data_task.setdefault("fixed_axes", {})
     data_task_fixed["target_structure"] = "single_target"
-    data_task_fixed.pop("task", None)
     data_task_leaf = data_task.setdefault("leaf_config", {})
     data_task_leaf["target"] = target_name
     data_task_leaf.pop("targets", None)

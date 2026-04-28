@@ -72,13 +72,6 @@ def test_axis_has_expected_planned_values(axis_name: str) -> None:
     assert planned == PLANNED_PRESENT[axis_name]
 
 
-def test_legacy_stat_test_axis_still_registered() -> None:
-    entry = get_axis_registry_entry("stat_test")
-    assert entry.layer == "6_stat_tests"
-    assert "dm" in entry.allowed_values
-    assert entry.current_status["dm"] == "operational"
-
-
 def test_scope_runtime_status_matches_current_orchestration() -> None:
     entry = get_axis_registry_entry("test_scope")
     assert entry.current_status["per_target"] == "operational"

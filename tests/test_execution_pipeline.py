@@ -34,7 +34,7 @@ def _stage0(
     feature_builder: str = "raw_feature_panel",
     benchmark: str = "zero_change",
     framework: str = "rolling",
-    info_set: str = "revised_monthly",
+    information_set_label: str = "revised_monthly",
 ):
     sample_split = {
         "expanding": "expanding_window_oos",
@@ -44,7 +44,7 @@ def _stage0(
         research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
-            "information_set": info_set,
+            "information_set": information_set_label,
             "sample_split": sample_split,
             "benchmark": benchmark,
             "evaluation_protocol": "point_forecast_core",
@@ -66,7 +66,7 @@ def _recipe(
     benchmark: str = "zero_change",
     framework: str = "rolling",
     benchmark_config: dict | None = None,
-    info_set: str = "revised_monthly",
+    information_set_label: str = "revised_monthly",
     data_vintage: str | None = None,
     forecast_object: str = "point_mean",
     forecast_type: str | None = None,
@@ -91,7 +91,7 @@ def _recipe(
         training_spec["quantile_level"] = quantile_level
     return build_recipe_spec(
         recipe_id=f"fred_md_{framework}_{model_family}_{feature_builder}",
-        stage0=_stage0(model_family=model_family, feature_builder=feature_builder, benchmark=benchmark, framework=framework, info_set=info_set),
+        stage0=_stage0(model_family=model_family, feature_builder=feature_builder, benchmark=benchmark, framework=framework, information_set_label=information_set_label),
         target="INDPRO",
         horizons=(1, 3),
         raw_dataset="fred_md",
@@ -833,14 +833,14 @@ def test_execute_recipe_writes_cw_artifact(tmp_path: Path) -> None:
         preprocess=preprocess,
         output_root=tmp_path,
         local_raw_source=fixture,
-        provenance_payload={"compiler": {"stat_test_spec": {"stat_test": "cw"}}},
+        provenance_payload={"compiler": {"stat_test_spec": {"nested": "cw"}}},
     )
 
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
     cw_payload = json.loads((run_dir / "stat_test_cw.json").read_text())
 
-    assert manifest["stat_test_spec"]["stat_test"] == "cw"
+    assert "stat_test" not in manifest["stat_test_spec"]
     assert manifest["stat_test_file"] == "stat_test_cw.json"
     assert cw_payload["stat_test"] == "cw"
     assert "forecast_adjustment_mean" in cw_payload
@@ -2168,7 +2168,7 @@ def test_execute_recipe_json_csv_export_writes_sidecar_files(tmp_path: Path) -> 
                     "artifact_granularity": "aggregated",
                 },
                 "importance_spec": {"importance_method": "none"},
-                "stat_test_spec": {"stat_test": "none"},
+                "stat_test_spec": {},
             }
         },
     )
@@ -2203,7 +2203,7 @@ def test_execute_recipe_predictions_only_saved_objects_writes_minimal_prediction
                     "artifact_granularity": "aggregated",
                 },
                 "importance_spec": {"importance_method": "none"},
-                "stat_test_spec": {"stat_test": "none"},
+                "stat_test_spec": {},
             }
         },
     )
@@ -2241,7 +2241,7 @@ def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) 
                     "artifact_granularity": "aggregated",
                 },
                 "importance_spec": {"importance_method": "none"},
-                "stat_test_spec": {"stat_test": "none"},
+                "stat_test_spec": {},
             }
         },
     )
@@ -2277,7 +2277,7 @@ def test_execute_recipe_rejects_unimplemented_artifact_granularity(tmp_path: Pat
                         "artifact_granularity": "per_target",
                     },
                     "importance_spec": {"importance_method": "none"},
-                    "stat_test_spec": {"stat_test": "none"},
+                    "stat_test_spec": {},
                 }
             },
         )
@@ -2295,7 +2295,7 @@ def test_execute_recipe_full_provenance_hash_changes_with_recipe_config(tmp_path
                 "artifact_granularity": "aggregated",
             },
             "importance_spec": {"importance_method": "none"},
-            "stat_test_spec": {"stat_test": "none"},
+            "stat_test_spec": {},
         }
     }
     base_recipe = build_recipe_spec(
@@ -2342,6 +2342,16 @@ def test_execute_recipe_full_provenance_hash_changes_with_recipe_config(tmp_path
     assert base_manifest["config_hash"] != alt_manifest["config_hash"]
 
 
+
+STAT_TEST_AXIS = {
+    "dm_hln": "equal_predictive", "dm_modified": "equal_predictive", "mcs": "multiple_model",
+    "enc_new": "nested", "mse_f": "nested", "mse_t": "nested",
+    "cpa": "cpa_instability", "rossi": "cpa_instability", "rolling_dm": "cpa_instability",
+    "reality_check": "multiple_model", "spa": "multiple_model",
+    "full_residual_diagnostics": "residual_diagnostics",
+    "pesaran_timmermann": "direction", "binomial_hit": "direction",
+}
+
 def test_execute_recipe_stage6_extended_stat_tests(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     cases = [
@@ -2367,7 +2377,7 @@ def test_execute_recipe_stage6_extended_stat_tests(tmp_path: Path) -> None:
             preprocess=_preprocess_raw_only(),
             output_root=out_root,
             local_raw_source=fixture,
-            provenance_payload={"compiler": {"stat_test_spec": {"stat_test": stat_name, **extra}}},
+            provenance_payload={"compiler": {"stat_test_spec": {STAT_TEST_AXIS[stat_name]: stat_name, **extra}}},
         )
         run_dir = out_root / result.run.artifact_subdir
         manifest = json.loads((run_dir / "manifest.json").read_text())
@@ -2384,7 +2394,7 @@ def test_execute_recipe_stage6_stat_test_manifest_preserves_dependence_correctio
         preprocess=_preprocess_raw_only(),
         output_root=tmp_path,
         local_raw_source=fixture,
-        provenance_payload={"compiler": {"stat_test_spec": {"stat_test": "dm_modified", "dependence_correction": "nw_hac_auto"}}},
+        provenance_payload={"compiler": {"stat_test_spec": {"equal_predictive": "dm_modified", "dependence_correction": "nw_hac_auto"}}},
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
     assert manifest["stat_test_spec"]["dependence_correction"] == "nw_hac_auto"
@@ -2414,7 +2424,6 @@ def test_execute_recipe_stage6_split_stat_test_contract(tmp_path: Path) -> None:
     artifact_manifest = json.loads((run_dir / "artifact_manifest.json").read_text())
 
     assert manifest["stat_test_contract"] == "layer6_stat_test_split_v1"
-    assert manifest["stat_test_spec"]["stat_test"] == "none"
     assert manifest["stat_test_spec"]["equal_predictive"] == "dm_modified"
     assert manifest["stat_test_spec"]["test_scope"] == "per_target"
     assert manifest["stat_test_file"] == "stat_test_dm_modified.json"

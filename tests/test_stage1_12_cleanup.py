@@ -16,8 +16,8 @@ from macrocast.compiler.errors import CompileValidationError
 def _base_recipe(overrides_1_data_task: dict[str, str] | None = None) -> dict:
     axes_1 = {
         "dataset": "fred_md",
-        "info_set": "final_revised_data",
-        "task": "single_target",
+        "information_set_type": "final_revised_data",
+        "target_structure": "single_target",
     }
     if overrides_1_data_task:
         axes_1.update(overrides_1_data_task)
@@ -56,7 +56,7 @@ def _base_recipe(overrides_1_data_task: dict[str, str] | None = None) -> dict:
                 "manifest_mode": "full",
                 "benchmark_config": {"minimum_train_size": 5},
             }},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }

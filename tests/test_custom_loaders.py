@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from macrocast import load_custom_csv, load_custom_parquet
+from macrocast.compiler.errors import CompileValidationError
 from macrocast.raw.errors import RawParseError
 
 
@@ -75,8 +76,8 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "source_adapter": "custom_csv",
-                    "info_set": "final_revised_data",
-                    "task": "single_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},  # no custom_data_path!
             },
@@ -95,7 +96,7 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
@@ -103,8 +104,7 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
         compile_recipe_dict(recipe)
 
 
-def test_legacy_dataset_source_alias_compiles_to_source_adapter(tmp_path: Path) -> None:
-    """Old recipes may still say dataset_source during the compatibility window."""
+def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
     from macrocast.compiler.build import compile_recipe_dict
 
     csv_path = tmp_path / "custom.csv"
@@ -117,8 +117,8 @@ def test_legacy_dataset_source_alias_compiles_to_source_adapter(tmp_path: Path) 
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "dataset_source": "custom_csv",
-                    "info_set": "final_revised_data",
-                    "task": "single_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {
                     "target": "INDPRO",
@@ -141,17 +141,15 @@ def test_legacy_dataset_source_alias_compiles_to_source_adapter(tmp_path: Path) 
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    compile_result = compile_recipe_dict(recipe)
-    spec = compile_result.manifest["data_task_spec"]
-    assert spec["source_adapter"] == "custom_csv"
-    assert "dataset_source" not in spec
+    with pytest.raises(CompileValidationError, match="unknown registry axis 'dataset_source'"):
+        compile_recipe_dict(recipe)
 
 
-def test_dataset_source_alias_conflicts_with_source_adapter() -> None:
+def test_dataset_source_alias_with_source_adapter_is_rejected() -> None:
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.compiler.errors import CompileValidationError
 
@@ -164,8 +162,8 @@ def test_dataset_source_alias_conflicts_with_source_adapter() -> None:
                     "dataset": "fred_md",
                     "source_adapter": "custom_csv",
                     "dataset_source": "custom_parquet",
-                    "info_set": "final_revised_data",
-                    "task": "single_target",
+                    "information_set_type": "final_revised_data",
+                    "target_structure": "single_target",
                 },
                 "leaf_config": {
                     "target": "INDPRO",
@@ -188,9 +186,9 @@ def test_dataset_source_alias_conflicts_with_source_adapter() -> None:
             }},
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {"stat_test": "none"}},
+            "6_stat_tests": {"fixed_axes": {}},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    with pytest.raises(CompileValidationError, match="canonical/legacy aliases"):
+    with pytest.raises(CompileValidationError, match="unknown registry axis 'dataset_source'"):
         compile_recipe_dict(recipe)

@@ -16,11 +16,10 @@ Values:
 - `multi_target`: two or more target series. Requires
   `leaf_config.targets`.
 
-Compatibility:
+Canonical API:
 
-- Legacy recipes may still use `task`.
-- The compiler canonicalizes `task` to `target_structure`.
-- New generated recipes, manifests, and docs should use `target_structure`.
+- Generated recipes, manifests, and docs use `target_structure`.
+- Removed target-shape aliases are rejected during registry validation.
 
 Layer 0 connection:
 
