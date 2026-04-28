@@ -646,11 +646,11 @@ def _interactive_wizard(*, recipe_path: str, yaml_path: str | None, max_steps: i
     return out
 
 
-def macrocast_single_run(
+def macrocast_preview(
     *,
     yaml_path: str | None = None,
     stages: str | Iterable[str] | None = None,
-    output_root: str = "/tmp/macrocast_single_run_preview",
+    output_root: str = "/tmp/macrocast_preview",
     recipe_path: str = "examples/recipes/model-benchmark.yaml",
     max_steps: int | None = None,
 ) -> dict[str, Any]:
