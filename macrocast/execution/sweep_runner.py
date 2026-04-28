@@ -29,7 +29,7 @@ from .build import execute_recipe
 from .errors import ExecutionError
 
 
-DEFAULT_RESEARCH_DESIGN = "controlled_variation"
+DEFAULT_EXECUTION_ROUTE = "comparison_sweep"
 
 
 @dataclass(frozen=True)
@@ -160,7 +160,7 @@ def execute_sweep(
     plan: SweepPlan,
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
-    research_design: str = DEFAULT_RESEARCH_DESIGN,
+    execution_route: str = DEFAULT_EXECUTION_ROUTE,
     extra_provenance: dict[str, Any] | None = None,
 ) -> SweepResult:
     """Execute every variant of ``plan`` under ``output_root``.
@@ -186,8 +186,8 @@ def execute_sweep(
             the aggregate ``study_manifest.json``.
         local_raw_source: Passed through to :func:`execute_recipe` so
             tests can use fixture CSVs.
-        research_design: Recorded on the study manifest. Defaults to
-            ``controlled_variation``.
+        execution_route: Recorded on the study manifest. Defaults to
+            ``comparison_sweep``.
         extra_provenance: Optional dict merged into each variant's
             ``provenance_payload`` on top of ``variant_id`` / ``study_id``.
 
@@ -383,7 +383,7 @@ def execute_sweep(
 
     manifest = build_study_manifest(
         study_id=plan.study_id,
-        research_design=research_design,
+        execution_route=execution_route,
         parent_recipe_id=plan.parent_recipe_id,
         parent_recipe_dict=plan.parent_recipe_dict,
         axes_swept=plan.axes_swept,

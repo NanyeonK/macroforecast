@@ -283,7 +283,6 @@ def _rule_experiment_unit_default(
             return selection_map[name].selected_values[0]
         return default
 
-    research_design = _sv("research_design", "single_forecast_run")
     task = (
         _sv("target_structure")
         or leaf_config.get("target_structure")
@@ -292,7 +291,6 @@ def _rule_experiment_unit_default(
     model_sel = selection_map.get("model_family")
     feature_sel = selection_map.get("feature_builder")
     return derive_experiment_unit_default(
-        research_design=research_design or "single_forecast_run",
         task=task,
         model_axis_mode=model_sel.selection_mode if model_sel else "fixed",
         feature_axis_mode=feature_sel.selection_mode if feature_sel else "fixed",
@@ -462,7 +460,7 @@ def _selection_value(selection_map: dict[str, AxisSelection], axis_name: str, de
         return default
     values = selection_map[axis_name].selected_values
     if len(values) != 1:
-        raise CompileValidationError(f"axis {axis_name!r} must be fixed for direct single-run compilation")
+        raise CompileValidationError(f"axis {axis_name!r} must be fixed for direct comparison-cell compilation")
     return values[0]
 
 
@@ -846,7 +844,7 @@ def _build_tree_context(
     failure_policy = next((selection.selected_values[0] for selection in selections if selection.axis_name == "failure_policy"), "fail_fast")
     variation_axes = _variation_axes(selections)
     return {
-        "research_design": stage0.research_design,
+        "execution_route": "comparison_sweep",
         "design_shape": stage0.design_shape,
         "execution_posture": stage0.execution_posture,
         "experiment_unit": stage0.experiment_unit,
@@ -900,10 +898,10 @@ def _controlled_axis_kind(variation_axes: tuple[str, ...]) -> str:
 
 def _route_contract(stage0, run_spec: RunSpec, selections: tuple[AxisSelection, ...]) -> str:
     route_owner = run_spec.route_owner
-    if route_owner == "single_run":
+    if route_owner == "comparison_sweep":
         if _variation_axes(selections):
             return "sweep_runner_executable"
-        return "single_run_executable"
+        return "single_cell_executable"
     if route_owner == "wrapper":
         return "wrapper_handoff"
     if route_owner == "replication":
@@ -2985,7 +2983,6 @@ def _build_stage0_and_recipe(
     leaf_config: dict[str, Any],
     preprocess_contract,
 ):
-    research_design = _selection_value(selection_map, "research_design")
     dataset = _selection_value(selection_map, "dataset")
     information_set_type = _selection_value(selection_map, "information_set_type")
     target_structure = _target_structure(selection_map)
@@ -3008,7 +3005,6 @@ def _build_stage0_and_recipe(
             raise CompileValidationError("single-target recipes require leaf_config.target")
 
     derived_experiment_unit = derive_experiment_unit_default(
-        research_design=research_design,
         task=target_structure,
         model_axis_mode=model_axis.selection_mode,
         feature_axis_mode=feature_axis.selection_mode,
@@ -3018,10 +3014,6 @@ def _build_stage0_and_recipe(
     experiment_unit = _selection_value(selection_map, "experiment_unit", default=derived_experiment_unit)
     if experiment_unit_explicit:
         unit_entry = get_experiment_unit_entry(experiment_unit)
-        if experiment_unit != derived_experiment_unit:
-            raise CompileValidationError(
-                f"experiment_unit={experiment_unit!r} conflicts with current recipe shape; implied unit is {derived_experiment_unit!r}"
-            )
         if unit_entry.requires_multi_target and target_structure != "multi_target":
             raise CompileValidationError(
                 f"experiment_unit={experiment_unit!r} requires target_structure='multi_target'"
@@ -3041,7 +3033,6 @@ def _build_stage0_and_recipe(
     }.get(information_set_type, information_set_type)
 
     stage0 = build_design_frame(
-        research_design=research_design,
         experiment_unit=experiment_unit if experiment_unit_explicit else None,
         fixed_design={
             "dataset_adapter": dataset,
@@ -3710,7 +3701,7 @@ def _execution_status(
         not_supported.append(
             "route_owner='orchestrator' has no executable runner contract in the current runtime"
         )
-    elif route_owner == "single_run" and has_runner_managed_sweep:
+    elif route_owner == "comparison_sweep" and has_runner_managed_sweep:
         runner_ready_status = "ready_for_sweep_runner"
 
     if blocked:
@@ -3774,7 +3765,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
     selections = _append_feature_builder_bridge_if_needed(selections, selection_map)
     _ensure_unique_axis_selections(selections)
     selection_map = _selection_map(selections)
-    required_axes = {"research_design", "dataset", "information_set_type", "target_structure", "framework", "benchmark_family", "model_family", "feature_builder"}
+    required_axes = {"dataset", "information_set_type", "target_structure", "framework", "benchmark_family", "model_family", "feature_builder"}
     missing_axes = sorted(axis for axis in required_axes if axis not in selection_map)
     if missing_axes:
         raise CompileValidationError(f"recipe missing required axes: {missing_axes}")
@@ -3951,10 +3942,10 @@ def run_compiled_recipe(
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
 ):
-    if compiled.run_spec.route_owner != "single_run":
+    if compiled.run_spec.route_owner != "comparison_sweep":
         raise CompileValidationError(
             f"compiled recipe route_owner={compiled.run_spec.route_owner!r} requires a dedicated runner; "
-            "run_compiled_recipe only executes route_owner='single_run'"
+            "run_compiled_recipe only executes route_owner='comparison_sweep'"
         )
     if compiled.execution_status != "executable":
         raise CompileValidationError(

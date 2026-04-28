@@ -62,7 +62,7 @@ recipe_id: layer2-layer3-grid
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
+      experiment_unit: single_target_generator_grid
       failure_policy: skip_failed_cell
       compute_mode: serial
   1_data_task:

@@ -48,11 +48,10 @@ Layer 0 currently exports the first presentation contract:
 
 | Step | Registry axis | Human label | Contract |
 |---|---|---|---|
-| 1 | `research_design` | Study route | User-facing runner route. Affects executor family, sweep interpretation, and artifact shape. |
-| 2 | `experiment_unit` | Runner unit | Usually compiler-derived from study route, target structure, and sweep shape. Explicit values must match runner constraints. |
-| 3 | `failure_policy` | Failure handling | Runtime failure behavior for single runs and sweeps. |
-| 4 | `reproducibility_mode` | Reproducibility | Seed and determinism policy applied before stochastic model code runs. |
-| 5 | `compute_mode` | Compute layout | Serial or parallel execution request; unsupported modes and singleton work units degrade to serial/no-op behavior. |
+| 1 | `experiment_unit` | Execution Unit | Work unit for one-cell comparison, controlled sweep, multi-target run, wrapper handoff, or replication handoff. |
+| 2 | `failure_policy` | Failure handling | Runtime failure behavior for comparison cells, sweeps, and handoff runners. |
+| 3 | `reproducibility_mode` | Reproducibility | Seed and determinism policy applied before stochastic model code runs. |
+| 4 | `compute_mode` | Compute layout | Serial or parallel execution request; unsupported modes and singleton work units degrade to serial/no-op behavior. |
 
 The same presentation contract should be extended layer by layer so each choice has a label, question, contract note, detailed-docs route, and value descriptions.
 

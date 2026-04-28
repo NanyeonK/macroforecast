@@ -64,7 +64,7 @@ Use this for large controlled sweeps where some cells may be invalid.
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
+      experiment_unit: single_target_generator_grid
       failure_policy: skip_failed_cell
 ```
 
@@ -190,7 +190,7 @@ For a controlled sweep:
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
+      experiment_unit: single_target_generator_grid
       failure_policy: skip_failed_cell
 ```
 

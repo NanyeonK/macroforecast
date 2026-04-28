@@ -1,15 +1,7 @@
 from __future__ import annotations
 
 from .errors import DesignNormalizationError
-from .types import ComparisonContract, FixedDesign, ReplicationInput, ResearchDesign, VaryingDesign
-from ..registry.naming import canonical_axis_value
-
-_ALLOWED_RESEARCH_DESIGNS: tuple[ResearchDesign, ...] = (
-    "single_forecast_run",
-    "controlled_variation",
-    "study_bundle",
-    "replication_recipe",
-)
+from .types import ComparisonContract, FixedDesign, ReplicationInput, VaryingDesign
 
 
 def _tupleize(value: object) -> tuple[str, ...]:
@@ -24,15 +16,6 @@ def _tupleize(value: object) -> tuple[str, ...]:
             return tuple(value)
         raise DesignNormalizationError("list values must contain only strings")
     raise DesignNormalizationError(f"expected tuple/list of strings, got {type(value).__name__}")
-
-
-def normalize_research_design(value: str) -> str:
-    value = canonical_axis_value("research_design", value)
-    if value not in _ALLOWED_RESEARCH_DESIGNS:
-        raise DesignNormalizationError(
-            f"unknown research_design={value!r}; expected one of {_ALLOWED_RESEARCH_DESIGNS}"
-        )
-    return value
 
 
 def normalize_fixed_design(value: FixedDesign | dict) -> FixedDesign:

@@ -6,7 +6,6 @@ from .normalize import (
     normalize_comparison_contract,
     normalize_fixed_design,
     normalize_replication_input,
-    normalize_research_design,
     normalize_varying_design,
 )
 from .types import DesignFrame
@@ -19,7 +18,6 @@ def design_to_dict(stage0: DesignFrame) -> dict:
 
 def design_from_dict(payload: dict) -> DesignFrame:
     return build_design_frame(
-        research_design=normalize_research_design(payload["research_design"]),
         fixed_design=normalize_fixed_design(payload["fixed_design"]),
         comparison_contract=normalize_comparison_contract(payload["comparison_contract"]),
         varying_design=normalize_varying_design(payload.get("varying_design")),

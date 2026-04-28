@@ -19,7 +19,7 @@ STUDY_MANIFEST_SCHEMA_VERSION = "1.0"
 _REQUIRED_TOP_LEVEL_KEYS = (
     "schema_version",
     "study_id",
-    "research_design",
+    "execution_route",
     "created_at_utc",
     "parent_recipe_id",
     "sweep_plan",
@@ -90,7 +90,7 @@ def _utc_now_iso() -> str:
 def build_study_manifest(
     *,
     study_id: str,
-    research_design: str,
+    execution_route: str,
     parent_recipe_id: str,
     parent_recipe_dict: dict[str, Any],
     axes_swept: Iterable[str],
@@ -115,7 +115,7 @@ def build_study_manifest(
     manifest: dict[str, Any] = {
         "schema_version": STUDY_MANIFEST_SCHEMA_VERSION,
         "study_id": study_id,
-        "research_design": research_design,
+        "execution_route": execution_route,
         "created_at_utc": created_at_utc or _utc_now_iso(),
         "parent_recipe_id": parent_recipe_id,
         "parent_recipe": parent_recipe_dict,

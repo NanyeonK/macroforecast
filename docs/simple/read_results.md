@@ -49,7 +49,7 @@ Common attributes:
 - `result.metrics`: one row per horizon, or per variant and horizon for sweeps
 - `result.comparison`: compact comparison table
 - `result.manifest`: provenance dictionary
-- `result.artifact_dir`: single-run artifact directory
+- `result.artifact_dir`: comparison-cell artifact directory
 - `result.output_root`: sweep artifact root
 
 Single-run raw artifact access:

@@ -33,7 +33,7 @@ execute_sweep(
     plan: SweepPlan,
     output_root: str | Path,
     local_raw_source: str | Path | None = None,
-    research_design: str = "controlled_variation",
+    execution_route: str = "comparison_sweep",
     extra_provenance: dict | None = None,
 ) -> SweepResult
 ```

@@ -1,8 +1,7 @@
-"""Registry layer for the six Layer 0 meta axes.
+"""Registry layer for the Layer 0 meta axes.
 
 Holds enum definitions for axis_type, compute_mode, experiment_unit,
-failure_policy, reproducibility_mode, and research_design —
-i.e. the catalogs consumed by the Stage 0 framework
+failure_policy, and reproducibility_mode — i.e. the catalogs consumed by the Stage 0 framework
 (``macrocast.stage0``) and referenced in every recipe.
 
 To enumerate the catalogs at runtime, prefer

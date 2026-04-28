@@ -78,7 +78,7 @@ Use the full layer grammar when you need exact decisions:
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
   1_data_task:
     fixed_axes:
       dataset: fred_md

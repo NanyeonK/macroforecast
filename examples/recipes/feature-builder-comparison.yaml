@@ -2,7 +2,7 @@ recipe_id: feature-builder-comparison
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
+      experiment_unit: single_target_generator_grid
   1_data_task:
     fixed_axes:
       dataset: fred_md

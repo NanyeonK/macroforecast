@@ -254,7 +254,7 @@ without editing package internals.
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
+      experiment_unit: single_target_generator_grid
       failure_policy: skip_failed_cell
   2_preprocessing:
     sweep_axes:

@@ -9,7 +9,11 @@ from .compiler import CompileValidationError, compile_recipe_dict, compile_recip
 from .execution.importance_dispatch import IMPORTANCE_FILE_NAMES, active_importance_methods
 from .execution.stat_tests import active_stat_test_axes
 from .registry import get_axis_registry_entry
-from .registry.stage0.experiment_unit import derive_experiment_unit_default, experiment_unit_options_for_wizard
+from .registry.stage0.experiment_unit import (
+    derive_experiment_unit_default,
+    experiment_unit_options_for_wizard,
+    get_experiment_unit_entry,
+)
 
 _AVAILABLE_STAGES = (
     "route_preview",
@@ -20,7 +24,6 @@ _AVAILABLE_STAGES = (
 )
 
 _WIZARD_KEYS = (
-    "research_design",
     "target_structure",
     "experiment_unit",
     "target",
@@ -111,21 +114,19 @@ def _planned_branch_message(warnings: list[str]) -> str | None:
     planned_hits = [warning for warning in warnings if "status=planned" in warning]
     if not planned_hits:
         return None
-    return "Planned branch selected. Current YAML parses, but this branch is not executable in the current single-run runtime."
+    return "Planned branch selected. Current YAML parses, but this branch is not executable in the current comparison runtime."
 
 
-def _single_run_extension_message(tree_context: dict[str, Any], warnings: list[str]) -> str:
+def _comparison_surface_extension_message(tree_context: dict[str, Any], warnings: list[str]) -> str:
     sweep_axes = tree_context.get("sweep_axes", {})
     if "model_family" in sweep_axes and "feature_builder" in sweep_axes:
-        return "Full model/feature sweep is not a single-run preview. Use the sweep runtime only if the compiler reports ready_for_sweep_runner; otherwise drop this route."
+        return "Full model/feature sweep is not a one-cell preview. Use the sweep runtime only if the compiler reports ready_for_sweep_runner; otherwise drop this route."
     if "model_family" in sweep_axes:
-        return "Model grid selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe."
-    return _planned_branch_message(warnings) or "Sweep route selected. Execute with compile_sweep_plan/execute_sweep; single-run previews stop at the parent recipe."
+        return "Model grid selected. Execute with compile_sweep_plan/execute_sweep; one-cell previews stop at the parent recipe."
+    return _planned_branch_message(warnings) or "Sweep route selected. Execute with compile_sweep_plan/execute_sweep; one-cell previews stop at the parent recipe."
 
 
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
-    if key == "research_design":
-        return _recipe_fixed(recipe, "0_meta").get("research_design")
     if key == "target_structure":
         return _target_structure_value(recipe)
     if key == "experiment_unit":
@@ -135,7 +136,6 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
         training = _recipe_fixed(recipe, "3_training")
         training_sweep = _recipe_sweep(recipe, "3_training")
         return derive_experiment_unit_default(
-            research_design=_recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run"),
             task=_target_structure_value(recipe),
             model_axis_mode="sweep" if "model_family" in training_sweep else "fixed",
             feature_axis_mode="sweep" if "feature_builder" in training_sweep else "fixed",
@@ -171,9 +171,6 @@ def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
 
 
 def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
-    if key == "research_design":
-        _recipe_fixed(recipe, "0_meta")["research_design"] = value
-        return
     leaf = _recipe_leaf(recipe, "1_data_task")
     preprocess = _recipe_fixed(recipe, "2_preprocessing")
     training = _recipe_fixed(recipe, "3_training")
@@ -196,12 +193,10 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
         meta["experiment_unit"] = value
         output_leaf = _recipe_leaf(recipe, "5_output_provenance")
         if value == "replication_recipe":
-            meta["research_design"] = "replication_recipe"
             output_leaf.pop("wrapper_family", None)
             output_leaf.pop("bundle_label", None)
             return
         if value in {"benchmark_suite", "ablation_study"}:
-            meta["research_design"] = "study_bundle"
             _set_target_structure(recipe, "single_target")
             leaf.pop("targets", None)
             leaf.setdefault("target", "INDPRO")
@@ -209,14 +204,12 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
         if value in {"multi_target_separate_runs", "multi_target_shared_design"}:
-            meta["research_design"] = "study_bundle"
             _set_target_structure(recipe, "multi_target")
             leaf.pop("target", None)
             leaf.setdefault("targets", ["INDPRO", "RPI"])
             output_leaf["wrapper_family"] = value
             output_leaf.setdefault("bundle_label", value.replace("_", "-"))
             return
-        meta["research_design"] = "single_forecast_run"
         _set_target_structure(recipe, "single_target")
         leaf.pop("targets", None)
         leaf.setdefault("target", "INDPRO")
@@ -323,12 +316,9 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
     benchmark_family = _recipe_fixed(recipe, "3_training").get("benchmark_family", "zero_change")
     stack = [
         {
-            "key": "research_design",
-            "prompt": "Study mode",
-            "options": [
-                "single_forecast_run",
-                "controlled_variation",
-            ],
+            "key": "experiment_unit",
+            "prompt": "Execution unit",
+            "options": list(experiment_unit_options_for_wizard(target_structure)),
         },
         {
             "key": "target_structure",
@@ -337,14 +327,6 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
                 "single_target",
                 "multi_target",
             ],
-        },
-        {
-            "key": "experiment_unit",
-            "prompt": "Experiment unit",
-            "options": list(experiment_unit_options_for_wizard(
-                _recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run"),
-                target_structure,
-            )),
         },
         {
             "key": target_key,
@@ -451,34 +433,34 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
 
     if execution_status == "executable":
         wizard_status = "implemented"
-        continue_in_single_run = True
-        message = "Route remains inside the current executable single-run surface."
+        continue_in_preview = True
+        message = "Route remains inside the current executable comparison surface."
     elif execution_status == "ready_for_sweep_runner":
         wizard_status = "sweep_runner_ready"
-        continue_in_single_run = False
-        message = _single_run_extension_message(tree_context, warnings)
+        continue_in_preview = False
+        message = _comparison_surface_extension_message(tree_context, warnings)
     elif execution_status == "ready_for_wrapper_runner":
         wizard_status = "wrapper_runner_ready"
-        continue_in_single_run = False
-        message = "Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; single-run previews stop here."
+        continue_in_preview = False
+        message = "Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; current previews stop here."
     elif execution_status == "ready_for_replication_runner":
         wizard_status = "replication_runner_ready"
-        continue_in_single_run = False
-        message = "Route is replication-owned and has a runner contract. Use execute_replication; single-run previews stop here."
+        continue_in_preview = False
+        message = "Route is replication-owned and has a runner contract. Use execute_replication; current previews stop here."
     elif route_owner == "wrapper":
         wizard_status = "wrapper_not_supported"
-        continue_in_single_run = False
+        continue_in_preview = False
         message = "Route is wrapper-owned but has no executable wrapper runner contract in the current runtime."
     else:
         wizard_status = "blocked_or_nonexecutable"
-        continue_in_single_run = False
-        message = _planned_branch_message(warnings) or "; ".join(blocked_reasons or warnings) or "Route is not executable in the current single-run surface."
+        continue_in_preview = False
+        message = _planned_branch_message(warnings) or "; ".join(blocked_reasons or warnings) or "Route is not executable in the current comparison surface."
 
     return {
         "route_owner": route_owner,
         "execution_status": execution_status,
         "wizard_status": wizard_status,
-        "continue_in_single_run": continue_in_single_run,
+        "continue_in_preview": continue_in_preview,
         "message": message,
         "warnings": warnings,
         "blocked_reasons": blocked_reasons,
@@ -488,31 +470,28 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
 
 
 def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
-    research_design = _recipe_fixed(recipe, "0_meta").get("research_design", "single_forecast_run")
     target_structure = _target_structure_value(recipe)
     explicit_unit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
-    route_owner = "wrapper" if research_design == "study_bundle" else "single_run"
-    if explicit_unit in {"single_target_full_sweep", "multi_target_separate_runs", "multi_target_shared_design", "benchmark_suite", "ablation_study"}:
-        route_owner = "wrapper"
-    elif explicit_unit == "replication_recipe":
-        route_owner = "replication"
+    route_owner = "comparison_sweep"
+    if explicit_unit:
+        route_owner = get_experiment_unit_entry(explicit_unit).route_owner
     if route_owner == "wrapper":
         wizard_status = "wrapper_not_supported"
-        continue_in_single_run = False
+        continue_in_preview = False
         message = "Wrapper-owned route chosen, but no executable wrapper runner contract is available for this draft."
     else:
         wizard_status = "draft_incomplete"
-        continue_in_single_run = True
+        continue_in_preview = True
         message = error
     return {
         "route_owner": route_owner,
         "execution_status": "draft_incomplete",
         "wizard_status": wizard_status,
-        "continue_in_single_run": continue_in_single_run,
+        "continue_in_preview": continue_in_preview,
         "message": message,
         "warnings": [error],
         "blocked_reasons": [],
-        "tree_context_summary": f"route_owner={route_owner}; research_design={research_design}; target_structure={target_structure}",
+        "tree_context_summary": f"route_owner={route_owner}; execution_route=comparison_sweep; target_structure={target_structure}",
         "wrapper_handoff": {},
     }
 
@@ -645,7 +624,7 @@ def _interactive_wizard(*, recipe_path: str, yaml_path: str | None, max_steps: i
         step_count += 1
         completed.append({"key": current_choice["key"], "value": _read_wizard_value(recipe, current_choice["key"])})
         preview = _preview_recipe_dict(recipe)
-        if not preview["route_preview"]["continue_in_single_run"]:
+        if not preview["route_preview"]["continue_in_preview"]:
             stop_reason = preview["route_preview"]["message"]
             current_choice = None
             break

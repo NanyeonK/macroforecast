@@ -41,12 +41,12 @@ def _make_multi_target(recipe: dict) -> None:
     leaf["targets"] = ["INDPRO", "RPI"]
 
 
-def test_single_default_is_direct_single_run_executable() -> None:
+def test_single_default_is_direct_comparison_cell_executable() -> None:
     compiled = compile_recipe_dict(_base_recipe("single-default")).compiled
 
     assert compiled.execution_status == "executable"
-    assert compiled.tree_context["route_owner"] == "single_run"
-    assert compiled.tree_context["route_contract"] == "single_run_executable"
+    assert compiled.tree_context["route_owner"] == "comparison_sweep"
+    assert compiled.tree_context["route_contract"] == "single_cell_executable"
     assert compiled.tree_context["experiment_unit"] == "single_target_single_generator"
 
 
@@ -64,15 +64,15 @@ def test_model_comparison_parent_requires_sweep_runner_but_variants_are_executab
     assert variant_statuses == ["executable", "executable"]
 
 
-def test_feature_only_controlled_variation_is_sweep_runner_contract() -> None:
+def test_feature_only_comparison_grid_is_sweep_runner_contract() -> None:
     recipe = _base_recipe("feature-comparison", model_families=("ridge",))
-    _set_meta(recipe, research_design="controlled_variation")
+    _set_meta(recipe, experiment_unit="single_target_generator_grid")
     _fixed_to_sweep(recipe, "3_training", "feature_builder", ["target_lag_features", "raw_feature_panel"])
 
     compiled = compile_recipe_dict(recipe).compiled
 
     assert compiled.execution_status == "ready_for_sweep_runner"
-    assert compiled.tree_context["route_owner"] == "single_run"
+    assert compiled.tree_context["route_owner"] == "comparison_sweep"
     assert compiled.tree_context["route_contract"] == "sweep_runner_executable"
     assert compiled.tree_context["controlled_axis_kind"] == "feature"
     assert compiled.tree_context["experiment_unit"] == "single_target_generator_grid"
@@ -80,7 +80,7 @@ def test_feature_only_controlled_variation_is_sweep_runner_contract() -> None:
 
 def test_preprocessing_sweep_is_runner_ready_but_variants_can_be_blocked_by_layer2() -> None:
     recipe = _base_recipe("preprocessing-sweep", model_families=("ridge",))
-    _set_meta(recipe, research_design="controlled_variation")
+    _set_meta(recipe, experiment_unit="single_target_generator_grid")
     _fixed_to_sweep(recipe, "2_preprocessing", "scaling_policy", ["none", "standard"])
 
     compiled = compile_recipe_dict(recipe).compiled
@@ -132,7 +132,7 @@ def test_multi_target_separate_runs_is_wrapper_runner_ready_not_direct_executabl
 
 def test_replication_recipe_is_handoff_not_direct_executable(tmp_path) -> None:
     recipe = _base_recipe("replication")
-    _set_meta(recipe, research_design="replication_recipe")
+    _set_meta(recipe, experiment_unit="replication_recipe")
 
     compiled = compile_recipe_dict(recipe).compiled
 
@@ -143,15 +143,16 @@ def test_replication_recipe_is_handoff_not_direct_executable(tmp_path) -> None:
         run_compiled_recipe(compiled, output_root=tmp_path)
 
 
-def test_multi_target_shared_design_stays_direct_single_run_executable() -> None:
+def test_multi_target_shared_design_stays_direct_comparison_cell_executable() -> None:
     recipe = _base_recipe("multi-target-shared")
     _make_multi_target(recipe)
+    _set_meta(recipe, experiment_unit="multi_target_shared_design")
 
     compiled = compile_recipe_dict(recipe).compiled
 
     assert compiled.execution_status == "executable"
-    assert compiled.run_spec.route_owner == "single_run"
-    assert compiled.tree_context["route_contract"] == "single_run_executable"
+    assert compiled.run_spec.route_owner == "comparison_sweep"
+    assert compiled.tree_context["route_contract"] == "single_cell_executable"
     assert compiled.tree_context["experiment_unit"] == "multi_target_shared_design"
 
 

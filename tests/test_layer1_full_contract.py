@@ -10,7 +10,7 @@ def _recipe() -> dict:
     return {
         "recipe_id": "layer1-full-contract",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",

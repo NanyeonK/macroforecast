@@ -15,7 +15,7 @@ def _base_recipe(overrides_3=None, overrides_1=None, overrides_4=None, overrides
     r = {
         "recipe_id": "sweep_test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run", "experiment_unit": "single_target_generator_grid"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator", "experiment_unit": "single_target_generator_grid"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target", "benchmark_family": "autoregressive_bic", "evaluation_scale": "raw_level"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1]},

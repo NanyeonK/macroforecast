@@ -9,7 +9,6 @@ from macrocast import build_preprocess_contract, build_recipe_spec, build_design
 
 def _stage0():
     return build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

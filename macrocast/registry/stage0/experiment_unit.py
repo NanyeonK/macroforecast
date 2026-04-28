@@ -6,7 +6,7 @@ from typing import Literal
 from ..base import AxisDefinition, EnumRegistryEntry
 from ..naming import canonical_axis_value
 
-RouteOwner = Literal["single_run", "wrapper", "orchestrator", "replication"]
+RouteOwner = Literal["comparison_sweep", "wrapper", "orchestrator", "replication"]
 
 
 @dataclass(frozen=True)
@@ -23,16 +23,16 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
         description="Single-target executable single-generator run.",
         status="operational",
         priority="A",
-        route_owner="single_run",
+        route_owner="comparison_sweep",
         requires_multi_target=False,
         requires_wrapper=False,
     ),
     ExperimentUnitEntry(
         id="single_target_generator_grid",
-        description="Single-target controlled one-axis comparison within the single-run family; usually a generator grid.",
+        description="Single-target controlled comparison within the comparison_sweep family; usually a generator grid.",
         status="operational",
         priority="A",
-        route_owner="single_run",
+        route_owner="comparison_sweep",
         requires_multi_target=False,
         requires_wrapper=False,
     ),
@@ -60,7 +60,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
         description="Multi-target shared-design run: one compiled recipe evaluates all targets with the same design and produces an aggregated predictions table. Handled by execute_recipe's multi-target path.",
         status="operational",
         priority="A",
-        route_owner="single_run",
+        route_owner="comparison_sweep",
         requires_multi_target=True,
         requires_wrapper=False,
     ),
@@ -87,7 +87,7 @@ EXPERIMENT_UNIT_ENTRIES: tuple[ExperimentUnitEntry, ...] = (
         description="Single-run state-space forecasting family.",
         status="future",
         priority="B",
-        route_owner="single_run",
+        route_owner="comparison_sweep",
         requires_multi_target=False,
         requires_wrapper=False,
     ),
@@ -139,51 +139,40 @@ def get_experiment_unit_entry(experiment_unit: str) -> ExperimentUnitEntry:
     return _BY_ID[canonical_axis_value("experiment_unit", experiment_unit)]
 
 
-def experiment_unit_options_for_wizard(research_design: str, task: str) -> tuple[str, ...]:
+def experiment_unit_options_for_wizard(task: str = "single_target") -> tuple[str, ...]:
     """Return the experiment_unit options the wizard/UI should surface.
 
     Only values whose current registry status is operational are
     returned — registry_only and future entries are intentionally filtered
     so UIs do not propose non-executable units.
     """
-    research_design = canonical_axis_value("research_design", research_design)
-    if research_design == "replication_recipe":
-        candidates = ("replication_recipe",)
-    elif task == "multi_target":
+    if task == "multi_target":
         candidates = (
             "multi_target_shared_design",
             "multi_target_separate_runs",
         )
-    elif research_design == "study_bundle":
-        candidates = ("benchmark_suite", "ablation_study")
     else:
         candidates = (
             "single_target_single_generator",
             "single_target_generator_grid",
-            "single_target_full_sweep",
+            "replication_recipe",
         )
     return tuple(cid for cid in candidates if _BY_ID[cid].status == "operational")
 
 
 def derive_experiment_unit_default(
     *,
-    research_design: str,
     task: str,
     model_axis_mode: str = "fixed",
     feature_axis_mode: str = "fixed",
     wrapper_family: str | None = None,
 ) -> str:
-    research_design = canonical_axis_value("research_design", research_design)
-    if research_design == "replication_recipe":
-        return "replication_recipe"
     if wrapper_family in _BY_ID:
         return wrapper_family
     if task == "multi_target":
         # shared_design is handled by execute_recipe; separate_runs is the
         # supported wrapper-runner fan-out path.
         return "multi_target_shared_design"
-    if research_design == "study_bundle":
-        return "benchmark_suite"
     if model_axis_mode == "sweep" and feature_axis_mode == "sweep":
         return "single_target_full_sweep"
     if model_axis_mode == "sweep" or feature_axis_mode == "sweep":

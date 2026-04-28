@@ -28,7 +28,7 @@ recipe_id: replication-synthetic-src
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
   1_data_task:
     fixed_axes:
       dataset: fred_md

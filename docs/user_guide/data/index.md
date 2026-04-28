@@ -1,6 +1,6 @@
 # Data (Stage 1)
 
-Stage 1 answers **"what official data frame does this study start from?"** — once the design (Stage 0) has fixed the research identity and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.
+Stage 1 answers **"what official data frame does this study start from?"** — once Stage 0 has fixed the execution unit and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.
 
 After the layer-boundary migration, Stage 1 holds **13 canonical axes** under the `1_data_task` layer:
 
@@ -14,7 +14,7 @@ Stage 1 does not fix which model, benchmark, researcher preprocessing, or evalua
 
 ## Relation to Stage 0
 
-The 6 meta axes of Stage 0 ([design](../design.md)) — `research_design`, `experiment_unit`, `axis_type`, `failure_policy`, `reproducibility_mode`, `compute_mode` — set the **grammar** of the study (which runner, what recipe shape, how parallel, how reproducible). Stage 1 fills that grammar with **content**: which data, which target, which horizons.
+The Stage 0 axes ([design](../design.md)) — `experiment_unit`, `axis_type`, `failure_policy`, `reproducibility_mode`, `compute_mode` — set the **grammar** of the study (which execution unit, what recipe shape, how parallel, how reproducible). Stage 1 fills that grammar with **content**: which data, which target, which horizons.
 
 ## Honest operational status
 

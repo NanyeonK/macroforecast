@@ -7,62 +7,30 @@ AXIS_PRESENTATION_SCHEMA_VERSION = "axis_presentation_v1"
 # User-facing labels live here. Registry IDs remain the canonical API/YAML
 # values; labels are the docs/Navigator surface shown to researchers.
 AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
-    "research_design": {
-        "order": 1,
-        "label": "Research Design",
-        "short_label": "Design",
-        "question": "What kind of forecasting study are you running?",
-        "summary": "Selects the top-level study route: one run, controlled comparison, study bundle, or replication.",
-        "docs_url": "../detail/layer0/research_design.html",
-        "contract": "User-facing runner route. This affects executor family, sweep interpretation, and artifact shape.",
-        "selection_kind": "user_choice",
-        "values": {
-            "single_forecast_run": {
-                "label": "Single Forecasting Run",
-                "short_label": "Single Run",
-                "summary": "Run one resolved forecasting path and produce forecasts, metrics, and artifacts.",
-            },
-            "controlled_variation": {
-                "label": "Controlled Comparison",
-                "short_label": "Comparison",
-                "summary": "Vary one or more choices while holding the rest of the study path fixed.",
-            },
-            "study_bundle": {
-                "label": "Study Bundle",
-                "short_label": "Bundle",
-                "summary": "Hand the recipe to a higher-level study runner, such as a benchmark suite or ablation route.",
-            },
-            "replication_recipe": {
-                "label": "Replication Recipe",
-                "short_label": "Replication",
-                "summary": "Rerun a known paper-style recipe and record replication provenance and deviations.",
-            },
-        },
-    },
     "experiment_unit": {
-        "order": 2,
+        "order": 1,
         "label": "Execution Unit",
         "short_label": "Unit",
-        "question": "Which execution unit should own this recipe?",
-        "summary": "Usually derived by the compiler from research design, target structure, and sweep shape.",
+        "question": "What unit of work should this study compare or repeat?",
+        "summary": "Selects the object that gets run, compared, or repeated. A single run is the one-cell case of the same comparison/sweep grammar.",
         "docs_url": "../detail/layer0/experiment_unit.html",
-        "contract": "Derived runner contract. Explicit values must match target and sweep constraints.",
-        "selection_kind": "usually_derived",
+        "contract": "Primary Layer 0 route contract. It determines target shape, runner ownership, and whether the path is a one-cell comparison, grid, multi-target run, or replication handoff.",
+        "selection_kind": "user_choice",
         "values": {
             "single_target_single_generator": {
-                "label": "One Target, One Model",
-                "short_label": "One Target / One Model",
-                "summary": "Default unit for a single target with one model path.",
+                "label": "One Target, One Forecasting Path",
+                "short_label": "One Target / One Path",
+                "summary": "Run one cell of the comparison grid: one target, one horizon set, one representation path, and one model path.",
             },
             "single_target_generator_grid": {
-                "label": "Model Comparison",
-                "short_label": "Model Grid",
-                "summary": "Compare model-family or representation variants for one target.",
+                "label": "One Target, Compare Methods",
+                "short_label": "Method Comparison",
+                "summary": "Compare multiple model, representation, preprocessing, horizon, or tuning choices for one target while holding the rest fixed.",
             },
             "single_target_full_sweep": {
-                "label": "Full Sweep",
+                "label": "One Target, Full Grid Sweep",
                 "short_label": "Full Sweep",
-                "summary": "Reserved grammar for wider single-target sweep orchestration.",
+                "summary": "Reserved route for a wider single-target grid where multiple axes vary together.",
             },
             "multi_target_separate_runs": {
                 "label": "Separate Runs Per Target",
@@ -90,9 +58,9 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
                 "summary": "Reserved route for state-space forecast execution.",
             },
             "replication_recipe": {
-                "label": "Replication Run",
+                "label": "Replicate a Paper",
                 "short_label": "Replication",
-                "summary": "Execution unit derived for replication recipes.",
+                "summary": "Run a paper-style or library-provided recipe while preserving replication provenance and deviations.",
             },
             "benchmark_suite": {
                 "label": "Benchmark Suite",

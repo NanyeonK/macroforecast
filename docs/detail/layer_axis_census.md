@@ -45,7 +45,6 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | `experiment_unit` | - | `enum` | `fixed` | operational=5, registry_only=3, future=3 | `operational`: `single_target_single_generator`, `single_target_generator_grid`, `multi_target_separate_runs`, `multi_target_shared_design`, `replication_recipe`<br>`registry_only`: `single_target_full_sweep`, `benchmark_suite`, `ablation_study`<br>`future`: `hierarchical_forecasting_run`, `panel_forecasting_run`, `state_space_run` |
 | `failure_policy` | - | `enum` | `fixed` | operational=5, registry_only=2 | `operational`: `fail_fast`, `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only`<br>`registry_only`: `retry_then_skip`, `fallback_to_default_hp` |
 | `reproducibility_mode` | - | `enum` | `fixed` | operational=4 | `operational`: `strict_reproducible`, `seeded_reproducible`, `best_effort`, `exploratory` |
-| `research_design` | - | `enum` | `fixed` | operational=4 | `operational`: `single_forecast_run`, `controlled_variation`, `study_bundle`, `replication_recipe` |
 
 ### Layer 1: source data, target, and official frame
 
@@ -230,4 +229,3 @@ This census is generated from the live registry and Navigator tree after PR #92.
 3. Layer 2: audit the large set of registry axes outside the primary Navigator tree, especially custom feature-block templates, target transformer examples, and bridge-only compatibility axes.
 4. Layer 3: audit training axes outside the primary Navigator tree, plus virtual route axes for raw-panel iterated future-X paths.
 5. Layers 4-7: verify that public runtime artifacts cover every visible decision axis and that registry-only/future values stay disabled with clear reasons.
-

@@ -21,7 +21,7 @@ def _base_recipe() -> dict:
     return {
         "recipe_id": "derived-test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -103,11 +103,6 @@ def test_derived_axes_must_be_mapping() -> None:
 
 def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
     selection_map = {
-        "research_design": AxisSelection(
-            axis_name="research_design", layer="0_meta", selection_mode="fixed",
-            selected_values=("single_forecast_run",),
-            selected_status={"single_forecast_run": "operational"},
-        ),
         "model_family": AxisSelection(
             axis_name="model_family", layer="3_training", selection_mode="sweep",
             selected_values=("ols", "ridge"),
@@ -126,11 +121,6 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
 
 def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() -> None:
     selection_map = {
-        "research_design": AxisSelection(
-            axis_name="research_design", layer="0_meta", selection_mode="fixed",
-            selected_values=("single_forecast_run",),
-            selected_status={"single_forecast_run": "operational"},
-        ),
         "model_family": AxisSelection(
             axis_name="model_family", layer="3_training", selection_mode="fixed",
             selected_values=("ridge",),

@@ -37,7 +37,7 @@ recipe = {
     "recipe_id": "my-first-study",
     "path": {
         "0_meta": {
-            "fixed_axes": {"research_design": "single_forecast_run"}
+            "fixed_axes": {"experiment_unit": "single_target_single_generator"}
         },
         "1_data_task": {
             "fixed_axes": {

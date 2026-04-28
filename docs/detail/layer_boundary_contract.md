@@ -14,7 +14,6 @@ validation, and backlog.
 
 Owns study grammar and execution shape:
 
-- `research_design`
 - `experiment_unit`
 - `axis_type`
 - `failure_policy`

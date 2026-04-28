@@ -41,7 +41,7 @@ def _build(tmp_path: Path) -> Path:
             {
                 "schema_version": "1.0",
                 "study_id": "stability-xyz",
-                "research_design": "x",
+                "execution_route": "comparison_sweep",
                 "parent_recipe_id": "p",
                 "parent_recipe_dict": {},
                 "axes_swept": ["2_preprocessing.scaling_policy", "3_training.model_family"],

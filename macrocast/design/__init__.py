@@ -7,10 +7,10 @@ canonical builder; see docs/user_guide/stage0.md for the full
 contract.
 
 Distinct from (but related to) the ``macrocast.registry.stage0`` package,
-which holds the *registry layer* for the six Layer 0 meta axes
-(axis_type, compute_mode, experiment_unit, failure_policy,
-reproducibility_mode, research_design). Framework dataclasses
-defined here consume values from those meta axes.
+which holds the *registry layer* for the Layer 0 meta axes
+(axis_type, compute_mode, experiment_unit, failure_policy, and
+reproducibility_mode). Framework dataclasses consume values from those
+meta axes.
 """
 
 from .build import (

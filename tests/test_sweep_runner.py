@@ -18,7 +18,7 @@ def _horse_race_recipe() -> dict:
     return {
         "recipe_id": "sweep-rt-model",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "controlled_variation"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_generator_grid"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -86,7 +86,7 @@ def test_two_variant_sweep_end_to_end(tmp_path: Path) -> None:
     manifest = json.loads(Path(result.manifest_path).read_text())
     assert manifest["schema_version"] == "1.0"
     assert manifest["study_id"] == plan.study_id
-    assert manifest["research_design"] == "controlled_variation"
+    assert manifest["execution_route"] == "comparison_sweep"
     assert len(manifest["sweep_plan"]["variants"]) == 2
     assert all(v["status"] == "success" for v in manifest["sweep_plan"]["variants"])
 

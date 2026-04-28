@@ -5,14 +5,13 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 146
+EXPECTED_AXIS_COUNT = 145
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
     registry = get_axis_registry()
     assert len(registry) == EXPECTED_AXIS_COUNT
     assert {
-        "research_design",
         "dataset",
         "information_set_type",
         "target_structure",

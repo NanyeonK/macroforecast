@@ -2,7 +2,7 @@ recipe_id: preprocessing-ablation-raw-panel-train-only
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
   1_data_task:
     fixed_axes:
       dataset: fred_md

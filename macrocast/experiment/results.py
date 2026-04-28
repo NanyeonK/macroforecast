@@ -148,19 +148,19 @@ class ExperimentRunResult:
     @property
     def spec(self):
         if self.execution is None:
-            raise AttributeError("spec is available only on direct single-run results")
+            raise AttributeError("spec is available only on direct comparison-cell results")
         return self.execution.spec
 
     @property
     def run(self):
         if self.execution is None:
-            raise AttributeError("run is available only on direct single-run results")
+            raise AttributeError("run is available only on direct comparison-cell results")
         return self.execution.run
 
     @property
     def raw_result(self):
         if self.execution is None:
-            raise AttributeError("raw_result is available only on direct single-run results")
+            raise AttributeError("raw_result is available only on direct comparison-cell results")
         return self.execution.raw_result
 
     def file_path(self, filename: str) -> Path:

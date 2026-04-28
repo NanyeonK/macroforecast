@@ -39,7 +39,7 @@ recipe_id: ridge-vs-lasso-indpro
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
+      experiment_unit: single_target_single_generator
       experiment_unit: single_target_generator_grid
 
   1_data_task:

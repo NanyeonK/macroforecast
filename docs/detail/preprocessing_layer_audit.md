@@ -143,7 +143,7 @@ Layer 2 is closed for fixed full recipes under the current runtime scope:
   `registry_only`, not `operational`;
 - the simple API still does not expose preprocessing sweeps.
 
-The closed full profile is therefore a fixed single-run or fixed controlled
+The closed full profile is therefore a fixed comparison-cell or fixed controlled
 recipe, not an arbitrary public sweep. Full recipes can represent broader
 macro-forecasting research intentions, but unsupported target-side
 normalization/inversion, non-strict separation rules, feature grouping,

@@ -2,7 +2,7 @@
 
 Layer 1 only declares the target shape inside the official data frame. It does
 not choose the study runner. Runner ownership stays in Layer 0 through
-`research_design` and `experiment_unit`.
+`experiment_unit`.
 
 ## 1.2.1 `target_structure`
 

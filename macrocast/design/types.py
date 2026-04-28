@@ -3,16 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-ResearchDesign = Literal[
-    "single_forecast_run",
-    "controlled_variation",
-    "study_bundle",
-    "replication_recipe",
-]
-
 ExecutionPosture = Literal[
-    "single_run_recipe",
-    "single_run_with_internal_sweep",
+    "comparison_cell",
+    "comparison_sweep_plan",
     "wrapper_bundle_plan",
     "replication_locked_plan",
 ]
@@ -62,7 +55,6 @@ class ReplicationInput:
 
 @dataclass(frozen=True)
 class DesignFrame:
-    research_design: str
     fixed_design: FixedDesign
     comparison_contract: ComparisonContract
     varying_design: VaryingDesign

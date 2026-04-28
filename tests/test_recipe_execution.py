@@ -10,7 +10,6 @@ from macrocast import (
 
 def _stage0(task: str = "single_target"):
     return build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -66,7 +65,7 @@ def test_build_run_spec() -> None:
     run = build_run_spec(recipe)
 
     assert run.recipe_id == "fred_md_baseline"
-    assert run.route_owner == "single_run"
+    assert run.route_owner == "comparison_sweep"
     assert run.run_id.startswith("fred_md_baseline__INDPRO__")
     assert run.artifact_subdir == f"runs/{run.run_id}"
 
@@ -84,7 +83,7 @@ def test_recipe_summary_mentions_target_and_route() -> None:
 
     assert "fred_md_baseline" in summary
     assert "INDPRO" in summary
-    assert "single_run" in summary
+    assert "comparison_sweep" in summary
 
 
 def test_build_multi_target_recipe_spec_and_run_id() -> None:

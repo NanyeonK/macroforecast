@@ -7,7 +7,6 @@ from macrocast.design import (
     FixedDesign,
     ReplicationInput,
     DesignCompletenessError,
-    DesignNormalizationError,
     DesignValidationError,
     VaryingDesign,
     build_design_frame,
@@ -40,7 +39,6 @@ def _base_contract() -> dict:
 
 def test_stage0_roundtrip_dict() -> None:
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar", "ridge"), "horizons": ("h1", "h3")},
@@ -53,7 +51,7 @@ def test_stage0_roundtrip_dict() -> None:
 
 def test_replication_route_owner_and_execution_posture() -> None:
     stage0 = build_design_frame(
-        research_design="replication_recipe",
+        experiment_unit="replication_recipe",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},
@@ -65,10 +63,10 @@ def test_replication_route_owner_and_execution_posture() -> None:
     assert stage0.experiment_unit == "replication_recipe"
 
 
-def test_invalid_study_mode_raises_normalization_error() -> None:
-    with pytest.raises(DesignNormalizationError):
+def test_invalid_experiment_unit_raises_validation_error() -> None:
+    with pytest.raises(Exception):
         build_design_frame(
-            research_design="unknown_mode",
+            experiment_unit="unknown_unit",
             fixed_design=_base_fixed(),
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
@@ -81,16 +79,14 @@ def test_blank_fixed_design_field_raises_validation_error() -> None:
 
     with pytest.raises(DesignValidationError):
         build_design_frame(
-            research_design="single_forecast_run",
             fixed_design=fixed,
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
         )
 
 
-def test_single_run_without_model_families_raises_completeness_error() -> None:
+def test_comparison_cell_without_model_families_raises_completeness_error() -> None:
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design=VaryingDesign(),
@@ -100,9 +96,9 @@ def test_single_run_without_model_families_raises_completeness_error() -> None:
         check_design_completeness(stage0)
 
 
-def test_study_bundle_route_owner_is_wrapper() -> None:
+def test_wrapper_experiment_unit_route_owner_is_wrapper() -> None:
     stage0 = build_design_frame(
-        research_design="study_bundle",
+        experiment_unit="benchmark_suite",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},

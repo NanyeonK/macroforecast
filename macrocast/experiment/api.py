@@ -410,7 +410,9 @@ class Experiment:
             else:
                 layer_block.pop("sweep_axes", None)
         if _has_sweep_axes(recipe):
-            recipe["path"]["0_meta"]["fixed_axes"]["research_design"] = "controlled_variation"
+            recipe["path"]["0_meta"].setdefault("fixed_axes", {})[
+                "experiment_unit"
+            ] = "single_target_generator_grid"
         return recipe
 
     def run(

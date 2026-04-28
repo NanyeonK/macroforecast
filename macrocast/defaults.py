@@ -23,7 +23,6 @@ DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
 
 DEFAULT_PROFILE: dict[str, Any] = {
     "name": DEFAULT_PROFILE_NAME,
-    "research_design": "single_forecast_run",
     "information_set_type": "final_revised_data",
     "target_structure": "single_target",
     "framework": "expanding",
@@ -177,7 +176,7 @@ def build_default_recipe_dict(
     if benchmark_config:
         resolved_benchmark_config.update(benchmark_config)
 
-    research_design = "controlled_variation" if len(model_values) > 1 else "single_forecast_run"
+    experiment_unit = "single_target_generator_grid" if len(model_values) > 1 else "single_target_single_generator"
     training_fixed = {
         "framework": framework,
         "benchmark_family": benchmark_family,
@@ -194,7 +193,7 @@ def build_default_recipe_dict(
         "path": {
             "0_meta": {
                 "fixed_axes": {
-                    "research_design": research_design,
+                    "experiment_unit": experiment_unit,
                     "reproducibility_mode": reproducibility_mode,
                     "failure_policy": failure_policy,
                     "compute_mode": compute_mode,

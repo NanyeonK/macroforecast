@@ -1,13 +1,12 @@
-# 4.1.2 experiment_unit
+# 4.1.1 experiment_unit
 
 - Parent: [4.1 Layer 0: Study Setup](index.md)
-- Previous: [4.1.1 research_design](research_design.md)
 - Current: `experiment_unit`
-- Next: [4.1.3 failure_policy](failure_policy.md)
+- Next: [4.1.2 failure_policy](failure_policy.md)
 
-`experiment_unit` is the runner unit. It says which execution unit owns the recipe after `research_design`, target structure, and sweep shape are known.
+`experiment_unit` is the first Layer 0 decision. It names the unit of work that the study will run, compare, repeat, or hand off to a dedicated runner.
 
-In most recipes, users should let the compiler derive it. Pin it only when writing a Full recipe and you want the compiler to reject any shape mismatch.
+A one-path forecast is not a separate "single run" design route. It is the one-cell case of the same `comparison_sweep` grammar: if every downstream choice has one value, one cell runs; if one or more downstream axes are swept, the sweep runner expands the same path into multiple cells.
 
 ## Where It Lives In Code
 
@@ -25,78 +24,75 @@ In most recipes, users should let the compiler derive it. Pin it only when writi
 | Wrapper metadata | `macrocast.compiler.build._build_wrapper_handoff` |
 | Wizard read/write | `macrocast.start._read_wizard_value`, `macrocast.start._apply_wizard_value` |
 
-## Choices
+## Choice Map
 
-Read this axis as the execution owner. In most recipes, do not choose it directly; let the compiler derive it from `research_design`, target structure, and swept axes. Pin it only when you want Full mode to reject mismatches.
+| Choice | Owner | Current State | Meaning |
+|---|---|---|---|
+| `single_target_single_generator` | `comparison_sweep` | runnable | One target, one forecasting path, one comparison cell. |
+| `single_target_generator_grid` | `comparison_sweep` | runnable / sweep-aware | One target with one or more controlled downstream sweeps. |
+| `multi_target_shared_design` | `comparison_sweep` | runnable | Multiple targets share one data, preprocessing, model, and evaluation design. |
+| `multi_target_separate_runs` | `wrapper` | wrapper runner | Multiple targets are split into independent target-level runs. |
+| `replication_recipe` | `replication` | replication runner | Re-run or adapt a source recipe with replication provenance. |
+| `single_target_full_sweep` | `wrapper` | reserved | Wider full-grid wrapper grammar; not a direct compiled recipe. |
+| `benchmark_suite` | `wrapper` | reserved | Bundle of benchmark recipes; requires wrapper contract. |
+| `ablation_study` | `wrapper` | standalone runner only | Ablation grammar exists, but compiled-recipe wrapper handoff is not direct-run. |
+| `hierarchical_forecasting_run` | `orchestrator` | future | Hierarchical forecasting placeholder. |
+| `panel_forecasting_run` | `orchestrator` | future | Panel forecasting placeholder. |
+| `state_space_run` | `comparison_sweep` | future | State-space forecasting placeholder. |
 
-### Quick Map
+## Direct Comparison Units
 
-| Choice | Owner | Current State |
-|---|---|---|
-| `single_target_single_generator` | `single_run` | runnable |
-| `single_target_generator_grid` | `single_run` | runnable / sweep-aware |
-| `multi_target_shared_design` | `single_run` | runnable |
-| `multi_target_separate_runs` | `wrapper` | runnable through wrapper |
-| `replication_recipe` | `replication` | runnable through replication runner |
-| `single_target_full_sweep` | `wrapper` | reserved grammar |
-| `benchmark_suite` | `wrapper` | reserved grammar |
-| `ablation_study` | `wrapper` | standalone runner only |
-| `hierarchical_forecasting_run` | `orchestrator` | future |
-| `panel_forecasting_run` | `orchestrator` | future |
-| `state_space_run` | `single_run` | future |
+### `single_target_single_generator`
 
-### Runnable Direct Units
-
-#### `single_target_single_generator`
-
-This is the smallest ordinary execution unit.
+Use when every selected downstream axis is fixed to one value.
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
       experiment_unit: single_target_single_generator
 ```
 
-The direct runner owns it:
+Runtime contract:
 
 ```text
-route_owner = single_run
-runner      = execute_recipe
+route_owner     = comparison_sweep
+route_contract  = single_cell_executable
+runner          = execute_recipe
 ```
 
-#### `single_target_generator_grid`
+### `single_target_generator_grid`
 
-Use this when one target is evaluated across a controlled model or feature comparison.
+Use when one target is evaluated across a controlled set of alternatives: model families, feature builders, Layer 2 representations, horizons, metrics, or other supported sweep axes.
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: controlled_variation
       experiment_unit: single_target_generator_grid
   3_training:
     sweep_axes:
       model_family: [ridge, lasso, random_forest]
 ```
 
-Runtime ownership depends on how the variation is compiled:
+Runtime contract:
 
 ```text
-small/internal grid = execute_recipe
-parent sweep        = compile_sweep_plan / execute_sweep
+route_owner     = comparison_sweep
+route_contract  = sweep_runner_executable when sweep_axes are present
+runner          = compile_sweep_plan -> execute_sweep
 ```
 
-#### `multi_target_shared_design`
+If all grid axes collapse to one value, this becomes the same one-cell `comparison_sweep` execution as `single_target_single_generator`.
 
-Use this when several targets share one design and should be evaluated in one compiled recipe.
+### `multi_target_shared_design`
+
+Use when several targets share one design and should be evaluated in one compiled recipe.
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
       experiment_unit: multi_target_shared_design
   1_data_task:
     fixed_axes:
@@ -105,203 +101,92 @@ path:
       targets: [INDPRO, RPI]
 ```
 
-The direct runner handles the shared design and writes aggregated outputs:
+Runtime contract:
 
 ```text
-route_owner = single_run
-runner      = execute_recipe
-target mode = shared design
+route_owner     = comparison_sweep
+route_contract  = single_cell_executable
+runner          = execute_recipe
+target mode     = shared multi-target design
 ```
 
-### Runnable Handoff Units
+## Handoff Units
 
-#### `multi_target_separate_runs`
+### `multi_target_separate_runs`
 
-Use this when each target should run as a separate single-target job with its own output directory.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      research_design: study_bundle
-      experiment_unit: multi_target_separate_runs
-  1_data_task:
-    fixed_axes:
-      target_structure: multi_target
-    leaf_config:
-      targets: [INDPRO, RPI]
-```
-
-The wrapper runner owns the fan-out:
+Use when each target should run as a separate job with its own output directory.
 
 ```text
-route_owner = wrapper
-runner      = macrocast.studies.multi_target:execute_separate_runs
+route_owner     = wrapper
+route_contract  = wrapper_handoff
+runner          = execute_separate_runs
 ```
 
-#### `replication_recipe`
+### `replication_recipe`
 
-Use this when the route is replication-locked and should preserve paper-style provenance.
-
-```yaml
-recipe_id: goulet-coulombe-2021-fred-md-ridge
-path:
-  0_meta:
-    fixed_axes:
-      research_design: replication_recipe
-      experiment_unit: replication_recipe
-```
-
-The replication runner owns it:
+Use when a source recipe or paper recipe owns the path and the package should preserve replication provenance.
 
 ```text
-route_owner = replication
-runner      = macrocast.studies.replication:execute_replication
+route_owner     = replication
+route_contract  = replication_handoff
+runner          = execute_replication
 ```
 
-### Reserved Or Future Units
+### Reserved Wrapper And Orchestrator Units
 
-#### `single_target_full_sweep`
-
-This is reserved grammar for a wider single-target sweep managed by a wrapper.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      research_design: controlled_variation
-      experiment_unit: single_target_full_sweep
-```
-
-Current status:
-
-```text
-status = registry_only
-runtime = no general executable wrapper contract yet
-```
-
-#### `benchmark_suite`
-
-This is reserved grammar for a wrapper-managed benchmark suite.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      research_design: study_bundle
-      experiment_unit: benchmark_suite
-```
-
-Current status:
-
-```text
-status = registry_only
-runtime = no compiled-recipe benchmark-suite wrapper yet
-```
-
-#### `ablation_study`
-
-This is reserved grammar for ablation routes.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      research_design: study_bundle
-      experiment_unit: ablation_study
-```
-
-Current status:
-
-```text
-status = registry_only
-standalone runner = macrocast.studies.ablation:execute_ablation
-compiled wrapper = not opened yet
-```
-
-#### `hierarchical_forecasting_run`
-
-Reserved for hierarchy-aware forecasting.
-
-```text
-status = future
-runtime = no current executable contract
-```
-
-#### `panel_forecasting_run`
-
-Reserved for panel-oriented forecasting.
-
-```text
-status = future
-runtime = no current executable contract
-```
-
-#### `state_space_run`
-
-Reserved for state-space forecasting.
-
-```text
-status = future
-runtime = registry placeholder; not opened as runnable route
-```
+`single_target_full_sweep`, `benchmark_suite`, `ablation_study`, `hierarchical_forecasting_run`, and `panel_forecasting_run` are valid registry concepts, but they are not ordinary direct-run cells. They compile only when a concrete wrapper/orchestrator contract exists; otherwise the compiler returns `not_supported` or keeps them out of the simple wizard.
 
 ## Derivation Rules
 
-`derive_experiment_unit_default()` is the core rule.
+Full YAML may set `experiment_unit` explicitly. If omitted, the compiler derives it from target structure and sweep shape:
 
 | Recipe Shape | Derived Unit |
 |---|---|
-| `research_design=replication_recipe` | `replication_recipe` |
+| `replication_input` is present | `replication_recipe` |
 | `leaf_config.wrapper_family` names a known unit | that wrapper family |
 | `target_structure=multi_target` | `multi_target_shared_design` |
-| `research_design=study_bundle` | `benchmark_suite` unless a wrapper family overrides it |
 | both `model_family` and `feature_builder` are swept | `single_target_full_sweep` |
 | either `model_family` or `feature_builder` is swept | `single_target_generator_grid` |
 | none of the above | `single_target_single_generator` |
 
-If `experiment_unit` is explicit in YAML, `_build_stage0_and_recipe()` checks that it matches the unit implied by the recipe shape. A mismatch is a compile error.
+Simple API helpers set or derive this for you:
+
+- `Experiment(...).to_recipe_dict()` emits `single_target_single_generator` for one fixed path.
+- `Experiment(...).compare_models([...])` emits `single_target_generator_grid`.
+- `Experiment(...).sweep({...})` emits `single_target_generator_grid` when any supported sweep axis has multiple values.
+- The interactive wizard asks for `experiment_unit` first, then target structure and downstream axes.
+
+## Compatibility Guards
+
+- `multi_target_shared_design` and `multi_target_separate_runs` require `target_structure=multi_target`.
+- Single-target units are incompatible with `target_structure=multi_target`.
+- Direct `comparison_sweep` units can execute only if every selected downstream axis has an implemented runtime cell.
+- Wrapper and replication units are not accepted by `run_compiled_recipe`; they must use their dedicated runner.
 
 ## YAML
 
-Usually derived:
+One-cell comparison:
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
-    derived_axes:
-      experiment_unit: experiment_unit_default
-```
-
-Explicit Full recipe:
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      research_design: single_forecast_run
       experiment_unit: single_target_single_generator
+      failure_policy: fail_fast
+      reproducibility_mode: seeded_reproducible
+      compute_mode: serial
 ```
 
-Multi-target shared design:
+Controlled comparison:
 
 ```yaml
 path:
   0_meta:
     fixed_axes:
-      research_design: single_forecast_run
-      experiment_unit: multi_target_shared_design
-  1_data_task:
+      experiment_unit: single_target_generator_grid
+  3_training:
     fixed_axes:
-      target_structure: multi_target
-    leaf_config:
-      targets: [INDPRO, RPI]
+      feature_builder: target_lag_features
+    sweep_axes:
+      model_family: [ar, ridge, lasso]
 ```
-
-## Runtime Notes
-
-Do not use `experiment_unit` as a cosmetic label. It is a contract between the compiler and the runner.
-
-The compiler records route ownership in the tree context and wrapper handoff metadata. Direct `execute_recipe` owns `single_run` units. Wrapper and replication units require their own runner surface.

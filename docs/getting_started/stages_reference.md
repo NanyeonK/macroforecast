@@ -5,7 +5,7 @@ completed user-facing stages. Use this as a quick cheat sheet: pick a recipe
 shape from Stage 0, pick data decisions from Stage 1, then cross over to the
 in-depth user-guide pages for per-axis semantics and recipe YAML examples.
 
-**Scope.** Layer 0 (Design, 0.1–0.6) + Layer 1 (Data, 1.1–1.5).
+**Scope.** Layer 0 (Design, 0.1–0.5) + Layer 1 (Data, 1.1–1.5).
 Layer 2 full fixed recipes are documented in
 `docs/detail/preprocessing_layer_audit.md`; public preprocessing sweeps remain
 blocked. Layers 3+ are outside this quick-reference page.
@@ -14,44 +14,31 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 | Stage | Axes | Allowed values | What it governs |
 |---|---|---|---|
-| 0 — Design  | 6 | 38 | Recipe grammar: runner, sweep shape, reproducibility, compute |
+| 0 — Design  | 5 | 34 | Recipe grammar: execution unit, sweep shape, reproducibility, compute |
 | 1 — Data    | 12 | 38 | Official data frame: dataset, source, frequency, information set, target structure, FRED-SD panel policy, availability |
 
 ---
 
 ## Stage 0 — Design
 
-### 0.1 `research_design`
+### 0.1 `experiment_unit`
 
-**What it picks:** The overall shape of the study — how axes sweep, which runner fires, which artifacts land.
-
-| Value | Check / observe |
-|---|---|
-| `single_forecast_run` (default) | Single recipe → `execute_recipe()` → one predictions file + one metrics file |
-| `controlled_variation` | Sweep plan → one run per variant, shared baseline contract → `study_manifest.json` |
-| `study_bundle` | Compile-only in v1.0 (Phase 8 `PaperReadyBundle` will consume) — manifest carries `wrapper_handoff` |
-| `replication_recipe` | `execute_replication()` runner → byte-identical re-run vs. source manifest |
-
-**Deep dive:** [user_guide/design.md 0.1](../user_guide/design.md#01-research_design).
-
-### 0.2 `experiment_unit`
-
-**What it picks:** Which runner owns the recipe.
+**What it picks:** The unit of work to run, compare, repeat, or hand off.
 
 | Value | Check / observe |
 |---|---|
-| `single_target_single_generator` | one target + one model → default derivation |
-| `single_target_generator_grid` | one target + `model_family` sweep |
-| `single_target_full_sweep` | registry-only; dropped until a wrapper runner exists |
-| `multi_target_separate_runs` | N targets → N independent `execute_recipe` calls (dedicated runner) |
-| `multi_target_shared_design` | N targets → one run with shared preprocessing + benchmarks |
+| `single_target_single_generator` | one target + one forecasting path -> one `comparison_sweep` cell |
+| `single_target_generator_grid` | one target + one or more sweep axes -> `compile_sweep_plan()` / `execute_sweep()` |
+| `single_target_full_sweep` | wrapper grammar; not direct-run unless a wrapper runner exists |
+| `multi_target_separate_runs` | N targets -> N independent target-level runs via wrapper runner |
+| `multi_target_shared_design` | N targets -> one run with shared preprocessing + benchmarks |
 | `ablation_study` | registry-only compiled-wrapper route; standalone `execute_ablation()` uses `AblationSpec` |
-| `replication_recipe` | `execute_replication()` — source-derived recipe |
-| `benchmark_suite` | registry-only; dropped until a wrapper runner exists |
+| `replication_recipe` | `execute_replication()` source-derived recipe |
+| `benchmark_suite` | wrapper grammar; not direct-run unless a wrapper runner exists |
 
-**Deep dive:** [user_guide/design.md 0.2](../user_guide/design.md#02-experiment_unit).
+**Deep dive:** [user_guide/design.md 0.1](../user_guide/design.md#01-experiment_unit).
 
-### 0.3 `axis_type`
+### 0.2 `axis_type`
 
 **What it picks:** How a given axis is consumed at compile time (applies per axis, not per recipe).
 
@@ -63,7 +50,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `conditional` | value chosen via rule (`apply_rule_value`) |
 | `derived` | value inferred from other axes at compile time |
 
-### 0.4 `failure_policy`
+### 0.3 `failure_policy`
 
 **What it picks:** What happens when a variant / cell fails.
 
@@ -75,7 +62,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `save_partial_results` | flush artifacts before aborting |
 | `warn_only` | RuntimeWarning emitted, run continues |
 
-### 0.5 `reproducibility_mode`
+### 0.4 `reproducibility_mode`
 
 **What it picks:** How aggressive the seed/deterministic controls are.
 
@@ -88,7 +75,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 `manifest.reproducibility_applied` records the resolved config; `PYTHONHASHSEED` not set → `RuntimeWarning`.
 
-### 0.6 `compute_mode`
+### 0.5 `compute_mode`
 
 **What it picks:** Which level of the sweep is parallelised.
 

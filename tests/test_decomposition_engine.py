@@ -60,7 +60,7 @@ def _synthetic_manifest(
     manifest = {
         "schema_version": "1.0",
         "study_id": "synth-study-xyz",
-        "research_design": "controlled_variation",
+        "experiment_unit": "single_target_generator_grid",
         "parent_recipe_id": "synth-parent",
         "parent_recipe_dict": {},
         "axes_swept": ["2_preprocessing.scaling_policy", "3_training.model_family"],
@@ -109,7 +109,7 @@ def test_legacy_feature_builder_component_alias_normalizes_to_feature_representa
     manifest = {
         "schema_version": "1.0",
         "study_id": "feature-representation-alias",
-        "research_design": "controlled_variation",
+        "experiment_unit": "single_target_generator_grid",
         "parent_recipe_id": "p",
         "parent_recipe_dict": {},
         "axes_swept": ["2_preprocessing.feature_builder"],
@@ -163,7 +163,7 @@ def test_manual_anova_matches_engine(tmp_path: Path):
             {
                 "schema_version": "1.0",
                 "study_id": "manual",
-                "research_design": "x",
+                "execution_route": "comparison_sweep",
                 "parent_recipe_id": "p",
                 "parent_recipe_dict": {},
                 "axes_swept": ["2_preprocessing.scaling_policy"],

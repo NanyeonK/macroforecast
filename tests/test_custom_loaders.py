@@ -71,7 +71,7 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
     recipe = {
         "recipe_id": "custom-csv-missing-path",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -112,7 +112,7 @@ def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
     recipe = {
         "recipe_id": "legacy-dataset-source",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -156,7 +156,7 @@ def test_dataset_source_alias_with_source_adapter_is_rejected() -> None:
     recipe = {
         "recipe_id": "conflicting-source-adapter",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",

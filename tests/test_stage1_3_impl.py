@@ -54,7 +54,7 @@ def _recipe(
     return {
         "recipe_id": "s13-impl-test",
         "path": {
-            "0_meta": {"fixed_axes": {"research_design": "single_forecast_run"}},
+            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
             "1_data_task": {"fixed_axes": axes_1, "leaf_config": leaf},
             "2_preprocessing": {"fixed_axes": {
                 "target_transform_policy": "raw_level",

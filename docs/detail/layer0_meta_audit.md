@@ -1,11 +1,11 @@
 # Layer 0 Meta Audit
 
-Layer 0 decides what kind of research design a recipe represents before data, preprocessing, models, metrics, or artifacts are interpreted.
+Layer 0 decides the execution grammar a recipe represents before data, preprocessing, models, metrics, or artifacts are interpreted.
 
 For the public `Experiment` API, this layer answers one question:
 
 ```text
-Is this a single default run, a one-axis controlled comparison, a multi-axis grid, a wrapper bundle, or a replication?
+What execution unit is being run, compared, repeated, or handed off?
 ```
 
 ## Layer 0 Surfaces
@@ -15,7 +15,7 @@ Layer 0 is split across two code surfaces.
 | Surface | Files | Role |
 |---------|-------|------|
 | registry axes | `macrocast/registry/stage0/` | allowed values and support status |
-| design frame | `macrocast/design/` | derived research shape, execution posture, route owner |
+| design frame | `macrocast/design/` | derived execution shape, execution posture, route owner |
 | compiler lowering | `macrocast/compiler/build.py` | maps recipe axes into a `DesignFrame` and execution status |
 
 ## Registry Axes
@@ -24,14 +24,13 @@ Current source axes:
 
 | Axis | Public role | Current default |
 |------|-------------|-----------------|
-| `research_design` | public concept, mostly derived by `Experiment` | `single_forecast_run` |
-| `experiment_unit` | internal/advanced route selector | derived |
+| `experiment_unit` | public execution-unit selector | `single_target_single_generator` |
 | `compute_mode` | advanced execution control | `serial` |
 | `failure_policy` | advanced execution control | `fail_fast` |
 | `reproducibility_mode` | public advanced option | `seeded_reproducible` |
 | `axis_type` | internal registry grammar | not a user recipe choice |
 
-Layer 0 has six active source axes. `axis_type` is intentionally outside the
+Layer 0 has five active source axes. `axis_type` is intentionally outside the
 Navigator decision tree because it describes recipe grammar (`fixed`,
 `sweep`, `nested_sweep`, `conditional`, `derived`) rather than a research
 choice.
@@ -45,10 +44,10 @@ The live registry / Navigator census shows:
 
 | Item | Finding | Decision |
 |---|---|---|
-| Active Layer 0 axes | 6 registry axes, 38 total values. | Keep. Code docstrings now say six axes. |
-| Primary Navigator axes | 5 axes: `research_design`, `experiment_unit`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
+| Active Layer 0 axes | 5 registry axes, 34 total values. | Keep. The old route axis was removed; `experiment_unit` is the first user-facing axis. |
+| Primary Navigator axes | 4 axes: `experiment_unit`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
 | Internal axis | `axis_type`. | Keep hidden from the primary Navigator tree; document it as registry grammar. |
-| Runner handoffs | `study_bundle`, `replication_recipe`, `multi_target_separate_runs`, and `replication_recipe` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
+| Runner handoffs | `replication_recipe`, `multi_target_separate_runs`, `benchmark_suite`, and `ablation_study` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
 | Main open Layer 0 question | Whether benchmark/ablation wrapper families should become real public simple API methods. | Defer until wrapper result/artifact contracts are audited after Layers 4-6. |
 
 ## Full Route Contract
@@ -57,7 +56,7 @@ Layer 0 separates grammar from the runner that is allowed to execute it.
 
 | Contract | Meaning | Direct `run_compiled_recipe` |
 |----------|---------|------------------------------|
-| `single_run_executable` | one fully specified single-run recipe | allowed |
+| `single_cell_executable` | one fully specified comparison cell | allowed |
 | `sweep_runner_executable` | parent recipe with sweep axes; variants run through `compile_sweep_plan` / `execute_sweep` | parent blocked |
 | `wrapper_handoff` | wrapper-owned bundle such as full sweep, benchmark suite, ablation, or separate multi-target runs | blocked |
 | `replication_handoff` | replication-owned run; must go through `execute_replication` with source/override contract | blocked |
@@ -65,46 +64,35 @@ Layer 0 separates grammar from the runner that is allowed to execute it.
 | `not_supported_route` | grammar exists, but no runner contract is assigned | blocked |
 
 The compiler records this in `manifest["tree_context"]["route_contract"]`.
-Only `route_owner="single_run"` can be executed by `run_compiled_recipe`.
-
-## Research Design
-
-| Value | Meaning | MVP public API |
-|-------|---------|----------------|
-| `single_forecast_run` | one fixed recipe path | `forecast(...)` / `Experiment(...).run()` |
-| `controlled_variation` | one controlled comparison surface | `.compare_models(...)`, `.sweep({"models": ...})` |
-| `study_bundle` | wrapper-managed bundle | advanced/detail only |
-| `replication_recipe` | replication-locked route | `execute_replication` / Replication Library route |
-
-`Experiment` should set `research_design` automatically. Users should not need to pass this in the simple path.
+Only `route_owner="comparison_sweep"` can be executed by `run_compiled_recipe`.
 
 ## Experiment Unit
 
-`experiment_unit` is derived from research shape and task.
+`experiment_unit` is the first user-facing Layer 0 choice. It may be explicit in Full YAML or derived from target structure and sweep shape.
 
 | Value | Route owner | Runtime status | Public role |
 |-------|-------------|----------------|-------------|
-| `single_target_single_generator` | `single_run` | executable | simple default |
-| `single_target_generator_grid` | `single_run` | executable through sweep runner | one controlled single-run axis, usually model comparison |
+| `single_target_single_generator` | `comparison_sweep` | executable | simple one-cell default |
+| `single_target_generator_grid` | `comparison_sweep` | executable through sweep runner | controlled comparison over one or more axes |
 | `single_target_full_sweep` | `wrapper` | registry_only / not_supported | dropped until a wrapper runner exists |
-| `multi_target_shared_design` | `single_run` | executable | advanced after Layer 1 audit |
+| `multi_target_shared_design` | `comparison_sweep` | executable | advanced after Layer 1 audit |
 | `multi_target_separate_runs` | `wrapper` | executable wrapper path | advanced after Layer 1 audit |
 | `replication_recipe` | `replication` | ready_for_replication_runner | replication API |
 | `benchmark_suite` | `wrapper` | registry_only / not_supported | dropped until a wrapper runner exists |
 | `ablation_study` | `wrapper` | registry_only / not_supported | standalone runner only; no compiled wrapper contract |
 | `hierarchical_forecasting_run` | `orchestrator` | future | closed |
 | `panel_forecasting_run` | `orchestrator` | future | closed |
-| `state_space_run` | `single_run` | future | closed |
+| `state_space_run` | `comparison_sweep` | future | closed |
 
 The simple API should not expose `experiment_unit` directly. It should expose clearer methods like `compare_models`, future `grid`, future `replicate`, and future `ablate`.
 
 Full contract notes:
 
-- `single_target_generator_grid` is historical naming. In the current full contract it means one controlled single-run axis, usually `model_family`.
+- `single_target_generator_grid` is historical naming. In the current full contract it means one controlled comparison axis, usually `model_family`.
 - `multi_target_separate_runs` is a wrapper handoff with a concrete `execute_separate_runs` runner; it is not a direct executable compiled recipe.
 - `single_target_full_sweep`, `benchmark_suite`, and `ablation_study` are wrapper handoffs without compiled-recipe runner contracts and compile as `not_supported`.
 - `replication_recipe` is a replication handoff. It is consumed by `execute_replication`, not by `run_compiled_recipe`.
-- `multi_target_shared_design` remains a single-run executable route because `execute_recipe` owns its shared-design multi-target path.
+- `multi_target_shared_design` remains a comparison-cell executable route because `execute_recipe` owns its shared-design multi-target path.
 
 ## DesignFrame Derived Fields
 
@@ -128,8 +116,8 @@ Current postures:
 
 | Posture | Meaning |
 |---------|---------|
-| `single_run_recipe` | direct recipe execution |
-| `single_run_with_internal_sweep` | sweep runner can expand variants |
+| `comparison_cell` | direct recipe execution |
+| `comparison_sweep_plan` | sweep runner can expand variants |
 | `wrapper_bundle_plan` | wrapper runtime required |
 | `replication_locked_plan` | replication runtime/contract required |
 
@@ -142,23 +130,21 @@ Correct behavior:
 ```text
 one model + one feature recipe -> one_fixed_env_one_tool_surface
 one model + multiple feature recipes -> one_fixed_env_controlled_axis_variation
-multiple models + single_forecast_run -> one_fixed_env_multi_tool_surface
-controlled_variation -> one_fixed_env_controlled_axis_variation
+multiple models or swept axes -> one_fixed_env_controlled_axis_variation
 ```
 
 The derivation now counts feature/preprocess/tuning axes only when they contain more than one value.
-When that produces a single-run controlled axis, Layer 0 keeps the route in
+When that produces a controlled axis, Layer 0 keeps the route in
 `single_target_generator_grid` until a finer-grained experiment unit is introduced.
-The name is historical; the current contract is "one controlled single-run
-axis", not strictly "model axis only".
+The current contract is "one controlled comparison surface", not strictly "model axis only".
 
 ## Current Simple API Mapping
 
 | User action | Layer 0 mapping |
 |-------------|-----------------|
-| `mc.forecast(...)` | `single_forecast_run`, `single_target_single_generator`, `single_run_recipe` |
+| `mc.forecast(...)` | `single_target_single_generator`, `single_cell_executable` |
 | `Experiment(...).run()` | same as `forecast` when no sweep axes exist |
-| `.compare_models([...])` | `controlled_variation`, `single_target_generator_grid`, `single_run_with_internal_sweep` |
+| `.compare_models([...])` | `single_target_generator_grid`, `sweep_runner_executable` |
 | `.sweep({"models": [...]})` | same as `compare_models` |
 | fixed `.use_preprocessor(...)` | still single path unless models are compared |
 | fixed `.use_target_transformer(...)` | still single path unless models are compared |
@@ -168,25 +154,25 @@ axis", not strictly "model axis only".
 
 | Scenario | Route contract | Compile status | Runner |
 |----------|----------------|----------------|--------|
-| single default | `single_run_executable` | `executable` | `run_compiled_recipe` / `Experiment.run` |
+| single default | `single_cell_executable` | `executable` | `run_compiled_recipe` / `Experiment.run` |
 | model comparison parent | `sweep_runner_executable` | `ready_for_sweep_runner` | `execute_sweep` |
-| model comparison variant | `single_run_executable` | `executable` | `run_compiled_recipe` |
+| model comparison variant | `single_cell_executable` | `executable` | `run_compiled_recipe` |
 | feature-only comparison parent | `sweep_runner_executable` | `ready_for_sweep_runner` | `execute_sweep` |
 | preprocessing sweep parent | `sweep_runner_executable` | `ready_for_sweep_runner` | blocked in simple; Layer 2 governs variants |
 | full sweep explicit | `wrapper_handoff` | `not_supported` | dropped until a wrapper runner exists |
 | benchmark suite | `wrapper_handoff` | `not_supported` | dropped until a wrapper runner exists |
 | ablation study | `wrapper_handoff` | `not_supported` | standalone `AblationSpec` runner only; no compiled-recipe wrapper contract |
 | replication override | `replication_handoff` | `ready_for_replication_runner` | `execute_replication` |
-| multi-target shared design | `single_run_executable` | `executable` | `execute_recipe` |
+| multi-target shared design | `single_cell_executable` | `executable` | `execute_recipe` |
 | multi-target separate runs | `wrapper_handoff` | `ready_for_wrapper_runner` | `execute_separate_runs` |
 
-`run_compiled_recipe` rejects every non-`single_run` route. A runner-ready
+`run_compiled_recipe` rejects every non-`comparison_sweep` route. A runner-ready
 status means a dedicated runner can consume the recipe; `not_supported` means
 the route remains in the registry but must not be exposed as runnable.
 
 ## Run Policy Axes
 
-`compute_mode`, `failure_policy`, and `reproducibility_mode` are policy axes. They do not change the research design by themselves.
+`compute_mode`, `failure_policy`, and `reproducibility_mode` are policy axes. They do not change the execution unit by themselves.
 
 | Axis | Executable values | Not-supported registry values |
 |------|-------------------|---------------------------|

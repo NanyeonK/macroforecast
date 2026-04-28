@@ -41,7 +41,6 @@ def _stage0(
         "rolling": "rolling_window_oos",
     }[framework]
     return build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": information_set_label,
@@ -819,7 +818,7 @@ def test_execute_recipe_expanding_still_supported_without_importance(tmp_path: P
     )
 
     assert result.raw_result.dataset_metadata.dataset == "fred_md"
-    assert result.run.route_owner == "single_run"
+    assert result.run.route_owner == "comparison_sweep"
     assert result.run.artifact_subdir.startswith("runs/")
 
 
@@ -1425,7 +1424,6 @@ def test_execute_recipe_writes_minimal_importance_artifact_for_lasso(tmp_path: P
 def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -1471,7 +1469,6 @@ def test_execute_recipe_runs_multi_target_slice(tmp_path: Path) -> None:
 def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -1498,11 +1495,10 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
     )
     provenance_payload = {
         "tree_context": {
-            "research_design": "single_forecast_run",
+            "experiment_unit": "single_target_single_generator",
             "design_shape": "one_fixed_env_one_tool_surface",
-            "execution_posture": "single_run_recipe",
-            "experiment_unit": "single_model_path",
-            "route_owner": "single_run",
+            "execution_posture": "comparison_cell",
+            "route_owner": "comparison_sweep",
             "fixed_design": {
                 "dataset_adapter": "fred_md",
                 "information_set": "revised_monthly",
@@ -1542,10 +1538,10 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
     run_dir = tmp_path / result.run.artifact_subdir
     manifest = json.loads((run_dir / "manifest.json").read_text())
     summary = (run_dir / "summary.txt").read_text()
-    assert manifest["tree_context"]["route_owner"] == "single_run"
+    assert manifest["tree_context"]["route_owner"] == "comparison_sweep"
     assert manifest["tree_context"]["fixed_design"]["dataset_adapter"] == "fred_md"
     assert manifest["tree_context"]["leaf_config"]["target"] == "INDPRO"
-    assert "tree_context=route_owner=single_run" in summary
+    assert "tree_context=route_owner=comparison_sweep" in summary
 
 
 
@@ -1553,7 +1549,6 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
 def test_execute_recipe_skip_failed_model_records_partial_manifest(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -1641,7 +1636,6 @@ def test_execute_recipe_parallel_by_horizon_writes_manifest(tmp_path: Path) -> N
 def test_execute_recipe_parallel_by_target_runs_multi_target_slice(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/fred_md_ar_sample.csv")
     stage0 = build_design_frame(
-        research_design="single_forecast_run",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",

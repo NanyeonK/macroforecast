@@ -4,10 +4,9 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 
 ## Stage 0 — Design
 
-[Design (Stage 0)](design.md) — six axes that decide the shape of the study:
+[Design (Stage 0)](design.md) — axes that decide the execution grammar:
 
-- `research_design` — single forecast vs. horse race vs. bundle vs. replication.
-- `experiment_unit` — which runner owns the recipe (auto-derived).
+- `experiment_unit` — one-cell comparison, controlled sweep, multi-target run, wrapper handoff, or replication handoff.
 - `axis_type` — fixed / sweep / nested / conditional / derived per axis.
 - `failure_policy` — how to handle per-cell failures.
 - `reproducibility_mode` — how strict to make determinism.
