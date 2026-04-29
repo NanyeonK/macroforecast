@@ -158,6 +158,7 @@
 <span class="n">_CUSTOM_SOURCE_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">_CUSTOM_SOURCE_DATASET_SCHEMAS</span><span class="p">}</span>
 <span class="n">_CUSTOM_SOURCE_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;official_only&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">,</span> <span class="s2">&quot;official_plus_custom&quot;</span><span class="p">}</span>
 <span class="n">_CUSTOM_SOURCE_FORMATS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;parquet&quot;</span><span class="p">}</span>
+<span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.parquet&quot;</span><span class="p">,</span> <span class="s2">&quot;.pq&quot;</span><span class="p">}</span>
 
 <span class="n">_X_IMPUTATION_METHODS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;ffill&quot;</span><span class="p">,</span> <span class="s2">&quot;bfill&quot;</span><span class="p">}</span>
 
@@ -315,6 +316,126 @@
     <span class="k">if</span> <span class="n">schema</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_SCHEMAS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_source_schema must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_SOURCE_SCHEMAS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">))</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;csv&quot;</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;parquet&quot;</span>
+    <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+        <span class="s2">&quot;custom source file format is inferred from leaf_config.custom_source_path; &quot;</span>
+        <span class="s2">&quot;use a .csv, .parquet, or .pq file, or set legacy fixed_axes.custom_source_format&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolved_custom_source_format</span><span class="p">(</span>
+    <span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span>
+    <span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">explicit_format</span> <span class="o">=</span> <span class="n">_custom_source_format</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom_source_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">explicit_format</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">inferred_format</span> <span class="o">=</span> <span class="n">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CompileValidationError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">explicit_format</span>
+        <span class="k">raise</span>
+    <span class="k">if</span> <span class="n">explicit_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">explicit_format</span> <span class="o">!=</span> <span class="n">inferred_format</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+            <span class="s2">&quot;fixed_axes.custom_source_format conflicts with leaf_config.custom_source_path extension&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">explicit_format</span> <span class="k">if</span> <span class="n">explicit_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">inferred_format</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_schema_from_route</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">custom_source_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">dataset_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span> <span class="ow">and</span> <span class="n">dataset_str</span> <span class="o">==</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fred_sd&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;fred_qd&quot;</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">frequency</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;quarterly&quot;</span> <span class="k">else</span> <span class="s2">&quot;fred_md&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolved_custom_source_schema</span><span class="p">(</span>
+    <span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">custom_source_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">explicit_schema</span> <span class="o">=</span> <span class="n">_custom_source_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">explicit_schema</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">explicit_schema</span>
+    <span class="k">return</span> <span class="n">_custom_schema_from_route</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">frequency</span><span class="p">,</span> <span class="n">custom_source_policy</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolved_custom_source_contract</span><span class="p">(</span>
+    <span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span>
+    <span class="n">leaf_config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">)</span>
+    <span class="n">raw_dataset_schema</span> <span class="o">=</span> <span class="n">_raw_dataset_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
+    <span class="n">frequency</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span>
+        <span class="n">selection_map</span><span class="p">,</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_DATASET_DEFAULT_FREQUENCY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">raw_dataset_schema</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">custom_source_policy</span> <span class="o">=</span> <span class="n">_custom_source_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
+    <span class="n">custom_source_path</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_schema&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+            <span class="s2">&quot;leaf_config.custom_source_schema is no longer supported; &quot;</span>
+            <span class="s2">&quot;omit it. Custom source schema is inferred from dataset/frequency; &quot;</span>
+            <span class="s2">&quot;legacy recipes may still set fixed_axes.custom_source_schema.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;official_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_custom_source_format</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;custom_source_format applies only when a custom source is selected&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">_custom_source_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="n">custom_source_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;custom_source_schema and leaf_config.custom_source_path apply only when a custom source is selected&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;custom_source_policy&quot;</span><span class="p">:</span> <span class="n">custom_source_policy</span><span class="p">,</span>
+            <span class="s2">&quot;custom_source_format&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;custom_source_schema&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;custom_source_path&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_source_path</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+            <span class="s2">&quot;custom sources require leaf_config.custom_source_path; &quot;</span>
+            <span class="s2">&quot;the parser is inferred from the .csv/.parquet/.pq extension&quot;</span>
+        <span class="p">)</span>
+    <span class="n">resolved_format</span> <span class="o">=</span> <span class="n">_resolved_custom_source_format</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">custom_source_path</span><span class="p">)</span>
+    <span class="n">resolved_schema</span> <span class="o">=</span> <span class="n">_resolved_custom_source_schema</span><span class="p">(</span>
+        <span class="n">selection_map</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="o">=</span><span class="n">frequency</span><span class="p">,</span>
+        <span class="n">custom_source_policy</span><span class="o">=</span><span class="n">custom_source_policy</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;+&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39; supports a single FRED dataset, not a composite&quot;</span>
+            <span class="p">)</span>
+        <span class="n">explicit_schema</span> <span class="o">=</span> <span class="n">_custom_source_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">explicit_schema</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">resolved_schema</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;legacy fixed_axes.custom_source_schema must match dataset when &quot;</span>
+                <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39;&quot;</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;custom_source_policy&quot;</span><span class="p">:</span> <span class="n">custom_source_policy</span><span class="p">,</span>
+        <span class="s2">&quot;custom_source_format&quot;</span><span class="p">:</span> <span class="n">resolved_format</span><span class="p">,</span>
+        <span class="s2">&quot;custom_source_schema&quot;</span><span class="p">:</span> <span class="n">resolved_schema</span><span class="p">,</span>
+        <span class="s2">&quot;custom_source_path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">),</span>
+    <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sd_target_parts</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1183,48 +1304,7 @@
 
     <span class="n">targets</span> <span class="o">=</span> <span class="n">_targets_for_layer1_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">has_fred_sd</span> <span class="o">=</span> <span class="n">_dataset_has_fred_sd</span><span class="p">(</span><span class="n">raw_dataset_schema</span><span class="p">)</span>
-    <span class="n">custom_source_policy</span> <span class="o">=</span> <span class="n">_custom_source_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="n">custom_source_format</span> <span class="o">=</span> <span class="n">_custom_source_format</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="n">custom_source_schema</span> <span class="o">=</span> <span class="n">_custom_source_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
-    <span class="n">custom_source_path</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_schema&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-            <span class="s2">&quot;leaf_config.custom_source_schema is no longer supported; &quot;</span>
-            <span class="s2">&quot;set fixed_axes.custom_source_schema instead&quot;</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;official_only&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;custom_source_format must be &#39;none&#39; when custom_source_policy=&#39;official_only&#39;&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="n">custom_source_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;custom_source_schema and leaf_config.custom_source_path apply only when a custom source is selected&quot;</span>
-            <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;custom_source_format must be &#39;csv&#39; or &#39;parquet&#39; when a custom source is selected&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_DATASET_SCHEMAS</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;custom sources require custom_source_schema &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;in </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_SOURCE_DATASET_SCHEMAS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_source_path</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;custom sources require leaf_config.custom_source_path&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;+&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                    <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39; supports a single FRED dataset, not a composite&quot;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="o">!=</span> <span class="n">dataset</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                    <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39; requires &quot;</span>
-                    <span class="s2">&quot;custom_source_schema to match dataset&quot;</span>
-                <span class="p">)</span>
+    <span class="n">_resolved_custom_source_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">fred_sd_frequency_policy</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;fred_sd_frequency_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;report_only&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fred_sd_frequency_policy</span> <span class="o">!=</span> <span class="s2">&quot;report_only&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_fred_sd</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
@@ -1458,16 +1538,14 @@
     <span class="n">feature_builder</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
     <span class="n">information_set_type</span> <span class="o">=</span> <span class="n">_first_selected_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;information_set_type&quot;</span><span class="p">,</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">)</span>
     <span class="n">fred_sd_selectors</span> <span class="o">=</span> <span class="n">_resolve_fred_sd_selector_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
+    <span class="n">custom_source_contract</span> <span class="o">=</span> <span class="n">_resolved_custom_source_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_feature_blocks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">custom_feature_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">custom_feature_blocks</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">dataset</span><span class="p">,</span>
         <span class="s2">&quot;dataset_schema&quot;</span><span class="p">:</span> <span class="n">raw_dataset_schema</span><span class="p">,</span>
-        <span class="s2">&quot;custom_source_policy&quot;</span><span class="p">:</span> <span class="n">_custom_source_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
-        <span class="s2">&quot;custom_source_format&quot;</span><span class="p">:</span> <span class="n">_custom_source_format</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
-        <span class="s2">&quot;custom_source_schema&quot;</span><span class="p">:</span> <span class="n">_custom_source_schema</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
-        <span class="s2">&quot;custom_source_path&quot;</span><span class="p">:</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">),</span>
+        <span class="o">**</span><span class="n">custom_source_contract</span><span class="p">,</span>
         <span class="s2">&quot;target_structure&quot;</span><span class="p">:</span> <span class="n">target_structure</span><span class="p">,</span>
         <span class="s2">&quot;official_transform_policy&quot;</span><span class="p">:</span> <span class="n">_official_transform_policy</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
         <span class="s2">&quot;official_transform_scope&quot;</span><span class="p">:</span> <span class="n">_official_transform_scope</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>

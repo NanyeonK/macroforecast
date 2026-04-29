@@ -281,11 +281,11 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code></p></td>
-<td><p>-</p></td>
+<td><p>hidden compatibility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
+<td><p>inferred</p></td>
 <td><p>operational=3</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
+<td><p>Legacy fixed axis only. New recipes infer parser from <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> extension.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
 <td><p>-</p></td>
@@ -295,11 +295,11 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">official_only</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>, <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code></p></td>
-<td><p>-</p></td>
+<td><p>hidden compatibility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
+<td><p>inferred</p></td>
 <td><p>operational=4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code></p></td>
+<td><p>Legacy fixed axis only. New recipes infer internal schema from <code class="docutils literal notranslate"><span class="pre">dataset</span></code>/<code class="docutils literal notranslate"><span class="pre">frequency</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
 <td><p>-</p></td>

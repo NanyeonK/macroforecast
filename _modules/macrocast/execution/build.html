@@ -271,6 +271,7 @@
     <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_RUNTIME_TCODE_CONTRACT_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;official_tcode_only&quot;</span><span class="p">,</span> <span class="s2">&quot;official_tcode_then_extra_preprocess&quot;</span><span class="p">}</span>
+<span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.parquet&quot;</span><span class="p">,</span> <span class="s2">&quot;.pq&quot;</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_data_task_axis</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">axis_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1722,9 +1723,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_path</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">,</span> <span class="n">local_raw_source</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">allow_direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">local_raw_source</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
         <span class="n">file_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_format&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">))</span>
+        <span class="n">fallback</span> <span class="o">=</span> <span class="n">local_raw_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_csv&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">local_raw_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_parquet&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">local_raw_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">local_raw_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">file_format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="n">local_raw_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_</span><span class="si">{</span><span class="n">file_format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">file_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">fallback</span>
             <span class="ow">or</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">)</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">allow_direct</span> <span class="ow">and</span> <span class="n">local_raw_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1732,17 +1735,52 @@
     <span class="k">return</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">custom_path</span><span class="p">))</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;csv&quot;</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;parquet&quot;</span>
+    <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
+        <span class="s2">&quot;custom source file format is inferred from custom_source_path; &quot;</span>
+        <span class="s2">&quot;use a .csv, .parquet, or .pq file, or set legacy custom_source_format&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_format_for_recipe</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">,</span> <span class="n">custom_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">explicit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_format&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">inferred</span> <span class="o">=</span> <span class="n">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ExecutionError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">explicit</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">explicit</span>
+        <span class="k">raise</span>
+    <span class="k">if</span> <span class="n">explicit</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">explicit</span> <span class="o">!=</span> <span class="n">inferred</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;custom_source_format conflicts with custom_source_path extension&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">explicit</span> <span class="k">if</span> <span class="n">explicit</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">inferred</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_schema_for_recipe</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">explicit</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_schema&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">explicit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">explicit</span><span class="p">)</span>
+    <span class="n">policy</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;official_only&quot;</span><span class="p">))</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">recipe</span><span class="o">.</span><span class="n">raw_dataset</span><span class="p">)</span>
+    <span class="n">frequency</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frequency&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span> <span class="ow">and</span> <span class="n">dataset</span> <span class="o">==</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fred_sd&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;fred_qd&quot;</span> <span class="k">if</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s2">&quot;quarterly&quot;</span> <span class="k">else</span> <span class="s2">&quot;fred_md&quot;</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_load_custom_source_for_recipe</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="n">RecipeSpec</span><span class="p">,</span> <span class="n">local_raw_source</span><span class="p">,</span> <span class="n">cache_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">allow_direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-    <span class="n">file_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_format&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">))</span>
     <span class="n">custom_path</span> <span class="o">=</span> <span class="n">_custom_source_path</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">local_raw_source</span><span class="p">,</span> <span class="n">allow_direct</span><span class="o">=</span><span class="n">allow_direct</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">custom_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span>
             <span class="s2">&quot;custom sources require leaf_config.custom_source_path &quot;</span>
             <span class="s2">&quot;(or local_raw_source mapping key &#39;custom&#39;)&quot;</span>
         <span class="p">)</span>
-    <span class="n">custom_schema</span> <span class="o">=</span> <span class="n">recipe</span><span class="o">.</span><span class="n">data_task_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_source_schema&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">custom_schema</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
-        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s2">&quot;custom sources require custom_source_schema&quot;</span><span class="p">)</span>
+    <span class="n">file_format</span> <span class="o">=</span> <span class="n">_custom_source_format_for_recipe</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">custom_path</span><span class="p">)</span>
+    <span class="n">custom_schema</span> <span class="o">=</span> <span class="n">_custom_source_schema_for_recipe</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_format</span> <span class="o">==</span> <span class="s2">&quot;csv&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">load_custom_csv</span><span class="p">(</span><span class="n">custom_path</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">custom_schema</span><span class="p">),</span> <span class="n">cache_root</span><span class="o">=</span><span class="n">cache_root</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_format</span> <span class="o">==</span> <span class="s2">&quot;parquet&quot;</span><span class="p">:</span>

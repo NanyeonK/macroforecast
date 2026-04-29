@@ -51,9 +51,9 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `contemporaneous_x_rule` | - | `enum` | `fixed` | operational=2 | `operational`: `allow_same_period_predictors`, `forbid_same_period_predictors` |
-| `custom_source_format` | - | `enum` | `fixed` | operational=3 | `operational`: `none`, `csv`, `parquet` |
+| `custom_source_format` | hidden compatibility | `enum` | inferred | operational=3 | Legacy fixed axis only. New recipes infer parser from `custom_source_path` extension. |
 | `custom_source_policy` | - | `enum` | `fixed` | operational=3 | `operational`: `official_only`, `custom_panel_only`, `official_plus_custom` |
-| `custom_source_schema` | - | `enum` | `fixed` | operational=4 | `operational`: `none`, `fred_md`, `fred_qd`, `fred_sd` |
+| `custom_source_schema` | hidden compatibility | `enum` | inferred | operational=4 | Legacy fixed axis only. New recipes infer internal schema from `dataset`/`frequency`. |
 | `dataset` | - | `enum` | `fixed` | operational=5 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` |
 | `fred_sd_frequency_policy` | - | `enum` | `fixed` | operational=4 | `operational`: `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` |
 | `fred_sd_state_group` | - | `enum` | `fixed` | operational=16 | `operational`: `all_states`, `census_region_northeast`, `census_region_midwest`, `census_region_south`, `census_region_west`, `census_division_new_england`, `census_division_middle_atlantic`, `census_division_east_north_central`, `census_division_west_north_central`, `census_division_south_atlantic`, `census_division_east_south_central`, `census_division_west_south_central`, `census_division_mountain`, `census_division_pacific`, `contiguous_48_plus_dc`, `custom_state_group` |
