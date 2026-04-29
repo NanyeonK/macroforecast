@@ -11,13 +11,13 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(
             id="apply_official_tcode",
-            description="apply official dataset transformation codes",
+            description="apply FRED-provided transformation codes",
             status="operational",
             priority="A",
         ),
         EnumRegistryEntry(
             id="keep_official_raw_scale",
-            description="leave official source columns on their raw reported scale",
+            description="leave FRED source columns on their raw reported scale",
             status="operational",
             priority="A",
         ),

@@ -1,6 +1,6 @@
 # Target Structure (1.2)
 
-Layer 1 only declares the target shape inside the official data frame. It does
+Layer 1 only declares the target shape inside the FRED data frame. It does
 not choose the study runner. Runner ownership stays in Layer 0 through
 `study_scope`.
 

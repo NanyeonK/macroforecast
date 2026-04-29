@@ -11,19 +11,19 @@ AXIS_DEFINITION = AxisDefinition(
     entries=(
         EnumRegistryEntry(
             id='official_only',
-            description='use the selected official source panel only',
+            description='use the selected FRED source panel only',
             status='operational',
             priority="A",
         ),
         EnumRegistryEntry(
             id='custom_panel_only',
-            description='load a user supplied file instead of the selected official panel',
+            description='load a custom file instead of the selected FRED panel',
             status='operational',
             priority="A",
         ),
         EnumRegistryEntry(
             id='official_plus_custom',
-            description='append a user supplied file to the selected official panel',
+            description='append a custom file to the selected FRED panel',
             status='operational',
             priority="A",
         ),

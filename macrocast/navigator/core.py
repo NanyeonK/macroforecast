@@ -21,7 +21,7 @@ NAVIGATOR_SCHEMA_VERSION = "navigator_view_v1"
 
 _LAYER_LABELS = {
     "0_meta": "Layer 0: study scope",
-    "1_data_task": "Layer 1: official data frame",
+    "1_data_task": "Layer 1: FRED data frame",
     "2_preprocessing": "Layer 2: representation construction",
     "3_training": "Layer 3: forecast generation",
     "4_evaluation": "Layer 4: evaluation",
@@ -160,7 +160,7 @@ _LAYER_AXIS_GROUPS = {
             "id": "source_identity",
             "label": "Source Identity",
             "level": "primary_decision",
-            "summary": "Choose the official source family, optional custom source use, custom file schema, and calendar frequency.",
+            "summary": "Choose the FRED source family, optional custom data use, custom file schema, and calendar frequency.",
             "axes": ("dataset", "custom_source_policy", "custom_source_format", "custom_source_schema", "frequency"),
         },
         {
@@ -206,7 +206,7 @@ _LAYER_AXIS_GROUPS = {
             "id": "official_frame_policy",
             "label": "Official Frame Policy",
             "level": "secondary_policy",
-            "summary": "Apply official transforms and close availability gaps in the Layer 1 official frame.",
+            "summary": "Apply FRED transforms and close availability gaps in the Layer 1 FRED frame.",
             "axes": ("official_transform_policy", "official_transform_scope", "missing_availability"),
         },
     ),
@@ -640,7 +640,7 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return f"dataset={dataset} requires frequency={implied_frequency}"
     if axis_name == "custom_source_policy":
         if value == "custom_panel_only" and "+" in dataset:
-            return "custom_panel_only supports one official source panel; use official_plus_custom for composites"
+            return "custom_panel_only supports one FRED source panel; use official_plus_custom for composites"
     if axis_name == "custom_source_format":
         if custom_source_policy == "official_only" and value != "none":
             return "custom_source_format is active only when a custom source is selected"

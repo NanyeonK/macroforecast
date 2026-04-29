@@ -3381,15 +3381,15 @@
       }
     },
     "custom_source_format": {
-      "contract": "Use csv for a date-indexed CSV panel and parquet for a Parquet panel. Use none when no custom source is selected.",
+      "contract": "Use csv for a date-indexed CSV panel and parquet for a Parquet panel. Use none only when no custom data is selected.",
       "default_value": "none",
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Custom File Format",
       "order": 6.2,
-      "question": "What file format does the custom source use?",
+      "question": "What file format does the custom data use?",
       "selection_kind": "conditional_choice",
       "short_label": "Custom Format",
-      "summary": "Active only when Custom Data Use is My Data Only or Official + Mine.",
+      "summary": "Active only when Custom Data Use is Custom Only or FRED + Custom.",
       "values": {
         "csv": {
           "label": "CSV",
@@ -3397,9 +3397,9 @@
           "summary": "A date-indexed CSV file with numeric series columns."
         },
         "none": {
-          "label": "No Custom File (Default)",
+          "label": "No Custom File",
           "short_label": "None",
-          "summary": "No custom source file is used."
+          "summary": "No custom file is used. Valid only when Custom Data Use is FRED Only."
         },
         "parquet": {
           "label": "Parquet",
@@ -3410,44 +3410,44 @@
       "warning": "Check the detailed docs for required date index and numeric-column shape."
     },
     "custom_source_policy": {
-      "contract": "When a custom source is selected, choose custom_source_format and custom_source_schema, then provide leaf_config.custom_source_path. custom_panel_only supports one official source panel; official_plus_custom supports single or composite official panels.",
+      "contract": "When custom data is selected, choose custom_source_format and custom_source_schema, then provide leaf_config.custom_source_path. custom_panel_only supports one FRED source panel; official_plus_custom supports single or composite FRED panels.",
       "default_value": "official_only",
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Custom Data Use",
       "order": 6,
-      "question": "Do you want official data, your own data, or official data plus your own data?",
+      "question": "Do you want FRED data, custom data, or FRED data plus custom data?",
       "selection_kind": "defaulted_choice",
       "short_label": "Custom Data",
-      "summary": "Choose official data only, custom panel only, or official data plus custom columns.",
+      "summary": "Choose FRED data only, custom data only, or FRED data plus custom columns.",
       "values": {
         "custom_panel_only": {
-          "label": "Use My Data Only",
-          "short_label": "My Data Only",
-          "summary": "Use a custom file instead of the selected single official source panel. The custom schema must match the selected source panel."
+          "label": "Use Custom Data Only",
+          "short_label": "Custom Only",
+          "summary": "Use a custom file instead of the selected single FRED source panel. The custom schema must match the selected source panel."
         },
         "official_only": {
-          "label": "Use Official Data Only (Default)",
-          "short_label": "Official Only",
-          "summary": "Use only the selected official FRED source panel."
+          "label": "Use FRED Data Only (Default)",
+          "short_label": "FRED Only",
+          "summary": "Use only the selected FRED source panel."
         },
         "official_plus_custom": {
-          "label": "Add My Data To Official Data",
-          "short_label": "Official + Mine",
-          "summary": "Load the selected official source panel and append custom columns after frequency alignment."
+          "label": "Add Custom Data To FRED Data",
+          "short_label": "FRED + Custom",
+          "summary": "Load the selected FRED source panel and append custom columns after frequency alignment."
         }
       },
       "warning": "Custom files must follow the frequency and schema contract in the docs before the run is reproducible."
     },
     "custom_source_schema": {
-      "contract": "Use none with official_only. Use fred_md for monthly national macro panels, fred_qd for quarterly national macro panels, and fred_sd for state-level panels that will be aligned to the selected Layer 1 frequency.",
+      "contract": "Use none with FRED-only data. Use fred_md for monthly national macro panels, fred_qd for quarterly national macro panels, and fred_sd for state-level panels that will be aligned to the selected Layer 1 frequency.",
       "default_value": "none",
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Custom File Schema",
       "order": 6.4,
-      "question": "Which official panel schema does the custom file follow?",
+      "question": "Which FRED-style schema does the custom file follow?",
       "selection_kind": "conditional_choice",
       "short_label": "Custom Schema",
-      "summary": "Active only when a custom file is selected. My Data Only must match the selected Source Panel; Official + Mine may use MD, QD, or SD-like columns.",
+      "summary": "Active only when a custom file is selected. Custom Only must match the selected Source Panel; FRED + Custom may use MD, QD, or SD-like columns.",
       "values": {
         "fred_md": {
           "label": "FRED-MD-Like Monthly Panel",
@@ -3465,9 +3465,9 @@
           "summary": "Date-indexed state-level columns, normally monthly before Layer 1 alignment."
         },
         "none": {
-          "label": "No Custom Schema (Default)",
+          "label": "No Custom Schema",
           "short_label": "None",
-          "summary": "No custom file is used."
+          "summary": "No custom schema is used. Valid only when Custom Data Use is FRED Only."
         }
       },
       "warning": "This is a schema contract, not a loader choice. The file path still lives in leaf_config.custom_source_path."
@@ -3477,7 +3477,7 @@
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Source Panel",
       "order": 5,
-      "question": "Which official source panel starts the study?",
+      "question": "Which FRED source panel starts the study?",
       "selection_kind": "user_choice",
       "short_label": "Source",
       "summary": "Selects the official FRED-family panel before optional custom-file use, target, timing, or representation decisions.",
@@ -3751,7 +3751,7 @@
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Frequency",
       "order": 7,
-      "question": "What calendar frequency should the official frame use?",
+      "question": "What calendar frequency should the FRED frame use?",
       "selection_kind": "derived_or_required_choice",
       "short_label": "Frequency",
       "summary": "Derived for FRED-MD/QD/composites and required for standalone FRED-SD.",
@@ -3759,12 +3759,12 @@
         "monthly": {
           "label": "Monthly",
           "short_label": "Monthly",
-          "summary": "Monthly official frame."
+          "summary": "Monthly FRED frame."
         },
         "quarterly": {
           "label": "Quarterly",
           "short_label": "Quarterly",
-          "summary": "Quarterly official frame."
+          "summary": "Quarterly FRED frame."
         }
       }
     },
@@ -3800,7 +3800,7 @@
       "question": "How should official-frame availability gaps be handled?",
       "selection_kind": "defaulted_choice",
       "short_label": "Availability",
-      "summary": "Runs after the official frame exists and before Layer 2 representation construction.",
+      "summary": "Runs after the FRED frame exists and before Layer 2 representation construction.",
       "values": {
         "impute_predictors_only": {
           "label": "Impute Predictors Only",
@@ -3815,7 +3815,7 @@
         "require_complete_rows": {
           "label": "Require Complete Rows",
           "short_label": "Complete Rows",
-          "summary": "Keep only rows complete across the official frame."
+          "summary": "Keep only rows complete across the FRED frame."
         },
         "zero_fill_leading_predictor_gaps": {
           "label": "Zero-Fill Leading Predictor Gaps (Default)",
@@ -3825,20 +3825,20 @@
       }
     },
     "official_transform_policy": {
-      "contract": "Official-transform contract. FRED-SD inferred transforms are Layer 2 researcher-chosen transformations, not official source definitions.",
+      "contract": "FRED-transform contract. FRED-SD inferred transforms are Layer 2 researcher-chosen transformations, not source definitions.",
       "default_value": "apply_official_tcode",
       "docs_url": "../detail/layer1/official_transforms.html",
       "label": "Official Transform Policy",
       "order": 16,
-      "question": "Should official dataset transform codes be applied?",
+      "question": "Should FRED-provided transform codes be applied?",
       "selection_kind": "defaulted_choice",
       "short_label": "Official T-Code",
-      "summary": "Controls official FRED-MD/QD t-code application while building the official frame.",
+      "summary": "Controls FRED-MD/QD t-code application while building the FRED frame.",
       "values": {
         "apply_official_tcode": {
-          "label": "Apply Official T-Codes (Default)",
+          "label": "Apply FRED T-Codes (Default)",
           "short_label": "Apply T-Codes",
-          "summary": "Apply official dataset transform codes."
+          "summary": "Apply FRED-provided transform codes."
         },
         "keep_official_raw_scale": {
           "label": "Keep Official Raw Scale",
@@ -4081,7 +4081,7 @@
       "question": "Which source columns are eligible before Layer 2 builds features?",
       "selection_kind": "defaulted_choice",
       "short_label": "Universe",
-      "summary": "Filters the official source universe before representation construction.",
+      "summary": "Filters the FRED source universe before representation construction.",
       "values": {
         "all_variables": {
           "label": "All Variables (Default)",
@@ -4125,7 +4125,7 @@
         "id": "source_identity",
         "label": "Source Identity",
         "level": "primary_decision",
-        "summary": "Choose the official source family, optional custom source use, custom file schema, and calendar frequency."
+        "summary": "Choose the FRED source family, optional custom data use, custom file schema, and calendar frequency."
       },
       {
         "axes": [
@@ -4190,13 +4190,13 @@
         "id": "official_frame_policy",
         "label": "Official Frame Policy",
         "level": "secondary_policy",
-        "summary": "Apply official transforms and close availability gaps in the Layer 1 official frame."
+        "summary": "Apply FRED transforms and close availability gaps in the Layer 1 FRED frame."
       }
     ]
   },
   "layer_labels": {
     "0_meta": "Layer 0: study scope",
-    "1_data_task": "Layer 1: official data frame",
+    "1_data_task": "Layer 1: FRED data frame",
     "2_preprocessing": "Layer 2: representation construction",
     "3_training": "Layer 3: forecast generation",
     "4_evaluation": "Layer 4: evaluation",
@@ -4741,7 +4741,7 @@
               "information_set_type": "final_revised_data",
               "target_structure": "single_target"
             },
-            "label": "Layer 1: official data frame",
+            "label": "Layer 1: FRED data frame",
             "leaf_config": {
               "horizons": [
                 1,
@@ -5478,7 +5478,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.dataset = 'fred_md'",
@@ -5527,7 +5527,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
@@ -5562,7 +5562,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_format = 'none'",
@@ -5597,7 +5597,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
@@ -5639,7 +5639,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.frequency = 'monthly'",
@@ -5667,7 +5667,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
@@ -5696,7 +5696,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
@@ -5740,7 +5740,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
@@ -5868,7 +5868,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
@@ -5968,7 +5968,7 @@
             "group_level": "contract_derived",
             "group_order": 4,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
@@ -5997,7 +5997,7 @@
             "group_level": "secondary_policy",
             "group_order": 5,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'all_variables'",
@@ -6046,7 +6046,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'preserve_raw_missing'",
@@ -6088,7 +6088,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'preserve_raw_outliers'",
@@ -6144,7 +6144,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
@@ -6172,7 +6172,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
@@ -6214,7 +6214,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
@@ -6256,7 +6256,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.release_lag_rule = 'ignore_release_lag'",
@@ -6291,7 +6291,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",
@@ -10862,7 +10862,7 @@
               "information_set_type": "final_revised_data",
               "target_structure": "single_target"
             },
-            "label": "Layer 1: official data frame",
+            "label": "Layer 1: FRED data frame",
             "leaf_config": {
               "horizons": [
                 1
@@ -11609,7 +11609,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.dataset = 'fred_md'",
@@ -11658,7 +11658,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
@@ -11693,7 +11693,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_format = 'none'",
@@ -11728,7 +11728,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
@@ -11770,7 +11770,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.frequency = 'monthly'",
@@ -11798,7 +11798,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
@@ -11827,7 +11827,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
@@ -11871,7 +11871,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
@@ -11999,7 +11999,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
@@ -12099,7 +12099,7 @@
             "group_level": "contract_derived",
             "group_order": 4,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
@@ -12128,7 +12128,7 @@
             "group_level": "secondary_policy",
             "group_order": 5,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'all_variables'",
@@ -12177,7 +12177,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'preserve_raw_missing'",
@@ -12219,7 +12219,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'preserve_raw_outliers'",
@@ -12275,7 +12275,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
@@ -12303,7 +12303,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
@@ -12345,7 +12345,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
@@ -12387,7 +12387,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.release_lag_rule = 'ignore_release_lag'",
@@ -12422,7 +12422,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",
@@ -17030,7 +17030,7 @@
               "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
-            "label": "Layer 1: official data frame",
+            "label": "Layer 1: FRED data frame",
             "leaf_config": {
               "horizons": [
                 1,
@@ -17863,7 +17863,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.dataset = 'fred_md'",
@@ -17912,7 +17912,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
@@ -17947,7 +17947,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_format = 'none'",
@@ -17982,7 +17982,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
@@ -18024,7 +18024,7 @@
             "group_level": "primary_decision",
             "group_order": 1,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.frequency = 'monthly'",
@@ -18052,7 +18052,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.information_set_type = 'final_revised_data'",
@@ -18081,7 +18081,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_frequency_policy = 'report_only'",
@@ -18125,7 +18125,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_state_group = 'all_states'",
@@ -18253,7 +18253,7 @@
             "group_level": "conditional_subgroup",
             "group_order": 3,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.fred_sd_variable_group = 'all_sd_variables'",
@@ -18353,7 +18353,7 @@
             "group_level": "contract_derived",
             "group_order": 4,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.target_structure = 'single_target'",
@@ -18382,7 +18382,7 @@
             "group_level": "secondary_policy",
             "group_order": 5,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.variable_universe = 'all_variables'",
@@ -18431,7 +18431,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_missing_policy = 'preserve_raw_missing'",
@@ -18473,7 +18473,7 @@
             "group_level": "secondary_policy",
             "group_order": 6,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.raw_outlier_policy = 'preserve_raw_outliers'",
@@ -18529,7 +18529,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_policy = 'apply_official_tcode'",
@@ -18557,7 +18557,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.official_transform_scope = 'target_only'",
@@ -18599,7 +18599,7 @@
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.missing_availability = 'require_complete_rows'",
@@ -18641,7 +18641,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.release_lag_rule = 'ignore_release_lag'",
@@ -18676,7 +18676,7 @@
             "group_level": "primary_policy",
             "group_order": 2,
             "layer": "1_data_task",
-            "layer_label": "Layer 1: official data frame",
+            "layer_label": "Layer 1: FRED data frame",
             "options": [
               {
                 "canonical_path_effect": "path.1_data_task.fixed_axes.contemporaneous_x_rule = 'allow_same_period_predictors'",

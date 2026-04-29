@@ -21,7 +21,7 @@ Layer 1.
 
 ## Canonical Layer 1 After Migration
 
-Layer 1 now means official data frame and target identity. The live canonical
+Layer 1 now means FRED data frame and target identity. The live canonical
 Layer 1 registry has 17 axes:
 
 - `dataset`
@@ -51,10 +51,10 @@ availability reports remain Layer 1 `leaf_config`/provenance responsibilities.
 
 Full mode additionally distinguishes raw-source data defects from
 post-transform/model-input defects. A raw-source missing value or raw-source
-outlier is already present in the source panel before the official dataset
+outlier is already present in the source panel before the FRED-provided
 transform/T-code step. Layer 1 owns the policy and provenance for those raw
 defects when the researcher chooses to inspect, fill, drop, winsorize, clip, or
-otherwise repair the source panel before official transforms are applied.
+otherwise repair the source panel before FRED transforms are applied.
 
 Runtime now closes this boundary with `layer1_official_frame_v1`. Every run
 writes `layer1_official_frame.json`, records the contract version and compact
@@ -85,7 +85,7 @@ The following axes were moved out of Layer 1 ownership:
   `fred_sd`, `fred_md+fred_sd`, and `fred_qd+fred_sd`.
 - Custom files are handled by `custom_source_policy` and
   `custom_source_format`: users choose whether a custom file replaces the
-  selected official panel or is appended to it.
+  selected FRED panel or is appended to it.
 - Standalone `fred_sd` requires explicit `frequency`; the source contains monthly and quarterly state series, so an implicit default would hide a research decision.
 - `fred_md+fred_sd` is fixed to monthly.
 - `fred_qd+fred_sd` is fixed to quarterly.
@@ -97,14 +97,14 @@ The following axes were moved out of Layer 1 ownership:
   workbook adapter.
 - Custom sources require fixed-axis `custom_source_schema` and
   `leaf_config.custom_source_path`.
-- Official dataset transforms now have canonical Layer 1 axes:
+- FRED-provided transforms now have canonical Layer 1 axes:
   `official_transform_policy` and `official_transform_scope`.
 - Official transform choices are read from Layer 1 axes. The compiler derives runtime `PreprocessContract` fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.
 - `target_structure` is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through `study_scope`.
 
 ### 1.2 Target Structure
 
-- Layer 1 `target_structure` only records whether the official frame has one
+- Layer 1 `target_structure` only records whether the FRED frame has one
   target or multiple targets.
 - `single_target` requires `leaf_config.target`.
 - `multi_target` requires `leaf_config.targets`.
@@ -168,11 +168,11 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 - `missing_availability=impute_predictors_only` requires `leaf_config.x_imputation` in `{mean, median, ffill, bfill}`.
 - `missing_availability=keep_available_rows` and `missing_availability=impute_predictors_only` now write `data_reports.missing_availability` in `layer1_official_frame_v1`, including row-drop counts or predictor-imputation counts.
 - `raw_missing_policy=preserve_raw_missing` is the default raw-source missing policy.
-- `raw_missing_policy=zero_fill_leading_predictor_missing_before_tcode` fills predictor leading missing values in the raw source panel before official transforms/T-codes.
-- `raw_missing_policy=impute_raw_predictors` requires `leaf_config.raw_x_imputation` in `{mean, median, ffill, bfill}` and imputes raw predictors before official transforms/T-codes.
-- `raw_missing_policy=drop_raw_missing_rows` drops rows with any raw-source missing value before official transforms/T-codes.
+- `raw_missing_policy=zero_fill_leading_predictor_missing_before_tcode` fills predictor leading missing values in the raw source panel before FRED transforms/T-codes.
+- `raw_missing_policy=impute_raw_predictors` requires `leaf_config.raw_x_imputation` in `{mean, median, ffill, bfill}` and imputes raw predictors before FRED transforms/T-codes.
+- `raw_missing_policy=drop_raw_missing_rows` drops rows with any raw-source missing value before FRED transforms/T-codes.
 - `raw_outlier_policy=preserve_raw_outliers` is the default raw-source outlier policy.
-- `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `set_raw_outliers_to_missing` operate on raw numeric columns before official transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
+- `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `set_raw_outliers_to_missing` operate on raw numeric columns before FRED transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
 - `release_lag_rule=series_specific_lag` requires non-empty `leaf_config.release_lag_per_series`.
 - `release_lag_rule=fixed_lag_all_series` and `release_lag_rule=series_specific_lag` now write `data_reports.release_lag` in `layer1_official_frame_v1`, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.
 - `structural_break_segmentation` is no longer a Layer 1 policy. It remains
@@ -190,7 +190,7 @@ Full-mode interpretation:
   applies dataset transforms or T-codes.
 - Stage 2 is post-transform/model-input missing/outlier treatment in Layer 2.
 - Raw-source missing values belong to Layer 1 when the decision is "repair the
-  raw source panel, then apply official transforms/T-codes."
+  raw source panel, then apply FRED transforms/T-codes."
 - Raw-source outliers follow the same ownership rule. If a researcher clips,
   winsorizes, or converts a raw outlier to missing before T-code construction,
   that is a Layer 1 full-contract decision and must be recorded in provenance.
@@ -201,7 +201,7 @@ Full-mode interpretation:
   difference can be small in many empirical settings, but full mode must record
   the phase and order.
 - `impute_predictors_only` remains accepted for migration compatibility. Conceptually,
-  imputation applied after the official frame exists belongs to Layer 2.
+  imputation applied after the FRED frame exists belongs to Layer 2.
 - Layer 1 now exposes this raw-before-T-code decision through
   `raw_missing_policy` and `raw_outlier_policy`. Layer 2 `x_missing_policy` and
   `x_outlier_policy` remain post-transform/model-input preprocessing.
@@ -287,7 +287,7 @@ Simple docs should stay short; this audit is the detailed contract source for La
   conflicting Layer 1 official-transform choices vs legacy Layer 2 t-code bridge
   choices fail at compile time.
 - Layer 1 raw missing/outlier axes are recorded in `data_task_spec` and execute
-  before official transforms/T-codes.
+  before FRED transforms/T-codes.
 - Layer 1 official-frame handoff is exported as `layer1_official_frame_v1`,
   written to `layer1_official_frame.json`, summarized in `manifest.json`, and
   listed in `artifact_manifest.json`.

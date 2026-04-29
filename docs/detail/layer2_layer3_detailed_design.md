@@ -64,7 +64,7 @@ validation, not Layer 3 ownership of feature construction.
 The current runtime contract is tabular:
 
 ```text
-Layer 1 official frame -> Layer 2 Layer2Representation -> Layer 3 ForecastPayload
+Layer 1 FRED frame -> Layer 2 Layer2Representation -> Layer 3 ForecastPayload
 ```
 
 `layer_contract_ledger.md` is the canonical status ledger for named contracts.

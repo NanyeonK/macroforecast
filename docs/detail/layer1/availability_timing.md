@@ -3,7 +3,7 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: availability and timing
 
-These policies act after the official frame exists and before Layer 2 builds the representation.
+These policies act after the FRED frame exists and before Layer 2 builds the representation.
 
 | Axis | Choices | Default / rule |
 |---|---|---|

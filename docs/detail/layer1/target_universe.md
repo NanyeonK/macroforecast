@@ -3,7 +3,7 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: target and variable universe
 
-Layer 1 identifies the target series inside the official data frame. It does not choose forecast type, target transformation, target normalization, or the model feature representation.
+Layer 1 identifies the target series inside the FRED data frame. It does not choose forecast type, target transformation, target normalization, or the model feature representation.
 
 | Axis | Choices | Default / rule |
 |---|---|---|

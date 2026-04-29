@@ -303,7 +303,7 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert presentation["dataset"]["values"]["fred_md+fred_sd"]["label"] == "FRED-MD + FRED-SD"
     assert "custom_csv" not in presentation["dataset"]["values"]
     assert presentation["custom_source_policy"]["default_value"] == "official_only"
-    assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Use My Data Only"
+    assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Use Custom Data Only"
     assert presentation["custom_source_format"]["default_value"] == "none"
     assert presentation["custom_source_schema"]["default_value"] == "none"
     assert "warning" in presentation["custom_source_schema"]

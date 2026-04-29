@@ -24,8 +24,8 @@ describes the registry layer after migration.
 | `factor_count` | 3_training | 2_preprocessing | Factor count is a representation dimension for factor blocks. |
 | `oos_period` | 1_data_task | 4_evaluation | Recession/expansion-only selection is evaluation subset filtering. |
 | `overlap_handling` | 1_data_task | 6_stat_tests | HAC/overlap handling is inference over dependent forecast errors. |
-| `official_transform_policy` | split from Layer 2 t-code axes | 1_data_task | Official dataset transformations define the official frame, before researcher preprocessing. |
-| `official_transform_scope` | split from `tcode_application_scope` | 1_data_task | Target/X official transform scope is part of official frame construction. |
+| `official_transform_policy` | split from Layer 2 t-code axes | 1_data_task | FRED-provided transformations define the FRED frame, before researcher preprocessing. |
+| `official_transform_scope` | split from `tcode_application_scope` | 1_data_task | Target/X official transform scope is part of FRED frame construction. |
 | `target_structure` | target-shape alias | 1_data_task | Layer 1 records target cardinality; Layer 0 owns runner grammar. |
 
 ## Still To Migrate
@@ -68,6 +68,6 @@ tests.
 - Generated recipes, Navigator paths, and docs use canonical axis names only.
 - Removed name aliases for source dispatch, information-set regime, target shape, and Layer 6 test routing are rejected by compiler and registry validation.
 - Runtime fallback fields are kept only where needed to read already compiled manifests or feed older execution internals; they are not user-facing recipe choices.
-- Official dataset transformation is a Layer 1 decision through `official_transform_policy` and `official_transform_scope`; runtime derives the lower-level transform contract from those axes.
+- FRED-provided transformation is a Layer 1 decision through `official_transform_policy` and `official_transform_scope`; runtime derives the lower-level transform contract from those axes.
 - Runtime dispatch reads explicit Layer 2 feature blocks first and keeps compatibility/provenance fields only as internal payloads. Explicit Layer 2 block recipes can omit bridge inputs; the compiler derives any required runtime payload internally.
 - Layer 2 cleanup is closed for supported fixed full/runtime slices. Generic `Z` unification is a Layer 2 representation-handoff task, while Layer 3 stays a forecast-generator consumer. Remaining cleanup is focused on shrinking internal fallback readers without reopening the public recipe API.

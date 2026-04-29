@@ -22,7 +22,7 @@ The directory names are legacy-compatible. The semantic ownership is:
 | Layer | Name | Responsibility |
 |---|---|---|
 | 0 | Study design / execution grammar | Research design, experiment unit, sweep grammar, reproducibility, failure policy, compute mode. |
-| 1 | Official data frame | Dataset loading, source adapter, frequency, information set, target identity, sample period, official availability handling, official release-lag discipline. |
+| 1 | FRED data frame | Dataset loading, source adapter, frequency, information set, target identity, sample period, official availability handling, official release-lag discipline. |
 | 2 | Research preprocessing / feature representation | Researcher-chosen target/X transforms, scaling, imputation, outlier treatment, feature-block grammar, predictor family, feature builder bridge, PCA/factors, factor counts, deterministic features, custom preprocessors. |
 | 3 | Forecast generator | Forecast generator family currently exposed as `model_family`, baseline generator role assignment currently exposed as `benchmark_family`, forecast type, forecast object, training windows, refit, model lag order, tuning, estimator training settings. |
 | 4 | Evaluation protocol / metrics | Metric families, aggregation, rankings, reporting, regime-specific evaluation subsets. |
@@ -32,10 +32,10 @@ The directory names are legacy-compatible. The semantic ownership is:
 
 ## Boundary Rules
 
-- Layer 1 creates an official data frame. It should not choose a model, a
+- Layer 1 creates an FRED data frame. It should not choose a model, a
   benchmark, a hyperparameter search, or a researcher-specific transformation.
-- Layer 2 changes the representation of the official frame for a study. It owns
-  extra preprocessing after official dataset transforms and the construction of
+- Layer 2 changes the representation of the FRED frame for a study. It owns
+  extra preprocessing after FRED-provided transforms and the construction of
   `Z_train`/`Z_pred` feature matrices.
 - Layer 3 generates forecasts. Benchmarks and registered custom models belong
   here because they are forecast generators, not data definitions. A benchmark

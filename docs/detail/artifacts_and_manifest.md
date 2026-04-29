@@ -18,7 +18,7 @@ run also writes `evaluation_report.md`; if `report_style=latex_table`, it writes
 `evaluation_report.tex`.
 
 Layer 1 writes `layer1_official_frame.json` for every run. It records
-`layer1_official_frame_v1`: the resolved official frame handed to Layer 2,
+`layer1_official_frame_v1`: the resolved FRED frame handed to Layer 2,
 including source metadata, target/horizon identity, frame shape and columns,
 information-set provenance, raw missing/outlier choices, missing-availability,
 release-lag, variable-universe rules, official transform/T-code evidence, data

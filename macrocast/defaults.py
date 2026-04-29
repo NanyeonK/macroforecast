@@ -169,7 +169,7 @@ def _custom_source_contract(
         raise ValueError("custom sources require custom_source_path")
     if custom_source_policy == "custom_panel_only":
         if "+" in dataset:
-            raise ValueError("custom_panel_only supports a single official dataset, not a composite")
+            raise ValueError("custom_panel_only supports a single FRED dataset, not a composite")
         if custom_source_schema != dataset:
             raise ValueError("custom_panel_only requires custom_source_schema to match dataset")
     return custom_source_schema, str(custom_source_path)

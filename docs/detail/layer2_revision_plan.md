@@ -71,7 +71,7 @@ The current fixed full support surface is:
 
 | Runtime profile | Status | Meaning |
 |---|---|---|
-| `official_tcode_only` | executable | Layer 1 applies official dataset transforms; Layer 2 adds no extra preprocessing. |
+| `official_tcode_only` | executable | Layer 1 applies FRED-provided transforms; Layer 2 adds no extra preprocessing. |
 | `raw_only` | executable | Raw panel path with no official transforms and no extra preprocessing. |
 | `raw_train_only_extra` | executable | Raw panel path plus train-only Layer 2 extra preprocessing. |
 | `apply_official_tcode_then_train_only_extra` | executable | Layer 1 official transforms first, then supported train-only Layer 2 extra preprocessing. |
@@ -314,7 +314,7 @@ Current lowered slice:
   Target add-back appends the observed target level at the feature row date and
   at the prediction origin. X-level add-back appends raw-level `H` predictor
   values preserved after Layer 1 raw missing/outlier handling and before
-  official transforms/T-codes. Selected level add-back applies the same
+  FRED transforms/T-codes. Selected level add-back applies the same
   source/alignment rule to `leaf_config.selected_level_addback_columns`.
   Level-growth pairs record existing transformed predictor columns with
   raw-level counterparts from `leaf_config.level_growth_pair_columns`. These

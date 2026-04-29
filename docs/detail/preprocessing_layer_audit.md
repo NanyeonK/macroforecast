@@ -17,7 +17,7 @@ change when the researcher changes the representation handed to the forecast
 generator. It owns optional transformations of predictors and the target, feature engineering,
 feature-block selection, predictor family, feature builders, dimensionality
 reduction, factor-count decisions, target-scale handling, preprocessing order,
-and leakage discipline. It does not own dataset identity, official data
+and leakage discipline. It does not own dataset identity, FRED data
 availability, model family, benchmark family, model training/tuning protocol,
 scoring metrics, or statistical tests.
 
@@ -48,7 +48,7 @@ preprocessing under train-only fit discipline. That profile is the current
 generic preprocessing support surface, not the full research feature-block grammar.
 
 Built-in Layer 2 choices should stay aligned with macro-forecasting research:
-official dataset transforms, X-side imputation, scaling, filtering, PCA/static
+FRED-provided transforms, X-side imputation, scaling, filtering, PCA/static
 factor extraction, feature screening, fixed lag construction, level add-backs,
 lag rotations, local temporal factors, and custom hooks for researcher
 extensions. Named papers such as Goulet Coulombe et al. (2021) should be
@@ -66,7 +66,7 @@ records what the current runtime can execute today.
 | `target_lag_block` / `target_lag_selection` | `none`, `fixed_target_lags` / `none`, `fixed` | Fixed target-lag construction is executable from the explicit block first. It can run as the standalone target-lag runtime or concatenate into raw-panel/factor-panel direct `Z` after X-side block construction. Legacy target-lag fields remain fallback/provenance. IC, CV, horizon-specific, and custom lag selection remain registry-only. |
 | `x_lag_feature_block` | `none`, `fixed_predictor_lags` | Fixed predictor lags are executable from the explicit block first with origin-aligned prediction lags; `x_lag_creation` remains a compatibility fallback. |
 | `factor_feature_block` | `none`, `pca_static_factors`, `pca_factor_lags`, `supervised_factors`, registered `custom_factors` | Static PCA factors are executable from the explicit block first; PCA factor lags append lagged factor scores; supervised factors use a train-window PLS factor block; registered custom factor callables append or replace named feature blocks. Old factor builders and raw-panel `dimensionality_reduction_policy=pca` / `static_factor` remain compatibility fallbacks. Runtime writes factor fit-state/loadings provenance for the latest recursive window. |
-| `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed `target_t` / `target_origin`; X-level add-back appends raw-level `H` predictor values preserved before official transforms/T-codes; selected subset add-back restricts those columns via `leaf_config.selected_level_addback_columns`; level-growth pairs record existing transformed predictor columns with raw-level counterparts from `leaf_config.level_growth_pair_columns`. |
+| `level_feature_block` | `none`, `target_level_addback`, `x_level_addback`, `selected_level_addbacks`, `level_growth_pairs` | Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed `target_t` / `target_origin`; X-level add-back appends raw-level `H` predictor values preserved before FRED transforms/T-codes; selected subset add-back restricts those columns via `leaf_config.selected_level_addback_columns`; level-growth pairs record existing transformed predictor columns with raw-level counterparts from `leaf_config.level_growth_pair_columns`. |
 | `temporal_feature_block` | `none`, `moving_average_features`, `rolling_moments`, `local_temporal_factors`, `volatility_features`, registered `custom_temporal_features` | Moving-average, rolling-moment, local-temporal-factor, and volatility temporal features are executable for raw-panel feature runtimes with trailing 3-period `{predictor}_ma3`, `{predictor}_mean3` / `{predictor}_var3`, deterministic `local_temporal_factor_mean3` / `local_temporal_factor_dispersion3`, and `{predictor}_vol3` features. Registered custom temporal callables execute under `custom_feature_block_callable_v1`. They can compose with fixed X lags, `moving_average_rotation`, and MARX append mode. |
 | Other feature-block primitive axes | `rotation_feature_block=none`, `moving_average_rotation`, `marx_rotation`, `maf_rotation`, registered `custom_rotation` | Non-rotated feature representation is executable and records explicit no-rotation provenance when selected. `moving_average_rotation` is executable for raw-panel feature runtimes as deterministic trailing 3- and 6-period rotations of each active predictor and can compose with fixed X lags plus deterministic temporal append blocks. `marx_rotation` is executable for raw-panel feature runtimes when `leaf_config.marx_max_lag` is set; it builds `lag_polynomial_rotation_contract_v1` features, replaces the source X lag-polynomial basis, supports `marx_then_factor`, supports `factor_then_marx` via `factor_rotation_order=factor_then_rotation`, and supports append/concatenate composition with fixed X lags or deterministic temporal blocks through `feature_block_combination=append_to_base_predictors` / `concatenate_named_blocks`. `maf_rotation` is executable as a factor-score moving-average composer for `pca_static_factors`. Registered custom rotations execute under `custom_feature_block_callable_v1`. `feature_block_set=factor_blocks_only` records static-factor-only representation; unknown old bridge recipes may still use `feature_builder_compatibility_bridge` as compatibility provenance. |
 | `predictor_family` | `target_lags_only`, `all_macro_vars`, `category_based`, `factor_only`, `explicit_variable_list` | Canonical Layer 2 owner; runtime support is constrained by the selected feature runtime and explicit block composer coverage. |
@@ -152,7 +152,7 @@ runtime integration and acceptance tests.
 
 ## Current Default
 
-`macrocast-default-v1` uses the official dataset transformation path:
+`macrocast-default-v1` uses the FRED-provided transformation path:
 
 | Axis | Default |
 |------|---------|
@@ -176,14 +176,14 @@ Layer ownership after the migration pass:
 - Layer 2 keeps the legacy t-code fields as a runtime compatibility bridge
   until the `PreprocessContract` no longer needs them.
 - Layer 2 still owns researcher-controlled extra preprocessing after the
-  official frame exists.
+  FRED frame exists.
 
 Missing/outlier boundary after the migration pass:
 
 - Layer 1 owns raw-source missing/outlier treatment when it happens before
-  official dataset transforms or T-codes. This is the "clean raw, then T-code"
+  FRED-provided transforms or T-codes. This is the "clean raw, then T-code"
   order, now represented by `raw_missing_policy` and `raw_outlier_policy`.
-- Layer 2 owns missing imputation and outlier handling after the official frame
+- Layer 2 owns missing imputation and outlier handling after the FRED frame
   exists. This is the "T-code first, then impute/clip/select/scale" order.
 - Both orders can be reasonable for detailed empirical work. The second order
   can mix raw-source defects with transform-induced missing values and model
@@ -288,8 +288,8 @@ derives the runtime bridge:
 
 Runtime order:
 
-1. Layer 1 applies official dataset t-codes to the selected frame.
-2. Layer 2 builds supervised train/test slices from that official frame.
+1. Layer 1 applies FRED-provided t-codes to the selected frame.
+2. Layer 2 builds supervised train/test slices from that FRED frame.
 3. Layer 2 fits supported extra preprocessing on each training slice only and
    applies it to the prediction slice.
 
@@ -303,7 +303,7 @@ Constraints:
 - Legacy bridge fields remain compatibility fields. New recipes should set the
   Layer 1 official-transform axes and let the compiler derive the bridge.
 
-These helpers operate after the selected official frame or raw-panel feature
+These helpers operate after the selected FRED frame or raw-panel feature
 frame has been handed to Layer 2. They should not be documented as raw-source
 cleaning unless the recipe explicitly chooses a raw-only preprocessing path and
 records that the action occurred before any official transform/T-code step.
