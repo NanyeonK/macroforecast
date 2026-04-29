@@ -73,7 +73,7 @@ function axisMatchesLayer(axis) {
 
 function layerLabel(layer) {
   const labels = {
-    "0_meta": "L0 Study setup",
+    "0_meta": "L0 Study Scope",
     "1_data_task": "L1 Data task",
     "2_preprocessing": "L2 Representation",
     "3_training": "L3 Generator",
@@ -132,7 +132,7 @@ function docsLink(axisName) {
 
 function layerDescription(layer) {
   const descriptions = {
-    "0_meta": "5 user-facing decisions in order: study route, runner unit, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
+    "0_meta": "4 user-facing decisions in order: study scope, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
     "1_data_task": "Official data task and source frame: source, target structure, availability, raw source policy, and official transforms.",
     "2_preprocessing": "Representation construction after the official frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
     "3_training": "Forecast generation: model, benchmark, forecast object, future-X path, windows, and tuning.",

@@ -1,9 +1,9 @@
-# 4.1.4 reproducibility_mode
+# 4.0.3 Reproducibility
 
-- Parent: [4.1 Layer 0: Study Setup](index.md)
-- Previous: [4.1.3 failure_policy](failure_policy.md)
+- Parent: [4.0 Layer 0: Study Scope](index.md)
+- Previous: [4.0.2 Failure Handling](failure_policy.md)
 - Current: `reproducibility_mode`
-- Next: [4.1.5 compute_mode](compute_mode.md)
+- Next: [4.0.4 Compute Layout](compute_mode.md)
 
 `reproducibility_mode` controls seed resolution and deterministic runtime behavior.
 

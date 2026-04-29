@@ -49,7 +49,7 @@ Layer 0 currently exports the first presentation contract:
 | Step | Registry axis | Human label | Contract |
 |---|---|---|---|
 | 1 | `study_scope` | Study Scope | Target cardinality and method-comparison scope; derives Layer 1 `target_structure` and keeps downstream paths fixed or sweep-aware. |
-| 2 | `failure_policy` | Failure handling | Runtime failure behavior for comparison cells, sweeps, and handoff runners. |
+| 2 | `failure_policy` | Failure Handling | Runtime failure behavior for comparison cells and sweeps. |
 | 3 | `reproducibility_mode` | Reproducibility | Seed and determinism policy applied before stochastic model code runs. |
 | 4 | `compute_mode` | Compute layout | Serial or parallel execution request; unsupported modes and singleton work units degrade to serial/no-op behavior. |
 

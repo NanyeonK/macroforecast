@@ -1,7 +1,7 @@
-# 4.1.5 compute_mode
+# 4.0.4 Compute Layout
 
-- Parent: [4.1 Layer 0: Study Setup](index.md)
-- Previous: [4.1.4 reproducibility_mode](reproducibility_mode.md)
+- Parent: [4.0 Layer 0: Study Scope](index.md)
+- Previous: [4.0.3 Reproducibility](reproducibility_mode.md)
 - Current: `compute_mode`
 - Next: none inside Layer 0
 

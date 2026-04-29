@@ -1,9 +1,9 @@
-# 4.4 Layer 3: Forecast Generator
+# 4.3 Layer 3: Forecast Generator
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.3 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
+- Previous: [4.2 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
 - Current: Layer 3
-- Next: [4.5 Layer 4: Evaluation](../layer4/index.md)
+- Next: [4.4 Layer 4: Evaluation](../layer4/index.md)
 
 Layer 3 owns forecast generation. It consumes Layer 2 representation contracts and chooses model, benchmark, forecast type/object, future-X path policy, training windows, and tuning behavior.
 

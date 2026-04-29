@@ -3297,7 +3297,7 @@
       "contract": "Execution parallelism contract. Unsupported modes or singleton work units degrade to serial/no-op behavior.",
       "docs_url": "../detail/layer0/compute_mode.html",
       "label": "Compute Layout",
-      "order": 5,
+      "order": 4,
       "question": "Where should parallel work be attempted?",
       "selection_kind": "user_choice",
       "short_label": "Compute",
@@ -3344,7 +3344,7 @@
       "contract": "Runtime failure contract. Sweep-compatible modes decide whether invalid variants stop or are skipped.",
       "docs_url": "../detail/layer0/failure_policy.html",
       "label": "Failure Handling",
-      "order": 3,
+      "order": 2,
       "question": "What should happen when a run, variant, or cell fails?",
       "selection_kind": "user_choice",
       "short_label": "Failures",
@@ -3391,7 +3391,7 @@
       "contract": "Seed and determinism contract applied before stochastic model code runs.",
       "docs_url": "../detail/layer0/reproducibility_mode.html",
       "label": "Reproducibility",
-      "order": 4,
+      "order": 3,
       "question": "How strictly should stochastic components be pinned?",
       "selection_kind": "user_choice",
       "short_label": "Reproducibility",
@@ -3454,7 +3454,7 @@
   },
   "axis_presentation_schema_version": "axis_presentation_v1",
   "layer_labels": {
-    "0_meta": "Layer 0: study design / execution grammar",
+    "0_meta": "Layer 0: study scope",
     "1_data_task": "Layer 1: official data frame",
     "2_preprocessing": "Layer 2: representation construction",
     "3_training": "Layer 3: forecast generation",
@@ -3993,7 +3993,7 @@
             "fixed_axes": {
               "study_scope": "one_target_one_method"
             },
-            "label": "Layer 0: study design / execution grammar",
+            "label": "Layer 0: study scope",
             "leaf_config": {},
             "sweep_axes": {}
           },
@@ -4538,7 +4538,7 @@
           {
             "axis": "study_scope",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.study_scope = 'one_target_one_method'",
@@ -4574,7 +4574,7 @@
           {
             "axis": "failure_policy",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.failure_policy = 'fail_fast'",
@@ -4631,7 +4631,7 @@
           {
             "axis": "reproducibility_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.reproducibility_mode = 'strict_reproducible'",
@@ -4667,7 +4667,7 @@
           {
             "axis": "compute_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'serial'",
@@ -9438,7 +9438,7 @@
               "reproducibility_mode": "seeded_reproducible",
               "study_scope": "one_target_one_method"
             },
-            "label": "Layer 0: study design / execution grammar",
+            "label": "Layer 0: study scope",
             "leaf_config": {
               "random_seed": 42
             },
@@ -10002,7 +10002,7 @@
           {
             "axis": "study_scope",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.study_scope = 'one_target_one_method'",
@@ -10038,7 +10038,7 @@
           {
             "axis": "failure_policy",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.failure_policy = 'fail_fast'",
@@ -10095,7 +10095,7 @@
           {
             "axis": "reproducibility_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.reproducibility_mode = 'strict_reproducible'",
@@ -10131,7 +10131,7 @@
           {
             "axis": "compute_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'serial'",
@@ -14930,7 +14930,7 @@
               "reproducibility_mode": "seeded_reproducible",
               "study_scope": "one_target_one_method"
             },
-            "label": "Layer 0: study design / execution grammar",
+            "label": "Layer 0: study scope",
             "leaf_config": {
               "random_seed": 42
             },
@@ -15597,7 +15597,7 @@
           {
             "axis": "study_scope",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.study_scope = 'one_target_one_method'",
@@ -15633,7 +15633,7 @@
           {
             "axis": "failure_policy",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.failure_policy = 'fail_fast'",
@@ -15690,7 +15690,7 @@
           {
             "axis": "reproducibility_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.reproducibility_mode = 'strict_reproducible'",
@@ -15726,7 +15726,7 @@
           {
             "axis": "compute_mode",
             "layer": "0_meta",
-            "layer_label": "Layer 0: study design / execution grammar",
+            "layer_label": "Layer 0: study scope",
             "options": [
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'serial'",

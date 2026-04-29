@@ -1,8 +1,8 @@
-# 4.1.1 study_scope
+# 4.0.1 Study Scope
 
-- Parent: [4.1 Layer 0: Study Setup](index.md)
+- Parent: [4.0 Layer 0: Study Scope](index.md)
 - Current: `study_scope`
-- Next: [4.1.2 failure_policy](failure_policy.md)
+- Next: [4.0.2 Failure Handling](failure_policy.md)
 
 `study_scope` is the first Layer 0 decision. It answers two questions at once:
 

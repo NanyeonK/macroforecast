@@ -279,11 +279,11 @@ input {
 .axis-button {
   width: 100%;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  padding: 10px;
+  padding: 14px;
   background: #fff;
   text-align: left;
   cursor: pointer;
@@ -292,18 +292,19 @@ input {
 .axis-button.active {
   border-color: var(--accent);
   background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .axis-step {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   background: #eef1f5;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 800;
 }
 
@@ -318,29 +319,31 @@ input {
 
 .axis-name {
   display: block;
+  font-size: 16px;
   font-weight: 700;
+  line-height: 1.25;
 }
 
 .axis-question {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
 .axis-meta {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .axis-summary {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
@@ -441,7 +444,7 @@ input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
   background: #fff;
   color: inherit;
   text-align: left;
@@ -461,7 +464,7 @@ input {
 }
 
 .option-card.selected {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--accent);
 }
 
 .option-value {
@@ -470,6 +473,8 @@ input {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
+  font-size: 16px;
+  line-height: 1.25;
   font-weight: 800;
 }
 
@@ -636,8 +641,8 @@ input {
 
 .path-axis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
 }
 
 .path-layer.compact .path-axis-grid {
@@ -647,12 +652,12 @@ input {
 
 .tree-path-item {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px;
+  padding: 14px;
   background: #fff;
   color: var(--text);
   text-align: left;
@@ -668,6 +673,7 @@ input {
 .tree-path-item.active {
   border-color: var(--accent);
   background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .tree-path-item.blocked {
@@ -679,12 +685,12 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -698,6 +704,7 @@ input {
 
 .path-axis {
   width: 100%;
+  font-size: 15px;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
@@ -712,11 +719,11 @@ input {
 .path-value {
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 3px 7px;
+  padding: 5px 8px;
   background: #fff;
   color: var(--text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 
