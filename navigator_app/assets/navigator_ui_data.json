@@ -384,19 +384,39 @@
       "incompatible_with": {},
       "layer": "1_data_task"
     },
-    "custom_source_mode": {
+    "custom_source_policy": {
       "allowed_values": [
-        "no_custom_source",
-        "replace_official_panel",
-        "append_to_official_panel"
+        "official_only",
+        "custom_panel_only",
+        "official_plus_custom"
       ],
-      "axis_name": "custom_source_mode",
+      "axis_name": "custom_source_policy",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "append_to_official_panel": "operational",
-        "no_custom_source": "operational",
-        "replace_official_panel": "operational"
+        "custom_panel_only": "operational",
+        "official_only": "operational",
+        "official_plus_custom": "operational"
+      },
+      "default_policy": "fixed",
+      "incompatible_with": {},
+      "layer": "1_data_task"
+    },
+    "custom_source_schema": {
+      "allowed_values": [
+        "none",
+        "fred_md",
+        "fred_qd",
+        "fred_sd"
+      ],
+      "axis_name": "custom_source_schema",
+      "axis_type": "enum",
+      "compatible_with": {},
+      "current_status": {
+        "fred_md": "operational",
+        "fred_qd": "operational",
+        "fred_sd": "operational",
+        "none": "operational"
       },
       "default_policy": "fixed",
       "incompatible_with": {},
@@ -3365,11 +3385,11 @@
       "default_value": "none",
       "docs_url": "../detail/layer1/source_frame.html",
       "label": "Custom File Format",
-      "order": 6.5,
+      "order": 6.2,
       "question": "What file format does the custom source use?",
       "selection_kind": "conditional_choice",
       "short_label": "Custom Format",
-      "summary": "Active only when Custom Source Use is Replace or Append.",
+      "summary": "Active only when Custom Data Use is My Data Only or Official + Mine.",
       "values": {
         "csv": {
           "label": "CSV",
@@ -3386,35 +3406,71 @@
           "short_label": "Parquet",
           "summary": "A Parquet file with a DatetimeIndex or parseable date first column."
         }
-      }
+      },
+      "warning": "Check the detailed docs for required date index and numeric-column shape."
     },
-    "custom_source_mode": {
-      "contract": "When a custom source is selected, YAML must provide leaf_config.custom_dataset_schema in fred_md/fred_qd/fred_sd and leaf_config.custom_data_path. replace_official_panel supports one official source panel; append_to_official_panel can add custom columns to official or composite panels.",
-      "default_value": "no_custom_source",
+    "custom_source_policy": {
+      "contract": "When a custom source is selected, choose custom_source_format and custom_source_schema, then provide leaf_config.custom_source_path. custom_panel_only supports one official source panel; official_plus_custom supports single or composite official panels.",
+      "default_value": "official_only",
       "docs_url": "../detail/layer1/source_frame.html",
-      "label": "Custom Source Use",
+      "label": "Custom Data Use",
       "order": 6,
-      "question": "Should a user-supplied file be used with the official source panel?",
+      "question": "Do you want official data, your own data, or official data plus your own data?",
       "selection_kind": "defaulted_choice",
-      "short_label": "Custom Use",
-      "summary": "Choose no custom file, replace the selected official panel with a custom file, or append custom columns to the official panel.",
+      "short_label": "Custom Data",
+      "summary": "Choose official data only, custom panel only, or official data plus custom columns.",
       "values": {
-        "append_to_official_panel": {
-          "label": "Append Custom File",
-          "short_label": "Append",
-          "summary": "Load the selected official source panel and append custom columns after frequency alignment."
+        "custom_panel_only": {
+          "label": "Use My Data Only",
+          "short_label": "My Data Only",
+          "summary": "Use a custom file instead of the selected single official source panel. The custom schema must match the selected source panel."
         },
-        "no_custom_source": {
-          "label": "Official Source Only (Default)",
+        "official_only": {
+          "label": "Use Official Data Only (Default)",
           "short_label": "Official Only",
           "summary": "Use only the selected official FRED source panel."
         },
-        "replace_official_panel": {
-          "label": "Replace With Custom File",
-          "short_label": "Replace",
-          "summary": "Use a custom file instead of the selected single official source panel. The custom schema must match the selected source panel."
+        "official_plus_custom": {
+          "label": "Add My Data To Official Data",
+          "short_label": "Official + Mine",
+          "summary": "Load the selected official source panel and append custom columns after frequency alignment."
         }
-      }
+      },
+      "warning": "Custom files must follow the frequency and schema contract in the docs before the run is reproducible."
+    },
+    "custom_source_schema": {
+      "contract": "Use none with official_only. Use fred_md for monthly national macro panels, fred_qd for quarterly national macro panels, and fred_sd for state-level panels that will be aligned to the selected Layer 1 frequency.",
+      "default_value": "none",
+      "docs_url": "../detail/layer1/source_frame.html",
+      "label": "Custom File Schema",
+      "order": 6.4,
+      "question": "Which official panel schema does the custom file follow?",
+      "selection_kind": "conditional_choice",
+      "short_label": "Custom Schema",
+      "summary": "Active only when a custom file is selected. My Data Only must match the selected Source Panel; Official + Mine may use MD, QD, or SD-like columns.",
+      "values": {
+        "fred_md": {
+          "label": "FRED-MD-Like Monthly Panel",
+          "short_label": "MD-like",
+          "summary": "Date-indexed monthly national macro columns named like series IDs."
+        },
+        "fred_qd": {
+          "label": "FRED-QD-Like Quarterly Panel",
+          "short_label": "QD-like",
+          "summary": "Date-indexed quarterly national macro columns named like series IDs."
+        },
+        "fred_sd": {
+          "label": "FRED-SD-Like State Panel",
+          "short_label": "SD-like",
+          "summary": "Date-indexed state-level columns, normally monthly before Layer 1 alignment."
+        },
+        "none": {
+          "label": "No Custom Schema (Default)",
+          "short_label": "None",
+          "summary": "No custom file is used."
+        }
+      },
+      "warning": "This is a schema contract, not a loader choice. The file path still lives in leaf_config.custom_source_path."
     },
     "dataset": {
       "contract": "Layer 1 source contract. FRED-MD implies monthly data, FRED-QD implies quarterly data, and standalone FRED-SD requires an explicit frequency. User-supplied files are configured by the custom source axes, not by this source-panel axis.",
@@ -4061,14 +4117,15 @@
       {
         "axes": [
           "dataset",
-          "custom_source_mode",
+          "custom_source_policy",
           "custom_source_format",
+          "custom_source_schema",
           "frequency"
         ],
         "id": "source_identity",
         "label": "Source Identity",
         "level": "primary_decision",
-        "summary": "Choose the official source family, optional custom source use, and calendar frequency."
+        "summary": "Choose the official source family, optional custom source use, custom file schema, and calendar frequency."
       },
       {
         "axes": [
@@ -4769,7 +4826,8 @@
             "contemporaneous_x_rule": "forbid_same_period_predictors",
             "cpa_instability": "none",
             "custom_source_format": "none",
-            "custom_source_mode": "no_custom_source",
+            "custom_source_policy": "official_only",
+            "custom_source_schema": "none",
             "dataset": "fred_md",
             "decomposition_order": "marginal_effect_only",
             "decomposition_target": "preprocessing_effect",
@@ -5461,7 +5519,7 @@
             "selected": "fred_md"
           },
           {
-            "axis": "custom_source_mode",
+            "axis": "custom_source_policy",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 2,
             "group_id": "source_identity",
@@ -5472,28 +5530,28 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'no_custom_source'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "no_custom_source"
+                "value": "official_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'replace_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'custom_panel_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_official_panel"
+                "value": "custom_panel_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'append_to_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_plus_custom'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_official_panel"
+                "value": "official_plus_custom"
               }
             ],
-            "selected": "no_custom_source"
+            "selected": "official_only"
           },
           {
             "axis": "custom_source_format",
@@ -5531,9 +5589,51 @@
             "selected": "none"
           },
           {
+            "axis": "custom_source_schema",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
+            "group_id": "source_identity",
+            "group_label": "Source Identity",
+            "group_level": "primary_decision",
+            "group_order": 1,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_md'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_md"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_qd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_qd"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_sd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_sd"
+              }
+            ],
+            "selected": "none"
+          },
+          {
             "axis": "frequency",
             "axis_level": "derived_or_required",
-            "axis_order_in_group": 4,
+            "axis_order_in_group": 5,
             "group_id": "source_identity",
             "group_label": "Source Identity",
             "group_level": "primary_decision",
@@ -10848,7 +10948,8 @@
             "contemporaneous_x_rule": "forbid_same_period_predictors",
             "cpa_instability": "none",
             "custom_source_format": "none",
-            "custom_source_mode": "no_custom_source",
+            "custom_source_policy": "official_only",
+            "custom_source_schema": "none",
             "dataset": "fred_md",
             "decomposition_order": "marginal_effect_only",
             "decomposition_target": "preprocessing_effect",
@@ -11549,7 +11650,7 @@
             "selected": "fred_md"
           },
           {
-            "axis": "custom_source_mode",
+            "axis": "custom_source_policy",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 2,
             "group_id": "source_identity",
@@ -11560,28 +11661,28 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'no_custom_source'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "no_custom_source"
+                "value": "official_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'replace_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'custom_panel_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_official_panel"
+                "value": "custom_panel_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'append_to_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_plus_custom'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_official_panel"
+                "value": "official_plus_custom"
               }
             ],
-            "selected": "no_custom_source"
+            "selected": "official_only"
           },
           {
             "axis": "custom_source_format",
@@ -11619,9 +11720,51 @@
             "selected": "none"
           },
           {
+            "axis": "custom_source_schema",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
+            "group_id": "source_identity",
+            "group_label": "Source Identity",
+            "group_level": "primary_decision",
+            "group_order": 1,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_md'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_md"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_qd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_qd"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_sd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_sd"
+              }
+            ],
+            "selected": "none"
+          },
+          {
             "axis": "frequency",
             "axis_level": "derived_or_required",
-            "axis_order_in_group": 4,
+            "axis_order_in_group": 5,
             "group_id": "source_identity",
             "group_label": "Source Identity",
             "group_level": "primary_decision",
@@ -16997,7 +17140,8 @@
             "contemporaneous_x_rule": "forbid_same_period_predictors",
             "cpa_instability": "none",
             "custom_source_format": "none",
-            "custom_source_mode": "no_custom_source",
+            "custom_source_policy": "official_only",
+            "custom_source_schema": "none",
             "dataset": "fred_md",
             "decomposition_order": "marginal_effect_only",
             "decomposition_target": "preprocessing_effect",
@@ -17760,7 +17904,7 @@
             "selected": "fred_md"
           },
           {
-            "axis": "custom_source_mode",
+            "axis": "custom_source_policy",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 2,
             "group_id": "source_identity",
@@ -17771,28 +17915,28 @@
             "layer_label": "Layer 1: official data frame",
             "options": [
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'no_custom_source'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "no_custom_source"
+                "value": "official_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'replace_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'custom_panel_only'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "replace_official_panel"
+                "value": "custom_panel_only"
               },
               {
-                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_mode = 'append_to_official_panel'",
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_policy = 'official_plus_custom'",
                 "disabled_reason": null,
                 "enabled": true,
                 "status": "operational",
-                "value": "append_to_official_panel"
+                "value": "official_plus_custom"
               }
             ],
-            "selected": "no_custom_source"
+            "selected": "official_only"
           },
           {
             "axis": "custom_source_format",
@@ -17830,9 +17974,51 @@
             "selected": "none"
           },
           {
+            "axis": "custom_source_schema",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
+            "group_id": "source_identity",
+            "group_label": "Source Identity",
+            "group_level": "primary_decision",
+            "group_order": 1,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: official data frame",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'none'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "none"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_md'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_md"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_qd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_qd"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.custom_source_schema = 'fred_sd'",
+                "disabled_reason": "custom_source_schema is active only when a custom source is selected",
+                "enabled": false,
+                "status": "operational",
+                "value": "fred_sd"
+              }
+            ],
+            "selected": "none"
+          },
+          {
             "axis": "frequency",
             "axis_level": "derived_or_required",
-            "axis_order_in_group": 4,
+            "axis_order_in_group": 5,
             "group_id": "source_identity",
             "group_label": "Source Identity",
             "group_level": "primary_decision",
@@ -22971,7 +23157,8 @@
       "contemporaneous_x_rule": "forbid_same_period_predictors",
       "cpa_instability": "none",
       "custom_source_format": "none",
-      "custom_source_mode": "no_custom_source",
+      "custom_source_policy": "official_only",
+      "custom_source_schema": "none",
       "decomposition_order": "marginal_effect_only",
       "decomposition_target": "preprocessing_effect",
       "density_interval": "none",
@@ -23223,8 +23410,9 @@
     ],
     "1_data_task": [
       "dataset",
-      "custom_source_mode",
+      "custom_source_policy",
       "custom_source_format",
+      "custom_source_schema",
       "frequency",
       "information_set_type",
       "fred_sd_frequency_policy",

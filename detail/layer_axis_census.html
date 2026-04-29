@@ -287,119 +287,126 @@
 <td><p>operational=3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=3</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">no_custom_source</span></code>, <code class="docutils literal notranslate"><span class="pre">replace_official_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">append_to_official_panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">official_only</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>, <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code></p></td>
+<td><p>-</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
+<td><p>operational=4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">report_only</span></code>, <code class="docutils literal notranslate"><span class="pre">allow_mixed_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">reject_mixed_known_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">require_single_known_frequency</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=16</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_south</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_west</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_new_england</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_middle_atlantic</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_east_north_central</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_west_north_central</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_south_atlantic</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_east_south_central</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_west_south_central</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_mountain</span></code>, <code class="docutils literal notranslate"><span class="pre">census_division_pacific</span></code>, <code class="docutils literal notranslate"><span class="pre">contiguous_48_plus_dc</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_state_group</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=12</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code>, <code class="docutils literal notranslate"><span class="pre">gsp_output</span></code>, <code class="docutils literal notranslate"><span class="pre">housing</span></code>, <code class="docutils literal notranslate"><span class="pre">trade</span></code>, <code class="docutils literal notranslate"><span class="pre">income</span></code>, <code class="docutils literal notranslate"><span class="pre">direct_analog_high_confidence</span></code>, <code class="docutils literal notranslate"><span class="pre">provisional_analog_medium</span></code>, <code class="docutils literal notranslate"><span class="pre">semantic_review_outputs</span></code>, <code class="docutils literal notranslate"><span class="pre">no_reliable_analog</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_sd_variable_group</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">monthly</span></code>, <code class="docutils literal notranslate"><span class="pre">quarterly</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code>, <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">ignore_release_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_lag_all_series</span></code>, <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_sd_variables</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_states</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
 <td><p>operational=2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">operational</span></code>: <code class="docutils literal notranslate"><span class="pre">single_target</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p>-</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">enum</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>

@@ -93,15 +93,23 @@
 <td><p>Which official source family to load</p></td>
 </tr>
 <tr class="row-odd"><td><p>1.1.2</p></td>
-<td><p><a class="reference internal" href="#custom-source-mode"><code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code></a> / <a class="reference internal" href="#custom-source-format"><code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code></a></p></td>
-<td><p>Whether a custom file replaces or augments the official panel</p></td>
+<td><p><a class="reference internal" href="#custom-source-policy"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></a></p></td>
+<td><p>Official data only, custom data only, or official plus custom data</p></td>
 </tr>
 <tr class="row-even"><td><p>1.1.3</p></td>
+<td><p><a class="reference internal" href="#custom-source-format"><code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code></a></p></td>
+<td><p>Custom file parser</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.1.4</p></td>
+<td><p><a class="reference internal" href="#custom-source-schema"><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code></a></p></td>
+<td><p>FRED-family schema the custom file follows</p></td>
+</tr>
+<tr class="row-even"><td><p>1.1.5</p></td>
 <td><p><a class="reference internal" href="#frequency"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></p></td>
 <td><p>Series frequency (monthly/quarterly); dataset-derived</p></td>
 </tr>
-<tr class="row-odd"><td><p>1.1.4</p></td>
-<td><p><a class="reference internal" href="#115-information_set_type"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></span></a></p></td>
+<tr class="row-odd"><td><p>1.1.6</p></td>
+<td><p><a class="reference internal" href="#information-set-type"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></p></td>
 <td><p>Real-time regime (revised vs. vintage-aware)</p></td>
 </tr>
 </tbody>
@@ -110,10 +118,11 @@
 <strong>At a glance (defaults):</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> — no default; you pick one official panel: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">custom_source_mode</span> <span class="pre">=</span> <span class="pre">no_custom_source</span></code> — default; pick <code class="docutils literal notranslate"><span class="pre">replace_official_panel</span></code> or <code class="docutils literal notranslate"><span class="pre">append_to_official_panel</span></code> only when using a custom file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span> <span class="pre">=</span> <span class="pre">official_only</span></code> — default; choose <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code> for my data only, or <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code> for official data plus my data.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">custom_source_format</span> <span class="pre">=</span> <span class="pre">none</span></code> — default; must be <code class="docutils literal notranslate"><span class="pre">csv</span></code> or <code class="docutils literal notranslate"><span class="pre">parquet</span></code> when a custom source is selected.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span> <span class="pre">=</span> <span class="pre">none</span></code> — default; must be <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> when a custom source is selected.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code> — derived from <code class="docutils literal notranslate"><span class="pre">dataset</span></code> for MD/QD/composites. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> requires an explicit monthly/quarterly choice.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span> <span class="pre">=</span> <span class="pre">revised</span></code> — post-revision truth. Pick <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code> only when you want synthetic release-lag masking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span> <span class="pre">=</span> <span class="pre">final_revised_data</span></code> — post-revision truth. Pick <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code> only when you want synthetic release-lag masking.</p></li>
 </ul>
 <p><strong>Most research runs need only <code class="docutils literal notranslate"><span class="pre">dataset</span></code> + <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>.</strong> The other source-frame choices auto-derive, except standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> and custom files.</p>
 <hr class="docutils" />
@@ -171,8 +180,8 @@
 </ul>
 </section>
 </section>
-<section id="custom-source-mode">
-<h2>1.1.2 <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code><a class="headerlink" href="#custom-source-mode" title="Link to this heading"></a></h2>
+<section id="custom-source-policy">
+<h2>1.1.2 <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code><a class="headerlink" href="#custom-source-policy" title="Link to this heading"></a></h2>
 <p><strong>Controls whether a user-supplied file is used with the official source panel.</strong></p>
 <table class="docutils align-default">
 <thead>
@@ -182,22 +191,22 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">no_custom_source</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_only</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>Use only the selected official source panel.</p></td>
+<td><p>Official data only. Use the selected official source panel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replace_official_panel</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>Load a custom file instead of the selected single official panel.</p></td>
+<td><p>My data only. Load a custom file instead of the selected single official panel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">append_to_official_panel</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>Load the selected official panel and append custom columns after frequency alignment.</p></td>
+<td><p>Official plus my data. Load the selected official panel and append custom columns after frequency alignment.</p></td>
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal notranslate"><span class="pre">replace_official_panel</span></code> supports only one official panel (<code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>). It requires <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_dataset_schema</span></code> to match the selected <code class="docutils literal notranslate"><span class="pre">dataset</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">append_to_official_panel</span></code> supports single or composite official panels. The custom file can declare <code class="docutils literal notranslate"><span class="pre">custom_dataset_schema:</span> <span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>; runtime converts it to the selected Layer 1 frequency before appending.</p>
+<p><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code> supports only one official panel (<code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>). It requires <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code> to match the selected <code class="docutils literal notranslate"><span class="pre">dataset</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code> supports single or composite official panels. The custom file can declare <code class="docutils literal notranslate"><span class="pre">custom_source_schema:</span> <span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>; runtime converts it to the selected Layer 1 frequency before appending.</p>
 </section>
 <section id="custom-source-format">
 <h2>1.1.3 <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code><a class="headerlink" href="#custom-source-format" title="Link to this heading"></a></h2>
@@ -224,22 +233,88 @@
 </tr>
 </tbody>
 </table>
-<p>When <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code> is not <code class="docutils literal notranslate"><span class="pre">no_custom_source</span></code>:</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> is not <code class="docutils literal notranslate"><span class="pre">official_only</span></code>:</p>
 <ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">leaf_config.custom_data_path</span></code></strong> is <strong>required</strong>. Compile-time validation in <code class="docutils literal notranslate"><span class="pre">compile_recipe_dict</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code> if missing.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">leaf_config.custom_dataset_schema</span></code></strong> is <strong>required</strong> and declares the schema the custom file must conform to (<code class="docutils literal notranslate"><span class="pre">fred_md</span></code> / <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code> / <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>). The loader validates the schema label and labels the resulting panel accordingly.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">leaf_config.custom_source_path</span></code></strong> is <strong>required</strong>. Compile-time validation in <code class="docutils literal notranslate"><span class="pre">compile_recipe_dict</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code> if missing.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code></strong> is <strong>required</strong> in <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> and declares the schema the custom file must conform to (<code class="docutils literal notranslate"><span class="pre">fred_md</span></code> / <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code> / <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>). The loader validates the schema label and labels the resulting panel accordingly.</p></li>
 <li><p><strong>CSV shape</strong>: first column is a date index (parseable by <code class="docutils literal notranslate"><span class="pre">pandas.read_csv(...,</span> <span class="pre">parse_dates=True)</span></code>); remaining columns are numeric with series IDs as headers. Optional FRED-style T-code row is not consumed automatically — pre-strip it or use <code class="docutils literal notranslate"><span class="pre">tcode_policy:</span> <span class="pre">raw_only</span></code>.</p></li>
 <li><p><strong>Parquet shape</strong>: DatetimeIndex OR first column parseable as date; numeric columns.</p></li>
 <li><p><strong>No caching</strong> — the custom loader reads the file fresh each time (no vintage / no cache key). For reproducibility, users should treat the path as part of the recipe provenance and keep the file pinned.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">support_tier</span> <span class="pre">=</span> <span class="pre">provisional</span></code></strong> on the returned <code class="docutils literal notranslate"><span class="pre">RawLoadResult</span></code> — signals the user-supplied panel has not been through FRED’s QC / vintage pipeline.</p></li>
 </ul>
+<blockquote>
+<div><p><strong>Warning:</strong> The package can validate enum choices and file parseability, but
+it cannot certify the economic meaning of custom columns, vintage discipline,
+release lags, or whether a T-code row was stripped correctly. Treat the file
+path and file hash as part of study provenance.</p>
+</div></blockquote>
+</section>
+<section id="custom-source-schema">
+<h2>1.1.4 <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code><a class="headerlink" href="#custom-source-schema" title="Link to this heading"></a></h2>
+<p><strong>Declares which official panel shape the custom file follows.</strong> This is a
+decision axis because the Navigator must show it only when custom data is used.
+The file path remains in <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_source_path</span></code> because paths are
+study-specific payload, not an enum.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Required shape</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>No custom source file is used. Valid only with <code class="docutils literal notranslate"><span class="pre">custom_source_policy:</span> <span class="pre">official_only</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_md</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Monthly date index, national macro series columns, normally FRED-style series IDs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_qd</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Quarterly date index, national macro series columns, normally FRED-style series IDs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>State-level series columns. Current v1 custom-source runtime treats the file as monthly (<code class="docutils literal notranslate"><span class="pre">state_monthly</span></code>) before Layer 1 alignment.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Frequency behavior:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Custom schema</p></th>
+<th class="head"><p>If selected Layer 1 <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is monthly</p></th>
+<th class="head"><p>If selected Layer 1 <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is quarterly</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_md</span></code></p></td>
+<td><p>Used at native monthly frequency.</p></td>
+<td><p>Aggregated to quarterly by 3-month average when appended to a quarterly route.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_qd</span></code></p></td>
+<td><p>Interpolated to monthly when appended to a monthly route.</p></td>
+<td><p>Used at native quarterly frequency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd</span></code></p></td>
+<td><p>Used as monthly state-level data.</p></td>
+<td><p>Aggregated to quarterly by 3-month average.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>, the schema must match <code class="docutils literal notranslate"><span class="pre">dataset</span></code>: <code class="docutils literal notranslate"><span class="pre">dataset:</span> <span class="pre">fred_md</span></code>
+requires <code class="docutils literal notranslate"><span class="pre">custom_source_schema:</span> <span class="pre">fred_md</span></code>, and so on. For <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code>,
+the schema may differ from the official panel because Layer 1 aligns the custom
+file to the selected route frequency before appending.</p>
 <section id="id1">
 <h3>Functions &amp; features<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">macrocast.load_custom_csv(path,</span> <span class="pre">*,</span> <span class="pre">dataset,</span> <span class="pre">cache_root=None)</span></code> — direct call.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">macrocast.load_custom_parquet(path,</span> <span class="pre">*,</span> <span class="pre">dataset,</span> <span class="pre">cache_root=None)</span></code> — direct call (requires pyarrow or fastparquet).</p></li>
-<li><p>Dispatcher: <code class="docutils literal notranslate"><span class="pre">_load_raw_for_recipe</span></code> in <code class="docutils literal notranslate"><span class="pre">macrocast/execution/build.py</span></code> dispatches from <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code> and <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>.</p></li>
-<li><p>Compile guard: custom source selected + missing <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_dataset_schema</span></code> or <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_data_path</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p>Dispatcher: <code class="docutils literal notranslate"><span class="pre">_load_raw_for_recipe</span></code> in <code class="docutils literal notranslate"><span class="pre">macrocast/execution/build.py</span></code> dispatches from <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>.</p></li>
+<li><p>Compile guard: custom source selected + missing <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code> or <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_source_path</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 </ul>
 </section>
 <section id="recipe-usage">
@@ -249,6 +324,9 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
+<span class="w">      </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_only</span>
+<span class="w">      </span><span class="nt">custom_source_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">custom_source_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
 <span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">]</span>
@@ -259,14 +337,14 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">custom_source_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">replace_official_panel</span>
+<span class="w">      </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
 <span class="w">      </span><span class="nt">custom_source_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">csv</span>
+<span class="w">      </span><span class="nt">custom_source_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
 <span class="w">      </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
 <span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span>
-<span class="w">      </span><span class="nt">custom_dataset_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">custom_data_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/my_fred_md_extract.csv</span>
+<span class="w">      </span><span class="nt">custom_source_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/my_fred_md_extract.csv</span>
 </pre></div>
 </div>
 <p>Append custom Parquet columns to FRED-QD:</p>
@@ -274,21 +352,21 @@
 <span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_qd</span>
-<span class="w">      </span><span class="nt">custom_source_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">append_to_official_panel</span>
+<span class="w">      </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_plus_custom</span>
 <span class="w">      </span><span class="nt">custom_source_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parquet</span>
+<span class="w">      </span><span class="nt">custom_source_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_qd</span>
 <span class="w">      </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">quarterly</span>
 <span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GDPC1</span>
 <span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">]</span>
-<span class="w">      </span><span class="nt">custom_dataset_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_qd</span>
-<span class="w">      </span><span class="nt">custom_data_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/my_fred_qd_extract.parquet</span>
+<span class="w">      </span><span class="nt">custom_source_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/my_fred_qd_extract.parquet</span>
 </pre></div>
 </div>
 </section>
 </section>
 <hr class="docutils" />
 <section id="frequency">
-<h2>1.1.4 <code class="docutils literal notranslate"><span class="pre">frequency</span></code><a class="headerlink" href="#frequency" title="Link to this heading"></a></h2>
+<h2>1.1.5 <code class="docutils literal notranslate"><span class="pre">frequency</span></code><a class="headerlink" href="#frequency" title="Link to this heading"></a></h2>
 <p><strong>Series frequency of the dataset panel.</strong> Dataset-derived for MD/QD/composite runs; required for standalone FRED-SD runs.</p>
 <section id="id2">
 <h3>Value catalog<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
@@ -334,7 +412,7 @@
 </section>
 <hr class="docutils" />
 <section id="information-set-type">
-<h2>1.1.3 <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code><a class="headerlink" href="#information-set-type" title="Link to this heading"></a></h2>
+<h2>1.1.6 <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code><a class="headerlink" href="#information-set-type" title="Link to this heading"></a></h2>
 <p><strong>Real-time regime</strong> that governs which version of each observation the model is allowed to see at each forecast origin. Fully wired — this is the only 1.1 axis with compile-time validation AND runtime dispatch across its operational values.</p>
 <section id="id5">
 <h3>Value catalog<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>

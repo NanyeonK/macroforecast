@@ -157,7 +157,7 @@ broader cells are marked selectable.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> keeps only official source-panel choices: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>,
 <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, and <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>.</p></li>
-<li><p>Custom files are handled by <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code> and
+<li><p>Custom files are handled by <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> and
 <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>: users choose whether a custom file replaces the
 selected official panel or is appended to it.</p></li>
 <li><p>Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> requires explicit <code class="docutils literal notranslate"><span class="pre">frequency</span></code>; the source contains monthly and quarterly state series, so an implicit default would hide a research decision.</p></li>
@@ -169,8 +169,8 @@ Local CSV is accepted as a fixture/runtime path for deterministic tests and
 replication bundles that should not require the optional Excel parser. Wide
 CSV columns use the same canonical <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> names produced by the
 workbook adapter.</p></li>
-<li><p>Custom sources require <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_dataset_schema</span></code> and
-<code class="docutils literal notranslate"><span class="pre">leaf_config.custom_data_path</span></code>.</p></li>
+<li><p>Custom sources require fixed-axis <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code> and
+<code class="docutils literal notranslate"><span class="pre">leaf_config.custom_source_path</span></code>.</p></li>
 <li><p>Official dataset transforms now have canonical Layer 1 axes:
 <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>.</p></li>
 <li><p>Official transform choices are read from Layer 1 axes. The compiler derives runtime <code class="docutils literal notranslate"><span class="pre">PreprocessContract</span></code> fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.</p></li>

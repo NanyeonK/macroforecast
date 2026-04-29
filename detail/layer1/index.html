@@ -109,8 +109,8 @@
 <p>Layer 1 owns the official data task. It decides which data source is used, which target structure is being forecast, what information is available, and how raw source-level missing/outlier and official-transform policies are handled before representation construction.</p>
 <section id="simple-vs-full">
 <h2>Simple vs Full<a class="headerlink" href="#simple-vs-full" title="Link to this heading"></a></h2>
-<p>Simple asks for the data question directly: <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">horizons</span></code>. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> also needs <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. Custom files are optional source modifiers: Simple can expose <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_dataset_schema</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_data_path</span></code> when the user wants to replace or append to the official source panel. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.</p>
-<p>Full exposes the complete Layer 1 official-frame contract. The live registry has <strong>19 Layer 1 axes</strong>. The Navigator primary tree shows 17 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional custom/FRED-SD sub-decisions, and many are defaulted policy controls. <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
+<p>Simple asks for the data question directly: <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">horizons</span></code>. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> also needs <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. Custom files are optional source modifiers: Simple can expose <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> when the user wants to replace or append to the official source panel. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.</p>
+<p>Full exposes the complete Layer 1 official-frame contract. The live registry has <strong>20 Layer 1 axes</strong>. The Navigator primary tree shows 18 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional custom/FRED-SD sub-decisions, and many are defaulted policy controls. <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
 </section>
 <section id="hierarchy">
 <h2>Hierarchy<a class="headerlink" href="#hierarchy" title="Link to this heading"></a></h2>
@@ -126,8 +126,8 @@
 <tbody>
 <tr class="row-even"><td><p>Primary decision</p></td>
 <td><p>Source identity</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> is the official source-panel choice. Custom source axes decide whether to replace or append a user file. <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is derived for MD/QD/composites and required only for standalone FRED-SD.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> is the official source-panel choice. Custom source axes decide whether to use official data only, custom data only, or official plus custom data. <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is derived for MD/QD/composites and required only for standalone FRED-SD.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Primary policy</p></td>
 <td><p>Information regime</p></td>
@@ -175,7 +175,7 @@
 <tbody>
 <tr class="row-even"><td><p>4.1.1</p></td>
 <td><p><a class="reference internal" href="source_frame.html"><span class="std std-doc">Source and frame</span></a></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>4.1.2</p></td>
 <td><p><a class="reference internal" href="fred_sd_source_selection.html"><span class="std std-doc">FRED-SD source selection</span></a></p></td>
@@ -214,75 +214,79 @@
 <td><p>required user choice</p></td>
 <td><p>required; official source panel only: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">no_custom_source</span></code></p></td>
-<td><p>choose <code class="docutils literal notranslate"><span class="pre">replace_official_panel</span></code> or <code class="docutils literal notranslate"><span class="pre">append_to_official_panel</span></code> when using a custom file</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_only</span></code></p></td>
+<td><p>choose <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code> or <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code> when using a custom file</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
-<td><p>required as <code class="docutils literal notranslate"><span class="pre">csv</span></code> or <code class="docutils literal notranslate"><span class="pre">parquet</span></code> when <code class="docutils literal notranslate"><span class="pre">custom_source_mode</span></code> is not <code class="docutils literal notranslate"><span class="pre">no_custom_source</span></code></p></td>
+<td><p>required as <code class="docutils literal notranslate"><span class="pre">csv</span></code> or <code class="docutils literal notranslate"><span class="pre">parquet</span></code> when <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> is not <code class="docutils literal notranslate"><span class="pre">official_only</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>required as <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> when <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> is not <code class="docutils literal notranslate"><span class="pre">official_only</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
 <td><p>inferred for FRED-MD/QD/composites; required for standalone FRED-SD</p></td>
 <td><p>MD/composites are constrained; standalone FRED-SD must choose monthly or quarterly</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code></p></td>
 <td><p>write explicitly in Full recipes</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">report_only</span></code></p></td>
 <td><p>defaulted; non-default values require a dataset containing FRED-SD</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_states</span></code></p></td>
 <td><p>defaulted; non-default values require FRED-SD</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></p></td>
 <td><p>defaulted; non-default values require FRED-SD</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_states</span></code></p></td>
 <td><p>hidden selector; <code class="docutils literal notranslate"><span class="pre">selected_states</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.sd_states</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></p></td>
 <td><p>hidden selector; <code class="docutils literal notranslate"><span class="pre">selected_sd_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.sd_variables</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">single_target</span></code></p></td>
 <td><p>write <code class="docutils literal notranslate"><span class="pre">single_target</span></code> with <code class="docutils literal notranslate"><span class="pre">leaf_config.target</span></code> or <code class="docutils literal notranslate"><span class="pre">multi_target</span></code> with <code class="docutils literal notranslate"><span class="pre">leaf_config.targets</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_variables</span></code></p></td>
 <td><p>defaulted unless the research design filters source columns</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></p></td>
 <td><p>defaulted; non-default values act before official transforms/T-codes</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code></p></td>
 <td><p>defaulted; non-default values act before official transforms/T-codes</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></p></td>
 <td><p>default profile uses official t-codes; <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code> preserves raw scale</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p></td>
 <td><p>default profile transforms both target and predictors</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
 <td><p>defaulted after the official frame exists</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ignore_release_lag</span></code></p></td>
 <td><p>defaulted; <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.release_lag_per_series</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code></p></td>
 <td><p>defaulted realistic forecasting rule; <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code> is an oracle benchmark</p></td>
 </tr>
