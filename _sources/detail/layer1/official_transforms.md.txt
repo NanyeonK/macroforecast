@@ -1,9 +1,9 @@
-# 4.1.5 Official Transforms
+# 4.1.6 Official Transforms
 
-- Parent: [4.1 Layer 1: Data Task](index.md)
+- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: official transforms
 
-This group decides whether FRED-provided transform codes are applied while constructing the FRED frame.
+This group decides whether FRED-provided transform codes are applied while constructing the source frame for FRED-backed routes.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
@@ -25,4 +25,3 @@ path:
       official_transform_policy: apply_official_tcode
       official_transform_scope: target_and_predictors
 ```
-

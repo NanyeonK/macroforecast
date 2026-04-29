@@ -1,14 +1,14 @@
-# Forecast-Time And Data Handling Policies (1.5)
+# Forecast-Time And Source-Frame Policies (1.5)
 
 Declares **how forecast-time information and source-frame quality are handled
 before Layer 2 sees the data**. Data revision / vintage status is controlled by
-`information_set_type` in the source-frame page. This page covers publication
-lag, same-period x access, raw-source missing/outlier treatment before T-codes,
-and frame availability after the FRED/custom frame exists.
+`information_set_type` in the forecast-time information page. This page covers
+publication lag, same-period x access, raw-source missing/outlier treatment
+before T-codes, and frame availability after the Layer 1 source frame exists.
 
 | Section | axis | Role |
 |---|---|---|
-| 1.5.1 | [`missing_availability`](#151-missing_availability) | Frame Availability Policy: what to do when predictor / target rows contain NaN after the source frame exists |
+| 1.5.1 | [`missing_availability`](#151-missing_availability) | Frame Availability Policy: what to do when predictor / target rows contain NaN after the Layer 1 source frame exists |
 | 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before FRED transforms/T-codes |
 | 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before FRED transforms/T-codes |
 | 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | Publication Lag Rule: when predictor observations are treated as published and usable |
@@ -223,11 +223,11 @@ path:
 
 ---
 
-## Forecast-Time And Data Handling Policies (1.5) takeaways
+## Forecast-Time And Source-Frame Policies (1.5) takeaways
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
 - All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`) and are propagated into `data_task_spec`.
-- `raw_missing_policy` and `raw_outlier_policy` run before FRED transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the FRED frame exists.
-- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or FRED frame before researcher preprocessing.
+- `raw_missing_policy` and `raw_outlier_policy` run before official transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the Layer 1 source frame exists.
+- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or source frame before researcher preprocessing.
 
 Layer 1 data-handling walk complete — the current policy axes are operational.

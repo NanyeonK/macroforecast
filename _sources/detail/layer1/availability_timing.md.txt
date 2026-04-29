@@ -1,7 +1,7 @@
-# 4.1.2 Forecast-Time Information And Frame Availability
+# 4.1.2 Forecast-Time Information
 
-- Parent: [4.1 Layer 1: Data Task](index.md)
-- Current group: forecast-time information / frame availability
+- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Current group: Forecast-Time Information
 
 These policies define what information is available when a forecast is made.
 They separate three concepts that are often mixed in macro forecasting code:
@@ -10,15 +10,14 @@ They separate three concepts that are often mixed in macro forecasting code:
 - publication lag: when each predictor x observation becomes usable;
 - same-period predictor access: whether x at the target date is allowed.
 
-`missing_availability` is listed here because it closes the source-frame gaps
-after the Layer 1 frame exists. It is not raw-source repair.
+Frame availability is separate. `missing_availability` runs after the Layer 1
+source frame exists and is documented in [4.1.7 Frame Availability](frame_availability.md).
 
 | Axis | Choices | Default / rule |
 |---|---|---|
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | Data revision/vintage regime. Default uses final revised data. |
 | `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | Publication lag rule. Default ignores publication lag; `series_specific_lag` requires `leaf_config.release_lag_per_series`. |
 | `contemporaneous_x_rule` | `forbid_same_period_predictors`, `allow_same_period_predictors` | Same-period x rule. Default forbids target-date predictors; `allow_same_period_predictors` is an oracle/data-leak benchmark. |
-| `missing_availability` | `zero_fill_leading_predictor_gaps`, `require_complete_rows`, `keep_available_rows`, `impute_predictors_only` | Source-frame availability policy. Default `zero_fill_leading_predictor_gaps`; `impute_predictors_only` requires `leaf_config.x_imputation`. |
 
 Boundary rule:
 
@@ -30,7 +29,9 @@ Boundary rule:
 - `contemporaneous_x_rule` controls whether `x_{t+h}` can be used when
   forecasting `y_{t+h}`. Allowing it is an oracle benchmark unless the research
   design is explicitly nowcasting with contemporaneous indicators.
-- `missing_availability` is official-frame availability, not raw-source repair.
+- `missing_availability` is not a forecast-time information axis. It is a
+  source-frame availability policy after source loading, raw-source quality
+  handling, and official transforms.
 
 YAML:
 
@@ -41,5 +42,4 @@ path:
       information_set_type: final_revised_data
       release_lag_rule: ignore_release_lag
       contemporaneous_x_rule: forbid_same_period_predictors
-      missing_availability: zero_fill_leading_predictor_gaps
 ```

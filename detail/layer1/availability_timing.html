@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4.1.2 Forecast-Time Information And Frame Availability &mdash; macrocast</title>
+  <title>4.1.2 Forecast-Time Information &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -22,8 +22,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.2 Layer 2: Representation / Research Preprocessing" href="../layer2/index.html" />
-    <link rel="prev" title="4.1.5 Official Transforms" href="official_transforms.html" /> 
+    <link rel="next" title="4.1.4 FRED-SD Predictor Scope" href="fred_sd_source_selection.html" />
+    <link rel="prev" title="4.1.1 Data Source Mode / Frequency" href="source_frame.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,13 +52,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../layer0/index.html">4.0 Layer 0: Study Scope</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html">4.1 Layer 1: Data Task</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="source_frame.html">4.1.1 Source And Frame</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="source_frame.html">4.1.1 Data Source Mode / Frequency</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">4.1.2 Forecast-Time Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fred_sd_source_selection.html">4.1.4 FRED-SD Predictor Scope</a></li>
 <li class="toctree-l3"><a class="reference internal" href="target_universe.html">4.1.3 Target (y) And Predictor (x) Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="raw_source_cleaning.html">4.1.4 Raw Source Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="official_transforms.html">4.1.5 Official Transforms</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">4.1.2 Forecast-Time Information And Frame Availability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_source_cleaning.html">4.1.5 Raw Source Cleaning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transforms.html">4.1.6 Official Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="frame_availability.html">4.1.7 Frame Availability</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
@@ -88,8 +89,8 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">4. Detail (code): Full</a></li>
-          <li class="breadcrumb-item"><a href="index.html">4.1 Layer 1: Data Task</a></li>
-      <li class="breadcrumb-item active">4.1.2 Forecast-Time Information And Frame Availability</li>
+          <li class="breadcrumb-item"><a href="index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
+      <li class="breadcrumb-item active">4.1.2 Forecast-Time Information</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer1/availability_timing.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -99,11 +100,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="forecast-time-information-and-frame-availability">
-<h1>4.1.2 Forecast-Time Information And Frame Availability<a class="headerlink" href="#forecast-time-information-and-frame-availability" title="Link to this heading"></a></h1>
+  <section id="forecast-time-information">
+<h1>4.1.2 Forecast-Time Information<a class="headerlink" href="#forecast-time-information" title="Link to this heading"></a></h1>
 <ul class="simple">
-<li><p>Parent: <a class="reference internal" href="index.html"><span class="std std-doc">4.1 Layer 1: Data Task</span></a></p></li>
-<li><p>Current group: forecast-time information / frame availability</p></li>
+<li><p>Parent: <a class="reference internal" href="index.html"><span class="std std-doc">4.1 Layer 1: Data Source, Target y, Predictor x</span></a></p></li>
+<li><p>Current group: Forecast-Time Information</p></li>
 </ul>
 <p>These policies define what information is available when a forecast is made.
 They separate three concepts that are often mixed in macro forecasting code:</p>
@@ -112,8 +113,8 @@ They separate three concepts that are often mixed in macro forecasting code:</p>
 <li><p>publication lag: when each predictor x observation becomes usable;</p></li>
 <li><p>same-period predictor access: whether x at the target date is allowed.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> is listed here because it closes the source-frame gaps
-after the Layer 1 frame exists. It is not raw-source repair.</p>
+<p>Frame availability is separate. <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> runs after the Layer 1
+source frame exists and is documented in <a class="reference internal" href="frame_availability.html"><span class="std std-doc">4.1.7 Frame Availability</span></a>.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Axis</p></th>
@@ -134,10 +135,6 @@ after the Layer 1 frame exists. It is not raw-source repair.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code></p></td>
 <td><p>Same-period x rule. Default forbids target-date predictors; <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code> is an oracle/data-leak benchmark.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code>, <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></p></td>
-<td><p>Source-frame availability policy. Default <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code>; <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code>.</p></td>
-</tr>
 </tbody>
 </table>
 <p>Boundary rule:</p>
@@ -150,7 +147,9 @@ observation dated at month/quarter t is already known at the forecast origin.</p
 <li><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code> controls whether <code class="docutils literal notranslate"><span class="pre">x_{t+h}</span></code> can be used when
 forecasting <code class="docutils literal notranslate"><span class="pre">y_{t+h}</span></code>. Allowing it is an oracle benchmark unless the research
 design is explicitly nowcasting with contemporaneous indicators.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> is official-frame availability, not raw-source repair.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> is not a forecast-time information axis. It is a
+source-frame availability policy after source loading, raw-source quality
+handling, and official transforms.</p></li>
 </ul>
 <p>YAML:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
@@ -159,7 +158,6 @@ design is explicitly nowcasting with contemporaneous indicators.</p></li>
 <span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">final_revised_data</span>
 <span class="w">      </span><span class="nt">release_lag_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ignore_release_lag</span>
 <span class="w">      </span><span class="nt">contemporaneous_x_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forbid_same_period_predictors</span>
-<span class="w">      </span><span class="nt">missing_availability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zero_fill_leading_predictor_gaps</span>
 </pre></div>
 </div>
 </section>
@@ -168,8 +166,8 @@ design is explicitly nowcasting with contemporaneous indicators.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="official_transforms.html" class="btn btn-neutral float-left" title="4.1.5 Official Transforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../layer2/index.html" class="btn btn-neutral float-right" title="4.2 Layer 2: Representation / Research Preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="source_frame.html" class="btn btn-neutral float-left" title="4.1.1 Data Source Mode / Frequency" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fred_sd_source_selection.html" class="btn btn-neutral float-right" title="4.1.4 FRED-SD Predictor Scope" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

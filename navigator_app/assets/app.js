@@ -74,7 +74,7 @@ function axisMatchesLayer(axis) {
 function layerLabel(layer) {
   const labels = {
     "0_meta": "L0 Study Scope",
-    "1_data_task": "L1 Data task",
+    "1_data_task": "L1 Data + y/x",
     "2_preprocessing": "L2 Representation",
     "3_training": "L3 Generator",
     "4_evaluation": "L4 Evaluation",
@@ -157,8 +157,8 @@ function docsLink(axisName) {
 function layerDescription(layer) {
   const descriptions = {
     "0_meta": "4 user-facing decisions in order: study scope, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
-    "1_data_task": "FRED data task and source frame: source, target structure, availability, raw source policy, and transform rules.",
-    "2_preprocessing": "Representation construction after the Layer 1 FRED frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
+    "1_data_task": "Data source, target y, and predictor x source frame: source mode, frequency, forecast-time information, target y, predictor x, raw source quality, transforms, and availability.",
+    "2_preprocessing": "Representation construction after the Layer 1 source frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
     "3_training": "Forecast generation: model, benchmark, forecast object, future-X path, windows, and tuning.",
     "4_evaluation": "Evaluation choices: metrics, benchmark comparison, aggregation, ranking, regimes, decomposition, and OOS period.",
     "5_output_provenance": "Output and provenance: export format, saved objects, provenance fields, and artifact granularity.",

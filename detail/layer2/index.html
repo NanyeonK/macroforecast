@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="4.3 Layer 3: Forecast Generator" href="../layer3/index.html" />
-    <link rel="prev" title="4.1.2 Forecast-Time Information And Frame Availability" href="../layer1/availability_timing.html" /> 
+    <link rel="prev" title="4.1.7 Frame Availability" href="../layer1/frame_availability.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,7 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../layer0/index.html">4.0 Layer 0: Study Scope</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">4.2 Layer 2: Representation / Research Preprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer3/index.html">4.3 Layer 3: Forecast Generator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">4.4 Layer 4: Evaluation</a></li>
@@ -94,11 +94,11 @@
 <h1>4.2 Layer 2: Representation / Research Preprocessing<a class="headerlink" href="#layer-2-representation-research-preprocessing" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">4. Detail (code): Full</span></a></p></li>
-<li><p>Previous: <a class="reference internal" href="../layer1/index.html"><span class="std std-doc">4.1 Layer 1: Data Task</span></a></p></li>
+<li><p>Previous: <a class="reference internal" href="../layer1/index.html"><span class="std std-doc">4.1 Layer 1: Data Source, Target y, Predictor x</span></a></p></li>
 <li><p>Current: Layer 2</p></li>
 <li><p>Next: <a class="reference internal" href="../layer3/index.html"><span class="std std-doc">4.3 Layer 3: Forecast Generator</span></a></p></li>
 </ul>
-<p>Layer 2 owns representation construction after Layer 1 produces the FRED frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the FRED frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.</p>
+<p>Layer 2 owns representation construction after Layer 1 produces the source frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the source frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.</p>
 <section id="decision-order">
 <h2>Decision order<a class="headerlink" href="#decision-order" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
@@ -137,7 +137,7 @@
 <h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
 <p>Input:</p>
 <ul class="simple">
-<li><p>Layer 1 FRED frame and target task.</p></li>
+<li><p>Layer 1 source frame, target y, and candidate predictor x contract.</p></li>
 </ul>
 <p>Output:</p>
 <ul class="simple">
@@ -160,7 +160,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../layer1/availability_timing.html" class="btn btn-neutral float-left" title="4.1.2 Forecast-Time Information And Frame Availability" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../layer1/frame_availability.html" class="btn btn-neutral float-left" title="4.1.7 Frame Availability" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../layer3/index.html" class="btn btn-neutral float-right" title="4.3 Layer 3: Forecast Generator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

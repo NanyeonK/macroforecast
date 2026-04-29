@@ -1,4 +1,4 @@
-# Layer 1 Data Task Audit
+# Layer 1 Source-Frame Audit
 
 Date: 2026-04-22
 
@@ -21,8 +21,8 @@ Layer 1.
 
 ## Canonical Layer 1 After Migration
 
-Layer 1 now means FRED data frame and target identity. The live canonical
-Layer 1 registry has 17 axes:
+Layer 1 now means the source frame, target y identity, and candidate predictor x
+universe. The live canonical Layer 1 registry has 17 axes:
 
 - `dataset`
 - `frequency`
@@ -185,7 +185,7 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 Full-mode interpretation:
 
 - `missing_availability` is the current executable Layer 1 availability axis.
-  It covers official-frame availability and the compatibility path for simple
+  It covers source-frame availability and the compatibility path for simple
   X imputation validation.
 - The detailed contract should be read as a two-stage policy. Stage 1 is
   raw-source missing/outlier treatment before `official_transform_policy`

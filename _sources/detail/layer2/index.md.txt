@@ -1,11 +1,11 @@
 # 4.2 Layer 2: Representation / Research Preprocessing
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.1 Layer 1: Data Task](../layer1/index.md)
+- Previous: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
 - Current: Layer 2
 - Next: [4.3 Layer 3: Forecast Generator](../layer3/index.md)
 
-Layer 2 owns representation construction after Layer 1 produces the FRED frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the FRED frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.
+Layer 2 owns representation construction after Layer 1 produces the source frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the source frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.
 
 ## Decision order
 
@@ -25,7 +25,7 @@ Layer 2 uses researcher-facing names for target construction, predictor construc
 ## Layer contract
 
 Input:
-- Layer 1 FRED frame and target task.
+- Layer 1 source frame, target y, and candidate predictor x contract.
 
 Output:
 - `layer2_representation_v1`;

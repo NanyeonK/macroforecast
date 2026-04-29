@@ -3696,12 +3696,12 @@
         "monthly": {
           "label": "Monthly",
           "short_label": "Monthly",
-          "summary": "Monthly FRED frame."
+          "summary": "Monthly Layer 1 source frame."
         },
         "quarterly": {
           "label": "Quarterly",
           "short_label": "Quarterly",
-          "summary": "Quarterly FRED frame."
+          "summary": "Quarterly Layer 1 source frame."
         }
       }
     },
@@ -3729,15 +3729,15 @@
       }
     },
     "missing_availability": {
-      "contract": "Official-frame availability contract. This is not raw-source repair.",
+      "contract": "Source-frame availability contract. This is not raw-source repair or publication-lag handling.",
       "default_value": "zero_fill_leading_predictor_gaps",
-      "docs_url": "../detail/layer1/availability_timing.html",
+      "docs_url": "../detail/layer1/frame_availability.html",
       "label": "Frame Availability Policy",
       "order": 18,
-      "question": "How should official-frame availability gaps be handled?",
+      "question": "How should source-frame availability gaps be handled?",
       "selection_kind": "defaulted_choice",
       "short_label": "Availability",
-      "summary": "Runs after the FRED frame exists and before Layer 2 representation construction.",
+      "summary": "Runs after the Layer 1 source frame exists and before Layer 2 representation construction.",
       "values": {
         "impute_predictors_only": {
           "label": "Impute Predictors Only",
@@ -3752,12 +3752,12 @@
         "require_complete_rows": {
           "label": "Require Complete Rows",
           "short_label": "Complete Rows",
-          "summary": "Keep only rows complete across the FRED frame."
+          "summary": "Keep only rows complete across the source frame."
         },
         "zero_fill_leading_predictor_gaps": {
           "label": "Zero-Fill Leading Predictor Gaps (Default)",
           "short_label": "Zero-Fill Leading",
-          "summary": "Default. Fill leading predictor gaps after official-frame construction."
+          "summary": "Default. Fill leading predictor gaps after source-frame construction."
         }
       }
     },
@@ -4123,7 +4123,7 @@
           "missing_availability"
         ],
         "id": "official_frame_policy",
-        "label": "FRED Transform / Frame Availability",
+        "label": "Official Transform / Frame Availability",
         "level": "secondary_policy",
         "summary": "Apply FRED transform codes when available and close source-frame availability gaps."
       }
@@ -6059,7 +6059,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 1,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -6087,7 +6087,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 2,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -6129,7 +6129,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 3,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -12111,7 +12111,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 1,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -12139,7 +12139,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 2,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -12181,7 +12181,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 3,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -18286,7 +18286,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 1,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -18314,7 +18314,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 2,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
@@ -18356,7 +18356,7 @@
             "axis_level": "secondary_policy",
             "axis_order_in_group": 3,
             "group_id": "official_frame_policy",
-            "group_label": "FRED Transform / Frame Availability",
+            "group_label": "Official Transform / Frame Availability",
             "group_level": "secondary_policy",
             "group_order": 7,
             "layer": "1_data_task",
