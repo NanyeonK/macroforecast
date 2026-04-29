@@ -47,7 +47,7 @@ def test_single_default_is_direct_comparison_cell_executable() -> None:
     assert compiled.execution_status == "executable"
     assert compiled.tree_context["route_owner"] == "comparison_sweep"
     assert compiled.tree_context["route_contract"] == "single_cell_executable"
-    assert compiled.tree_context["experiment_unit"] == "single_target_single_generator"
+    assert compiled.tree_context["study_scope"] == "one_target_one_method"
 
 
 def test_model_comparison_parent_requires_sweep_runner_but_variants_are_executable() -> None:
@@ -66,7 +66,7 @@ def test_model_comparison_parent_requires_sweep_runner_but_variants_are_executab
 
 def test_feature_only_comparison_grid_is_sweep_runner_contract() -> None:
     recipe = _base_recipe("feature-comparison", model_families=("ridge",))
-    _set_meta(recipe, experiment_unit="single_target_generator_grid")
+    _set_meta(recipe, study_scope="one_target_compare_methods")
     _fixed_to_sweep(recipe, "3_training", "feature_builder", ["target_lag_features", "raw_feature_panel"])
 
     compiled = compile_recipe_dict(recipe).compiled
@@ -75,12 +75,12 @@ def test_feature_only_comparison_grid_is_sweep_runner_contract() -> None:
     assert compiled.tree_context["route_owner"] == "comparison_sweep"
     assert compiled.tree_context["route_contract"] == "sweep_runner_executable"
     assert compiled.tree_context["controlled_axis_kind"] == "feature"
-    assert compiled.tree_context["experiment_unit"] == "single_target_generator_grid"
+    assert compiled.tree_context["study_scope"] == "one_target_compare_methods"
 
 
 def test_preprocessing_sweep_is_runner_ready_but_variants_can_be_blocked_by_layer2() -> None:
     recipe = _base_recipe("preprocessing-sweep", model_families=("ridge",))
-    _set_meta(recipe, experiment_unit="single_target_generator_grid")
+    _set_meta(recipe, study_scope="one_target_compare_methods")
     _fixed_to_sweep(recipe, "2_preprocessing", "scaling_policy", ["none", "standard"])
 
     compiled = compile_recipe_dict(recipe).compiled
@@ -98,62 +98,40 @@ def test_preprocessing_sweep_is_runner_ready_but_variants_can_be_blocked_by_laye
     assert statuses == ["executable", "compile_error"]
 
 
-@pytest.mark.parametrize("unit", ["single_target_full_sweep", "benchmark_suite", "ablation_study"])
-def test_wrapper_units_without_compiled_runner_contract_are_not_supported(unit: str, tmp_path) -> None:
-    recipe = _base_recipe(f"wrapper-{unit}", model_families=("ridge",))
-    _set_meta(recipe, experiment_unit=unit)
-    _set_leaf(recipe, "5_output_provenance", wrapper_family=unit, bundle_label=f"{unit}-bundle")
+@pytest.mark.parametrize("unit", ["single_target_full_sweep", "benchmark_suite", "ablation_study", "replication_recipe"])
+def test_removed_study_scope_values_are_rejected(unit: str) -> None:
+    recipe = _base_recipe(f"removed-{unit}", model_families=("ridge",))
+    _set_meta(recipe, study_scope=unit)
 
-    compiled = compile_recipe_dict(recipe).compiled
-
-    assert compiled.run_spec.route_owner == "wrapper"
-    assert compiled.execution_status == "not_supported"
-    assert compiled.tree_context["route_contract"] == "wrapper_handoff"
-    assert compiled.wrapper_handoff["wrapper_family"] == unit
-    with pytest.raises(CompileValidationError, match="route_owner='wrapper'"):
-        run_compiled_recipe(compiled, output_root=tmp_path)
+    with pytest.raises(CompileValidationError, match="unknown value"):
+        compile_recipe_dict(recipe)
 
 
-def test_multi_target_separate_runs_is_wrapper_runner_ready_not_direct_executable(tmp_path) -> None:
-    recipe = _base_recipe("multi-target-separate")
+def test_multiple_targets_compare_methods_is_comparison_sweep_ready() -> None:
+    recipe = _base_recipe("multi-target-compare", model_families=("ar", "ridge"))
     _make_multi_target(recipe)
-    _set_meta(recipe, experiment_unit="multi_target_separate_runs")
-    _set_leaf(recipe, "5_output_provenance", wrapper_family="multi_target_separate_runs", bundle_label="mt-separate")
+    _set_meta(recipe, study_scope="multiple_targets_compare_methods")
 
     compiled = compile_recipe_dict(recipe).compiled
 
-    assert compiled.run_spec.route_owner == "wrapper"
-    assert compiled.execution_status == "ready_for_wrapper_runner"
-    assert compiled.tree_context["route_contract"] == "wrapper_handoff"
-    assert compiled.wrapper_handoff["targets"] == ["INDPRO", "RPI"]
-    with pytest.raises(CompileValidationError, match="route_owner='wrapper'"):
-        run_compiled_recipe(compiled, output_root=tmp_path)
+    assert compiled.run_spec.route_owner == "comparison_sweep"
+    assert compiled.execution_status == "ready_for_sweep_runner"
+    assert compiled.tree_context["route_contract"] == "sweep_runner_executable"
+    assert compiled.tree_context["study_scope"] == "multiple_targets_compare_methods"
 
 
-def test_replication_recipe_is_handoff_not_direct_executable(tmp_path) -> None:
-    recipe = _base_recipe("replication")
-    _set_meta(recipe, experiment_unit="replication_recipe")
 
-    compiled = compile_recipe_dict(recipe).compiled
-
-    assert compiled.run_spec.route_owner == "replication"
-    assert compiled.execution_status == "ready_for_replication_runner"
-    assert compiled.tree_context["route_contract"] == "replication_handoff"
-    with pytest.raises(CompileValidationError, match="route_owner='replication'"):
-        run_compiled_recipe(compiled, output_root=tmp_path)
-
-
-def test_multi_target_shared_design_stays_direct_comparison_cell_executable() -> None:
+def test_multiple_targets_one_method_stays_direct_comparison_cell_executable() -> None:
     recipe = _base_recipe("multi-target-shared")
     _make_multi_target(recipe)
-    _set_meta(recipe, experiment_unit="multi_target_shared_design")
+    _set_meta(recipe, study_scope="multiple_targets_one_method")
 
     compiled = compile_recipe_dict(recipe).compiled
 
     assert compiled.execution_status == "executable"
     assert compiled.run_spec.route_owner == "comparison_sweep"
     assert compiled.tree_context["route_contract"] == "single_cell_executable"
-    assert compiled.tree_context["experiment_unit"] == "multi_target_shared_design"
+    assert compiled.tree_context["study_scope"] == "multiple_targets_one_method"
 
 
 def test_route_contract_is_preserved_in_manifest() -> None:

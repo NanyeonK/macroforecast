@@ -176,7 +176,7 @@ def build_default_recipe_dict(
     if benchmark_config:
         resolved_benchmark_config.update(benchmark_config)
 
-    experiment_unit = "single_target_generator_grid" if len(model_values) > 1 else "single_target_single_generator"
+    study_scope = "one_target_compare_methods" if len(model_values) > 1 else "one_target_one_method"
     training_fixed = {
         "framework": framework,
         "benchmark_family": benchmark_family,
@@ -193,7 +193,7 @@ def build_default_recipe_dict(
         "path": {
             "0_meta": {
                 "fixed_axes": {
-                    "experiment_unit": experiment_unit,
+                    "study_scope": study_scope,
                     "reproducibility_mode": reproducibility_mode,
                     "failure_policy": failure_policy,
                     "compute_mode": compute_mode,

@@ -43,7 +43,7 @@ from ..preprocessing import (
 from ..recipes import build_recipe_spec, build_run_spec
 from ..registry import AxisSelection, get_axis_registry, get_canonical_layer_order
 from ..registry.naming import canonical_axis_name, canonical_axis_value
-from ..registry.stage0.experiment_unit import derive_experiment_unit_default, get_experiment_unit_entry
+from ..registry.stage0.study_scope import derive_study_scope_default, get_study_scope_entry
 from ..raw.fred_sd_groups import resolve_fred_sd_state_group, resolve_fred_sd_variable_group
 from ..design import build_design_frame, resolve_route_owner, design_to_dict
 from ..custom import (
@@ -266,16 +266,16 @@ def _build_axis_selections(recipe_dict: dict[str, Any]) -> tuple[AxisSelection, 
     return tuple(selections)
 
 
-def _rule_experiment_unit_default(
+def _rule_study_scope_default(
     *,
     selection_map: dict[str, AxisSelection],
     leaf_config: dict[str, Any],
 ) -> str:
-    """Derivation rule: default experiment_unit from recipe shape.
+    """Derivation rule: default study_scope from recipe shape.
 
-    Thin wrapper around macrocast.registry.stage0.experiment_unit.
-    derive_experiment_unit_default. Registered under the rule key
-    experiment_unit_default in :data:`DERIVATION_RULES`.
+    Thin wrapper around macrocast.registry.stage0.study_scope.
+    derive_study_scope_default. Registered under the rule key
+    study_scope_default in :data:`DERIVATION_RULES`.
     """
 
     def _sv(name: str, default: str | None = None) -> str | None:
@@ -290,7 +290,7 @@ def _rule_experiment_unit_default(
     )
     model_sel = selection_map.get("model_family")
     feature_sel = selection_map.get("feature_builder")
-    return derive_experiment_unit_default(
+    return derive_study_scope_default(
         task=task,
         model_axis_mode=model_sel.selection_mode if model_sel else "fixed",
         feature_axis_mode=feature_sel.selection_mode if feature_sel else "fixed",
@@ -299,7 +299,7 @@ def _rule_experiment_unit_default(
 
 
 DERIVATION_RULES: dict[str, Any] = {
-    "experiment_unit_default": _rule_experiment_unit_default,
+    "study_scope_default": _rule_study_scope_default,
 }
 
 
@@ -847,7 +847,7 @@ def _build_tree_context(
         "execution_route": "comparison_sweep",
         "design_shape": stage0.design_shape,
         "execution_posture": stage0.execution_posture,
-        "experiment_unit": stage0.experiment_unit,
+        "study_scope": stage0.study_scope,
         "route_contract": _route_contract(stage0, run_spec, selections),
         "variation_axes": list(variation_axes),
         "controlled_axis_kind": _controlled_axis_kind(variation_axes),
@@ -3004,23 +3004,23 @@ def _build_stage0_and_recipe(
         if not target:
             raise CompileValidationError("single-target recipes require leaf_config.target")
 
-    derived_experiment_unit = derive_experiment_unit_default(
+    derived_study_scope = derive_study_scope_default(
         task=target_structure,
         model_axis_mode=model_axis.selection_mode,
         feature_axis_mode=feature_axis.selection_mode,
         wrapper_family=wrapper_family,
     )
-    experiment_unit_explicit = "experiment_unit" in selection_map
-    experiment_unit = _selection_value(selection_map, "experiment_unit", default=derived_experiment_unit)
-    if experiment_unit_explicit:
-        unit_entry = get_experiment_unit_entry(experiment_unit)
+    study_scope_explicit = "study_scope" in selection_map
+    study_scope = _selection_value(selection_map, "study_scope", default=derived_study_scope)
+    if study_scope_explicit:
+        unit_entry = get_study_scope_entry(study_scope)
         if unit_entry.requires_multi_target and target_structure != "multi_target":
             raise CompileValidationError(
-                f"experiment_unit={experiment_unit!r} requires target_structure='multi_target'"
+                f"study_scope={study_scope!r} requires target_structure='multi_target'"
             )
         if not unit_entry.requires_multi_target and target_structure == "multi_target":
             raise CompileValidationError(
-                f"experiment_unit={experiment_unit!r} is incompatible with target_structure='multi_target'"
+                f"study_scope={study_scope!r} is incompatible with target_structure='multi_target'"
             )
 
     sample_split = {
@@ -3033,7 +3033,7 @@ def _build_stage0_and_recipe(
     }.get(information_set_type, information_set_type)
 
     stage0 = build_design_frame(
-        experiment_unit=experiment_unit if experiment_unit_explicit else None,
+        study_scope=study_scope if study_scope_explicit else None,
         fixed_design={
             "dataset_adapter": dataset,
             "information_set": design_information_set,
@@ -3657,13 +3657,13 @@ def _execution_status(
         not_supported.append(
             f"failure_policy {failure_policy!r} is not supported by the current runtime slice"
         )
-    experiment_unit = (
-        stage0.experiment_unit
+    study_scope = (
+        stage0.study_scope
         if stage0 is not None
         else (
-            _selection_value(selection_map, "experiment_unit", default="single_target_single_generator")
-            if "experiment_unit" in selection_map
-            else "single_target_single_generator"
+            _selection_value(selection_map, "study_scope", default="one_target_one_method")
+            if "study_scope" in selection_map
+            else "one_target_one_method"
         )
     )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
@@ -3672,36 +3672,8 @@ def _execution_status(
             f"compute_mode {compute_mode!r} is not supported by the current runtime slice"
         )
     route_owner = run_spec.route_owner if run_spec is not None else None
-    if route_owner in {"wrapper", "replication", "orchestrator"} and has_runner_managed_sweep:
-        not_supported.append(
-            f"route_owner={route_owner!r} cannot contain sweep_axes/conditional_axes until a composed runner contract is implemented"
-        )
     runner_ready_status: str | None = None
-    if route_owner == "wrapper":
-        if experiment_unit == "multi_target_separate_runs":
-            runner_ready_status = "ready_for_wrapper_runner"
-            warnings.append(
-                "route_owner='wrapper' requires execute_separate_runs; direct run_compiled_recipe/execute_recipe is not supported"
-            )
-        else:
-            not_supported.append(
-                f"experiment_unit={experiment_unit!r} has no executable wrapper runner contract in the current runtime"
-            )
-    elif route_owner == "replication":
-        if experiment_unit == "replication_recipe":
-            runner_ready_status = "ready_for_replication_runner"
-            warnings.append(
-                "route_owner='replication' requires execute_replication; direct run_compiled_recipe/execute_recipe is not supported"
-            )
-        else:
-            not_supported.append(
-                f"experiment_unit={experiment_unit!r} cannot use route_owner='replication'"
-            )
-    elif route_owner == "orchestrator":
-        not_supported.append(
-            "route_owner='orchestrator' has no executable runner contract in the current runtime"
-        )
-    elif route_owner == "comparison_sweep" and has_runner_managed_sweep:
+    if route_owner == "comparison_sweep" and has_runner_managed_sweep:
         runner_ready_status = "ready_for_sweep_runner"
 
     if blocked:
@@ -3722,38 +3694,9 @@ def _build_wrapper_handoff(
     run_spec: RunSpec,
     leaf_config: dict[str, Any],
     *,
-    experiment_unit_explicit: bool,
+    study_scope_explicit: bool,
 ) -> dict[str, Any]:
-    if run_spec.route_owner != "wrapper":
-        return {}
-    wrapper_family = leaf_config.get("wrapper_family")
-    bundle_label = leaf_config.get("bundle_label")
-    if experiment_unit_explicit:
-        wrapper_family = wrapper_family or stage0.experiment_unit
-        bundle_label = bundle_label or f"{recipe_spec.recipe_id}-{wrapper_family}"
-    if wrapper_family not in {
-        "single_target_full_sweep",
-        "multi_target_separate_runs",
-        "multi_target_shared_design",
-        "benchmark_suite",
-        "ablation_study",
-    }:
-        raise CompileValidationError(
-            "wrapper_bundle_plan requires a wrapper family in {'single_target_full_sweep', 'multi_target_separate_runs', 'multi_target_shared_design', 'benchmark_suite', 'ablation_study'}"
-        )
-    if not isinstance(bundle_label, str) or not bundle_label.strip():
-        raise CompileValidationError("wrapper_bundle_plan requires non-empty leaf_config.bundle_label")
-    return {
-        "wrapper_family": wrapper_family,
-        "bundle_label": bundle_label,
-        "route_owner": run_spec.route_owner,
-        "execution_posture": stage0.execution_posture,
-        "experiment_unit": stage0.experiment_unit,
-        "recipe_id": recipe_spec.recipe_id,
-        "artifact_subdir": run_spec.artifact_subdir,
-        "targets": list(recipe_spec.targets),
-        "horizons": list(recipe_spec.horizons),
-    }
+    return {}
 
 
 def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
@@ -3784,7 +3727,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         _ensure_unique_axis_selections(selections)
         selection_map = _selection_map(selections)
     target_structure_value = _target_structure(selection_map)
-    experiment_unit_explicit = "experiment_unit" in selection_map
+    study_scope_explicit = "study_scope" in selection_map
     if target_structure_value == "multi_target":
         if "targets" not in leaf_config:
             raise CompileValidationError("recipe leaf_config missing 'targets'")
@@ -3829,7 +3772,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         recipe_spec,
         run_spec,
         leaf_config,
-        experiment_unit_explicit=experiment_unit_explicit,
+        study_scope_explicit=study_scope_explicit,
     )
 
     compiled = CompiledRecipeSpec(

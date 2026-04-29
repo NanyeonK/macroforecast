@@ -33,7 +33,7 @@ def _recipe(**training_overrides):
     return {
         "recipe_id": "navigator-test",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -212,10 +212,10 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
 
     assert payload["axis_presentation_schema_version"] == AXIS_PRESENTATION_SCHEMA_VERSION
     assert "research" + "_design" not in presentation
-    assert presentation["experiment_unit"]["label"] == "Execution Unit"
-    assert presentation["experiment_unit"]["values"]["single_target_single_generator"]["label"] == "One Target, One Forecasting Path"
-    assert presentation["experiment_unit"]["docs_url"].endswith("/detail/layer0/experiment_unit.html")
-    assert presentation["experiment_unit"]["selection_kind"] == "user_choice"
+    assert presentation["study_scope"]["label"] == "Study Scope"
+    assert presentation["study_scope"]["values"]["one_target_one_method"]["label"] == "One Target, One Method"
+    assert presentation["study_scope"]["docs_url"].endswith("/detail/layer0/study_scope.html")
+    assert presentation["study_scope"]["selection_kind"] == "user_choice"
     assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallelize Models"
     assert AXIS_PRESENTATION_MAP["failure_policy"]["values"]["fail_fast"]["label"] == "Stop on First Failure"
 
@@ -308,11 +308,11 @@ def test_replication_library_writes_yaml(tmp_path: Path):
     payload = yaml.safe_load(out.read_text())
 
     assert payload["recipe_id"] == "synthetic-replication-roundtrip-navigator"
-    assert payload["path"]["0_meta"]["fixed_axes"]["experiment_unit"] == "single_target_single_generator"
+    assert payload["path"]["0_meta"]["fixed_axes"]["study_scope"] == "one_target_one_method"
     assert "research" + "_design" not in payload["path"]["0_meta"]["fixed_axes"]
     assert payload["path"]["3_training"]["fixed_axes"]["forecast_type"] == "iterated"
     assert get_replication_entry("synthetic-replication-roundtrip")["expected_outputs"]
-    assert "single_target_single_generator" in replication_recipe_yaml("synthetic-replication-roundtrip")
+    assert "one_target_one_method" in replication_recipe_yaml("synthetic-replication-roundtrip")
 
 
 def test_navigator_cli_writes_replication_yaml(tmp_path: Path):

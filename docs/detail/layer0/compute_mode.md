@@ -64,7 +64,7 @@ Use this when the recipe sweeps model families.
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_generator_grid
+      study_scope: one_target_compare_methods
       compute_mode: parallel_by_model
   3_training:
     sweep_axes:
@@ -227,7 +227,7 @@ Model sweep parallelism:
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_generator_grid
+      study_scope: one_target_compare_methods
       compute_mode: parallel_by_model
   3_training:
     sweep_axes:

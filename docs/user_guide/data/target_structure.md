@@ -2,7 +2,7 @@
 
 Layer 1 only declares the target shape inside the official data frame. It does
 not choose the study runner. Runner ownership stays in Layer 0 through
-`experiment_unit`.
+`study_scope`.
 
 ## 1.2.1 `target_structure`
 
@@ -23,10 +23,10 @@ Canonical API:
 
 Layer 0 connection:
 
-- `experiment_unit` is derived from `target_structure` plus the sweep shape.
-- Multi-target `experiment_unit` values require
+- `study_scope` is derived from `target_structure` plus the sweep shape.
+- Multi-target `study_scope` values require
   `target_structure=multi_target`.
-- Single-target `experiment_unit` values require
+- Single-target `study_scope` values require
   `target_structure=single_target`.
 
 Recipe usage:
@@ -67,7 +67,7 @@ These axes are no longer Layer 1 target-structure choices:
   construction is target representation. Coulombe-style direct average and
   path-average growth/difference targets are also Layer 2 target representation
   choices, even where runtime support is still registry-only.
-- `multi_target_architecture`: Layer 0, through `experiment_unit`.
+- `multi_target_architecture`: Layer 0, through `study_scope`.
 
 Layer 1 owns target identity and target cautoregressive_diffusion_indexnality. Layer 0 owns how that
 cautoregressive_diffusion_indexnality is executed.

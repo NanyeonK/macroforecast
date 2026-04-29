@@ -1495,7 +1495,7 @@ def test_execute_recipe_manifest_preserves_tree_context_payload(tmp_path: Path) 
     )
     provenance_payload = {
         "tree_context": {
-            "experiment_unit": "single_target_single_generator",
+            "study_scope": "one_target_one_method",
             "design_shape": "one_fixed_env_one_tool_surface",
             "execution_posture": "comparison_cell",
             "route_owner": "comparison_sweep",

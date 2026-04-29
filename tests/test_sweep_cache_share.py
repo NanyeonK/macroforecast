@@ -20,7 +20,7 @@ def _horse_race_recipe(models: list[str]) -> dict:
     return {
         "recipe_id": "sweep-cache-share",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_generator_grid", "failure_policy": "skip_failed_cell"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_compare_methods", "failure_policy": "skip_failed_cell"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",

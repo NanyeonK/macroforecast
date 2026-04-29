@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from ..registry.stage0.experiment_unit import get_experiment_unit_entry
+from ..registry.stage0.study_scope import get_study_scope_entry
 from ..registry.naming import canonical_axis_value
-from .derive import derive_design_shape, derive_execution_posture, derive_experiment_unit
+from .derive import derive_design_shape, derive_execution_posture, derive_study_scope
 from .errors import DesignCompletenessError, DesignRoutingError, DesignValidationError
 from .normalize import (
     normalize_comparison_contract,
@@ -20,19 +20,19 @@ def build_design_frame(
     comparison_contract: ComparisonContract | dict,
     varying_design: VaryingDesign | dict | None = None,
     replication_input: ReplicationInput | dict | None = None,
-    experiment_unit: str | None = None,
+    study_scope: str | None = None,
 ) -> DesignFrame:
     normalized_fixed_design = normalize_fixed_design(fixed_design)
     normalized_comparison_contract = normalize_comparison_contract(comparison_contract)
     normalized_varying_design = normalize_varying_design(varying_design)
     normalized_replication_input = normalize_replication_input(replication_input)
 
-    resolved_experiment_unit = (
-        canonical_axis_value("experiment_unit", str(experiment_unit))
-        if experiment_unit is not None
+    resolved_study_scope = (
+        canonical_axis_value("study_scope", str(study_scope))
+        if study_scope is not None
         else None
     )
-    if resolved_experiment_unit is None:
+    if resolved_study_scope is None:
         provisional_design_shape = derive_design_shape(
             normalized_varying_design,
         )
@@ -40,32 +40,34 @@ def build_design_frame(
             provisional_design_shape,
             normalized_replication_input,
         )
-        resolved_experiment_unit = derive_experiment_unit(
+        resolved_study_scope = derive_study_scope(
             provisional_execution_posture,
             normalized_fixed_design.forecast_task,
         )
     else:
-        get_experiment_unit_entry(resolved_experiment_unit)
+        get_study_scope_entry(resolved_study_scope)
 
-    if resolved_experiment_unit is None:
-        raise DesignValidationError("experiment_unit could not be derived")
+    if resolved_study_scope is None:
+        raise DesignValidationError("study_scope could not be derived")
 
-    unit_entry = get_experiment_unit_entry(resolved_experiment_unit)
+    unit_entry = get_study_scope_entry(resolved_study_scope)
     if unit_entry.requires_multi_target and normalized_fixed_design.forecast_task != "multi_target":
         raise DesignValidationError(
-            f"experiment_unit={resolved_experiment_unit!r} requires forecast_task='multi_target'"
+            f"study_scope={resolved_study_scope!r} requires forecast_task='multi_target'"
         )
-    if not unit_entry.requires_multi_target and normalized_fixed_design.forecast_task == "multi_target" and resolved_experiment_unit not in {"single_target_generator_grid", "single_target_single_generator", "single_target_full_sweep", "replication_recipe"}:
-        pass
+    if not unit_entry.requires_multi_target and normalized_fixed_design.forecast_task == "multi_target":
+        raise DesignValidationError(
+            f"study_scope={resolved_study_scope!r} is incompatible with forecast_task=\"multi_target\""
+        )
 
     design_shape = derive_design_shape(
         normalized_varying_design,
-        resolved_experiment_unit,
+        resolved_study_scope,
     )
     execution_posture = derive_execution_posture(
         design_shape,
         normalized_replication_input,
-        resolved_experiment_unit,
+        resolved_study_scope,
     )
 
     stage0 = DesignFrame(
@@ -75,19 +77,15 @@ def build_design_frame(
         execution_posture=execution_posture,
         design_shape=design_shape,
         replication_input=normalized_replication_input,
-        experiment_unit=resolved_experiment_unit,
+        study_scope=resolved_study_scope,
     )
     validate_stage0_frame(stage0)
     return stage0
 
 
 def resolve_route_owner(stage0: DesignFrame) -> str:
-    if stage0.experiment_unit is not None:
-        return get_experiment_unit_entry(stage0.experiment_unit).route_owner
-    if stage0.execution_posture == "wrapper_bundle_plan":
-        return "wrapper"
-    if stage0.execution_posture == "replication_locked_plan":
-        return "replication"
+    if stage0.study_scope is not None:
+        return get_study_scope_entry(stage0.study_scope).route_owner
     if stage0.execution_posture in {"comparison_cell", "comparison_sweep_plan"}:
         return "comparison_sweep"
     raise DesignRoutingError(f"unknown execution_posture={stage0.execution_posture!r}")
@@ -105,7 +103,7 @@ def design_summary(stage0: DesignFrame) -> str:
     models = ", ".join(stage0.varying_design.model_families) or "none"
     horizons = ", ".join(stage0.varying_design.horizons) or "none"
     return (
-        f"experiment_unit={stage0.experiment_unit}; "
+        f"study_scope={stage0.study_scope}; "
         f"dataset={stage0.fixed_design.dataset_adapter}; "
         f"route={resolve_route_owner(stage0)}; "
         f"execution_posture={stage0.execution_posture}; "

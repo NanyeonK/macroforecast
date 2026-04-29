@@ -10,7 +10,7 @@ Layer 0 decides the execution grammar before data or models are chosen. It answe
 
 Layer 0 has **four user-facing steps**. Select them in this order:
 
-1. `experiment_unit` — choose the work unit: one cell, one controlled grid, multi-target shared run, wrapper handoff, or replication handoff.
+1. `study_scope` — choose target cardinality and whether the method path is fixed or compared.
 2. `failure_policy` — decide how failed variants or cells are handled.
 3. `reproducibility_mode` — decide how strictly stochastic components are pinned.
 4. `compute_mode` — decide whether execution is serial or parallelized over a work unit.
@@ -21,20 +21,21 @@ There is also an internal `axis_type` grammar, but it is not a sixth user step. 
 
 | Step | Axis | Role |
 |---|---|---|
-| 4.1.1 | [experiment_unit](experiment_unit.md) | Execution unit and runner ownership. |
+| 4.1.1 | [study_scope](study_scope.md) | Target/method cardinality for the study. |
 | 4.1.2 | [failure_policy](failure_policy.md) | Runtime failure behavior. |
 | 4.1.3 | [reproducibility_mode](reproducibility_mode.md) | Seed and determinism policy. |
 | 4.1.4 | [compute_mode](compute_mode.md) | Serial or parallel work layout. |
 
 ## Selection logic
 
-Start with `experiment_unit`. A one-path forecast is not a separate route; it is the one-cell case of the same `comparison_sweep` execution grammar.
+Start with `study_scope`. A one-path forecast is not a separate route; it is the one-cell case of the same `comparison_sweep` execution grammar.
 
-- `single_target_single_generator` runs one target through one forecasting path.
-- `single_target_generator_grid` opens a controlled comparison where one or more downstream axes are swept.
-- `multi_target_shared_design` runs several targets under one shared design.
-- `multi_target_separate_runs`, `benchmark_suite`, and `ablation_study` are wrapper handoff units.
-- `replication_recipe` is a replication handoff and preserves source recipe provenance.
+- `one_target_one_method` runs one target through one fixed forecasting method path.
+- `one_target_compare_methods` runs one target across one or more method alternatives.
+- `multiple_targets_one_method` runs several targets through one fixed forecasting method path.
+- `multiple_targets_compare_methods` runs several targets across one or more method alternatives.
+
+Replication Library entries are ordinary YAML recipes with one of these four scopes; replication is not a Study Scope branch.
 
 Then set policies:
 
@@ -45,11 +46,11 @@ Then set policies:
 ## Layer contract
 
 Input:
-- user intent for execution unit;
-- target structure and sweep shape from the recipe when the compiler derives a runner unit.
+- user intent for study scope;
+- target structure and sweep shape from the recipe when the compiler derives the scope.
 
 Output:
-- resolved or derived `experiment_unit`;
+- resolved or derived `study_scope`;
 - `execution_route=comparison_sweep` for direct one-cell and sweep-grid work;
 - failure/reproducibility/compute policies recorded in manifest and runner context.
 
@@ -63,7 +64,7 @@ Layer 0 is canonical-only in generated recipes and Navigator paths. The compiler
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_single_generator
+      study_scope: one_target_one_method
       failure_policy: fail_fast
       reproducibility_mode: seeded_reproducible
       compute_mode: serial
@@ -78,7 +79,7 @@ path:
 ```{toctree}
 :maxdepth: 1
 
-experiment_unit
+study_scope
 failure_policy
 reproducibility_mode
 compute_mode

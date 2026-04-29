@@ -49,24 +49,25 @@ def test_stage0_roundtrip_dict() -> None:
     assert rebuilt == stage0
 
 
-def test_replication_route_owner_and_execution_posture() -> None:
+def test_replication_input_is_provenance_not_route_owner() -> None:
     stage0 = build_design_frame(
-        experiment_unit="replication_recipe",
+        study_scope="one_target_one_method",
         fixed_design=_base_fixed(),
         comparison_contract=_base_contract(),
         varying_design={"model_families": ("ar",)},
         replication_input=ReplicationInput(source_type="paper_recipe", source_id="clss2021"),
     )
 
-    assert stage0.execution_posture == "replication_locked_plan"
-    assert resolve_route_owner(stage0) == "replication"
-    assert stage0.experiment_unit == "replication_recipe"
+    assert stage0.execution_posture == "comparison_cell"
+    assert resolve_route_owner(stage0) == "comparison_sweep"
+    assert stage0.study_scope == "one_target_one_method"
+    assert stage0.replication_input is not None
 
 
-def test_invalid_experiment_unit_raises_validation_error() -> None:
+def test_invalid_study_scope_raises_validation_error() -> None:
     with pytest.raises(Exception):
         build_design_frame(
-            experiment_unit="unknown_unit",
+            study_scope="unknown_unit",
             fixed_design=_base_fixed(),
             comparison_contract=_base_contract(),
             varying_design={"model_families": ("ar",)},
@@ -96,14 +97,11 @@ def test_comparison_cell_without_model_families_raises_completeness_error() -> N
         check_design_completeness(stage0)
 
 
-def test_wrapper_experiment_unit_route_owner_is_wrapper() -> None:
-    stage0 = build_design_frame(
-        experiment_unit="benchmark_suite",
-        fixed_design=_base_fixed(),
-        comparison_contract=_base_contract(),
-        varying_design={"model_families": ("ar",)},
-    )
-
-    assert stage0.execution_posture == "wrapper_bundle_plan"
-    assert resolve_route_owner(stage0) == "wrapper"
-    assert stage0.experiment_unit == "benchmark_suite"
+def test_removed_wrapper_study_scope_raises_validation_error() -> None:
+    with pytest.raises(Exception):
+        build_design_frame(
+            study_scope="benchmark_suite",
+            fixed_design=_base_fixed(),
+            comparison_contract=_base_contract(),
+            varying_design={"model_families": ("ar",)},
+        )

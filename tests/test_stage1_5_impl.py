@@ -29,7 +29,7 @@ def _recipe(**data_task_axes) -> dict:
     return {
         "recipe_id": "s15-impl-test",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
                 "leaf_config": {"target": "INDPRO", "horizons": [1], **leaf_extras},

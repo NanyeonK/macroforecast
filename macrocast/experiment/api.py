@@ -411,8 +411,8 @@ class Experiment:
                 layer_block.pop("sweep_axes", None)
         if _has_sweep_axes(recipe):
             recipe["path"]["0_meta"].setdefault("fixed_axes", {})[
-                "experiment_unit"
-            ] = "single_target_generator_grid"
+                "study_scope"
+            ] = "one_target_compare_methods"
         return recipe
 
     def run(

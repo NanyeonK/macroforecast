@@ -49,7 +49,7 @@ def test_canonical_recipe_compiles_to_canonical_ids() -> None:
         start="1960-01-01",
         end="1970-01-01",
     )
-    recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] = "single_target_single_generator"
+    recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "one_target_one_method"
     recipe["path"]["1_data_task"]["fixed_axes"]["information_set_type"] = "pseudo_oos_on_revised_data"
     recipe["path"]["1_data_task"]["fixed_axes"]["target_structure"] = "single_target"
     recipe["path"]["1_data_task"]["fixed_axes"]["official_transform_scope"] = "target_and_predictors"
@@ -71,7 +71,7 @@ def test_canonical_recipe_compiles_to_canonical_ids() -> None:
 
     result = compile_recipe_dict(recipe)
 
-    assert result.compiled.stage0.experiment_unit == "single_target_single_generator"
+    assert result.compiled.stage0.study_scope == "one_target_one_method"
     assert result.manifest["data_task_spec"]["information_set_type"] == "pseudo_oos_on_revised_data"
     assert result.manifest["data_task_spec"]["target_structure"] == "single_target"
     assert result.manifest["model_spec"]["model_family"] == "random_forest"

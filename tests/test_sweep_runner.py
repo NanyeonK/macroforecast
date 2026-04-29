@@ -18,7 +18,7 @@ def _horse_race_recipe() -> dict:
     return {
         "recipe_id": "sweep-rt-model",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_generator_grid"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_compare_methods"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",

@@ -19,7 +19,7 @@ def _baseline_recipe() -> dict:
     return {
         "recipe_id": "replication-src",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
@@ -126,33 +126,24 @@ def test_replication_no_overrides_no_source_artifact(tmp_path: Path) -> None:
     assert diff["override_diff_entries"] == []
 
 
-def test_replication_recipe_mode_compiles_as_replication_handoff(tmp_path: Path) -> None:
-    """replication_recipe is represented for execute_replication, not direct execution."""
+def test_replication_recipe_scope_value_is_rejected(tmp_path: Path) -> None:
+    """Replication is a recipe-library concern, not a Layer 0 Study Scope."""
     from macrocast.compiler.build import compile_recipe_dict
+    from macrocast.compiler.errors import CompileValidationError
 
     src_recipe = _baseline_recipe()
-    src_recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] = "replication_recipe"
+    src_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "replication_recipe"
 
-    compile_result = compile_recipe_dict(src_recipe)
-    assert compile_result.compiled.execution_status == "ready_for_replication_runner"
-    assert compile_result.manifest["tree_context"]["route_owner"] == "replication"
-    assert compile_result.manifest["tree_context"]["route_contract"] == "replication_handoff"
-    # No wrapper-route warning in the manifest.
-    manifest_warnings = compile_result.manifest.get("warnings", [])
-    assert not any(
-        "replication_recipe" in w and "wrapper/orchestrator route" in w
-        for w in manifest_warnings
-    ), f"unexpected wrapper-route warning: {manifest_warnings}"
+    with pytest.raises(CompileValidationError, match="unknown value"):
+        compile_recipe_dict(src_recipe)
 
 
-def test_replication_with_experiment_unit_replication_recipe_runs_end_to_end(tmp_path: Path) -> None:
-    """End-to-end: source recipe has experiment_unit=replication_recipe;
-    execute_replication accepts it and produces a replay artifact."""
+def test_replication_with_library_recipe_runs_end_to_end(tmp_path: Path) -> None:
+    """Replication runner consumes a normal recipe YAML from the library."""
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.execution.build import execute_recipe
 
     recipe = _baseline_recipe()
-    recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] = "replication_recipe"
     compile_result = compile_recipe_dict(recipe)
     src_exec = execute_recipe(
         recipe=compile_result.compiled.recipe_spec,

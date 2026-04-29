@@ -33,7 +33,7 @@ def _recipe(**axes_1_extras) -> dict:
     return {
         "recipe_id": "s14-impl-test",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
                 "leaf_config": {"target": "INDPRO", "horizons": [1], **leaf_extras},

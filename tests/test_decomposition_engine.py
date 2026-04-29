@@ -60,7 +60,7 @@ def _synthetic_manifest(
     manifest = {
         "schema_version": "1.0",
         "study_id": "synth-study-xyz",
-        "experiment_unit": "single_target_generator_grid",
+        "study_scope": "one_target_compare_methods",
         "parent_recipe_id": "synth-parent",
         "parent_recipe_dict": {},
         "axes_swept": ["2_preprocessing.scaling_policy", "3_training.model_family"],
@@ -109,7 +109,7 @@ def test_legacy_feature_builder_component_alias_normalizes_to_feature_representa
     manifest = {
         "schema_version": "1.0",
         "study_id": "feature-representation-alias",
-        "experiment_unit": "single_target_generator_grid",
+        "study_scope": "one_target_compare_methods",
         "parent_recipe_id": "p",
         "parent_recipe_dict": {},
         "axes_swept": ["2_preprocessing.feature_builder"],

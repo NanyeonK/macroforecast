@@ -33,53 +33,15 @@ def test_macrocast_preview_sweep_runner_route_blocks_run_manifest() -> None:
     assert "execute_sweep" in out["blocked_preview_reason"]
 
 
-def test_macrocast_preview_wrapper_route_blocks_run_manifest(tmp_path: Path) -> None:
-    recipe = {
-        "recipe_id": "wrapper_preview",
-        "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "benchmark_suite"}, "leaf_config": {"wrapper_family": "benchmark_suite", "bundle_label": "fred-md-baselines"}},
-            "1_data_task": {
-                "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
-                "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
-            },
-            "2_preprocessing": {"fixed_axes": {
-                "target_transform_policy": "raw_level", "x_transform_policy": "raw_level", "tcode_policy": "raw_only",
-                "target_missing_policy": "none", "x_missing_policy": "none", "target_outlier_policy": "none", "x_outlier_policy": "none",
-                "scaling_policy": "none", "dimensionality_reduction_policy": "none", "feature_selection_policy": "none",
-                "preprocess_order": "none", "preprocess_fit_scope": "not_applicable", "inverse_transform_policy": "none", "evaluation_scale": "raw_level"
-            }},
-            "3_training": {"fixed_axes": {
-                "framework": "expanding", "benchmark_family": "zero_change", "feature_builder": "target_lag_features", "model_family": "ar"
-            }},
-            "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
-            "5_output_provenance": {"leaf_config": {"manifest_mode": "full", "benchmark_config": {"minimum_train_size": 5}}},
-            "6_stat_tests": {"fixed_axes": {}},
-            "7_importance": {"fixed_axes": {"importance_method": "none"}},
-        },
-    }
-    path = tmp_path / "wrapper_preview.yaml"
-    path.write_text(yaml.safe_dump(recipe, sort_keys=False), encoding="utf-8")
-
-    out = macrocast_preview(yaml_path=str(path))
-    assert out["route_preview"]["route_owner"] == "wrapper"
-    assert out["route_preview"]["wizard_status"] == "wrapper_not_supported"
-    assert out["compile_preview"]["execution_status"] == "not_supported"
-    assert out["compile_preview"]["wrapper_handoff"]["wrapper_family"] == "benchmark_suite"
-    assert out["tree_context"]["route_owner"] == "wrapper"
-    assert out["blocked_preview_stages"] == ["runs_preview", "manifest_preview"]
-    assert "no executable wrapper runner contract" in out["blocked_preview_reason"]
-
-
-
 def test_macrocast_preview_interactive_first_step(monkeypatch, tmp_path: Path) -> None:
     answers = iter([str(tmp_path / "wizard.yaml"), ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_preview(max_steps=1)
     assert out["interactive"] is True
     assert out["yaml_path"].endswith("wizard.yaml")
-    assert out["completed_choices"][0]["key"] == "experiment_unit"
-    assert out["completed_choices"][0]["value"] == "single_target_single_generator"
-    assert out["current_choice"]["key"] == "target_structure"
+    assert out["completed_choices"][0]["key"] == "study_scope"
+    assert out["completed_choices"][0]["value"] == "one_target_one_method"
+    assert out["current_choice"]["key"] == "target"
     assert out["route_preview"]["route_owner"] == "comparison_sweep"
 
 
@@ -87,33 +49,34 @@ def test_macrocast_preview_interactive_drops_unsupported_wrapper_choice(monkeypa
     answers = iter([str(tmp_path / "wrapper.yaml")])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_preview(max_steps=0)
-    assert out["current_choice"]["key"] == "experiment_unit"
+    assert out["current_choice"]["key"] == "study_scope"
     assert "benchmark_suite" not in out["current_choice"]["options"]
+    assert "replication_recipe" not in out["current_choice"]["options"]
 
 
 def test_macrocast_preview_interactive_task_switches_next_choice(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "multi.yaml"), "", "2"])
+    answers = iter([str(tmp_path / "multi.yaml"), "3"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=2)
-    assert [item["key"] for item in out["completed_choices"]] == ["experiment_unit", "target_structure"]
-    assert out["completed_choices"][1]["value"] == "multi_target"
+    out = macrocast_preview(max_steps=1)
+    assert [item["key"] for item in out["completed_choices"]] == ["study_scope"]
+    assert out["completed_choices"][0]["value"] == "multiple_targets_one_method"
     assert out["current_choice"]["key"] == "targets"
 
 
 
 def test_macrocast_preview_interactive_framework_follows_target(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "framework.yaml"), "", "", "", ""])
+    answers = iter([str(tmp_path / "framework.yaml"), "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=3)
-    assert [item["key"] for item in out["completed_choices"]] == ["experiment_unit", "target_structure", "target"]
+    out = macrocast_preview(max_steps=2)
+    assert [item["key"] for item in out["completed_choices"]] == ["study_scope", "target"]
     assert out["current_choice"]["key"] == "framework"
 
 
 def test_macrocast_preview_interactive_custom_benchmark_requests_plugin_fields(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "custom.yaml"), "", "", "", "", "4"])
+    answers = iter([str(tmp_path / "custom.yaml"), "", "", "", "4"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=5)
-    assert [item["key"] for item in out["completed_choices"]] == ["experiment_unit", "target_structure", "target", "framework", "benchmark_family"]
+    out = macrocast_preview(max_steps=4)
+    assert [item["key"] for item in out["completed_choices"]] == ["study_scope", "target", "framework", "benchmark_family"]
     assert out["completed_choices"][-1]["value"] == "custom_benchmark"
     assert out["current_choice"]["key"] == "benchmark_plugin_path"
 
@@ -121,15 +84,14 @@ def test_macrocast_preview_interactive_custom_benchmark_requests_plugin_fields(m
 def test_macrocast_preview_interactive_tcode_switch_normalizes_preprocess(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "preprocess.yaml"),
-        "",  # experiment_unit
-        "",  # target_structure
+        "",  # study_scope
         "",  # target
         "",  # framework
         "",  # benchmark_family
         "2", # tcode_policy -> extra_preprocess_only
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=6)
+    out = macrocast_preview(max_steps=5)
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     preprocess = payload["path"]["2_preprocessing"]["fixed_axes"]
     assert out["completed_choices"][-1] == {"key": "tcode_policy", "value": "extra_preprocess_only"}
@@ -142,10 +104,10 @@ def test_macrocast_preview_interactive_tcode_switch_normalizes_preprocess(monkey
 def test_macrocast_preview_interactive_metric_follows_feature_builder(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "metric.yaml"),
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "",
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=14)
+    out = macrocast_preview(max_steps=13)
     assert out["completed_choices"][-1]["key"] == "primary_metric"
     assert out["current_choice"]["key"] == "manifest_mode"
 
@@ -153,11 +115,11 @@ def test_macrocast_preview_interactive_metric_follows_feature_builder(monkeypatc
 def test_macrocast_preview_interactive_stat_test_follows_manifest_mode(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "stat.yaml"),
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "",
         "2",
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=16)
+    out = macrocast_preview(max_steps=15)
     assert out["completed_choices"][-1] == {"key": "equal_predictive", "value": "dm"}
     assert out["current_choice"]["key"] == "importance_method"
 
@@ -165,10 +127,10 @@ def test_macrocast_preview_interactive_stat_test_follows_manifest_mode(monkeypat
 def test_macrocast_preview_interactive_importance_persists_yaml(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "importance.yaml"),
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "2",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "2",
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=17)
+    out = macrocast_preview(max_steps=16)
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     assert out["completed_choices"][-1] == {"key": "importance_method", "value": "minimal_importance"}
     assert payload["path"]["7_importance"]["fixed_axes"]["importance_method"] == "minimal_importance"
@@ -176,9 +138,9 @@ def test_macrocast_preview_interactive_importance_persists_yaml(monkeypatch, tmp
 
 
 def test_macrocast_preview_current_choice_exposes_planned_option_details(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "planned.yaml"), "", "", "", "", "", "", "", "", "", "", "", "", ""])
+    answers = iter([str(tmp_path / "planned.yaml"), "", "", "", "", "", "", "", "", "", "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=12)
+    out = macrocast_preview(max_steps=11)
     choice = out["current_choice"]
     assert choice["key"] == "feature_builder"
     assert choice["option_details"]["pca_factor_features"]["status"] == "operational"
@@ -187,10 +149,10 @@ def test_macrocast_preview_current_choice_exposes_planned_option_details(monkeyp
 def test_macrocast_preview_planned_feature_builder_stops_with_explicit_message(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "factor.yaml"),
-        "", "", "", "", "", "", "", "", "", "", "", "", "3",
+        "", "", "", "", "", "", "", "", "", "", "", "3",
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=13)
+    out = macrocast_preview(max_steps=12)
     assert out["completed_choices"][-1] == {"key": "feature_builder", "value": "pca_factor_features"}
     assert out["route_preview"]["wizard_status"] in {"implemented", "blocked_or_nonexecutable"}
     assert out["route_preview"]["route_owner"] == "comparison_sweep"
@@ -199,10 +161,10 @@ def test_macrocast_preview_planned_feature_builder_stops_with_explicit_message(m
 def test_macrocast_preview_planned_importance_option_is_labeled(monkeypatch, tmp_path: Path) -> None:
     answers = iter([
         str(tmp_path / "importance-planned.yaml"),
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
     ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=16)
+    out = macrocast_preview(max_steps=15)
     choice = out["current_choice"]
     assert choice["key"] == "importance_method"
     assert choice["option_details"]["tree_shap"]["status"] == "operational"
@@ -210,16 +172,16 @@ def test_macrocast_preview_planned_importance_option_is_labeled(monkeypatch, tmp
 
 
 def test_macrocast_preview_model_path_mode_follows_preprocess_fit_scope(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "grid.yaml"), "", "", "", "", "", "", "", "", "", "", ""])
+    answers = iter([str(tmp_path / "grid.yaml"), "", "", "", "", "", "", "", "", "", ""])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=10)
+    out = macrocast_preview(max_steps=9)
     assert out["current_choice"]["key"] == "model_path_mode"
 
 
 def test_macrocast_preview_model_grid_route_message(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "grid.yaml"), "", "", "", "", "", "", "", "", "", "", "2"])
+    answers = iter([str(tmp_path / "grid.yaml"), "", "", "", "", "", "", "", "", "", "2"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=11)
+    out = macrocast_preview(max_steps=10)
     payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
     assert out["completed_choices"][-1] == {"key": "model_path_mode", "value": "model_grid"}
     assert payload["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge", "lasso", "random_forest"]
@@ -227,18 +189,41 @@ def test_macrocast_preview_model_grid_route_message(monkeypatch, tmp_path: Path)
     assert "Model grid" in out["route_preview"]["message"]
 
 
-def test_macrocast_preview_drops_full_sweep_choice(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", "", ""])
+def test_macrocast_preview_model_path_mode_preserves_multi_target_scope(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([
+        str(tmp_path / "multi-grid.yaml"),
+        "3",
+        "INDPRO,RPI",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "2",
+    ])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
     out = macrocast_preview(max_steps=10)
+    payload = yaml.safe_load(Path(out["yaml_path"]).read_text())
+    assert payload["path"]["0_meta"]["fixed_axes"]["study_scope"] == "multiple_targets_compare_methods"
+    assert payload["path"]["1_data_task"]["fixed_axes"]["target_structure"] == "multi_target"
+    assert payload["path"]["1_data_task"]["leaf_config"]["targets"] == ["INDPRO", "RPI"]
+
+
+def test_macrocast_preview_drops_full_sweep_choice(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "full.yaml"), "", "", "", "", "", "", "", "", "", ""])
+    monkeypatch.setattr("builtins.input", lambda _="": next(answers))
+    out = macrocast_preview(max_steps=9)
     assert out["current_choice"]["key"] == "model_path_mode"
     assert "full_sweep" not in out["current_choice"]["options"]
 
 
 
-def test_macrocast_preview_interactive_experiment_unit_follows_task(monkeypatch, tmp_path: Path) -> None:
-    answers = iter([str(tmp_path / "experiment-unit.yaml"), "", ""])
+def test_macrocast_preview_interactive_study_scope_follows_task(monkeypatch, tmp_path: Path) -> None:
+    answers = iter([str(tmp_path / "study-scope.yaml"), "3"])
     monkeypatch.setattr("builtins.input", lambda _="": next(answers))
-    out = macrocast_preview(max_steps=2)
-    assert [item["key"] for item in out["completed_choices"]] == ["experiment_unit", "target_structure"]
-    assert out["current_choice"]["key"] == "target"
+    out = macrocast_preview(max_steps=1)
+    assert [item["key"] for item in out["completed_choices"]] == ["study_scope"]
+    assert out["completed_choices"][0]["value"] == "multiple_targets_one_method"
+    assert out["current_choice"]["key"] == "targets"

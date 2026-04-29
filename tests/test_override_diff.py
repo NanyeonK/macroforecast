@@ -12,7 +12,7 @@ def _baseline_recipe() -> dict:
     return {
         "recipe_id": "base",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "2_preprocessing": {
                 "fixed_axes": {
                     "scaling_policy": "standard",

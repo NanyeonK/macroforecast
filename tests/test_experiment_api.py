@@ -201,7 +201,7 @@ def test_experiment_to_recipe_dict_uses_model_sweep_for_compare_models() -> None
         .to_recipe_dict()
     )
 
-    assert recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] == "single_target_generator_grid"
+    assert recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] == "one_target_compare_methods"
     assert recipe["path"]["3_training"]["sweep_axes"]["model_family"] == ["ar", "ridge"]
     assert "model_family" not in recipe["path"]["3_training"]["fixed_axes"]
     assert recipe["path"]["1_data_task"]["fixed_axes"]["frequency"] == "monthly"
@@ -1236,7 +1236,7 @@ def test_experiment_sweep_alias_maps_to_internal_axis() -> None:
         .to_recipe_dict()
     )
 
-    assert recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] == "single_target_generator_grid"
+    assert recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] == "one_target_compare_methods"
     assert recipe["path"]["2_preprocessing"]["sweep_axes"]["scaling_policy"] == ["none", "standard"]
     assert "scaling_policy" not in recipe["path"]["2_preprocessing"]["fixed_axes"]
 

@@ -18,8 +18,8 @@ def _multi_target_recipe() -> dict:
         "recipe_id": "separate-runs-test",
         "path": {
             "0_meta": {"fixed_axes": {
-                "experiment_unit": "single_target_single_generator",
-                "experiment_unit": "multi_target_separate_runs",
+                "study_scope": "one_target_one_method",
+                "study_scope": "multiple_targets_compare_methods",
             }},
             "1_data_task": {
                 "fixed_axes": {
@@ -58,8 +58,8 @@ def test_build_single_target_recipe_dict_sets_target_structure_and_target() -> N
     assert "task" not in variant["path"]["1_data_task"]["fixed_axes"]
     assert variant["path"]["1_data_task"]["leaf_config"]["target"] == "RPI"
     assert "targets" not in variant["path"]["1_data_task"]["leaf_config"]
-    # experiment_unit=multi_target_separate_runs must be cleared on the child
-    assert "experiment_unit" not in variant["path"]["0_meta"].get("fixed_axes", {})
+    # study_scope=multiple_targets_compare_methods must be cleared on the child
+    assert "study_scope" not in variant["path"]["0_meta"].get("fixed_axes", {})
     assert variant["recipe_id"].endswith("__target__RPI")
 
 
@@ -80,7 +80,7 @@ def test_execute_separate_runs_fans_out_per_target(tmp_path: Path) -> None:
     # Top-level aggregate manifest
     manifest = json.loads(Path(result.manifest_path).read_text())
     assert manifest["schema_version"] == SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION
-    assert manifest["experiment_unit"] == "multi_target_separate_runs"
+    assert manifest["study_scope"] == "multiple_targets_compare_methods"
     assert manifest["targets"] == ["INDPRO", "RPI"]
     assert manifest["summary"]["total"] == 2
     assert manifest["summary"]["successful"] == 2
@@ -98,15 +98,17 @@ def test_execute_separate_runs_requires_at_least_two_targets(tmp_path: Path) -> 
         )
 
 
-def test_multi_target_separate_runs_registry_entry_is_operational() -> None:
-    from macrocast.registry.stage0.experiment_unit import get_experiment_unit_entry
+def test_multiple_targets_compare_methods_registry_entry_is_operational() -> None:
+    from macrocast.registry.stage0.study_scope import get_study_scope_entry
 
-    entry = get_experiment_unit_entry("multi_target_separate_runs")
+    entry = get_study_scope_entry("multiple_targets_compare_methods")
     assert entry.status == "operational"
-    assert entry.runner == "macrocast.studies.multi_target:execute_separate_runs"
+    assert entry.route_owner == "comparison_sweep"
+    assert entry.requires_multi_target is True
+    assert entry.compares_methods is True
 
 
-def test_multi_target_separate_runs_exported_at_top_level() -> None:
+def test_multiple_targets_compare_methods_exported_at_top_level() -> None:
     import macrocast
 
     assert hasattr(macrocast, "execute_separate_runs")
@@ -116,11 +118,11 @@ def test_multi_target_separate_runs_exported_at_top_level() -> None:
 
 def test_multi_output_joint_model_is_dropped_from_registry() -> None:
     """Regression test: multi_output_joint_model was dropped in PR #27."""
-    from macrocast.registry.stage0.experiment_unit import get_experiment_unit_entry
+    from macrocast.registry.stage0.study_scope import get_study_scope_entry
 
     with pytest.raises(KeyError):
-        get_experiment_unit_entry("multi_output_joint_model")
+        get_study_scope_entry("multi_output_joint_model")
 
     from macrocast.registry import get_axis_registry_entry
-    entry = get_axis_registry_entry("experiment_unit")
+    entry = get_axis_registry_entry("study_scope")
     assert "multi_output_joint_model" not in entry.allowed_values

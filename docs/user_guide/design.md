@@ -3,21 +3,21 @@
 Stage 0 decides **the execution grammar**: which unit of work is run or compared, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. The simple default path uses the small operational subset needed for a one-cell comparison or a controlled model comparison.
 
 **At a glance (defaults):**
-- `experiment_unit = single_target_single_generator` — one target, one forecasting path, one `comparison_sweep` cell.
+- `study_scope = one_target_one_method` — one target, one forecasting path, one `comparison_sweep` cell.
 - `axis_type = fixed` per axis — set to `sweep` only on the axis you are varying.
 - `failure_policy = fail_fast` — stop on the first error.
 - `reproducibility_mode = seeded_reproducible` — Python + numpy seeded; torch optional.
 - `compute_mode = serial` — no parallelism.
 
-Deviate when you explicitly want multiple variants, different runners, looser error handling, stricter determinism, or compute speedups.
+Deviate when you explicitly want multiple targets, method comparisons, looser error handling, stricter determinism, or compute speedups.
 
 ---
 
-## 0.1 `experiment_unit`
+## 0.1 `study_scope`
 
-**Selection question**: What unit of work should the study run, compare, repeat, or hand off?
+**Selection question**: How many targets and methods should the study compare?
 
-**Default**: `single_target_single_generator` for one fixed single-target path.
+**Default**: `one_target_one_method` for one fixed single-target path.
 
 A one-path forecast is the one-cell case of `comparison_sweep`. A controlled model, feature, preprocessing, or representation comparison is the multi-cell case of the same grammar.
 
@@ -25,25 +25,21 @@ A one-path forecast is the one-cell case of `comparison_sweep`. A controlled mod
 
 | Value | Status | When to use | Verify |
 |---|---|---|---|
-| `single_target_single_generator` | operational | One target, one forecasting path, no active sweep axes. | `tree_context["route_contract"] == "single_cell_executable"` |
-| `single_target_generator_grid` | operational | One target with one or more supported sweep axes. | `tree_context["route_contract"] == "sweep_runner_executable"` when sweeps are present. |
-| `single_target_full_sweep` | registry_only | Grammar retained for future wrapper/orchestrator work; not exposed as runnable. | `execution_status == "not_supported"`. |
-| `multi_target_separate_runs` | operational | Multi-target recipe, each target runs independently via `execute_separate_runs`. | N `run/` directories; `separate_runs_manifest.json`. |
-| `multi_target_shared_design` | operational (default for multi-target) | Multi-target with shared preprocessing / benchmarks (default auto-derivation). | Single run directory; `predictions.csv` contains all targets. |
-| `replication_recipe` | operational | Source recipe or paper recipe owns the path. | `ReplicationResult` artefact. |
-| `benchmark_suite` | registry_only | Reserved for a future PaperReadyBundle/runtime contract. | `execution_status == "not_supported"`. |
-| `ablation_study` | registry_only | Standalone `AblationSpec` runner exists, but compiled-recipe wrapper handoff is not wired. | `execution_status == "not_supported"`. |
+| `one_target_one_method` | operational | One target, one fixed method path. | `tree_context["route_contract"] == "single_cell_executable"` |
+| `one_target_compare_methods` | operational | One target with one or more supported method sweeps. | `tree_context["route_contract"] == "sweep_runner_executable"` when sweeps are present. |
+| `multiple_targets_one_method` | operational | Multiple targets with one fixed method path. | `target_structure == "multi_target"`; one shared multi-target run. |
+| `multiple_targets_compare_methods` | operational | Multiple targets with one or more supported method sweeps. | `target_structure == "multi_target"`; sweep runner parent when sweeps are present. |
 
 ### Compatibility guards
 
-- Multi-target units require `target_structure = multi_target`.
-- Single-target units are incompatible with `target_structure = multi_target`.
-- Wrapper and replication units must use their dedicated runners, not direct `run_compiled_recipe`.
+- `one_target_*` scopes require `target_structure = single_target`.
+- `multiple_targets_*` scopes require `target_structure = multi_target`.
+- Replication Library entries are normal YAML recipes; replication is not a Layer 0 Study Scope branch.
 
 ### Functions & features
 
-- Auto-derivation: `macrocast.registry.stage0.experiment_unit.derive_experiment_unit_default`.
-- Runners: `execute_recipe`, `execute_sweep`, `execute_separate_runs` (`macrocast.studies.multi_target`), `execute_replication` (`macrocast.studies.replication`). `execute_ablation` is standalone until a compiled-recipe contract is added.
+- Auto-derivation: `macrocast.registry.stage0.study_scope.derive_study_scope_default`.
+- Runners: `execute_recipe` for one-cell scopes, `compile_sweep_plan` / `execute_sweep` when downstream axes are swept.
 
 ### Recipe usage
 
@@ -52,7 +48,7 @@ A one-path forecast is the one-cell case of `comparison_sweep`. A controlled mod
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_generator_grid
+      study_scope: one_target_compare_methods
   3_training:
     sweep_axes:
       model_family: [ar, ridge, lasso]
@@ -216,7 +212,7 @@ path:
 ## Design (Stage 0) takeaways
 
 - Six axes, 38 allowed values, and the simple default path keeps the operational surface narrow. Researchers who don't need sweeps, parallelism, or strict reproducibility write Stage 0 by omission.
-- Runner dispatch flows from `experiment_unit`. One fixed path and a controlled sweep both use the `comparison_sweep` route; the difference is whether any downstream `sweep_axes` are present.
+- Runner dispatch flows from `study_scope`. One fixed path and a controlled sweep both use the `comparison_sweep` route; the difference is whether any downstream `sweep_axes` are present.
 - `failure_policy` + `reproducibility_mode` + `compute_mode` are three independent dials. Pick per-run, don't carry them over from copy-pasted templates.
 - Every resolved value lands in `manifest.json` — when a run does something unexpected, read the manifest before anything else.
 

@@ -6,7 +6,7 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 
 [Design (Stage 0)](design.md) — axes that decide the execution grammar:
 
-- `experiment_unit` — one-cell comparison, controlled sweep, multi-target run, wrapper handoff, or replication handoff.
+- `study_scope` — one target or multiple targets, with one fixed method path or a controlled method comparison.
 - `axis_type` — fixed / sweep / nested / conditional / derived per axis.
 - `failure_policy` — how to handle per-cell failures.
 - `reproducibility_mode` — how strict to make determinism.

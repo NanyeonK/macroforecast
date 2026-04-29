@@ -14,7 +14,7 @@ from macrocast.design import (
 )
 
 
-def test_build_stage0_frame_single_target_single_generator() -> None:
+def test_build_stage0_frame_one_target_one_method() -> None:
     stage0 = build_design_frame(
         fixed_design=FixedDesign(
             dataset_adapter="fred_md",
@@ -61,7 +61,7 @@ def test_build_stage0_frame_single_fixed_model_and_feature_is_one_tool_surface()
 
     assert stage0.design_shape == "one_fixed_env_one_tool_surface"
     assert stage0.execution_posture == "comparison_cell"
-    assert stage0.experiment_unit == "single_target_single_generator"
+    assert stage0.study_scope == "one_target_one_method"
 
 
 def test_build_stage0_frame_multiple_feature_recipes_is_comparison_grid() -> None:
@@ -91,9 +91,9 @@ def test_build_stage0_frame_multiple_feature_recipes_is_comparison_grid() -> Non
     assert stage0.execution_posture == "comparison_sweep_plan"
 
 
-def test_build_stage0_frame_bundle_route() -> None:
+def test_build_stage0_frame_compare_scope_route() -> None:
     stage0 = build_design_frame(
-        experiment_unit="benchmark_suite",
+        study_scope="one_target_compare_methods",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -111,9 +111,9 @@ def test_build_stage0_frame_bundle_route() -> None:
         varying_design={"model_families": ("ar", "ridge", "rf")},
     )
 
-    assert stage0.design_shape == "wrapper_managed_multi_run_bundle"
-    assert stage0.execution_posture == "wrapper_bundle_plan"
-    assert resolve_route_owner(stage0) == "wrapper"
+    assert stage0.design_shape == "one_fixed_env_controlled_axis_variation"
+    assert stage0.execution_posture == "comparison_sweep_plan"
+    assert resolve_route_owner(stage0) == "comparison_sweep"
 
 
 def test_check_stage0_completeness_rejects_empty_model_surface() -> None:
@@ -159,15 +159,15 @@ def test_stage0_summary_contains_core_fields() -> None:
 
     summary = design_summary(stage0)
 
-    assert "single_target_single_generator" in summary
+    assert "one_target_one_method" in summary
     assert "fred_md" in summary
     assert "comparison_cell" in summary
 
 
 
-def test_build_stage0_frame_explicit_experiment_unit_controls_wrapper_route() -> None:
+def test_build_stage0_frame_explicit_study_scope_controls_comparison_route() -> None:
     stage0 = build_design_frame(
-        experiment_unit="benchmark_suite",
+        study_scope="one_target_compare_methods",
         fixed_design={
             "dataset_adapter": "fred_md",
             "information_set": "revised_monthly",
@@ -185,6 +185,6 @@ def test_build_stage0_frame_explicit_experiment_unit_controls_wrapper_route() ->
         varying_design={"model_families": ("ar",)},
     )
 
-    assert stage0.experiment_unit == "benchmark_suite"
-    assert stage0.execution_posture == "wrapper_bundle_plan"
-    assert resolve_route_owner(stage0) == "wrapper"
+    assert stage0.study_scope == "one_target_compare_methods"
+    assert stage0.execution_posture == "comparison_sweep_plan"
+    assert resolve_route_owner(stage0) == "comparison_sweep"

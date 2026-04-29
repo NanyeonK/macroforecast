@@ -32,7 +32,7 @@ _LAYER_LABELS = {
 
 _TREE_AXES = {
     "0_meta": (
-        "experiment_unit",
+        "study_scope",
         "failure_policy",
         "reproducibility_mode",
         "compute_mode",
@@ -153,7 +153,7 @@ _TREE_AXES = {
 }
 
 _DEFAULT_SELECTIONS = {
-    "experiment_unit": "single_target_single_generator",
+    "study_scope": "one_target_one_method",
     "forecast_type": "direct",
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",

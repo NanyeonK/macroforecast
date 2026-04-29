@@ -9,7 +9,7 @@ import pytest
 from macrocast.compiler.build import (
     DERIVATION_RULES,
     _resolve_derived_axes,
-    _rule_experiment_unit_default,
+    _rule_study_scope_default,
     compile_recipe_dict,
 )
 from macrocast.compiler.errors import CompileValidationError
@@ -60,35 +60,35 @@ def _base_recipe() -> dict:
     }
 
 
-def test_experiment_unit_default_rule_is_registered() -> None:
-    assert "experiment_unit_default" in DERIVATION_RULES
+def test_study_scope_default_rule_is_registered() -> None:
+    assert "study_scope_default" in DERIVATION_RULES
 
 
-def test_derived_axes_experiment_unit_compiles_with_consistent_value() -> None:
+def test_derived_axes_study_scope_compiles_with_consistent_value() -> None:
     recipe = _base_recipe()
-    recipe["path"]["0_meta"]["derived_axes"] = {"experiment_unit": "experiment_unit_default"}
+    recipe["path"]["0_meta"]["derived_axes"] = {"study_scope": "study_scope_default"}
     result = compile_recipe_dict(recipe)
     assert result.compiled.execution_status == "executable"
 
 
 def test_derived_axes_conflicts_with_fixed_axes_same_axis() -> None:
     recipe = _base_recipe()
-    recipe["path"]["0_meta"]["fixed_axes"]["experiment_unit"] = "single_target_single_generator"
-    recipe["path"]["0_meta"]["derived_axes"] = {"experiment_unit": "experiment_unit_default"}
+    recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "one_target_one_method"
+    recipe["path"]["0_meta"]["derived_axes"] = {"study_scope": "study_scope_default"}
     with pytest.raises(CompileValidationError, match="declared as derived but also appears"):
         compile_recipe_dict(recipe)
 
 
 def test_derived_axes_unknown_rule_raises() -> None:
     recipe = _base_recipe()
-    recipe["path"]["0_meta"]["derived_axes"] = {"experiment_unit": "totally_made_up"}
+    recipe["path"]["0_meta"]["derived_axes"] = {"study_scope": "totally_made_up"}
     with pytest.raises(CompileValidationError, match="unknown derivation rule"):
         compile_recipe_dict(recipe)
 
 
 def test_derived_axes_unknown_axis_raises() -> None:
     recipe = _base_recipe()
-    recipe["path"]["0_meta"]["derived_axes"] = {"not_a_real_axis": "experiment_unit_default"}
+    recipe["path"]["0_meta"]["derived_axes"] = {"not_a_real_axis": "study_scope_default"}
     with pytest.raises(CompileValidationError, match="unknown axis"):
         compile_recipe_dict(recipe)
 
@@ -96,12 +96,12 @@ def test_derived_axes_unknown_axis_raises() -> None:
 def test_derived_axes_must_be_mapping() -> None:
     recipe = _base_recipe()
     # Call _resolve_derived_axes directly with list form to verify its validation error
-    recipe["path"]["0_meta"]["derived_axes"] = ["experiment_unit", "experiment_unit_default"]
+    recipe["path"]["0_meta"]["derived_axes"] = ["study_scope", "study_scope_default"]
     with pytest.raises(CompileValidationError, match="derived_axes must be a mapping"):
         _resolve_derived_axes(recipe, selection_map={}, leaf_config={})
 
 
-def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
+def test_derived_study_scope_rule_returns_model_grid_when_sweep() -> None:
     selection_map = {
         "model_family": AxisSelection(
             axis_name="model_family", layer="3_training", selection_mode="sweep",
@@ -115,11 +115,11 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_sweep() -> None:
         ),
     }
     leaf_config = {"target_structure": "single_target"}
-    result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
-    assert result == "single_target_generator_grid"
+    result = _rule_study_scope_default(selection_map=selection_map, leaf_config=leaf_config)
+    assert result == "one_target_compare_methods"
 
 
-def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() -> None:
+def test_derived_study_scope_rule_returns_model_grid_when_feature_sweep() -> None:
     selection_map = {
         "model_family": AxisSelection(
             axis_name="model_family", layer="3_training", selection_mode="fixed",
@@ -133,5 +133,5 @@ def test_derived_experiment_unit_rule_returns_model_grid_when_feature_sweep() ->
         ),
     }
     leaf_config = {"target_structure": "single_target"}
-    result = _rule_experiment_unit_default(selection_map=selection_map, leaf_config=leaf_config)
-    assert result == "single_target_generator_grid"
+    result = _rule_study_scope_default(selection_map=selection_map, leaf_config=leaf_config)
+    assert result == "one_target_compare_methods"

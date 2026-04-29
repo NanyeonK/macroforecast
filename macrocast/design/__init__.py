@@ -8,7 +8,7 @@ contract.
 
 Distinct from (but related to) the ``macrocast.registry.stage0`` package,
 which holds the *registry layer* for the Layer 0 meta axes
-(axis_type, compute_mode, experiment_unit, failure_policy, and
+(axis_type, compute_mode, study_scope, failure_policy, and
 reproducibility_mode). Framework dataclasses consume values from those
 meta axes.
 """

@@ -4,7 +4,7 @@
 single-target executions, each under its own artifact directory, and
 writes a top-level aggregate manifest linking them.
 
-Distinct from the `multi_target_shared_design` path inside
+Distinct from the `multiple_targets_one_method` path inside
 `execute_recipe`, which loops over targets internally but aggregates
 predictions into one table.
 
@@ -66,8 +66,8 @@ def _build_single_target_recipe_dict(
     Changes applied to the clone:
     - ``1_data_task.fixed_axes.target_structure`` → ``single_target``
     - ``1_data_task.leaf_config.target`` → ``target_name``; ``targets`` removed
-    - ``0_meta.fixed_axes.experiment_unit`` cleared if it was set to
-      ``multi_target_separate_runs`` (the child runs derive their own unit)
+    - ``0_meta.fixed_axes.study_scope`` cleared if it was set to
+      ``multiple_targets_compare_methods`` (the child runs derive their own unit)
     - ``recipe_id`` suffixed with ``__target__<name>`` for traceability
     """
     variant = copy.deepcopy(source_recipe_dict)
@@ -83,8 +83,8 @@ def _build_single_target_recipe_dict(
     data_task_leaf.pop("targets", None)
 
     meta_fixed = path.setdefault("0_meta", {}).setdefault("fixed_axes", {})
-    if meta_fixed.get("experiment_unit") == "multi_target_separate_runs":
-        meta_fixed.pop("experiment_unit")
+    if meta_fixed.get("study_scope") == "multiple_targets_compare_methods":
+        meta_fixed.pop("study_scope")
 
     return variant
 
@@ -190,7 +190,7 @@ def execute_separate_runs(
     manifest_path = output_root_path / "separate_runs_manifest.json"
     manifest_path.write_text(json.dumps({
         "schema_version": SEPARATE_RUNS_MANIFEST_SCHEMA_VERSION,
-        "experiment_unit": "multi_target_separate_runs",
+        "study_scope": "multiple_targets_compare_methods",
         "source_recipe_id": source_recipe_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "targets": targets,

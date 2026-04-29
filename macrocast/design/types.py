@@ -61,4 +61,4 @@ class DesignFrame:
     execution_posture: str
     design_shape: str
     replication_input: ReplicationInput | None = None
-    experiment_unit: str | None = None
+    study_scope: str | None = None

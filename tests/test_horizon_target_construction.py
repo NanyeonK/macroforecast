@@ -49,7 +49,7 @@ def _recipe(construction: str, *, horizons: list[int] | None = None) -> dict:
     return {
         "recipe_id": f"htc-{construction}",
         "path": {
-            "0_meta": {"fixed_axes": {"experiment_unit": "single_target_single_generator"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": axes_1,
                 "leaf_config": {"target": "INDPRO", "horizons": horizons or [1]},

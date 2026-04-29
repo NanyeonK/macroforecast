@@ -2,8 +2,8 @@ recipe_id: fred-sd-midasr-almonp-direct
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_single_generator
-      experiment_unit: single_target_single_generator
+      study_scope: one_target_one_method
+      study_scope: one_target_one_method
       failure_policy: fail_fast
       compute_mode: serial
       reproducibility_mode: seeded_reproducible

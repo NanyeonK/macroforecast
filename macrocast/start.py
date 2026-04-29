@@ -9,10 +9,9 @@ from .compiler import CompileValidationError, compile_recipe_dict, compile_recip
 from .execution.importance_dispatch import IMPORTANCE_FILE_NAMES, active_importance_methods
 from .execution.stat_tests import active_stat_test_axes
 from .registry import get_axis_registry_entry
-from .registry.stage0.experiment_unit import (
-    derive_experiment_unit_default,
-    experiment_unit_options_for_wizard,
-    get_experiment_unit_entry,
+from .registry.stage0.study_scope import (
+    derive_study_scope_default,
+    study_scope_options_for_wizard,
 )
 
 _AVAILABLE_STAGES = (
@@ -24,8 +23,7 @@ _AVAILABLE_STAGES = (
 )
 
 _WIZARD_KEYS = (
-    "target_structure",
-    "experiment_unit",
+    "study_scope",
     "target",
     "targets",
     "framework",
@@ -110,6 +108,15 @@ def _set_target_structure(recipe: dict[str, Any], value: str) -> None:
     fixed["target_structure"] = value
 
 
+def _set_study_scope_for_method_mode(recipe: dict[str, Any], *, compares_methods: bool) -> None:
+    is_multi_target = _target_structure_value(recipe) == "multi_target"
+    if is_multi_target:
+        value = "multiple_targets_compare_methods" if compares_methods else "multiple_targets_one_method"
+    else:
+        value = "one_target_compare_methods" if compares_methods else "one_target_one_method"
+    _recipe_fixed(recipe, "0_meta")["study_scope"] = value
+
+
 def _planned_branch_message(warnings: list[str]) -> str | None:
     planned_hits = [warning for warning in warnings if "status=planned" in warning]
     if not planned_hits:
@@ -129,13 +136,13 @@ def _comparison_surface_extension_message(tree_context: dict[str, Any], warnings
 def _read_wizard_value(recipe: dict[str, Any], key: str) -> Any:
     if key == "target_structure":
         return _target_structure_value(recipe)
-    if key == "experiment_unit":
-        explicit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
+    if key == "study_scope":
+        explicit = _recipe_fixed(recipe, "0_meta").get("study_scope")
         if explicit:
             return explicit
         training = _recipe_fixed(recipe, "3_training")
         training_sweep = _recipe_sweep(recipe, "3_training")
-        return derive_experiment_unit_default(
+        return derive_study_scope_default(
             task=_target_structure_value(recipe),
             model_axis_mode="sweep" if "model_family" in training_sweep else "fixed",
             feature_axis_mode="sweep" if "feature_builder" in training_sweep else "fixed",
@@ -188,50 +195,40 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
                     leaf["target"] = targets[0]
             leaf.setdefault("target", "INDPRO")
         return
-    if key == "experiment_unit":
+    if key == "study_scope":
         meta = _recipe_fixed(recipe, "0_meta")
-        meta["experiment_unit"] = value
+        meta["study_scope"] = value
         output_leaf = _recipe_leaf(recipe, "5_output_provenance")
-        if value == "replication_recipe":
-            output_leaf.pop("wrapper_family", None)
-            output_leaf.pop("bundle_label", None)
-            return
-        if value in {"benchmark_suite", "ablation_study"}:
-            _set_target_structure(recipe, "single_target")
-            leaf.pop("targets", None)
-            leaf.setdefault("target", "INDPRO")
-            output_leaf["wrapper_family"] = value
-            output_leaf.setdefault("bundle_label", value.replace("_", "-"))
-            return
-        if value in {"multi_target_separate_runs", "multi_target_shared_design"}:
+        output_leaf.pop("wrapper_family", None)
+        output_leaf.pop("bundle_label", None)
+
+        is_multi_target = value in {
+            "multiple_targets_one_method",
+            "multiple_targets_compare_methods",
+        }
+        compares_methods = value in {
+            "one_target_compare_methods",
+            "multiple_targets_compare_methods",
+        }
+        if is_multi_target:
             _set_target_structure(recipe, "multi_target")
             leaf.pop("target", None)
             leaf.setdefault("targets", ["INDPRO", "RPI"])
-            output_leaf["wrapper_family"] = value
-            output_leaf.setdefault("bundle_label", value.replace("_", "-"))
-            return
-        _set_target_structure(recipe, "single_target")
-        leaf.pop("targets", None)
-        leaf.setdefault("target", "INDPRO")
-        output_leaf.pop("wrapper_family", None)
-        output_leaf.pop("bundle_label", None)
-        if value == "single_target_single_generator":
+        else:
+            _set_target_structure(recipe, "single_target")
+            leaf.pop("targets", None)
+            leaf.setdefault("target", "INDPRO")
+
+        if compares_methods:
+            training["feature_builder"] = training.get("feature_builder", "target_lag_features")
+            training.pop("model_family", None)
+            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
+            training_sweep.pop("feature_builder", None)
+        else:
             training["model_family"] = training.get("model_family", "ar")
             training["feature_builder"] = training.get("feature_builder", "target_lag_features")
             training_sweep.pop("model_family", None)
             training_sweep.pop("feature_builder", None)
-        elif value == "single_target_generator_grid":
-            training["feature_builder"] = training.get("feature_builder", "target_lag_features")
-            training.pop("model_family", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
-            training_sweep.pop("feature_builder", None)
-        elif value == "single_target_full_sweep":
-            output_leaf["wrapper_family"] = value
-            output_leaf.setdefault("bundle_label", value.replace("_", "-"))
-            training.pop("model_family", None)
-            training.pop("feature_builder", None)
-            training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
-            training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
         return
     if key == "target":
         leaf["target"] = str(value)
@@ -250,21 +247,21 @@ def _apply_wizard_value(recipe: dict[str, Any], key: str, value: Any) -> None:
             training["feature_builder"] = current_feature
             training_sweep.pop("model_family", None)
             training_sweep.pop("feature_builder", None)
-            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_single_generator"
+            _set_study_scope_for_method_mode(recipe, compares_methods=False)
         elif value == "model_grid":
             training["feature_builder"] = current_feature
             training.pop("model_family", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep.pop("feature_builder", None)
-            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_generator_grid"
+            _set_study_scope_for_method_mode(recipe, compares_methods=True)
         elif value == "full_sweep":
             training.pop("model_family", None)
             training.pop("feature_builder", None)
             training_sweep["model_family"] = ["ar", "ridge", "lasso", "random_forest"]
             training_sweep["feature_builder"] = ["target_lag_features", "raw_feature_panel", "pca_factor_features"]
-            _recipe_fixed(recipe, "0_meta")["experiment_unit"] = "single_target_full_sweep"
-            _recipe_leaf(recipe, "5_output_provenance")["wrapper_family"] = "single_target_full_sweep"
-            _recipe_leaf(recipe, "5_output_provenance").setdefault("bundle_label", "single-target-full-sweep")
+            _set_study_scope_for_method_mode(recipe, compares_methods=True)
+            _recipe_leaf(recipe, "5_output_provenance").pop("wrapper_family", None)
+            _recipe_leaf(recipe, "5_output_provenance").pop("bundle_label", None)
         return
     if key in {"framework", "benchmark_family", "model_family", "feature_builder"}:
         training[key] = value
@@ -316,17 +313,9 @@ def _wizard_choice_stack(recipe: dict[str, Any]) -> list[dict[str, Any]]:
     benchmark_family = _recipe_fixed(recipe, "3_training").get("benchmark_family", "zero_change")
     stack = [
         {
-            "key": "experiment_unit",
-            "prompt": "Execution unit",
-            "options": list(experiment_unit_options_for_wizard(target_structure)),
-        },
-        {
-            "key": "target_structure",
-            "prompt": "Target structure",
-            "options": [
-                "single_target",
-                "multi_target",
-            ],
+            "key": "study_scope",
+            "prompt": "Study scope",
+            "options": list(study_scope_options_for_wizard()),
         },
         {
             "key": target_key,
@@ -439,18 +428,6 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
         wizard_status = "sweep_runner_ready"
         continue_in_preview = False
         message = _comparison_surface_extension_message(tree_context, warnings)
-    elif execution_status == "ready_for_wrapper_runner":
-        wizard_status = "wrapper_runner_ready"
-        continue_in_preview = False
-        message = "Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; current previews stop here."
-    elif execution_status == "ready_for_replication_runner":
-        wizard_status = "replication_runner_ready"
-        continue_in_preview = False
-        message = "Route is replication-owned and has a runner contract. Use execute_replication; current previews stop here."
-    elif route_owner == "wrapper":
-        wizard_status = "wrapper_not_supported"
-        continue_in_preview = False
-        message = "Route is wrapper-owned but has no executable wrapper runner contract in the current runtime."
     else:
         wizard_status = "blocked_or_nonexecutable"
         continue_in_preview = False
@@ -471,18 +448,10 @@ def _route_preview(compile_manifest: dict[str, Any]) -> dict[str, Any]:
 
 def _draft_route_preview(recipe: dict[str, Any], error: str) -> dict[str, Any]:
     target_structure = _target_structure_value(recipe)
-    explicit_unit = _recipe_fixed(recipe, "0_meta").get("experiment_unit")
     route_owner = "comparison_sweep"
-    if explicit_unit:
-        route_owner = get_experiment_unit_entry(explicit_unit).route_owner
-    if route_owner == "wrapper":
-        wizard_status = "wrapper_not_supported"
-        continue_in_preview = False
-        message = "Wrapper-owned route chosen, but no executable wrapper runner contract is available for this draft."
-    else:
-        wizard_status = "draft_incomplete"
-        continue_in_preview = True
-        message = error
+    wizard_status = "draft_incomplete"
+    continue_in_preview = True
+    message = error
     return {
         "route_owner": route_owner,
         "execution_status": "draft_incomplete",

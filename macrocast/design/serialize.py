@@ -22,5 +22,5 @@ def design_from_dict(payload: dict) -> DesignFrame:
         comparison_contract=normalize_comparison_contract(payload["comparison_contract"]),
         varying_design=normalize_varying_design(payload.get("varying_design")),
         replication_input=normalize_replication_input(payload.get("replication_input")),
-        experiment_unit=payload.get("experiment_unit"),
+        study_scope=payload.get("study_scope"),
     )

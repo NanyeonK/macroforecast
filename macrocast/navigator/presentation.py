@@ -7,70 +7,35 @@ AXIS_PRESENTATION_SCHEMA_VERSION = "axis_presentation_v1"
 # User-facing labels live here. Registry IDs remain the canonical API/YAML
 # values; labels are the docs/Navigator surface shown to researchers.
 AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
-    "experiment_unit": {
+    "study_scope": {
         "order": 1,
-        "label": "Execution Unit",
-        "short_label": "Unit",
-        "question": "What unit of work should this study compare or repeat?",
-        "summary": "Selects the object that gets run, compared, or repeated. A single run is the one-cell case of the same comparison/sweep grammar.",
-        "docs_url": "../detail/layer0/experiment_unit.html",
-        "contract": "Primary Layer 0 route contract. It determines target shape, runner ownership, and whether the path is a one-cell comparison, grid, multi-target run, or replication handoff.",
+        "label": "Study Scope",
+        "short_label": "Scope",
+        "question": "How many targets and methods should this study compare?",
+        "summary": "Sets target cardinality and whether the method path is fixed or compared across alternatives.",
+        "docs_url": "../detail/layer0/study_scope.html",
+        "contract": "Primary Layer 0 study-shape contract. It derives the Layer 1 target_structure and determines whether downstream method axes are fixed or sweep-aware.",
         "selection_kind": "user_choice",
         "values": {
-            "single_target_single_generator": {
-                "label": "One Target, One Forecasting Path",
-                "short_label": "One Target / One Path",
-                "summary": "Run one cell of the comparison grid: one target, one horizon set, one representation path, and one model path.",
+            "one_target_one_method": {
+                "label": "One Target, One Method",
+                "short_label": "1 Target / 1 Method",
+                "summary": "Use one target and one fixed forecasting method path.",
             },
-            "single_target_generator_grid": {
+            "one_target_compare_methods": {
                 "label": "One Target, Compare Methods",
-                "short_label": "Method Comparison",
-                "summary": "Compare multiple model, representation, preprocessing, horizon, or tuning choices for one target while holding the rest fixed.",
+                "short_label": "1 Target / Compare",
+                "summary": "Use one target and compare multiple model, representation, preprocessing, horizon, or tuning choices.",
             },
-            "single_target_full_sweep": {
-                "label": "One Target, Full Grid Sweep",
-                "short_label": "Full Sweep",
-                "summary": "Reserved route for a wider single-target grid where multiple axes vary together.",
+            "multiple_targets_one_method": {
+                "label": "Multiple Targets, One Method",
+                "short_label": "Multi Target / 1 Method",
+                "summary": "Use multiple targets and one fixed forecasting method path shared across targets.",
             },
-            "multi_target_separate_runs": {
-                "label": "Separate Runs Per Target",
-                "short_label": "Separate Target Runs",
-                "summary": "Run each target independently and write separate outputs.",
-            },
-            "multi_target_shared_design": {
-                "label": "Multi-Target Shared Design",
-                "short_label": "Shared Multi-Target",
-                "summary": "Evaluate multiple targets under the same data and representation design.",
-            },
-            "hierarchical_forecasting_run": {
-                "label": "Hierarchical Forecasting",
-                "short_label": "Hierarchy",
-                "summary": "Reserved route for hierarchy-aware forecast execution.",
-            },
-            "panel_forecasting_run": {
-                "label": "Panel Forecasting",
-                "short_label": "Panel",
-                "summary": "Reserved route for panel-oriented forecast execution.",
-            },
-            "state_space_run": {
-                "label": "State-Space Forecasting",
-                "short_label": "State Space",
-                "summary": "Reserved route for state-space forecast execution.",
-            },
-            "replication_recipe": {
-                "label": "Replicate a Paper",
-                "short_label": "Replication",
-                "summary": "Run a paper-style or library-provided recipe while preserving replication provenance and deviations.",
-            },
-            "benchmark_suite": {
-                "label": "Benchmark Suite",
-                "short_label": "Benchmark Suite",
-                "summary": "Reserved route for a bundled benchmark suite.",
-            },
-            "ablation_study": {
-                "label": "Ablation Study",
-                "short_label": "Ablation",
-                "summary": "Reserved route for ablation-oriented execution.",
+            "multiple_targets_compare_methods": {
+                "label": "Multiple Targets, Compare Methods",
+                "short_label": "Multi Target / Compare",
+                "summary": "Use multiple targets and compare one or more downstream method axes across the same study.",
             },
         },
     },
