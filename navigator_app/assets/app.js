@@ -175,6 +175,57 @@ function axesByLayer(axes) {
   }, {});
 }
 
+function hierarchyLevelLabel(level) {
+  const labels = {
+    primary_decision: "Primary",
+    primary_policy: "Primary policy",
+    derived_or_required: "Derived/required",
+    conditional_subgroup: "Conditional",
+    conditional_subdecision: "Conditional",
+    contract_derived: "Contract-derived",
+    secondary_policy: "Policy",
+    timing_policy: "Timing policy",
+  };
+  return labels[level] || humanizeToken(level || "decision");
+}
+
+function layerAxisGroups(layer, axes) {
+  const configured = (((state.data || {}).layer_axis_groups || {})[layer]) || [];
+  if (!configured.length) {
+    return [{
+      id: `${layer}-steps`,
+      label: layerLabel(layer),
+      level: "primary_decision",
+      summary: "",
+      condition: "",
+      axisItems: axes,
+    }];
+  }
+  const byAxis = new Map(axes.map((axis) => [axis.axis, axis]));
+  const seen = new Set();
+  const groups = configured
+    .map((group) => {
+      const axisItems = (group.axes || [])
+        .map((axisName) => byAxis.get(axisName))
+        .filter(Boolean);
+      axisItems.forEach((axis) => seen.add(axis.axis));
+      return { ...group, axisItems };
+    })
+    .filter((group) => group.axisItems.length);
+  const ungrouped = axes.filter((axis) => !seen.has(axis.axis));
+  if (ungrouped.length) {
+    groups.push({
+      id: `${layer}-other`,
+      label: "Other Layer Steps",
+      level: "secondary_policy",
+      summary: "",
+      condition: "",
+      axisItems: ungrouped,
+    });
+  }
+  return groups;
+}
+
 function setLayerFilter(layer) {
   state.layerFilter = layer;
   document.querySelectorAll("[data-layer]").forEach((item) => {
@@ -240,8 +291,19 @@ function renderPathHeader() {
 
 function renderAxisList() {
   const axes = filteredAxes();
-  els.axisList.innerHTML = axes
-    .map((axis, idx) => {
+  const groups = layerAxisGroups(state.layerFilter, axes);
+  let step = 0;
+  els.axisList.innerHTML = groups
+    .map((group) => `
+      <section class="axis-group" data-axis-group="${escapeHtml(group.id)}">
+        <div class="axis-group-head">
+          <span class="axis-group-level">${escapeHtml(hierarchyLevelLabel(group.level))}</span>
+          <strong>${escapeHtml(group.label)}</strong>
+          ${group.condition ? `<span class="axis-group-condition">${escapeHtml(group.condition)}</span>` : ""}
+          ${group.summary ? `<p>${escapeHtml(group.summary)}</p>` : ""}
+        </div>
+        ${group.axisItems.map((axis) => {
+          step += 1;
       const disabled = axis.options.filter((option) => !option.enabled).length;
       const active = axis.axis === state.activeAxis ? " active" : "";
       const edited = axis.edited ? `<span class="axis-edited">edited</span>` : "";
@@ -249,17 +311,19 @@ function renderAxisList() {
       const summary = axisSummary(axis);
       return `
         <button type="button" class="axis-button${active}" data-axis="${escapeHtml(axis.axis)}">
-          <span class="axis-step">${idx + 1}</span>
+          <span class="axis-step">${step}</span>
           <span class="axis-button-body">
             <span class="axis-name">${escapeHtml(axisDisplayName(axis))}</span>
             <span class="axis-question">${escapeHtml(axisQuestion(axis))}</span>
-            <span class="axis-meta">selected: ${escapeHtml(selectedLabel || "-")} | disabled options: ${disabled}</span>
+            <span class="axis-meta">level: ${escapeHtml(hierarchyLevelLabel(axis.axis_level || axis.group_level))} | selected: ${escapeHtml(selectedLabel || "-")} | disabled options: ${disabled}</span>
             <span class="axis-summary">${escapeHtml(summary)}</span>
             ${edited}
           </span>
         </button>
       `;
-    })
+        }).join("")}
+      </section>
+    `)
     .join("");
 }
 
@@ -275,13 +339,15 @@ function renderOptions() {
   }
   const layerAxes = allAxes().filter((item) => item.layer === axis.layer);
   const stepIndex = Math.max(0, layerAxes.findIndex((item) => item.axis === axis.axis));
+  const groupAxes = layerAxes.filter((item) => item.group_id === axis.group_id);
+  const groupStepIndex = Math.max(0, groupAxes.findIndex((item) => item.axis === axis.axis));
   const presentation = axisPresentation(axis.axis);
   const selectedLabel = selectedDisplayLabel(axis.axis, axis.selected) || "-";
   const selectedSummary = valueSummary(axis.axis, axis.selected);
   const docs = docsLink(axis.axis);
   const defaultLabel = defaultValue(axis.axis) ? valueDisplayName(axis.axis, defaultValue(axis.axis)) : "";
   els.axisTitle.textContent = axisDisplayName(axis);
-  els.axisLayer.textContent = `${layerLabel(axis.layer)} | step ${stepIndex + 1} of ${layerAxes.length}`;
+  els.axisLayer.textContent = `${layerLabel(axis.layer)} | ${axis.group_label || "Steps"} | group step ${groupStepIndex + 1} of ${groupAxes.length} | layer step ${stepIndex + 1} of ${layerAxes.length}`;
   els.axisSelected.textContent = `selected: ${selectedLabel}`;
   els.axisExplainer.innerHTML = `
     <p class="decision-question">${escapeHtml(axisQuestion(axis))}</p>
@@ -290,6 +356,8 @@ function renderOptions() {
       <span><strong>Current selection:</strong> ${escapeHtml(selectedLabel)}</span>
       ${defaultLabel ? `<span><strong>Default:</strong> ${escapeHtml(defaultLabel)}</span>` : ""}
       <span><strong>YAML key:</strong> ${escapeHtml(axis.axis)}</span>
+      ${axis.group_label ? `<span><strong>Group:</strong> ${escapeHtml(axis.group_label)}</span>` : ""}
+      ${(axis.axis_level || axis.group_level) ? `<span><strong>Level:</strong> ${escapeHtml(hierarchyLevelLabel(axis.axis_level || axis.group_level))}</span>` : ""}
       ${presentation.selection_kind ? `<span><strong>Selection type:</strong> ${escapeHtml(humanizeToken(presentation.selection_kind))}</span>` : ""}
     </div>
     ${selectedSummary ? `<p class="decision-selected">${escapeHtml(selectedSummary)}</p>` : ""}
@@ -359,7 +427,7 @@ function renderTreePath() {
                 </div>
               </div>
               <div class="path-axis-grid">
-                ${visibleAxes.map((axis, axisIdx) => renderPathAxis(axis, axisIdx, axis.axis === state.activeAxis)).join("")}
+                ${renderPathAxisGroups(layer, visibleAxes)}
               </div>
             </div>
           </section>
@@ -367,6 +435,28 @@ function renderTreePath() {
       }).join("")}
     </div>
   `;
+}
+
+function renderPathAxisGroups(layer, visibleAxes) {
+  const groups = layerAxisGroups(layer, visibleAxes);
+  let step = 0;
+  return groups
+    .map((group) => `
+      <section class="path-axis-group">
+        <div class="path-axis-group-head">
+          <span>${escapeHtml(hierarchyLevelLabel(group.level))}</span>
+          <strong>${escapeHtml(group.label)}</strong>
+          ${group.condition ? `<em>${escapeHtml(group.condition)}</em>` : ""}
+        </div>
+        <div class="path-axis-group-grid">
+          ${group.axisItems.map((axis) => {
+            step += 1;
+            return renderPathAxis(axis, step, axis.axis === state.activeAxis);
+          }).join("")}
+        </div>
+      </section>
+    `)
+    .join("");
 }
 
 function renderPathAxis(axis, axisIdx, current) {
@@ -395,7 +485,7 @@ function renderPathAxis(axis, axisIdx, current) {
     : "";
   return `
     <div class="tree-path-item${blocked}${active}" data-tree-axis="${escapeHtml(axis.axis)}" data-tree-layer="${escapeHtml(axis.layer)}" tabindex="0" role="button">
-      <span class="path-step">${axisIdx + 1}</span>
+      <span class="path-step">${axisIdx}</span>
       <span class="path-body">
         <span class="path-axis">${escapeHtml(axisDisplayName(axis))}</span>
         <span class="path-value">${escapeHtml(selectedValueLabel || valueLabel || "-")}</span>

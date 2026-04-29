@@ -110,11 +110,61 @@
 <section id="simple-vs-full">
 <h2>Simple vs Full<a class="headerlink" href="#simple-vs-full" title="Link to this heading"></a></h2>
 <p>Simple asks for the data question directly: <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">horizons</span></code>. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> also needs <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.</p>
-<p>Full exposes the complete Layer 1 official-frame contract. The live registry has <strong>17 Layer 1 axes</strong>. The Navigator primary tree shows 15 user-facing axes; <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
+<p>Full exposes the complete Layer 1 official-frame contract. The live registry has <strong>17 Layer 1 axes</strong>. The Navigator primary tree shows 15 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional FRED-SD sub-decisions, and many are defaulted policy controls. <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
+</section>
+<section id="hierarchy">
+<h2>Hierarchy<a class="headerlink" href="#hierarchy" title="Link to this heading"></a></h2>
+<p>Layer 1 should be read as a hierarchy, not a flat checklist.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Level</p></th>
+<th class="head"><p>Group</p></th>
+<th class="head"><p>Axes</p></th>
+<th class="head"><p>Rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Primary decision</p></td>
+<td><p>Source identity</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> is the source choice. <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is derived for MD/QD/composites and required only for standalone FRED-SD or custom schemas where the schema does not imply it.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Primary policy</p></td>
+<td><p>Information regime</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></p></td>
+<td><p>Defines what information is available at each forecast origin.</p></td>
+</tr>
+<tr class="row-even"><td><p>Conditional subgroup</p></td>
+<td><p>FRED-SD source scope</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
+<td><p>Active only when <code class="docutils literal notranslate"><span class="pre">dataset</span></code> includes FRED-SD.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Contract-derived</p></td>
+<td><p>Target request</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
+<td><p>Constrained by Layer 0 <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>; target IDs, target lists, horizons, and dates live in <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Secondary policy</p></td>
+<td><p>Source universe</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
+<td><p>Limits eligible raw source columns before Layer 2 builds representations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Secondary policy</p></td>
+<td><p>Raw source quality</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
+<td><p>Handles defects present in raw source data before official transforms/T-codes.</p></td>
+</tr>
+<tr class="row-even"><td><p>Secondary policy</p></td>
+<td><p>Official frame policy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
+<td><p>Closes the official Layer 1 frame before Layer 2 research preprocessing begins.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="decision-order">
 <h2>Decision order<a class="headerlink" href="#decision-order" title="Link to this heading"></a></h2>
-<p>Read Layer 1 in runtime order:</p>
+<p>Read Layer 1 in runtime order. The table below is ordered, but the hierarchy above explains which rows are parent decisions and which are subordinate controls.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Step</p></th>

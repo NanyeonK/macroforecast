@@ -276,6 +276,46 @@ input {
   overflow: auto;
 }
 
+.axis-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 3px solid var(--line);
+  padding-left: 10px;
+}
+
+.axis-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 2px 2px;
+}
+
+.axis-group-head strong {
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.axis-group-head p,
+.axis-group-condition {
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.axis-group-level {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .axis-button {
   width: 100%;
   display: grid;
@@ -640,14 +680,58 @@ input {
 }
 
 .path-axis-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 .path-layer.compact .path-axis-grid {
   max-height: 145px;
   overflow: auto;
+}
+
+.path-axis-group {
+  min-width: 0;
+  border-left: 3px solid var(--line);
+  padding-left: 10px;
+}
+
+.path-axis-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.path-axis-group-head span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.path-axis-group-head strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.path-axis-group-head em {
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.path-axis-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
 }
 
 .tree-path-item {

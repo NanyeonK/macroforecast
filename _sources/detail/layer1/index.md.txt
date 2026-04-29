@@ -11,11 +11,25 @@ Layer 1 owns the official data task. It decides which data source is used, which
 
 Simple asks for the data question directly: `dataset`, `target`, `start`, `end`, and `horizons`. Standalone `fred_sd` also needs `frequency`. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.
 
-Full exposes the complete Layer 1 official-frame contract. The live registry has **17 Layer 1 axes**. The Navigator primary tree shows 15 user-facing axes; `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
+Full exposes the complete Layer 1 official-frame contract. The live registry has **17 Layer 1 axes**. The Navigator primary tree shows 15 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional FRED-SD sub-decisions, and many are defaulted policy controls. `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
+
+## Hierarchy
+
+Layer 1 should be read as a hierarchy, not a flat checklist.
+
+| Level | Group | Axes | Rule |
+|---|---|---|---|
+| Primary decision | Source identity | `dataset`, `frequency` | `dataset` is the source choice. `frequency` is derived for MD/QD/composites and required only for standalone FRED-SD or custom schemas where the schema does not imply it. |
+| Primary policy | Information regime | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` | Defines what information is available at each forecast origin. |
+| Conditional subgroup | FRED-SD source scope | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group` | Active only when `dataset` includes FRED-SD. |
+| Contract-derived | Target request | `target_structure` | Constrained by Layer 0 `study_scope`; target IDs, target lists, horizons, and dates live in `leaf_config`. |
+| Secondary policy | Source universe | `variable_universe` | Limits eligible raw source columns before Layer 2 builds representations. |
+| Secondary policy | Raw source quality | `raw_missing_policy`, `raw_outlier_policy` | Handles defects present in raw source data before official transforms/T-codes. |
+| Secondary policy | Official frame policy | `official_transform_policy`, `official_transform_scope`, `missing_availability` | Closes the official Layer 1 frame before Layer 2 research preprocessing begins. |
 
 ## Decision order
 
-Read Layer 1 in runtime order:
+Read Layer 1 in runtime order. The table below is ordered, but the hierarchy above explains which rows are parent decisions and which are subordinate controls.
 
 | Step | Group | Axes |
 |---|---|---|

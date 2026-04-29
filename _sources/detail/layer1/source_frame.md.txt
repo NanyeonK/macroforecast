@@ -3,7 +3,7 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: Source and frame
 
-This group selects the data source, frequency, and information-set regime. `dataset` is the only source-choice axis; custom files are selected directly as `custom_csv` or `custom_parquet`.
+This group starts the Layer 1 hierarchy. `dataset` is the only source-choice axis; custom files are selected directly as `custom_csv` or `custom_parquet`. `frequency` is not the same level as `dataset`: it is derived for FRED-MD/FRED-QD/composites and is only a required follow-up when the source does not imply a single calendar frequency.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
