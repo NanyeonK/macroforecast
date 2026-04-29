@@ -20,7 +20,7 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 - [1.2 Target Structure](data/target_structure.md) — `target_structure`.
 - [1.3 Horizon & Evaluation Window](data/horizon.md) — `min_train_size`, `training_start_rule`, `oos_period`, `overlap_handling`.
 - [1.4 Benchmark & Predictor Universe](data/benchmark.md) — `benchmark_family`, `predictor_family`, `variable_universe`, `deterministic_components`.
-- [1.5 Data Handling Policies](data/policies.md) — `missing_availability`, `raw_missing_policy`, `raw_outlier_policy`, `release_lag_rule`, `structural_break_segmentation`, `contemporaneous_x_rule`.
+- [1.5 Data Handling Policies](data/policies.md) — `missing_availability`, `raw_missing_policy`, `raw_outlier_policy`, `release_lag_rule`, `contemporaneous_x_rule`.
 
 ## Stages 2 through 7
 

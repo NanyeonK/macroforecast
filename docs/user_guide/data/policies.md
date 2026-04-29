@@ -1,6 +1,6 @@
 # Data Handling Policies (1.5)
 
-Declares **how the raw panel is prepared before it reaches the model** — official-frame availability, raw-source missing/outlier treatment before T-codes, release-lag shifts, structural-break handling, and contemporaneous-X rules. Six axes in v1.0 — every value operational.
+Declares **how the raw panel is prepared before it reaches the model** — official-frame availability, raw-source missing/outlier treatment before T-codes, release-lag shifts, and contemporaneous-X rules. Five Layer 1 axes in v1.0 — every value operational.
 
 | Section | axis | Role |
 |---|---|---|
@@ -8,8 +8,7 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 | 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before official transforms/T-codes |
 | 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before official transforms/T-codes |
 | 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
-| 1.5.5 | [`structural_break_segmentation`](#155-structural_break_segmentation) | Break-dummy augmentation of X around NBER crises / user-supplied break dates |
-| 1.5.6 | [`contemporaneous_x_rule`](#156-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
+| 1.5.5 | [`contemporaneous_x_rule`](#155-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
 
 **Note on dropped axes:**
 
@@ -24,10 +23,9 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 - `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
 - `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before official transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
 - `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
-- `structural_break_segmentation = none` — no break dummies. Switch to `pre_post_crisis` / `pre_post_covid` to add a single NBER-dated break dummy.
 - `contemporaneous_x_rule = forbid_same_period_predictors` — realistic real-time constraint. Switch to `allow_same_period_predictors` only for oracle / data-leak benchmarks.
 
-**Most research runs leave all six at the default.**
+**Most research runs leave all five at the default.**
 
 
 ---
@@ -179,44 +177,13 @@ path:
 
 ---
 
-## 1.5.5 `structural_break_segmentation`
+## Moved Out Of Layer 1
 
-**Selects break-dummy augmentation of the X panel.** Four operational values.
-
-### Value catalog
-
-| Value | Status | What it does |
-|---|---|---|
-| `none` | operational | Default, no-op. |
-| `pre_post_crisis` | operational | Single break dummy at 2008-09-01 (NBER Great-Recession onset). |
-| `pre_post_covid` | operational | Single break dummy at 2020-03-01 (NBER COVID-recession onset). |
-
-### Functions & features
-
-- Resolution helper: `macrocast.execution.build._resolve_structural_break_dates(spec)` maps the axis value to a list of break dates.
-- The actual augmentation reuses the 1.4 `deterministic_components.break_dummies` path (`augment_array` in `macrocast.execution.deterministic`). Both X_train and X_pred receive the same dummy columns.
-- If both `deterministic_components=break_dummies` and `structural_break_segmentation` are set, the augmentations stack (both sets of dummies are added). For user-supplied break dates, use `deterministic_components=break_dummies` with `leaf_config.break_dates` — this is the canonical path after the 2026-04-21 dedup.
-
-### Dropped values
-
-- `break_test_detected`, `rolling_break_adaptive` — change-point detection / adaptive break algorithms; v1.1+.
-- `user_break_dates` (2026-04-21) — duplicate of `deterministic_components=break_dummies` + `leaf_config.break_dates`. Both values read the same leaf_config field and dispatched through the same `augment_array(component='break_dummies')` path. Use `deterministic_components=break_dummies` instead.
-
-### Recipe usage
-
-```yaml
-# Explicit 2008 + 2020 structural breaks — use deterministic_components
-path:
-  1_data_task:
-    fixed_axes:
-      deterministic_components: break_dummies
-    leaf_config:
-      break_dates: ["2008-09-01", "2020-03-01"]
-```
+`structural_break_segmentation` is now a Layer 2 representation/feature-block decision. It augments the model input with break dummies, so it no longer belongs to the official data-frame task. For user-supplied break dates, use Layer 2 `deterministic_components=break_dummies` with `leaf_config.break_dates`.
 
 ---
 
-## 1.5.6 `contemporaneous_x_rule`
+## 1.5.5 `contemporaneous_x_rule`
 
 **Selects whether X observed at the target date may enter the model.** Two operational values.
 
@@ -251,9 +218,8 @@ path:
 ## Data Handling Policies (1.5) takeaways
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
-- All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`, `break_dates`) and are propagated into `data_task_spec`.
+- All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`) and are propagated into `data_task_spec`.
 - `raw_missing_policy` and `raw_outlier_policy` run before official transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the official frame exists.
-- `structural_break_segmentation` reuses the 1.4 `deterministic_components.break_dummies` augmentation path — the axis just supplies the break-date list.
 - `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or official frame before researcher preprocessing.
 
-Layer 1 per-axis walk complete — 1.1 through 1.5 are all fully honest & operational.
+Layer 1 data-handling walk complete — the five current policy axes are operational.

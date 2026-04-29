@@ -69,5 +69,5 @@ These axes are no longer Layer 1 target-structure choices:
   choices, even where runtime support is still registry-only.
 - `multi_target_architecture`: Layer 0, through `study_scope`.
 
-Layer 1 owns target identity and target cautoregressive_diffusion_indexnality. Layer 0 owns how that
-cautoregressive_diffusion_indexnality is executed.
+Layer 1 owns target identity and target cardinality. Layer 0 owns how that
+cardinality is executed.
