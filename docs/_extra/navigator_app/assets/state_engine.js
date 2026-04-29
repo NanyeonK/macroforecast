@@ -310,6 +310,46 @@
     return null;
   }
 
+  function defaultSelection(data, axisName) {
+    return (data.state_engine.default_selections || {})[axisName];
+  }
+
+  function splitDatasetTokens(value) {
+    return new Set(String(value || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
+  }
+
+  function selectionIsDefault(data, engineState, axisName) {
+    const fallback = defaultSelection(data, axisName);
+    return fallback !== undefined && String(engineState.selections[axisName]) === String(fallback);
+  }
+
+  function axisVisibilityReason(data, engineState, axisName) {
+    const selected = engineState.selections || {};
+    const customSourcePolicy = String(selected.custom_source_policy || "official_only");
+    const hasFredSd = splitDatasetTokens(selected.dataset || "").has("fred_sd");
+
+    if (["custom_source_format", "custom_source_schema"].includes(axisName)) {
+      if (customSourcePolicy === "official_only" && selectionIsDefault(data, engineState, axisName)) {
+        return "Hidden until Custom Data Use selects a custom source.";
+      }
+    }
+    if (["fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"].includes(axisName)) {
+      if (!hasFredSd && selectionIsDefault(data, engineState, axisName)) {
+        return "Hidden until Source Panel includes FRED-SD.";
+      }
+    }
+    if (axisName === "fred_sd_mixed_frequency_representation") {
+      if (!hasFredSd && selectionIsDefault(data, engineState, axisName)) {
+        return "Hidden until Source Panel includes FRED-SD.";
+      }
+    }
+    return null;
+  }
+
+  function isAxisVisible(data, engineState, axisName) {
+    return !axisVisibilityReason(data, engineState, axisName);
+  }
+
   function axisView(data, engineState, layer, axisName) {
     const catalog = data.axis_catalog[axisName];
     const values = (catalog && catalog.allowed_values) || [];
@@ -346,6 +386,30 @@
     return out;
   }
 
+  function visibleTree(data, engineState) {
+    return buildTree(data, engineState).filter((axis) => isAxisVisible(data, engineState, axis.axis));
+  }
+
+  function resetDependentSelection(data, next, axisName) {
+    const fallback = defaultSelection(data, axisName);
+    if (fallback === undefined) return;
+    next.selections[axisName] = fallback;
+    delete next.edits[axisName];
+  }
+
+  function applyDependentResets(data, next, changedAxisName) {
+    if (changedAxisName === "custom_source_policy" && String(next.selections.custom_source_policy || "official_only") === "official_only") {
+      resetDependentSelection(data, next, "custom_source_format");
+      resetDependentSelection(data, next, "custom_source_schema");
+    }
+    if (changedAxisName === "dataset" && !splitDatasetTokens(next.selections.dataset || "").has("fred_sd")) {
+      resetDependentSelection(data, next, "fred_sd_frequency_policy");
+      resetDependentSelection(data, next, "fred_sd_state_group");
+      resetDependentSelection(data, next, "fred_sd_variable_group");
+      resetDependentSelection(data, next, "fred_sd_mixed_frequency_representation");
+    }
+  }
+
   function selectOption(data, engineState, axisName, value) {
     const next = clone(engineState);
     const importanceSplitAxes = new Set(((data.state_engine.importance || {}).split_axes) || []);
@@ -367,6 +431,7 @@
     }
     next.selections[axisName] = value;
     next.edits[axisName] = value;
+    applyDependentResets(data, next, axisName);
     return next;
   }
 
@@ -582,6 +647,9 @@
     createState,
     createStateFromRecipe,
     buildTree,
+    visibleTree,
+    isAxisVisible,
+    axisVisibilityReason,
     selectOption,
     selectedDisabledReasons,
     compatibility,
