@@ -17,7 +17,7 @@ macrocast-navigate tree examples/recipes/model-benchmark.yaml --upstream-only
 `--upstream-only` shows Layers 0-3:
 
 - Layer 0: study design and execution grammar;
-- Layer 1: data task and official data frame;
+- Layer 1: data task and FRED data frame;
 - Layer 2: representation construction and researcher preprocessing;
 - Layer 3: forecast generation.
 

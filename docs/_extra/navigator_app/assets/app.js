@@ -135,7 +135,17 @@ function isDefaultSelection(axisName, value) {
   return fallback !== null && String(fallback) === String(value);
 }
 
-function selectedDisplayLabel(axisName, value) {
+function axisSelectedOption(axis) {
+  return axis.options.find((option) => option.value === axis.selected);
+}
+
+function axisRequiresSelection(axis) {
+  const option = axisSelectedOption(axis);
+  return Boolean(option && option.disabled_reason && isDefaultSelection(axis.axis, axis.selected));
+}
+
+function selectedDisplayLabel(axisName, value, axis) {
+  if (axis && axisRequiresSelection(axis)) return "Selection required";
   const label = valueDisplayName(axisName, value);
   return isDefaultSelection(axisName, value) ? `${label} [default]` : label;
 }
@@ -147,8 +157,8 @@ function docsLink(axisName) {
 function layerDescription(layer) {
   const descriptions = {
     "0_meta": "4 user-facing decisions in order: study scope, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
-    "1_data_task": "Official data task and source frame: source, target structure, availability, raw source policy, and official transforms.",
-    "2_preprocessing": "Representation construction after the official frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
+    "1_data_task": "FRED data task and source frame: source, target structure, availability, raw source policy, and transform rules.",
+    "2_preprocessing": "Representation construction after the Layer 1 FRED frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
     "3_training": "Forecast generation: model, benchmark, forecast object, future-X path, windows, and tuning.",
     "4_evaluation": "Evaluation choices: metrics, benchmark comparison, aggregation, ranking, regimes, decomposition, and OOS period.",
     "5_output_provenance": "Output and provenance: export format, saved objects, provenance fields, and artifact granularity.",
@@ -307,7 +317,7 @@ function renderAxisList() {
       const disabled = axis.options.filter((option) => !option.enabled).length;
       const active = axis.axis === state.activeAxis ? " active" : "";
       const edited = axis.edited ? `<span class="axis-edited">edited</span>` : "";
-      const selectedLabel = selectedDisplayLabel(axis.axis, axis.selected);
+      const selectedLabel = selectedDisplayLabel(axis.axis, axis.selected, axis);
       const summary = axisSummary(axis);
       return `
         <button type="button" class="axis-button${active}" data-axis="${escapeHtml(axis.axis)}">
@@ -342,10 +352,11 @@ function renderOptions() {
   const groupAxes = layerAxes.filter((item) => item.group_id === axis.group_id);
   const groupStepIndex = Math.max(0, groupAxes.findIndex((item) => item.axis === axis.axis));
   const presentation = axisPresentation(axis.axis);
-  const selectedLabel = selectedDisplayLabel(axis.axis, axis.selected) || "-";
+  const selectedLabel = selectedDisplayLabel(axis.axis, axis.selected, axis) || "-";
   const selectedSummary = valueSummary(axis.axis, axis.selected);
   const docs = docsLink(axis.axis);
   const defaultLabel = defaultValue(axis.axis) ? valueDisplayName(axis.axis, defaultValue(axis.axis)) : "";
+  const showDefaultLabel = defaultLabel && !axisRequiresSelection(axis);
   els.axisTitle.textContent = axisDisplayName(axis);
   els.axisLayer.textContent = `${layerLabel(axis.layer)} | ${axis.group_label || "Steps"} | group step ${groupStepIndex + 1} of ${groupAxes.length} | layer step ${stepIndex + 1} of ${layerAxes.length}`;
   els.axisSelected.textContent = `selected: ${selectedLabel}`;
@@ -354,7 +365,7 @@ function renderOptions() {
     <p class="decision-summary">${escapeHtml(axisSummary(axis))}</p>
     <div class="decision-meta">
       <span><strong>Current selection:</strong> ${escapeHtml(selectedLabel)}</span>
-      ${defaultLabel ? `<span><strong>Default:</strong> ${escapeHtml(defaultLabel)}</span>` : ""}
+      ${showDefaultLabel ? `<span><strong>Default:</strong> ${escapeHtml(defaultLabel)}</span>` : ""}
       <span><strong>YAML key:</strong> ${escapeHtml(axis.axis)}</span>
       ${axis.group_label ? `<span><strong>Group:</strong> ${escapeHtml(axis.group_label)}</span>` : ""}
       ${(axis.axis_level || axis.group_level) ? `<span><strong>Level:</strong> ${escapeHtml(hierarchyLevelLabel(axis.axis_level || axis.group_level))}</span>` : ""}
@@ -373,7 +384,8 @@ function renderOptions() {
       const disabledAttr = option.enabled ? "" : " disabled";
       const summary = valueSummary(axis.axis, option.value);
       const optionLabel = valueDisplayName(axis.axis, option.value);
-      const statusLabel = isDefaultSelection(axis.axis, option.value) ? `${option.status} · default` : option.status;
+      const needsSelection = axisRequiresSelection(axis) && option.value === axis.selected;
+      const statusLabel = needsSelection ? "required" : (isDefaultSelection(axis.axis, option.value) ? `${option.status} · default` : option.status);
       return `
         <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
@@ -461,14 +473,14 @@ function renderPathAxisGroups(layer, visibleAxes) {
 }
 
 function renderPathAxis(axis, axisIdx, current) {
-  const selectedOption = axis.options.find((option) => option.value === axis.selected);
+  const selectedOption = axisSelectedOption(axis);
   const disabledReason = selectedOption && selectedOption.disabled_reason;
   const blocked = disabledReason ? " blocked" : "";
   const active = axis.axis === state.activeAxis ? " active" : "";
   const edited = axis.edited ? `<span class="path-edited">edited</span>` : "";
   const docs = docsLink(axis.axis);
   const valueLabel = valueDisplayName(axis.axis, axis.selected);
-  const selectedValueLabel = selectedDisplayLabel(axis.axis, axis.selected);
+  const selectedValueLabel = selectedDisplayLabel(axis.axis, axis.selected, axis);
   const selectedSummary = valueSummary(axis.axis, axis.selected);
   const presentation = axisPresentation(axis.axis);
   const contract = presentation.contract ? `<span class="path-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</span>` : "";

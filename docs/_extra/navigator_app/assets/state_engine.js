@@ -151,7 +151,7 @@
     }
     if (axisName === "custom_source_policy") {
       if (value === "custom_panel_only" && dataset.includes("+")) {
-        return "custom_panel_only supports one official source panel; use official_plus_custom for composites";
+        return "custom_panel_only supports one FRED source panel; use official_plus_custom for composites";
       }
     }
     if (axisName === "custom_source_format") {

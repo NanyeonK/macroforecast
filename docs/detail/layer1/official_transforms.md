@@ -3,7 +3,7 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: official transforms
 
-This group decides whether official dataset transform codes are applied while constructing the official frame.
+This group decides whether FRED-provided transform codes are applied while constructing the FRED frame.
 
 | Axis | Choices | Default / rule |
 |---|---|---|

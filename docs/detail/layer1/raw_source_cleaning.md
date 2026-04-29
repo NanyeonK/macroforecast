@@ -12,8 +12,8 @@ These policies act on defects already present in the raw source panel before off
 
 Boundary rule:
 
-- Layer 1 raw cleaning changes the source panel before official transforms/T-codes. That means the transform output can change.
-- Layer 2 missing/outlier policies act after the official frame exists. They can mix raw-source defects with transform-induced missing values and model-input preprocessing artifacts.
+- Layer 1 raw cleaning changes the source panel before FRED transforms/T-codes. That means the transform output can change.
+- Layer 2 missing/outlier policies act after the FRED frame exists. They can mix raw-source defects with transform-induced missing values and model-input preprocessing artifacts.
 
 Full researchers can choose either phase, but provenance must record which phase was used.
 

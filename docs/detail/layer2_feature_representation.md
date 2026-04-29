@@ -3,7 +3,7 @@
 Date: 2026-04-26
 
 Layer 2 is the research preprocessing and feature-representation layer. Its job
-is to turn the Layer 1 official data frame into the model input matrices used by
+is to turn the Layer 1 FRED data frame into the model input matrices used by
 Layer 3.
 
 See `layer2_revision_plan.md` for the step-by-step migration plan from the
@@ -179,7 +179,7 @@ Operational support is currently narrow:
   `target_level_addback` appends the observable target level at the feature row
   date (`target_t`) and at the prediction origin (`target_origin`).
   `x_level_addback` appends raw-level `H` values preserved after Layer 1 raw
-  missing/outlier handling and before official transforms/T-codes, using
+  missing/outlier handling and before FRED transforms/T-codes, using
   `{predictor}_level` public names. `selected_level_addbacks` applies the same
   source/alignment rule only to `leaf_config.selected_level_addback_columns`.
   `level_growth_pairs` records existing transformed predictor columns paired

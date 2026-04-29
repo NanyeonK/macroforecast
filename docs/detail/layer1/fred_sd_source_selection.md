@@ -3,7 +3,7 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: FRED-SD source selection
 
-This group is active only when `dataset` contains `fred_sd`. It selects which state-level source columns enter the official frame and how strict the native-frequency gate should be.
+This group is active only when `dataset` contains `fred_sd`. It selects which state-level source columns enter the FRED frame and how strict the native-frequency gate should be.
 
 | Axis | Choices | Default / rule |
 |---|---|---|

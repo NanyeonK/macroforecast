@@ -3,22 +3,22 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: Source and frame
 
-This group starts the Layer 1 hierarchy. `dataset` now means the official
-FRED-family source panel. Custom files are not official panels and are not
-selected as `dataset` values. If the study uses a user-supplied file, choose
+This group starts the Layer 1 hierarchy. `dataset` means the FRED-family source
+panel. Custom files are not FRED panels and are not selected as `dataset`
+values. If the study uses a custom file, choose
 that in `custom_source_policy`, then declare the file format and the schema it
 conforms to.
 
 `frequency` is not the same level as `dataset`: it is derived for FRED-MD,
-FRED-QD, and composite official panels. It is only a required follow-up when
-the official source does not imply a single calendar frequency.
+FRED-QD, and composite FRED panels. It is only a required follow-up when
+the FRED source does not imply a single calendar frequency.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
-| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | Required user choice. This is the official source-panel family. |
-| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. This is the user-facing choice: official data only, my data only, or official data plus my data. |
-| `custom_source_format` | `none`, `csv`, `parquet` | Default is `none`. Must be `csv` or `parquet` when a custom source is selected. |
-| `custom_source_schema` | `none`, `fred_md`, `fred_qd`, `fred_sd` | Default is `none`. Must be a FRED-family schema when a custom source is selected. |
+| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | Required user choice. This is the FRED source-panel family. |
+| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. This is the user-facing choice: FRED data only, custom data only, or FRED data plus custom data. |
+| `custom_source_format` | `none`, `csv`, `parquet` | `none` only means no custom file. Once custom data is selected, this is an explicit required choice: `csv` or `parquet`. |
+| `custom_source_schema` | `none`, `fred_md`, `fred_qd`, `fred_sd` | `none` only means no custom file. Once custom data is selected, this is an explicit required FRED-style schema choice. |
 | `frequency` | `monthly`, `quarterly` | Derived for FRED-MD/QD/composites. Required for standalone FRED-SD. |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | Simple default is `final_revised_data`; Full recipes should write it explicitly. |
 
@@ -29,25 +29,30 @@ Contracts:
 - standalone `fred_sd` must choose monthly or quarterly because the source contains mixed native frequencies.
 - User-supplied files are configured with `custom_source_policy` and
   `custom_source_format`, not as `dataset` values.
-- `custom_source_policy: official_only` means official data only. It requires
+- `custom_source_policy: official_only` means FRED data only. It requires
   `custom_source_format: none`, `custom_source_schema: none`, and no
   `leaf_config.custom_source_path`.
-- `custom_source_policy: custom_panel_only` means my data only. It loads a
-  custom file instead of one selected official panel. It supports single
-  official panels only: `fred_md`, `fred_qd`, or `fred_sd`. The custom schema
+- `custom_source_policy: custom_panel_only` means custom data only. It loads a
+  custom file instead of one selected FRED panel. It supports single FRED
+  panels only: `fred_md`, `fred_qd`, or `fred_sd`. The custom schema
   must match the selected panel.
-- `custom_source_policy: official_plus_custom` loads the selected official
+- `custom_source_policy: official_plus_custom` loads the selected FRED
   panel and appends custom columns after frequency alignment. It can be used
-  with single or composite official panels.
+  with single or composite FRED panels.
 - custom sources require `custom_source_schema` in `fred_md`, `fred_qd`, or
   `fred_sd`, plus `leaf_config.custom_source_path`.
 - Custom CSV/Parquet schema contract:
   - first column, or Parquet index, is a parseable date index;
   - remaining columns are numeric series;
-  - column names should match the selected FRED-family schema when the custom
-    file is replacing an official panel;
+  - for `custom_panel_only`, column names should match the selected
+    FRED-family schema;
   - appended custom columns may use new names, but duplicate names are renamed
     with a `__custom` suffix at runtime.
+- In practical terms, a custom file is acceptable if its date index, column
+  shape, and native frequency can be aligned to the selected Layer 1 frequency.
+  Monthly routes expect monthly rows or a schema that Layer 1 can convert to
+  monthly; quarterly routes expect quarterly rows or a schema that Layer 1 can
+  aggregate/interpolate to quarterly.
 - `pseudo_oos_on_revised_data` uses revised data but applies pseudo-OOS availability discipline.
 
 > **Warning:** Custom files are user-supplied source data. The Navigator can
@@ -67,8 +72,8 @@ Additional custom-source fields:
 
 | Field | Where | Required when | Meaning |
 |---|---|---|---|
-| `custom_source_format` | `fixed_axes` | `custom_source_policy != official_only` | File parser: `csv` or `parquet`. |
-| `custom_source_schema` | `fixed_axes` | `custom_source_policy != official_only` | FRED-family schema the file follows. |
+| `custom_source_format` | `fixed_axes` | `custom_source_policy != official_only` | Required file parser: `csv` or `parquet`. |
+| `custom_source_schema` | `fixed_axes` | `custom_source_policy != official_only` | Required FRED-style schema the file follows. |
 | `custom_source_path` | `leaf_config` | `custom_source_policy != official_only` | Local file path. This is not an enum axis because it is study-specific. |
 
 Minimal YAML:

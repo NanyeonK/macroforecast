@@ -1,11 +1,11 @@
 # Source & Frame (1.1)
 
-Declares **where the data comes from and which information-set regime applies**. The user-facing axes answer: which official source panel, whether a custom file replaces or augments it, at what frequency, and under which real-time regime — before the target-structure choice (1.2) or the evaluation window (1.3) is fixed.
+Declares **where the data comes from and which information-set regime applies**. The user-facing axes answer: which FRED source panel is used, whether a custom file replaces or augments it, at what frequency, and under which real-time regime — before the target-structure choice (1.2) or the evaluation window (1.3) is fixed.
 
 | Section | axis | Role |
 |---|---|---|
-| 1.1.1 | [`dataset`](#111-dataset) | Which official source family to load |
-| 1.1.2 | [`custom_source_policy`](#112-custom_source_policy) | Official data only, custom data only, or official plus custom data |
+| 1.1.1 | [`dataset`](#111-dataset) | Which FRED source family to load |
+| 1.1.2 | [`custom_source_policy`](#112-custom_source_policy) | FRED data only, custom data only, or FRED plus custom data |
 | 1.1.3 | [`custom_source_format`](#113-custom_source_format) | Custom file parser |
 | 1.1.4 | [`custom_source_schema`](#114-custom_source_schema) | FRED-family schema the custom file follows |
 | 1.1.5 | [`frequency`](#115-frequency) | Series frequency (monthly/quarterly); dataset-derived |
@@ -13,10 +13,10 @@ Declares **where the data comes from and which information-set regime applies**.
 
 **Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as 0.5 `registry_type` drop).
 **At a glance (defaults):**
-- `dataset` — no default; you pick one official panel: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`.
-- `custom_source_policy = official_only` — default; choose `custom_panel_only` for my data only, or `official_plus_custom` for official data plus my data.
-- `custom_source_format = none` — default; must be `csv` or `parquet` when a custom source is selected.
-- `custom_source_schema = none` — default; must be `fred_md`, `fred_qd`, or `fred_sd` when a custom source is selected.
+- `dataset` — no default; you pick one FRED panel: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`.
+- `custom_source_policy = official_only` — default; choose `custom_panel_only` for custom data only, or `official_plus_custom` for FRED data plus custom data.
+- `custom_source_format = none` — only means no custom file. Once custom data is selected, Navigator treats this as an explicit required choice: `csv` or `parquet`.
+- `custom_source_schema = none` — only means no custom file. Once custom data is selected, Navigator treats this as an explicit required choice: `fred_md`, `fred_qd`, or `fred_sd`.
 - `frequency` — derived from `dataset` for MD/QD/composites. Standalone `fred_sd` requires an explicit monthly/quarterly choice.
 - `information_set_type = final_revised_data` — post-revision truth. Pick `pseudo_oos_on_revised_data` only when you want synthetic release-lag masking.
 
@@ -27,7 +27,7 @@ Declares **where the data comes from and which information-set regime applies**.
 
 ## 1.1.1 `dataset`
 
-**Selects the official source family loaded.** Every recipe picks exactly one official source panel. Custom files are configured separately so the recipe can say whether the file replaces the official panel or is appended to it.
+**Selects the FRED source family loaded.** Every recipe picks exactly one FRED source panel. Custom files are configured separately so the recipe can say whether the file replaces the FRED panel or is appended to it.
 
 ### Value catalog
 
@@ -51,17 +51,17 @@ Each base dataset has its own dedicated documentation page covering citation, do
 
 ## 1.1.2 `custom_source_policy`
 
-**Controls whether a user-supplied file is used with the official source panel.**
+**Controls whether a custom file is used with the FRED source panel.**
 
 | Value | Status | Meaning |
 |---|---|---|
-| `official_only` | operational | Official data only. Use the selected official source panel. |
-| `custom_panel_only` | operational | My data only. Load a custom file instead of the selected single official panel. |
-| `official_plus_custom` | operational | Official plus my data. Load the selected official panel and append custom columns after frequency alignment. |
+| `official_only` | operational | FRED data only. Use the selected FRED source panel. |
+| `custom_panel_only` | operational | Custom data only. Load a custom file instead of the selected single FRED panel. |
+| `official_plus_custom` | operational | FRED plus custom data. Load the selected FRED panel and append custom columns after frequency alignment. |
 
-`custom_panel_only` supports only one official panel (`fred_md`, `fred_qd`, or `fred_sd`). It requires `custom_source_schema` to match the selected `dataset`.
+`custom_panel_only` supports only one FRED panel (`fred_md`, `fred_qd`, or `fred_sd`). It requires `custom_source_schema` to match the selected `dataset`.
 
-`official_plus_custom` supports single or composite official panels. The custom file can declare `custom_source_schema: fred_md`, `fred_qd`, or `fred_sd`; runtime converts it to the selected Layer 1 frequency before appending.
+`official_plus_custom` supports single or composite FRED panels. The custom file can declare `custom_source_schema: fred_md`, `fred_qd`, or `fred_sd`; runtime converts it to the selected Layer 1 frequency before appending.
 
 ## 1.1.3 `custom_source_format`
 
@@ -69,7 +69,7 @@ Each base dataset has its own dedicated documentation page covering citation, do
 
 | Value | Status | Meaning |
 |---|---|---|
-| `none` | operational | No custom source file is used. |
+| `none` | operational | No custom file is used. Valid only with `custom_source_policy: official_only`. |
 | `csv` | operational | Use `macrocast.raw.load_custom_csv`. |
 | `parquet` | operational | Use `macrocast.raw.load_custom_parquet`. |
 
@@ -79,6 +79,7 @@ When `custom_source_policy` is not `official_only`:
 - **`custom_source_schema`** is **required** in `fixed_axes` and declares the schema the custom file must conform to (`fred_md` / `fred_qd` / `fred_sd`). The loader validates the schema label and labels the resulting panel accordingly.
 - **CSV shape**: first column is a date index (parseable by `pandas.read_csv(..., parse_dates=True)`); remaining columns are numeric with series IDs as headers. Optional FRED-style T-code row is not consumed automatically — pre-strip it or use `tcode_policy: raw_only`.
 - **Parquet shape**: DatetimeIndex OR first column parseable as date; numeric columns.
+- **Frequency shape**: the file only needs to satisfy the selected route's frequency contract. Monthly routes need rows that are monthly or can be converted to monthly; quarterly routes need rows that are quarterly or can be converted/aggregated to quarterly. The `custom_source_schema` tells Layer 1 how to align the custom file.
 - **No caching** — the custom loader reads the file fresh each time (no vintage / no cache key). For reproducibility, users should treat the path as part of the recipe provenance and keep the file pinned.
 - **`support_tier = provisional`** on the returned `RawLoadResult` — signals the user-supplied panel has not been through FRED's QC / vintage pipeline.
 
@@ -89,7 +90,7 @@ When `custom_source_policy` is not `official_only`:
 
 ## 1.1.4 `custom_source_schema`
 
-**Declares which official panel shape the custom file follows.** This is a
+**Declares which FRED-style panel shape the custom file follows.** This is a
 decision axis because the Navigator must show it only when custom data is used.
 The file path remains in `leaf_config.custom_source_path` because paths are
 study-specific payload, not an enum.
@@ -111,7 +112,7 @@ Frequency behavior:
 
 For `custom_panel_only`, the schema must match `dataset`: `dataset: fred_md`
 requires `custom_source_schema: fred_md`, and so on. For `official_plus_custom`,
-the schema may differ from the official panel because Layer 1 aligns the custom
+the schema may differ from the FRED panel because Layer 1 aligns the custom
 file to the selected route frequency before appending.
 
 ### Functions & features
@@ -152,7 +153,7 @@ path:
     leaf_config:
       target: INDPRO
       horizons: [1, 3]
-      custom_source_path: /path/to/my_fred_md_extract.csv
+      custom_source_path: /path/to/custom_fred_md_extract.csv
 ```
 
 Append custom Parquet columns to FRED-QD:
@@ -169,7 +170,7 @@ path:
     leaf_config:
       target: GDPC1
       horizons: [1, 2, 4]
-      custom_source_path: /path/to/my_fred_qd_extract.parquet
+      custom_source_path: /path/to/custom_fred_qd_extract.parquet
 ```
 
 ---

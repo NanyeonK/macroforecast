@@ -1136,7 +1136,7 @@ def _validate_layer1_data_task_contract(
         if custom_source_policy == "custom_panel_only":
             if "+" in str(dataset):
                 raise CompileValidationError(
-                    "custom_source_policy='custom_panel_only' supports a single official dataset, not a composite"
+                    "custom_source_policy='custom_panel_only' supports a single FRED dataset, not a composite"
                 )
             if custom_source_schema != dataset:
                 raise CompileValidationError(
