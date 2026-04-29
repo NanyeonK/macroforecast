@@ -117,6 +117,18 @@
 </pre></div>
 </div>
 <p>The MVP contract is default-first: specify the forecasting question, then sweep only choices you care about. All resolved defaults are written to artifacts and manifests.</p>
+<p>At Layer 0, Simple exposes only <strong>Study Scope</strong>. The shape of the call picks it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">forecast()</span></code> or <code class="docutils literal notranslate"><span class="pre">Experiment.run()</span></code> with one target and one method path -&gt; <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_one_method</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Experiment.compare_models([...])</span></code> with one target -&gt; <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_compare_methods</span></code></p></li>
+</ul>
+<p>The other Layer 0 execution-policy axes are filled from defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span> <span class="pre">=</span> <span class="pre">fail_fast</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span> <span class="pre">=</span> <span class="pre">seeded_reproducible</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">serial</span></code></p></li>
+</ul>
+<p>Use Detail (code): Full when those policies should be reviewed or changed directly.</p>
 <p>MVP public shapes:</p>
 <ul class="simple">
 <li><p>one default run</p></li>

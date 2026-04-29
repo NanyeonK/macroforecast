@@ -6,6 +6,12 @@
 
 Layer 0 defines the study scope and execution discipline before data or models are chosen. It answers: how many targets are in the study, whether the downstream method path is fixed or compared, how failures behave, how deterministic execution should be, and how work may be parallelized.
 
+## Simple vs Full
+
+Simple exposes only the first Layer 0 decision: `study_scope`. A single-method run maps to `one_target_one_method`; a Simple model comparison maps to `one_target_compare_methods`. The remaining Layer 0 policies use defaults and are still written to manifests for auditability.
+
+Full shows all four user-facing Layer 0 decisions. You should review them in order, but you do not need to write every defaulted policy into YAML. If omitted, the compiler/runtime apply the defaults below.
+
 ## How many steps?
 
 Layer 0 has **four user-facing steps**. Select them in this order:
@@ -25,6 +31,15 @@ There is also an internal `axis_type` grammar, but it is not a sixth user step. 
 | 4.0.2 | [Failure Handling](failure_policy.md) | Runtime failure behavior. |
 | 4.0.3 | [Reproducibility](reproducibility_mode.md) | Seed and determinism policy. |
 | 4.0.4 | [Compute Layout](compute_mode.md) | Serial by default, or local parallelism over a supported work unit. |
+
+## Defaults When Omitted
+
+| Axis | Default if omitted | Notes |
+|---|---|---|
+| `study_scope` | Derived when the recipe shape is sufficient; minimal one-cell recipes fall back to `one_target_one_method`. | Full users should normally set this explicitly because it drives Navigator compatibility and runner contracts. |
+| `failure_policy` | `fail_fast` | Defaulted execution policy. |
+| `reproducibility_mode` | `seeded_reproducible` | Defaulted execution policy; omitted seed falls back to `42`. Explicit strict or seeded modes must carry `leaf_config.random_seed`. |
+| `compute_mode` | `serial` | Defaulted execution policy. |
 
 ## Selection logic
 
@@ -60,6 +75,17 @@ Layer 0 is canonical-only in generated recipes and Navigator paths. The compiler
 
 ## YAML shape
 
+Minimal one-cell Full YAML can specify only Study Scope:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      study_scope: one_target_one_method
+```
+
+The fully explicit equivalent records the same defaults directly:
+
 ```yaml
 path:
   0_meta:
@@ -68,6 +94,8 @@ path:
       failure_policy: fail_fast
       reproducibility_mode: seeded_reproducible
       compute_mode: serial
+    leaf_config:
+      random_seed: 42
 ```
 
 ## Related reference

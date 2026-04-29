@@ -80,6 +80,7 @@
   <section id="design-stage-0">
 <h1>Design (Stage 0)<a class="headerlink" href="#design-stage-0" title="Link to this heading"></a></h1>
 <p>Stage 0 decides <strong>the execution grammar</strong>: which unit of work is run or compared, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. The simple default path uses the small operational subset needed for a one-cell comparison or a controlled model comparison.</p>
+<p>Simple exposes only <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> at this stage. Full exposes all four user-facing axes, but the three execution-policy axes can be omitted to use defaults.</p>
 <p><strong>At a glance (defaults):</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_one_method</span></code> — one target, one forecasting path, one <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> cell.</p></li>

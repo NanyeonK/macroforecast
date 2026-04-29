@@ -122,6 +122,37 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code>: default <code class="docutils literal notranslate"><span class="pre">msfe</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code>: default <code class="docutils literal notranslate"><span class="pre">42</span></code></p></li>
 </ul>
+<section id="layer-0-in-simple">
+<h2>Layer 0 In Simple<a class="headerlink" href="#layer-0-in-simple" title="Link to this heading"></a></h2>
+<p>Simple exposes only the Layer 0 <strong>Study Scope</strong> decision. The run shape picks it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">exp.run()</span></code> with one target and one method path -&gt; <code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exp.compare_models([...]).run()</span></code> with one target -&gt; <code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code></p></li>
+</ul>
+<p>The remaining Layer 0 policies are defaulted:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Policy</p></th>
+<th class="head"><p>Simple default</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fail_fast</span></code></p></td>
+<td><p>Stop on the first failed cell or variant.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+<td><p>Apply seed discipline; <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">42</span></code> and can be passed to <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">serial</span></code></p></td>
+<td><p>Execute sequentially.</p></td>
+</tr>
+</tbody>
+</table>
+<p>These resolved defaults are still written to the lowered recipe and manifest. To select non-default failure handling, reproducibility mode, or compute layout directly, use the Full YAML path in Detail (code).</p>
 <p>Inspect the lowered recipe before running:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">to_recipe_dict</span><span class="p">()</span>
 </pre></div>
@@ -131,6 +162,7 @@
 </pre></div>
 </div>
 <p>The simple API is a facade. It does not bypass recipes, manifests, or provenance. Every default it fills is written to the manifest.</p>
+</section>
 <section id="single-run-or-sweep">
 <h2>Single Run Or Sweep<a class="headerlink" href="#single-run-or-sweep" title="Link to this heading"></a></h2>
 <p>If no sweep axes are present, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ExperimentRunResult</span></code>.</p>

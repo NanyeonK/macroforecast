@@ -93,6 +93,7 @@
   <section id="compare-models">
 <h1>Compare Models<a class="headerlink" href="#compare-models" title="Link to this heading"></a></h1>
 <p>Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.</p>
+<p>In Layer 0 Simple, this call shape selects <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_compare_methods</span></code>. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>

@@ -93,10 +93,11 @@
 completed user-facing stages. Use this as a quick cheat sheet: pick a recipe
 shape from Stage 0, pick data decisions from Stage 1, then cross over to the
 in-depth user-guide pages for per-axis semantics and recipe YAML examples.</p>
-<p><strong>Scope.</strong> Layer 0 (Design, 0.1–0.5) + Layer 1 (Data, 1.1–1.5).
+<p><strong>Scope.</strong> Layer 0 (Design: four user-facing axes plus the internal <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> grammar) + Layer 1 (Data, 1.1–1.5).
 Layer 2 full fixed recipes are documented in
 <code class="docutils literal notranslate"><span class="pre">docs/detail/preprocessing_layer_audit.md</span></code>; public preprocessing sweeps remain
 blocked. Layers 3+ are outside this quick-reference page.</p>
+<p>Simple exposes only Layer 0 Study Scope. Full exposes all four user-facing Layer 0 axes; <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, and <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> can be omitted to use their defaults.</p>
 <p><strong>At a glance.</strong></p>
 <table class="docutils align-default">
 <thead>
@@ -108,9 +109,9 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>0 — Design</p></td>
-<td><p>5</p></td>
-<td><p>34</p></td>
-<td><p>Recipe grammar: study scope, sweep shape, reproducibility, compute</p></td>
+<td><p>4 user-facing + internal <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></p></td>
+<td><p>see below</p></td>
+<td><p>Study scope, failure handling, reproducibility, compute layout, and YAML sweep grammar</p></td>
 </tr>
 <tr class="row-odd"><td><p>1 — Data</p></td>
 <td><p>12</p></td>

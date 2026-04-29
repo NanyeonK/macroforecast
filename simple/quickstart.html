@@ -112,6 +112,10 @@
 </div>
 <p>The default profile is <code class="docutils literal notranslate"><span class="pre">macrocast-default-v1</span></code>. It uses a conservative baseline path:</p>
 <ul class="simple">
+<li><p>Layer 0 <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_one_method</span></code></p></li>
+<li><p>Layer 0 <code class="docutils literal notranslate"><span class="pre">failure_policy</span> <span class="pre">=</span> <span class="pre">fail_fast</span></code></p></li>
+<li><p>Layer 0 <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span> <span class="pre">=</span> <span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code></p></li>
+<li><p>Layer 0 <code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">serial</span></code></p></li>
 <li><p>revised information set</p></li>
 <li><p>expanding-window point forecast</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ar</span></code> model</p></li>
@@ -120,6 +124,7 @@
 <li><p>official FRED-MD/FRED-QD transformation codes when available</p></li>
 <li><p>no extra scaling, imputation, outlier handling, feature selection, or dimensionality reduction</p></li>
 </ul>
+<p>Simple users normally choose only the first Layer 0 item, Study Scope. A single default call resolves to <code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code>; <code class="docutils literal notranslate"><span class="pre">Experiment.compare_models([...])</span></code> resolves to <code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code>. The failure, reproducibility, and compute policies above are written to the manifest but are not first-screen Simple decisions.</p>
 <p>The sample period is required. <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are part of the experiment definition, not optional runtime filters.</p>
 <section id="data-frequency">
 <h2>Data Frequency<a class="headerlink" href="#data-frequency" title="Link to this heading"></a></h2>

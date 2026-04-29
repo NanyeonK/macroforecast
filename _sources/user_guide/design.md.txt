@@ -2,6 +2,8 @@
 
 Stage 0 decides **the execution grammar**: which unit of work is run or compared, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. The simple default path uses the small operational subset needed for a one-cell comparison or a controlled model comparison.
 
+Simple exposes only `study_scope` at this stage. Full exposes all four user-facing axes, but the three execution-policy axes can be omitted to use defaults.
+
 **At a glance (defaults):**
 - `study_scope = one_target_one_method` — one target, one forecasting path, one `comparison_sweep` cell.
 - `axis_type = fixed` per axis — set to `sweep` only on the axis you are varying.
