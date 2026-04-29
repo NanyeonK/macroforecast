@@ -99,39 +99,39 @@ validation, and backlog.</p>
 <p>Layer 0 must not know dataset semantics, preprocessing semantics, model
 families, or metrics.</p>
 </section>
-<section id="layer-1-official-data-frame">
-<h2>Layer 1: Official Data Frame<a class="headerlink" href="#layer-1-official-data-frame" title="Link to this heading"></a></h2>
-<p>Owns the official data frame before researcher-specific transformations:</p>
+<section id="layer-1-fred-data-frame">
+<h2>Layer 1: FRED Data Frame<a class="headerlink" href="#layer-1-fred-data-frame" title="Link to this heading"></a></h2>
+<p>Owns the FRED data frame before researcher-specific transformations:</p>
 <ul class="simple">
 <li><p>dataset identity</p></li>
 <li><p>source adapter / loader</p></li>
 <li><p>frequency</p></li>
 <li><p>information set and release-lag availability</p></li>
 <li><p>target identity, horizons, sample start/end</p></li>
-<li><p>official dataset transformation policy and target/X transform scope</p></li>
-<li><p>official availability handling</p></li>
-<li><p>raw-source missing/outlier policy before official transforms/T-codes
+<li><p>FRED-provided transformation policy and target/X transform scope</p></li>
+<li><p>FRED availability handling</p></li>
+<li><p>raw-source missing/outlier policy before FRED transforms/T-codes
 (<code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>)</p></li>
 <li><p>raw eligible variable universe</p></li>
 <li><p>contemporaneous information-set rule</p></li>
 </ul>
-<p>Layer 1 output is an official frame plus provenance reports. Runtime records
+<p>Layer 1 output is a FRED frame plus provenance reports. Runtime records
 that handoff as <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code> in <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code>,
 with a compact summary in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and an artifact entry in
 <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>. It should be enough to reproduce “what data were
 available to the study” before model-specific choices.</p>
 <p>In full mode, Layer 1 may clean or flag raw-source missing values and
-raw-source outliers before official transforms/T-codes. That order must be
+raw-source outliers before FRED transforms/T-codes. That order must be
 recorded because it differs from imputing or clipping after transformed model
 inputs already exist.</p>
 </section>
 <section id="layer-2-research-preprocessing-feature-representation">
 <h2>Layer 2: Research Preprocessing / Feature Representation<a class="headerlink" href="#layer-2-research-preprocessing-feature-representation" title="Link to this heading"></a></h2>
 <p>Owns transformations and feature representations researchers can vary within
-the same official data frame:</p>
+the same FRED data frame:</p>
 <ul class="simple">
-<li><p>target transforms beyond official dataset codes</p></li>
-<li><p>X transforms beyond official dataset codes</p></li>
+<li><p>target transforms beyond FRED-provided codes</p></li>
+<li><p>X transforms beyond FRED-provided codes</p></li>
 <li><p>scaling and normalization</p></li>
 <li><p>post-transform/model-input missing imputation algorithms</p></li>
 <li><p>post-transform/model-input outlier handling</p></li>
@@ -358,7 +358,7 @@ gradient-path reports are named but not open.</p>
 <p>Existing recipes may still place migrated axes at their old layer path. The
 compiler accepts that during migration. New docs, examples, and generated recipes
 should move toward canonical ownership.</p>
-<p>For official dataset transformations, canonical Layer 1 axes are
+<p>For FRED-provided transformations, canonical Layer 1 axes are
 <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>. The older Layer 2
 t-code fields remain compatibility inputs for legacy recipes. New generated
 recipes should use the Layer 1 axes; the compiler derives any runtime

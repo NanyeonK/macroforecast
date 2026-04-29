@@ -5,7 +5,7 @@ Date: 2026-04-24
 Layer 3 is the forecast-generator layer. It consumes the Layer 2
 representation handoff and produces forecasts. The Layer 0/1/2 migration makes
 this boundary stricter: Layer 3 no longer owns feature representation choices,
-target construction, official data treatment, or researcher preprocessing.
+target construction, FRED data treatment, or researcher preprocessing.
 
 ## Canonical Role
 
@@ -140,7 +140,7 @@ An AR generator, historical mean, random walk, ridge model, or registered
 custom generator can be a candidate or a baseline depending on the comparison
 design. The current `model_family` and `benchmark_family` names remain accepted
 for recipe compatibility, but docs should describe them as generator family and
-generator role assignment. The official data frame and feature representation
+generator role assignment. The FRED data frame and feature representation
 are still supplied by Layers 1 and 2.
 
 ## Current Design State

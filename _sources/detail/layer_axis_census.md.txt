@@ -46,7 +46,7 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | `failure_policy` | - | `enum` | `fixed` | operational=5 | `operational`: `fail_fast` (default), `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only` |
 | `reproducibility_mode` | - | `enum` | `fixed` | operational=4 | `operational`: `strict_reproducible`, `seeded_reproducible` (default), `best_effort`, `exploratory` |
 
-### Layer 1: source data, target, and official frame
+### Layer 1: source data, target, and FRED frame
 
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|

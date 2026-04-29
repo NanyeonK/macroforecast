@@ -15,7 +15,7 @@ Defaults are part of the research design. They must be visible, versioned, and w
 Each layer owns a different class of decisions:
 
 - Layer 0: study setup and execution grammar.
-- Layer 1: official data task and source frame.
+- Layer 1: FRED data task and source frame.
 - Layer 2: representation construction and researcher preprocessing.
 - Layer 3: forecast generation.
 - Layer 4: evaluation.

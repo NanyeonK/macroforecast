@@ -1218,7 +1218,7 @@
         <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;+&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-                    <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39; supports a single official dataset, not a composite&quot;</span>
+                    <span class="s2">&quot;custom_source_policy=&#39;custom_panel_only&#39; supports a single FRED dataset, not a composite&quot;</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="o">!=</span> <span class="n">dataset</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>

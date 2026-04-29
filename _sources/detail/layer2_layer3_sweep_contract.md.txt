@@ -74,7 +74,7 @@ representation payload plus training settings.
 ## Terms
 
 `H`
-: The Layer 1 official frame after source loading, official transform policy,
+: The Layer 1 FRED frame after source loading, official transform policy,
   raw-source missing/outlier decisions, release-lag policy, and target/X
   alignment.
 
@@ -225,7 +225,7 @@ the data.
 
 ### Base X
 
-Base X starts from the active predictor panel. It may be raw official frame X,
+Base X starts from the active predictor panel. It may be raw FRED frame X,
 dataset t-code transformed X, or post-frame extra-preprocessed X depending on
 the Layer 1 official-transform choices and Layer 2 frame-conditioning choices.
 

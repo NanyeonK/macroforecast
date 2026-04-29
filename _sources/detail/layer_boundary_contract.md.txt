@@ -23,40 +23,40 @@ Owns study grammar and execution shape:
 Layer 0 must not know dataset semantics, preprocessing semantics, model
 families, or metrics.
 
-## Layer 1: Official Data Frame
+## Layer 1: FRED Data Frame
 
-Owns the official data frame before researcher-specific transformations:
+Owns the FRED data frame before researcher-specific transformations:
 
 - dataset identity
 - source adapter / loader
 - frequency
 - information set and release-lag availability
 - target identity, horizons, sample start/end
-- official dataset transformation policy and target/X transform scope
-- official availability handling
-- raw-source missing/outlier policy before official transforms/T-codes
+- FRED-provided transformation policy and target/X transform scope
+- FRED availability handling
+- raw-source missing/outlier policy before FRED transforms/T-codes
   (`raw_missing_policy`, `raw_outlier_policy`)
 - raw eligible variable universe
 - contemporaneous information-set rule
 
-Layer 1 output is an official frame plus provenance reports. Runtime records
+Layer 1 output is a FRED frame plus provenance reports. Runtime records
 that handoff as `layer1_official_frame_v1` in `layer1_official_frame.json`,
 with a compact summary in `manifest.json` and an artifact entry in
 `artifact_manifest.json`. It should be enough to reproduce "what data were
 available to the study" before model-specific choices.
 
 In full mode, Layer 1 may clean or flag raw-source missing values and
-raw-source outliers before official transforms/T-codes. That order must be
+raw-source outliers before FRED transforms/T-codes. That order must be
 recorded because it differs from imputing or clipping after transformed model
 inputs already exist.
 
 ## Layer 2: Research Preprocessing / Feature Representation
 
 Owns transformations and feature representations researchers can vary within
-the same official data frame:
+the same FRED data frame:
 
-- target transforms beyond official dataset codes
-- X transforms beyond official dataset codes
+- target transforms beyond FRED-provided codes
+- X transforms beyond FRED-provided codes
 - scaling and normalization
 - post-transform/model-input missing imputation algorithms
 - post-transform/model-input outlier handling
@@ -283,7 +283,7 @@ Existing recipes may still place migrated axes at their old layer path. The
 compiler accepts that during migration. New docs, examples, and generated recipes
 should move toward canonical ownership.
 
-For official dataset transformations, canonical Layer 1 axes are
+For FRED-provided transformations, canonical Layer 1 axes are
 `official_transform_policy` and `official_transform_scope`. The older Layer 2
 t-code fields remain compatibility inputs for legacy recipes. New generated
 recipes should use the Layer 1 axes; the compiler derives any runtime

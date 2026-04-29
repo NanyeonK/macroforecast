@@ -81,7 +81,7 @@
 <h1>Layer 2 Feature Representation<a class="headerlink" href="#layer-2-feature-representation" title="Link to this heading"></a></h1>
 <p>Date: 2026-04-26</p>
 <p>Layer 2 is the research preprocessing and feature-representation layer. Its job
-is to turn the Layer 1 official data frame into the model input matrices used by
+is to turn the Layer 1 FRED data frame into the model input matrices used by
 Layer 3.</p>
 <p>See <code class="docutils literal notranslate"><span class="pre">layer2_revision_plan.md</span></code> for the step-by-step migration plan from the
 current bridge to the explicit feature-block runtime.</p>
@@ -330,7 +330,7 @@ raw-panel feature runtimes.
 <code class="docutils literal notranslate"><span class="pre">target_level_addback</span></code> appends the observable target level at the feature row
 date (<code class="docutils literal notranslate"><span class="pre">target_t</span></code>) and at the prediction origin (<code class="docutils literal notranslate"><span class="pre">target_origin</span></code>).
 <code class="docutils literal notranslate"><span class="pre">x_level_addback</span></code> appends raw-level <code class="docutils literal notranslate"><span class="pre">H</span></code> values preserved after Layer 1 raw
-missing/outlier handling and before official transforms/T-codes, using
+missing/outlier handling and before FRED transforms/T-codes, using
 <code class="docutils literal notranslate"><span class="pre">{predictor}_level</span></code> public names. <code class="docutils literal notranslate"><span class="pre">selected_level_addbacks</span></code> applies the same
 source/alignment rule only to <code class="docutils literal notranslate"><span class="pre">leaf_config.selected_level_addback_columns</span></code>.
 <code class="docutils literal notranslate"><span class="pre">level_growth_pairs</span></code> records existing transformed predictor columns paired

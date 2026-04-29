@@ -116,7 +116,7 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <tr class="row-odd"><td><p>1 — Data</p></td>
 <td><p>18 registry axes, 15 primary Navigator axes</p></td>
 <td><p>all current values operational</p></td>
-<td><p>Official data frame: dataset, frequency, information set, FRED-SD source selection, target structure, raw cleaning, official transforms, availability</p></td>
+<td><p>FRED data frame: dataset, frequency, information set, FRED-SD source selection, target structure, raw cleaning, official transforms, availability</p></td>
 </tr>
 </tbody>
 </table>
@@ -266,8 +266,8 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <hr class="docutils" />
 <section id="stage-1-data">
 <h2>Stage 1 — Data<a class="headerlink" href="#stage-1-data" title="Link to this heading"></a></h2>
-<section id="official-data-frame-source-md">
-<h3>1.1 Official Data Frame — <a class="reference internal" href="../user_guide/data/source.html"><span class="std std-doc">source.md</span></a><a class="headerlink" href="#official-data-frame-source-md" title="Link to this heading"></a></h3>
+<section id="fred-data-frame-source-md">
+<h3>1.1 FRED Data Frame — <a class="reference internal" href="../user_guide/data/source.html"><span class="std std-doc">source.md</span></a><a class="headerlink" href="#fred-data-frame-source-md" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Axis</p></th>
@@ -278,7 +278,7 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code></p></td>
-<td><p>official source loaded/merged -&gt; <code class="docutils literal notranslate"><span class="pre">raw_result.data.columns</span></code>; standalone FRED-SD requires explicit <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p>FRED source loaded/merged -&gt; <code class="docutils literal notranslate"><span class="pre">raw_result.data.columns</span></code>; standalone FRED-SD requires explicit <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">official_only</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>, <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></p></td>
@@ -330,11 +330,11 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p></td>
-<td><p>raw-source missing treatment before official transforms/T-codes; <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code> reads <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code></p></td>
+<td><p>raw-source missing treatment before FRED transforms/T-codes; <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code> reads <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></p></td>
-<td><p>raw-source outlier treatment before official transforms/T-codes; optional <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code> limits affected columns</p></td>
+<td><p>raw-source outlier treatment before FRED transforms/T-codes; optional <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code> limits affected columns</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code></p></td>
@@ -388,7 +388,7 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <h2>How to verify what you picked<a class="headerlink" href="#how-to-verify-what-you-picked" title="Link to this heading"></a></h2>
 <p>Every value above lands somewhere you can inspect:</p>
 <ol class="arabic simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code></strong> in the run’s artifact directory — official data choices live under <code class="docutils literal notranslate"><span class="pre">data_task_spec</span></code> (Layer 1), while migrated model/preprocessing/evaluation choices live under their canonical specs.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code></strong> in the run’s artifact directory — FRED data choices live under <code class="docutils literal notranslate"><span class="pre">data_task_spec</span></code> (Layer 1), while migrated model/preprocessing/evaluation choices live under their canonical specs.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code></strong> — per-row columns show realised targets, forecasts, benchmark forecasts, horizon labels, and any evaluation-time transformed columns.</p></li>
 <li><p><strong>Compile status</strong> — <code class="docutils literal notranslate"><span class="pre">compile_result.compiled.execution_status</span></code> is one of <code class="docutils literal notranslate"><span class="pre">executable</span></code>, <code class="docutils literal notranslate"><span class="pre">ready_for_sweep_runner</span></code>, <code class="docutils literal notranslate"><span class="pre">ready_for_wrapper_runner</span></code>, <code class="docutils literal notranslate"><span class="pre">ready_for_replication_runner</span></code>, <code class="docutils literal notranslate"><span class="pre">not_supported</span></code>, or <code class="docutils literal notranslate"><span class="pre">blocked_by_incompatibility</span></code>. <code class="docutils literal notranslate"><span class="pre">blocked_reasons</span></code> lists hard compile guards; <code class="docutils literal notranslate"><span class="pre">warnings</span></code> lists runner handoff or unsupported-route context.</p></li>
 </ol>

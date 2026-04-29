@@ -5,8 +5,8 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 | Section | axis | Role |
 |---|---|---|
 | 1.5.1 | [`missing_availability`](#151-missing_availability) | What to do when predictor / target rows contain NaN |
-| 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before official transforms/T-codes |
-| 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before official transforms/T-codes |
+| 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before FRED transforms/T-codes |
+| 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before FRED transforms/T-codes |
 | 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
 | 1.5.5 | [`contemporaneous_x_rule`](#155-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
 
@@ -20,8 +20,8 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `study_scope` (0.2).
 **At a glance (defaults):**
 - `missing_availability = zero_fill_leading_predictor_gaps` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `require_complete_rows`, `keep_available_rows`, or `impute_predictors_only` only when a specific missing-data treatment matters.
-- `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
-- `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before official transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
+- `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before FRED transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
+- `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before FRED transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
 - `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
 - `contemporaneous_x_rule = forbid_same_period_predictors` — realistic real-time constraint. Switch to `allow_same_period_predictors` only for oracle / data-leak benchmarks.
 
@@ -71,16 +71,16 @@ path:
 
 ## 1.5.2 `raw_missing_policy`
 
-**Selects raw-source missing treatment before official transforms/T-codes.** Four operational values.
+**Selects raw-source missing treatment before FRED transforms/T-codes.** Four operational values.
 
 ### Value catalog
 
 | Value | Status | What it does |
 |---|---|---|
-| `preserve_raw_missing` | operational | Default. Leave raw-source missing values untouched before official transforms/T-codes. |
-| `zero_fill_leading_predictor_missing_before_tcode` | operational | Within the selected sample period, fill predictor leading missing values with 0 before official transforms/T-codes. |
-| `impute_raw_predictors` | operational | Impute raw predictor columns before official transforms/T-codes using `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}. |
-| `drop_raw_missing_rows` | operational | Drop rows with any raw-source missing value before official transforms/T-codes. Aggressive; use only for explicit full-mode designs. |
+| `preserve_raw_missing` | operational | Default. Leave raw-source missing values untouched before FRED transforms/T-codes. |
+| `zero_fill_leading_predictor_missing_before_tcode` | operational | Within the selected sample period, fill predictor leading missing values with 0 before FRED transforms/T-codes. |
+| `impute_raw_predictors` | operational | Impute raw predictor columns before FRED transforms/T-codes using `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}. |
+| `drop_raw_missing_rows` | operational | Drop rows with any raw-source missing value before FRED transforms/T-codes. Aggressive; use only for explicit full-mode designs. |
 
 ### Functions & features
 
@@ -105,18 +105,18 @@ path:
 
 ## 1.5.3 `raw_outlier_policy`
 
-**Selects raw-source outlier treatment before official transforms/T-codes.** Six operational values.
+**Selects raw-source outlier treatment before FRED transforms/T-codes.** Six operational values.
 
 ### Value catalog
 
 | Value | Status | What it does |
 |---|---|---|
-| `preserve_raw_outliers` | operational | Default. Leave raw-source outliers untouched before official transforms/T-codes. |
+| `preserve_raw_outliers` | operational | Default. Leave raw-source outliers untouched before FRED transforms/T-codes. |
 | `winsorize_raw` | operational | Clip raw numeric columns at the 1st and 99th percentiles. |
 | `iqr_clip_raw` | operational | Clip raw numeric columns by 1.5 IQR fences. |
 | `mad_clip_raw` | operational | Clip raw numeric columns by 3 MAD fences. |
 | `zscore_clip_raw` | operational | Clip raw numeric columns by 3 standard deviations. |
-| `set_raw_outliers_to_missing` | operational | Convert values outside the 1st and 99th percentiles to missing before official transforms/T-codes. |
+| `set_raw_outliers_to_missing` | operational | Convert values outside the 1st and 99th percentiles to missing before FRED transforms/T-codes. |
 
 ### Functions & features
 
@@ -179,7 +179,7 @@ path:
 
 ## Moved Out Of Layer 1
 
-`structural_break_segmentation` is now a Layer 2 representation/feature-block decision. It augments the model input with break dummies, so it no longer belongs to the official data-frame task. For user-supplied break dates, use Layer 2 `deterministic_components=break_dummies` with `leaf_config.break_dates`.
+`structural_break_segmentation` is now a Layer 2 representation/feature-block decision. It augments the model input with break dummies, so it no longer belongs to the FRED data-frame task. For user-supplied break dates, use Layer 2 `deterministic_components=break_dummies` with `leaf_config.break_dates`.
 
 ---
 
@@ -219,7 +219,7 @@ path:
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
 - All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`) and are propagated into `data_task_spec`.
-- `raw_missing_policy` and `raw_outlier_policy` run before official transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the official frame exists.
-- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or official frame before researcher preprocessing.
+- `raw_missing_policy` and `raw_outlier_policy` run before FRED transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the FRED frame exists.
+- `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or FRED frame before researcher preprocessing.
 
 Layer 1 data-handling walk complete — the five current policy axes are operational.

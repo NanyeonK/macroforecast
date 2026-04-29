@@ -79,16 +79,16 @@
              
   <section id="data-stage-1">
 <h1>Data (Stage 1)<a class="headerlink" href="#data-stage-1" title="Link to this heading"></a></h1>
-<p>Stage 1 answers <strong>“what official data frame does this study start from?”</strong> — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.</p>
+<p>Stage 1 answers <strong>“what FRED data frame does this study start from?”</strong> — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only FRED availability rules.</p>
 <p>After the layer-boundary migration, Stage 1 holds <strong>17 canonical axes</strong> under the <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code> layer. Fifteen are shown in the primary Navigator tree; <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are hidden lower selectors used by explicit FRED-SD selector helpers and group resolution.</p>
 <p>| Group | Axes | Focus |
 |—|—|—:|—|
-| Source &amp; frame | 3 | <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code> |
+| Source &amp; frame | 6 | <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code> |
 | FRED-SD source selection | 5 | <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code>, hidden <code class="docutils literal notranslate"><span class="pre">state_selection</span></code>, hidden <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> |
 | Target structure | 1 | <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>; target/targets/horizons live in <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> |
 | Variable universe | 1 | <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> |
-| Raw source cleaning | 2 | <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before official transforms/T-codes |
-| Official transforms | 2 | <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code> |
+| Raw source cleaning | 2 | <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before FRED transforms/T-codes |
+| FRED transforms | 2 | <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code> |
 | Availability and timing | 3 | <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code> |</p>
 <p>Stage 1 does not fix which model, benchmark, researcher preprocessing, or evaluation metric to use — those belong to Stage 2+ layers.</p>
 <section id="relation-to-stage-0">
@@ -99,7 +99,7 @@
 <h2>Honest operational status<a class="headerlink" href="#honest-operational-status" title="Link to this heading"></a></h2>
 <p>Layer 1 now covers 17 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:</p>
 <ul class="simple">
-<li><p><strong>Kept in Layer 1</strong> — dataset/source/frequency/information set, FRED-SD source selection, target structure, raw variable universe, raw-source cleaning, official transforms, official availability, release lag, and contemporaneous information rule.</p></li>
+<li><p><strong>Kept in Layer 1</strong> — dataset/source/frequency/information set, FRED-SD source selection, target structure, raw variable universe, raw-source cleaning, FRED transforms, FRED availability, release lag, and contemporaneous information rule.</p></li>
 <li><p><strong>Moved to Layer 2</strong> — target representation, predictor family, feature builder / data-richness representation, feature-block grammar, factor-count representation, and deterministic/break features.</p></li>
 <li><p><strong>Moved to Layer 3</strong> — benchmark, forecast type/object, model family, and training-window rules.</p></li>
 <li><p><strong>Moved to Layer 4</strong> — OOS regime subset evaluation.</p></li>

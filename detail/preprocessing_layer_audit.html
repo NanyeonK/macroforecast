@@ -93,7 +93,7 @@ change when the researcher changes the representation handed to the forecast
 generator. It owns optional transformations of predictors and the target, feature engineering,
 feature-block selection, predictor family, feature builders, dimensionality
 reduction, factor-count decisions, target-scale handling, preprocessing order,
-and leakage discipline. It does not own dataset identity, official data
+and leakage discipline. It does not own dataset identity, FRED data
 availability, model family, benchmark family, model training/tuning protocol,
 scoring metrics, or statistical tests.</p>
 <p>This means the canonical Layer 2 question is not “what preprocessing happens by
@@ -149,7 +149,7 @@ scaling, filtering, dimensionality reduction, feature selection, or custom
 preprocessing under train-only fit discipline. That profile is the current
 generic preprocessing support surface, not the full research feature-block grammar.</p>
 <p>Built-in Layer 2 choices should stay aligned with macro-forecasting research:
-official dataset transforms, X-side imputation, scaling, filtering, PCA/static
+FRED-provided transforms, X-side imputation, scaling, filtering, PCA/static
 factor extraction, feature screening, fixed lag construction, level add-backs,
 lag rotations, local temporal factors, and custom hooks for researcher
 extensions. Named papers such as Goulet Coulombe et al. (2021) should be
@@ -189,7 +189,7 @@ records what the current runtime can execute today.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">level_feature_block</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">target_level_addback</span></code>, <code class="docutils literal notranslate"><span class="pre">x_level_addback</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_level_addbacks</span></code>, <code class="docutils literal notranslate"><span class="pre">level_growth_pairs</span></code></p></td>
-<td><p>Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed <code class="docutils literal notranslate"><span class="pre">target_t</span></code> / <code class="docutils literal notranslate"><span class="pre">target_origin</span></code>; X-level add-back appends raw-level <code class="docutils literal notranslate"><span class="pre">H</span></code> predictor values preserved before official transforms/T-codes; selected subset add-back restricts those columns via <code class="docutils literal notranslate"><span class="pre">leaf_config.selected_level_addback_columns</span></code>; level-growth pairs record existing transformed predictor columns with raw-level counterparts from <code class="docutils literal notranslate"><span class="pre">leaf_config.level_growth_pair_columns</span></code>.</p></td>
+<td><p>Level add-backs are executable for raw-panel feature runtimes. Target add-back appends observed <code class="docutils literal notranslate"><span class="pre">target_t</span></code> / <code class="docutils literal notranslate"><span class="pre">target_origin</span></code>; X-level add-back appends raw-level <code class="docutils literal notranslate"><span class="pre">H</span></code> predictor values preserved before FRED transforms/T-codes; selected subset add-back restricts those columns via <code class="docutils literal notranslate"><span class="pre">leaf_config.selected_level_addback_columns</span></code>; level-growth pairs record existing transformed predictor columns with raw-level counterparts from <code class="docutils literal notranslate"><span class="pre">leaf_config.level_growth_pair_columns</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">temporal_feature_block</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">moving_average_features</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_moments</span></code>, <code class="docutils literal notranslate"><span class="pre">local_temporal_factors</span></code>, <code class="docutils literal notranslate"><span class="pre">volatility_features</span></code>, registered <code class="docutils literal notranslate"><span class="pre">custom_temporal_features</span></code></p></td>
@@ -288,7 +288,7 @@ runtime integration and acceptance tests.</p>
 </section>
 <section id="current-default">
 <h2>Current Default<a class="headerlink" href="#current-default" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast-default-v1</span></code> uses the official dataset transformation path:</p>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast-default-v1</span></code> uses the FRED-provided transformation path:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Axis</p></th>
@@ -336,14 +336,14 @@ and <code class="docutils literal notranslate"><span class="pre">official_transf
 <li><p>Layer 2 keeps the legacy t-code fields as a runtime compatibility bridge
 until the <code class="docutils literal notranslate"><span class="pre">PreprocessContract</span></code> no longer needs them.</p></li>
 <li><p>Layer 2 still owns researcher-controlled extra preprocessing after the
-official frame exists.</p></li>
+FRED frame exists.</p></li>
 </ul>
 <p>Missing/outlier boundary after the migration pass:</p>
 <ul class="simple">
 <li><p>Layer 1 owns raw-source missing/outlier treatment when it happens before
-official dataset transforms or T-codes. This is the “clean raw, then T-code”
+FRED-provided transforms or T-codes. This is the “clean raw, then T-code”
 order, now represented by <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>.</p></li>
-<li><p>Layer 2 owns missing imputation and outlier handling after the official frame
+<li><p>Layer 2 owns missing imputation and outlier handling after the FRED frame
 exists. This is the “T-code first, then impute/clip/select/scale” order.</p></li>
 <li><p>Both orders can be reasonable for detailed empirical work. The second order
 can mix raw-source defects with transform-induced missing values and model
@@ -444,8 +444,8 @@ derives the runtime bridge:</p>
 </ul>
 <p>Runtime order:</p>
 <ol class="arabic simple">
-<li><p>Layer 1 applies official dataset t-codes to the selected frame.</p></li>
-<li><p>Layer 2 builds supervised train/test slices from that official frame.</p></li>
+<li><p>Layer 1 applies FRED-provided t-codes to the selected frame.</p></li>
+<li><p>Layer 2 builds supervised train/test slices from that FRED frame.</p></li>
 <li><p>Layer 2 fits supported extra preprocessing on each training slice only and
 applies it to the prediction slice.</p></li>
 </ol>
@@ -459,7 +459,7 @@ evaluation, and dual-scale evaluation are executable with per-window fit state.<
 <li><p>Legacy bridge fields remain compatibility fields. New recipes should set the
 Layer 1 official-transform axes and let the compiler derive the bridge.</p></li>
 </ul>
-<p>These helpers operate after the selected official frame or raw-panel feature
+<p>These helpers operate after the selected FRED frame or raw-panel feature
 frame has been handed to Layer 2. They should not be documented as raw-source
 cleaning unless the recipe explicitly chooses a raw-only preprocessing path and
 records that the action occurred before any official transform/T-code step.</p>

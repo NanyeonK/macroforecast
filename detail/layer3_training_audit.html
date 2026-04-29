@@ -83,7 +83,7 @@
 <p>Layer 3 is the forecast-generator layer. It consumes the Layer 2
 representation handoff and produces forecasts. The Layer 0/1/2 migration makes
 this boundary stricter: Layer 3 no longer owns feature representation choices,
-target construction, official data treatment, or researcher preprocessing.</p>
+target construction, FRED data treatment, or researcher preprocessing.</p>
 <section id="canonical-role">
 <h2>Canonical Role<a class="headerlink" href="#canonical-role" title="Link to this heading"></a></h2>
 <p>Layer 3 owns choices that determine how forecasts are generated after Layer 2
@@ -267,7 +267,7 @@ forecast-generator registry with comparison roles:</p>
 custom generator can be a candidate or a baseline depending on the comparison
 design. The current <code class="docutils literal notranslate"><span class="pre">model_family</span></code> and <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> names remain accepted
 for recipe compatibility, but docs should describe them as generator family and
-generator role assignment. The official data frame and feature representation
+generator role assignment. The FRED data frame and feature representation
 are still supplied by Layers 1 and 2.</p>
 </section>
 </section>

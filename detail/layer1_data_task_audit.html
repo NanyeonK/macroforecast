@@ -98,7 +98,7 @@ Layer 1.</p>
 </section>
 <section id="canonical-layer-1-after-migration">
 <h2>Canonical Layer 1 After Migration<a class="headerlink" href="#canonical-layer-1-after-migration" title="Link to this heading"></a></h2>
-<p>Layer 1 now means official data frame and target identity. The live canonical
+<p>Layer 1 now means FRED data frame and target identity. The live canonical
 Layer 1 registry has 17 axes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></li>
@@ -126,10 +126,10 @@ explicit FRED-SD helper methods or by group resolution.</p>
 availability reports remain Layer 1 <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>/provenance responsibilities.</p>
 <p>Full mode additionally distinguishes raw-source data defects from
 post-transform/model-input defects. A raw-source missing value or raw-source
-outlier is already present in the source panel before the official dataset
+outlier is already present in the source panel before the FRED-provided
 transform/T-code step. Layer 1 owns the policy and provenance for those raw
 defects when the researcher chooses to inspect, fill, drop, winsorize, clip, or
-otherwise repair the source panel before official transforms are applied.</p>
+otherwise repair the source panel before FRED transforms are applied.</p>
 <p>Runtime now closes this boundary with <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>. Every run
 writes <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code>, records the contract version and compact
 summary in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, and registers the sidecar in
@@ -159,7 +159,7 @@ broader cells are marked selectable.</p>
 <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, and <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>.</p></li>
 <li><p>Custom files are handled by <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> and
 <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>: users choose whether a custom file replaces the
-selected official panel or is appended to it.</p></li>
+selected FRED panel or is appended to it.</p></li>
 <li><p>Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> requires explicit <code class="docutils literal notranslate"><span class="pre">frequency</span></code>; the source contains monthly and quarterly state series, so an implicit default would hide a research decision.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code> is fixed to monthly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code> is fixed to quarterly.</p></li>
@@ -171,7 +171,7 @@ CSV columns use the same canonical <code class="docutils literal notranslate"><s
 workbook adapter.</p></li>
 <li><p>Custom sources require fixed-axis <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code> and
 <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_source_path</span></code>.</p></li>
-<li><p>Official dataset transforms now have canonical Layer 1 axes:
+<li><p>FRED-provided transforms now have canonical Layer 1 axes:
 <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>.</p></li>
 <li><p>Official transform choices are read from Layer 1 axes. The compiler derives runtime <code class="docutils literal notranslate"><span class="pre">PreprocessContract</span></code> fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code> is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>.</p></li>
@@ -180,7 +180,7 @@ workbook adapter.</p></li>
 <section id="target-structure">
 <h3>1.2 Target Structure<a class="headerlink" href="#target-structure" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Layer 1 <code class="docutils literal notranslate"><span class="pre">target_structure</span></code> only records whether the official frame has one
+<li><p>Layer 1 <code class="docutils literal notranslate"><span class="pre">target_structure</span></code> only records whether the FRED frame has one
 target or multiple targets.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">single_target</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multi_target</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.targets</span></code>.</p></li>
@@ -248,11 +248,11 @@ the network, and composite component source contracts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">missing_availability=impute_predictors_only</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code> in <code class="docutils literal notranslate"><span class="pre">{mean,</span> <span class="pre">median,</span> <span class="pre">ffill,</span> <span class="pre">bfill}</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">missing_availability=keep_available_rows</span></code> and <code class="docutils literal notranslate"><span class="pre">missing_availability=impute_predictors_only</span></code> now write <code class="docutils literal notranslate"><span class="pre">data_reports.missing_availability</span></code> in <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, including row-drop counts or predictor-imputation counts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=preserve_raw_missing</span></code> is the default raw-source missing policy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=zero_fill_leading_predictor_missing_before_tcode</span></code> fills predictor leading missing values in the raw source panel before official transforms/T-codes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=impute_raw_predictors</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> in <code class="docutils literal notranslate"><span class="pre">{mean,</span> <span class="pre">median,</span> <span class="pre">ffill,</span> <span class="pre">bfill}</span></code> and imputes raw predictors before official transforms/T-codes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=drop_raw_missing_rows</span></code> drops rows with any raw-source missing value before official transforms/T-codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=zero_fill_leading_predictor_missing_before_tcode</span></code> fills predictor leading missing values in the raw source panel before FRED transforms/T-codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=impute_raw_predictors</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> in <code class="docutils literal notranslate"><span class="pre">{mean,</span> <span class="pre">median,</span> <span class="pre">ffill,</span> <span class="pre">bfill}</span></code> and imputes raw predictors before FRED transforms/T-codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy=drop_raw_missing_rows</span></code> drops rows with any raw-source missing value before FRED transforms/T-codes.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy=preserve_raw_outliers</span></code> is the default raw-source outlier policy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> values <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, and <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code> operate on raw numeric columns before official transforms/T-codes. <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code> may restrict the column set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> values <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, and <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code> operate on raw numeric columns before FRED transforms/T-codes. <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code> may restrict the column set.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule=series_specific_lag</span></code> requires non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.release_lag_per_series</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule=fixed_lag_all_series</span></code> and <code class="docutils literal notranslate"><span class="pre">release_lag_rule=series_specific_lag</span></code> now write <code class="docutils literal notranslate"><span class="pre">data_reports.release_lag</span></code> in <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">structural_break_segmentation</span></code> is no longer a Layer 1 policy. It remains
@@ -270,7 +270,7 @@ raw-source missing/outlier treatment before <code class="docutils literal notran
 applies dataset transforms or T-codes.</p></li>
 <li><p>Stage 2 is post-transform/model-input missing/outlier treatment in Layer 2.</p></li>
 <li><p>Raw-source missing values belong to Layer 1 when the decision is “repair the
-raw source panel, then apply official transforms/T-codes.”</p></li>
+raw source panel, then apply FRED transforms/T-codes.”</p></li>
 <li><p>Raw-source outliers follow the same ownership rule. If a researcher clips,
 winsorizes, or converts a raw outlier to missing before T-code construction,
 that is a Layer 1 full-contract decision and must be recorded in provenance.</p></li>
@@ -281,7 +281,7 @@ differencing endpoints, and model-input preprocessing artifacts. The numerical
 difference can be small in many empirical settings, but full mode must record
 the phase and order.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code> remains accepted for migration compatibility. Conceptually,
-imputation applied after the official frame exists belongs to Layer 2.</p></li>
+imputation applied after the FRED frame exists belongs to Layer 2.</p></li>
 <li><p>Layer 1 now exposes this raw-before-T-code decision through
 <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>. Layer 2 <code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code> and
 <code class="docutils literal notranslate"><span class="pre">x_outlier_policy</span></code> remain post-transform/model-input preprocessing.</p></li>
@@ -370,7 +370,7 @@ manifest summary.</p></li>
 conflicting Layer 1 official-transform choices vs legacy Layer 2 t-code bridge
 choices fail at compile time.</p></li>
 <li><p>Layer 1 raw missing/outlier axes are recorded in <code class="docutils literal notranslate"><span class="pre">data_task_spec</span></code> and execute
-before official transforms/T-codes.</p></li>
+before FRED transforms/T-codes.</p></li>
 <li><p>Layer 1 official-frame handoff is exported as <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>,
 written to <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code>, summarized in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, and
 listed in <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>.</p></li>

@@ -95,7 +95,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runs</span><span class="o">/</span>
   <span class="p">{</span><span class="n">recipe_id</span><span class="p">}</span><span class="n">__</span><span class="p">{</span><span class="n">target</span><span class="p">}</span><span class="n">__h</span><span class="p">{</span><span class="n">horizons</span><span class="p">}</span><span class="o">/</span>
     <span class="n">manifest</span><span class="o">.</span><span class="n">json</span>               <span class="c1"># Full provenance record</span>
-    <span class="n">layer1_official_frame</span><span class="o">.</span><span class="n">json</span>  <span class="c1"># Layer 1 official frame handoff contract</span>
+    <span class="n">layer1_official_frame</span><span class="o">.</span><span class="n">json</span>  <span class="c1"># Layer 1 FRED frame handoff contract</span>
     <span class="n">fred_sd_series_metadata</span><span class="o">.</span><span class="n">json</span> <span class="c1"># FRED-SD selected panel metadata, if used</span>
     <span class="n">fred_sd_frequency_report</span><span class="o">.</span><span class="n">json</span> <span class="c1"># FRED-SD frequency composition, if used</span>
     <span class="n">predictions</span><span class="o">.</span><span class="n">csv</span>             <span class="c1"># OOS prediction table</span>
@@ -171,7 +171,7 @@ that parse <code class="docutils literal notranslate"><span class="pre">predicti
 <section id="layer1-official-frame-json">
 <h2>layer1_official_frame.json<a class="headerlink" href="#layer1-official-frame-json" title="Link to this heading"></a></h2>
 <p>Layer 1 writes this file before Layer 2 representation construction. It records
-<code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, the exact official frame contract used by the run:
+<code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, the exact FRED frame contract used by the run:
 source metadata, target and horizon identity, frame shape/index/columns,
 information-set provenance, raw missing/outlier handling, missing-availability,
 release-lag, variable-universe choices, official transform/T-code evidence,

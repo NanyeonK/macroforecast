@@ -155,7 +155,7 @@ bridge fields for the old <code class="docutils literal notranslate"><span class
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_tcode_only</span></code></p></td>
 <td><p>executable</p></td>
-<td><p>Layer 1 applies official dataset transforms; Layer 2 adds no extra preprocessing.</p></td>
+<td><p>Layer 1 applies FRED-provided transforms; Layer 2 adds no extra preprocessing.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_only</span></code></p></td>
 <td><p>executable</p></td>
@@ -414,7 +414,7 @@ raw-panel feature runtimes.
 Target add-back appends the observed target level at the feature row date and
 at the prediction origin. X-level add-back appends raw-level <code class="docutils literal notranslate"><span class="pre">H</span></code> predictor
 values preserved after Layer 1 raw missing/outlier handling and before
-official transforms/T-codes. Selected level add-back applies the same
+FRED transforms/T-codes. Selected level add-back applies the same
 source/alignment rule to <code class="docutils literal notranslate"><span class="pre">leaf_config.selected_level_addback_columns</span></code>.
 Level-growth pairs record existing transformed predictor columns with
 raw-level counterparts from <code class="docutils literal notranslate"><span class="pre">leaf_config.level_growth_pair_columns</span></code>. These

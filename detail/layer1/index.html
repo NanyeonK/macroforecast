@@ -106,11 +106,11 @@
 <li><p>Current: Layer 1</p></li>
 <li><p>Next: <a class="reference internal" href="../layer2/index.html"><span class="std std-doc">4.2 Layer 2: Representation / Research Preprocessing</span></a></p></li>
 </ul>
-<p>Layer 1 owns the official data task. It decides which data source is used, which target structure is being forecast, what information is available, and how raw source-level missing/outlier and official-transform policies are handled before representation construction.</p>
+<p>Layer 1 owns the FRED data task. It decides which FRED source is used, whether custom data is attached, which target structure is being forecast, what information is available, and how raw source-level missing/outlier and transform policies are handled before representation construction.</p>
 <section id="simple-vs-full">
 <h2>Simple vs Full<a class="headerlink" href="#simple-vs-full" title="Link to this heading"></a></h2>
-<p>Simple asks for the data question directly: <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">horizons</span></code>. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> also needs <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. Custom files are optional source modifiers: Simple can expose <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> when the user wants to replace or append to the official source panel. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.</p>
-<p>Full exposes the complete Layer 1 official-frame contract. The live registry has <strong>20 Layer 1 axes</strong>. The Navigator primary tree shows 18 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional custom/FRED-SD sub-decisions, and many are defaulted policy controls. <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
+<p>Simple asks for the data question directly: <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">horizons</span></code>. Standalone <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> also needs <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. Custom files are optional source modifiers: Simple can expose <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, and <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> when the user wants to replace or append to the FRED source panel. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.</p>
+<p>Full exposes the complete Layer 1 FRED-frame contract. The live registry has <strong>20 Layer 1 axes</strong>. The Navigator primary tree shows 18 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional custom/FRED-SD sub-decisions, and many are defaulted policy controls. <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.</p>
 </section>
 <section id="hierarchy">
 <h2>Hierarchy<a class="headerlink" href="#hierarchy" title="Link to this heading"></a></h2>
@@ -127,7 +127,7 @@
 <tr class="row-even"><td><p>Primary decision</p></td>
 <td><p>Source identity</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_format</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_source_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> is the official source-panel choice. Custom source axes decide whether to use official data only, custom data only, or official plus custom data. <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is derived for MD/QD/composites and required only for standalone FRED-SD.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> is the FRED source-panel choice. Custom source axes decide whether to use FRED data only, custom data only, or FRED plus custom data. <code class="docutils literal notranslate"><span class="pre">frequency</span></code> is derived for MD/QD/composites and required only for standalone FRED-SD.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Primary policy</p></td>
 <td><p>Information regime</p></td>
@@ -152,10 +152,10 @@
 <tr class="row-odd"><td><p>Secondary policy</p></td>
 <td><p>Raw source quality</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
-<td><p>Handles defects present in raw source data before official transforms/T-codes.</p></td>
+<td><p>Handles defects present in raw source data before FRED transforms/T-codes.</p></td>
 </tr>
 <tr class="row-even"><td><p>Secondary policy</p></td>
-<td><p>Official frame policy</p></td>
+<td><p>FRED frame policy</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>Closes the official Layer 1 frame before Layer 2 research preprocessing begins.</p></td>
 </tr>
@@ -187,7 +187,7 @@
 </tr>
 <tr class="row-odd"><td><p>4.1.4</p></td>
 <td><p><a class="reference internal" href="raw_source_cleaning.html"><span class="std std-doc">Raw source cleaning</span></a></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before official transforms/T-codes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before FRED transforms/T-codes</p></td>
 </tr>
 <tr class="row-even"><td><p>4.1.5</p></td>
 <td><p><a class="reference internal" href="official_transforms.html"><span class="std std-doc">Official transforms</span></a></p></td>
@@ -195,7 +195,7 @@
 </tr>
 <tr class="row-odd"><td><p>4.1.6</p></td>
 <td><p><a class="reference internal" href="availability_timing.html"><span class="std std-doc">Availability and timing</span></a></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code> after the official frame exists</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code> after the FRED frame exists</p></td>
 </tr>
 </tbody>
 </table>
@@ -212,7 +212,7 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
 <td><p>required user choice</p></td>
-<td><p>required; official source panel only: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code></p></td>
+<td><p>required; FRED source panel only: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, or <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">official_only</span></code></p></td>
@@ -264,11 +264,11 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></p></td>
-<td><p>defaulted; non-default values act before official transforms/T-codes</p></td>
+<td><p>defaulted; non-default values act before FRED transforms/T-codes</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code></p></td>
-<td><p>defaulted; non-default values act before official transforms/T-codes</p></td>
+<td><p>defaulted; non-default values act before FRED transforms/T-codes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></p></td>
@@ -280,7 +280,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
-<td><p>defaulted after the official frame exists</p></td>
+<td><p>defaulted after the FRED frame exists</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ignore_release_lag</span></code></p></td>

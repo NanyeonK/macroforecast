@@ -167,12 +167,12 @@ describes the registry layer after migration.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
 <td><p>split from Layer 2 t-code axes</p></td>
 <td><p>1_data_task</p></td>
-<td><p>Official dataset transformations define the official frame, before researcher preprocessing.</p></td>
+<td><p>FRED-provided transformations define the FRED frame, before researcher preprocessing.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p>split from <code class="docutils literal notranslate"><span class="pre">tcode_application_scope</span></code></p></td>
 <td><p>1_data_task</p></td>
-<td><p>Target/X official transform scope is part of official frame construction.</p></td>
+<td><p>Target/X official transform scope is part of FRED frame construction.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
 <td><p>target-shape alias</p></td>
@@ -304,7 +304,7 @@ tests.</p>
 <li><p>Generated recipes, Navigator paths, and docs use canonical axis names only.</p></li>
 <li><p>Removed name aliases for source dispatch, information-set regime, target shape, and Layer 6 test routing are rejected by compiler and registry validation.</p></li>
 <li><p>Runtime fallback fields are kept only where needed to read already compiled manifests or feed older execution internals; they are not user-facing recipe choices.</p></li>
-<li><p>Official dataset transformation is a Layer 1 decision through <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>; runtime derives the lower-level transform contract from those axes.</p></li>
+<li><p>FRED-provided transformation is a Layer 1 decision through <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>; runtime derives the lower-level transform contract from those axes.</p></li>
 <li><p>Runtime dispatch reads explicit Layer 2 feature blocks first and keeps compatibility/provenance fields only as internal payloads. Explicit Layer 2 block recipes can omit bridge inputs; the compiler derives any required runtime payload internally.</p></li>
 <li><p>Layer 2 cleanup is closed for supported fixed full/runtime slices. Generic <code class="docutils literal notranslate"><span class="pre">Z</span></code> unification is a Layer 2 representation-handoff task, while Layer 3 stays a forecast-generator consumer. Remaining cleanup is focused on shrinking internal fallback readers without reopening the public recipe API.</p></li>
 </ul>

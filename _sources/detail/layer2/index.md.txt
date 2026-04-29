@@ -5,7 +5,7 @@
 - Current: Layer 2
 - Next: [4.3 Layer 3: Forecast Generator](../layer3/index.md)
 
-Layer 2 owns representation construction after Layer 1 produces the official frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the official frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.
+Layer 2 owns representation construction after Layer 1 produces the FRED frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the FRED frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.
 
 ## Decision order
 
@@ -25,7 +25,7 @@ Layer 2 uses researcher-facing names for target construction, predictor construc
 ## Layer contract
 
 Input:
-- Layer 1 official frame and target task.
+- Layer 1 FRED frame and target task.
 
 Output:
 - `layer2_representation_v1`;
