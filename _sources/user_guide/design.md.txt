@@ -136,7 +136,7 @@ path:
 
 **Selection question**: How hard do you want to pin the stochastic components?
 
-**Default**: `seeded_reproducible` — Python `random`, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism.
+**Default**: `seeded_reproducible` with seed `42` — Python `random`, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism. You can leave this axis out of a recipe unless you want stricter or looser behavior.
 
 Escalate when you need bit-identical reruns (paper replication) or when you don't care at all (exploratory drafting).
 

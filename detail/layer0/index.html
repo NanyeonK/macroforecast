@@ -111,7 +111,7 @@
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> — choose target cardinality and whether the method path is fixed or compared.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> — decide how failed variants or cells are handled; default is <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> — decide how strictly stochastic components are pinned.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> — decide how strictly stochastic components are pinned; default is <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — decide whether execution is serial or parallelized over a work unit.</p></li>
 </ol>
 <p>There is also an internal <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> grammar, but it is not a sixth user step. Users express it by placing choices under <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code>, or <code class="docutils literal notranslate"><span class="pre">conditional_axes</span></code>.</p>
@@ -158,7 +158,7 @@
 <p>Then set policies:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> is already <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code> by default. Change it only when a sweep or bundle should continue after invalid cells.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> should be stricter for replication and looser for exploratory work.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> is already <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code> by default. Change it only for strict replication or intentionally exploratory work.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> is an execution request. It only has an effect when the selected run has multiple units of the chosen type.</p></li>
 </ul>
 </section>

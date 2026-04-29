@@ -294,7 +294,7 @@
 <section id="reproducibility-mode">
 <h2>0.4 <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code><a class="headerlink" href="#reproducibility-mode" title="Link to this heading"></a></h2>
 <p><strong>Selection question</strong>: How hard do you want to pin the stochastic components?</p>
-<p><strong>Default</strong>: <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> — Python <code class="docutils literal notranslate"><span class="pre">random</span></code>, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism.</p>
+<p><strong>Default</strong>: <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code> — Python <code class="docutils literal notranslate"><span class="pre">random</span></code>, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism. You can leave this axis out of a recipe unless you want stricter or looser behavior.</p>
 <p>Escalate when you need bit-identical reruns (paper replication) or when you don’t care at all (exploratory drafting).</p>
 <section id="id7">
 <h3>Value catalog<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>

@@ -138,6 +138,9 @@
 
 <span class="n">_ALLOWED_SELECTION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">,</span> <span class="s2">&quot;sweep_axes&quot;</span><span class="p">,</span> <span class="s2">&quot;conditional_axes&quot;</span><span class="p">,</span> <span class="s2">&quot;leaf_config&quot;</span><span class="p">)</span>
 
+<span class="n">DEFAULT_REPRODUCIBILITY_MODE</span> <span class="o">=</span> <span class="s2">&quot;seeded_reproducible&quot;</span>
+<span class="n">DEFAULT_RANDOM_SEED</span> <span class="o">=</span> <span class="mi">42</span>
+
 <span class="n">_DATASET_DEFAULT_FREQUENCY</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;fred_md&quot;</span><span class="p">:</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
     <span class="s2">&quot;fred_qd&quot;</span><span class="p">:</span> <span class="s2">&quot;quarterly&quot;</span><span class="p">,</span>
@@ -546,6 +549,25 @@
     <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_reproducibility_mode</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_REPRODUCIBILITY_MODE</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reproducibility_random_seed</span><span class="p">(</span><span class="n">selection_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisSelection</span><span class="p">],</span> <span class="n">leaf_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="n">_reproducibility_mode</span><span class="p">(</span><span class="n">selection_map</span><span class="p">)</span>
+    <span class="n">random_seed</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">)</span>
+    <span class="n">mode_explicit</span> <span class="o">=</span> <span class="s2">&quot;reproducibility_mode&quot;</span> <span class="ow">in</span> <span class="n">selection_map</span>
+    <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mode_explicit</span> <span class="ow">and</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;strict_reproducible&quot;</span><span class="p">,</span> <span class="s2">&quot;seeded_reproducible&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;reproducibility_mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2"> requires leaf_config.random_seed&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">DEFAULT_REPRODUCIBILITY_MODE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DEFAULT_RANDOM_SEED</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+
+
 <span class="n">_CUSTOM_FEATURE_BLOCK_AXES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;temporal_feature_block&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;custom_temporal_features&quot;</span><span class="p">,</span> <span class="s2">&quot;temporal&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_temporal_feature_block&quot;</span><span class="p">),</span>
     <span class="s2">&quot;rotation_feature_block&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;custom_rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_rotation_feature_block&quot;</span><span class="p">),</span>
@@ -922,7 +944,14 @@
             <span class="n">conditional_axes</span><span class="p">[</span><span class="n">selection</span><span class="o">.</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
     <span class="n">reproducibility_mode</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reproducibility_mode_override&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">reproducibility_mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">reproducibility_mode</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">selections</span> <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">),</span> <span class="s2">&quot;best_effort&quot;</span><span class="p">)</span>
+        <span class="n">reproducibility_mode</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">selections</span>
+                <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;reproducibility_mode&quot;</span>
+            <span class="p">),</span>
+            <span class="n">DEFAULT_REPRODUCIBILITY_MODE</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="n">failure_policy</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">selection</span><span class="o">.</span><span class="n">selected_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">selection</span> <span class="ow">in</span> <span class="n">selections</span> <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;failure_policy&quot;</span><span class="p">),</span> <span class="s2">&quot;fail_fast&quot;</span><span class="p">)</span>
     <span class="n">variation_axes</span> <span class="o">=</span> <span class="n">_variation_axes</span><span class="p">(</span><span class="n">selections</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
@@ -3827,12 +3856,7 @@
         <span class="p">)</span>
     <span class="n">_validate_layer1_data_task_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">_validate_layer2_feature_block_contract</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
-    <span class="n">reproducibility_mode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;best_effort&quot;</span><span class="p">)</span>
-    <span class="n">random_seed</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">reproducibility_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;strict_reproducible&quot;</span><span class="p">,</span> <span class="s2">&quot;seeded_reproducible&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CompileValidationError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;reproducibility_mode=</span><span class="si">{</span><span class="n">reproducibility_mode</span><span class="si">!r}</span><span class="s2"> requires leaf_config.random_seed&quot;</span>
-        <span class="p">)</span>
+    <span class="n">_reproducibility_random_seed</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">leaf_config</span><span class="p">)</span>
     <span class="n">failure_policy</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;failure_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;fail_fast&quot;</span><span class="p">)</span>
     <span class="n">compute_mode</span> <span class="o">=</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;compute_mode&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;serial&quot;</span><span class="p">)</span>
 
@@ -3931,8 +3955,8 @@
         <span class="s2">&quot;benchmark_spec&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">compiled</span><span class="o">.</span><span class="n">recipe_spec</span><span class="o">.</span><span class="n">benchmark_config</span><span class="p">),</span>
         <span class="s2">&quot;model_spec&quot;</span><span class="p">:</span> <span class="n">_model_spec</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
         <span class="s2">&quot;reproducibility_spec&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;best_effort&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="n">compiled</span><span class="o">.</span><span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">:</span> <span class="n">_reproducibility_mode</span><span class="p">(</span><span class="n">selection_map</span><span class="p">),</span>
+            <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="n">_reproducibility_random_seed</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="n">compiled</span><span class="o">.</span><span class="n">leaf_config</span><span class="p">),</span>
         <span class="p">},</span>
         <span class="s2">&quot;failure_policy_spec&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;failure_policy&quot;</span><span class="p">:</span> <span class="n">_selection_value</span><span class="p">(</span><span class="n">selection_map</span><span class="p">,</span> <span class="s2">&quot;failure_policy&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;fail_fast&quot;</span><span class="p">),</span>

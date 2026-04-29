@@ -9,6 +9,8 @@
 
 It is applied before model execution. It affects Python, NumPy, optional torch, cuDNN, CUDA deterministic settings, and per-variant seed derivation.
 
+The default is `seeded_reproducible` with seed `42`. Users do not need to choose this axis for ordinary runs; the compiler and runtime treat an omitted `reproducibility_mode` as `seeded_reproducible`.
+
 ## Where It Lives In Code
 
 | Purpose | Function or object |
@@ -24,14 +26,14 @@ It is applied before model execution. It affects Python, NumPy, optional torch, 
 
 ## Choices
 
-Read this axis as the seed and determinism policy. The stricter modes require `leaf_config.random_seed`; `exploratory` intentionally waives reproducibility.
+Read this axis as the seed and determinism policy. The default profile supplies seed `42`. Explicit `strict_reproducible` and explicit `seeded_reproducible` selections should pin `leaf_config.random_seed`; `exploratory` intentionally waives reproducibility.
 
 ### Quick Map
 
 | Choice | Current State | Determinism Level |
 |---|---|---|
 | `strict_reproducible` | runnable | strongest |
-| `seeded_reproducible` | runnable | normal seeded |
+| `seeded_reproducible` | runnable, default | normal seeded |
 | `best_effort` | runnable | seeded, non-strict label |
 | `exploratory` | runnable | intentionally non-deterministic |
 
@@ -81,6 +83,15 @@ strict flags = not forced
 
 This is reproducible enough for ordinary package runs, but it does not claim bit-identical backend behavior across all library/hardware combinations.
 
+If the recipe omits `reproducibility_mode`, the runtime behaves as if this value were selected with seed `42`:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      study_scope: one_target_one_method
+```
+
 ### `best_effort`
 
 Use this when you want seeded behavior but do not want the run classified as strict.
@@ -124,7 +135,9 @@ random_seed      = not required
 
 ## Compiler Contract
 
-For Full recipes, `strict_reproducible` and `seeded_reproducible` require `leaf_config.random_seed`.
+For Full recipes, omitted `reproducibility_mode` defaults to `seeded_reproducible` with seed `42`.
+
+Explicit `strict_reproducible` and explicit `seeded_reproducible` selections require `leaf_config.random_seed`.
 
 ```yaml
 path:
@@ -160,6 +173,15 @@ The runtime then calls `apply_reproducibility_mode()` at the start of `execute_r
 
 ## YAML Examples
 
+Default research run can be left implicit:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      study_scope: one_target_one_method
+```
+
 Replication-grade:
 
 ```yaml
@@ -171,7 +193,7 @@ path:
       random_seed: 42
 ```
 
-Default research run:
+Default research run, written explicitly:
 
 ```yaml
 path:

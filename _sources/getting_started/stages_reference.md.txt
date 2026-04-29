@@ -64,6 +64,8 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 **What it picks:** How aggressive the seed/deterministic controls are.
 
+**Default:** `seeded_reproducible` with seed `42`. This is already selected when the recipe omits the axis.
+
 | Value | Check / observe |
 |---|---|
 | `seeded_reproducible` (default) | Python/numpy/torch seeded; no strict deterministic-library flags |

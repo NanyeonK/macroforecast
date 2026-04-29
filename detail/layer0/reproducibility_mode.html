@@ -108,6 +108,7 @@
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> controls seed resolution and deterministic runtime behavior.</p>
 <p>It is applied before model execution. It affects Python, NumPy, optional torch, cuDNN, CUDA deterministic settings, and per-variant seed derivation.</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>. Users do not need to choose this axis for ordinary runs; the compiler and runtime treat an omitted <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> as <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code>.</p>
 <section id="where-it-lives-in-code">
 <h2>Where It Lives In Code<a class="headerlink" href="#where-it-lives-in-code" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
@@ -146,7 +147,7 @@
 </section>
 <section id="choices">
 <h2>Choices<a class="headerlink" href="#choices" title="Link to this heading"></a></h2>
-<p>Read this axis as the seed and determinism policy. The stricter modes require <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>; <code class="docutils literal notranslate"><span class="pre">exploratory</span></code> intentionally waives reproducibility.</p>
+<p>Read this axis as the seed and determinism policy. The default profile supplies seed <code class="docutils literal notranslate"><span class="pre">42</span></code>. Explicit <code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code> and explicit <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> selections should pin <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>; <code class="docutils literal notranslate"><span class="pre">exploratory</span></code> intentionally waives reproducibility.</p>
 <section id="quick-map">
 <h3>Quick Map<a class="headerlink" href="#quick-map" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
@@ -162,7 +163,7 @@
 <td><p>strongest</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
-<td><p>runnable</p></td>
+<td><p>runnable, default</p></td>
 <td><p>normal seeded</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">best_effort</span></code></p></td>
@@ -213,6 +214,13 @@ strict flags = not forced
 </pre></div>
 </div>
 <p>This is reproducible enough for ordinary package runs, but it does not claim bit-identical backend behavior across all library/hardware combinations.</p>
+<p>If the recipe omits <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, the runtime behaves as if this value were selected with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
+</pre></div>
+</div>
 </section>
 <section id="best-effort">
 <h3><code class="docutils literal notranslate"><span class="pre">best_effort</span></code><a class="headerlink" href="#best-effort" title="Link to this heading"></a></h3>
@@ -251,7 +259,8 @@ random_seed      = not required
 </section>
 <section id="compiler-contract">
 <h2>Compiler Contract<a class="headerlink" href="#compiler-contract" title="Link to this heading"></a></h2>
-<p>For Full recipes, <code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code> and <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> require <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>.</p>
+<p>For Full recipes, omitted <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>.</p>
+<p>Explicit <code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code> and explicit <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> selections require <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
@@ -284,6 +293,13 @@ random_seed      = not required
 </section>
 <section id="yaml-examples">
 <h2>YAML Examples<a class="headerlink" href="#yaml-examples" title="Link to this heading"></a></h2>
+<p>Default research run can be left implicit:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
+</pre></div>
+</div>
 <p>Replication-grade:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
@@ -293,7 +309,7 @@ random_seed      = not required
 <span class="w">      </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
 </pre></div>
 </div>
-<p>Default research run:</p>
+<p>Default research run, written explicitly:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
