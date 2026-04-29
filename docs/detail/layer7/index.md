@@ -1,7 +1,7 @@
-# 4.8 Layer 7: Interpretation / Importance
+# 4.7 Layer 7: Interpretation / Importance
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.7 Layer 6: Statistical Tests](../layer6/index.md)
+- Previous: [4.6 Layer 6: Statistical Tests](../layer6/index.md)
 - Current: Layer 7
 
 Layer 7 owns interpretation and importance outputs. It consumes trained generators, prediction artifacts, and feature representation metadata.

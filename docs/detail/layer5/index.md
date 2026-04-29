@@ -1,9 +1,9 @@
-# 4.6 Layer 5: Output / Provenance
+# 4.5 Layer 5: Output / Provenance
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.5 Layer 4: Evaluation](../layer4/index.md)
+- Previous: [4.4 Layer 4: Evaluation](../layer4/index.md)
 - Current: Layer 5
-- Next: [4.7 Layer 6: Statistical Tests](../layer6/index.md)
+- Next: [4.6 Layer 6: Statistical Tests](../layer6/index.md)
 
 Layer 5 owns output format, saved objects, provenance fields, and artifact granularity. It is the boundary where execution becomes auditable files.
 

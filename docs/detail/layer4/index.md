@@ -1,9 +1,9 @@
-# 4.5 Layer 4: Evaluation
+# 4.4 Layer 4: Evaluation
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.4 Layer 3: Forecast Generator](../layer3/index.md)
+- Previous: [4.3 Layer 3: Forecast Generator](../layer3/index.md)
 - Current: Layer 4
-- Next: [4.6 Layer 5: Output / Provenance](../layer5/index.md)
+- Next: [4.5 Layer 5: Output / Provenance](../layer5/index.md)
 
 Layer 4 owns evaluation of forecast artifacts. It chooses metric families, benchmark comparison scope, aggregation, ranking, reporting style, regime use, decomposition, and OOS period.
 

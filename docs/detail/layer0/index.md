@@ -1,10 +1,10 @@
-# 4.1 Layer 0: Study Setup
+# 4.0 Layer 0: Study Scope
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Current: Layer 0
-- Next: [4.2 Layer 1: Data Task](../layer1/index.md)
+- Next: [4.1 Layer 1: Data Task](../layer1/index.md)
 
-Layer 0 decides the execution grammar before data or models are chosen. It answers: what unit of work is being compared or repeated, how failures behave, how deterministic execution should be, and how work may be parallelized.
+Layer 0 defines the study scope and execution discipline before data or models are chosen. It answers: how many targets are in the study, whether the downstream method path is fixed or compared, how failures behave, how deterministic execution should be, and how work may be parallelized.
 
 ## How many steps?
 
@@ -21,10 +21,10 @@ There is also an internal `axis_type` grammar, but it is not a sixth user step. 
 
 | Step | Axis | Role |
 |---|---|---|
-| 4.1.1 | [study_scope](study_scope.md) | Target/method cardinality for the study. |
-| 4.1.2 | [failure_policy](failure_policy.md) | Runtime failure behavior. |
-| 4.1.3 | [reproducibility_mode](reproducibility_mode.md) | Seed and determinism policy. |
-| 4.1.4 | [compute_mode](compute_mode.md) | Serial or parallel work layout. |
+| 4.0.1 | [Study Scope](study_scope.md) | Target/method cardinality for the study. |
+| 4.0.2 | [Failure Handling](failure_policy.md) | Runtime failure behavior. |
+| 4.0.3 | [Reproducibility](reproducibility_mode.md) | Seed and determinism policy. |
+| 4.0.4 | [Compute Layout](compute_mode.md) | Serial or parallel work layout. |
 
 ## Selection logic
 

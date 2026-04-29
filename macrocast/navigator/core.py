@@ -20,7 +20,7 @@ from ..registry import get_axis_registry
 NAVIGATOR_SCHEMA_VERSION = "navigator_view_v1"
 
 _LAYER_LABELS = {
-    "0_meta": "Layer 0: study design / execution grammar",
+    "0_meta": "Layer 0: study scope",
     "1_data_task": "Layer 1: official data frame",
     "2_preprocessing": "Layer 2: representation construction",
     "3_training": "Layer 3: forecast generation",

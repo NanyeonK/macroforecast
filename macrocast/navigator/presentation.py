@@ -40,7 +40,7 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         },
     },
     "failure_policy": {
-        "order": 3,
+        "order": 2,
         "label": "Failure Handling",
         "short_label": "Failures",
         "question": "What should happen when a run, variant, or cell fails?",
@@ -87,7 +87,7 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         },
     },
     "reproducibility_mode": {
-        "order": 4,
+        "order": 3,
         "label": "Reproducibility",
         "short_label": "Reproducibility",
         "question": "How strictly should stochastic components be pinned?",
@@ -119,7 +119,7 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         },
     },
     "compute_mode": {
-        "order": 5,
+        "order": 4,
         "label": "Compute Layout",
         "short_label": "Compute",
         "question": "Where should parallel work be attempted?",

@@ -1,9 +1,9 @@
-# 4.2 Layer 1: Data Task
+# 4.1 Layer 1: Data Task
 
 - Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.1 Layer 0: Study Setup](../layer0/index.md)
+- Previous: [4.0 Layer 0: Study Scope](../layer0/index.md)
 - Current: Layer 1
-- Next: [4.3 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
+- Next: [4.2 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
 
 Layer 1 owns the official data task. It decides which data source is used, which target structure is being forecast, what information is available, and how raw source-level missing/outlier and official-transform policies are handled before representation construction.
 
