@@ -10,7 +10,7 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 - `axis_type` — fixed / sweep / nested / conditional / derived per axis.
 - `failure_policy` — how to handle per-cell failures.
 - `reproducibility_mode` — how strict to make determinism.
-- `compute_mode` — which level of the sweep runs in parallel.
+- `compute_mode` — serial by default, or a Study Scope-compatible parallel work layout.
 
 ## Stage 1 — Data
 

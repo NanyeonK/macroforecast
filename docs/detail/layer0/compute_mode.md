@@ -5,9 +5,11 @@
 - Current: `compute_mode`
 - Next: none inside Layer 0
 
-`compute_mode` requests where parallel work should happen.
+`compute_mode` selects the execution layout.
 
-It is an execution-layout contract, not a modeling choice. It does not change target construction, features, models, metrics, or statistical tests. It only changes whether a supported runner uses serial loops or thread pools over a specific work unit.
+It is an execution-layout contract, not a modeling choice. It does not change target construction, features, models, metrics, or statistical tests. It only changes whether a supported runner uses serial loops or local thread pools over a specific work unit.
+
+The default is `serial`. Users do not need to choose this axis for ordinary runs; the compiler and runtime treat an omitted `compute_mode` as `serial`.
 
 ## Where It Lives In Code
 
@@ -26,17 +28,20 @@ It is an execution-layout contract, not a modeling choice. It does not change ta
 
 Read this axis as an execution layout request. Parallel modes only help when the selected work unit has more than one item.
 
+The Navigator uses the selected Study Scope to disable incompatible options:
+
+- `parallel_by_model` is active only when Study Scope compares methods.
+- `parallel_by_target` is active only when Study Scope has multiple targets.
+
 ### Quick Map
 
 | Choice | Work Unit | Current State |
 |---|---|---|
-| `serial` | none | runnable |
+| `serial` | none | runnable, default |
 | `parallel_by_model` | model variants | runnable for model-family sweeps |
 | `parallel_by_horizon` | horizons | runnable for multi-horizon runs |
 | `parallel_by_target` | targets | runnable for multi-target runs |
 | `parallel_by_oos_date` | OOS origin dates | runnable for long pseudo-OOS loops |
-| `parallel_by_trial` | tuning trials | reserved |
-| `distributed_cluster` | external cluster tasks | reserved |
 
 ### `serial`
 
@@ -54,6 +59,15 @@ Runtime behavior:
 ```text
 runner = execute one unit at a time
 parallel workers = none
+```
+
+If the recipe omits `compute_mode`, the runtime behaves as if this value were selected:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      study_scope: one_target_one_method
 ```
 
 ### `parallel_by_model`
@@ -79,7 +93,7 @@ work unit = model-family variant
 executor = ThreadPoolExecutor, capped at 4 workers
 ```
 
-If there is no `model_family` sweep, this behaves like serial sweep execution.
+Navigator disables this for `one_target_one_method` and `multiple_targets_one_method`, because those scopes fix the method path. If there is no `model_family` sweep inside a method-comparison scope, this behaves like serial sweep execution.
 
 ### `parallel_by_horizon`
 
@@ -129,7 +143,7 @@ work unit = target
 executor = ThreadPoolExecutor, capped at 4 workers
 ```
 
-If there is only one target, this is a no-op.
+Navigator disables this for `one_target_one_method` and `one_target_compare_methods`, because those scopes have one target. If there is only one target, this is a no-op.
 
 ### `parallel_by_oos_date`
 
@@ -152,45 +166,9 @@ executor = ThreadPoolExecutor, capped at 4 workers
 
 Refit-policy state is computed serially before origin-date model/benchmark fits are parallelized.
 
-### `parallel_by_trial`
-
-Reserved for tuning or trial-level parallelism.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      compute_mode: parallel_by_trial
-```
-
-Current status:
-
-```text
-status = registry_only
-runtime = not supported by current slice
-```
-
-### `distributed_cluster`
-
-Reserved for external cluster execution.
-
-```yaml
-path:
-  0_meta:
-    fixed_axes:
-      compute_mode: distributed_cluster
-```
-
-Current status:
-
-```text
-status = registry_only
-runtime = not supported by current slice
-```
-
 ## Compiler Contract
 
-The compiler currently accepts only these runtime-supported values:
+The compiler currently accepts these values:
 
 - `serial`;
 - `parallel_by_model`;
@@ -198,7 +176,7 @@ The compiler currently accepts only these runtime-supported values:
 - `parallel_by_target`;
 - `parallel_by_oos_date`.
 
-Selecting `parallel_by_trial` or `distributed_cluster` produces a not-supported compiler status.
+Omitted `compute_mode` defaults to `serial`.
 
 The compiler writes:
 
@@ -212,7 +190,16 @@ The runtime reads this with `_compute_mode_spec()`.
 
 ## YAML Examples
 
-Serial default:
+Default research run can be left implicit:
+
+```yaml
+path:
+  0_meta:
+    fixed_axes:
+      study_scope: one_target_one_method
+```
+
+Serial default, written explicitly:
 
 ```yaml
 path:
@@ -262,9 +249,11 @@ Examples:
 - `parallel_by_target` with one target behaves like serial execution.
 - `parallel_by_model` without a model-family sweep behaves like serial sweep execution.
 
+Scope-incompatible choices are stricter than no-op cases: Navigator marks them disabled before YAML generation.
+
 ## Guidance
 
-Use `serial` for debugging and replication.
+Use `serial` for ordinary runs, debugging, and replication.
 
 Use `parallel_by_model` for model comparison sweeps.
 

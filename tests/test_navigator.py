@@ -125,6 +125,8 @@ console.log(JSON.stringify({
     equal_dm_hln: option("equal_predictive", "dm_hln"),
     density_pit: option("density_interval", "pit_uniformity"),
     direction_binomial: option("direction", "binomial_hit"),
+    compute_parallel_by_model: option("compute_mode", "parallel_by_model"),
+    compute_parallel_by_target: option("compute_mode", "parallel_by_target"),
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
     sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
     sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency"),
@@ -216,7 +218,13 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert presentation["study_scope"]["values"]["one_target_one_method"]["label"] == "One Target, One Method"
     assert presentation["study_scope"]["docs_url"].endswith("/detail/layer0/study_scope.html")
     assert presentation["study_scope"]["selection_kind"] == "user_choice"
-    assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallelize Models"
+    assert presentation["compute_mode"]["selection_kind"] == "defaulted_choice"
+    assert presentation["compute_mode"]["default_value"] == "serial"
+    assert presentation["compute_mode"]["values"]["serial"]["label"] == "Serial (Default)"
+    assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallelize Model Variants"
+    assert "parallel_by_trial" not in presentation["compute_mode"]["values"]
+    assert "distributed_cluster" not in presentation["compute_mode"]["values"]
+    assert payload["state_engine"]["default_selections"]["compute_mode"] == "serial"
     assert AXIS_PRESENTATION_MAP["failure_policy"]["default_value"] == "fail_fast"
     assert "Default" in AXIS_PRESENTATION_MAP["failure_policy"]["values"]["fail_fast"]["label"]
     assert "retry_then_skip" not in AXIS_PRESENTATION_MAP["failure_policy"]["values"]
@@ -225,6 +233,36 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert AXIS_PRESENTATION_MAP["reproducibility_mode"]["default_value"] == "seeded_reproducible"
     assert "Default" in AXIS_PRESENTATION_MAP["reproducibility_mode"]["values"]["seeded_reproducible"]["label"]
     assert payload["state_engine"]["default_selections"]["reproducibility_mode"] == "seeded_reproducible"
+
+
+def test_navigation_compute_layout_respects_study_scope():
+    view = build_navigation_view(_recipe())
+    compute_axis = _axis(view, "compute_mode")
+
+    assert _option(compute_axis, "serial")["enabled"] is True
+    assert _option(compute_axis, "parallel_by_horizon")["enabled"] is True
+    assert _option(compute_axis, "parallel_by_oos_date")["enabled"] is True
+    assert "compares methods" in _option(compute_axis, "parallel_by_model")["disabled_reason"]
+    assert "multiple targets" in _option(compute_axis, "parallel_by_target")["disabled_reason"]
+    assert {option["value"] for option in compute_axis["options"]} == {
+        "serial",
+        "parallel_by_model",
+        "parallel_by_horizon",
+        "parallel_by_target",
+        "parallel_by_oos_date",
+    }
+
+    compare_methods_recipe = _recipe()
+    compare_methods_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "one_target_compare_methods"
+    compare_methods_axis = _axis(build_navigation_view(compare_methods_recipe), "compute_mode")
+    assert _option(compare_methods_axis, "parallel_by_model")["enabled"] is True
+    assert "multiple targets" in _option(compare_methods_axis, "parallel_by_target")["disabled_reason"]
+
+    multi_target_recipe = _recipe()
+    multi_target_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "multiple_targets_one_method"
+    multi_target_axis = _axis(build_navigation_view(multi_target_recipe), "compute_mode")
+    assert "compares methods" in _option(multi_target_axis, "parallel_by_model")["disabled_reason"]
+    assert _option(multi_target_axis, "parallel_by_target")["enabled"] is True
 
 
 def test_navigator_ui_data_omits_rename_ledger():
@@ -429,6 +467,25 @@ def test_browser_state_engine_matches_python_hac_gate(tmp_path: Path):
         _axis(python_view, "equal_predictive"), "dm_hln"
     )["enabled"]
     assert "HAC-capable" in js["options"]["equal_dm"]["disabled_reason"]
+
+
+def test_browser_state_engine_matches_compute_layout_scope_gate(tmp_path: Path):
+    recipe = _recipe()
+    python_view = build_navigation_view(recipe)
+    js = _js_state_snapshot(tmp_path, recipe, [])
+
+    assert js["options"]["compute_parallel_by_model"]["enabled"] == _option(
+        _axis(python_view, "compute_mode"), "parallel_by_model"
+    )["enabled"]
+    assert js["options"]["compute_parallel_by_target"]["enabled"] == _option(
+        _axis(python_view, "compute_mode"), "parallel_by_target"
+    )["enabled"]
+    assert "compares methods" in js["options"]["compute_parallel_by_model"]["disabled_reason"]
+    assert "multiple targets" in js["options"]["compute_parallel_by_target"]["disabled_reason"]
+
+    compare_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "one_target_compare_methods")])
+    assert compare_js["options"]["compute_parallel_by_model"]["enabled"] is True
+    assert "multiple targets" in compare_js["options"]["compute_parallel_by_target"]["disabled_reason"]
 
 
 def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):

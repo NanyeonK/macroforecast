@@ -166,7 +166,7 @@ the route remains in the registry but must not be exposed as runnable.
 
 | Axis | Executable values | Not-supported registry values |
 |------|-------------------|---------------------------|
-| `compute_mode` | `serial`, `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date` | `parallel_by_trial`, `distributed_cluster` |
+| `compute_mode` | `serial` (default), `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date` | none |
 | `failure_policy` | `fail_fast` (default), `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only` | none |
 | `reproducibility_mode` | `strict_reproducible`, `seeded_reproducible` (default), `best_effort`, `exploratory` | none |
 

@@ -120,6 +120,7 @@
     const localImportance = asSet(((data.state_engine.importance || {}).local_methods) || []);
     const defaultImportance = ((data.state_engine.importance || {}).default_spec) || {};
 
+    const studyScope = String(selected.study_scope || "one_target_one_method");
     const model = String(selected.model_family || "");
     const featureBuilder = String(selected.feature_builder || "");
     const forecastType = String(selected.forecast_type || "direct");
@@ -130,6 +131,15 @@
     const importanceMethods = selectedImportanceMethods(data, engineState);
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
+
+    if (axisName === "compute_mode") {
+      if (value === "parallel_by_model" && ["one_target_one_method", "multiple_targets_one_method"].includes(studyScope)) {
+        return "parallel_by_model is active only when Study Scope compares methods";
+      }
+      if (value === "parallel_by_target" && ["one_target_one_method", "one_target_compare_methods"].includes(studyScope)) {
+        return "parallel_by_target is active only when Study Scope has multiple targets";
+      }
+    }
 
     if (axisName === "fred_sd_frequency_policy" && value !== "report_only" && !hasFredSd) {
       return "fred_sd_frequency_policy requires dataset to include fred_sd";

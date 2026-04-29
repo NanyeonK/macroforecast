@@ -157,8 +157,6 @@ def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
         "parallel_by_horizon",
         "parallel_by_target",
         "parallel_by_oos_date",
-        "parallel_by_trial",
-        "distributed_cluster",
     )
 
 

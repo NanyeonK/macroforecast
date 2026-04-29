@@ -156,6 +156,7 @@ _DEFAULT_SELECTIONS = {
     "study_scope": "one_target_one_method",
     "failure_policy": "fail_fast",
     "reproducibility_mode": "seeded_reproducible",
+    "compute_mode": "serial",
     "forecast_type": "direct",
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",
@@ -508,6 +509,7 @@ def _selection_has_fred_sd(selected: Mapping[str, Any]) -> bool:
 
 
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
+    study_scope = str(selected.get("study_scope", "one_target_one_method"))
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
     forecast_type = str(selected.get("forecast_type", "direct"))
@@ -519,6 +521,11 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
     importance = str(selected.get("importance_method", "none"))
     importance_methods = set(_selected_importance_methods(selected))
 
+    if axis_name == "compute_mode":
+        if value == "parallel_by_model" and study_scope in {"one_target_one_method", "multiple_targets_one_method"}:
+            return "parallel_by_model is active only when Study Scope compares methods"
+        if value == "parallel_by_target" and study_scope in {"one_target_one_method", "one_target_compare_methods"}:
+            return "parallel_by_target is active only when Study Scope has multiple targets"
     if axis_name == "fred_sd_frequency_policy" and value != "report_only" and not _selection_has_fred_sd(selected):
         return "fred_sd_frequency_policy requires dataset to include fred_sd"
     if axis_name == "fred_sd_state_group" and value != "all_states" and not _selection_has_fred_sd(selected):

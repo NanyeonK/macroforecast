@@ -13,7 +13,7 @@ Layer 0 has **four user-facing steps**. Select them in this order:
 1. `study_scope` — choose target cardinality and whether the method path is fixed or compared.
 2. `failure_policy` — decide how failed variants or cells are handled; default is `fail_fast`.
 3. `reproducibility_mode` — decide how strictly stochastic components are pinned; default is `seeded_reproducible` with seed `42`.
-4. `compute_mode` — decide whether execution is serial or parallelized over a work unit.
+4. `compute_mode` — decide how execution work is laid out; default is `serial`.
 
 There is also an internal `axis_type` grammar, but it is not a sixth user step. Users express it by placing choices under `fixed_axes`, `sweep_axes`, or `conditional_axes`.
 
@@ -24,7 +24,7 @@ There is also an internal `axis_type` grammar, but it is not a sixth user step. 
 | 4.0.1 | [Study Scope](study_scope.md) | Target/method cardinality for the study. |
 | 4.0.2 | [Failure Handling](failure_policy.md) | Runtime failure behavior. |
 | 4.0.3 | [Reproducibility](reproducibility_mode.md) | Seed and determinism policy. |
-| 4.0.4 | [Compute Layout](compute_mode.md) | Serial or parallel work layout. |
+| 4.0.4 | [Compute Layout](compute_mode.md) | Serial by default, or local parallelism over a supported work unit. |
 
 ## Selection logic
 
@@ -41,7 +41,7 @@ Then set policies:
 
 - `failure_policy` is already `fail_fast` by default. Change it only when a sweep or bundle should continue after invalid cells.
 - `reproducibility_mode` is already `seeded_reproducible` with seed `42` by default. Change it only for strict replication or intentionally exploratory work.
-- `compute_mode` is an execution request. It only has an effect when the selected run has multiple units of the chosen type.
+- `compute_mode` is already `serial` by default. Change it only when the selected run has multiple units of the chosen type.
 
 ## Layer contract
 

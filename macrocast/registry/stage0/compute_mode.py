@@ -4,13 +4,11 @@ from ..base import AxisDefinition, EnumRegistryEntry
 
 
 COMPUTE_MODE_ENTRIES: tuple[EnumRegistryEntry, ...] = (
-    EnumRegistryEntry(id="serial", description="Serial local execution.", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_model", description="Parallel across sweep variants when model_family is swept (variant-level threading, max 4 workers).", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_horizon", description="Parallel across horizons (threading, max 4 workers).", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_target", description="Parallel across targets in multi-target recipes (threading, max 4 workers).", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_oos_date", description="Parallel across OOS origins within a single horizon loop (threading, max 4 workers). Refit-policy state is computed serially in a pre-pass; only the model/benchmark fit is parallelised.", status="operational", priority="A"),
-    EnumRegistryEntry(id="parallel_by_trial", description="Parallel execution across trials.", status="registry_only", priority="B"),
-    EnumRegistryEntry(id="distributed_cluster", description="Distributed cluster execution.", status="registry_only", priority="B"),
+    EnumRegistryEntry(id="serial", description="Default local execution: run one work unit at a time.", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_model", description="Parallelize model-family sweep variants with local threading, capped at 4 workers.", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_horizon", description="Parallelize forecast horizons with local threading, capped at 4 workers.", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_target", description="Parallelize targets in multi-target recipes with local threading, capped at 4 workers.", status="operational", priority="A"),
+    EnumRegistryEntry(id="parallel_by_oos_date", description="Parallelize OOS origin-date fits within each horizon loop with local threading, capped at 4 workers. Refit-policy state is computed serially in a pre-pass.", status="operational", priority="A"),
 )
 
 AXIS_DEFINITION = AxisDefinition(

@@ -41,7 +41,7 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `axis_type` | - | `enum` | `fixed` | operational=5 | `operational`: `fixed`, `sweep`, `nested_sweep`, `conditional`, `derived` |
-| `compute_mode` | - | `enum` | `fixed` | operational=5, registry_only=2 | `operational`: `serial`, `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date`<br>`registry_only`: `parallel_by_trial`, `distributed_cluster` |
+| `compute_mode` | - | `enum` | `fixed` | operational=5 | `operational`: `serial` (default), `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date` |
 | `study_scope` | - | `enum` | `fixed` | operational=4 | `operational`: `one_target_one_method`, `one_target_compare_methods`, `multiple_targets_one_method`, `multiple_targets_compare_methods` |
 | `failure_policy` | - | `enum` | `fixed` | operational=5 | `operational`: `fail_fast` (default), `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only` |
 | `reproducibility_mode` | - | `enum` | `fixed` | operational=4 | `operational`: `strict_reproducible`, `seeded_reproducible` (default), `best_effort`, `exploratory` |

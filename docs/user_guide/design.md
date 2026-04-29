@@ -170,20 +170,20 @@ path:
 
 ## 0.5 `compute_mode`
 
-**Selection question**: Which level of the sweep should run in parallel?
+**Selection question**: How should execution work be laid out?
 
-**Default**: `serial` — one variant / horizon / origin at a time.
+**Default**: `serial` — one variant / horizon / target / origin at a time. You can leave this axis out of a recipe unless the run has a natural parallel work unit.
 
-Pick a parallel mode when the sweep is big enough that wall-clock matters and the chosen level actually has multiple units of work.
+Pick a parallel mode when wall-clock matters and the chosen level actually has multiple units of work. Navigator disables scope-incompatible choices: `parallel_by_model` requires a Study Scope that compares methods, and `parallel_by_target` requires a multiple-target Study Scope.
 
 ### Value catalog
 
 | Value | Status | When to use | Verify |
 |---|---|---|---|
 | `serial` | operational (default) | Default. Any run where wall-clock isn't the bottleneck. | No parallelism; straight `for`-loop. |
-| `parallel_by_model` | operational | Sweep with many model_family variants. | `ThreadPoolExecutor(max_workers=min(n_variants, 4))` in `sweep_runner._run_variant`. |
+| `parallel_by_model` | operational | Method-comparison Study Scope with many model_family variants. | `ThreadPoolExecutor(max_workers=min(n_variants, 4))` in `sweep_runner._run_variant`. |
 | `parallel_by_horizon` | operational | Recipe with multiple horizons per target. | Pool inside `_rows_for_horizon` when `len(horizons) > 1`. |
-| `parallel_by_target` | operational | Multi-target recipe, N targets. | Pool inside `execute_recipe` when `len(targets) > 1`. |
+| `parallel_by_target` | operational | Multiple-target Study Scope. | Pool inside `execute_recipe` when `len(targets) > 1`. |
 | `parallel_by_oos_date` | operational | Long OOS windows — origin-level parallelism. | Pool inside `_rows_for_horizon` stage-2 when `len(origin_plan) > 1`. |
 
 A parallel mode that doesn't have multiple units of work (e.g. `parallel_by_horizon` with a single-horizon recipe) is a silent no-op — not an error.
@@ -211,9 +211,9 @@ path:
 
 ## Design (Stage 0) takeaways
 
-- Six axes, 38 allowed values, and the simple default path keeps the operational surface narrow. Researchers who don't need sweeps, parallelism, or strict reproducibility write Stage 0 by omission.
+- Four user-facing axes plus internal YAML grammar keep the operational surface narrow. Researchers who do not need failure-policy changes, stricter reproducibility, or parallelism write Layer 0 mostly by omission.
 - Runner dispatch flows from `study_scope`. One fixed path and a controlled sweep both use the `comparison_sweep` route; the difference is whether any downstream `sweep_axes` are present.
-- `failure_policy` + `reproducibility_mode` + `compute_mode` are three independent dials. Pick per-run, don't carry them over from copy-pasted templates.
+- `failure_policy` + `reproducibility_mode` + `compute_mode` are three defaulted execution dials. Pick per-run, and let Navigator show which compute choices are disabled by the chosen Study Scope.
 - Every resolved value lands in `manifest.json` — when a run does something unexpected, read the manifest before anything else.
 
 Next: [Data (Stage 1)](data/index.md).

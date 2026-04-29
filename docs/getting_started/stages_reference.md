@@ -77,7 +77,9 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 ### 0.5 `compute_mode`
 
-**What it picks:** Which level of the sweep is parallelised.
+**What it picks:** How execution work is laid out.
+
+**Default:** `serial`. This is already selected when the recipe omits the axis.
 
 | Value | Check / observe |
 |---|---|

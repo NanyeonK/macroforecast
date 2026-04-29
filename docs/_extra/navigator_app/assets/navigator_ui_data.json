@@ -274,20 +274,16 @@
         "parallel_by_model",
         "parallel_by_horizon",
         "parallel_by_target",
-        "parallel_by_oos_date",
-        "parallel_by_trial",
-        "distributed_cluster"
+        "parallel_by_oos_date"
       ],
       "axis_name": "compute_mode",
       "axis_type": "enum",
       "compatible_with": {},
       "current_status": {
-        "distributed_cluster": "registry_only",
         "parallel_by_horizon": "operational",
         "parallel_by_model": "operational",
         "parallel_by_oos_date": "operational",
         "parallel_by_target": "operational",
-        "parallel_by_trial": "registry_only",
         "serial": "operational"
       },
       "default_policy": "fixed",
@@ -3290,27 +3286,23 @@
   },
   "axis_presentation": {
     "compute_mode": {
-      "contract": "Execution parallelism contract. Unsupported modes or singleton work units degrade to serial/no-op behavior.",
+      "contract": "Execution layout contract. Singleton work units degrade to serial/no-op behavior.",
+      "default_value": "serial",
       "docs_url": "../detail/layer0/compute_mode.html",
       "label": "Compute Layout",
       "order": 4,
-      "question": "Where should parallel work be attempted?",
-      "selection_kind": "user_choice",
+      "question": "How should execution work be laid out?",
+      "selection_kind": "defaulted_choice",
       "short_label": "Compute",
-      "summary": "Requests serial or parallel execution across models, horizons, targets, OOS dates, or trials.",
+      "summary": "Default to serial execution, or request local parallelism over models, horizons, targets, or OOS dates.",
       "values": {
-        "distributed_cluster": {
-          "label": "Distributed Cluster",
-          "short_label": "Cluster",
-          "summary": "Reserved route for cluster-managed execution."
-        },
         "parallel_by_horizon": {
-          "label": "Parallelize Horizons",
+          "label": "Parallelize Forecast Horizons",
           "short_label": "By Horizon",
           "summary": "Parallelize across forecast horizons when multiple horizons exist."
         },
         "parallel_by_model": {
-          "label": "Parallelize Models",
+          "label": "Parallelize Model Variants",
           "short_label": "By Model",
           "summary": "Parallelize across model-family variants when a model sweep exists."
         },
@@ -3324,15 +3316,10 @@
           "short_label": "By Target",
           "summary": "Parallelize across targets in a multi-target run."
         },
-        "parallel_by_trial": {
-          "label": "Parallelize Trials",
-          "short_label": "By Trial",
-          "summary": "Reserved route for trial-level parallelism."
-        },
         "serial": {
-          "label": "Serial",
-          "short_label": "Serial",
-          "summary": "Run one unit of work at a time."
+          "label": "Serial (Default)",
+          "short_label": "Serial (Default)",
+          "summary": "Default. Run one unit of work at a time."
         }
       }
     },
@@ -4072,6 +4059,7 @@
             "benchmark_family": "zero_change",
             "benchmark_scope": "same_for_all",
             "benchmark_window": "expanding",
+            "compute_mode": "serial",
             "cpa_instability": "none",
             "dataset": "fred_md",
             "decomposition_order": "marginal_effect_only",
@@ -4654,8 +4642,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_model'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_model is active only when Study Scope compares methods",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_model"
               },
@@ -4668,8 +4656,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_target'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_target is active only when Study Scope has multiple targets",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_target"
               },
@@ -4679,23 +4667,9 @@
                 "enabled": true,
                 "status": "operational",
                 "value": "parallel_by_oos_date"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_trial'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "parallel_by_trial"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'distributed_cluster'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "distributed_cluster"
               }
             ],
-            "selected": null
+            "selected": "serial"
           },
           {
             "axis": "dataset",
@@ -10104,8 +10078,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_model'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_model is active only when Study Scope compares methods",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_model"
               },
@@ -10118,8 +10092,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_target'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_target is active only when Study Scope has multiple targets",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_target"
               },
@@ -10129,20 +10103,6 @@
                 "enabled": true,
                 "status": "operational",
                 "value": "parallel_by_oos_date"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_trial'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "parallel_by_trial"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'distributed_cluster'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "distributed_cluster"
               }
             ],
             "selected": "serial"
@@ -15685,8 +15645,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_model'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_model is active only when Study Scope compares methods",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_model"
               },
@@ -15699,8 +15659,8 @@
               },
               {
                 "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_target'",
-                "disabled_reason": null,
-                "enabled": true,
+                "disabled_reason": "parallel_by_target is active only when Study Scope has multiple targets",
+                "enabled": false,
                 "status": "operational",
                 "value": "parallel_by_target"
               },
@@ -15710,20 +15670,6 @@
                 "enabled": true,
                 "status": "operational",
                 "value": "parallel_by_oos_date"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'parallel_by_trial'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "parallel_by_trial"
-              },
-              {
-                "canonical_path_effect": "path.0_meta.fixed_axes.compute_mode = 'distributed_cluster'",
-                "disabled_reason": "registered in the grammar, but no current runtime cell is open",
-                "enabled": false,
-                "status": "registry_only",
-                "value": "distributed_cluster"
               }
             ],
             "selected": "serial"
@@ -20362,6 +20308,7 @@
       "artifact_granularity": "aggregated",
       "benchmark_scope": "same_for_all",
       "benchmark_window": "expanding",
+      "compute_mode": "serial",
       "cpa_instability": "none",
       "decomposition_order": "marginal_effect_only",
       "decomposition_target": "preprocessing_effect",

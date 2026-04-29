@@ -1031,6 +1031,8 @@ def test_axis_governance_table_includes_compute_mode() -> None:
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["compute_mode"]["current_status"]["serial"] == "operational"
     assert by_name["compute_mode"]["current_status"]["parallel_by_model"] == "operational"
+    assert "parallel_by_trial" not in by_name["compute_mode"]["current_status"]
+    assert "distributed_cluster" not in by_name["compute_mode"]["current_status"]
 
 
 def test_compile_compute_mode_spec_defaults_to_serial() -> None:

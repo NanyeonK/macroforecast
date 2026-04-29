@@ -14,7 +14,7 @@ Stage 1 does not fix which model, benchmark, researcher preprocessing, or evalua
 
 ## Relation to Stage 0
 
-The Stage 0 axes ([design](../design.md)) — `study_scope`, `axis_type`, `failure_policy`, `reproducibility_mode`, `compute_mode` — set the **grammar** of the study (which study scope, what recipe shape, how parallel, how reproducible). Stage 1 fills that grammar with **content**: which data, which target, which horizons.
+The Stage 0 axes ([design](../design.md)) — `study_scope`, `axis_type`, `failure_policy`, `reproducibility_mode`, `compute_mode` — set the **grammar** of the study (which study scope, what recipe shape, how failures/reproducibility work, and which parallel layout is allowed). Stage 1 fills that grammar with **content**: which data, which target, which horizons.
 
 ## Honest operational status
 
