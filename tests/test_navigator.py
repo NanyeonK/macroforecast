@@ -127,6 +127,10 @@ console.log(JSON.stringify({
     direction_binomial: option("direction", "binomial_hit"),
     compute_parallel_by_model: option("compute_mode", "parallel_by_model"),
     compute_parallel_by_target: option("compute_mode", "parallel_by_target"),
+    frequency_monthly: option("frequency", "monthly"),
+    frequency_quarterly: option("frequency", "quarterly"),
+    target_single: option("target_structure", "single_target"),
+    target_multi: option("target_structure", "multi_target"),
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
     sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
     sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency"),
@@ -235,6 +239,48 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert payload["state_engine"]["default_selections"]["reproducibility_mode"] == "seeded_reproducible"
 
 
+def test_navigator_ui_data_exports_layer1_presentation_contract():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    presentation = payload["axis_presentation"]
+    tree_axes = payload["tree_axes"]["1_data_task"]
+
+    assert tree_axes == [
+        "dataset",
+        "source_adapter",
+        "frequency",
+        "information_set_type",
+        "fred_sd_frequency_policy",
+        "fred_sd_state_group",
+        "fred_sd_variable_group",
+        "target_structure",
+        "variable_universe",
+        "raw_missing_policy",
+        "raw_outlier_policy",
+        "official_transform_policy",
+        "official_transform_scope",
+        "missing_availability",
+        "release_lag_rule",
+        "contemporaneous_x_rule",
+    ]
+    assert presentation["dataset"]["label"] == "Dataset"
+    assert presentation["dataset"]["values"]["fred_md+fred_sd"]["label"] == "FRED-MD + FRED-SD"
+    assert presentation["frequency"]["selection_kind"] == "derived_or_required_choice"
+    assert presentation["target_structure"]["contract"].startswith("Target cardinality")
+    assert presentation["target_structure"]["default_value"] == "single_target"
+    assert presentation["raw_missing_policy"]["default_value"] == "preserve_raw_missing"
+    assert presentation["raw_outlier_policy"]["default_value"] == "preserve_raw_outliers"
+    assert presentation["official_transform_policy"]["default_value"] == "apply_official_tcode"
+    assert presentation["official_transform_scope"]["default_value"] == "target_and_predictors"
+    assert presentation["missing_availability"]["default_value"] == "zero_fill_leading_predictor_gaps"
+    assert presentation["release_lag_rule"]["default_value"] == "ignore_release_lag"
+    assert presentation["contemporaneous_x_rule"]["default_value"] == "forbid_same_period_predictors"
+    assert payload["state_engine"]["default_selections"]["information_set_type"] == "final_revised_data"
+    assert payload["state_engine"]["default_selections"]["target_structure"] == "single_target"
+    assert payload["state_engine"]["default_selections"]["variable_universe"] == "all_variables"
+    assert payload["state_engine"]["default_selections"]["raw_missing_policy"] == "preserve_raw_missing"
+    assert payload["state_engine"]["default_selections"]["release_lag_rule"] == "ignore_release_lag"
+
+
 def test_navigation_compute_layout_respects_study_scope():
     view = build_navigation_view(_recipe())
     compute_axis = _axis(view, "compute_mode")
@@ -263,6 +309,40 @@ def test_navigation_compute_layout_respects_study_scope():
     multi_target_axis = _axis(build_navigation_view(multi_target_recipe), "compute_mode")
     assert "compares methods" in _option(multi_target_axis, "parallel_by_model")["disabled_reason"]
     assert _option(multi_target_axis, "parallel_by_target")["enabled"] is True
+
+
+def test_navigation_layer1_frequency_respects_dataset():
+    view = build_navigation_view(_recipe())
+    frequency_axis = _axis(view, "frequency")
+
+    assert _option(frequency_axis, "monthly")["enabled"] is True
+    assert "requires frequency=monthly" in _option(frequency_axis, "quarterly")["disabled_reason"]
+
+    qd_recipe = _recipe()
+    qd_recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_qd+fred_sd"
+    qd_axis = _axis(build_navigation_view(qd_recipe), "frequency")
+    assert _option(qd_axis, "quarterly")["enabled"] is True
+    assert "requires frequency=quarterly" in _option(qd_axis, "monthly")["disabled_reason"]
+
+    sd_recipe = _recipe()
+    sd_recipe["path"]["1_data_task"]["fixed_axes"]["dataset"] = "fred_sd"
+    sd_axis = _axis(build_navigation_view(sd_recipe), "frequency")
+    assert _option(sd_axis, "monthly")["enabled"] is True
+    assert _option(sd_axis, "quarterly")["enabled"] is True
+
+
+def test_navigation_layer1_target_structure_respects_study_scope():
+    view = build_navigation_view(_recipe())
+    target_axis = _axis(view, "target_structure")
+
+    assert _option(target_axis, "single_target")["enabled"] is True
+    assert "one-target Study Scope" in _option(target_axis, "multi_target")["disabled_reason"]
+
+    multi_recipe = _recipe()
+    multi_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "multiple_targets_compare_methods"
+    multi_axis = _axis(build_navigation_view(multi_recipe), "target_structure")
+    assert "multiple-target Study Scope" in _option(multi_axis, "single_target")["disabled_reason"]
+    assert _option(multi_axis, "multi_target")["enabled"] is True
 
 
 def test_navigator_ui_data_omits_rename_ledger():
@@ -486,6 +566,36 @@ def test_browser_state_engine_matches_compute_layout_scope_gate(tmp_path: Path):
     compare_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "one_target_compare_methods")])
     assert compare_js["options"]["compute_parallel_by_model"]["enabled"] is True
     assert "multiple targets" in compare_js["options"]["compute_parallel_by_target"]["disabled_reason"]
+
+
+def test_browser_state_engine_matches_layer1_frequency_and_target_gates(tmp_path: Path):
+    recipe = _recipe()
+    python_view = build_navigation_view(recipe)
+    js = _js_state_snapshot(tmp_path, recipe, [])
+
+    assert js["options"]["frequency_monthly"]["enabled"] == _option(
+        _axis(python_view, "frequency"), "monthly"
+    )["enabled"]
+    assert js["options"]["frequency_quarterly"]["enabled"] == _option(
+        _axis(python_view, "frequency"), "quarterly"
+    )["enabled"]
+    assert "requires frequency=monthly" in js["options"]["frequency_quarterly"]["disabled_reason"]
+    assert js["options"]["target_single"]["enabled"] == _option(
+        _axis(python_view, "target_structure"), "single_target"
+    )["enabled"]
+    assert "one-target Study Scope" in js["options"]["target_multi"]["disabled_reason"]
+
+    qd_js = _js_state_snapshot(tmp_path, recipe, [("dataset", "fred_qd")])
+    assert qd_js["options"]["frequency_quarterly"]["enabled"] is True
+    assert "requires frequency=quarterly" in qd_js["options"]["frequency_monthly"]["disabled_reason"]
+
+    sd_js = _js_state_snapshot(tmp_path, recipe, [("dataset", "fred_sd")])
+    assert sd_js["options"]["frequency_monthly"]["enabled"] is True
+    assert sd_js["options"]["frequency_quarterly"]["enabled"] is True
+
+    multi_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "multiple_targets_compare_methods")])
+    assert "multiple-target Study Scope" in multi_js["options"]["target_single"]["disabled_reason"]
+    assert multi_js["options"]["target_multi"]["enabled"] is True
 
 
 def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
