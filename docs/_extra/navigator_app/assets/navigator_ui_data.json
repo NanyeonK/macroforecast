@@ -2617,28 +2617,6 @@
       "incompatible_with": {},
       "layer": "3_training"
     },
-    "source_adapter": {
-      "allowed_values": [
-        "fred_md",
-        "fred_qd",
-        "fred_sd",
-        "custom_csv",
-        "custom_parquet"
-      ],
-      "axis_name": "source_adapter",
-      "axis_type": "enum",
-      "compatible_with": {},
-      "current_status": {
-        "custom_csv": "operational",
-        "custom_parquet": "operational",
-        "fred_md": "operational",
-        "fred_qd": "operational",
-        "fred_sd": "operational"
-      },
-      "default_policy": "fixed",
-      "incompatible_with": {},
-      "layer": "1_data_task"
-    },
     "split_family": {
       "allowed_values": [
         "simple_holdout",
@@ -3905,43 +3883,6 @@
         }
       }
     },
-    "source_adapter": {
-      "contract": "Internal loader-dispatch contract. Kept for compatibility with old custom-loader recipes; new recipes choose custom_csv/custom_parquet on dataset.",
-      "docs_url": "../detail/layer1/source_frame.html",
-      "label": "Source Loader Dispatch",
-      "order": 6,
-      "question": "Which internal loader should read the source panel?",
-      "selection_kind": "internal_derived_choice",
-      "short_label": "Loader Dispatch",
-      "summary": "Internal dispatch axis derived from dataset; ordinary recipes should omit it.",
-      "values": {
-        "custom_csv": {
-          "label": "Custom CSV",
-          "short_label": "CSV",
-          "summary": "Read a custom CSV panel from leaf_config.custom_data_path."
-        },
-        "custom_parquet": {
-          "label": "Custom Parquet",
-          "short_label": "Parquet",
-          "summary": "Read a custom Parquet panel from leaf_config.custom_data_path."
-        },
-        "fred_md": {
-          "label": "FRED-MD Loader",
-          "short_label": "FRED-MD",
-          "summary": "Read the built-in FRED-MD source."
-        },
-        "fred_qd": {
-          "label": "FRED-QD Loader",
-          "short_label": "FRED-QD",
-          "summary": "Read the built-in FRED-QD source."
-        },
-        "fred_sd": {
-          "label": "FRED-SD Loader",
-          "short_label": "FRED-SD",
-          "summary": "Read the built-in FRED-SD source."
-        }
-      }
-    },
     "study_scope": {
       "contract": "Primary Layer 0 study-shape contract. It derives the Layer 1 target_structure and determines whether downstream method axes are fixed or sweep-aware.",
       "docs_url": "../detail/layer0/study_scope.html",
@@ -4178,7 +4119,6 @@
               "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
-              "source_adapter": "fred_md",
               "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
@@ -4260,7 +4200,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: autoregressive_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: autoregressive_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "FRED-MD style macro forecasting path with official transformations, raw-panel ridge generator, AR-BIC benchmark, and MSFE evaluation."
     },
     {
@@ -4301,7 +4241,6 @@
             "fixed_axes": {
               "dataset": "fred_md",
               "information_set_type": "final_revised_data",
-              "source_adapter": "fred_md",
               "target_structure": "single_target"
             },
             "leaf_config": {
@@ -4363,7 +4302,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Small fixture-safe replication route used to verify recipe lowering and artifact contracts."
     },
     {
@@ -4416,7 +4355,6 @@
               "official_transform_policy": "keep_official_raw_scale",
               "raw_missing_policy": "preserve_raw_missing",
               "raw_outlier_policy": "preserve_raw_outliers",
-              "source_adapter": "fred_sd",
               "target_structure": "single_target"
             },
             "leaf_config": {
@@ -4490,7 +4428,7 @@
         },
         "recipe_id": "fred-sd-midasr-almonp-direct"
       },
-      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      source_adapter: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_predictors\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: fred-sd-midasr-almonp-direct\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_sd\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      fred_sd_frequency_policy: report_only\n      official_transform_policy: keep_official_raw_scale\n      raw_missing_policy: preserve_raw_missing\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: UR_CA\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      fred_sd_mixed_frequency_representation: mixed_frequency_model_adapter\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n      feature_block_set: transformed_predictors\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: raw_feature_panel\n      model_family: midasr\n      midasr_weight_family: almonp\n      forecast_type: direct\n      forecast_object: point_mean\n    leaf_config:\n      training_config:\n        midas_max_lag: 3\n        midasr_almonp_degree: 2\n        midasr_max_terms: 12\n        midasr_max_nfev: 500\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
@@ -9904,7 +9842,6 @@
             "fixed_axes": {
               "dataset": "fred_md",
               "information_set_type": "final_revised_data",
-              "source_adapter": "fred_md",
               "target_structure": "single_target"
             },
             "leaf_config": {
@@ -9966,7 +9903,7 @@
         },
         "recipe_id": "synthetic-replication-roundtrip-navigator"
       },
-      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: synthetic-replication-roundtrip-navigator\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      information_set_type: final_revised_data\n      target_structure: single_target\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n  2_preprocessing:\n    fixed_axes:\n      target_transform_policy: raw_level\n      x_transform_policy: raw_level\n      tcode_policy: raw_only\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: none\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: none\n      preprocess_fit_scope: not_applicable\n      inverse_transform_policy: none\n      evaluation_scale: raw_level\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: zero_change\n      feature_builder: target_lag_features\n      model_family: ar\n      forecast_type: iterated\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 5\n  6_stat_tests:\n    fixed_axes: {}\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -9986,7 +9923,6 @@
             "fixed_axes": {
               "dataset": "fred_md",
               "information_set_type": "final_revised_data",
-              "source_adapter": "fred_md",
               "target_structure": "single_target"
             },
             "label": "Layer 1: official data frame",
@@ -10144,7 +10080,6 @@
             "residual_diagnostics": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
-            "source_adapter": "fred_md",
             "study_scope": "one_target_one_method",
             "target": "INDPRO",
             "target_missing_policy": "none",
@@ -10445,7 +10380,6 @@
               "primary_metric": "4_evaluation",
               "reproducibility_mode": "0_meta",
               "scaling_policy": "2_preprocessing",
-              "source_adapter": "1_data_task",
               "study_scope": "0_meta",
               "target_missing_policy": "2_preprocessing",
               "target_outlier_policy": "2_preprocessing",
@@ -10490,7 +10424,6 @@
               "primary_metric": "msfe",
               "reproducibility_mode": "seeded_reproducible",
               "scaling_policy": "none",
-              "source_adapter": "fred_md",
               "study_scope": "one_target_one_method",
               "target_missing_policy": "none",
               "target_outlier_policy": "none",
@@ -15327,7 +15260,6 @@
               "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
-              "source_adapter": "fred_md",
               "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
@@ -15409,7 +15341,7 @@
         },
         "recipe_id": "goulet-coulombe-2021-fred-md-ridge"
       },
-      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      source_adapter: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: autoregressive_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
+      "recipe_yaml": "recipe_id: goulet-coulombe-2021-fred-md-ridge\npath:\n  0_meta:\n    fixed_axes:\n      study_scope: one_target_one_method\n      failure_policy: fail_fast\n      compute_mode: serial\n      reproducibility_mode: seeded_reproducible\n    leaf_config:\n      random_seed: 42\n  1_data_task:\n    fixed_axes:\n      dataset: fred_md\n      frequency: monthly\n      information_set_type: final_revised_data\n      target_structure: single_target\n      variable_universe: all_variables\n      missing_availability: zero_fill_leading_predictor_gaps\n      release_lag_rule: ignore_release_lag\n      contemporaneous_x_rule: forbid_same_period_predictors\n      official_transform_policy: apply_official_tcode\n      official_transform_scope: target_and_predictors\n      raw_missing_policy: zero_fill_leading_predictor_missing_before_tcode\n      raw_outlier_policy: preserve_raw_outliers\n    leaf_config:\n      target: INDPRO\n      horizons:\n      - 1\n      - 3\n      - 6\n      - 12\n  2_preprocessing:\n    fixed_axes:\n      horizon_target_construction: future_target_level_t_plus_h\n      target_transform_policy: official_tcode_transformed\n      x_transform_policy: official_tcode_transformed\n      tcode_policy: official_tcode_then_extra_preprocess\n      target_missing_policy: none\n      x_missing_policy: none\n      target_outlier_policy: none\n      x_outlier_policy: none\n      scaling_policy: standard\n      dimensionality_reduction_policy: none\n      feature_selection_policy: none\n      preprocess_order: official_tcode_then_extra\n      preprocess_fit_scope: train_only\n      inverse_transform_policy: target_only\n      evaluation_scale: raw_level\n      target_lag_block: none\n      x_lag_feature_block: none\n      factor_feature_block: none\n      level_feature_block: none\n      temporal_feature_block: none\n      rotation_feature_block: none\n      feature_block_combination: replace_with_selected_blocks\n  3_training:\n    fixed_axes:\n      framework: expanding\n      benchmark_family: autoregressive_bic\n      feature_builder: raw_feature_panel\n      model_family: ridge\n      forecast_type: direct\n      forecast_object: point_mean\n  4_evaluation:\n    fixed_axes:\n      primary_metric: msfe\n  5_output_provenance:\n    fixed_axes:\n      export_format: json\n      saved_objects: full_bundle\n      provenance_fields: full\n      artifact_granularity: aggregated\n    leaf_config:\n      manifest_mode: full\n      benchmark_config:\n        minimum_train_size: 60\n  6_stat_tests:\n    fixed_axes:\n      equal_predictive: dm\n  7_importance:\n    fixed_axes:\n      importance_method: none\n",
       "view": {
         "canonical_path": {
           "0_meta": {
@@ -15437,7 +15369,6 @@
               "raw_missing_policy": "zero_fill_leading_predictor_missing_before_tcode",
               "raw_outlier_policy": "preserve_raw_outliers",
               "release_lag_rule": "ignore_release_lag",
-              "source_adapter": "fred_md",
               "target_structure": "single_target",
               "variable_universe": "all_variables"
             },
@@ -15629,7 +15560,6 @@
             "rotation_feature_block": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "standard",
-            "source_adapter": "fred_md",
             "study_scope": "one_target_one_method",
             "target": "INDPRO",
             "target_lag_block": "none",
@@ -15951,7 +15881,6 @@
               "rotation_feature_block": "2_preprocessing",
               "saved_objects": "5_output_provenance",
               "scaling_policy": "2_preprocessing",
-              "source_adapter": "1_data_task",
               "study_scope": "0_meta",
               "target_lag_block": "2_preprocessing",
               "target_missing_policy": "2_preprocessing",
@@ -16018,7 +15947,6 @@
               "rotation_feature_block": "none",
               "saved_objects": "full_bundle",
               "scaling_policy": "standard",
-              "source_adapter": "fred_md",
               "study_scope": "one_target_one_method",
               "target_lag_block": "none",
               "target_missing_policy": "none",

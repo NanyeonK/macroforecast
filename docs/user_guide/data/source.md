@@ -5,14 +5,12 @@ Declares **where the data comes from and which information-set regime applies**.
 | Section | axis | Role |
 |---|---|---|
 | 1.1.1 | [`dataset`](#111-dataset) | Which source family to load, including custom CSV/Parquet |
-| 1.1.2 | [`source_adapter`](#112-source_adapter-internal) | Internal loader dispatch derived from `dataset` |
-| 1.1.3 | [`frequency`](#113-frequency) | Series frequency (monthly/quarterly); dataset-derived |
-| 1.1.4 | [`information_set_type`](#114-information_set_type) | Real-time regime (revised vs. vintage-aware) |
+| 1.1.2 | [`frequency`](#112-frequency) | Series frequency (monthly/quarterly); dataset-derived |
+| 1.1.3 | [`information_set_type`](#113-information_set_type) | Real-time regime (revised vs. vintage-aware) |
 
 **Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as 0.5 `registry_type` drop).
 **At a glance (defaults):**
 - `dataset` — no default; you pick one of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, or `custom_parquet`.
-- `source_adapter` — internal dispatch bridge derived from `dataset`; omit in new recipes.
 - `frequency` — derived from `dataset` for MD/QD/composites. Standalone `fred_sd` requires an explicit monthly/quarterly choice.
 - `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_on_revised_data` only when you want synthetic release-lag masking.
 
@@ -48,38 +46,6 @@ Each base dataset has its own dedicated documentation page covering citation, do
 - Compile guard: standalone `dataset=fred_sd` requires explicit `frequency`; `fred_md+fred_sd` requires monthly; `fred_qd+fred_sd` requires quarterly.
 - Compile guard: `dataset=custom_csv/custom_parquet` requires `leaf_config.custom_dataset_schema` in `fred_md`, `fred_qd`, or `fred_sd`, plus `leaf_config.custom_data_path`.
 
-### Recipe usage
-
-```yaml
-path:
-  1_data_task:
-    fixed_axes:
-      dataset: fred_md
-    leaf_config:
-      target: INDPRO
-      horizons: [1, 3, 6]
-```
-
----
-
-## 1.1.2 `source_adapter` (internal)
-
-**Internal loader dispatch.** New recipes should not set this axis. The compiler derives it from `dataset`: canonical FRED dataset values dispatch to their FRED loaders, and `dataset=custom_csv/custom_parquet` dispatches to the custom loader.
-
-### Value catalog
-
-| Value | Status | Loader | What it does |
-|---|---|---|---|
-| `fred_md` | operational | `load_fred_md` | FRED-MD from St. Louis Fed (default for `dataset=fred_md`) |
-| `fred_qd` | operational | `load_fred_qd` | FRED-QD from St. Louis Fed |
-| `fred_sd` | operational | `load_fred_sd` | FRED-SD from St. Louis Fed |
-| `custom_csv` | operational | `load_custom_csv` | Compatibility route for old recipes. Prefer `dataset: custom_csv`. |
-| `custom_parquet` | operational | `load_custom_parquet` | Compatibility route for old recipes. Prefer `dataset: custom_parquet`. |
-
-### What was dropped in this pass
-
-The previous iteration carried 14 reserved source-adapter labels (`bea`, `bls`, `census`, `oecd`, `imf_ifs`, `ecb_sdw`, `bis`, `world_bank`, `wrds_macro_finance`, `survey_spf`, `fred_api_custom`, `market_prices`, `news_text`, `custom_sql`) as registry_only or future. None had a concrete adapter roadmap for v1.0 / v1.1 that justified keeping them in the registry, so they were dropped outright. If and when a third-party adapter ships, the corresponding value can be re-registered.
-
 ### Custom CSV / Parquet — implementation contract
 
 When `dataset` is `custom_csv` or `custom_parquet`:
@@ -95,9 +61,8 @@ When `dataset` is `custom_csv` or `custom_parquet`:
 
 - `macrocast.load_custom_csv(path, *, dataset, cache_root=None)` — direct call.
 - `macrocast.load_custom_parquet(path, *, dataset, cache_root=None)` — direct call (requires pyarrow or fastparquet).
-- Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` reads the derived `recipe.data_task_spec["source_adapter"]`.
+- Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` dispatches directly from `recipe.data_task_spec["dataset"]`.
 - Compile guard: `dataset ∈ {custom_csv, custom_parquet}` + missing `leaf_config.custom_dataset_schema` or `leaf_config.custom_data_path` → `CompileValidationError`.
-- Compatibility: old recipes using `dataset: fred_md` plus `source_adapter: custom_csv` still compile, but the preferred public axis is now `dataset`.
 
 ### Recipe usage
 
@@ -145,7 +110,7 @@ path:
 
 ---
 
-## 1.1.3 `frequency`
+## 1.1.2 `frequency`
 
 **Series frequency of the dataset panel.** Dataset-derived for MD/QD/composite runs; required for standalone FRED-SD runs.
 
@@ -174,7 +139,7 @@ Usually omitted for MD/QD/composites because the dataset implies the frequency. 
 
 ---
 
-## 1.1.4 `information_set_type`
+## 1.1.3 `information_set_type`
 
 **Real-time regime** that governs which version of each observation the model is allowed to see at each forecast origin. Fully wired — this is the only 1.1 axis with compile-time validation AND runtime dispatch across its operational values.
 
@@ -220,7 +185,6 @@ path:
 ## Source & Frame (1.1) takeaways
 
 - **`dataset`** and **`information_set_type`** are the two axes the user usually decides in 1.1; standalone FRED-SD also requires `frequency`.
-- **`source_adapter`** is internal loader dispatch derived from `dataset`; new recipes do not set it.
 - **`frequency`** is executable: it controls conversion and is compile-checked for FRED-SD composites.
 - **`data_domain`** axis dropped entirely (pure duplication of `dataset.source_family`).
 

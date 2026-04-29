@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 145
+EXPECTED_AXIS_COUNT = 144
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -17,7 +17,6 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "target_structure",
         "model_family",
         "importance_method",
-        "source_adapter",
         "state_selection",
         "sd_variable_selection",
         "fred_sd_frequency_policy",
@@ -164,7 +163,6 @@ def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
 def test_registry_loader_discovers_stage1_data_task_axes() -> None:
     registry = get_axis_registry()
     expected = {
-        "source_adapter",
         "frequency",
         "information_set_type",
         "official_transform_policy",

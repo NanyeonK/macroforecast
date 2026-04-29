@@ -238,7 +238,8 @@ def test_execute_recipe_records_layer1_official_frame_contract(tmp_path: Path) -
     assert source_contract["contract_version"] == "source_availability_contract_v1"
     assert source_contract["raw_dataset"] == "fred_md"
     assert source_contract["dataset"] == "fred_md"
-    assert source_contract["source_adapter"] == "fred_md"
+    assert source_contract["dataset_schema"] == "fred_md"
+    assert "source_adapter" not in source_contract
     assert source_contract["version_mode"] == "current"
     assert source_contract["vintage"] is None
     assert source_contract["data_vintage_requested"] is None

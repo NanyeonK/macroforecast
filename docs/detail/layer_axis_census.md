@@ -64,7 +64,6 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | `raw_outlier_policy` | - | `enum` | `fixed` | operational=6 | `operational`: `preserve_raw_outliers`, `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, `set_raw_outliers_to_missing` |
 | `release_lag_rule` | - | `enum` | `fixed` | operational=3 | `operational`: `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` |
 | `sd_variable_selection` | - | `enum` | `fixed` | operational=2 | `operational`: `all_sd_variables`, `selected_sd_variables` |
-| `source_adapter` | - | `enum` | `fixed` | operational=5 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet`; internal dispatch bridge derived from `dataset` |
 | `state_selection` | - | `enum` | `fixed` | operational=2 | `operational`: `all_states`, `selected_states` |
 | `target_structure` | - | `enum` | `fixed` | operational=2 | `operational`: `single_target`, `multi_target` |
 | `variable_universe` | - | `enum` | `fixed` | operational=5 | `operational`: `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` |

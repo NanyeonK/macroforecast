@@ -42,7 +42,6 @@ _GOULET_COULOMBE_2021_RECIPE: dict[str, Any] = {
         "1_data_task": {
             "fixed_axes": {
                 "dataset": "fred_md",
-                "source_adapter": "fred_md",
                 "frequency": "monthly",
                 "information_set_type": "final_revised_data",
                 "target_structure": "single_target",
@@ -123,7 +122,6 @@ _SYNTHETIC_REPLICATION_RECIPE: dict[str, Any] = {
         "1_data_task": {
             "fixed_axes": {
                 "dataset": "fred_md",
-                "source_adapter": "fred_md",
                 "information_set_type": "final_revised_data",
                 "target_structure": "single_target",
             },
@@ -179,7 +177,6 @@ _FRED_SD_MIDASR_ALMONP_RECIPE: dict[str, Any] = {
         "1_data_task": {
             "fixed_axes": {
                 "dataset": "fred_sd",
-                "source_adapter": "fred_sd",
                 "frequency": "monthly",
                 "information_set_type": "final_revised_data",
                 "target_structure": "single_target",

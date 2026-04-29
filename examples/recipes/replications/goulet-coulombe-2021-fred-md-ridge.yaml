@@ -11,7 +11,6 @@ path:
   1_data_task:
     fixed_axes:
       dataset: fred_md
-      source_adapter: fred_md
       frequency: monthly
       information_set_type: final_revised_data
       target_structure: single_target

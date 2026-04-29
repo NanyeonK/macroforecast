@@ -3,12 +3,11 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: Source and frame
 
-This group selects the data source, frequency, and information-set regime. Loader dispatch is derived from `dataset`; ordinary recipes should not set `source_adapter`.
+This group selects the data source, frequency, and information-set regime. `dataset` is the only source-choice axis; custom files are selected directly as `custom_csv` or `custom_parquet`.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, `custom_parquet` | Required user choice. Custom values require `leaf_config.custom_dataset_schema` and `leaf_config.custom_data_path`. |
-| `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | Internal dispatch bridge. New recipes omit it; old custom-loader recipes remain accepted. |
 | `frequency` | `monthly`, `quarterly` | Derived for FRED-MD/QD/composites. Required for standalone FRED-SD. |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | Simple default is `final_revised_data`; Full recipes should write it explicitly. |
 

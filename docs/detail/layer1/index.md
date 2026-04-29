@@ -11,7 +11,7 @@ Layer 1 owns the official data task. It decides which data source is used, which
 
 Simple asks for the data question directly: `dataset`, `target`, `start`, `end`, and `horizons`. Standalone `fred_sd` also needs `frequency`. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.
 
-Full exposes the complete Layer 1 official-frame contract. The live registry has **18 Layer 1 axes**. The Navigator primary tree shows 15 user-facing axes; `source_adapter` is now an internal dispatch bridge, and `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
+Full exposes the complete Layer 1 official-frame contract. The live registry has **17 Layer 1 axes**. The Navigator primary tree shows 15 user-facing axes; `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
 
 ## Decision order
 
@@ -19,7 +19,7 @@ Read Layer 1 in runtime order:
 
 | Step | Group | Axes |
 |---|---|---|
-| 4.1.1 | [Source and frame](source_frame.md) | `dataset`, `frequency`, `information_set_type`; `source_adapter` is derived/internal |
+| 4.1.1 | [Source and frame](source_frame.md) | `dataset`, `frequency`, `information_set_type` |
 | 4.1.2 | [FRED-SD source selection](fred_sd_source_selection.md) | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group`, hidden `state_selection`, hidden `sd_variable_selection` |
 | 4.1.3 | [Target and variable universe](target_universe.md) | `target_structure`, `variable_universe`; target IDs, horizons, and sample dates live in `leaf_config` |
 | 4.1.4 | [Raw source cleaning](raw_source_cleaning.md) | `raw_missing_policy`, `raw_outlier_policy` before official transforms/T-codes |
@@ -31,7 +31,6 @@ Read Layer 1 in runtime order:
 | Axis | Simple default | Full rule |
 |---|---|---|
 | `dataset` | required user choice | required; choose `custom_csv` or `custom_parquet` for user-supplied files |
-| `source_adapter` | derived from `dataset` | internal dispatch bridge; omit in new recipes |
 | `frequency` | inferred for FRED-MD/QD/composites; required for standalone FRED-SD | MD/composites are constrained; standalone FRED-SD must choose monthly or quarterly |
 | `information_set_type` | `final_revised_data` | write explicitly in Full recipes |
 | `fred_sd_frequency_policy` | `report_only` | defaulted; non-default values require a dataset containing FRED-SD |

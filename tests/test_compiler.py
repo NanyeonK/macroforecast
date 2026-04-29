@@ -1195,7 +1195,7 @@ def test_compile_recipe_rejects_conflicting_predictor_family_and_feature_builder
 def test_compiled_manifest_records_stage1_data_task_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     spec = compile_result.manifest["data_task_spec"]
-    assert spec["source_adapter"] == "fred_md"
+    assert "source_adapter" not in spec
     assert "dataset_source" not in spec
     assert spec["target_structure"] == "single_target"
     assert "task" not in spec

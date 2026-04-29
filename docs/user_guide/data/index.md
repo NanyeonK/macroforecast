@@ -2,11 +2,11 @@
 
 Stage 1 answers **"what official data frame does this study start from?"** — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.
 
-After the layer-boundary migration, Stage 1 holds **18 canonical axes** under the `1_data_task` layer. Sixteen are shown in the primary Navigator tree; `state_selection` and `sd_variable_selection` are hidden lower selectors used by explicit FRED-SD selector helpers and group resolution.
+After the layer-boundary migration, Stage 1 holds **17 canonical axes** under the `1_data_task` layer. Fifteen are shown in the primary Navigator tree; `state_selection` and `sd_variable_selection` are hidden lower selectors used by explicit FRED-SD selector helpers and group resolution.
 
 | Group | Axes | Focus |
 |---|---|---:|---|
-| Source & frame | 3 user-facing + 1 internal | `dataset`, `frequency`, `information_set_type`; `source_adapter` is derived/internal |
+| Source & frame | 3 | `dataset`, `frequency`, `information_set_type` |
 | FRED-SD source selection | 5 | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group`, hidden `state_selection`, hidden `sd_variable_selection` |
 | Target structure | 1 | `target_structure`; target/targets/horizons live in `leaf_config` |
 | Variable universe | 1 | `variable_universe` |
@@ -22,7 +22,7 @@ The Stage 0 axes ([design](../design.md)) — `study_scope`, `axis_type`, `failu
 
 ## Honest operational status
 
-Layer 1 now covers 18 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
+Layer 1 now covers 17 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
 
 - **Kept in Layer 1** — dataset/source/frequency/information set, FRED-SD source selection, target structure, raw variable universe, raw-source cleaning, official transforms, official availability, release lag, and contemporaneous information rule.
 - **Moved to Layer 2** — target representation, predictor family, feature builder / data-richness representation, feature-block grammar, factor-count representation, and deterministic/break features.

@@ -195,43 +195,6 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "source_adapter": {
-        "order": 6,
-        "label": "Source Loader Dispatch",
-        "short_label": "Loader Dispatch",
-        "question": "Which internal loader should read the source panel?",
-        "summary": "Internal dispatch axis derived from dataset; ordinary recipes should omit it.",
-        "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "Internal loader-dispatch contract. Kept for compatibility with old custom-loader recipes; new recipes choose custom_csv/custom_parquet on dataset.",
-        "selection_kind": "internal_derived_choice",
-        "values": {
-            "fred_md": {
-                "label": "FRED-MD Loader",
-                "short_label": "FRED-MD",
-                "summary": "Read the built-in FRED-MD source.",
-            },
-            "fred_qd": {
-                "label": "FRED-QD Loader",
-                "short_label": "FRED-QD",
-                "summary": "Read the built-in FRED-QD source.",
-            },
-            "fred_sd": {
-                "label": "FRED-SD Loader",
-                "short_label": "FRED-SD",
-                "summary": "Read the built-in FRED-SD source.",
-            },
-            "custom_csv": {
-                "label": "Custom CSV",
-                "short_label": "CSV",
-                "summary": "Read a custom CSV panel from leaf_config.custom_data_path.",
-            },
-            "custom_parquet": {
-                "label": "Custom Parquet",
-                "short_label": "Parquet",
-                "summary": "Read a custom Parquet panel from leaf_config.custom_data_path.",
-            },
-        },
-    },
     "frequency": {
         "order": 7,
         "label": "Frequency",

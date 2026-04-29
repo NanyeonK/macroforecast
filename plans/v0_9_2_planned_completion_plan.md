@@ -173,10 +173,10 @@ Each test consumes the new interval columns where applicable.
 
 Most architectural. Real-time data adapters + multi-target orchestration.
 
-**E1 — vintage_policy:rolling_vintage + source_adapter trio (~4 values, ~1000 LOC)**
+**E1 — vintage_policy:rolling_vintage + custom data-source trio (~4 values, ~1000 LOC)**
 
 - Add FRED ALFRED adapter (already stubbed in `raw/datasets/`?) — confirm + finish.
-- `source_adapter`: fred_api_custom, custom_csv, custom_parquet (generic adapter shells).
+- custom data-source values: fred_api_custom, custom_csv, custom_parquet (generic adapter shells).
 - `vintage_policy`: rolling_vintage (vintage-timestamp-indexed pull).
 
 **E2 — multi_target_architecture + predictor_family + alignment_rule (~7 values, ~800 LOC)**

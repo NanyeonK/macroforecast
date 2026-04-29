@@ -16,7 +16,7 @@ In-depth documentation for every macrocast axis whose per-axis walk is complete.
 
 [Data (Stage 1)](data/index.md) — thirteen canonical axes after the layer-boundary migration, with historical/migrated detail pages kept for reference:
 
-- [1.1 Source & Frame](data/source.md) — `dataset`, `source_adapter`, `frequency`, `information_set_type`, `official_transform_policy`, `official_transform_scope`.
+- [1.1 Source & Frame](data/source.md) — `dataset`, `frequency`, `information_set_type`, `official_transform_policy`, `official_transform_scope`.
 - [1.2 Target Structure](data/target_structure.md) — `target_structure`.
 - [1.3 Horizon & Evaluation Window](data/horizon.md) — `min_train_size`, `training_start_rule`, `oos_period`, `overlap_handling`.
 - [1.4 Benchmark & Predictor Universe](data/benchmark.md) — `benchmark_family`, `predictor_family`, `variable_universe`, `deterministic_components`.

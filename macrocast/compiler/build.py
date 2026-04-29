@@ -207,20 +207,11 @@ def _dataset_has_fred_sd(dataset: object) -> bool:
     return "fred_sd" in {token.strip().lower() for token in tokens if token.strip()}
 
 
-def _dataset_is_custom(dataset: object) -> bool:
-    return str(dataset) in _CUSTOM_DATASETS
-
-
-def _source_adapter_for_dataset(selection_map: dict[str, AxisSelection], dataset: str) -> str:
-    return _selection_value(selection_map, "source_adapter", default=dataset)
-
-
 def _raw_dataset_schema(
     selection_map: dict[str, AxisSelection],
     leaf_config: Mapping[str, Any],
 ) -> str:
     dataset = _selection_value(selection_map, "dataset")
-    source_adapter = _source_adapter_for_dataset(selection_map, dataset)
     if dataset in _CUSTOM_DATASETS:
         schema = leaf_config.get("custom_dataset_schema")
         if schema not in _CUSTOM_DATASET_SCHEMAS:
@@ -228,17 +219,7 @@ def _raw_dataset_schema(
                 "dataset='custom_csv'/'custom_parquet' requires "
                 f"leaf_config.custom_dataset_schema in {sorted(_CUSTOM_DATASET_SCHEMAS)}"
             )
-        if "source_adapter" in selection_map and source_adapter != dataset:
-            raise CompileValidationError(
-                f"dataset={dataset!r} derives source_adapter={dataset!r}; "
-                "omit source_adapter or set it to the same custom dataset value"
-            )
         return str(schema)
-    if source_adapter in _CUSTOM_DATASETS and dataset not in _CUSTOM_DATASET_SCHEMAS:
-        raise CompileValidationError(
-            f"source_adapter={source_adapter!r} requires dataset to declare one of "
-            f"{sorted(_CUSTOM_DATASET_SCHEMAS)} as the custom file schema"
-        )
     return dataset
 
 
@@ -1093,7 +1074,6 @@ def _validate_layer1_data_task_contract(
 
     dataset = _selection_value(selection_map, "dataset")
     raw_dataset_schema = _raw_dataset_schema(selection_map, leaf_config)
-    source_adapter = _source_adapter_for_dataset(selection_map, dataset)
     if raw_dataset_schema == "fred_sd" and "frequency" not in selection_map:
         raise CompileValidationError("dataset='fred_sd' requires explicit frequency ('monthly' or 'quarterly')")
     if raw_dataset_schema in _COMPOSITE_DATASET_FREQUENCY:
@@ -1106,7 +1086,7 @@ def _validate_layer1_data_task_contract(
 
     targets = _targets_for_layer1_contract(selection_map, leaf_config)
     has_fred_sd = _dataset_has_fred_sd(raw_dataset_schema)
-    if source_adapter in _CUSTOM_DATASETS and not leaf_config.get("custom_data_path"):
+    if dataset in _CUSTOM_DATASETS and not leaf_config.get("custom_data_path"):
         raise CompileValidationError(
             f"dataset={dataset!r} requires leaf_config.custom_data_path"
         )
@@ -1339,7 +1319,6 @@ def _validate_layer2_feature_block_contract(
 def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     dataset = _first_selected_value(selection_map, "dataset", "fred_md")
     raw_dataset_schema = _raw_dataset_schema(selection_map, leaf_config)
-    source_adapter = _source_adapter_for_dataset(selection_map, dataset)
     target_structure = _first_selected_value(selection_map, "target_structure", "single_target")
     feature_builder = _first_selected_value(selection_map, "feature_builder", "target_lag_features")
     information_set_type = _first_selected_value(selection_map, "information_set_type", "final_revised_data")
@@ -1352,7 +1331,6 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         "dataset_schema": raw_dataset_schema,
         "custom_dataset_schema": leaf_config.get("custom_dataset_schema"),
         "custom_data_path": leaf_config.get("custom_data_path"),
-        "source_adapter": source_adapter,
         "target_structure": target_structure,
         "official_transform_policy": _official_transform_policy(selection_map),
         "official_transform_scope": _official_transform_scope(selection_map),
@@ -3817,12 +3795,6 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         if "target" not in leaf_config:
             raise CompileValidationError("recipe leaf_config missing 'target'")
 
-    # Custom source adapter validation: custom_csv / custom_parquet require leaf_config.custom_data_path.
-    source_adapter_choice = selection_map["source_adapter"].selected_values[0] if "source_adapter" in selection_map else None
-    if source_adapter_choice in {"custom_csv", "custom_parquet"} and not leaf_config.get("custom_data_path"):
-        raise CompileValidationError(
-            f"source_adapter={source_adapter_choice!r} requires leaf_config.custom_data_path"
-        )
     _validate_layer1_data_task_contract(selection_map, leaf_config)
     _validate_layer2_feature_block_contract(selection_map, leaf_config)
     _reproducibility_random_seed(selection_map, leaf_config)

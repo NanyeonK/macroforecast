@@ -26,7 +26,6 @@ describes the registry layer after migration.
 | `overlap_handling` | 1_data_task | 6_stat_tests | HAC/overlap handling is inference over dependent forecast errors. |
 | `official_transform_policy` | split from Layer 2 t-code axes | 1_data_task | Official dataset transformations define the official frame, before researcher preprocessing. |
 | `official_transform_scope` | split from `tcode_application_scope` | 1_data_task | Target/X official transform scope is part of official frame construction. |
-| `source_adapter` | source-dispatch alias | 1_data_task | Loader dispatch is an adapter choice; `dataset` remains the schema identity. |
 | `target_structure` | target-shape alias | 1_data_task | Layer 1 records target cardinality; Layer 0 owns runner grammar. |
 
 ## Still To Migrate

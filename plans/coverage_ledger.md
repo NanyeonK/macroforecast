@@ -6,7 +6,7 @@
 - benchmark_family.var (VAR dropped from Phase 5 per memo)
 
 **Tier 2 — scope drift (macro-forecasting package boundary):**
-- source_adapter: blue_chip, google_trends, climate_series, satellite_proxy, high_frequency_surprises
+- retired source-dispatch values: blue_chip, google_trends, climate_series, satellite_proxy, high_frequency_surprises
 - horizon_target_construction: future_volatility, future_drawdown
 - economic_metrics: portfolio_SR_if_finance
 
@@ -152,7 +152,7 @@ above. Historical rows preserved for archaeology:
 | text_macro | future | v2 | phase-11 | text pipeline 필요 |
 | mixed_domain | future | v2 | phase-11 | 도메인 혼합 설계 필요 |
 
-### 1.1.2 source_adapter
+### 1.1.2 Retired Source Dispatch Axis
 
 | Value | Current | Target version | Target phase | Rationale |
 |-------|---------|:---:|:---:|-----------|

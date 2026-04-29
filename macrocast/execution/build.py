@@ -1724,12 +1724,12 @@ def _combine_raw_results(dataset: str, target_frequency: str, components):
 
 def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapping[str, str | Path] | None, cache_root: Path):
     vintage = recipe.data_vintage
-    source_adapter = recipe.data_task_spec.get("source_adapter") or recipe.raw_dataset
-    if source_adapter in {"custom_csv", "custom_parquet"}:
+    dataset = recipe.data_task_spec.get("dataset") or recipe.raw_dataset
+    if dataset in {"custom_csv", "custom_parquet"}:
         custom_path = local_raw_source or recipe.data_task_spec.get("custom_data_path")
         if custom_path is None:
             raise ExecutionError(
-                f"source_adapter={source_adapter!r} requires leaf_config.custom_data_path "
+                f"dataset={dataset!r} requires leaf_config.custom_data_path "
                 "(or pass local_raw_source to execute_recipe)"
             )
         custom_schema = (
@@ -1737,7 +1737,7 @@ def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapp
             or recipe.data_task_spec.get("dataset_schema")
             or recipe.raw_dataset
         )
-        if source_adapter == "custom_csv":
+        if dataset == "custom_csv":
             return load_custom_csv(custom_path, dataset=str(custom_schema), cache_root=cache_root)
         return load_custom_parquet(custom_path, dataset=str(custom_schema), cache_root=cache_root)
     parts = _dataset_parts(recipe.raw_dataset)
@@ -2905,17 +2905,15 @@ def _source_availability_contract(
         if isinstance(components, list):
             component_source_contracts = components
     source_kind = _source_url_kind(artifact_payload.get("source_url"))
-    source_adapter = (
-        recipe.data_task_spec.get("source_adapter")
-        or recipe.raw_dataset
-    )
+    public_dataset = recipe.data_task_spec.get("dataset") or metadata.get("dataset", recipe.raw_dataset)
+    dataset_schema = recipe.data_task_spec.get("dataset_schema") or recipe.raw_dataset
     return {
         "schema_version": _SOURCE_AVAILABILITY_CONTRACT_VERSION,
         "contract_version": _SOURCE_AVAILABILITY_CONTRACT_VERSION,
         "owner_layer": "1_data_task",
         "raw_dataset": recipe.raw_dataset,
-        "dataset": metadata.get("dataset", recipe.raw_dataset),
-        "source_adapter": source_adapter,
+        "dataset": public_dataset,
+        "dataset_schema": dataset_schema,
         "source_family": metadata.get("source_family"),
         "frequency": metadata.get("frequency"),
         "version_mode": metadata.get("version_mode"),

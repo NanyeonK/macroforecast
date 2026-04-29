@@ -63,7 +63,7 @@ def test_load_custom_csv_rejects_missing_file(tmp_path: Path) -> None:
 
 
 def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
-    """Compiler-level validation: source_adapter=custom_csv without
+    """Compiler-level validation: dataset=custom_csv without
     leaf_config.custom_data_path raises CompileValidationError."""
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.compiler.errors import CompileValidationError
@@ -74,12 +74,15 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
             "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": {
-                    "dataset": "fred_md",
-                    "source_adapter": "custom_csv",
+                    "dataset": "custom_csv",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
                 },
-                "leaf_config": {"target": "INDPRO", "horizons": [1]},  # no custom_data_path!
+                "leaf_config": {
+                    "target": "INDPRO",
+                    "horizons": [1],
+                    "custom_dataset_schema": "fred_md",
+                },  # no custom_data_path!
             },
             "2_preprocessing": {"fixed_axes": {
                 "target_transform_policy": "raw_level", "x_transform_policy": "raw_level",
@@ -148,7 +151,7 @@ def test_custom_csv_dataset_requires_custom_dataset_schema(tmp_path: Path) -> No
         compile_recipe_dict(recipe)
 
 
-def test_custom_csv_dataset_compiles_to_schema_and_adapter(tmp_path: Path) -> None:
+def test_custom_csv_dataset_compiles_to_schema(tmp_path: Path) -> None:
     from macrocast.compiler.build import compile_recipe_dict
 
     csv_path = tmp_path / "custom.csv"
@@ -196,7 +199,7 @@ def test_custom_csv_dataset_compiles_to_schema_and_adapter(tmp_path: Path) -> No
     assert recipe_spec.raw_dataset == "fred_md"
     assert recipe_spec.data_task_spec["dataset"] == "custom_csv"
     assert recipe_spec.data_task_spec["dataset_schema"] == "fred_md"
-    assert recipe_spec.data_task_spec["source_adapter"] == "custom_csv"
+    assert "source_adapter" not in recipe_spec.data_task_spec
 
 
 def test_default_recipe_accepts_custom_csv_dataset(tmp_path: Path) -> None:
@@ -267,19 +270,18 @@ def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
         compile_recipe_dict(recipe)
 
 
-def test_dataset_source_alias_with_source_adapter_is_rejected() -> None:
+def test_source_adapter_axis_is_rejected() -> None:
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.compiler.errors import CompileValidationError
 
     recipe = {
-        "recipe_id": "conflicting-source-adapter",
+        "recipe_id": "removed-source-adapter",
         "path": {
             "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method"}},
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "source_adapter": "custom_csv",
-                    "dataset_source": "custom_parquet",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
                 },
@@ -308,5 +310,5 @@ def test_dataset_source_alias_with_source_adapter_is_rejected() -> None:
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    with pytest.raises(CompileValidationError, match="unknown registry axis 'dataset_source'"):
+    with pytest.raises(CompileValidationError, match="unknown registry axis 'source_adapter'"):
         compile_recipe_dict(recipe)

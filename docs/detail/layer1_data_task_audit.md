@@ -22,10 +22,9 @@ Layer 1.
 ## Canonical Layer 1 After Migration
 
 Layer 1 now means official data frame and target identity. The live canonical
-Layer 1 registry has 18 axes:
+Layer 1 registry has 17 axes:
 
 - `dataset`
-- `source_adapter`
 - `frequency`
 - `information_set_type`
 - `fred_sd_frequency_policy`
@@ -98,8 +97,6 @@ The following axes were moved out of Layer 1 ownership:
 - Official dataset transforms now have canonical Layer 1 axes:
   `official_transform_policy` and `official_transform_scope`.
 - Official transform choices are read from Layer 1 axes. The compiler derives runtime `PreprocessContract` fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.
-- `source_adapter` remains an internal dispatch bridge derived from `dataset`;
-  removed source-dispatch aliases are rejected during registry validation.
 - `target_structure` is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through `study_scope`.
 
 ### 1.2 Target Structure

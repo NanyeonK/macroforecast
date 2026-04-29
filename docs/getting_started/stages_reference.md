@@ -100,7 +100,6 @@ Simple exposes only Layer 0 Study Scope. Full exposes all four user-facing Layer
 | Axis | Op values | Check / observe |
 |---|---|---|
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, `custom_parquet` | source loaded/merged → `raw_result.data.columns`; standalone FRED-SD requires explicit `frequency`; custom files require `leaf_config.custom_dataset_schema` and `custom_data_path` |
-| `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | internal dispatch derived from `dataset`; old custom-loader recipes may still set it explicitly |
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
 | `target_structure` | `single_target`, `multi_target` | target cardinality; Layer 0 derives `study_scope` from this plus sweep shape |

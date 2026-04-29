@@ -72,7 +72,7 @@ The authoritative change log is maintained by the St. Louis Fed in the appendix 
 - **Download is cached** at `~/.cache/macrocast/raw/` (override with `cache_root` on the loader). The cache key is `(dataset, vintage, source_url)`.
 - **No data redistribution** — the package never bundles the CSV. Network access or a user-provided `local_source` path is required on first load.
 - **Parsing**: `parse_fred_csv` at `macrocast/raw/shared_csv.py` separates the T-code header row from the observation rows and returns both (T-codes surface only if Layer 2 preprocessing consumes them).
-- **Schema conformance**: FRED-MD's column naming follows FRED series IDs (`INDPRO`, `CPIAUCSL`, …). Any user-side CSV used with `source_adapter: custom_csv` must match the same schema (date index + numeric columns named with FRED IDs) for the downstream pipeline to align.
+- **Schema conformance**: FRED-MD's column naming follows FRED series IDs (`INDPRO`, `CPIAUCSL`, …). Any user-side CSV used with `dataset: custom_csv` and `custom_dataset_schema: fred_md` must match the same schema (date index + numeric columns named with FRED IDs) for the downstream pipeline to align.
 
 ## Known limitations in macrocast v1.0
 
@@ -84,4 +84,4 @@ The authoritative change log is maintained by the St. Louis Fed in the appendix 
 
 - [FRED-QD](fred_qd.md) — sister quarterly database.
 - [FRED-SD](fred_sd.md) — state-level real-time database.
-- [Source & Frame (1.1)](../source.md) — how `dataset`, `source_adapter`, `frequency`, `information_set_type` interact at recipe compile time.
+- [Source & Frame (1.1)](../source.md) — how `dataset`, `frequency`, `information_set_type`, and custom dataset schema interact at recipe compile time.

@@ -375,11 +375,12 @@ Plus B-tier: housing, energy, labor, regional, panel_macro, text_macro, mixed_do
 
 ---
 
-## Issue 2-2: Expand source_adapter to full planned set [DONE]
+## Issue 2-2: Expand data-source dispatch to full planned set [SUPERSEDED]
 pri:high | size:M | deps: 0-4
 
 ### File
-`macrocast/registry/data/source_adapter.py`
+Removed in the Layer 1 dataset cleanup. Custom files now live directly on
+`dataset=custom_csv/custom_parquet`.
 
 ### What
 Expand from 3 values to full set. A-tier additions:
