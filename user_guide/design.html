@@ -82,18 +82,18 @@
 <p>Stage 0 decides <strong>the execution grammar</strong>: which unit of work is run or compared, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. The simple default path uses the small operational subset needed for a one-cell comparison or a controlled model comparison.</p>
 <p><strong>At a glance (defaults):</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span> <span class="pre">=</span> <span class="pre">single_target_single_generator</span></code> — one target, one forecasting path, one <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> cell.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_one_method</span></code> — one target, one forecasting path, one <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> cell.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">axis_type</span> <span class="pre">=</span> <span class="pre">fixed</span></code> per axis — set to <code class="docutils literal notranslate"><span class="pre">sweep</span></code> only on the axis you are varying.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span> <span class="pre">=</span> <span class="pre">fail_fast</span></code> — stop on the first error.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span> <span class="pre">=</span> <span class="pre">seeded_reproducible</span></code> — Python + numpy seeded; torch optional.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">serial</span></code> — no parallelism.</p></li>
 </ul>
-<p>Deviate when you explicitly want multiple variants, different runners, looser error handling, stricter determinism, or compute speedups.</p>
+<p>Deviate when you explicitly want multiple targets, method comparisons, looser error handling, stricter determinism, or compute speedups.</p>
 <hr class="docutils" />
-<section id="experiment-unit">
-<h2>0.1 <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code><a class="headerlink" href="#experiment-unit" title="Link to this heading"></a></h2>
-<p><strong>Selection question</strong>: What unit of work should the study run, compare, repeat, or hand off?</p>
-<p><strong>Default</strong>: <code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code> for one fixed single-target path.</p>
+<section id="study-scope">
+<h2>0.1 <code class="docutils literal notranslate"><span class="pre">study_scope</span></code><a class="headerlink" href="#study-scope" title="Link to this heading"></a></h2>
+<p><strong>Selection question</strong>: How many targets and methods should the study compare?</p>
+<p><strong>Default</strong>: <code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code> for one fixed single-target path.</p>
 <p>A one-path forecast is the one-cell case of <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code>. A controlled model, feature, preprocessing, or representation comparison is the multi-cell case of the same grammar.</p>
 <section id="value-catalog">
 <h3>Value catalog<a class="headerlink" href="#value-catalog" title="Link to this heading"></a></h3>
@@ -106,45 +106,25 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>One target, one forecasting path, no active sweep axes.</p></td>
+<td><p>One target, one fixed method path.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tree_context[&quot;route_contract&quot;]</span> <span class="pre">==</span> <span class="pre">&quot;single_cell_executable&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>One target with one or more supported sweep axes.</p></td>
+<td><p>One target with one or more supported method sweeps.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tree_context[&quot;route_contract&quot;]</span> <span class="pre">==</span> <span class="pre">&quot;sweep_runner_executable&quot;</span></code> when sweeps are present.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code></p></td>
-<td><p>registry_only</p></td>
-<td><p>Grammar retained for future wrapper/orchestrator work; not exposed as runnable.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">execution_status</span> <span class="pre">==</span> <span class="pre">&quot;not_supported&quot;</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>Multi-target recipe, each target runs independently via <code class="docutils literal notranslate"><span class="pre">execute_separate_runs</span></code>.</p></td>
-<td><p>N <code class="docutils literal notranslate"><span class="pre">run/</span></code> directories; <code class="docutils literal notranslate"><span class="pre">separate_runs_manifest.json</span></code>.</p></td>
+<td><p>Multiple targets with one fixed method path.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">==</span> <span class="pre">&quot;multi_target&quot;</span></code>; one shared multi-target run.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code></p></td>
-<td><p>operational (default for multi-target)</p></td>
-<td><p>Multi-target with shared preprocessing / benchmarks (default auto-derivation).</p></td>
-<td><p>Single run directory; <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code> contains all targets.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>Source recipe or paper recipe owns the path.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ReplicationResult</span></code> artefact.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
-<td><p>registry_only</p></td>
-<td><p>Reserved for a future PaperReadyBundle/runtime contract.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">execution_status</span> <span class="pre">==</span> <span class="pre">&quot;not_supported&quot;</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ablation_study</span></code></p></td>
-<td><p>registry_only</p></td>
-<td><p>Standalone <code class="docutils literal notranslate"><span class="pre">AblationSpec</span></code> runner exists, but compiled-recipe wrapper handoff is not wired.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">execution_status</span> <span class="pre">==</span> <span class="pre">&quot;not_supported&quot;</span></code>.</p></td>
+<td><p>Multiple targets with one or more supported method sweeps.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">==</span> <span class="pre">&quot;multi_target&quot;</span></code>; sweep runner parent when sweeps are present.</p></td>
 </tr>
 </tbody>
 </table>
@@ -152,16 +132,16 @@
 <section id="compatibility-guards">
 <h3>Compatibility guards<a class="headerlink" href="#compatibility-guards" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Multi-target units require <code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">=</span> <span class="pre">multi_target</span></code>.</p></li>
-<li><p>Single-target units are incompatible with <code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">=</span> <span class="pre">multi_target</span></code>.</p></li>
-<li><p>Wrapper and replication units must use their dedicated runners, not direct <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one_target_*</span></code> scopes require <code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">=</span> <span class="pre">single_target</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_*</span></code> scopes require <code class="docutils literal notranslate"><span class="pre">target_structure</span> <span class="pre">=</span> <span class="pre">multi_target</span></code>.</p></li>
+<li><p>Replication Library entries are normal YAML recipes; replication is not a Layer 0 Study Scope branch.</p></li>
 </ul>
 </section>
 <section id="functions-features">
 <h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Auto-derivation: <code class="docutils literal notranslate"><span class="pre">macrocast.registry.stage0.experiment_unit.derive_experiment_unit_default</span></code>.</p></li>
-<li><p>Runners: <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>, <code class="docutils literal notranslate"><span class="pre">execute_sweep</span></code>, <code class="docutils literal notranslate"><span class="pre">execute_separate_runs</span></code> (<code class="docutils literal notranslate"><span class="pre">macrocast.studies.multi_target</span></code>), <code class="docutils literal notranslate"><span class="pre">execute_replication</span></code> (<code class="docutils literal notranslate"><span class="pre">macrocast.studies.replication</span></code>). <code class="docutils literal notranslate"><span class="pre">execute_ablation</span></code> is standalone until a compiled-recipe contract is added.</p></li>
+<li><p>Auto-derivation: <code class="docutils literal notranslate"><span class="pre">macrocast.registry.stage0.study_scope.derive_study_scope_default</span></code>.</p></li>
+<li><p>Runners: <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> for one-cell scopes, <code class="docutils literal notranslate"><span class="pre">compile_sweep_plan</span></code> / <code class="docutils literal notranslate"><span class="pre">execute_sweep</span></code> when downstream axes are swept.</p></li>
 </ul>
 </section>
 <section id="recipe-usage">
@@ -170,7 +150,7 @@
 <span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">experiment_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target_generator_grid</span>
+<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_compare_methods</span>
 <span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">sweep_axes</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ar</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lasso</span><span class="p p-Indicator">]</span>
@@ -443,7 +423,7 @@
 <h2>Design (Stage 0) takeaways<a class="headerlink" href="#design-stage-0-takeaways" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Six axes, 38 allowed values, and the simple default path keeps the operational surface narrow. Researchers who don’t need sweeps, parallelism, or strict reproducibility write Stage 0 by omission.</p></li>
-<li><p>Runner dispatch flows from <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>. One fixed path and a controlled sweep both use the <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> route; the difference is whether any downstream <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code> are present.</p></li>
+<li><p>Runner dispatch flows from <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>. One fixed path and a controlled sweep both use the <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> route; the difference is whether any downstream <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code> are present.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> + <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> + <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> are three independent dials. Pick per-run, don’t carry them over from copy-pasted templates.</p></li>
 <li><p>Every resolved value lands in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> — when a run does something unexpected, read the manifest before anything else.</p></li>
 </ul>

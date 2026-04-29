@@ -14,29 +14,25 @@ blocked. Layers 3+ are outside this quick-reference page.
 
 | Stage | Axes | Allowed values | What it governs |
 |---|---|---|---|
-| 0 — Design  | 5 | 34 | Recipe grammar: execution unit, sweep shape, reproducibility, compute |
+| 0 — Design  | 5 | 34 | Recipe grammar: study scope, sweep shape, reproducibility, compute |
 | 1 — Data    | 12 | 38 | Official data frame: dataset, source, frequency, information set, target structure, FRED-SD panel policy, availability |
 
 ---
 
 ## Stage 0 — Design
 
-### 0.1 `experiment_unit`
+### 0.1 `study_scope`
 
-**What it picks:** The unit of work to run, compare, repeat, or hand off.
+**What it picks:** Target cardinality and whether the method path is fixed or compared.
 
 | Value | Check / observe |
 |---|---|
-| `single_target_single_generator` | one target + one forecasting path -> one `comparison_sweep` cell |
-| `single_target_generator_grid` | one target + one or more sweep axes -> `compile_sweep_plan()` / `execute_sweep()` |
-| `single_target_full_sweep` | wrapper grammar; not direct-run unless a wrapper runner exists |
-| `multi_target_separate_runs` | N targets -> N independent target-level runs via wrapper runner |
-| `multi_target_shared_design` | N targets -> one run with shared preprocessing + benchmarks |
-| `ablation_study` | registry-only compiled-wrapper route; standalone `execute_ablation()` uses `AblationSpec` |
-| `replication_recipe` | `execute_replication()` source-derived recipe |
-| `benchmark_suite` | wrapper grammar; not direct-run unless a wrapper runner exists |
+| `one_target_one_method` | one target + one fixed method path -> one `comparison_sweep` cell |
+| `one_target_compare_methods` | one target + one or more method sweeps -> `compile_sweep_plan()` / `execute_sweep()` |
+| `multiple_targets_one_method` | multiple targets + one fixed method path |
+| `multiple_targets_compare_methods` | multiple targets + one or more method sweeps |
 
-**Deep dive:** [user_guide/design.md 0.1](../user_guide/design.md#01-experiment_unit).
+**Deep dive:** [user_guide/design.md 0.1](../user_guide/design.md#01-study_scope).
 
 ### 0.2 `axis_type`
 
@@ -99,7 +95,7 @@ blocked. Layers 3+ are outside this quick-reference page.
 | `source_adapter` | `fred_md`, `fred_qd`, `fred_sd`, `custom_csv`, `custom_parquet` | which loader fires (`_load_raw_for_recipe`), `manifest.raw_artifact`; this is the sole source-dispatch axis |
 | `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
-| `target_structure` | `single_target`, `multi_target` | target cardinality; Layer 0 derives `experiment_unit` from this plus sweep shape |
+| `target_structure` | `single_target`, `multi_target` | target cardinality; Layer 0 derives `study_scope` from this plus sweep shape |
 | `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` | FRED-SD selected-panel native-frequency gate; strict modes consume `fred_sd_frequency_report_v1` before Layer 2 |
 | `fred_sd_state_group` | `all_states`, Census regions/divisions, `contiguous_48_plus_dc`, `custom_state_group` | FRED-SD recipe-level state bundle; non-default values resolve to `state_selection=selected_states` before loading |
 | `fred_sd_variable_group` | `all_sd_variables`, economic/t-code-review groups, `custom_sd_variable_group` | FRED-SD recipe-level workbook-variable bundle; non-default values resolve to `sd_variable_selection=selected_sd_variables` before loading |

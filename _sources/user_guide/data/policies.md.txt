@@ -18,7 +18,7 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 - `exogenous_block` — redundant with `feature_builder` default logic.
 - `regime_task` — duplicates 1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.
 - `vintage_policy` — dropped as a separate axis. Current real-time vintage control is handled by `information_set_type` plus `leaf_config.data_vintage`, including FRED-SD vintages.
-- `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `experiment_unit` (0.2).
+- `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `study_scope` (0.2).
 **At a glance (defaults):**
 - `missing_availability = zero_fill_leading_predictor_gaps` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `require_complete_rows`, `keep_available_rows`, or `impute_predictors_only` only when a specific missing-data treatment matters.
 - `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before official transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.

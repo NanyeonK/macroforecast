@@ -5,7 +5,7 @@ Layer 0 decides the execution grammar a recipe represents before data, preproces
 For the public `Experiment` API, this layer answers one question:
 
 ```text
-What execution unit is being run, compared, repeated, or handed off?
+What study scope is being run, compared, repeated, or handed off?
 ```
 
 ## Layer 0 Surfaces
@@ -24,7 +24,7 @@ Current source axes:
 
 | Axis | Public role | Current default |
 |------|-------------|-----------------|
-| `experiment_unit` | public execution-unit selector | `single_target_single_generator` |
+| `study_scope` | public execution-unit selector | `one_target_one_method` |
 | `compute_mode` | advanced execution control | `serial` |
 | `failure_policy` | advanced execution control | `fail_fast` |
 | `reproducibility_mode` | public advanced option | `seeded_reproducible` |
@@ -44,10 +44,10 @@ The live registry / Navigator census shows:
 
 | Item | Finding | Decision |
 |---|---|---|
-| Active Layer 0 axes | 5 registry axes, 34 total values. | Keep. The old route axis was removed; `experiment_unit` is the first user-facing axis. |
-| Primary Navigator axes | 4 axes: `experiment_unit`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
+| Active Layer 0 axes | 5 registry axes, 34 total values. | Keep. The old route axis was removed; `study_scope` is the first user-facing axis. |
+| Primary Navigator axes | 4 axes: `study_scope`, `failure_policy`, `reproducibility_mode`, `compute_mode`. | Keep. These affect route, reproducibility, failure handling, or compute posture. |
 | Internal axis | `axis_type`. | Keep hidden from the primary Navigator tree; document it as registry grammar. |
-| Runner handoffs | `replication_recipe`, `multi_target_separate_runs`, `benchmark_suite`, and `ablation_study` are routing contracts, not direct `run_compiled_recipe` paths. | Keep direct-run guard. Dedicated runners own these routes. |
+| Study Scope handoffs | Replication, benchmark suites, ablations, hierarchical, panel, and state-space routes are not Layer 0 Study Scope values. | Keep Study Scope to the four target/method cardinality branches. |
 | Main open Layer 0 question | Whether benchmark/ablation wrapper families should become real public simple API methods. | Defer until wrapper result/artifact contracts are audited after Layers 4-6. |
 
 ## Full Route Contract
@@ -66,33 +66,23 @@ Layer 0 separates grammar from the runner that is allowed to execute it.
 The compiler records this in `manifest["tree_context"]["route_contract"]`.
 Only `route_owner="comparison_sweep"` can be executed by `run_compiled_recipe`.
 
-## Experiment Unit
+## Study Scope
 
-`experiment_unit` is the first user-facing Layer 0 choice. It may be explicit in Full YAML or derived from target structure and sweep shape.
+`study_scope` is the first user-facing Layer 0 choice. It is explicit in Full YAML or derived from target structure and sweep shape.
 
 | Value | Route owner | Runtime status | Public role |
 |-------|-------------|----------------|-------------|
-| `single_target_single_generator` | `comparison_sweep` | executable | simple one-cell default |
-| `single_target_generator_grid` | `comparison_sweep` | executable through sweep runner | controlled comparison over one or more axes |
-| `single_target_full_sweep` | `wrapper` | registry_only / not_supported | dropped until a wrapper runner exists |
-| `multi_target_shared_design` | `comparison_sweep` | executable | advanced after Layer 1 audit |
-| `multi_target_separate_runs` | `wrapper` | executable wrapper path | advanced after Layer 1 audit |
-| `replication_recipe` | `replication` | ready_for_replication_runner | replication API |
-| `benchmark_suite` | `wrapper` | registry_only / not_supported | dropped until a wrapper runner exists |
-| `ablation_study` | `wrapper` | registry_only / not_supported | standalone runner only; no compiled wrapper contract |
-| `hierarchical_forecasting_run` | `orchestrator` | future | closed |
-| `panel_forecasting_run` | `orchestrator` | future | closed |
-| `state_space_run` | `comparison_sweep` | future | closed |
-
-The simple API should not expose `experiment_unit` directly. It should expose clearer methods like `compare_models`, future `grid`, future `replicate`, and future `ablate`.
+| `one_target_one_method` | `comparison_sweep` | executable | one target and one fixed method path |
+| `one_target_compare_methods` | `comparison_sweep` | executable through sweep runner when sweeps are present | one target and method alternatives |
+| `multiple_targets_one_method` | `comparison_sweep` | executable | multiple targets and one fixed method path |
+| `multiple_targets_compare_methods` | `comparison_sweep` | executable through sweep runner when sweeps are present | multiple targets and method alternatives |
 
 Full contract notes:
 
-- `single_target_generator_grid` is historical naming. In the current full contract it means one controlled comparison axis, usually `model_family`.
-- `multi_target_separate_runs` is a wrapper handoff with a concrete `execute_separate_runs` runner; it is not a direct executable compiled recipe.
-- `single_target_full_sweep`, `benchmark_suite`, and `ablation_study` are wrapper handoffs without compiled-recipe runner contracts and compile as `not_supported`.
-- `replication_recipe` is a replication handoff. It is consumed by `execute_replication`, not by `run_compiled_recipe`.
-- `multi_target_shared_design` remains a comparison-cell executable route because `execute_recipe` owns its shared-design multi-target path.
+- Replication recipes are YAML entries in the Replication Library, not `study_scope` values.
+- Benchmark suites live under Layer 3 `benchmark_family=benchmark_suite`, not Layer 0.
+- Ablation studies are comparison sweeps or standalone helpers, not Layer 0 scopes.
+- Hierarchical, panel, and state-space forecasting belong to future data/model-layer contracts.
 
 ## DesignFrame Derived Fields
 
@@ -100,7 +90,7 @@ Full contract notes:
 
 - `design_shape`
 - `execution_posture`
-- `experiment_unit`
+- `study_scope`
 - route owner via `resolve_route_owner`
 
 Current shapes:
@@ -135,16 +125,16 @@ multiple models or swept axes -> one_fixed_env_controlled_axis_variation
 
 The derivation now counts feature/preprocess/tuning axes only when they contain more than one value.
 When that produces a controlled axis, Layer 0 keeps the route in
-`single_target_generator_grid` until a finer-grained experiment unit is introduced.
+`one_target_compare_methods` until a finer-grained experiment unit is introduced.
 The current contract is "one controlled comparison surface", not strictly "model axis only".
 
 ## Current Simple API Mapping
 
 | User action | Layer 0 mapping |
 |-------------|-----------------|
-| `mc.forecast(...)` | `single_target_single_generator`, `single_cell_executable` |
+| `mc.forecast(...)` | `one_target_one_method`, `single_cell_executable` |
 | `Experiment(...).run()` | same as `forecast` when no sweep axes exist |
-| `.compare_models([...])` | `single_target_generator_grid`, `sweep_runner_executable` |
+| `.compare_models([...])` | `one_target_compare_methods`, `sweep_runner_executable` |
 | `.sweep({"models": [...]})` | same as `compare_models` |
 | fixed `.use_preprocessor(...)` | still single path unless models are compared |
 | fixed `.use_target_transformer(...)` | still single path unless models are compared |
@@ -172,7 +162,7 @@ the route remains in the registry but must not be exposed as runnable.
 
 ## Run Policy Axes
 
-`compute_mode`, `failure_policy`, and `reproducibility_mode` are policy axes. They do not change the execution unit by themselves.
+`compute_mode`, `failure_policy`, and `reproducibility_mode` are policy axes. They do not change the study scope by themselves.
 
 | Axis | Executable values | Not-supported registry values |
 |------|-------------------|---------------------------|
@@ -192,7 +182,7 @@ the route remains in the registry but must not be exposed as runnable.
 | `sweep` | Cartesian sweep value list |
 | `nested_sweep` | non-uniform dependent sweep groups expanded by `compile_sweep_plan` |
 | `conditional` | conditionally active axis, represented by compiler selections |
-| `derived` | value resolved from recipe state, e.g. `experiment_unit_default` |
+| `derived` | value resolved from recipe state, e.g. `study_scope_default` |
 
 ## Closed Until Later Layers
 

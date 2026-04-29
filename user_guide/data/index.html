@@ -79,7 +79,7 @@
              
   <section id="data-stage-1">
 <h1>Data (Stage 1)<a class="headerlink" href="#data-stage-1" title="Link to this heading"></a></h1>
-<p>Stage 1 answers <strong>“what official data frame does this study start from?”</strong> — once Stage 0 has fixed the execution unit and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.</p>
+<p>Stage 1 answers <strong>“what official data frame does this study start from?”</strong> — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.</p>
 <p>After the layer-boundary migration, Stage 1 holds <strong>13 canonical axes</strong> under the <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code> layer:</p>
 <p>| Group | Axes | Focus |
 |—|—|—:|—|
@@ -89,7 +89,7 @@
 <p>Stage 1 does not fix which model, benchmark, researcher preprocessing, or evaluation metric to use — those belong to Stage 2+ layers.</p>
 <section id="relation-to-stage-0">
 <h2>Relation to Stage 0<a class="headerlink" href="#relation-to-stage-0" title="Link to this heading"></a></h2>
-<p>The Stage 0 axes (<a class="reference internal" href="../design.html"><span class="std std-doc">design</span></a>) — <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>, <code class="docutils literal notranslate"><span class="pre">axis_type</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — set the <strong>grammar</strong> of the study (which execution unit, what recipe shape, how parallel, how reproducible). Stage 1 fills that grammar with <strong>content</strong>: which data, which target, which horizons.</p>
+<p>The Stage 0 axes (<a class="reference internal" href="../design.html"><span class="std std-doc">design</span></a>) — <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">axis_type</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — set the <strong>grammar</strong> of the study (which study scope, what recipe shape, how parallel, how reproducible). Stage 1 fills that grammar with <strong>content</strong>: which data, which target, which horizons.</p>
 </section>
 <section id="honest-operational-status">
 <h2>Honest operational status<a class="headerlink" href="#honest-operational-status" title="Link to this heading"></a></h2>

@@ -87,7 +87,7 @@ The following axes were moved out of Layer 1 ownership:
   `official_transform_policy` and `official_transform_scope`.
 - Official transform choices are read from Layer 1 axes. The compiler derives runtime `PreprocessContract` fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.
 - `source_adapter` is the only source-dispatch axis. Removed source-dispatch aliases are rejected during registry validation.
-- `target_structure` is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through `experiment_unit`.
+- `target_structure` is the only Layer 1 target-shape axis. Runner grammar remains in Layer 0 through `study_scope`.
 
 ### 1.2 Target Structure
 
@@ -96,7 +96,7 @@ The following axes were moved out of Layer 1 ownership:
 - `single_target` requires `leaf_config.target`.
 - `multi_target` requires `leaf_config.targets`.
 - Layer 0 owns the execution shape derived from target cautoregressive_diffusion_indexnality through
-  `experiment_unit`.
+  `study_scope`.
 - `forecast_type` remains dynamic by the Layer 2 feature runtime: autoregressive paths default to `iterated`, raw/factor panel paths default to `direct`.
 - Crossed `forecast_type` / feature-runtime pairs remain `blocked_by_incompatibility`; legacy `feature_builder` recipes are mapped to that runtime for compatibility.
 - `forecast_object=point_median` and `forecast_object=quantile` now require `model_family=quantile_linear`.

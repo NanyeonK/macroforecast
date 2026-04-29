@@ -37,7 +37,7 @@ recipe = {
     "recipe_id": "my-first-study",
     "path": {
         "0_meta": {
-            "fixed_axes": {"experiment_unit": "single_target_single_generator"}
+            "fixed_axes": {"study_scope": "one_target_one_method"}
         },
         "1_data_task": {
             "fixed_axes": {

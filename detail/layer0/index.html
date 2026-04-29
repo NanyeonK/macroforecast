@@ -22,7 +22,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.1.1 experiment_unit" href="experiment_unit.html" />
+    <link rel="next" title="4.1.1 study_scope" href="study_scope.html" />
     <link rel="prev" title="4. Detail (code): Full" href="../index.html" /> 
 </head>
 
@@ -52,7 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">4.1 Layer 0: Study Setup</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="experiment_unit.html">4.1.1 experiment_unit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="study_scope.html">4.1.1 study_scope</a></li>
 <li class="toctree-l3"><a class="reference internal" href="failure_policy.html">4.1.3 failure_policy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reproducibility_mode.html">4.1.4 reproducibility_mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="compute_mode.html">4.1.5 compute_mode</a></li>
@@ -109,7 +109,7 @@
 <h2>How many steps?<a class="headerlink" href="#how-many-steps" title="Link to this heading"></a></h2>
 <p>Layer 0 has <strong>four user-facing steps</strong>. Select them in this order:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> — choose the work unit: one cell, one controlled grid, multi-target shared run, wrapper handoff, or replication handoff.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> — choose target cardinality and whether the method path is fixed or compared.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> — decide how failed variants or cells are handled.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> — decide how strictly stochastic components are pinned.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — decide whether execution is serial or parallelized over a work unit.</p></li>
@@ -127,8 +127,8 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>4.1.1</p></td>
-<td><p><a class="reference internal" href="experiment_unit.html"><span class="std std-doc">experiment_unit</span></a></p></td>
-<td><p>Execution unit and runner ownership.</p></td>
+<td><p><a class="reference internal" href="study_scope.html"><span class="std std-doc">study_scope</span></a></p></td>
+<td><p>Target/method cardinality for the study.</p></td>
 </tr>
 <tr class="row-odd"><td><p>4.1.2</p></td>
 <td><p><a class="reference internal" href="failure_policy.html"><span class="std std-doc">failure_policy</span></a></p></td>
@@ -147,14 +147,14 @@
 </section>
 <section id="selection-logic">
 <h2>Selection logic<a class="headerlink" href="#selection-logic" title="Link to this heading"></a></h2>
-<p>Start with <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>. A one-path forecast is not a separate route; it is the one-cell case of the same <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> execution grammar.</p>
+<p>Start with <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>. A one-path forecast is not a separate route; it is the one-cell case of the same <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> execution grammar.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code> runs one target through one forecasting path.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code> opens a controlled comparison where one or more downstream axes are swept.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code> runs several targets under one shared design.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, and <code class="docutils literal notranslate"><span class="pre">ablation_study</span></code> are wrapper handoff units.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code> is a replication handoff and preserves source recipe provenance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code> runs one target through one fixed forecasting method path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code> runs one target across one or more method alternatives.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code> runs several targets through one fixed forecasting method path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code> runs several targets across one or more method alternatives.</p></li>
 </ul>
+<p>Replication Library entries are ordinary YAML recipes with one of these four scopes; replication is not a Study Scope branch.</p>
 <p>Then set policies:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> matters most when a sweep or bundle can produce invalid cells.</p></li>
@@ -166,12 +166,12 @@
 <h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
 <p>Input:</p>
 <ul class="simple">
-<li><p>user intent for execution unit;</p></li>
-<li><p>target structure and sweep shape from the recipe when the compiler derives a runner unit.</p></li>
+<li><p>user intent for study scope;</p></li>
+<li><p>target structure and sweep shape from the recipe when the compiler derives the scope.</p></li>
 </ul>
 <p>Output:</p>
 <ul class="simple">
-<li><p>resolved or derived <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>;</p></li>
+<li><p>resolved or derived <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">execution_route=comparison_sweep</span></code> for direct one-cell and sweep-grid work;</p></li>
 <li><p>failure/reproducibility/compute policies recorded in manifest and runner context.</p></li>
 </ul>
@@ -185,7 +185,7 @@
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">experiment_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target_single_generator</span>
+<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
 <span class="w">      </span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fail_fast</span>
 <span class="w">      </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
 <span class="w">      </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">serial</span>
@@ -201,7 +201,7 @@
 </ul>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="experiment_unit.html">4.1.1 experiment_unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="study_scope.html">4.1.1 study_scope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="failure_policy.html">4.1.3 failure_policy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility_mode.html">4.1.4 reproducibility_mode</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compute_mode.html">4.1.5 compute_mode</a></li>
@@ -216,7 +216,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="4. Detail (code): Full" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="experiment_unit.html" class="btn btn-neutral float-right" title="4.1.1 experiment_unit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="study_scope.html" class="btn btn-neutral float-right" title="4.1.1 study_scope" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

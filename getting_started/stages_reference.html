@@ -110,7 +110,7 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <tr class="row-even"><td><p>0 — Design</p></td>
 <td><p>5</p></td>
 <td><p>34</p></td>
-<td><p>Recipe grammar: execution unit, sweep shape, reproducibility, compute</p></td>
+<td><p>Recipe grammar: study scope, sweep shape, reproducibility, compute</p></td>
 </tr>
 <tr class="row-odd"><td><p>1 — Data</p></td>
 <td><p>12</p></td>
@@ -122,9 +122,9 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 <hr class="docutils" />
 <section id="stage-0-design">
 <h2>Stage 0 — Design<a class="headerlink" href="#stage-0-design" title="Link to this heading"></a></h2>
-<section id="experiment-unit">
-<h3>0.1 <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code><a class="headerlink" href="#experiment-unit" title="Link to this heading"></a></h3>
-<p><strong>What it picks:</strong> The unit of work to run, compare, repeat, or hand off.</p>
+<section id="study-scope">
+<h3>0.1 <code class="docutils literal notranslate"><span class="pre">study_scope</span></code><a class="headerlink" href="#study-scope" title="Link to this heading"></a></h3>
+<p><strong>What it picks:</strong> Target cardinality and whether the method path is fixed or compared.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Value</p></th>
@@ -132,33 +132,21 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code></p></td>
-<td><p>one target + one forecasting path -&gt; one <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> cell</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code></p></td>
+<td><p>one target + one fixed method path -&gt; one <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> cell</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code></p></td>
-<td><p>one target + one or more sweep axes -&gt; <code class="docutils literal notranslate"><span class="pre">compile_sweep_plan()</span></code> / <code class="docutils literal notranslate"><span class="pre">execute_sweep()</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code></p></td>
+<td><p>one target + one or more method sweeps -&gt; <code class="docutils literal notranslate"><span class="pre">compile_sweep_plan()</span></code> / <code class="docutils literal notranslate"><span class="pre">execute_sweep()</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code></p></td>
-<td><p>wrapper grammar; not direct-run unless a wrapper runner exists</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code></p></td>
+<td><p>multiple targets + one fixed method path</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code></p></td>
-<td><p>N targets -&gt; N independent target-level runs via wrapper runner</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code></p></td>
-<td><p>N targets -&gt; one run with shared preprocessing + benchmarks</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ablation_study</span></code></p></td>
-<td><p>registry-only compiled-wrapper route; standalone <code class="docutils literal notranslate"><span class="pre">execute_ablation()</span></code> uses <code class="docutils literal notranslate"><span class="pre">AblationSpec</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">execute_replication()</span></code> source-derived recipe</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
-<td><p>wrapper grammar; not direct-run unless a wrapper runner exists</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code></p></td>
+<td><p>multiple targets + one or more method sweeps</p></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Deep dive:</strong> <a class="reference internal" href="../user_guide/design.html#experiment-unit"><span class="std std-ref">user_guide/design.md 0.1</span></a>.</p>
+<p><strong>Deep dive:</strong> <a class="reference internal" href="../user_guide/design.html#study-scope"><span class="std std-ref">user_guide/design.md 0.1</span></a>.</p>
 </section>
 <section id="axis-type">
 <h3>0.2 <code class="docutils literal notranslate"><span class="pre">axis_type</span></code><a class="headerlink" href="#axis-type" title="Link to this heading"></a></h3>
@@ -302,7 +290,7 @@ blocked. Layers 3+ are outside this quick-reference page.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">single_target</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target</span></code></p></td>
-<td><p>target cardinality; Layer 0 derives <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> from this plus sweep shape</p></td>
+<td><p>target cardinality; Layer 0 derives <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> from this plus sweep shape</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">report_only</span></code>, <code class="docutils literal notranslate"><span class="pre">allow_mixed_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">reject_mixed_known_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">require_single_known_frequency</span></code></p></td>

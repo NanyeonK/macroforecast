@@ -79,9 +79,9 @@
   <h1>Source code for macrocast.design.build</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..registry.stage0.experiment_unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_experiment_unit_entry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..registry.stage0.study_scope</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_study_scope_entry</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..registry.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">canonical_axis_value</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.derive</span><span class="w"> </span><span class="kn">import</span> <span class="n">derive_design_shape</span><span class="p">,</span> <span class="n">derive_execution_posture</span><span class="p">,</span> <span class="n">derive_experiment_unit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.derive</span><span class="w"> </span><span class="kn">import</span> <span class="n">derive_design_shape</span><span class="p">,</span> <span class="n">derive_execution_posture</span><span class="p">,</span> <span class="n">derive_study_scope</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">DesignCompletenessError</span><span class="p">,</span> <span class="n">DesignRoutingError</span><span class="p">,</span> <span class="n">DesignValidationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.normalize</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">normalize_comparison_contract</span><span class="p">,</span>
@@ -101,19 +101,19 @@
     <span class="n">comparison_contract</span><span class="p">:</span> <span class="n">ComparisonContract</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">varying_design</span><span class="p">:</span> <span class="n">VaryingDesign</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">replication_input</span><span class="p">:</span> <span class="n">ReplicationInput</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">experiment_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">study_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DesignFrame</span><span class="p">:</span>
     <span class="n">normalized_fixed_design</span> <span class="o">=</span> <span class="n">normalize_fixed_design</span><span class="p">(</span><span class="n">fixed_design</span><span class="p">)</span>
     <span class="n">normalized_comparison_contract</span> <span class="o">=</span> <span class="n">normalize_comparison_contract</span><span class="p">(</span><span class="n">comparison_contract</span><span class="p">)</span>
     <span class="n">normalized_varying_design</span> <span class="o">=</span> <span class="n">normalize_varying_design</span><span class="p">(</span><span class="n">varying_design</span><span class="p">)</span>
     <span class="n">normalized_replication_input</span> <span class="o">=</span> <span class="n">normalize_replication_input</span><span class="p">(</span><span class="n">replication_input</span><span class="p">)</span>
 
-    <span class="n">resolved_experiment_unit</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">canonical_axis_value</span><span class="p">(</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_unit</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">experiment_unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">resolved_study_scope</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">canonical_axis_value</span><span class="p">(</span><span class="s2">&quot;study_scope&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">study_scope</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">study_scope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">else</span> <span class="kc">None</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="n">resolved_experiment_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">resolved_study_scope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">provisional_design_shape</span> <span class="o">=</span> <span class="n">derive_design_shape</span><span class="p">(</span>
             <span class="n">normalized_varying_design</span><span class="p">,</span>
         <span class="p">)</span>
@@ -121,32 +121,34 @@
             <span class="n">provisional_design_shape</span><span class="p">,</span>
             <span class="n">normalized_replication_input</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">resolved_experiment_unit</span> <span class="o">=</span> <span class="n">derive_experiment_unit</span><span class="p">(</span>
+        <span class="n">resolved_study_scope</span> <span class="o">=</span> <span class="n">derive_study_scope</span><span class="p">(</span>
             <span class="n">provisional_execution_posture</span><span class="p">,</span>
             <span class="n">normalized_fixed_design</span><span class="o">.</span><span class="n">forecast_task</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">get_experiment_unit_entry</span><span class="p">(</span><span class="n">resolved_experiment_unit</span><span class="p">)</span>
+        <span class="n">get_study_scope_entry</span><span class="p">(</span><span class="n">resolved_study_scope</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">resolved_experiment_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">DesignValidationError</span><span class="p">(</span><span class="s2">&quot;experiment_unit could not be derived&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resolved_study_scope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DesignValidationError</span><span class="p">(</span><span class="s2">&quot;study_scope could not be derived&quot;</span><span class="p">)</span>
 
-    <span class="n">unit_entry</span> <span class="o">=</span> <span class="n">get_experiment_unit_entry</span><span class="p">(</span><span class="n">resolved_experiment_unit</span><span class="p">)</span>
+    <span class="n">unit_entry</span> <span class="o">=</span> <span class="n">get_study_scope_entry</span><span class="p">(</span><span class="n">resolved_study_scope</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">normalized_fixed_design</span><span class="o">.</span><span class="n">forecast_task</span> <span class="o">!=</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">DesignValidationError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">resolved_experiment_unit</span><span class="si">!r}</span><span class="s2"> requires forecast_task=&#39;multi_target&#39;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;study_scope=</span><span class="si">{</span><span class="n">resolved_study_scope</span><span class="si">!r}</span><span class="s2"> requires forecast_task=&#39;multi_target&#39;&quot;</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">normalized_fixed_design</span><span class="o">.</span><span class="n">forecast_task</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span> <span class="ow">and</span> <span class="n">resolved_experiment_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;single_target_generator_grid&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target_single_generator&quot;</span><span class="p">,</span> <span class="s2">&quot;single_target_full_sweep&quot;</span><span class="p">,</span> <span class="s2">&quot;replication_recipe&quot;</span><span class="p">}:</span>
-        <span class="k">pass</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">unit_entry</span><span class="o">.</span><span class="n">requires_multi_target</span> <span class="ow">and</span> <span class="n">normalized_fixed_design</span><span class="o">.</span><span class="n">forecast_task</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DesignValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;study_scope=</span><span class="si">{</span><span class="n">resolved_study_scope</span><span class="si">!r}</span><span class="s2"> is incompatible with forecast_task=</span><span class="se">\&quot;</span><span class="s2">multi_target</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="n">design_shape</span> <span class="o">=</span> <span class="n">derive_design_shape</span><span class="p">(</span>
         <span class="n">normalized_varying_design</span><span class="p">,</span>
-        <span class="n">resolved_experiment_unit</span><span class="p">,</span>
+        <span class="n">resolved_study_scope</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">execution_posture</span> <span class="o">=</span> <span class="n">derive_execution_posture</span><span class="p">(</span>
         <span class="n">design_shape</span><span class="p">,</span>
         <span class="n">normalized_replication_input</span><span class="p">,</span>
-        <span class="n">resolved_experiment_unit</span><span class="p">,</span>
+        <span class="n">resolved_study_scope</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">stage0</span> <span class="o">=</span> <span class="n">DesignFrame</span><span class="p">(</span>
@@ -156,7 +158,7 @@
         <span class="n">execution_posture</span><span class="o">=</span><span class="n">execution_posture</span><span class="p">,</span>
         <span class="n">design_shape</span><span class="o">=</span><span class="n">design_shape</span><span class="p">,</span>
         <span class="n">replication_input</span><span class="o">=</span><span class="n">normalized_replication_input</span><span class="p">,</span>
-        <span class="n">experiment_unit</span><span class="o">=</span><span class="n">resolved_experiment_unit</span><span class="p">,</span>
+        <span class="n">study_scope</span><span class="o">=</span><span class="n">resolved_study_scope</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">validate_stage0_frame</span><span class="p">(</span><span class="n">stage0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">stage0</span></div>
@@ -166,12 +168,8 @@
 <div class="viewcode-block" id="resolve_route_owner">
 <a class="viewcode-back" href="../../../api/design.html#macrocast.design.resolve_route_owner">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_route_owner</span><span class="p">(</span><span class="n">stage0</span><span class="p">:</span> <span class="n">DesignFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">stage0</span><span class="o">.</span><span class="n">experiment_unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">get_experiment_unit_entry</span><span class="p">(</span><span class="n">stage0</span><span class="o">.</span><span class="n">experiment_unit</span><span class="p">)</span><span class="o">.</span><span class="n">route_owner</span>
-    <span class="k">if</span> <span class="n">stage0</span><span class="o">.</span><span class="n">execution_posture</span> <span class="o">==</span> <span class="s2">&quot;wrapper_bundle_plan&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;wrapper&quot;</span>
-    <span class="k">if</span> <span class="n">stage0</span><span class="o">.</span><span class="n">execution_posture</span> <span class="o">==</span> <span class="s2">&quot;replication_locked_plan&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;replication&quot;</span>
+    <span class="k">if</span> <span class="n">stage0</span><span class="o">.</span><span class="n">study_scope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_study_scope_entry</span><span class="p">(</span><span class="n">stage0</span><span class="o">.</span><span class="n">study_scope</span><span class="p">)</span><span class="o">.</span><span class="n">route_owner</span>
     <span class="k">if</span> <span class="n">stage0</span><span class="o">.</span><span class="n">execution_posture</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;comparison_cell&quot;</span><span class="p">,</span> <span class="s2">&quot;comparison_sweep_plan&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="s2">&quot;comparison_sweep&quot;</span>
     <span class="k">raise</span> <span class="n">DesignRoutingError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown execution_posture=</span><span class="si">{</span><span class="n">stage0</span><span class="o">.</span><span class="n">execution_posture</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span></div>
@@ -195,7 +193,7 @@
     <span class="n">models</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stage0</span><span class="o">.</span><span class="n">varying_design</span><span class="o">.</span><span class="n">model_families</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
     <span class="n">horizons</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stage0</span><span class="o">.</span><span class="n">varying_design</span><span class="o">.</span><span class="n">horizons</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;experiment_unit=</span><span class="si">{</span><span class="n">stage0</span><span class="o">.</span><span class="n">experiment_unit</span><span class="si">}</span><span class="s2">; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;study_scope=</span><span class="si">{</span><span class="n">stage0</span><span class="o">.</span><span class="n">study_scope</span><span class="si">}</span><span class="s2">; &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;dataset=</span><span class="si">{</span><span class="n">stage0</span><span class="o">.</span><span class="n">fixed_design</span><span class="o">.</span><span class="n">dataset_adapter</span><span class="si">}</span><span class="s2">; &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;route=</span><span class="si">{</span><span class="n">resolve_route_owner</span><span class="p">(</span><span class="n">stage0</span><span class="p">)</span><span class="si">}</span><span class="s2">; &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;execution_posture=</span><span class="si">{</span><span class="n">stage0</span><span class="o">.</span><span class="n">execution_posture</span><span class="si">}</span><span class="s2">; &quot;</span>

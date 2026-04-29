@@ -88,10 +88,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.execution.importance_dispatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">IMPORTANCE_FILE_NAMES</span><span class="p">,</span> <span class="n">active_importance_methods</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.execution.stat_tests</span><span class="w"> </span><span class="kn">import</span> <span class="n">active_stat_test_axes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_axis_registry_entry</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.registry.stage0.experiment_unit</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">derive_experiment_unit_default</span><span class="p">,</span>
-    <span class="n">experiment_unit_options_for_wizard</span><span class="p">,</span>
-    <span class="n">get_experiment_unit_entry</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry.stage0.study_scope</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">derive_study_scope_default</span><span class="p">,</span>
+    <span class="n">study_scope_options_for_wizard</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">_AVAILABLE_STAGES</span> <span class="o">=</span> <span class="p">(</span>
@@ -103,8 +102,7 @@
 <span class="p">)</span>
 
 <span class="n">_WIZARD_KEYS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;experiment_unit&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;study_scope&quot;</span><span class="p">,</span>
     <span class="s2">&quot;target&quot;</span><span class="p">,</span>
     <span class="s2">&quot;targets&quot;</span><span class="p">,</span>
     <span class="s2">&quot;framework&quot;</span><span class="p">,</span>
@@ -189,6 +187,15 @@
     <span class="n">fixed</span><span class="p">[</span><span class="s2">&quot;target_structure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_study_scope_for_method_mode</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">compares_methods</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">is_multi_target</span> <span class="o">=</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;multi_target&quot;</span>
+    <span class="k">if</span> <span class="n">is_multi_target</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;multiple_targets_compare_methods&quot;</span> <span class="k">if</span> <span class="n">compares_methods</span> <span class="k">else</span> <span class="s2">&quot;multiple_targets_one_method&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;one_target_compare_methods&quot;</span> <span class="k">if</span> <span class="n">compares_methods</span> <span class="k">else</span> <span class="s2">&quot;one_target_one_method&quot;</span>
+    <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;study_scope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_planned_branch_message</span><span class="p">(</span><span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">planned_hits</span> <span class="o">=</span> <span class="p">[</span><span class="n">warning</span> <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">warnings</span> <span class="k">if</span> <span class="s2">&quot;status=planned&quot;</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">planned_hits</span><span class="p">:</span>
@@ -208,13 +215,13 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_wizard_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">:</span>
-        <span class="n">explicit</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;study_scope&quot;</span><span class="p">:</span>
+        <span class="n">explicit</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;study_scope&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">explicit</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">explicit</span>
         <span class="n">training</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
         <span class="n">training_sweep</span> <span class="o">=</span> <span class="n">_recipe_sweep</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">derive_experiment_unit_default</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">derive_study_scope_default</span><span class="p">(</span>
             <span class="n">task</span><span class="o">=</span><span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">),</span>
             <span class="n">model_axis_mode</span><span class="o">=</span><span class="s2">&quot;sweep&quot;</span> <span class="k">if</span> <span class="s2">&quot;model_family&quot;</span> <span class="ow">in</span> <span class="n">training_sweep</span> <span class="k">else</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
             <span class="n">feature_axis_mode</span><span class="o">=</span><span class="s2">&quot;sweep&quot;</span> <span class="k">if</span> <span class="s2">&quot;feature_builder&quot;</span> <span class="ow">in</span> <span class="n">training_sweep</span> <span class="k">else</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
@@ -267,50 +274,40 @@
                     <span class="n">leaf</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
         <span class="k">return</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;study_scope&quot;</span><span class="p">:</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span>
-        <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;study_scope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="n">output_leaf</span> <span class="o">=</span> <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;replication_recipe&quot;</span><span class="p">:</span>
-            <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">return</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;benchmark_suite&quot;</span><span class="p">,</span> <span class="s2">&quot;ablation_study&quot;</span><span class="p">}:</span>
-            <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span>
-            <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
-            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
-            <span class="k">return</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;multi_target_separate_runs&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_target_shared_design&quot;</span><span class="p">}:</span>
+        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">is_multi_target</span> <span class="o">=</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;multiple_targets_one_method&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;multiple_targets_compare_methods&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">compares_methods</span> <span class="o">=</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;one_target_compare_methods&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;multiple_targets_compare_methods&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">is_multi_target</span><span class="p">:</span>
             <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;multi_target&quot;</span><span class="p">)</span>
             <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="s2">&quot;RPI&quot;</span><span class="p">])</span>
-            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
-            <span class="k">return</span>
-        <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span>
-        <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
-        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">output_leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_single_generator&quot;</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_set_target_structure</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;single_target&quot;</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">compares_methods</span><span class="p">:</span>
+            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
+            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">]</span>
+            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="n">training</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;ar&quot;</span><span class="p">)</span>
             <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
             <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_generator_grid&quot;</span><span class="p">:</span>
-            <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">training</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">)</span>
-            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">]</span>
-            <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;single_target_full_sweep&quot;</span><span class="p">:</span>
-            <span class="n">output_leaf</span><span class="p">[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="n">output_leaf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
-            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">]</span>
-            <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">]</span>
         <span class="k">return</span>
     <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span>
         <span class="n">leaf</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -329,21 +326,21 @@
             <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_feature</span>
             <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_single_generator&quot;</span>
+            <span class="n">_set_study_scope_for_method_mode</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">compares_methods</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;model_grid&quot;</span><span class="p">:</span>
             <span class="n">training</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_feature</span>
             <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">]</span>
             <span class="n">training_sweep</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_generator_grid&quot;</span>
+            <span class="n">_set_study_scope_for_method_mode</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">compares_methods</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;full_sweep&quot;</span><span class="p">:</span>
             <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">training</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">]</span>
             <span class="n">training_sweep</span><span class="p">[</span><span class="s2">&quot;feature_builder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_feature_panel&quot;</span><span class="p">,</span> <span class="s2">&quot;pca_factor_features&quot;</span><span class="p">]</span>
-            <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)[</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_full_sweep&quot;</span>
-            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)[</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_target_full_sweep&quot;</span>
-            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="s2">&quot;single-target-full-sweep&quot;</span><span class="p">)</span>
+            <span class="n">_set_study_scope_for_method_mode</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">compares_methods</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;wrapper_family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">_recipe_leaf</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bundle_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;framework&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span> <span class="s2">&quot;model_family&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_builder&quot;</span><span class="p">}:</span>
         <span class="n">training</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -395,17 +392,9 @@
     <span class="n">benchmark_family</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;3_training&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;benchmark_family&quot;</span><span class="p">,</span> <span class="s2">&quot;zero_change&quot;</span><span class="p">)</span>
     <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;experiment_unit&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Execution unit&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">experiment_unit_options_for_wizard</span><span class="p">(</span><span class="n">target_structure</span><span class="p">)),</span>
-        <span class="p">},</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;target_structure&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Target structure&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;single_target&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;multi_target&quot;</span><span class="p">,</span>
-            <span class="p">],</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;study_scope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;Study scope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">study_scope_options_for_wizard</span><span class="p">()),</span>
         <span class="p">},</span>
         <span class="p">{</span>
             <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">target_key</span><span class="p">,</span>
@@ -518,18 +507,6 @@
         <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;sweep_runner_ready&quot;</span>
         <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">message</span> <span class="o">=</span> <span class="n">_comparison_surface_extension_message</span><span class="p">(</span><span class="n">tree_context</span><span class="p">,</span> <span class="n">warnings</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;ready_for_wrapper_runner&quot;</span><span class="p">:</span>
-        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_runner_ready&quot;</span>
-        <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is wrapper-owned and has a runner contract. Use the dedicated wrapper runner; current previews stop here.&quot;</span>
-    <span class="k">elif</span> <span class="n">execution_status</span> <span class="o">==</span> <span class="s2">&quot;ready_for_replication_runner&quot;</span><span class="p">:</span>
-        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;replication_runner_ready&quot;</span>
-        <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is replication-owned and has a runner contract. Use execute_replication; current previews stop here.&quot;</span>
-    <span class="k">elif</span> <span class="n">route_owner</span> <span class="o">==</span> <span class="s2">&quot;wrapper&quot;</span><span class="p">:</span>
-        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_not_supported&quot;</span>
-        <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Route is wrapper-owned but has no executable wrapper runner contract in the current runtime.&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;blocked_or_nonexecutable&quot;</span>
         <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
@@ -550,18 +527,10 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_draft_route_preview</span><span class="p">(</span><span class="n">recipe</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">error</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">target_structure</span> <span class="o">=</span> <span class="n">_target_structure_value</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-    <span class="n">explicit_unit</span> <span class="o">=</span> <span class="n">_recipe_fixed</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="s2">&quot;0_meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;experiment_unit&quot;</span><span class="p">)</span>
     <span class="n">route_owner</span> <span class="o">=</span> <span class="s2">&quot;comparison_sweep&quot;</span>
-    <span class="k">if</span> <span class="n">explicit_unit</span><span class="p">:</span>
-        <span class="n">route_owner</span> <span class="o">=</span> <span class="n">get_experiment_unit_entry</span><span class="p">(</span><span class="n">explicit_unit</span><span class="p">)</span><span class="o">.</span><span class="n">route_owner</span>
-    <span class="k">if</span> <span class="n">route_owner</span> <span class="o">==</span> <span class="s2">&quot;wrapper&quot;</span><span class="p">:</span>
-        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;wrapper_not_supported&quot;</span>
-        <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Wrapper-owned route chosen, but no executable wrapper runner contract is available for this draft.&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;draft_incomplete&quot;</span>
-        <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="n">error</span>
+    <span class="n">wizard_status</span> <span class="o">=</span> <span class="s2">&quot;draft_incomplete&quot;</span>
+    <span class="n">continue_in_preview</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">error</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;route_owner&quot;</span><span class="p">:</span> <span class="n">route_owner</span><span class="p">,</span>
         <span class="s2">&quot;execution_status&quot;</span><span class="p">:</span> <span class="s2">&quot;draft_incomplete&quot;</span><span class="p">,</span>

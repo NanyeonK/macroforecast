@@ -72,10 +72,10 @@ factor-score rotations. Remaining items are feature work:
 Output/provenance is closed for aggregated run directories. Still gated:
 
 - per-target, per-horizon, and hierarchical artifact layouts;
-- wrapper/orchestrator handoff for `multi_target_separate_runs`,
+- wrapper/orchestrator handoff for `multiple_targets_compare_methods`,
   `benchmark_suite`, and `ablation_study`;
-- branch deltas for `single_target_full_sweep` and
-  `single_target_generator_grid`.
+- branch deltas for multi-axis Study Scope sweeps and
+  `one_target_compare_methods`.
 
 ### 5. Docs And Navigator UI
 

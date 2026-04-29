@@ -1,7 +1,7 @@
 # 4.1.3 failure_policy
 
 - Parent: [4.1 Layer 0: Study Setup](index.md)
-- Previous: [4.1.2 experiment_unit](experiment_unit.md)
+- Previous: [4.1.2 study_scope](study_scope.md)
 - Current: `failure_policy`
 - Next: [4.1.4 reproducibility_mode](reproducibility_mode.md)
 
@@ -64,7 +64,7 @@ Use this for large controlled sweeps where some cells may be invalid.
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_generator_grid
+      study_scope: one_target_compare_methods
       failure_policy: skip_failed_cell
 ```
 
@@ -190,7 +190,7 @@ For a controlled sweep:
 path:
   0_meta:
     fixed_axes:
-      experiment_unit: single_target_generator_grid
+      study_scope: one_target_compare_methods
       failure_policy: skip_failed_cell
 ```
 

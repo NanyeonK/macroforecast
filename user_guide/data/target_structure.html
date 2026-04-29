@@ -81,7 +81,7 @@
 <h1>Target Structure (1.2)<a class="headerlink" href="#target-structure-1-2" title="Link to this heading"></a></h1>
 <p>Layer 1 only declares the target shape inside the official data frame. It does
 not choose the study runner. Runner ownership stays in Layer 0 through
-<code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">study_scope</span></code>.</p>
 <section id="target-structure">
 <h2>1.2.1 <code class="docutils literal notranslate"><span class="pre">target_structure</span></code><a class="headerlink" href="#target-structure" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code> says whether the recipe has one target series or multiple
@@ -100,10 +100,10 @@ target series.</p>
 </ul>
 <p>Layer 0 connection:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">target_structure</span></code> plus the sweep shape.</p></li>
-<li><p>Multi-target <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> values require
+<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">target_structure</span></code> plus the sweep shape.</p></li>
+<li><p>Multi-target <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> values require
 <code class="docutils literal notranslate"><span class="pre">target_structure=multi_target</span></code>.</p></li>
-<li><p>Single-target <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> values require
+<li><p>Single-target <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> values require
 <code class="docutils literal notranslate"><span class="pre">target_structure=single_target</span></code>.</p></li>
 </ul>
 <p>Recipe usage:</p>
@@ -141,7 +141,7 @@ feature representation handed to the forecast generator.</p></li>
 construction is target representation. Coulombe-style direct average and
 path-average growth/difference targets are also Layer 2 target representation
 choices, even where runtime support is still registry-only.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_architecture</span></code>: Layer 0, through <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_architecture</span></code>: Layer 0, through <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>.</p></li>
 </ul>
 <p>Layer 1 owns target identity and target cautoregressive_diffusion_indexnality. Layer 0 owns how that
 cautoregressive_diffusion_indexnality is executed.</p>

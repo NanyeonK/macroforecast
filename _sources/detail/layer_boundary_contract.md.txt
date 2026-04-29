@@ -14,7 +14,7 @@ validation, and backlog.
 
 Owns study grammar and execution shape:
 
-- `experiment_unit`
+- `study_scope`
 - `axis_type`
 - `failure_policy`
 - `reproducibility_mode`

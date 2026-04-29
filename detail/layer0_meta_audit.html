@@ -81,7 +81,7 @@
 <h1>Layer 0 Meta Audit<a class="headerlink" href="#layer-0-meta-audit" title="Link to this heading"></a></h1>
 <p>Layer 0 decides the execution grammar a recipe represents before data, preprocessing, models, metrics, or artifacts are interpreted.</p>
 <p>For the public <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> API, this layer answers one question:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>What execution unit is being run, compared, repeated, or handed off?
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>What study scope is being run, compared, repeated, or handed off?
 </pre></div>
 </div>
 <section id="layer-0-surfaces">
@@ -121,9 +121,9 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></td>
 <td><p>public execution-unit selector</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
 <td><p>advanced execution control</p></td>
@@ -163,19 +163,19 @@ current source files do not define active axes for them.</p>
 <tbody>
 <tr class="row-even"><td><p>Active Layer 0 axes</p></td>
 <td><p>5 registry axes, 34 total values.</p></td>
-<td><p>Keep. The old route axis was removed; <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> is the first user-facing axis.</p></td>
+<td><p>Keep. The old route axis was removed; <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> is the first user-facing axis.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Primary Navigator axes</p></td>
-<td><p>4 axes: <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>.</p></td>
+<td><p>4 axes: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>.</p></td>
 <td><p>Keep. These affect route, reproducibility, failure handling, or compute posture.</p></td>
 </tr>
 <tr class="row-even"><td><p>Internal axis</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code>.</p></td>
 <td><p>Keep hidden from the primary Navigator tree; document it as registry grammar.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Runner handoffs</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code>, <code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, and <code class="docutils literal notranslate"><span class="pre">ablation_study</span></code> are routing contracts, not direct <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code> paths.</p></td>
-<td><p>Keep direct-run guard. Dedicated runners own these routes.</p></td>
+<tr class="row-odd"><td><p>Study Scope handoffs</p></td>
+<td><p>Replication, benchmark suites, ablations, hierarchical, panel, and state-space routes are not Layer 0 Study Scope values.</p></td>
+<td><p>Keep Study Scope to the four target/method cardinality branches.</p></td>
 </tr>
 <tr class="row-even"><td><p>Main open Layer 0 question</p></td>
 <td><p>Whether benchmark/ablation wrapper families should become real public simple API methods.</p></td>
@@ -224,9 +224,9 @@ current source files do not define active axes for them.</p>
 <p>The compiler records this in <code class="docutils literal notranslate"><span class="pre">manifest[&quot;tree_context&quot;][&quot;route_contract&quot;]</span></code>.
 Only <code class="docutils literal notranslate"><span class="pre">route_owner=&quot;comparison_sweep&quot;</span></code> can be executed by <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code>.</p>
 </section>
-<section id="experiment-unit">
-<h2>Experiment Unit<a class="headerlink" href="#experiment-unit" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> is the first user-facing Layer 0 choice. It may be explicit in Full YAML or derived from target structure and sweep shape.</p>
+<section id="study-scope">
+<h2>Study Scope<a class="headerlink" href="#study-scope" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> is the first user-facing Layer 0 choice. It is explicit in Full YAML or derived from target structure and sweep shape.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Value</p></th>
@@ -236,71 +236,34 @@ Only <code class="docutils literal notranslate"><span class="pre">route_owner=&q
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code></p></td>
 <td><p>executable</p></td>
-<td><p>simple one-cell default</p></td>
+<td><p>one target and one fixed method path</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code></p></td>
-<td><p>executable through sweep runner</p></td>
-<td><p>controlled comparison over one or more axes</p></td>
+<td><p>executable through sweep runner when sweeps are present</p></td>
+<td><p>one target and method alternatives</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
-<td><p>registry_only / not_supported</p></td>
-<td><p>dropped until a wrapper runner exists</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code></p></td>
 <td><p>executable</p></td>
-<td><p>advanced after Layer 1 audit</p></td>
+<td><p>multiple targets and one fixed method path</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
-<td><p>executable wrapper path</p></td>
-<td><p>advanced after Layer 1 audit</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">replication</span></code></p></td>
-<td><p>ready_for_replication_runner</p></td>
-<td><p>replication API</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
-<td><p>registry_only / not_supported</p></td>
-<td><p>dropped until a wrapper runner exists</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ablation_study</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">wrapper</span></code></p></td>
-<td><p>registry_only / not_supported</p></td>
-<td><p>standalone runner only; no compiled wrapper contract</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hierarchical_forecasting_run</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">orchestrator</span></code></p></td>
-<td><p>future</p></td>
-<td><p>closed</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">panel_forecasting_run</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">orchestrator</span></code></p></td>
-<td><p>future</p></td>
-<td><p>closed</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state_space_run</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code></p></td>
-<td><p>future</p></td>
-<td><p>closed</p></td>
+<td><p>executable through sweep runner when sweeps are present</p></td>
+<td><p>multiple targets and method alternatives</p></td>
 </tr>
 </tbody>
 </table>
-<p>The simple API should not expose <code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code> directly. It should expose clearer methods like <code class="docutils literal notranslate"><span class="pre">compare_models</span></code>, future <code class="docutils literal notranslate"><span class="pre">grid</span></code>, future <code class="docutils literal notranslate"><span class="pre">replicate</span></code>, and future <code class="docutils literal notranslate"><span class="pre">ablate</span></code>.</p>
 <p>Full contract notes:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code> is historical naming. In the current full contract it means one controlled comparison axis, usually <code class="docutils literal notranslate"><span class="pre">model_family</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_separate_runs</span></code> is a wrapper handoff with a concrete <code class="docutils literal notranslate"><span class="pre">execute_separate_runs</span></code> runner; it is not a direct executable compiled recipe.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">single_target_full_sweep</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, and <code class="docutils literal notranslate"><span class="pre">ablation_study</span></code> are wrapper handoffs without compiled-recipe runner contracts and compile as <code class="docutils literal notranslate"><span class="pre">not_supported</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">replication_recipe</span></code> is a replication handoff. It is consumed by <code class="docutils literal notranslate"><span class="pre">execute_replication</span></code>, not by <code class="docutils literal notranslate"><span class="pre">run_compiled_recipe</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multi_target_shared_design</span></code> remains a comparison-cell executable route because <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> owns its shared-design multi-target path.</p></li>
+<li><p>Replication recipes are YAML entries in the Replication Library, not <code class="docutils literal notranslate"><span class="pre">study_scope</span></code> values.</p></li>
+<li><p>Benchmark suites live under Layer 3 <code class="docutils literal notranslate"><span class="pre">benchmark_family=benchmark_suite</span></code>, not Layer 0.</p></li>
+<li><p>Ablation studies are comparison sweeps or standalone helpers, not Layer 0 scopes.</p></li>
+<li><p>Hierarchical, panel, and state-space forecasting belong to future data/model-layer contracts.</p></li>
 </ul>
 </section>
 <section id="designframe-derived-fields">
@@ -309,7 +272,7 @@ Only <code class="docutils literal notranslate"><span class="pre">route_owner=&q
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">design_shape</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">execution_posture</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">experiment_unit</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></li>
 <li><p>route owner via <code class="docutils literal notranslate"><span class="pre">resolve_route_owner</span></code></p></li>
 </ul>
 <p>Current shapes:</p>
@@ -368,7 +331,7 @@ multiple models or swept axes -&gt; one_fixed_env_controlled_axis_variation
 </div>
 <p>The derivation now counts feature/preprocess/tuning axes only when they contain more than one value.
 When that produces a controlled axis, Layer 0 keeps the route in
-<code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code> until a finer-grained experiment unit is introduced.
+<code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code> until a finer-grained experiment unit is introduced.
 The current contract is “one controlled comparison surface”, not strictly “model axis only”.</p>
 </section>
 <section id="current-simple-api-mapping">
@@ -381,13 +344,13 @@ The current contract is “one controlled comparison surface”, not strictly �
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mc.forecast(...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">single_target_single_generator</span></code>, <code class="docutils literal notranslate"><span class="pre">single_cell_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code>, <code class="docutils literal notranslate"><span class="pre">single_cell_executable</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Experiment(...).run()</span></code></p></td>
 <td><p>same as <code class="docutils literal notranslate"><span class="pre">forecast</span></code> when no sweep axes exist</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.compare_models([...])</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">single_target_generator_grid</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_runner_executable</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.sweep({&quot;models&quot;:</span> <span class="pre">[...]})</span></code></p></td>
 <td><p>same as <code class="docutils literal notranslate"><span class="pre">compare_models</span></code></p></td>
@@ -478,7 +441,7 @@ the route remains in the registry but must not be exposed as runnable.</p>
 </section>
 <section id="run-policy-axes">
 <h2>Run Policy Axes<a class="headerlink" href="#run-policy-axes" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, and <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> are policy axes. They do not change the execution unit by themselves.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>, and <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> are policy axes. They do not change the study scope by themselves.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Axis</p></th>
@@ -526,7 +489,7 @@ the route remains in the registry but must not be exposed as runnable.</p>
 <td><p>conditionally active axis, represented by compiler selections</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">derived</span></code></p></td>
-<td><p>value resolved from recipe state, e.g. <code class="docutils literal notranslate"><span class="pre">experiment_unit_default</span></code></p></td>
+<td><p>value resolved from recipe state, e.g. <code class="docutils literal notranslate"><span class="pre">study_scope_default</span></code></p></td>
 </tr>
 </tbody>
 </table>
