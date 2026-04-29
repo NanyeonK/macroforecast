@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 144
+EXPECTED_AXIS_COUNT = 146
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -13,6 +13,8 @@ def test_registry_loader_discovers_existing_axes() -> None:
     assert len(registry) == EXPECTED_AXIS_COUNT
     assert {
         "dataset",
+        "custom_source_mode",
+        "custom_source_format",
         "information_set_type",
         "target_structure",
         "model_family",
@@ -164,6 +166,8 @@ def test_registry_loader_discovers_stage1_data_task_axes() -> None:
     registry = get_axis_registry()
     expected = {
         "frequency",
+        "custom_source_mode",
+        "custom_source_format",
         "information_set_type",
         "official_transform_policy",
         "official_transform_scope",
@@ -232,6 +236,27 @@ def test_registry_loader_discovers_information_set_type_axis() -> None:
 
 
 def test_registry_loader_preserves_stage1_operational_values() -> None:
+    dataset = get_axis_registry_entry("dataset")
+    assert dataset.allowed_values == (
+        "fred_md",
+        "fred_qd",
+        "fred_sd",
+        "fred_md+fred_sd",
+        "fred_qd+fred_sd",
+    )
+
+    custom_source_mode = get_axis_registry_entry("custom_source_mode")
+    assert custom_source_mode.layer == "1_data_task"
+    assert custom_source_mode.allowed_values == (
+        "no_custom_source",
+        "replace_official_panel",
+        "append_to_official_panel",
+    )
+
+    custom_source_format = get_axis_registry_entry("custom_source_format")
+    assert custom_source_format.layer == "1_data_task"
+    assert custom_source_format.allowed_values == ("none", "csv", "parquet")
+
     variable_universe = get_axis_registry_entry("variable_universe")
     assert variable_universe.current_status["all_variables"] == "operational"
     assert variable_universe.current_status["explicit_variable_list"] == "operational"

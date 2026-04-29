@@ -150,12 +150,12 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
     },
     "dataset": {
         "order": 5,
-        "label": "Dataset",
-        "short_label": "Dataset",
-        "question": "Which official data panel starts the study?",
-        "summary": "Selects the source panel before any target, timing, or representation decisions.",
+        "label": "Source Panel",
+        "short_label": "Source",
+        "question": "Which official source panel starts the study?",
+        "summary": "Selects the official FRED-family panel before optional custom-file use, target, timing, or representation decisions.",
         "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "Layer 1 source contract. FRED-MD implies monthly data, FRED-QD implies quarterly data, and standalone FRED-SD requires an explicit frequency.",
+        "contract": "Layer 1 source contract. FRED-MD implies monthly data, FRED-QD implies quarterly data, and standalone FRED-SD requires an explicit frequency. User-supplied files are configured by the custom source axes, not by this source-panel axis.",
         "selection_kind": "user_choice",
         "values": {
             "fred_md": {
@@ -183,15 +183,61 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
                 "short_label": "QD + SD",
                 "summary": "Quarterly national panel plus state-level source columns.",
             },
-            "custom_csv": {
-                "label": "Custom CSV",
-                "short_label": "Custom CSV",
-                "summary": "User-supplied CSV panel; set leaf_config.custom_dataset_schema and custom_data_path.",
+        },
+    },
+    "custom_source_mode": {
+        "order": 6,
+        "label": "Custom Source Use",
+        "short_label": "Custom Use",
+        "question": "Should a user-supplied file be used with the official source panel?",
+        "summary": "Choose no custom file, replace the selected official panel with a custom file, or append custom columns to the official panel.",
+        "docs_url": "../detail/layer1/source_frame.html",
+        "contract": "When a custom source is selected, YAML must provide leaf_config.custom_dataset_schema in fred_md/fred_qd/fred_sd and leaf_config.custom_data_path. replace_official_panel supports one official source panel; append_to_official_panel can add custom columns to official or composite panels.",
+        "selection_kind": "defaulted_choice",
+        "default_value": "no_custom_source",
+        "values": {
+            "no_custom_source": {
+                "label": "Official Source Only (Default)",
+                "short_label": "Official Only",
+                "summary": "Use only the selected official FRED source panel.",
             },
-            "custom_parquet": {
-                "label": "Custom Parquet",
-                "short_label": "Custom Parquet",
-                "summary": "User-supplied Parquet panel; set leaf_config.custom_dataset_schema and custom_data_path.",
+            "replace_official_panel": {
+                "label": "Replace With Custom File",
+                "short_label": "Replace",
+                "summary": "Use a custom file instead of the selected single official source panel. The custom schema must match the selected source panel.",
+            },
+            "append_to_official_panel": {
+                "label": "Append Custom File",
+                "short_label": "Append",
+                "summary": "Load the selected official source panel and append custom columns after frequency alignment.",
+            },
+        },
+    },
+    "custom_source_format": {
+        "order": 6.5,
+        "label": "Custom File Format",
+        "short_label": "Custom Format",
+        "question": "What file format does the custom source use?",
+        "summary": "Active only when Custom Source Use is Replace or Append.",
+        "docs_url": "../detail/layer1/source_frame.html",
+        "contract": "Use csv for a date-indexed CSV panel and parquet for a Parquet panel. Use none when no custom source is selected.",
+        "selection_kind": "conditional_choice",
+        "default_value": "none",
+        "values": {
+            "none": {
+                "label": "No Custom File (Default)",
+                "short_label": "None",
+                "summary": "No custom source file is used.",
+            },
+            "csv": {
+                "label": "CSV",
+                "short_label": "CSV",
+                "summary": "A date-indexed CSV file with numeric series columns.",
+            },
+            "parquet": {
+                "label": "Parquet",
+                "short_label": "Parquet",
+                "summary": "A Parquet file with a DatetimeIndex or parseable date first column.",
             },
         },
     },

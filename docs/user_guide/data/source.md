@@ -1,16 +1,19 @@
 # Source & Frame (1.1)
 
-Declares **where the data comes from and which information-set regime applies**. The user-facing axes answer: which dataset, at what frequency, and under which real-time regime — before the target-structure choice (1.2) or the evaluation window (1.3) is fixed.
+Declares **where the data comes from and which information-set regime applies**. The user-facing axes answer: which official source panel, whether a custom file replaces or augments it, at what frequency, and under which real-time regime — before the target-structure choice (1.2) or the evaluation window (1.3) is fixed.
 
 | Section | axis | Role |
 |---|---|---|
-| 1.1.1 | [`dataset`](#111-dataset) | Which source family to load, including custom CSV/Parquet |
-| 1.1.2 | [`frequency`](#112-frequency) | Series frequency (monthly/quarterly); dataset-derived |
-| 1.1.3 | [`information_set_type`](#113-information_set_type) | Real-time regime (revised vs. vintage-aware) |
+| 1.1.1 | [`dataset`](#111-dataset) | Which official source family to load |
+| 1.1.2 | [`custom_source_mode`](#112-custom_source_mode) / [`custom_source_format`](#113-custom_source_format) | Whether a custom file replaces or augments the official panel |
+| 1.1.3 | [`frequency`](#114-frequency) | Series frequency (monthly/quarterly); dataset-derived |
+| 1.1.4 | [`information_set_type`](#115-information_set_type) | Real-time regime (revised vs. vintage-aware) |
 
 **Note**: `data_domain` axis was dropped entirely in this pass — every FRED dataset implies `domain=macro` via its own source_family metadata, so a separate axis was pure duplication (same rationale as 0.5 `registry_type` drop).
 **At a glance (defaults):**
-- `dataset` — no default; you pick one of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, or `custom_parquet`.
+- `dataset` — no default; you pick one official panel: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`.
+- `custom_source_mode = no_custom_source` — default; pick `replace_official_panel` or `append_to_official_panel` only when using a custom file.
+- `custom_source_format = none` — default; must be `csv` or `parquet` when a custom source is selected.
 - `frequency` — derived from `dataset` for MD/QD/composites. Standalone `fred_sd` requires an explicit monthly/quarterly choice.
 - `information_set_type = revised` — post-revision truth. Pick `pseudo_oos_on_revised_data` only when you want synthetic release-lag masking.
 
@@ -21,7 +24,7 @@ Declares **where the data comes from and which information-set regime applies**.
 
 ## 1.1.1 `dataset`
 
-**Selects the source family loaded.** Every recipe picks exactly one. Custom files are first-class dataset choices; their FRED-family schema is declared separately in `leaf_config.custom_dataset_schema`.
+**Selects the official source family loaded.** Every recipe picks exactly one official source panel. Custom files are configured separately so the recipe can say whether the file replaces the official panel or is appended to it.
 
 ### Value catalog
 
@@ -32,8 +35,6 @@ Declares **where the data comes from and which information-set regime applies**.
 | `fred_sd` | operational | `macrocast.raw.load_fred_sd` | FRED-SD state-level real-time panel (Bokun, Jackson, Kliesen, Owyang 2022) — see [fred_sd.md](datasets/fred_sd.md) |
 | `fred_md+fred_sd` | operational | composite loader | FRED-MD monthly panel plus FRED-SD state panel converted to monthly when needed. |
 | `fred_qd+fred_sd` | operational | composite loader | FRED-QD quarterly panel plus FRED-SD state panel converted to quarterly when needed. |
-| `custom_csv` | operational | `macrocast.raw.load_custom_csv` | User-supplied CSV panel. Requires `leaf_config.custom_dataset_schema` and `leaf_config.custom_data_path`. |
-| `custom_parquet` | operational | `macrocast.raw.load_custom_parquet` | User-supplied Parquet panel. Requires `leaf_config.custom_dataset_schema` and `leaf_config.custom_data_path`. |
 
 Each base dataset has its own dedicated documentation page covering citation, download path, variable groups, transformation codes, and changes from the original working paper to the current vintage. Composite dataset values are compiler/runtime contracts over those base loaders: the registry entry is used by the compiler, the composite loader chooses the relevant FRED loaders at run time, and the merged panel flows into every downstream axis.
 
@@ -44,11 +45,32 @@ Each base dataset has its own dedicated documentation page covering citation, do
 - Compiler reads `dataset` via `_selection_value(selection_map, "dataset")` → propagated into `CompiledRecipeSpec.dataset` and every downstream spec.
 - `_DATASET_DEFAULT_FREQUENCY` in `compiler/build.py` maps MD/QD/composite datasets to their default `frequency` value.
 - Compile guard: standalone `dataset=fred_sd` requires explicit `frequency`; `fred_md+fred_sd` requires monthly; `fred_qd+fred_sd` requires quarterly.
-- Compile guard: `dataset=custom_csv/custom_parquet` requires `leaf_config.custom_dataset_schema` in `fred_md`, `fred_qd`, or `fred_sd`, plus `leaf_config.custom_data_path`.
 
-### Custom CSV / Parquet — implementation contract
+## 1.1.2 `custom_source_mode`
 
-When `dataset` is `custom_csv` or `custom_parquet`:
+**Controls whether a user-supplied file is used with the official source panel.**
+
+| Value | Status | Meaning |
+|---|---|---|
+| `no_custom_source` | operational | Use only the selected official source panel. |
+| `replace_official_panel` | operational | Load a custom file instead of the selected single official panel. |
+| `append_to_official_panel` | operational | Load the selected official panel and append custom columns after frequency alignment. |
+
+`replace_official_panel` supports only one official panel (`fred_md`, `fred_qd`, or `fred_sd`). It requires `leaf_config.custom_dataset_schema` to match the selected `dataset`.
+
+`append_to_official_panel` supports single or composite official panels. The custom file can declare `custom_dataset_schema: fred_md`, `fred_qd`, or `fred_sd`; runtime converts it to the selected Layer 1 frequency before appending.
+
+## 1.1.3 `custom_source_format`
+
+**Declares the custom file type.**
+
+| Value | Status | Meaning |
+|---|---|---|
+| `none` | operational | No custom source file is used. |
+| `csv` | operational | Use `macrocast.raw.load_custom_csv`. |
+| `parquet` | operational | Use `macrocast.raw.load_custom_parquet`. |
+
+When `custom_source_mode` is not `no_custom_source`:
 
 - **`leaf_config.custom_data_path`** is **required**. Compile-time validation in `compile_recipe_dict` raises `CompileValidationError` if missing.
 - **`leaf_config.custom_dataset_schema`** is **required** and declares the schema the custom file must conform to (`fred_md` / `fred_qd` / `fred_sd`). The loader validates the schema label and labels the resulting panel accordingly.
@@ -61,8 +83,8 @@ When `dataset` is `custom_csv` or `custom_parquet`:
 
 - `macrocast.load_custom_csv(path, *, dataset, cache_root=None)` — direct call.
 - `macrocast.load_custom_parquet(path, *, dataset, cache_root=None)` — direct call (requires pyarrow or fastparquet).
-- Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` dispatches directly from `recipe.data_task_spec["dataset"]`.
-- Compile guard: `dataset ∈ {custom_csv, custom_parquet}` + missing `leaf_config.custom_dataset_schema` or `leaf_config.custom_data_path` → `CompileValidationError`.
+- Dispatcher: `_load_raw_for_recipe` in `macrocast/execution/build.py` dispatches from `custom_source_mode` and `custom_source_format`.
+- Compile guard: custom source selected + missing `leaf_config.custom_dataset_schema` or `leaf_config.custom_data_path` -> `CompileValidationError`.
 
 ### Recipe usage
 
@@ -78,13 +100,15 @@ path:
       horizons: [1, 3, 6]
 ```
 
-User-supplied CSV:
+Replace FRED-MD with a user-supplied CSV:
 
 ```yaml
 path:
   1_data_task:
     fixed_axes:
-      dataset: custom_csv
+      dataset: fred_md
+      custom_source_mode: replace_official_panel
+      custom_source_format: csv
       frequency: monthly
     leaf_config:
       target: INDPRO
@@ -93,13 +117,15 @@ path:
       custom_data_path: /path/to/my_fred_md_extract.csv
 ```
 
-User-supplied Parquet:
+Append custom Parquet columns to FRED-QD:
 
 ```yaml
 path:
   1_data_task:
     fixed_axes:
-      dataset: custom_parquet
+      dataset: fred_qd
+      custom_source_mode: append_to_official_panel
+      custom_source_format: parquet
       frequency: quarterly
     leaf_config:
       target: GDPC1
@@ -110,7 +136,7 @@ path:
 
 ---
 
-## 1.1.2 `frequency`
+## 1.1.4 `frequency`
 
 **Series frequency of the dataset panel.** Dataset-derived for MD/QD/composite runs; required for standalone FRED-SD runs.
 

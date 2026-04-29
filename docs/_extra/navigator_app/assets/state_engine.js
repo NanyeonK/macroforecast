@@ -132,6 +132,7 @@
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
     const dataset = String(selected.dataset || "");
+    const customSourceMode = String(selected.custom_source_mode || "no_custom_source");
     const impliedFrequency = (dataset === "fred_md" || dataset === "fred_md+fred_sd")
       ? "monthly"
       : ((dataset === "fred_qd" || dataset === "fred_qd+fred_sd") ? "quarterly" : null);
@@ -147,6 +148,19 @@
     }
     if (axisName === "frequency" && impliedFrequency && value !== impliedFrequency) {
       return `dataset=${dataset} requires frequency=${impliedFrequency}`;
+    }
+    if (axisName === "custom_source_mode") {
+      if (value === "replace_official_panel" && dataset.includes("+")) {
+        return "replace_official_panel supports one official source panel; use append_to_official_panel for composites";
+      }
+    }
+    if (axisName === "custom_source_format") {
+      if (customSourceMode === "no_custom_source" && value !== "none") {
+        return "custom_source_format is active only when a custom source is selected";
+      }
+      if (customSourceMode !== "no_custom_source" && value === "none") {
+        return "custom_source_format must be csv or parquet when a custom source is selected";
+      }
     }
     if (axisName === "target_structure") {
       if (multiTargetScope && value === "single_target") return "multiple-target Study Scope requires target_structure=multi_target";

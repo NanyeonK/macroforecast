@@ -39,6 +39,8 @@ _TREE_AXES = {
     ),
     "1_data_task": (
         "dataset",
+        "custom_source_mode",
+        "custom_source_format",
         "frequency",
         "information_set_type",
         "fred_sd_frequency_policy",
@@ -157,8 +159,8 @@ _LAYER_AXIS_GROUPS = {
             "id": "source_identity",
             "label": "Source Identity",
             "level": "primary_decision",
-            "summary": "Choose the source family and resolve calendar frequency.",
-            "axes": ("dataset", "frequency"),
+            "summary": "Choose the official source family, optional custom source use, and calendar frequency.",
+            "axes": ("dataset", "custom_source_mode", "custom_source_format", "frequency"),
         },
         {
             "id": "information_regime",
@@ -211,6 +213,8 @@ _LAYER_AXIS_GROUPS = {
 
 _AXIS_HIERARCHY_LEVELS = {
     "dataset": "primary_decision",
+    "custom_source_mode": "conditional_subdecision",
+    "custom_source_format": "conditional_subdecision",
     "frequency": "derived_or_required",
     "information_set_type": "primary_policy",
     "release_lag_rule": "timing_policy",
@@ -232,6 +236,8 @@ _DEFAULT_SELECTIONS = {
     "failure_policy": "fail_fast",
     "reproducibility_mode": "seeded_reproducible",
     "compute_mode": "serial",
+    "custom_source_mode": "no_custom_source",
+    "custom_source_format": "none",
     "information_set_type": "final_revised_data",
     "target_structure": "single_target",
     "variable_universe": "all_variables",
@@ -593,11 +599,10 @@ def _selection_has_fred_sd(selected: Mapping[str, Any]) -> bool:
     return "fred_sd" in tokens
 
 
-def _dataset_implied_frequency(dataset: str, custom_dataset_schema: str | None = None) -> str | None:
-    schema = custom_dataset_schema if dataset in {"custom_csv", "custom_parquet"} else dataset
-    if schema in {"fred_md", "fred_md+fred_sd"}:
+def _dataset_implied_frequency(dataset: str) -> str | None:
+    if dataset in {"fred_md", "fred_md+fred_sd"}:
         return "monthly"
-    if schema in {"fred_qd", "fred_qd+fred_sd"}:
+    if dataset in {"fred_qd", "fred_qd+fred_sd"}:
         return "quarterly"
     return None
 
@@ -609,6 +614,7 @@ def _study_scope_requires_multi_target(study_scope: str) -> bool:
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
     study_scope = str(selected.get("study_scope", "one_target_one_method"))
     dataset = str(selected.get("dataset", ""))
+    custom_source_mode = str(selected.get("custom_source_mode", "no_custom_source"))
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
     forecast_type = str(selected.get("forecast_type", "direct"))
@@ -626,12 +632,17 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         if value == "parallel_by_target" and study_scope in {"one_target_one_method", "one_target_compare_methods"}:
             return "parallel_by_target is active only when Study Scope has multiple targets"
     if axis_name == "frequency":
-        implied_frequency = _dataset_implied_frequency(
-            dataset,
-            str(selected.get("custom_dataset_schema", "")) or None,
-        )
+        implied_frequency = _dataset_implied_frequency(dataset)
         if implied_frequency is not None and value != implied_frequency:
             return f"dataset={dataset} requires frequency={implied_frequency}"
+    if axis_name == "custom_source_mode":
+        if value == "replace_official_panel" and "+" in dataset:
+            return "replace_official_panel supports one official source panel; use append_to_official_panel for composites"
+    if axis_name == "custom_source_format":
+        if custom_source_mode == "no_custom_source" and value != "none":
+            return "custom_source_format is active only when a custom source is selected"
+        if custom_source_mode != "no_custom_source" and value == "none":
+            return "custom_source_format must be csv or parquet when a custom source is selected"
     if axis_name == "target_structure":
         requires_multi = _study_scope_requires_multi_target(study_scope)
         if requires_multi and value == "single_target":

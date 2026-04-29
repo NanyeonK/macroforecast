@@ -75,8 +75,9 @@ _COMPOSITE_DATASET_FREQUENCY = {
     "fred_qd+fred_sd": "quarterly",
 }
 
-_CUSTOM_DATASETS = {"custom_csv", "custom_parquet"}
 _CUSTOM_DATASET_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
+_CUSTOM_SOURCE_MODES = {"no_custom_source", "replace_official_panel", "append_to_official_panel"}
+_CUSTOM_SOURCE_FORMATS = {"none", "csv", "parquet"}
 
 _X_IMPUTATION_METHODS = {"mean", "median", "ffill", "bfill"}
 
@@ -212,15 +213,21 @@ def _raw_dataset_schema(
     leaf_config: Mapping[str, Any],
 ) -> str:
     dataset = _selection_value(selection_map, "dataset")
-    if dataset in _CUSTOM_DATASETS:
-        schema = leaf_config.get("custom_dataset_schema")
-        if schema not in _CUSTOM_DATASET_SCHEMAS:
-            raise CompileValidationError(
-                "dataset='custom_csv'/'custom_parquet' requires "
-                f"leaf_config.custom_dataset_schema in {sorted(_CUSTOM_DATASET_SCHEMAS)}"
-            )
-        return str(schema)
     return dataset
+
+
+def _custom_source_mode(selection_map: dict[str, AxisSelection]) -> str:
+    mode = _selection_value(selection_map, "custom_source_mode", default="no_custom_source")
+    if mode not in _CUSTOM_SOURCE_MODES:
+        raise CompileValidationError(f"custom_source_mode must be one of {sorted(_CUSTOM_SOURCE_MODES)}")
+    return str(mode)
+
+
+def _custom_source_format(selection_map: dict[str, AxisSelection]) -> str:
+    file_format = _selection_value(selection_map, "custom_source_format", default="none")
+    if file_format not in _CUSTOM_SOURCE_FORMATS:
+        raise CompileValidationError(f"custom_source_format must be one of {sorted(_CUSTOM_SOURCE_FORMATS)}")
+    return str(file_format)
 
 
 def _sd_target_parts(target: str) -> tuple[str, str] | None:
@@ -1086,10 +1093,43 @@ def _validate_layer1_data_task_contract(
 
     targets = _targets_for_layer1_contract(selection_map, leaf_config)
     has_fred_sd = _dataset_has_fred_sd(raw_dataset_schema)
-    if dataset in _CUSTOM_DATASETS and not leaf_config.get("custom_data_path"):
-        raise CompileValidationError(
-            f"dataset={dataset!r} requires leaf_config.custom_data_path"
-        )
+    custom_source_mode = _custom_source_mode(selection_map)
+    custom_source_format = _custom_source_format(selection_map)
+    custom_dataset_schema = leaf_config.get("custom_dataset_schema")
+    custom_data_path = leaf_config.get("custom_data_path")
+    if custom_source_mode == "no_custom_source":
+        if custom_source_format != "none":
+            raise CompileValidationError(
+                "custom_source_format must be 'none' when custom_source_mode='no_custom_source'"
+            )
+        if custom_dataset_schema is not None or custom_data_path is not None:
+            raise CompileValidationError(
+                "leaf_config.custom_dataset_schema/custom_data_path apply only when a custom source is selected"
+            )
+    else:
+        if custom_source_format == "none":
+            raise CompileValidationError(
+                "custom_source_format must be 'csv' or 'parquet' when a custom source is selected"
+            )
+        if custom_dataset_schema not in _CUSTOM_DATASET_SCHEMAS:
+            raise CompileValidationError(
+                "custom sources require leaf_config.custom_dataset_schema "
+                f"in {sorted(_CUSTOM_DATASET_SCHEMAS)}"
+            )
+        if not custom_data_path:
+            raise CompileValidationError(
+                "custom sources require leaf_config.custom_data_path"
+            )
+        if custom_source_mode == "replace_official_panel":
+            if "+" in str(dataset):
+                raise CompileValidationError(
+                    "custom_source_mode='replace_official_panel' supports a single official dataset, not a composite"
+                )
+            if custom_dataset_schema != dataset:
+                raise CompileValidationError(
+                    "custom_source_mode='replace_official_panel' requires "
+                    "leaf_config.custom_dataset_schema to match dataset"
+                )
     fred_sd_frequency_policy = _selection_value(selection_map, "fred_sd_frequency_policy", default="report_only")
     if fred_sd_frequency_policy != "report_only" and not has_fred_sd:
         raise CompileValidationError(
@@ -1329,6 +1369,8 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
     return {
         "dataset": dataset,
         "dataset_schema": raw_dataset_schema,
+        "custom_source_mode": _custom_source_mode(selection_map),
+        "custom_source_format": _custom_source_format(selection_map),
         "custom_dataset_schema": leaf_config.get("custom_dataset_schema"),
         "custom_data_path": leaf_config.get("custom_data_path"),
         "target_structure": target_structure,

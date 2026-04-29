@@ -1,7 +1,8 @@
 """Custom Parquet loader — load a user-supplied Parquet file conforming to a FRED-family schema.
 
 Parquet-counterpart to :mod:`macrocast.raw.datasets.custom_csv`. Same
-contract: recipes use ``dataset == "custom_parquet"``, provide
+contract: recipes choose an official ``dataset``, select
+``custom_source_mode`` plus ``custom_source_format: parquet``, provide
 ``leaf_config.custom_data_path``, and declare the schema with
 ``leaf_config.custom_dataset_schema``.
 

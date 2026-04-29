@@ -1637,6 +1637,37 @@ def _load_single_raw_dataset(
     raise ExecutionError(f"unsupported raw_dataset={dataset!r}")
 
 
+def _custom_source_path(recipe: RecipeSpec, local_raw_source, *, allow_direct: bool = False):
+    if isinstance(local_raw_source, Mapping):
+        file_format = str(recipe.data_task_spec.get("custom_source_format", "none"))
+        return (
+            local_raw_source.get("custom")
+            or local_raw_source.get(f"custom_{file_format}")
+            or recipe.data_task_spec.get("custom_data_path")
+        )
+    if allow_direct and local_raw_source is not None:
+        return local_raw_source
+    return recipe.data_task_spec.get("custom_data_path")
+
+
+def _load_custom_source_for_recipe(recipe: RecipeSpec, local_raw_source, cache_root: Path, *, allow_direct: bool = False):
+    file_format = str(recipe.data_task_spec.get("custom_source_format", "none"))
+    custom_path = _custom_source_path(recipe, local_raw_source, allow_direct=allow_direct)
+    if custom_path is None:
+        raise ExecutionError(
+            "custom sources require leaf_config.custom_data_path "
+            "(or local_raw_source mapping key 'custom')"
+        )
+    custom_schema = recipe.data_task_spec.get("custom_dataset_schema")
+    if custom_schema is None:
+        raise ExecutionError("custom sources require leaf_config.custom_dataset_schema")
+    if file_format == "csv":
+        return load_custom_csv(custom_path, dataset=str(custom_schema), cache_root=cache_root)
+    if file_format == "parquet":
+        return load_custom_parquet(custom_path, dataset=str(custom_schema), cache_root=cache_root)
+    raise ExecutionError("custom_source_format must be 'csv' or 'parquet' when a custom source is selected")
+
+
 def _component_data_through(results) -> str | None:
     dates = [getattr(result.dataset_metadata, "data_through", None) for _, result in results]
     dates = [date for date in dates if date]
@@ -1722,24 +1753,28 @@ def _combine_raw_results(dataset: str, target_frequency: str, components):
     return _raw_result_with(primary, data=combined, metadata=metadata, artifact=artifact, transform_codes=combined_tcodes)
 
 
+def _maybe_append_custom_source(recipe: RecipeSpec, raw_result, local_raw_source, cache_root: Path):
+    mode = str(recipe.data_task_spec.get("custom_source_mode", "no_custom_source"))
+    if mode != "append_to_official_panel":
+        return raw_result
+    custom_result = _load_custom_source_for_recipe(recipe, local_raw_source, cache_root)
+    target_frequency = str(
+        recipe.data_task_spec.get("frequency")
+        or getattr(raw_result.dataset_metadata, "frequency", "monthly")
+    )
+    dataset = f"{recipe.raw_dataset}+custom"
+    return _combine_raw_results(
+        dataset,
+        target_frequency,
+        [(recipe.raw_dataset, raw_result), ("custom", custom_result)],
+    )
+
+
 def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapping[str, str | Path] | None, cache_root: Path):
     vintage = recipe.data_vintage
-    dataset = recipe.data_task_spec.get("dataset") or recipe.raw_dataset
-    if dataset in {"custom_csv", "custom_parquet"}:
-        custom_path = local_raw_source or recipe.data_task_spec.get("custom_data_path")
-        if custom_path is None:
-            raise ExecutionError(
-                f"dataset={dataset!r} requires leaf_config.custom_data_path "
-                "(or pass local_raw_source to execute_recipe)"
-            )
-        custom_schema = (
-            recipe.data_task_spec.get("custom_dataset_schema")
-            or recipe.data_task_spec.get("dataset_schema")
-            or recipe.raw_dataset
-        )
-        if dataset == "custom_csv":
-            return load_custom_csv(custom_path, dataset=str(custom_schema), cache_root=cache_root)
-        return load_custom_parquet(custom_path, dataset=str(custom_schema), cache_root=cache_root)
+    custom_source_mode = str(recipe.data_task_spec.get("custom_source_mode", "no_custom_source"))
+    if custom_source_mode == "replace_official_panel":
+        return _load_custom_source_for_recipe(recipe, local_raw_source, cache_root, allow_direct=True)
     parts = _dataset_parts(recipe.raw_dataset)
     if parts == {"fred_md", "fred_sd"}:
         if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
@@ -1758,7 +1793,8 @@ def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapp
                 ),
             ),
         ]
-        return _combine_raw_results(recipe.raw_dataset, "monthly", components)
+        raw_result = _combine_raw_results(recipe.raw_dataset, "monthly", components)
+        return _maybe_append_custom_source(recipe, raw_result, local_raw_source, cache_root)
     if parts == {"fred_qd", "fred_sd"}:
         if local_raw_source is not None and not isinstance(local_raw_source, Mapping):
             raise ExecutionError("composite FRED datasets require local_raw_source as a mapping keyed by component dataset")
@@ -1776,15 +1812,17 @@ def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapp
                 ),
             ),
         ]
-        return _combine_raw_results(recipe.raw_dataset, "quarterly", components)
+        raw_result = _combine_raw_results(recipe.raw_dataset, "quarterly", components)
+        return _maybe_append_custom_source(recipe, raw_result, local_raw_source, cache_root)
     if len(parts) == 1:
-        return _load_single_raw_dataset(
+        raw_result = _load_single_raw_dataset(
             recipe.raw_dataset,
             vintage=vintage,
             cache_root=cache_root,
             local_raw_source=local_raw_source,
             data_task_spec=dict(recipe.data_task_spec),
         )
+        return _maybe_append_custom_source(recipe, raw_result, local_raw_source, cache_root)
     raise ExecutionError(f"unsupported raw_dataset={recipe.raw_dataset!r}")
 
 

@@ -18,7 +18,7 @@ result = exp.run()
 
 Required arguments:
 
-- `dataset`: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, or `custom_parquet`
+- `dataset`: official source panel, one of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`
 - `target`: target series name
 - `start`: first sample date
 - `end`: last sample date
@@ -27,6 +27,9 @@ Common optional arguments:
 
 - `horizons`: forecast horizons, default `[1]`
 - `frequency`: required only for `fred_sd` alone
+- `custom_source_mode`: default `no_custom_source`; use `replace_official_panel` or `append_to_official_panel` for custom files
+- `custom_source_format`: `csv` or `parquet` when a custom source is selected
+- `custom_dataset_schema` and `custom_data_path`: required when a custom source is selected
 - `vintage`: data vintage; if omitted, current/latest data is used
 - `model_family`: default model, usually left as `ar`
 - `primary_metric`: default `msfe`

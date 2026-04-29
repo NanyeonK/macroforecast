@@ -17,7 +17,7 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Layer | Axis count | Value statuses | Navigator tree axes | Registry axes outside Navigator tree | Virtual/non-registry tree axes |
 |---|---:|---|---|---|---|
 | `0_meta` | 6 | operational=28, registry_only=7, future=3 | 5 | `axis_type` | - |
-| `1_data_task` | 18 | operational=82 | 16 | `sd_variable_selection`, `state_selection` | - |
+| `1_data_task` | 19 | operational=83 | 17 | `sd_variable_selection`, `state_selection` | - |
 | `2_preprocessing` | 45 | operational=156, operational_narrow=8, external_plugin=12, registry_only=52, future=3 | 19 | `additional_preprocessing`, `custom_preprocessor`, `data_richness_mode`, `deterministic_components`, `dimensionality_reduction_policy`, `factor_count`, `factor_rotation_order`, `feature_block_set`, `feature_grouping`, `inverse_transform_policy`, `predictor_family`, `preprocess_fit_scope`, `preprocess_order`, `representation_policy`, `scaling_scope`, `separation_rule`, `structural_break_segmentation`, `target_domain`, `target_lag_selection`, `target_missing_policy`, `target_outlier_policy`, `target_transform_policy`, `target_transformer`, `tcode_application_scope`, `x_lag_creation`, `x_transform_policy` | - |
 | `3_training` | 31 | operational=123, operational_narrow=8, registry_only=28, future=10 | 18 | `alignment_fairness`, `cache_policy`, `checkpointing`, `convergence_handling`, `early_stopping`, `embargo_gap`, `execution_backend`, `horizon_modelization`, `hp_space_style`, `logging_level`, `lookback`, `seed_policy`, `sequence_framework`, `shuffle_rule`, `split_family` | `exogenous_x_path_policy`, `recursive_x_model_family` |
 | `4_evaluation` | 19 | operational=57, registry_only=40, future=17 | 19 | - | - |
@@ -51,7 +51,9 @@ This census is generated from the live registry and Navigator tree after PR #92.
 | Axis | Component | Type | Default policy | Value status counts | Values by status |
 |---|---|---|---|---|---|
 | `contemporaneous_x_rule` | - | `enum` | `fixed` | operational=2 | `operational`: `allow_same_period_predictors`, `forbid_same_period_predictors` |
-| `dataset` | - | `enum` | `fixed` | operational=7 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`, `custom_csv`, `custom_parquet` |
+| `custom_source_format` | - | `enum` | `fixed` | operational=3 | `operational`: `none`, `csv`, `parquet` |
+| `custom_source_mode` | - | `enum` | `fixed` | operational=3 | `operational`: `no_custom_source`, `replace_official_panel`, `append_to_official_panel` |
+| `dataset` | - | `enum` | `fixed` | operational=5 | `operational`: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` |
 | `fred_sd_frequency_policy` | - | `enum` | `fixed` | operational=4 | `operational`: `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` |
 | `fred_sd_state_group` | - | `enum` | `fixed` | operational=16 | `operational`: `all_states`, `census_region_northeast`, `census_region_midwest`, `census_region_south`, `census_region_west`, `census_division_new_england`, `census_division_middle_atlantic`, `census_division_east_north_central`, `census_division_west_north_central`, `census_division_south_atlantic`, `census_division_east_south_central`, `census_division_west_south_central`, `census_division_mountain`, `census_division_pacific`, `contiguous_48_plus_dc`, `custom_state_group` |
 | `fred_sd_variable_group` | - | `enum` | `fixed` | operational=12 | `operational`: `all_sd_variables`, `labor_market_core`, `employment_sector`, `gsp_output`, `housing`, `trade`, `income`, `direct_analog_high_confidence`, `provisional_analog_medium`, `semantic_review_outputs`, `no_reliable_analog`, `custom_sd_variable_group` |

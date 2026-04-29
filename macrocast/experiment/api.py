@@ -138,6 +138,8 @@ class Experiment:
         horizons: Iterable[int] = (1,),
         frequency: str | None = None,
         vintage: str | None = None,
+        custom_source_mode: str = "no_custom_source",
+        custom_source_format: str = "none",
         custom_dataset_schema: str | None = None,
         custom_data_path: str | Path | None = None,
         default_profile: str = DEFAULT_PROFILE_NAME,
@@ -161,6 +163,8 @@ class Experiment:
         self.horizons = tuple(int(horizon) for horizon in horizons)
         self.frequency = frequency
         self.vintage = vintage
+        self.custom_source_mode = custom_source_mode
+        self.custom_source_format = custom_source_format
         self.custom_dataset_schema = custom_dataset_schema
         self.custom_data_path = None if custom_data_path is None else str(custom_data_path)
         self.default_profile = default_profile
@@ -344,6 +348,8 @@ class Experiment:
             horizons=self.horizons,
             frequency=self.frequency,
             vintage=self.vintage,
+            custom_source_mode=self.custom_source_mode,
+            custom_source_format=self.custom_source_format,
             custom_dataset_schema=self.custom_dataset_schema,
             custom_data_path=self.custom_data_path,
             recipe_id=self.recipe_id,

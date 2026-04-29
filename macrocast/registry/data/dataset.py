@@ -39,18 +39,6 @@ AXIS_DEFINITION = AxisDefinition(
             status='operational',
             priority="A",
         ),
-        EnumRegistryEntry(
-            id='custom_csv',
-            description='user supplied csv panel; schema declared in leaf_config.custom_dataset_schema',
-            status='operational',
-            priority="A",
-        ),
-        EnumRegistryEntry(
-            id='custom_parquet',
-            description='user supplied parquet panel; schema declared in leaf_config.custom_dataset_schema',
-            status='operational',
-            priority="A",
-        ),
     ),
     compatible_with={},
     incompatible_with={},
