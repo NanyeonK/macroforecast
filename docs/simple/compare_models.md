@@ -2,6 +2,8 @@
 
 Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.
 
+In Layer 0 Simple, this call shape selects `study_scope = one_target_compare_methods`. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.
+
 ```python
 import macrocast as mc
 

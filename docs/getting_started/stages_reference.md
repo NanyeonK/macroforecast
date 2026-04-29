@@ -5,16 +5,18 @@ completed user-facing stages. Use this as a quick cheat sheet: pick a recipe
 shape from Stage 0, pick data decisions from Stage 1, then cross over to the
 in-depth user-guide pages for per-axis semantics and recipe YAML examples.
 
-**Scope.** Layer 0 (Design, 0.1–0.5) + Layer 1 (Data, 1.1–1.5).
+**Scope.** Layer 0 (Design: four user-facing axes plus the internal `axis_type` grammar) + Layer 1 (Data, 1.1–1.5).
 Layer 2 full fixed recipes are documented in
 `docs/detail/preprocessing_layer_audit.md`; public preprocessing sweeps remain
 blocked. Layers 3+ are outside this quick-reference page.
+
+Simple exposes only Layer 0 Study Scope. Full exposes all four user-facing Layer 0 axes; `failure_policy`, `reproducibility_mode`, and `compute_mode` can be omitted to use their defaults.
 
 **At a glance.**
 
 | Stage | Axes | Allowed values | What it governs |
 |---|---|---|---|
-| 0 — Design  | 5 | 34 | Recipe grammar: study scope, sweep shape, reproducibility, compute |
+| 0 — Design  | 4 user-facing + internal `axis_type` | see below | Study scope, failure handling, reproducibility, compute layout, and YAML sweep grammar |
 | 1 — Data    | 12 | 38 | Official data frame: dataset, source, frequency, information set, target structure, FRED-SD panel policy, availability |
 
 ---

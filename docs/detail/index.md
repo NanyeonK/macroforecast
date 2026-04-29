@@ -9,6 +9,8 @@ Full means:
 - YAML paths, Python builders, runtime artifacts, and manifests must agree;
 - custom methods enter through documented Layer 2 or Layer 3 contracts.
 
+Layer 0 is the bridge between Simple and Full. Simple asks for Study Scope only, then applies default execution policies. Full shows all four user-facing Layer 0 axes. When a Full recipe omits defaulted policy axes, the compiler/runtime use the documented defaults and record the resolved values in manifests.
+
 Read the layers in order. Earlier layers define the data and representation contract that later layers consume.
 
 ## Full Layer Documents

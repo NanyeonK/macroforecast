@@ -32,6 +32,19 @@ result = exp.compare_models(["ar", "ridge"]).run()
 
 The MVP contract is default-first: specify the forecasting question, then sweep only choices you care about. All resolved defaults are written to artifacts and manifests.
 
+At Layer 0, Simple exposes only **Study Scope**. The shape of the call picks it:
+
+- `forecast()` or `Experiment.run()` with one target and one method path -> `study_scope = one_target_one_method`
+- `Experiment.compare_models([...])` with one target -> `study_scope = one_target_compare_methods`
+
+The other Layer 0 execution-policy axes are filled from defaults:
+
+- `failure_policy = fail_fast`
+- `reproducibility_mode = seeded_reproducible`
+- `compute_mode = serial`
+
+Use Detail (code): Full when those policies should be reviewed or changed directly.
+
 MVP public shapes:
 
 - one default run
