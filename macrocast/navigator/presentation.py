@@ -155,7 +155,7 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         "question": "Which FRED source panel starts the study?",
         "summary": "Selects the official FRED-family panel before optional custom-file use, target, timing, or representation decisions.",
         "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "Layer 1 source contract. FRED-MD implies monthly data, FRED-QD implies quarterly data, and standalone FRED-SD requires an explicit frequency. User-supplied files are configured by the custom source axes, not by this source-panel axis.",
+        "contract": "Layer 1 source contract. FRED-MD implies monthly data, FRED-QD implies quarterly data, and standalone FRED-SD requires an explicit frequency. User-supplied files are configured by custom_source_policy plus leaf_config.custom_source_path, not by this source-panel axis.",
         "selection_kind": "user_choice",
         "values": {
             "fred_md": {
@@ -192,8 +192,8 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         "question": "Do you want FRED data, custom data, or FRED data plus custom data?",
         "summary": "Choose FRED data only, custom data only, or FRED data plus custom columns.",
         "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "When custom data is selected, choose custom_source_format and custom_source_schema, then provide leaf_config.custom_source_path. custom_panel_only supports one FRED source panel; official_plus_custom supports single or composite FRED panels.",
-        "warning": "Custom files must follow the frequency and schema contract in the docs before the run is reproducible.",
+        "contract": "When custom data is selected, provide leaf_config.custom_source_path. The parser is inferred from the file extension and the internal schema is inferred from dataset/frequency. custom_panel_only supports one FRED source panel; official_plus_custom supports single or composite FRED panels.",
+        "warning": "Custom files must already match the selected Layer 1 frequency and file-shape contract in the docs.",
         "selection_kind": "defaulted_choice",
         "default_value": "official_only",
         "values": {
@@ -205,75 +205,12 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
             "custom_panel_only": {
                 "label": "Use Custom Data Only",
                 "short_label": "Custom Only",
-                "summary": "Use a custom file instead of the selected single FRED source panel. The custom schema must match the selected source panel.",
+                "summary": "Use a custom file instead of the selected single FRED source panel.",
             },
             "official_plus_custom": {
                 "label": "Add Custom Data To FRED Data",
                 "short_label": "FRED + Custom",
-                "summary": "Load the selected FRED source panel and append custom columns after frequency alignment.",
-            },
-        },
-    },
-    "custom_source_format": {
-        "order": 6.2,
-        "label": "Custom File Format",
-        "short_label": "Custom Format",
-        "question": "What file format does the custom data use?",
-        "summary": "Active only when Custom Data Use is Custom Only or FRED + Custom.",
-        "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "Use csv for a date-indexed CSV panel and parquet for a Parquet panel. Use none only when no custom data is selected.",
-        "warning": "Check the detailed docs for required date index and numeric-column shape.",
-        "selection_kind": "conditional_choice",
-        "default_value": "none",
-        "values": {
-            "none": {
-                "label": "No Custom File",
-                "short_label": "None",
-                "summary": "No custom file is used. Valid only when Custom Data Use is FRED Only.",
-            },
-            "csv": {
-                "label": "CSV",
-                "short_label": "CSV",
-                "summary": "A date-indexed CSV file with numeric series columns.",
-            },
-            "parquet": {
-                "label": "Parquet",
-                "short_label": "Parquet",
-                "summary": "A Parquet file with a DatetimeIndex or parseable date first column.",
-            },
-        },
-    },
-    "custom_source_schema": {
-        "order": 6.4,
-        "label": "Custom File Schema",
-        "short_label": "Custom Schema",
-        "question": "Which FRED-style schema does the custom file follow?",
-        "summary": "Active only when a custom file is selected. Custom Only must match the selected Source Panel; FRED + Custom may use MD, QD, or SD-like columns.",
-        "docs_url": "../detail/layer1/source_frame.html",
-        "contract": "Use none with FRED-only data. Use fred_md for monthly national macro panels, fred_qd for quarterly national macro panels, and fred_sd for state-level panels that will be aligned to the selected Layer 1 frequency.",
-        "warning": "This is a schema contract, not a loader choice. The file path still lives in leaf_config.custom_source_path.",
-        "selection_kind": "conditional_choice",
-        "default_value": "none",
-        "values": {
-            "none": {
-                "label": "No Custom Schema",
-                "short_label": "None",
-                "summary": "No custom schema is used. Valid only when Custom Data Use is FRED Only.",
-            },
-            "fred_md": {
-                "label": "FRED-MD-Like Monthly Panel",
-                "short_label": "MD-like",
-                "summary": "Date-indexed monthly national macro columns named like series IDs.",
-            },
-            "fred_qd": {
-                "label": "FRED-QD-Like Quarterly Panel",
-                "short_label": "QD-like",
-                "summary": "Date-indexed quarterly national macro columns named like series IDs.",
-            },
-            "fred_sd": {
-                "label": "FRED-SD-Like State Panel",
-                "short_label": "SD-like",
-                "summary": "Date-indexed state-level columns, normally monthly before Layer 1 alignment.",
+                "summary": "Load the selected FRED source panel and append custom columns with the selected Layer 1 frequency.",
             },
         },
     },

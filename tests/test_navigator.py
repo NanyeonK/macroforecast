@@ -247,8 +247,6 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert tree_axes == [
         "dataset",
         "custom_source_policy",
-        "custom_source_format",
-        "custom_source_schema",
         "frequency",
         "information_set_type",
         "fred_sd_frequency_policy",
@@ -278,8 +276,6 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert layer1_groups[0]["axes"] == [
         "dataset",
         "custom_source_policy",
-        "custom_source_format",
-        "custom_source_schema",
         "frequency",
     ]
     assert layer1_groups[2]["parent_axis"] == "dataset"
@@ -289,8 +285,8 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert sample_axes["dataset"]["axis_level"] == "primary_decision"
     assert sample_axes["custom_source_policy"]["group_id"] == "source_identity"
     assert sample_axes["custom_source_policy"]["axis_level"] == "conditional_subdecision"
-    assert sample_axes["custom_source_format"]["selected"] == "none"
-    assert sample_axes["custom_source_schema"]["selected"] == "none"
+    assert "custom_source_format" not in sample_axes
+    assert "custom_source_schema" not in sample_axes
     assert sample_axes["frequency"]["axis_level"] == "derived_or_required"
     assert sample_axes["fred_sd_state_group"]["group_id"] == "fred_sd_source_scope"
     assert sample_axes["fred_sd_state_group"]["axis_level"] == "conditional_subdecision"
@@ -304,9 +300,8 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert "custom_csv" not in presentation["dataset"]["values"]
     assert presentation["custom_source_policy"]["default_value"] == "official_only"
     assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Use Custom Data Only"
-    assert presentation["custom_source_format"]["default_value"] == "none"
-    assert presentation["custom_source_schema"]["default_value"] == "none"
-    assert "warning" in presentation["custom_source_schema"]
+    assert "custom_source_format" not in presentation
+    assert "custom_source_schema" not in presentation
     assert presentation["frequency"]["selection_kind"] == "derived_or_required_choice"
     assert presentation["target_structure"]["contract"].startswith("Target cardinality")
     assert presentation["target_structure"]["default_value"] == "single_target"

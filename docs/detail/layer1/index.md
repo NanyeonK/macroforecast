@@ -9,9 +9,9 @@ Layer 1 owns the FRED data task. It decides which FRED source is used, whether c
 
 ## Simple vs Full
 
-Simple asks for the data question directly: `dataset`, `target`, `start`, `end`, and `horizons`. Standalone `fred_sd` also needs `frequency`. Custom files are optional source modifiers: Simple can expose `custom_source_policy`, `custom_source_format`, `custom_source_schema`, and `custom_source_path` when the user wants to replace or append to the FRED source panel. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.
+Simple asks for the data question directly: `dataset`, `target`, `start`, `end`, and `horizons`. Standalone `fred_sd` also needs `frequency`. Custom files are optional source modifiers: Simple can expose `custom_source_policy` and `custom_source_path` when the user wants to replace or append to the FRED source panel. The file parser and internal schema are inferred from `custom_source_path`, `dataset`, and `frequency`. Optional Simple helpers expose FRED-SD state/variable selection, FRED-SD frequency policy, and FRED-SD t-code policies, but the ordinary path keeps Layer 1 mostly defaulted.
 
-Full exposes the complete Layer 1 FRED-frame contract. The live registry has **20 Layer 1 axes**. The Navigator primary tree shows 18 axes, but those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional custom/FRED-SD sub-decisions, and many are defaulted policy controls. `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
+Full exposes the complete Layer 1 FRED-frame contract. The live registry keeps hidden compatibility axes for older custom-source recipes, but the Navigator primary tree shows only user-facing decisions. Those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional FRED-SD sub-decisions, and many are defaulted policy controls. `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
 
 ## Hierarchy
 
@@ -19,7 +19,7 @@ Layer 1 should be read as a hierarchy, not a flat checklist.
 
 | Level | Group | Axes | Rule |
 |---|---|---|---|
-| Primary decision | Source identity | `dataset`, `custom_source_policy`, `custom_source_format`, `custom_source_schema`, `frequency` | `dataset` is the FRED source-panel choice. Custom source axes decide whether to use FRED data only, custom data only, or FRED plus custom data. `frequency` is derived for MD/QD/composites and required only for standalone FRED-SD. |
+| Primary decision | Source identity | `dataset`, `custom_source_policy`, `frequency` | `dataset` is the FRED source-panel choice. `custom_source_policy` decides whether to use FRED data only, custom data only, or FRED plus custom data. `frequency` is derived for MD/QD/composites and required only for standalone FRED-SD. |
 | Primary policy | Information regime | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` | Defines what information is available at each forecast origin. |
 | Conditional subgroup | FRED-SD source scope | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group` | Active only when `dataset` includes FRED-SD. |
 | Contract-derived | Target request | `target_structure` | Constrained by Layer 0 `study_scope`; target IDs, target lists, horizons, and dates live in `leaf_config`. |
@@ -33,7 +33,7 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 
 | Step | Group | Axes |
 |---|---|---|
-| 4.1.1 | [Source and frame](source_frame.md) | `dataset`, `custom_source_policy`, `custom_source_format`, `custom_source_schema`, `frequency`, `information_set_type` |
+| 4.1.1 | [Source and frame](source_frame.md) | `dataset`, `custom_source_policy`, `frequency`, `information_set_type`; custom paths live in `leaf_config.custom_source_path` |
 | 4.1.2 | [FRED-SD source selection](fred_sd_source_selection.md) | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group`, hidden `state_selection`, hidden `sd_variable_selection` |
 | 4.1.3 | [Target and variable universe](target_universe.md) | `target_structure`, `variable_universe`; target IDs, horizons, and sample dates live in `leaf_config` |
 | 4.1.4 | [Raw source cleaning](raw_source_cleaning.md) | `raw_missing_policy`, `raw_outlier_policy` before FRED transforms/T-codes |
@@ -46,8 +46,7 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 |---|---|---|
 | `dataset` | required user choice | required; FRED source panel only: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd` |
 | `custom_source_policy` | `official_only` | choose `custom_panel_only` or `official_plus_custom` when using a custom file |
-| `custom_source_format` | `none` | required as `csv` or `parquet` when `custom_source_policy` is not `official_only` |
-| `custom_source_schema` | `none` | required as `fred_md`, `fred_qd`, or `fred_sd` when `custom_source_policy` is not `official_only` |
+| `custom_source_path` | none | required in `leaf_config` when `custom_source_policy` is not `official_only`; parser/schema are inferred |
 | `frequency` | inferred for FRED-MD/QD/composites; required for standalone FRED-SD | MD/composites are constrained; standalone FRED-SD must choose monthly or quarterly |
 | `information_set_type` | `final_revised_data` | write explicitly in Full recipes |
 | `fred_sd_frequency_policy` | `report_only` | defaulted; non-default values require a dataset containing FRED-SD |

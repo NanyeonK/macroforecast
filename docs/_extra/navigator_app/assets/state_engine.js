@@ -132,7 +132,6 @@
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
     const dataset = String(selected.dataset || "");
-    const customSourcePolicy = String(selected.custom_source_policy || "official_only");
     const impliedFrequency = (dataset === "fred_md" || dataset === "fred_md+fred_sd")
       ? "monthly"
       : ((dataset === "fred_qd" || dataset === "fred_qd+fred_sd") ? "quarterly" : null);
@@ -152,30 +151,6 @@
     if (axisName === "custom_source_policy") {
       if (value === "custom_panel_only" && dataset.includes("+")) {
         return "custom_panel_only supports one FRED source panel; use official_plus_custom for composites";
-      }
-    }
-    if (axisName === "custom_source_format") {
-      if (customSourcePolicy === "official_only" && value !== "none") {
-        return "custom_source_format is active only when a custom source is selected";
-      }
-      if (customSourcePolicy !== "official_only" && value === "none") {
-        return "custom_source_format must be csv or parquet when a custom source is selected";
-      }
-    }
-    if (axisName === "custom_source_schema") {
-      if (customSourcePolicy === "official_only" && value !== "none") {
-        return "custom_source_schema is active only when a custom source is selected";
-      }
-      if (customSourcePolicy !== "official_only" && value === "none") {
-        return "custom_source_schema must be fred_md, fred_qd, or fred_sd when a custom source is selected";
-      }
-      if (customSourcePolicy === "custom_panel_only") {
-        if (dataset.includes("+")) {
-          return "custom_panel_only does not support composite source panels";
-        }
-        if (value !== dataset) {
-          return "custom_panel_only requires custom_source_schema to match Source Panel";
-        }
       }
     }
     if (axisName === "target_structure") {
@@ -325,14 +300,8 @@
 
   function axisVisibilityReason(data, engineState, axisName) {
     const selected = engineState.selections || {};
-    const customSourcePolicy = String(selected.custom_source_policy || "official_only");
     const hasFredSd = splitDatasetTokens(selected.dataset || "").has("fred_sd");
 
-    if (["custom_source_format", "custom_source_schema"].includes(axisName)) {
-      if (customSourcePolicy === "official_only" && selectionIsDefault(data, engineState, axisName)) {
-        return "Hidden until Custom Data Use selects a custom source.";
-      }
-    }
     if (["fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"].includes(axisName)) {
       if (!hasFredSd && selectionIsDefault(data, engineState, axisName)) {
         return "Hidden until Source Panel includes FRED-SD.";
@@ -398,10 +367,6 @@
   }
 
   function applyDependentResets(data, next, changedAxisName) {
-    if (changedAxisName === "custom_source_policy" && String(next.selections.custom_source_policy || "official_only") === "official_only") {
-      resetDependentSelection(data, next, "custom_source_format");
-      resetDependentSelection(data, next, "custom_source_schema");
-    }
     if (changedAxisName === "dataset" && !splitDatasetTokens(next.selections.dataset || "").has("fred_sd")) {
       resetDependentSelection(data, next, "fred_sd_frequency_policy");
       resetDependentSelection(data, next, "fred_sd_state_group");

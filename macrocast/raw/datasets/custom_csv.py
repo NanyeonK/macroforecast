@@ -2,10 +2,9 @@
 
 The caller provides the CSV path via ``leaf_config.custom_source_path``.
 Recipes should choose an official ``dataset`` and select
-``custom_source_policy`` plus ``custom_source_format: csv``. The schema is
-declared with fixed axis ``custom_source_schema`` (``fred_md`` /
-``fred_qd`` / ``fred_sd``), so downstream code can align the panel with the
-canonical FRED loader output.
+``custom_source_policy``. The compiler infers the parser from the ``.csv``
+extension and infers the internal loader schema from the selected
+``dataset``/``frequency`` route.
 
 Schema requirements:
 

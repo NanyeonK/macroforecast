@@ -76,8 +76,6 @@ def test_custom_csv_via_execute_recipe_requires_custom_source_path() -> None:
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "custom_source_policy": "custom_panel_only",
-                    "custom_source_format": "csv",
-                    "custom_source_schema": "fred_md",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
                 },
@@ -109,7 +107,7 @@ def test_custom_csv_via_execute_recipe_requires_custom_source_path() -> None:
         compile_recipe_dict(recipe)
 
 
-def test_custom_csv_source_requires_custom_source_schema(tmp_path: Path) -> None:
+def test_custom_csv_source_infers_custom_source_schema(tmp_path: Path) -> None:
     from macrocast.compiler.build import compile_recipe_dict
 
     csv_path = tmp_path / "custom.csv"
@@ -122,7 +120,6 @@ def test_custom_csv_source_requires_custom_source_schema(tmp_path: Path) -> None
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "custom_source_policy": "custom_panel_only",
-                    "custom_source_format": "csv",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
                 },
@@ -151,8 +148,10 @@ def test_custom_csv_source_requires_custom_source_schema(tmp_path: Path) -> None
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    with pytest.raises(CompileValidationError, match="custom_source_schema"):
-        compile_recipe_dict(recipe)
+    result = compile_recipe_dict(recipe)
+    spec = result.compiled.recipe_spec.data_task_spec
+    assert spec["custom_source_format"] == "csv"
+    assert spec["custom_source_schema"] == "fred_md"
 
 
 def test_custom_csv_source_compiles_to_schema(tmp_path: Path) -> None:
@@ -168,8 +167,6 @@ def test_custom_csv_source_compiles_to_schema(tmp_path: Path) -> None:
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "custom_source_policy": "custom_panel_only",
-                    "custom_source_format": "csv",
-                    "custom_source_schema": "fred_md",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -224,8 +221,6 @@ def test_custom_source_replace_runtime_loads_custom_csv(tmp_path: Path) -> None:
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "custom_source_policy": "custom_panel_only",
-                    "custom_source_format": "csv",
-                    "custom_source_schema": "fred_md",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -276,16 +271,14 @@ def test_default_recipe_accepts_custom_csv_replacement(tmp_path: Path) -> None:
         end="2020-04",
         horizons=[1],
         custom_source_policy="custom_panel_only",
-        custom_source_format="csv",
-        custom_source_schema="fred_md",
         custom_source_path=str(csv_path),
     )
 
     data_task = recipe["path"]["1_data_task"]
     assert data_task["fixed_axes"]["dataset"] == "fred_md"
     assert data_task["fixed_axes"]["custom_source_policy"] == "custom_panel_only"
-    assert data_task["fixed_axes"]["custom_source_format"] == "csv"
-    assert data_task["fixed_axes"]["custom_source_schema"] == "fred_md"
+    assert "custom_source_format" not in data_task["fixed_axes"]
+    assert "custom_source_schema" not in data_task["fixed_axes"]
     assert data_task["fixed_axes"]["frequency"] == "monthly"
     assert data_task["leaf_config"]["custom_source_path"] == str(csv_path)
 
@@ -303,8 +296,6 @@ def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None
                 "fixed_axes": {
                     "dataset": "fred_md",
                     "custom_source_policy": "official_plus_custom",
-                    "custom_source_format": "csv",
-                    "custom_source_schema": "fred_sd",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -341,7 +332,7 @@ def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None
     assert spec["dataset_schema"] == "fred_md"
     assert spec["custom_source_policy"] == "official_plus_custom"
     assert spec["custom_source_format"] == "csv"
-    assert spec["custom_source_schema"] == "fred_sd"
+    assert spec["custom_source_schema"] == "fred_md"
 
 
 def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
