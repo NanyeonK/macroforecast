@@ -47,13 +47,13 @@ _TREE_AXES = {
         "fred_sd_variable_group",
         "target_structure",
         "variable_universe",
-        "missing_availability",
-        "release_lag_rule",
-        "contemporaneous_x_rule",
         "raw_missing_policy",
         "raw_outlier_policy",
         "official_transform_policy",
         "official_transform_scope",
+        "missing_availability",
+        "release_lag_rule",
+        "contemporaneous_x_rule",
     ),
     "2_preprocessing": (
         "fred_sd_mixed_frequency_representation",
@@ -157,6 +157,16 @@ _DEFAULT_SELECTIONS = {
     "failure_policy": "fail_fast",
     "reproducibility_mode": "seeded_reproducible",
     "compute_mode": "serial",
+    "information_set_type": "final_revised_data",
+    "target_structure": "single_target",
+    "variable_universe": "all_variables",
+    "raw_missing_policy": "preserve_raw_missing",
+    "raw_outlier_policy": "preserve_raw_outliers",
+    "official_transform_policy": "apply_official_tcode",
+    "official_transform_scope": "target_and_predictors",
+    "missing_availability": "zero_fill_leading_predictor_gaps",
+    "release_lag_rule": "ignore_release_lag",
+    "contemporaneous_x_rule": "forbid_same_period_predictors",
     "forecast_type": "direct",
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",
@@ -508,8 +518,21 @@ def _selection_has_fred_sd(selected: Mapping[str, Any]) -> bool:
     return "fred_sd" in tokens
 
 
+def _dataset_implied_frequency(dataset: str) -> str | None:
+    if dataset in {"fred_md", "fred_md+fred_sd"}:
+        return "monthly"
+    if dataset in {"fred_qd", "fred_qd+fred_sd"}:
+        return "quarterly"
+    return None
+
+
+def _study_scope_requires_multi_target(study_scope: str) -> bool:
+    return study_scope in {"multiple_targets_one_method", "multiple_targets_compare_methods"}
+
+
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
     study_scope = str(selected.get("study_scope", "one_target_one_method"))
+    dataset = str(selected.get("dataset", ""))
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
     forecast_type = str(selected.get("forecast_type", "direct"))
@@ -526,6 +549,16 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "parallel_by_model is active only when Study Scope compares methods"
         if value == "parallel_by_target" and study_scope in {"one_target_one_method", "one_target_compare_methods"}:
             return "parallel_by_target is active only when Study Scope has multiple targets"
+    if axis_name == "frequency":
+        implied_frequency = _dataset_implied_frequency(dataset)
+        if implied_frequency is not None and value != implied_frequency:
+            return f"dataset={dataset} requires frequency={implied_frequency}"
+    if axis_name == "target_structure":
+        requires_multi = _study_scope_requires_multi_target(study_scope)
+        if requires_multi and value == "single_target":
+            return "multiple-target Study Scope requires target_structure=multi_target"
+        if not requires_multi and value == "multi_target":
+            return "one-target Study Scope requires target_structure=single_target"
     if axis_name == "fred_sd_frequency_policy" and value != "report_only" and not _selection_has_fred_sd(selected):
         return "fred_sd_frequency_policy requires dataset to include fred_sd"
     if axis_name == "fred_sd_state_group" and value != "all_states" and not _selection_has_fred_sd(selected):

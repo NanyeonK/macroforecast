@@ -131,6 +131,11 @@
     const importanceMethods = selectedImportanceMethods(data, engineState);
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
+    const dataset = String(selected.dataset || "");
+    const impliedFrequency = (dataset === "fred_md" || dataset === "fred_md+fred_sd")
+      ? "monthly"
+      : ((dataset === "fred_qd" || dataset === "fred_qd+fred_sd") ? "quarterly" : null);
+    const multiTargetScope = ["multiple_targets_one_method", "multiple_targets_compare_methods"].includes(studyScope);
 
     if (axisName === "compute_mode") {
       if (value === "parallel_by_model" && ["one_target_one_method", "multiple_targets_one_method"].includes(studyScope)) {
@@ -139,6 +144,13 @@
       if (value === "parallel_by_target" && ["one_target_one_method", "one_target_compare_methods"].includes(studyScope)) {
         return "parallel_by_target is active only when Study Scope has multiple targets";
       }
+    }
+    if (axisName === "frequency" && impliedFrequency && value !== impliedFrequency) {
+      return `dataset=${dataset} requires frequency=${impliedFrequency}`;
+    }
+    if (axisName === "target_structure") {
+      if (multiTargetScope && value === "single_target") return "multiple-target Study Scope requires target_structure=multi_target";
+      if (!multiTargetScope && value === "multi_target") return "one-target Study Scope requires target_structure=single_target";
     }
 
     if (axisName === "fred_sd_frequency_policy" && value !== "report_only" && !hasFredSd) {
