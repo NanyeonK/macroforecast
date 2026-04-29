@@ -24,6 +24,10 @@ manifest = result.manifest
 
 The default profile is `macrocast-default-v1`. It uses a conservative baseline path:
 
+- Layer 0 `study_scope = one_target_one_method`
+- Layer 0 `failure_policy = fail_fast`
+- Layer 0 `reproducibility_mode = seeded_reproducible` with seed `42`
+- Layer 0 `compute_mode = serial`
 - revised information set
 - expanding-window point forecast
 - `ar` model
@@ -31,6 +35,8 @@ The default profile is `macrocast-default-v1`. It uses a conservative baseline p
 - `msfe` primary metric
 - official FRED-MD/FRED-QD transformation codes when available
 - no extra scaling, imputation, outlier handling, feature selection, or dimensionality reduction
+
+Simple users normally choose only the first Layer 0 item, Study Scope. A single default call resolves to `one_target_one_method`; `Experiment.compare_models([...])` resolves to `one_target_compare_methods`. The failure, reproducibility, and compute policies above are written to the manifest but are not first-screen Simple decisions.
 
 The sample period is required. `start` and `end` are part of the experiment definition, not optional runtime filters.
 
