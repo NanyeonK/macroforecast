@@ -146,12 +146,12 @@
       }
     }
     if (axisName === "frequency" && impliedFrequency && value !== impliedFrequency) {
-      return `dataset=${dataset} requires frequency=${impliedFrequency}`;
-    }
-    if (axisName === "custom_source_policy") {
-      if (value === "custom_panel_only" && dataset.includes("+")) {
-        return "custom_panel_only supports one FRED source panel; use official_plus_custom for composites";
+      if (String(selected.custom_source_policy || "official_only") !== "custom_panel_only") {
+        return `dataset=${dataset} requires frequency=${impliedFrequency}`;
       }
+    }
+    if (axisName === "dataset" && String(selected.custom_source_policy || "official_only") === "custom_panel_only") {
+      return "FRED Source Panel is hidden when Data Source Mode is Custom Data Only";
     }
     if (axisName === "target_structure") {
       if (multiTargetScope && value === "single_target") return "multiple-target Study Scope requires target_structure=multi_target";
@@ -301,14 +301,18 @@
   function axisVisibilityReason(data, engineState, axisName) {
     const selected = engineState.selections || {};
     const hasFredSd = splitDatasetTokens(selected.dataset || "").has("fred_sd");
+    const customOnly = String(selected.custom_source_policy || "official_only") === "custom_panel_only";
 
+    if (axisName === "dataset" && customOnly) {
+      return "Hidden because Data Source Mode is Custom Data Only.";
+    }
     if (["fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"].includes(axisName)) {
-      if (!hasFredSd && selectionIsDefault(data, engineState, axisName)) {
+      if ((customOnly || !hasFredSd) && selectionIsDefault(data, engineState, axisName)) {
         return "Hidden until Source Panel includes FRED-SD.";
       }
     }
     if (axisName === "fred_sd_mixed_frequency_representation") {
-      if (!hasFredSd && selectionIsDefault(data, engineState, axisName)) {
+      if ((customOnly || !hasFredSd) && selectionIsDefault(data, engineState, axisName)) {
         return "Hidden until Source Panel includes FRED-SD.";
       }
     }
@@ -367,6 +371,12 @@
   }
 
   function applyDependentResets(data, next, changedAxisName) {
+    if (changedAxisName === "custom_source_policy" && next.selections.custom_source_policy === "custom_panel_only") {
+      resetDependentSelection(data, next, "fred_sd_frequency_policy");
+      resetDependentSelection(data, next, "fred_sd_state_group");
+      resetDependentSelection(data, next, "fred_sd_variable_group");
+      resetDependentSelection(data, next, "fred_sd_mixed_frequency_representation");
+    }
     if (changedAxisName === "dataset" && !splitDatasetTokens(next.selections.dataset || "").has("fred_sd")) {
       resetDependentSelection(data, next, "fred_sd_frequency_policy");
       resetDependentSelection(data, next, "fred_sd_state_group");
@@ -401,7 +411,7 @@
   }
 
   function selectedDisabledReasons(data, engineState) {
-    return buildTree(data, engineState)
+    return visibleTree(data, engineState)
       .map((axis) => {
         const option = axis.options.find((item) => item.value === axis.selected);
         if (option && !option.enabled) return { axis: axis.axis, value: axis.selected, reason: option.disabled_reason };
@@ -459,6 +469,11 @@
   function recipeWithEdits(data, source, engineState) {
     const recipe = clone((source || {}).recipe || {});
     Object.entries(engineState.edits).forEach(([axisName, value]) => applyEditToRecipe(data, recipe, axisName, value));
+    const layer1 = ((recipe.path || {})["1_data_task"] || {});
+    const fixedAxes = layer1.fixed_axes || {};
+    if (fixedAxes.custom_source_policy === "custom_panel_only") {
+      delete fixedAxes.dataset;
+    }
     return recipe;
   }
 

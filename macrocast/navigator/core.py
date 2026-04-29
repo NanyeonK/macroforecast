@@ -21,7 +21,7 @@ NAVIGATOR_SCHEMA_VERSION = "navigator_view_v1"
 
 _LAYER_LABELS = {
     "0_meta": "Layer 0: study scope",
-    "1_data_task": "Layer 1: FRED data frame",
+    "1_data_task": "Layer 1: data source, target y, predictor x",
     "2_preprocessing": "Layer 2: representation construction",
     "3_training": "Layer 3: forecast generation",
     "4_evaluation": "Layer 4: evaluation",
@@ -42,18 +42,18 @@ _TREE_AXES = {
         "dataset",
         "frequency",
         "information_set_type",
+        "release_lag_rule",
+        "contemporaneous_x_rule",
+        "target_structure",
+        "variable_universe",
         "fred_sd_frequency_policy",
         "fred_sd_state_group",
         "fred_sd_variable_group",
-        "target_structure",
-        "variable_universe",
         "raw_missing_policy",
         "raw_outlier_policy",
         "official_transform_policy",
         "official_transform_scope",
         "missing_availability",
-        "release_lag_rule",
-        "contemporaneous_x_rule",
     ),
     "2_preprocessing": (
         "fred_sd_mixed_frequency_representation",
@@ -155,43 +155,43 @@ _TREE_AXES = {
 _LAYER_AXIS_GROUPS = {
     "1_data_task": (
         {
-            "id": "source_identity",
-            "label": "Source Identity",
+            "id": "data_source_mode",
+            "label": "Data Source Mode / Frequency",
             "level": "primary_decision",
-            "summary": "Choose custom data use first, then the FRED route shape and calendar frequency.",
+            "summary": "Choose FRED-only, custom-only, or FRED-plus-custom data, then close the analysis frequency.",
             "axes": ("custom_source_policy", "dataset", "frequency"),
         },
         {
-            "id": "information_regime",
-            "label": "Information Regime",
+            "id": "forecast_time_information",
+            "label": "Forecast-Time Information",
             "level": "primary_policy",
-            "summary": "Define the information set and timing discipline used before Layer 2 sees the frame.",
+            "summary": "Separate data revision/vintage status from publication lag and same-period X availability.",
             "axes": ("information_set_type", "release_lag_rule", "contemporaneous_x_rule"),
         },
         {
-            "id": "fred_sd_source_scope",
-            "label": "FRED-SD Source Scope",
-            "level": "conditional_subgroup",
-            "parent_axis": "dataset",
-            "condition": "Active only when dataset includes fred_sd.",
-            "summary": "Restrict FRED-SD native frequency, states, and workbook variables.",
-            "axes": ("fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"),
-        },
-        {
-            "id": "target_request",
-            "label": "Target Request",
+            "id": "target_y_definition",
+            "label": "Target (y) Definition",
             "level": "contract_derived",
             "parent_axis": "study_scope",
             "condition": "Target cardinality is constrained by Layer 0 Study Scope.",
-            "summary": "Record whether Layer 1 carries one target or multiple targets; target IDs and horizons live in leaf_config.",
+            "summary": "Define the forecast target y; target IDs, horizons, and sample dates live in leaf_config.",
             "axes": ("target_structure",),
         },
         {
-            "id": "source_universe",
-            "label": "Source Universe",
+            "id": "predictor_x_definition",
+            "label": "Predictor (x) Definition",
             "level": "secondary_policy",
-            "summary": "Limit eligible source columns before representation construction.",
+            "summary": "Define the candidate predictor x columns before Layer 2 representation construction.",
             "axes": ("variable_universe",),
+        },
+        {
+            "id": "fred_sd_source_scope",
+            "label": "FRED-SD Predictor Scope",
+            "level": "conditional_subgroup",
+            "parent_axis": "dataset",
+            "condition": "Active only when the FRED source panel includes FRED-SD.",
+            "summary": "Restrict FRED-SD native frequency, states, and workbook variables used as candidate x columns.",
+            "axes": ("fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"),
         },
         {
             "id": "raw_source_quality",
@@ -202,9 +202,9 @@ _LAYER_AXIS_GROUPS = {
         },
         {
             "id": "official_frame_policy",
-            "label": "Official Frame Policy",
+            "label": "FRED Transform / Frame Availability",
             "level": "secondary_policy",
-            "summary": "Apply FRED transforms and close availability gaps in the Layer 1 FRED frame.",
+            "summary": "Apply FRED transform codes when available and close source-frame availability gaps.",
             "axes": ("official_transform_policy", "official_transform_scope", "missing_availability"),
         },
     ),
@@ -630,14 +630,8 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
             return "parallel_by_target is active only when Study Scope has multiple targets"
     if axis_name == "frequency":
         implied_frequency = _dataset_implied_frequency(dataset)
-        if implied_frequency is not None and value != implied_frequency:
+        if custom_source_policy != "custom_panel_only" and implied_frequency is not None and value != implied_frequency:
             return f"dataset={dataset} requires frequency={implied_frequency}"
-    if axis_name == "dataset":
-        if custom_source_policy == "custom_panel_only" and "+" in value:
-            return "custom_panel_only supports one FRED source panel; choose a single source-panel route"
-    if axis_name == "custom_source_policy":
-        if value == "custom_panel_only" and "+" in dataset:
-            return "custom_panel_only supports one FRED source panel; use official_plus_custom for composites"
     if axis_name == "target_structure":
         requires_multi = _study_scope_requires_multi_target(study_scope)
         if requires_multi and value == "single_target":

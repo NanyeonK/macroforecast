@@ -1,33 +1,44 @@
-# Target Structure (1.2)
+# Target (y) And Predictor (x) Definition (1.2)
 
-Layer 1 only declares the target shape inside the FRED data frame. It does
-not choose the study runner. Runner ownership stays in Layer 0 through
-`study_scope`.
+Layer 1 declares which y series is forecast and which source columns are
+eligible as candidate predictors x. It does not choose y transformations,
+horizon target construction, x lags, factors, or model-ready feature blocks.
 
 ## 1.2.1 `target_structure`
 
-`target_structure` says whether the recipe has one target series or multiple
-target series.
+**Target (y) Definition** says whether the recipe has one y series or multiple y
+series.
 
-Values:
-
-- `single_target`: one target series. Requires
-  `leaf_config.target`.
-- `multi_target`: two or more target series. Requires
-  `leaf_config.targets`.
-
-Canonical API:
-
-- Generated recipes, manifests, and docs use `target_structure`.
-- Removed target-shape aliases are rejected during registry validation.
+| Value | Required payload | Meaning |
+|---|---|---|
+| `single_target` | `leaf_config.target` | One y series. |
+| `multi_target` | `leaf_config.targets` | Multiple y series. |
 
 Layer 0 connection:
 
-- `study_scope` is derived from `target_structure` plus the sweep shape.
-- Multi-target `study_scope` values require
-  `target_structure=multi_target`.
-- Single-target `study_scope` values require
+- `one_target_one_method` and `one_target_compare_methods` require
   `target_structure=single_target`.
+- `multiple_targets_one_method` and `multiple_targets_compare_methods` require
+  `target_structure=multi_target`.
+
+## 1.2.2 `variable_universe`
+
+**Predictor (x) Universe** decides which source columns are eligible as x before
+Layer 2 representation construction.
+
+| Value | Required payload | Meaning |
+|---|---|---|
+| `all_variables` | none | Use all eligible non-date, non-target source columns. |
+| `core_variables` | package metadata | Use the package's core macro subset. |
+| `category_variables` | category mapping payload | Use columns mapped to a category. |
+| `target_specific_variables` | `leaf_config.target_specific_columns` | Use different x sets by target y. |
+| `explicit_variable_list` | `leaf_config.variable_universe_columns` | Use an explicit x column list. |
+
+Custom data note:
+
+- Custom-only files have no automatic FRED category metadata.
+- Use `all_variables` or `explicit_variable_list` unless the recipe provides
+  category or target-specific mappings.
 
 Recipe usage:
 
@@ -35,39 +46,37 @@ Recipe usage:
 path:
   1_data_task:
     fixed_axes:
-      target_structure: multi_target
+      target_structure: single_target
+      variable_universe: explicit_variable_list
     leaf_config:
-      targets: [INDPRO, UNRATE, CPIAUCSL]
+      target: INDPRO
       horizons: [1, 3, 6]
+      variable_universe_columns: [RPI, UNRATE, CPIAUCSL]
 ```
 
-Single-target usage:
+Multi-target usage:
 
 ```yaml
 path:
   1_data_task:
     fixed_axes:
-      target_structure: single_target
+      target_structure: multi_target
+      variable_universe: target_specific_variables
     leaf_config:
-      target: INDPRO
-      horizons: [1, 3, 6]
+      targets: [INDPRO, UNRATE]
+      horizons: [1, 3]
+      target_specific_columns:
+        INDPRO: [RPI, UNRATE, CPIAUCSL]
+        UNRATE: [PAYEMS, CLAIMSx, INDPRO]
 ```
 
 ## Boundary
 
-These axes are no longer Layer 1 target-structure choices:
+These are not Layer 1 target/predictor-definition choices:
 
-- `forecast_type`: Layer 3, because direct vs iterated is forecast-generation
-  logic.
-- `forecast_object`: Layer 3, because mean/median/quantile is model output
-  contract.
-- `predictor_family` and `feature_builder`: Layer 2, because they choose the
-  feature representation handed to the forecast generator.
-- `horizon_target_construction`: Layer 2, because level/diff/logdiff target
-  construction is target representation. Coulombe-style direct average and
-  path-average growth/difference targets are also Layer 2 target representation
-  choices, even where runtime support is still registry-only.
-- `multi_target_architecture`: Layer 0, through `study_scope`.
-
-Layer 1 owns target identity and target cardinality. Layer 0 owns how that
-cardinality is executed.
+- `horizon_target_construction`: Layer 2 target representation.
+- `target_transform` and `target_normalization`: Layer 2 target preprocessing.
+- `target_lag_block`, `x_lag_feature_block`, `factor_feature_block`, and
+  feature-block combinations: Layer 2 representation construction.
+- `forecast_type` and `forecast_object`: Layer 3 forecast-generation contract.
+- `model_family` and `benchmark_family`: Layer 3 training choices.

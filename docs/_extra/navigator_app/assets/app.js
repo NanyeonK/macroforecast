@@ -671,7 +671,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260429-custom-data-flow-v2");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260429-l1-target-x-design");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();

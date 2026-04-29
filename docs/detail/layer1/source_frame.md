@@ -3,27 +3,25 @@
 - Parent: [4.1 Layer 1: Data Task](index.md)
 - Current group: Source and frame
 
-This group starts the Layer 1 hierarchy. Choose `custom_source_policy` first:
-FRED data only, custom data only, or FRED data plus custom data. Then choose
-`dataset`, which is now best read as the FRED panel route. For FRED-only and
-FRED-plus-custom runs, `dataset` selects the FRED loader. For custom-only runs,
-`dataset` does not load FRED data; it defines the route shape, frequency, and
-schema contract the custom file must match.
+This group starts the Layer 1 hierarchy. Choose the data source mode first:
+FRED data only, custom data only, or FRED data plus custom data. Then close the
+analysis frequency. A FRED source-panel choice is shown only when the selected
+mode uses FRED data.
 
-Custom files are not `dataset` values. If the study uses a custom file, provide
-`leaf_config.custom_source_path`. The parser is inferred from the file extension
-and the internal loader schema is inferred from the selected route.
+Custom files are not FRED panels. If the study uses a custom file, provide
+`leaf_config.custom_source_path`. The parser is inferred from the file
+extension. The schema is inferred from the file frequency and source mode; the
+user should not have to choose a fake FRED-MD/FRED-QD route for custom-only data.
 
-`frequency` is not the same level as `dataset`: it is derived for FRED-MD,
-FRED-QD, and composite FRED panels. It is only a required follow-up when
-the FRED source does not imply a single calendar frequency.
+`frequency` is the final calendar frequency of the Layer 1 source frame. It is
+derived for FRED-MD, FRED-QD, and composite FRED panels. It is required for
+standalone FRED-SD and custom-only data.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
 | `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. First source choice: FRED data only, custom data only, or FRED data plus custom data. |
-| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | Conditional follow-up. Selects the FRED loader route for FRED runs, or the route/schema contract for custom-only runs. |
-| `frequency` | `monthly`, `quarterly` | Derived for FRED-MD/QD/composites. Required for standalone FRED-SD. |
-| `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | Simple default is `final_revised_data`; Full recipes should write it explicitly. |
+| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | FRED source-panel choice. Active only when source mode uses FRED data. |
+| `frequency` | `monthly`, `quarterly` | Derived for FRED-MD/QD/composites. Required for standalone FRED-SD and custom-only data. |
 
 Contracts:
 
@@ -33,9 +31,8 @@ Contracts:
 - `custom_source_policy: official_only` means FRED data only. It requires no
   `leaf_config.custom_source_path`; `dataset` selects the FRED loader.
 - `custom_source_policy: custom_panel_only` means custom data only. It loads a
-  custom file instead of one selected FRED panel route. It supports single FRED
-  routes only: `fred_md`, `fred_qd`, or `fred_sd`. Composite routes are
-  disabled because there is no official panel to merge.
+  custom file as the source panel. The UI should ask for file path and
+  frequency, not for a FRED source panel.
 - `custom_source_policy: official_plus_custom` loads the selected FRED
   panel and appends custom columns. It can be used with single or composite
   FRED panel routes.
@@ -47,8 +44,9 @@ Contracts:
 - Custom CSV/Parquet schema contract:
   - first column, or Parquet index, is a parseable date index;
   - remaining columns are numeric series;
-  - for `custom_panel_only`, column names should match the selected
-    FRED-family schema;
+  - for `custom_panel_only`, the target y column must exist in the file;
+  - predictor x columns are all non-target numeric columns unless
+    `variable_universe` narrows them later;
   - appended custom columns may use new names, but duplicate names are renamed
     with a `__custom` suffix at runtime.
 - In practical terms, a custom file is acceptable if its date index, column
@@ -65,8 +63,8 @@ Custom file shape by selected Layer 1 frequency:
 
 | Selected `frequency` | Expected file shape | Internal loader label |
 |---|---|---|
-| `monthly` | Monthly date index, numeric series columns. Column names may be FRED IDs or study-specific IDs. | `fred_md`, except legacy/standalone state-panel routes can resolve to `fred_sd`. |
-| `quarterly` | Quarterly date index, numeric series columns. Column names may be FRED IDs or study-specific IDs. | `fred_qd`, except legacy/standalone state-panel routes can resolve to `fred_sd`. |
+| `monthly` | Monthly date index, numeric series columns. Column names may be FRED IDs or study-specific IDs. | Generic monthly custom panel. |
+| `quarterly` | Quarterly date index, numeric series columns. Column names may be FRED IDs or study-specific IDs. | Generic quarterly custom panel. |
 
 Additional custom-source fields:
 
@@ -79,7 +77,7 @@ Compatibility fields:
 | Field | Status | Meaning |
 |---|---|---|
 | `custom_source_format` | hidden legacy fixed axis | Optional override for extensionless files; otherwise inferred from `custom_source_path`. |
-| `custom_source_schema` | hidden legacy fixed axis | Optional override for older recipes; otherwise inferred from `dataset`/`frequency`. |
+| `custom_source_schema` | hidden legacy fixed axis | Optional override for older recipes; otherwise inferred from source mode and `frequency`. |
 
 Minimal YAML:
 
@@ -103,7 +101,6 @@ Replace FRED-MD with a custom CSV:
 path:
   1_data_task:
     fixed_axes:
-      dataset: fred_md
       custom_source_policy: custom_panel_only
       frequency: monthly
       information_set_type: final_revised_data

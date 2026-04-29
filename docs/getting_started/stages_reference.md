@@ -17,7 +17,7 @@ Simple exposes only Layer 0 Study Scope. Full exposes all four user-facing Layer
 | Stage | Axes | Allowed values | What it governs |
 |---|---|---|---|
 | 0 — Design  | 4 user-facing + internal `axis_type` | see below | Study scope, failure handling, reproducibility, compute layout, and YAML sweep grammar |
-| 1 — Data    | 18 registry axes, 15 primary Navigator axes | all current values operational | Source frame: custom data use, FRED panel route, frequency, information set, FRED-SD source selection, target structure, raw cleaning, official transforms, availability |
+| 1 — Data    | primary Navigator axes plus hidden FRED-SD helper selectors | all current values operational | Source frame, forecast-time information, Target (y) Definition, Predictor (x) Definition, raw cleaning, official transforms, availability |
 
 ---
 
@@ -95,29 +95,29 @@ Simple exposes only Layer 0 Study Scope. Full exposes all four user-facing Layer
 
 ## Stage 1 — Data
 
-### 1.1 FRED Data Frame — [source.md](../user_guide/data/source.md)
+### 1.1 Source, Frequency, And Forecast-Time Information — [source.md](../user_guide/data/source.md)
 
 | Axis | Op values | Check / observe |
 |---|---|---|
-| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | first source decision; custom files require `leaf_config.custom_source_path`; parser/schema are inferred |
-| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | FRED route loaded/merged for FRED runs; route/schema contract for custom-only runs; standalone FRED-SD requires explicit `frequency` |
+| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Data Source Mode; first source decision; custom files require `leaf_config.custom_source_path`; parser/schema are inferred |
+| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | FRED Source Panel; active only when source mode uses FRED data; standalone FRED-SD requires explicit `frequency` |
 | `custom_source_path` | local `.csv`, `.parquet`, or `.pq` path | leaf_config payload, not a Navigator axis; file rows must match selected `frequency` |
-| `frequency` | `monthly`, `quarterly` | conversion target; MD+SD must be monthly, QD+SD must be quarterly |
-| `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | revised = post-revision truth; pseudo-oos masks to simulate real-time |
-| `target_structure` | `single_target`, `multi_target` | target cardinality; Layer 0 derives `study_scope` from this plus sweep shape |
+| `frequency` | `monthly`, `quarterly` | Analysis Frequency; inferred for FRED-MD/QD/composites, required for FRED-SD and custom-only |
+| `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` | Data Revision / Vintage Regime; not the publication-lag rule |
+| `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | Publication Lag Rule; `_apply_release_lag`; `series_specific_lag` requires `leaf_config.release_lag_per_series: dict[str, int]` |
+| `contemporaneous_x_rule` | `allow_same_period_predictors`, `forbid_same_period_predictors` | Same-Period Predictor Rule; affects `_build_raw_panel_training_data` X alignment |
+| `target_structure` | `single_target`, `multi_target` | Target (y) Definition; constrained by Layer 0 Study Scope |
+| `variable_universe` | `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` | Predictor (x) Universe; `_apply_variable_universe`; explicit lists read `leaf_config.variable_universe_columns` |
 | `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` | FRED-SD selected-panel native-frequency gate; strict modes consume `fred_sd_frequency_report_v1` before Layer 2 |
 | `fred_sd_state_group` | `all_states`, Census regions/divisions, `contiguous_48_plus_dc`, `custom_state_group` | FRED-SD recipe-level state bundle; non-default values resolve to `state_selection=selected_states` before loading |
 | `fred_sd_variable_group` | `all_sd_variables`, economic/t-code-review groups, `custom_sd_variable_group` | FRED-SD recipe-level workbook-variable bundle; non-default values resolve to `sd_variable_selection=selected_sd_variables` before loading |
 | `state_selection` | `all_states`, `selected_states` | FRED-SD source-load state selector; `selected_states` reads `leaf_config.sd_states` |
 | `sd_variable_selection` | `all_sd_variables`, `selected_sd_variables` | FRED-SD source-load workbook-sheet selector; `selected_sd_variables` reads `leaf_config.sd_variables` |
-| `variable_universe` | `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` | `_apply_variable_universe`; `explicit_variable_list` reads `leaf_config.variable_universe_columns`; target + date columns always preserved |
 | `raw_missing_policy` | `preserve_raw_missing`, `zero_fill_leading_predictor_missing_before_tcode`, `impute_raw_predictors`, `drop_raw_missing_rows` | raw-source missing treatment before FRED transforms/T-codes; `impute_raw_predictors` reads `leaf_config.raw_x_imputation` |
 | `raw_outlier_policy` | `preserve_raw_outliers`, `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, `set_raw_outliers_to_missing` | raw-source outlier treatment before FRED transforms/T-codes; optional `leaf_config.raw_outlier_columns` limits affected columns |
 | `official_transform_policy` | `apply_official_tcode`, `keep_official_raw_scale` | official FRED transform-code application policy |
 | `official_transform_scope` | `target_only`, `predictors_only`, `target_and_predictors`, `none` | columns that receive official transforms when policy applies |
-| `missing_availability` | `zero_fill_leading_predictor_gaps`, `require_complete_rows`, `keep_available_rows`, `impute_predictors_only` | default `zero_fill_leading_predictor_gaps` reports/fills predictor leading gaps; `impute_predictors_only` requires `leaf_config.x_imputation` ∈ {mean, median, ffill, bfill} |
-| `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | `_apply_release_lag`; `series_specific_lag` requires `leaf_config.release_lag_per_series: dict[str, int]` |
-| `contemporaneous_x_rule` | `allow_same_period_predictors`, `forbid_same_period_predictors` | affects `_build_raw_panel_training_data` X alignment (forbid: X_t paired with y_{t+h}; allow: X_{t+h} oracle benchmark) |
+| `missing_availability` | `zero_fill_leading_predictor_gaps`, `require_complete_rows`, `keep_available_rows`, `impute_predictors_only` | Frame Availability Policy; default reports/fills predictor leading gaps; `impute_predictors_only` requires `leaf_config.x_imputation` |
 
 Layer 2 FRED-SD follow-up:
 

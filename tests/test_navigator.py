@@ -113,6 +113,7 @@ function option(axisName, value) {
 const source = data.samples[0];
 const imported = E.recipeFromYaml(E.recipeYaml(data, source, state));
 console.log(JSON.stringify({
+  visible_axes: E.visibleTree(data, state).map((item) => item.axis),
   options: {
     model_ridge: option("model_family", "ridge"),
     model_midas_almon: option("model_family", "midas_almon"),
@@ -249,26 +250,26 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
         "dataset",
         "frequency",
         "information_set_type",
+        "release_lag_rule",
+        "contemporaneous_x_rule",
+        "target_structure",
+        "variable_universe",
         "fred_sd_frequency_policy",
         "fred_sd_state_group",
         "fred_sd_variable_group",
-        "target_structure",
-        "variable_universe",
         "raw_missing_policy",
         "raw_outlier_policy",
         "official_transform_policy",
         "official_transform_scope",
         "missing_availability",
-        "release_lag_rule",
-        "contemporaneous_x_rule",
     ]
     layer1_groups = payload["layer_axis_groups"]["1_data_task"]
     assert [group["id"] for group in layer1_groups] == [
-        "source_identity",
-        "information_regime",
+        "data_source_mode",
+        "forecast_time_information",
+        "target_y_definition",
+        "predictor_x_definition",
         "fred_sd_source_scope",
-        "target_request",
-        "source_universe",
         "raw_source_quality",
         "official_frame_policy",
     ]
@@ -278,33 +279,46 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
         "dataset",
         "frequency",
     ]
-    assert layer1_groups[2]["parent_axis"] == "dataset"
-    assert layer1_groups[2]["level"] == "conditional_subgroup"
+    assert layer1_groups[2]["parent_axis"] == "study_scope"
+    assert layer1_groups[2]["level"] == "contract_derived"
+    assert layer1_groups[4]["parent_axis"] == "dataset"
+    assert layer1_groups[4]["level"] == "conditional_subgroup"
     sample_axes = {item["axis"]: item for item in payload["samples"][0]["view"]["tree"]}
-    assert sample_axes["dataset"]["group_id"] == "source_identity"
+    assert sample_axes["dataset"]["group_id"] == "data_source_mode"
     assert sample_axes["dataset"]["axis_level"] == "conditional_subdecision"
-    assert sample_axes["custom_source_policy"]["group_id"] == "source_identity"
+    assert sample_axes["custom_source_policy"]["group_id"] == "data_source_mode"
     assert sample_axes["custom_source_policy"]["axis_level"] == "primary_decision"
     assert "custom_source_format" not in sample_axes
     assert "custom_source_schema" not in sample_axes
     assert sample_axes["frequency"]["axis_level"] == "derived_or_required"
+    assert sample_axes["information_set_type"]["group_id"] == "forecast_time_information"
+    assert sample_axes["release_lag_rule"]["group_id"] == "forecast_time_information"
+    assert sample_axes["contemporaneous_x_rule"]["group_id"] == "forecast_time_information"
     assert sample_axes["fred_sd_state_group"]["group_id"] == "fred_sd_source_scope"
     assert sample_axes["fred_sd_state_group"]["axis_level"] == "conditional_subdecision"
+    assert sample_axes["target_structure"]["group_id"] == "target_y_definition"
     assert sample_axes["target_structure"]["parent_axis"] == "study_scope"
     assert sample_axes["target_structure"]["axis_level"] == "contract_derived"
+    assert sample_axes["variable_universe"]["group_id"] == "predictor_x_definition"
     assert sample_axes["raw_missing_policy"]["group_id"] == "raw_source_quality"
     assert sample_axes["raw_missing_policy"]["axis_level"] == "secondary_policy"
     assert sample_axes["missing_availability"]["group_id"] == "official_frame_policy"
-    assert presentation["dataset"]["label"] == "FRED Panel Route"
+    assert presentation["dataset"]["label"] == "FRED Source Panel"
     assert presentation["dataset"]["values"]["fred_md+fred_sd"]["label"] == "FRED-MD + FRED-SD"
     assert "custom_csv" not in presentation["dataset"]["values"]
+    assert presentation["custom_source_policy"]["label"] == "Data Source Mode"
     assert presentation["custom_source_policy"]["default_value"] == "official_only"
-    assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Use Custom Data Only"
+    assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Custom Data Only"
     assert "custom_source_format" not in presentation
     assert "custom_source_schema" not in presentation
     assert presentation["frequency"]["selection_kind"] == "derived_or_required_choice"
-    assert presentation["target_structure"]["contract"].startswith("Target cardinality")
+    assert presentation["information_set_type"]["label"] == "Data Revision / Vintage Regime"
+    assert presentation["release_lag_rule"]["label"] == "Publication Lag Rule"
+    assert presentation["contemporaneous_x_rule"]["label"] == "Same-Period Predictor Rule"
+    assert presentation["target_structure"]["label"] == "Target (y) Definition"
+    assert presentation["target_structure"]["contract"].startswith("Target-y cardinality")
     assert presentation["target_structure"]["default_value"] == "single_target"
+    assert presentation["variable_universe"]["label"] == "Predictor (x) Universe"
     assert presentation["raw_missing_policy"]["default_value"] == "preserve_raw_missing"
     assert presentation["raw_outlier_policy"]["default_value"] == "preserve_raw_outliers"
     assert presentation["official_transform_policy"]["default_value"] == "apply_official_tcode"
@@ -369,18 +383,14 @@ def test_navigation_layer1_frequency_respects_dataset():
     assert _option(sd_axis, "quarterly")["enabled"] is True
 
 
-def test_navigation_layer1_custom_only_disables_composite_routes():
+def test_navigation_layer1_custom_only_leaves_frequency_free():
     recipe = _recipe()
     recipe["path"]["1_data_task"]["fixed_axes"]["custom_source_policy"] = "custom_panel_only"
     view = build_navigation_view(recipe)
-    dataset_axis = _axis(view, "dataset")
+    frequency_axis = _axis(view, "frequency")
 
-    assert _option(dataset_axis, "fred_md")["enabled"] is True
-    assert _option(dataset_axis, "fred_sd")["enabled"] is True
-    assert _option(dataset_axis, "fred_md+fred_sd")["enabled"] is False
-    assert "custom_panel_only supports one FRED source panel" in _option(
-        dataset_axis, "fred_md+fred_sd"
-    )["disabled_reason"]
+    assert _option(frequency_axis, "monthly")["enabled"] is True
+    assert _option(frequency_axis, "quarterly")["enabled"] is True
 
 
 def test_navigation_layer1_target_structure_respects_study_scope():
@@ -644,6 +654,12 @@ def test_browser_state_engine_matches_layer1_frequency_and_target_gates(tmp_path
     sd_js = _js_state_snapshot(tmp_path, recipe, [("dataset", "fred_sd")])
     assert sd_js["options"]["frequency_monthly"]["enabled"] is True
     assert sd_js["options"]["frequency_quarterly"]["enabled"] is True
+
+    custom_js = _js_state_snapshot(tmp_path, recipe, [("custom_source_policy", "custom_panel_only")])
+    assert "dataset" not in custom_js["visible_axes"]
+    assert custom_js["options"]["frequency_monthly"]["enabled"] is True
+    assert custom_js["options"]["frequency_quarterly"]["enabled"] is True
+    assert "dataset" not in custom_js["edited_recipe"]["path"]["1_data_task"]["fixed_axes"]
 
     multi_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "multiple_targets_compare_methods")])
     assert "multiple-target Study Scope" in multi_js["options"]["target_single"]["disabled_reason"]

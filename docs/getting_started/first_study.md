@@ -166,5 +166,5 @@ for feat in sorted(imp["feature_importances"], key=lambda x: -abs(x["importance"
 
 - [Understanding Output](understanding_output.md) — every artifact explained
 - [User Guide: Design (Stage 0)](../user_guide/design.md) — six axes that decide study shape.
-- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — twenty axes for data, target structure, evaluation window.
+- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — source data, forecast-time information, Target (y) Definition, and Predictor (x) Definition.
 - [Stages Reference](stages_reference.md) — cheat sheet with every operational value.

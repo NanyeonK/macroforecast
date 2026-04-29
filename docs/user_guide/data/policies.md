@@ -1,14 +1,18 @@
-# Data Handling Policies (1.5)
+# Forecast-Time And Data Handling Policies (1.5)
 
-Declares **how the raw panel is prepared before it reaches the model** — official-frame availability, raw-source missing/outlier treatment before T-codes, release-lag shifts, and contemporaneous-X rules. Five Layer 1 axes in v1.0 — every value operational.
+Declares **how forecast-time information and source-frame quality are handled
+before Layer 2 sees the data**. Data revision / vintage status is controlled by
+`information_set_type` in the source-frame page. This page covers publication
+lag, same-period x access, raw-source missing/outlier treatment before T-codes,
+and frame availability after the FRED/custom frame exists.
 
 | Section | axis | Role |
 |---|---|---|
-| 1.5.1 | [`missing_availability`](#151-missing_availability) | What to do when predictor / target rows contain NaN |
+| 1.5.1 | [`missing_availability`](#151-missing_availability) | Frame Availability Policy: what to do when predictor / target rows contain NaN after the source frame exists |
 | 1.5.2 | [`raw_missing_policy`](#152-raw_missing_policy) | Whether to repair raw-source missing values before FRED transforms/T-codes |
 | 1.5.3 | [`raw_outlier_policy`](#153-raw_outlier_policy) | Whether to repair raw-source outliers before FRED transforms/T-codes |
-| 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | How publication lag is modelled when predictors are shifted in time |
-| 1.5.5 | [`contemporaneous_x_rule`](#155-contemporaneous_x_rule) | Whether X observed at the target date may enter the model |
+| 1.5.4 | [`release_lag_rule`](#154-release_lag_rule) | Publication Lag Rule: when predictor observations are treated as published and usable |
+| 1.5.5 | [`contemporaneous_x_rule`](#155-contemporaneous_x_rule) | Same-Period Predictor Rule: whether x observed at the target date may enter the model |
 
 **Note on dropped axes:**
 
@@ -16,14 +20,14 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 - `evaluation_scale` — re-homed to Layer 2 (`PreprocessContract.evaluation_scale`) where the actual runtime effect lives.
 - `exogenous_block` — redundant with `feature_builder` default logic.
 - `regime_task` — duplicates 1.3 `oos_period.recession_only_oos` / `expansion_only_oos`.
-- `vintage_policy` — dropped as a separate axis. Current real-time vintage control is handled by `information_set_type` plus `leaf_config.data_vintage`, including FRED-SD vintages.
+- `vintage_policy` — dropped as a separate axis. Current data revision / vintage control is handled by `information_set_type` plus `leaf_config.data_vintage`, including FRED-SD vintages.
 - `x_map_policy` — single-op non-axis; multi-target X mapping is owned by `study_scope` (0.2).
 **At a glance (defaults):**
-- `missing_availability = zero_fill_leading_predictor_gaps` — after the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `require_complete_rows`, `keep_available_rows`, or `impute_predictors_only` only when a specific missing-data treatment matters.
+- `missing_availability = zero_fill_leading_predictor_gaps` — Frame Availability Policy. After the selected sample period is sliced, predictor leading missing values before each column's first valid observation are filled with zero and recorded in provenance. Switch to `require_complete_rows`, `keep_available_rows`, or `impute_predictors_only` only when a specific missing-data treatment matters.
 - `raw_missing_policy = preserve_raw_missing` — leave raw-source missing values unchanged before FRED transforms/T-codes. Switch only when the research design intentionally cleans raw data before T-code construction.
 - `raw_outlier_policy = preserve_raw_outliers` — leave raw-source outliers unchanged before FRED transforms/T-codes. Switch only when the research design intentionally clips or flags raw data before T-code construction.
-- `release_lag_rule = ignore_release_lag` — every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
-- `contemporaneous_x_rule = forbid_same_period_predictors` — realistic real-time constraint. Switch to `allow_same_period_predictors` only for oracle / data-leak benchmarks.
+- `release_lag_rule = ignore_release_lag` — Publication Lag Rule. Every column is available at its nominal date. Switch to `fixed_lag_all_series` / `series_specific_lag` when you need to simulate a publication lag.
+- `contemporaneous_x_rule = forbid_same_period_predictors` — Same-Period Predictor Rule. Realistic real-time constraint. Switch to `allow_same_period_predictors` only for oracle / data-leak benchmarks.
 
 **Most research runs leave all five at the default.**
 
@@ -32,7 +36,9 @@ Declares **how the raw panel is prepared before it reaches the model** — offic
 
 ## 1.5.1 `missing_availability`
 
-**Selects how NaN rows are handled before training.** Four operational values.
+**Frame Availability Policy.** Selects how NaN rows are handled after the source
+frame exists and before Layer 2 representation construction. Four operational
+values.
 
 ### Value catalog
 
@@ -141,7 +147,8 @@ path:
 
 ## 1.5.4 `release_lag_rule`
 
-**Selects publication-lag policy for predictor shifts.** Three operational values.
+**Publication Lag Rule.** Selects publication-lag policy for predictor shifts.
+Three operational values.
 
 ### Value catalog
 
@@ -185,7 +192,8 @@ path:
 
 ## 1.5.5 `contemporaneous_x_rule`
 
-**Selects whether X observed at the target date may enter the model.** Two operational values.
+**Same-Period Predictor Rule.** Selects whether x observed at the target date
+may enter the model. Two operational values.
 
 ### Value catalog
 
@@ -215,11 +223,11 @@ path:
 
 ---
 
-## Data Handling Policies (1.5) takeaways
+## Forecast-Time And Data Handling Policies (1.5) takeaways
 
 - Every value in every 1.5 axis is operational in v1.0. Zero `registry_only` entries remain.
 - All required non-default inputs are compile-time contracts (`release_lag_per_series`, `x_imputation`, `raw_x_imputation`) and are propagated into `data_task_spec`.
 - `raw_missing_policy` and `raw_outlier_policy` run before FRED transforms/T-codes; `missing_availability` and Layer 2 preprocessing policies run after the FRED frame exists.
 - `contemporaneous_x_rule` is the only 1.5 axis that affects fit-time X alignment; the other data-handling axes act on the raw or FRED frame before researcher preprocessing.
 
-Layer 1 data-handling walk complete — the five current policy axes are operational.
+Layer 1 data-handling walk complete — the current policy axes are operational.
