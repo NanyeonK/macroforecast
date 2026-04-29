@@ -64,7 +64,7 @@ function loadSource(source) {
 }
 
 function allAxes() {
-  return NavigatorStateEngine.buildTree(state.data, state.engineState);
+  return NavigatorStateEngine.visibleTree(state.data, state.engineState);
 }
 
 function axisMatchesLayer(axis) {
