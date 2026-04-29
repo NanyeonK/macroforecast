@@ -222,6 +222,9 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert "retry_then_skip" not in AXIS_PRESENTATION_MAP["failure_policy"]["values"]
     assert "fallback_to_default_hp" not in AXIS_PRESENTATION_MAP["failure_policy"]["values"]
     assert payload["state_engine"]["default_selections"]["failure_policy"] == "fail_fast"
+    assert AXIS_PRESENTATION_MAP["reproducibility_mode"]["default_value"] == "seeded_reproducible"
+    assert "Default" in AXIS_PRESENTATION_MAP["reproducibility_mode"]["values"]["seeded_reproducible"]["label"]
+    assert payload["state_engine"]["default_selections"]["reproducibility_mode"] == "seeded_reproducible"
 
 
 def test_navigator_ui_data_omits_rename_ledger():

@@ -85,7 +85,8 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
         "summary": "Controls seeds and deterministic-library settings before model execution.",
         "docs_url": "../detail/layer0/reproducibility_mode.html",
         "contract": "Seed and determinism contract applied before stochastic model code runs.",
-        "selection_kind": "user_choice",
+        "selection_kind": "defaulted_choice",
+        "default_value": "seeded_reproducible",
         "values": {
             "strict_reproducible": {
                 "label": "Strict Reproducible Run",
@@ -93,9 +94,9 @@ AXIS_PRESENTATION_MAP: dict[str, dict[str, Any]] = {
                 "summary": "Use deterministic-library settings for replication-grade reruns.",
             },
             "seeded_reproducible": {
-                "label": "Seeded Run",
-                "short_label": "Seeded",
-                "summary": "Seed Python, NumPy, and optional torch without strict backend flags.",
+                "label": "Seeded Run (Default)",
+                "short_label": "Seeded (Default)",
+                "summary": "Default. Seed Python, NumPy, and optional torch without strict backend flags.",
             },
             "best_effort": {
                 "label": "Best-Effort Seeded Run",

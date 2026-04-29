@@ -155,6 +155,7 @@ _TREE_AXES = {
 _DEFAULT_SELECTIONS = {
     "study_scope": "one_target_one_method",
     "failure_policy": "fail_fast",
+    "reproducibility_mode": "seeded_reproducible",
     "forecast_type": "direct",
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",

@@ -3376,11 +3376,12 @@
     },
     "reproducibility_mode": {
       "contract": "Seed and determinism contract applied before stochastic model code runs.",
+      "default_value": "seeded_reproducible",
       "docs_url": "../detail/layer0/reproducibility_mode.html",
       "label": "Reproducibility",
       "order": 3,
       "question": "How strictly should stochastic components be pinned?",
-      "selection_kind": "user_choice",
+      "selection_kind": "defaulted_choice",
       "short_label": "Reproducibility",
       "summary": "Controls seeds and deterministic-library settings before model execution.",
       "values": {
@@ -3395,9 +3396,9 @@
           "summary": "Do not force deterministic behavior."
         },
         "seeded_reproducible": {
-          "label": "Seeded Run",
-          "short_label": "Seeded",
-          "summary": "Seed Python, NumPy, and optional torch without strict backend flags."
+          "label": "Seeded Run (Default)",
+          "short_label": "Seeded (Default)",
+          "summary": "Default. Seed Python, NumPy, and optional torch without strict backend flags."
         },
         "strict_reproducible": {
           "label": "Strict Reproducible Run",
@@ -4132,6 +4133,7 @@
             "regime_use": "evaluation_only",
             "relative_metrics": "relative_msfe",
             "report_style": "tidy_dataframe",
+            "reproducibility_mode": "seeded_reproducible",
             "residual_diagnostics": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
@@ -4497,7 +4499,7 @@
               "manifest_mode": "full",
               "target": "INDPRO"
             },
-            "reproducibility_mode": "best_effort",
+            "reproducibility_mode": "seeded_reproducible",
             "route_contract": "single_cell_executable",
             "route_owner": "comparison_sweep",
             "study_scope": "one_target_one_method",
@@ -4636,7 +4638,7 @@
                 "value": "exploratory"
               }
             ],
-            "selected": null
+            "selected": "seeded_reproducible"
           },
           {
             "axis": "compute_mode",
@@ -20405,6 +20407,7 @@
       "regime_use": "evaluation_only",
       "relative_metrics": "relative_msfe",
       "report_style": "tidy_dataframe",
+      "reproducibility_mode": "seeded_reproducible",
       "residual_diagnostics": "none",
       "saved_objects": "full_bundle",
       "study_scope": "one_target_one_method",

@@ -59,6 +59,9 @@ from ..custom import (
 
 _ALLOWED_SELECTION_MODES = ("fixed_axes", "sweep_axes", "conditional_axes", "leaf_config")
 
+DEFAULT_REPRODUCIBILITY_MODE = "seeded_reproducible"
+DEFAULT_RANDOM_SEED = 42
+
 _DATASET_DEFAULT_FREQUENCY = {
     "fred_md": "monthly",
     "fred_qd": "quarterly",
@@ -464,6 +467,25 @@ def _selection_value(selection_map: dict[str, AxisSelection], axis_name: str, de
     return values[0]
 
 
+def _reproducibility_mode(selection_map: dict[str, AxisSelection]) -> str:
+    return _selection_value(selection_map, "reproducibility_mode", default=DEFAULT_REPRODUCIBILITY_MODE)
+
+
+def _reproducibility_random_seed(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> int | None:
+    mode = _reproducibility_mode(selection_map)
+    random_seed = leaf_config.get("random_seed")
+    mode_explicit = "reproducibility_mode" in selection_map
+    if random_seed is None:
+        if mode_explicit and mode in {"strict_reproducible", "seeded_reproducible"}:
+            raise CompileValidationError(
+                f"reproducibility_mode={mode!r} requires leaf_config.random_seed"
+            )
+        if mode == DEFAULT_REPRODUCIBILITY_MODE:
+            return DEFAULT_RANDOM_SEED
+        return None
+    return int(random_seed)
+
+
 _CUSTOM_FEATURE_BLOCK_AXES = {
     "temporal_feature_block": ("custom_temporal_features", "temporal", "custom_temporal_feature_block"),
     "rotation_feature_block": ("custom_rotation", "rotation", "custom_rotation_feature_block"),
@@ -840,7 +862,14 @@ def _build_tree_context(
             conditional_axes[selection.axis_name] = value
     reproducibility_mode = leaf_config.get("reproducibility_mode_override")
     if reproducibility_mode is None:
-        reproducibility_mode = next((selection.selected_values[0] for selection in selections if selection.axis_name == "reproducibility_mode"), "best_effort")
+        reproducibility_mode = next(
+            (
+                selection.selected_values[0]
+                for selection in selections
+                if selection.axis_name == "reproducibility_mode"
+            ),
+            DEFAULT_REPRODUCIBILITY_MODE,
+        )
     failure_policy = next((selection.selected_values[0] for selection in selections if selection.axis_name == "failure_policy"), "fail_fast")
     variation_axes = _variation_axes(selections)
     return {
@@ -3743,12 +3772,7 @@ def compile_recipe_dict(recipe_dict: dict[str, Any]) -> CompileResult:
         )
     _validate_layer1_data_task_contract(selection_map, leaf_config)
     _validate_layer2_feature_block_contract(selection_map, leaf_config)
-    reproducibility_mode = _selection_value(selection_map, "reproducibility_mode", default="best_effort")
-    random_seed = leaf_config.get("random_seed")
-    if reproducibility_mode in {"strict_reproducible", "seeded_reproducible"} and random_seed is None:
-        raise CompileValidationError(
-            f"reproducibility_mode={reproducibility_mode!r} requires leaf_config.random_seed"
-        )
+    _reproducibility_random_seed(selection_map, leaf_config)
     failure_policy = _selection_value(selection_map, "failure_policy", default="fail_fast")
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
 
@@ -3841,8 +3865,8 @@ def compiled_spec_to_dict(compiled: CompiledRecipeSpec) -> dict[str, Any]:
         "benchmark_spec": dict(compiled.recipe_spec.benchmark_config),
         "model_spec": _model_spec(selection_map),
         "reproducibility_spec": {
-            "reproducibility_mode": _selection_value(selection_map, "reproducibility_mode", default="best_effort"),
-            "random_seed": compiled.leaf_config.get("random_seed"),
+            "reproducibility_mode": _reproducibility_mode(selection_map),
+            "random_seed": _reproducibility_random_seed(selection_map, compiled.leaf_config),
         },
         "failure_policy_spec": {
             "failure_policy": _selection_value(selection_map, "failure_policy", default="fail_fast"),

@@ -7448,7 +7448,7 @@ def _failure_policy_spec(provenance_payload: dict | None) -> dict[str, object]:
 
 def _reproducibility_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get("compiler", {}) if provenance_payload else {}
-    return dict(compiler.get("reproducibility_spec", {"reproducibility_mode": "best_effort"}))
+    return dict(compiler.get("reproducibility_spec", {"reproducibility_mode": "seeded_reproducible", "random_seed": 42}))
 
 
 def _compute_mode_spec(provenance_payload: dict | None) -> dict[str, object]:
@@ -10165,7 +10165,7 @@ def execute_recipe(
     # read directly without passing through resolve_seed.
     _reproducibility_applied = apply_reproducibility_mode(
         mode=str(reproducibility_spec.get("reproducibility_mode", "seeded_reproducible")),
-        seed=int(reproducibility_spec.get("seed", 42)),
+        seed=int(reproducibility_spec.get("seed", reproducibility_spec.get("random_seed", 42))),
     )
     raw_result = _load_raw_for_recipe(recipe, local_raw_source, effective_cache_root)
     _fred_sd_frequency_policy = _data_task_axis(recipe, "fred_sd_frequency_policy")

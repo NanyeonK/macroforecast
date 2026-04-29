@@ -168,7 +168,7 @@ the route remains in the registry but must not be exposed as runnable.
 |------|-------------------|---------------------------|
 | `compute_mode` | `serial`, `parallel_by_model`, `parallel_by_horizon`, `parallel_by_target`, `parallel_by_oos_date` | `parallel_by_trial`, `distributed_cluster` |
 | `failure_policy` | `fail_fast` (default), `skip_failed_cell`, `skip_failed_model`, `save_partial_results`, `warn_only` | none |
-| `reproducibility_mode` | `strict_reproducible`, `seeded_reproducible`, `best_effort`, `exploratory` | none |
+| `reproducibility_mode` | `strict_reproducible`, `seeded_reproducible` (default), `best_effort`, `exploratory` | none |
 
 `strict_reproducible` and `seeded_reproducible` require `leaf_config.random_seed`.
 
