@@ -80,12 +80,16 @@
   <section id="data-stage-1">
 <h1>Data (Stage 1)<a class="headerlink" href="#data-stage-1" title="Link to this heading"></a></h1>
 <p>Stage 1 answers <strong>“what official data frame does this study start from?”</strong> — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.</p>
-<p>After the layer-boundary migration, Stage 1 holds <strong>13 canonical axes</strong> under the <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code> layer:</p>
+<p>After the layer-boundary migration, Stage 1 holds <strong>18 canonical axes</strong> under the <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code> layer. Sixteen are shown in the primary Navigator tree; <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are hidden lower selectors used by explicit FRED-SD selector helpers and group resolution.</p>
 <p>| Group | Axes | Focus |
 |—|—|—:|—|
-| Source &amp; frame | 6 | <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">source_adapter</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code> |
+| Source &amp; frame | 4 | <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">source_adapter</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code> |
+| FRED-SD source selection | 5 | <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code>, hidden <code class="docutils literal notranslate"><span class="pre">state_selection</span></code>, hidden <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> |
 | Target structure | 1 | <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>; target/targets/horizons live in <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> |
-| Availability and universe | 6 | <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> |</p>
+| Variable universe | 1 | <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> |
+| Raw source cleaning | 2 | <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before official transforms/T-codes |
+| Official transforms | 2 | <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code> |
+| Availability and timing | 3 | <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code> |</p>
 <p>Stage 1 does not fix which model, benchmark, researcher preprocessing, or evaluation metric to use — those belong to Stage 2+ layers.</p>
 <section id="relation-to-stage-0">
 <h2>Relation to Stage 0<a class="headerlink" href="#relation-to-stage-0" title="Link to this heading"></a></h2>
@@ -93,15 +97,15 @@
 </section>
 <section id="honest-operational-status">
 <h2>Honest operational status<a class="headerlink" href="#honest-operational-status" title="Link to this heading"></a></h2>
-<p>Layer 1 now covers 13 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:</p>
+<p>Layer 1 now covers 18 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:</p>
 <ul class="simple">
-<li><p><strong>Kept in Layer 1</strong> — dataset/source/frequency/information set, target structure, official availability, release lag, contemporaneous information rule, raw variable universe.</p></li>
+<li><p><strong>Kept in Layer 1</strong> — dataset/source/frequency/information set, FRED-SD source selection, target structure, raw variable universe, raw-source cleaning, official transforms, official availability, release lag, and contemporaneous information rule.</p></li>
 <li><p><strong>Moved to Layer 2</strong> — target representation, predictor family, feature builder / data-richness representation, feature-block grammar, factor-count representation, and deterministic/break features.</p></li>
 <li><p><strong>Moved to Layer 3</strong> — benchmark, forecast type/object, model family, and training-window rules.</p></li>
 <li><p><strong>Moved to Layer 4</strong> — OOS regime subset evaluation.</p></li>
 <li><p><strong>Moved to Layer 6</strong> — overlap/HAC inference handling.</p></li>
 </ul>
-<p>During migration, some detailed pages still document the old historical grouping. Treat <code class="docutils literal notranslate"><span class="pre">docs/detail/layer_boundary_contract.md</span></code> and <code class="docutils literal notranslate"><span class="pre">docs/detail/layer_axis_migration_plan.md</span></code> as the source of truth.</p>
+<p>Treat <a class="reference internal" href="../../detail/layer1/index.html"><span class="std std-doc">Detail Layer 1</span></a>, <code class="docutils literal notranslate"><span class="pre">docs/detail/layer_boundary_contract.md</span></code>, and <code class="docutils literal notranslate"><span class="pre">docs/detail/layer_axis_migration_plan.md</span></code> as the source of truth when old migration notes conflict with this page.</p>
 </section>
 <section id="data-source">
 <h2>Data source<a class="headerlink" href="#data-source" title="Link to this heading"></a></h2>

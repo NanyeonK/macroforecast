@@ -98,13 +98,18 @@ Layer 1.</p>
 </section>
 <section id="canonical-layer-1-after-migration">
 <h2>Canonical Layer 1 After Migration<a class="headerlink" href="#canonical-layer-1-after-migration" title="Link to this heading"></a></h2>
-<p>Layer 1 now means official data frame and target identity. The canonical Layer 1
-registry axes are:</p>
+<p>Layer 1 now means official data frame and target identity. The live canonical
+Layer 1 registry has 18 axes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">source_adapter</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></li>
@@ -112,8 +117,12 @@ registry axes are:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></li>
 </ul>
+<p>The Navigator primary tree shows all except <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> and
+<code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code>. Those two remain lower source-load selectors used by
+explicit FRED-SD helper methods or by group resolution.</p>
 <p>Target, targets, horizons, sample start/end, data vintage, and official
 availability reports remain Layer 1 <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>/provenance responsibilities.</p>
 <p>Full mode additionally distinguishes raw-source data defects from
@@ -172,7 +181,7 @@ workbook adapter.</p></li>
 target or multiple targets.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">single_target</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multi_target</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.targets</span></code>.</p></li>
-<li><p>Layer 0 owns the execution shape derived from target cautoregressive_diffusion_indexnality through
+<li><p>Layer 0 owns the execution shape derived from target cardinality through
 <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">forecast_type</span></code> remains dynamic by the Layer 2 feature runtime: autoregressive paths default to <code class="docutils literal notranslate"><span class="pre">iterated</span></code>, raw/factor panel paths default to <code class="docutils literal notranslate"><span class="pre">direct</span></code>.</p></li>
 <li><p>Crossed <code class="docutils literal notranslate"><span class="pre">forecast_type</span></code> / feature-runtime pairs remain <code class="docutils literal notranslate"><span class="pre">blocked_by_incompatibility</span></code>; legacy <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code> recipes are mapped to that runtime for compatibility.</p></li>
@@ -243,7 +252,10 @@ the network, and composite component source contracts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> values <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, and <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code> operate on raw numeric columns before official transforms/T-codes. <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code> may restrict the column set.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule=series_specific_lag</span></code> requires non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.release_lag_per_series</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule=fixed_lag_all_series</span></code> and <code class="docutils literal notranslate"><span class="pre">release_lag_rule=series_specific_lag</span></code> now write <code class="docutils literal notranslate"><span class="pre">data_reports.release_lag</span></code> in <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">structural_break_segmentation</span></code> remains executable through fixed built-in dates; user-supplied break dates are owned by <code class="docutils literal notranslate"><span class="pre">deterministic_components=break_dummies</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">structural_break_segmentation</span></code> is no longer a Layer 1 policy. It remains
+executable as a Layer 2 feature-block/representation decision through fixed
+built-in dates; user-supplied break dates are owned by
+<code class="docutils literal notranslate"><span class="pre">deterministic_components=break_dummies</span></code>.</p></li>
 </ul>
 <p>Full-mode interpretation:</p>
 <ul class="simple">

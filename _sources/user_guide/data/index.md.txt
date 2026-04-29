@@ -2,13 +2,17 @@
 
 Stage 1 answers **"what official data frame does this study start from?"** — once Stage 0 has fixed the study scope and recipe shape, Stage 1 loads the dataset, fixes the information set, identifies the target/horizon/sample period, and applies only official availability rules.
 
-After the layer-boundary migration, Stage 1 holds **13 canonical axes** under the `1_data_task` layer:
+After the layer-boundary migration, Stage 1 holds **18 canonical axes** under the `1_data_task` layer. Sixteen are shown in the primary Navigator tree; `state_selection` and `sd_variable_selection` are hidden lower selectors used by explicit FRED-SD selector helpers and group resolution.
 
 | Group | Axes | Focus |
 |---|---|---:|---|
-| Source & frame | 6 | `dataset`, `source_adapter`, `frequency`, `information_set_type`, `official_transform_policy`, `official_transform_scope` |
+| Source & frame | 4 | `dataset`, `source_adapter`, `frequency`, `information_set_type` |
+| FRED-SD source selection | 5 | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group`, hidden `state_selection`, hidden `sd_variable_selection` |
 | Target structure | 1 | `target_structure`; target/targets/horizons live in `leaf_config` |
-| Availability and universe | 6 | `missing_availability`, `raw_missing_policy`, `raw_outlier_policy`, `release_lag_rule`, `contemporaneous_x_rule`, `variable_universe` |
+| Variable universe | 1 | `variable_universe` |
+| Raw source cleaning | 2 | `raw_missing_policy`, `raw_outlier_policy` before official transforms/T-codes |
+| Official transforms | 2 | `official_transform_policy`, `official_transform_scope` |
+| Availability and timing | 3 | `missing_availability`, `release_lag_rule`, `contemporaneous_x_rule` |
 
 Stage 1 does not fix which model, benchmark, researcher preprocessing, or evaluation metric to use — those belong to Stage 2+ layers.
 
@@ -18,15 +22,15 @@ The Stage 0 axes ([design](../design.md)) — `study_scope`, `axis_type`, `failu
 
 ## Honest operational status
 
-Layer 1 now covers 13 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
+Layer 1 now covers 18 canonical axes. The migration moves model, benchmark, preprocessing, and inference choices out of Layer 1:
 
-- **Kept in Layer 1** — dataset/source/frequency/information set, target structure, official availability, release lag, contemporaneous information rule, raw variable universe.
+- **Kept in Layer 1** — dataset/source/frequency/information set, FRED-SD source selection, target structure, raw variable universe, raw-source cleaning, official transforms, official availability, release lag, and contemporaneous information rule.
 - **Moved to Layer 2** — target representation, predictor family, feature builder / data-richness representation, feature-block grammar, factor-count representation, and deterministic/break features.
 - **Moved to Layer 3** — benchmark, forecast type/object, model family, and training-window rules.
 - **Moved to Layer 4** — OOS regime subset evaluation.
 - **Moved to Layer 6** — overlap/HAC inference handling.
 
-During migration, some detailed pages still document the old historical grouping. Treat `docs/detail/layer_boundary_contract.md` and `docs/detail/layer_axis_migration_plan.md` as the source of truth.
+Treat [Detail Layer 1](../../detail/layer1/index.md), `docs/detail/layer_boundary_contract.md`, and `docs/detail/layer_axis_migration_plan.md` as the source of truth when old migration notes conflict with this page.
 
 ## Data source
 

@@ -21,13 +21,18 @@ Layer 1.
 
 ## Canonical Layer 1 After Migration
 
-Layer 1 now means official data frame and target identity. The canonical Layer 1
-registry axes are:
+Layer 1 now means official data frame and target identity. The live canonical
+Layer 1 registry has 18 axes:
 
 - `dataset`
 - `source_adapter`
 - `frequency`
 - `information_set_type`
+- `fred_sd_frequency_policy`
+- `fred_sd_state_group`
+- `fred_sd_variable_group`
+- `state_selection`
+- `sd_variable_selection`
 - `official_transform_policy`
 - `official_transform_scope`
 - `target_structure`
@@ -35,7 +40,12 @@ registry axes are:
 - `raw_missing_policy`
 - `raw_outlier_policy`
 - `release_lag_rule`
+- `contemporaneous_x_rule`
 - `variable_universe`
+
+The Navigator primary tree shows all except `state_selection` and
+`sd_variable_selection`. Those two remain lower source-load selectors used by
+explicit FRED-SD helper methods or by group resolution.
 
 Target, targets, horizons, sample start/end, data vintage, and official
 availability reports remain Layer 1 `leaf_config`/provenance responsibilities.
@@ -95,7 +105,7 @@ The following axes were moved out of Layer 1 ownership:
   target or multiple targets.
 - `single_target` requires `leaf_config.target`.
 - `multi_target` requires `leaf_config.targets`.
-- Layer 0 owns the execution shape derived from target cautoregressive_diffusion_indexnality through
+- Layer 0 owns the execution shape derived from target cardinality through
   `study_scope`.
 - `forecast_type` remains dynamic by the Layer 2 feature runtime: autoregressive paths default to `iterated`, raw/factor panel paths default to `direct`.
 - Crossed `forecast_type` / feature-runtime pairs remain `blocked_by_incompatibility`; legacy `feature_builder` recipes are mapped to that runtime for compatibility.
@@ -162,7 +172,10 @@ record the compile-time input contracts discovered during the Layer 1 audit.
 - `raw_outlier_policy` values `winsorize_raw`, `iqr_clip_raw`, `mad_clip_raw`, `zscore_clip_raw`, and `set_raw_outliers_to_missing` operate on raw numeric columns before official transforms/T-codes. `leaf_config.raw_outlier_columns` may restrict the column set.
 - `release_lag_rule=series_specific_lag` requires non-empty `leaf_config.release_lag_per_series`.
 - `release_lag_rule=fixed_lag_all_series` and `release_lag_rule=series_specific_lag` now write `data_reports.release_lag` in `layer1_official_frame_v1`, including shifted columns, lag map, missing configured columns, maximum lag, and level-source-frame shift status.
-- `structural_break_segmentation` remains executable through fixed built-in dates; user-supplied break dates are owned by `deterministic_components=break_dummies`.
+- `structural_break_segmentation` is no longer a Layer 1 policy. It remains
+  executable as a Layer 2 feature-block/representation decision through fixed
+  built-in dates; user-supplied break dates are owned by
+  `deterministic_components=break_dummies`.
 
 Full-mode interpretation:
 
