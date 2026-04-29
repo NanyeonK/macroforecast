@@ -132,7 +132,7 @@
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
     const dataset = String(selected.dataset || "");
-    const customSourceMode = String(selected.custom_source_mode || "no_custom_source");
+    const customSourcePolicy = String(selected.custom_source_policy || "official_only");
     const impliedFrequency = (dataset === "fred_md" || dataset === "fred_md+fred_sd")
       ? "monthly"
       : ((dataset === "fred_qd" || dataset === "fred_qd+fred_sd") ? "quarterly" : null);
@@ -149,17 +149,33 @@
     if (axisName === "frequency" && impliedFrequency && value !== impliedFrequency) {
       return `dataset=${dataset} requires frequency=${impliedFrequency}`;
     }
-    if (axisName === "custom_source_mode") {
-      if (value === "replace_official_panel" && dataset.includes("+")) {
-        return "replace_official_panel supports one official source panel; use append_to_official_panel for composites";
+    if (axisName === "custom_source_policy") {
+      if (value === "custom_panel_only" && dataset.includes("+")) {
+        return "custom_panel_only supports one official source panel; use official_plus_custom for composites";
       }
     }
     if (axisName === "custom_source_format") {
-      if (customSourceMode === "no_custom_source" && value !== "none") {
+      if (customSourcePolicy === "official_only" && value !== "none") {
         return "custom_source_format is active only when a custom source is selected";
       }
-      if (customSourceMode !== "no_custom_source" && value === "none") {
+      if (customSourcePolicy !== "official_only" && value === "none") {
         return "custom_source_format must be csv or parquet when a custom source is selected";
+      }
+    }
+    if (axisName === "custom_source_schema") {
+      if (customSourcePolicy === "official_only" && value !== "none") {
+        return "custom_source_schema is active only when a custom source is selected";
+      }
+      if (customSourcePolicy !== "official_only" && value === "none") {
+        return "custom_source_schema must be fred_md, fred_qd, or fred_sd when a custom source is selected";
+      }
+      if (customSourcePolicy === "custom_panel_only") {
+        if (dataset.includes("+")) {
+          return "custom_panel_only does not support composite source panels";
+        }
+        if (value !== dataset) {
+          return "custom_panel_only requires custom_source_schema to match Source Panel";
+        }
       }
     }
     if (axisName === "target_structure") {

@@ -1643,11 +1643,11 @@ def _custom_source_path(recipe: RecipeSpec, local_raw_source, *, allow_direct: b
         return (
             local_raw_source.get("custom")
             or local_raw_source.get(f"custom_{file_format}")
-            or recipe.data_task_spec.get("custom_data_path")
+            or recipe.data_task_spec.get("custom_source_path")
         )
     if allow_direct and local_raw_source is not None:
         return local_raw_source
-    return recipe.data_task_spec.get("custom_data_path")
+    return recipe.data_task_spec.get("custom_source_path")
 
 
 def _load_custom_source_for_recipe(recipe: RecipeSpec, local_raw_source, cache_root: Path, *, allow_direct: bool = False):
@@ -1655,12 +1655,12 @@ def _load_custom_source_for_recipe(recipe: RecipeSpec, local_raw_source, cache_r
     custom_path = _custom_source_path(recipe, local_raw_source, allow_direct=allow_direct)
     if custom_path is None:
         raise ExecutionError(
-            "custom sources require leaf_config.custom_data_path "
+            "custom sources require leaf_config.custom_source_path "
             "(or local_raw_source mapping key 'custom')"
         )
-    custom_schema = recipe.data_task_spec.get("custom_dataset_schema")
-    if custom_schema is None:
-        raise ExecutionError("custom sources require leaf_config.custom_dataset_schema")
+    custom_schema = recipe.data_task_spec.get("custom_source_schema")
+    if custom_schema in {None, "none"}:
+        raise ExecutionError("custom sources require custom_source_schema")
     if file_format == "csv":
         return load_custom_csv(custom_path, dataset=str(custom_schema), cache_root=cache_root)
     if file_format == "parquet":
@@ -1754,8 +1754,8 @@ def _combine_raw_results(dataset: str, target_frequency: str, components):
 
 
 def _maybe_append_custom_source(recipe: RecipeSpec, raw_result, local_raw_source, cache_root: Path):
-    mode = str(recipe.data_task_spec.get("custom_source_mode", "no_custom_source"))
-    if mode != "append_to_official_panel":
+    mode = str(recipe.data_task_spec.get("custom_source_policy", "official_only"))
+    if mode != "official_plus_custom":
         return raw_result
     custom_result = _load_custom_source_for_recipe(recipe, local_raw_source, cache_root)
     target_frequency = str(
@@ -1772,8 +1772,8 @@ def _maybe_append_custom_source(recipe: RecipeSpec, raw_result, local_raw_source
 
 def _load_raw_for_recipe(recipe: RecipeSpec, local_raw_source: str | Path | Mapping[str, str | Path] | None, cache_root: Path):
     vintage = recipe.data_vintage
-    custom_source_mode = str(recipe.data_task_spec.get("custom_source_mode", "no_custom_source"))
-    if custom_source_mode == "replace_official_panel":
+    custom_source_policy = str(recipe.data_task_spec.get("custom_source_policy", "official_only"))
+    if custom_source_policy == "custom_panel_only":
         return _load_custom_source_for_recipe(recipe, local_raw_source, cache_root, allow_direct=True)
     parts = _dataset_parts(recipe.raw_dataset)
     if parts == {"fred_md", "fred_sd"}:

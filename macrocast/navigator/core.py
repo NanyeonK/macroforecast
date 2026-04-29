@@ -39,8 +39,9 @@ _TREE_AXES = {
     ),
     "1_data_task": (
         "dataset",
-        "custom_source_mode",
+        "custom_source_policy",
         "custom_source_format",
+        "custom_source_schema",
         "frequency",
         "information_set_type",
         "fred_sd_frequency_policy",
@@ -159,8 +160,8 @@ _LAYER_AXIS_GROUPS = {
             "id": "source_identity",
             "label": "Source Identity",
             "level": "primary_decision",
-            "summary": "Choose the official source family, optional custom source use, and calendar frequency.",
-            "axes": ("dataset", "custom_source_mode", "custom_source_format", "frequency"),
+            "summary": "Choose the official source family, optional custom source use, custom file schema, and calendar frequency.",
+            "axes": ("dataset", "custom_source_policy", "custom_source_format", "custom_source_schema", "frequency"),
         },
         {
             "id": "information_regime",
@@ -213,8 +214,9 @@ _LAYER_AXIS_GROUPS = {
 
 _AXIS_HIERARCHY_LEVELS = {
     "dataset": "primary_decision",
-    "custom_source_mode": "conditional_subdecision",
+    "custom_source_policy": "conditional_subdecision",
     "custom_source_format": "conditional_subdecision",
+    "custom_source_schema": "conditional_subdecision",
     "frequency": "derived_or_required",
     "information_set_type": "primary_policy",
     "release_lag_rule": "timing_policy",
@@ -236,8 +238,9 @@ _DEFAULT_SELECTIONS = {
     "failure_policy": "fail_fast",
     "reproducibility_mode": "seeded_reproducible",
     "compute_mode": "serial",
-    "custom_source_mode": "no_custom_source",
+    "custom_source_policy": "official_only",
     "custom_source_format": "none",
+    "custom_source_schema": "none",
     "information_set_type": "final_revised_data",
     "target_structure": "single_target",
     "variable_universe": "all_variables",
@@ -614,7 +617,7 @@ def _study_scope_requires_multi_target(study_scope: str) -> bool:
 def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any]) -> str | None:
     study_scope = str(selected.get("study_scope", "one_target_one_method"))
     dataset = str(selected.get("dataset", ""))
-    custom_source_mode = str(selected.get("custom_source_mode", "no_custom_source"))
+    custom_source_policy = str(selected.get("custom_source_policy", "official_only"))
     model = str(selected.get("model_family", ""))
     feature_builder = str(selected.get("feature_builder", ""))
     forecast_type = str(selected.get("forecast_type", "direct"))
@@ -635,14 +638,24 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         implied_frequency = _dataset_implied_frequency(dataset)
         if implied_frequency is not None and value != implied_frequency:
             return f"dataset={dataset} requires frequency={implied_frequency}"
-    if axis_name == "custom_source_mode":
-        if value == "replace_official_panel" and "+" in dataset:
-            return "replace_official_panel supports one official source panel; use append_to_official_panel for composites"
+    if axis_name == "custom_source_policy":
+        if value == "custom_panel_only" and "+" in dataset:
+            return "custom_panel_only supports one official source panel; use official_plus_custom for composites"
     if axis_name == "custom_source_format":
-        if custom_source_mode == "no_custom_source" and value != "none":
+        if custom_source_policy == "official_only" and value != "none":
             return "custom_source_format is active only when a custom source is selected"
-        if custom_source_mode != "no_custom_source" and value == "none":
+        if custom_source_policy != "official_only" and value == "none":
             return "custom_source_format must be csv or parquet when a custom source is selected"
+    if axis_name == "custom_source_schema":
+        if custom_source_policy == "official_only" and value != "none":
+            return "custom_source_schema is active only when a custom source is selected"
+        if custom_source_policy != "official_only" and value == "none":
+            return "custom_source_schema must be fred_md, fred_qd, or fred_sd when a custom source is selected"
+        if custom_source_policy == "custom_panel_only":
+            if "+" in dataset:
+                return "custom_panel_only does not support composite source panels"
+            if value != dataset:
+                return "custom_panel_only requires custom_source_schema to match Source Panel"
     if axis_name == "target_structure":
         requires_multi = _study_scope_requires_multi_target(study_scope)
         if requires_multi and value == "single_target":

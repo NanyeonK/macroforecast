@@ -443,6 +443,18 @@ input {
   line-height: 1.45;
 }
 
+.decision-warning {
+  margin-top: 10px;
+  border: 1px solid #f0c269;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .decision-meta {
   display: flex;
   flex-wrap: wrap;

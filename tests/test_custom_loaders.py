@@ -62,9 +62,9 @@ def test_load_custom_csv_rejects_missing_file(tmp_path: Path) -> None:
         load_custom_csv(tmp_path / "missing.csv", dataset="fred_md")
 
 
-def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
+def test_custom_csv_via_execute_recipe_requires_custom_source_path() -> None:
     """Compiler-level validation: custom CSV without
-    leaf_config.custom_data_path raises CompileValidationError."""
+    leaf_config.custom_source_path raises CompileValidationError."""
     from macrocast.compiler.build import compile_recipe_dict
     from macrocast.compiler.errors import CompileValidationError
 
@@ -75,16 +75,16 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "custom_source_mode": "replace_official_panel",
+                    "custom_source_policy": "custom_panel_only",
                     "custom_source_format": "csv",
+                    "custom_source_schema": "fred_md",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
                 },
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_dataset_schema": "fred_md",
-                },  # no custom_data_path!
+                },  # no custom_source_path!
             },
             "2_preprocessing": {"fixed_axes": {
                 "target_transform_policy": "raw_level", "x_transform_policy": "raw_level",
@@ -105,11 +105,11 @@ def test_custom_csv_via_execute_recipe_requires_custom_data_path() -> None:
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    with pytest.raises(CompileValidationError, match="custom_data_path"):
+    with pytest.raises(CompileValidationError, match="custom_source_path"):
         compile_recipe_dict(recipe)
 
 
-def test_custom_csv_source_requires_custom_dataset_schema(tmp_path: Path) -> None:
+def test_custom_csv_source_requires_custom_source_schema(tmp_path: Path) -> None:
     from macrocast.compiler.build import compile_recipe_dict
 
     csv_path = tmp_path / "custom.csv"
@@ -121,7 +121,7 @@ def test_custom_csv_source_requires_custom_dataset_schema(tmp_path: Path) -> Non
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "custom_source_mode": "replace_official_panel",
+                    "custom_source_policy": "custom_panel_only",
                     "custom_source_format": "csv",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -129,7 +129,7 @@ def test_custom_csv_source_requires_custom_dataset_schema(tmp_path: Path) -> Non
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": str(csv_path),
+                    "custom_source_path": str(csv_path),
                 },
             },
             "2_preprocessing": {"fixed_axes": {
@@ -151,7 +151,7 @@ def test_custom_csv_source_requires_custom_dataset_schema(tmp_path: Path) -> Non
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
         },
     }
-    with pytest.raises(CompileValidationError, match="custom_dataset_schema"):
+    with pytest.raises(CompileValidationError, match="custom_source_schema"):
         compile_recipe_dict(recipe)
 
 
@@ -167,8 +167,9 @@ def test_custom_csv_source_compiles_to_schema(tmp_path: Path) -> None:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "custom_source_mode": "replace_official_panel",
+                    "custom_source_policy": "custom_panel_only",
                     "custom_source_format": "csv",
+                    "custom_source_schema": "fred_md",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -176,8 +177,7 @@ def test_custom_csv_source_compiles_to_schema(tmp_path: Path) -> None:
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": str(csv_path),
-                    "custom_dataset_schema": "fred_md",
+                    "custom_source_path": str(csv_path),
                 },
             },
             "2_preprocessing": {"fixed_axes": {
@@ -205,7 +205,7 @@ def test_custom_csv_source_compiles_to_schema(tmp_path: Path) -> None:
     assert recipe_spec.raw_dataset == "fred_md"
     assert recipe_spec.data_task_spec["dataset"] == "fred_md"
     assert recipe_spec.data_task_spec["dataset_schema"] == "fred_md"
-    assert recipe_spec.data_task_spec["custom_source_mode"] == "replace_official_panel"
+    assert recipe_spec.data_task_spec["custom_source_policy"] == "custom_panel_only"
     assert recipe_spec.data_task_spec["custom_source_format"] == "csv"
     assert "source_adapter" not in recipe_spec.data_task_spec
 
@@ -223,8 +223,9 @@ def test_custom_source_replace_runtime_loads_custom_csv(tmp_path: Path) -> None:
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "custom_source_mode": "replace_official_panel",
+                    "custom_source_policy": "custom_panel_only",
                     "custom_source_format": "csv",
+                    "custom_source_schema": "fred_md",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -232,8 +233,7 @@ def test_custom_source_replace_runtime_loads_custom_csv(tmp_path: Path) -> None:
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": str(csv_path),
-                    "custom_dataset_schema": "fred_md",
+                    "custom_source_path": str(csv_path),
                 },
             },
             "2_preprocessing": {"fixed_axes": {
@@ -275,19 +275,19 @@ def test_default_recipe_accepts_custom_csv_replacement(tmp_path: Path) -> None:
         start="2020-01",
         end="2020-04",
         horizons=[1],
-        custom_source_mode="replace_official_panel",
+        custom_source_policy="custom_panel_only",
         custom_source_format="csv",
-        custom_dataset_schema="fred_md",
-        custom_data_path=str(csv_path),
+        custom_source_schema="fred_md",
+        custom_source_path=str(csv_path),
     )
 
     data_task = recipe["path"]["1_data_task"]
     assert data_task["fixed_axes"]["dataset"] == "fred_md"
-    assert data_task["fixed_axes"]["custom_source_mode"] == "replace_official_panel"
+    assert data_task["fixed_axes"]["custom_source_policy"] == "custom_panel_only"
     assert data_task["fixed_axes"]["custom_source_format"] == "csv"
+    assert data_task["fixed_axes"]["custom_source_schema"] == "fred_md"
     assert data_task["fixed_axes"]["frequency"] == "monthly"
-    assert data_task["leaf_config"]["custom_dataset_schema"] == "fred_md"
-    assert data_task["leaf_config"]["custom_data_path"] == str(csv_path)
+    assert data_task["leaf_config"]["custom_source_path"] == str(csv_path)
 
 
 def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None:
@@ -302,8 +302,9 @@ def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": "fred_md",
-                    "custom_source_mode": "append_to_official_panel",
+                    "custom_source_policy": "official_plus_custom",
                     "custom_source_format": "csv",
+                    "custom_source_schema": "fred_sd",
                     "frequency": "monthly",
                     "information_set_type": "final_revised_data",
                     "target_structure": "single_target",
@@ -311,8 +312,7 @@ def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": str(csv_path),
-                    "custom_dataset_schema": "fred_sd",
+                    "custom_source_path": str(csv_path),
                 },
             },
             "2_preprocessing": {"fixed_axes": {
@@ -339,9 +339,9 @@ def test_custom_source_append_compiles_to_data_task_spec(tmp_path: Path) -> None
     spec = result.compiled.recipe_spec.data_task_spec
     assert spec["dataset"] == "fred_md"
     assert spec["dataset_schema"] == "fred_md"
-    assert spec["custom_source_mode"] == "append_to_official_panel"
+    assert spec["custom_source_policy"] == "official_plus_custom"
     assert spec["custom_source_format"] == "csv"
-    assert spec["custom_dataset_schema"] == "fred_sd"
+    assert spec["custom_source_schema"] == "fred_sd"
 
 
 def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
@@ -363,7 +363,7 @@ def test_dataset_source_alias_is_rejected(tmp_path: Path) -> None:
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": str(csv_path),
+                    "custom_source_path": str(csv_path),
                 },
             },
             "2_preprocessing": {"fixed_axes": {
@@ -407,7 +407,7 @@ def test_source_adapter_axis_is_rejected() -> None:
                 "leaf_config": {
                     "target": "INDPRO",
                     "horizons": [1],
-                    "custom_data_path": "/tmp/unused.csv",
+                    "custom_source_path": "/tmp/unused.csv",
                 },
             },
             "2_preprocessing": {"fixed_axes": {

@@ -1,9 +1,9 @@
 """Custom CSV loader — load a user-supplied CSV conforming to a FRED-family schema.
 
-The caller provides the CSV path via ``leaf_config.custom_data_path``.
+The caller provides the CSV path via ``leaf_config.custom_source_path``.
 Recipes should choose an official ``dataset`` and select
-``custom_source_mode`` plus ``custom_source_format: csv``. The schema is
-declared with ``leaf_config.custom_dataset_schema`` (``fred_md`` /
+``custom_source_policy`` plus ``custom_source_format: csv``. The schema is
+declared with fixed axis ``custom_source_schema`` (``fred_md`` /
 ``fred_qd`` / ``fred_sd``), so downstream code can align the panel with the
 canonical FRED loader output.
 

@@ -2,9 +2,9 @@
 
 Parquet-counterpart to :mod:`macrocast.raw.datasets.custom_csv`. Same
 contract: recipes choose an official ``dataset``, select
-``custom_source_mode`` plus ``custom_source_format: parquet``, provide
-``leaf_config.custom_data_path``, and declare the schema with
-``leaf_config.custom_dataset_schema``.
+``custom_source_policy`` plus ``custom_source_format: parquet``, provide
+``leaf_config.custom_source_path``, and declare the schema with
+fixed axis ``custom_source_schema``.
 
 Requires ``pyarrow`` or ``fastparquet`` to be installed (pandas picks
 whichever is available).

@@ -246,8 +246,9 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
 
     assert tree_axes == [
         "dataset",
-        "custom_source_mode",
+        "custom_source_policy",
         "custom_source_format",
+        "custom_source_schema",
         "frequency",
         "information_set_type",
         "fred_sd_frequency_policy",
@@ -274,15 +275,22 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
         "official_frame_policy",
     ]
     assert layer1_groups[0]["level"] == "primary_decision"
-    assert layer1_groups[0]["axes"] == ["dataset", "custom_source_mode", "custom_source_format", "frequency"]
+    assert layer1_groups[0]["axes"] == [
+        "dataset",
+        "custom_source_policy",
+        "custom_source_format",
+        "custom_source_schema",
+        "frequency",
+    ]
     assert layer1_groups[2]["parent_axis"] == "dataset"
     assert layer1_groups[2]["level"] == "conditional_subgroup"
     sample_axes = {item["axis"]: item for item in payload["samples"][0]["view"]["tree"]}
     assert sample_axes["dataset"]["group_id"] == "source_identity"
     assert sample_axes["dataset"]["axis_level"] == "primary_decision"
-    assert sample_axes["custom_source_mode"]["group_id"] == "source_identity"
-    assert sample_axes["custom_source_mode"]["axis_level"] == "conditional_subdecision"
+    assert sample_axes["custom_source_policy"]["group_id"] == "source_identity"
+    assert sample_axes["custom_source_policy"]["axis_level"] == "conditional_subdecision"
     assert sample_axes["custom_source_format"]["selected"] == "none"
+    assert sample_axes["custom_source_schema"]["selected"] == "none"
     assert sample_axes["frequency"]["axis_level"] == "derived_or_required"
     assert sample_axes["fred_sd_state_group"]["group_id"] == "fred_sd_source_scope"
     assert sample_axes["fred_sd_state_group"]["axis_level"] == "conditional_subdecision"
@@ -294,8 +302,11 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert presentation["dataset"]["label"] == "Source Panel"
     assert presentation["dataset"]["values"]["fred_md+fred_sd"]["label"] == "FRED-MD + FRED-SD"
     assert "custom_csv" not in presentation["dataset"]["values"]
-    assert presentation["custom_source_mode"]["default_value"] == "no_custom_source"
+    assert presentation["custom_source_policy"]["default_value"] == "official_only"
+    assert presentation["custom_source_policy"]["values"]["custom_panel_only"]["label"] == "Use My Data Only"
     assert presentation["custom_source_format"]["default_value"] == "none"
+    assert presentation["custom_source_schema"]["default_value"] == "none"
+    assert "warning" in presentation["custom_source_schema"]
     assert presentation["frequency"]["selection_kind"] == "derived_or_required_choice"
     assert presentation["target_structure"]["contract"].startswith("Target cardinality")
     assert presentation["target_structure"]["default_value"] == "single_target"

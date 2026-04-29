@@ -39,8 +39,8 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "preprocessing": dict(DEFAULT_PREPROCESSING_AXES),
 }
 
-_CUSTOM_DATASET_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
-_CUSTOM_SOURCE_MODES = {"no_custom_source", "replace_official_panel", "append_to_official_panel"}
+_CUSTOM_SOURCE_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
+_CUSTOM_SOURCE_POLICIES = {"official_only", "custom_panel_only", "official_plus_custom"}
 _CUSTOM_SOURCE_FORMATS = {"none", "csv", "parquet"}
 
 
@@ -96,7 +96,7 @@ def _normalize_dataset(dataset: str) -> str:
         raise ValueError(
             "custom_csv/custom_parquet are no longer dataset choices; "
             "choose dataset='fred_md'/'fred_qd'/'fred_sd' and set "
-            "custom_source_mode plus custom_source_format"
+            "custom_source_policy plus custom_source_format"
         )
     if "fred_md" in parts and "fred_qd" in parts:
         raise ValueError("fred_md and fred_qd cannot be combined in one default experiment")
@@ -137,40 +137,42 @@ def _resolve_frequency(dataset: str, frequency: str | None) -> str:
 def _custom_source_contract(
     *,
     dataset: str,
-    custom_source_mode: str,
+    custom_source_policy: str,
     custom_source_format: str,
-    custom_dataset_schema: str | None,
-    custom_data_path: str | None,
+    custom_source_schema: str | None,
+    custom_source_path: str | None,
 ) -> tuple[str | None, str | None]:
-    if custom_source_mode not in _CUSTOM_SOURCE_MODES:
-        raise ValueError(f"custom_source_mode must be one of {sorted(_CUSTOM_SOURCE_MODES)}")
+    if custom_source_schema == "none":
+        custom_source_schema = None
+    if custom_source_policy not in _CUSTOM_SOURCE_POLICIES:
+        raise ValueError(f"custom_source_policy must be one of {sorted(_CUSTOM_SOURCE_POLICIES)}")
     if custom_source_format not in _CUSTOM_SOURCE_FORMATS:
         raise ValueError(f"custom_source_format must be one of {sorted(_CUSTOM_SOURCE_FORMATS)}")
 
-    if custom_source_mode == "no_custom_source":
+    if custom_source_policy == "official_only":
         if custom_source_format != "none":
-            raise ValueError("custom_source_format must be 'none' when custom_source_mode='no_custom_source'")
-        if custom_dataset_schema is not None:
-            raise ValueError("custom_dataset_schema applies only when a custom source is selected")
-        if custom_data_path is not None:
-            raise ValueError("custom_data_path applies only when a custom source is selected")
+            raise ValueError("custom_source_format must be 'none' when custom_source_policy='official_only'")
+        if custom_source_schema is not None:
+            raise ValueError("custom_source_schema applies only when a custom source is selected")
+        if custom_source_path is not None:
+            raise ValueError("custom_source_path applies only when a custom source is selected")
         return None, None
 
     if custom_source_format == "none":
         raise ValueError("custom_source_format must be 'csv' or 'parquet' when a custom source is selected")
-    if custom_dataset_schema not in _CUSTOM_DATASET_SCHEMAS:
+    if custom_source_schema not in _CUSTOM_SOURCE_SCHEMAS:
         raise ValueError(
-            "custom sources require custom_dataset_schema "
-            f"in {sorted(_CUSTOM_DATASET_SCHEMAS)}"
+            "custom sources require custom_source_schema "
+            f"in {sorted(_CUSTOM_SOURCE_SCHEMAS)}"
         )
-    if not custom_data_path:
-        raise ValueError("custom sources require custom_data_path")
-    if custom_source_mode == "replace_official_panel":
+    if not custom_source_path:
+        raise ValueError("custom sources require custom_source_path")
+    if custom_source_policy == "custom_panel_only":
         if "+" in dataset:
-            raise ValueError("replace_official_panel supports a single official dataset, not a composite")
-        if custom_dataset_schema != dataset:
-            raise ValueError("replace_official_panel requires custom_dataset_schema to match dataset")
-    return custom_dataset_schema, str(custom_data_path)
+            raise ValueError("custom_panel_only supports a single official dataset, not a composite")
+        if custom_source_schema != dataset:
+            raise ValueError("custom_panel_only requires custom_source_schema to match dataset")
+    return custom_source_schema, str(custom_source_path)
 
 
 def build_default_recipe_dict(
@@ -185,10 +187,10 @@ def build_default_recipe_dict(
     information_set_type: str = "final_revised_data",
     frequency: str | None = None,
     vintage: str | None = None,
-    custom_source_mode: str = "no_custom_source",
+    custom_source_policy: str = "official_only",
     custom_source_format: str = "none",
-    custom_dataset_schema: str | None = None,
-    custom_data_path: str | None = None,
+    custom_source_schema: str | None = None,
+    custom_source_path: str | None = None,
     framework: str = "expanding",
     benchmark_family: str = "zero_change",
     feature_builder: str = "target_lag_features",
@@ -218,10 +220,10 @@ def build_default_recipe_dict(
     resolved_dataset = _normalize_dataset(dataset)
     resolved_custom_schema, resolved_custom_path = _custom_source_contract(
         dataset=resolved_dataset,
-        custom_source_mode=custom_source_mode,
+        custom_source_policy=custom_source_policy,
         custom_source_format=custom_source_format,
-        custom_dataset_schema=custom_dataset_schema,
-        custom_data_path=custom_data_path,
+        custom_source_schema=custom_source_schema,
+        custom_source_path=custom_source_path,
     )
     resolved_frequency = _resolve_frequency(resolved_dataset, frequency)
     horizon_values = _normalize_horizons(horizons)
@@ -256,9 +258,8 @@ def build_default_recipe_dict(
         "training_start_date": str(start),
         "data_vintage": vintage,
     }
-    if custom_source_mode != "no_custom_source":
-        data_leaf["custom_dataset_schema"] = resolved_custom_schema
-        data_leaf["custom_data_path"] = resolved_custom_path
+    if custom_source_policy != "official_only":
+        data_leaf["custom_source_path"] = resolved_custom_path
 
     return {
         "recipe_id": resolved_recipe_id,
@@ -278,8 +279,9 @@ def build_default_recipe_dict(
             "1_data_task": {
                 "fixed_axes": {
                     "dataset": resolved_dataset,
-                    "custom_source_mode": custom_source_mode,
+                    "custom_source_policy": custom_source_policy,
                     "custom_source_format": custom_source_format,
+                    "custom_source_schema": resolved_custom_schema or "none",
                     "official_transform_policy": "apply_official_tcode",
                     "official_transform_scope": "target_and_predictors",
                     "frequency": resolved_frequency,

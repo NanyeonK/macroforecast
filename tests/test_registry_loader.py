@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 146
+EXPECTED_AXIS_COUNT = 147
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -13,8 +13,9 @@ def test_registry_loader_discovers_existing_axes() -> None:
     assert len(registry) == EXPECTED_AXIS_COUNT
     assert {
         "dataset",
-        "custom_source_mode",
+        "custom_source_policy",
         "custom_source_format",
+        "custom_source_schema",
         "information_set_type",
         "target_structure",
         "model_family",
@@ -166,8 +167,9 @@ def test_registry_loader_discovers_stage1_data_task_axes() -> None:
     registry = get_axis_registry()
     expected = {
         "frequency",
-        "custom_source_mode",
+        "custom_source_policy",
         "custom_source_format",
+        "custom_source_schema",
         "information_set_type",
         "official_transform_policy",
         "official_transform_scope",
@@ -245,17 +247,21 @@ def test_registry_loader_preserves_stage1_operational_values() -> None:
         "fred_qd+fred_sd",
     )
 
-    custom_source_mode = get_axis_registry_entry("custom_source_mode")
-    assert custom_source_mode.layer == "1_data_task"
-    assert custom_source_mode.allowed_values == (
-        "no_custom_source",
-        "replace_official_panel",
-        "append_to_official_panel",
+    custom_source_policy = get_axis_registry_entry("custom_source_policy")
+    assert custom_source_policy.layer == "1_data_task"
+    assert custom_source_policy.allowed_values == (
+        "official_only",
+        "custom_panel_only",
+        "official_plus_custom",
     )
 
     custom_source_format = get_axis_registry_entry("custom_source_format")
     assert custom_source_format.layer == "1_data_task"
     assert custom_source_format.allowed_values == ("none", "csv", "parquet")
+
+    custom_source_schema = get_axis_registry_entry("custom_source_schema")
+    assert custom_source_schema.layer == "1_data_task"
+    assert custom_source_schema.allowed_values == ("none", "fred_md", "fred_qd", "fred_sd")
 
     variable_universe = get_axis_registry_entry("variable_universe")
     assert variable_universe.current_status["all_variables"] == "operational"

@@ -27,9 +27,9 @@ Common optional arguments:
 
 - `horizons`: forecast horizons, default `[1]`
 - `frequency`: required only for `fred_sd` alone
-- `custom_source_mode`: default `no_custom_source`; use `replace_official_panel` or `append_to_official_panel` for custom files
+- `custom_source_policy`: default `official_only`; use `custom_panel_only` or `official_plus_custom` for custom files
 - `custom_source_format`: `csv` or `parquet` when a custom source is selected
-- `custom_dataset_schema` and `custom_data_path`: required when a custom source is selected
+- `custom_source_schema` and `custom_source_path`: required when a custom source is selected
 - `vintage`: data vintage; if omitted, current/latest data is used
 - `model_family`: default model, usually left as `ar`
 - `primary_metric`: default `msfe`

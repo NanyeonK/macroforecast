@@ -361,6 +361,7 @@ function renderOptions() {
       ${presentation.selection_kind ? `<span><strong>Selection type:</strong> ${escapeHtml(humanizeToken(presentation.selection_kind))}</span>` : ""}
     </div>
     ${selectedSummary ? `<p class="decision-selected">${escapeHtml(selectedSummary)}</p>` : ""}
+    ${presentation.warning ? `<p class="decision-warning"><strong>Check docs:</strong> ${escapeHtml(presentation.warning)}</p>` : ""}
     ${presentation.contract ? `<p class="decision-contract"><strong>Contract:</strong> ${escapeHtml(presentation.contract)}</p>` : ""}
     ${docs ? `<a class="decision-docs" href="${escapeHtml(docs)}">Open detailed docs</a>` : ""}
   `;
