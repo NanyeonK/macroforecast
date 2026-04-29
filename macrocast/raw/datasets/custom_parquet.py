@@ -2,9 +2,9 @@
 
 Parquet-counterpart to :mod:`macrocast.raw.datasets.custom_csv`. Same
 contract: recipes choose an official ``dataset``, select
-``custom_source_policy`` plus ``custom_source_format: parquet``, provide
-``leaf_config.custom_source_path``, and declare the schema with
-fixed axis ``custom_source_schema``.
+``custom_source_policy``, and provide ``leaf_config.custom_source_path``.
+The compiler infers the parser from ``.parquet``/``.pq`` and infers the
+internal loader schema from the selected ``dataset``/``frequency`` route.
 
 Requires ``pyarrow`` or ``fastparquet`` to be installed (pandas picks
 whichever is available).

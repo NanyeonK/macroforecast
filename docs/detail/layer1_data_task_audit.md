@@ -83,9 +83,10 @@ The following axes were moved out of Layer 1 ownership:
 
 - `dataset` keeps only official source-panel choices: `fred_md`, `fred_qd`,
   `fred_sd`, `fred_md+fred_sd`, and `fred_qd+fred_sd`.
-- Custom files are handled by `custom_source_policy` and
-  `custom_source_format`: users choose whether a custom file replaces the
-  selected FRED panel or is appended to it.
+- Custom files are handled by `custom_source_policy` plus
+  `leaf_config.custom_source_path`: users choose whether a custom file replaces
+  the selected FRED panel or is appended to it. Parser/schema are inferred from
+  path extension, `dataset`, and `frequency`.
 - Standalone `fred_sd` requires explicit `frequency`; the source contains monthly and quarterly state series, so an implicit default would hide a research decision.
 - `fred_md+fred_sd` is fixed to monthly.
 - `fred_qd+fred_sd` is fixed to quarterly.
@@ -95,8 +96,9 @@ The following axes were moved out of Layer 1 ownership:
   replication bundles that should not require the optional Excel parser. Wide
   CSV columns use the same canonical `VARIABLE_STATE` names produced by the
   workbook adapter.
-- Custom sources require fixed-axis `custom_source_schema` and
-  `leaf_config.custom_source_path`.
+- Custom sources require `leaf_config.custom_source_path`. Hidden fixed axes
+  `custom_source_format` and `custom_source_schema` remain accepted only for
+  legacy recipes.
 - FRED-provided transforms now have canonical Layer 1 axes:
   `official_transform_policy` and `official_transform_scope`.
 - Official transform choices are read from Layer 1 axes. The compiler derives runtime `PreprocessContract` fields from those choices for the current execution path, while generated recipes keep the official-transform decision in Layer 1.

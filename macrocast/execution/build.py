@@ -192,6 +192,7 @@ _OFFICIAL_TRANSFORM_SCOPES = {
     "target_and_predictors",
 }
 _RUNTIME_TCODE_CONTRACT_POLICIES = {"official_tcode_only", "official_tcode_then_extra_preprocess"}
+_CUSTOM_SOURCE_PARQUET_SUFFIXES = {".parquet", ".pq"}
 
 
 def _data_task_axis(recipe, axis_name: str) -> str:
@@ -1640,9 +1641,11 @@ def _load_single_raw_dataset(
 def _custom_source_path(recipe: RecipeSpec, local_raw_source, *, allow_direct: bool = False):
     if isinstance(local_raw_source, Mapping):
         file_format = str(recipe.data_task_spec.get("custom_source_format", "none"))
+        fallback = local_raw_source.get("custom_csv") or local_raw_source.get("custom_parquet")
         return (
             local_raw_source.get("custom")
-            or local_raw_source.get(f"custom_{file_format}")
+            or (local_raw_source.get(f"custom_{file_format}") if file_format != "none" else None)
+            or fallback
             or recipe.data_task_spec.get("custom_source_path")
         )
     if allow_direct and local_raw_source is not None:
@@ -1650,17 +1653,52 @@ def _custom_source_path(recipe: RecipeSpec, local_raw_source, *, allow_direct: b
     return recipe.data_task_spec.get("custom_source_path")
 
 
+def _custom_source_format_from_path(custom_path) -> str:
+    suffix = Path(str(custom_path)).suffix.lower()
+    if suffix == ".csv":
+        return "csv"
+    if suffix in _CUSTOM_SOURCE_PARQUET_SUFFIXES:
+        return "parquet"
+    raise ExecutionError(
+        "custom source file format is inferred from custom_source_path; "
+        "use a .csv, .parquet, or .pq file, or set legacy custom_source_format"
+    )
+
+
+def _custom_source_format_for_recipe(recipe: RecipeSpec, custom_path) -> str:
+    explicit = str(recipe.data_task_spec.get("custom_source_format", "none"))
+    try:
+        inferred = _custom_source_format_from_path(custom_path)
+    except ExecutionError:
+        if explicit != "none":
+            return explicit
+        raise
+    if explicit != "none" and explicit != inferred:
+        raise ExecutionError("custom_source_format conflicts with custom_source_path extension")
+    return explicit if explicit != "none" else inferred
+
+
+def _custom_source_schema_for_recipe(recipe: RecipeSpec) -> str:
+    explicit = recipe.data_task_spec.get("custom_source_schema")
+    if explicit not in {None, "none"}:
+        return str(explicit)
+    policy = str(recipe.data_task_spec.get("custom_source_policy", "official_only"))
+    dataset = str(recipe.data_task_spec.get("dataset") or recipe.raw_dataset)
+    frequency = str(recipe.data_task_spec.get("frequency", "monthly"))
+    if policy == "custom_panel_only" and dataset == "fred_sd":
+        return "fred_sd"
+    return "fred_qd" if frequency == "quarterly" else "fred_md"
+
+
 def _load_custom_source_for_recipe(recipe: RecipeSpec, local_raw_source, cache_root: Path, *, allow_direct: bool = False):
-    file_format = str(recipe.data_task_spec.get("custom_source_format", "none"))
     custom_path = _custom_source_path(recipe, local_raw_source, allow_direct=allow_direct)
     if custom_path is None:
         raise ExecutionError(
             "custom sources require leaf_config.custom_source_path "
             "(or local_raw_source mapping key 'custom')"
         )
-    custom_schema = recipe.data_task_spec.get("custom_source_schema")
-    if custom_schema in {None, "none"}:
-        raise ExecutionError("custom sources require custom_source_schema")
+    file_format = _custom_source_format_for_recipe(recipe, custom_path)
+    custom_schema = _custom_source_schema_for_recipe(recipe)
     if file_format == "csv":
         return load_custom_csv(custom_path, dataset=str(custom_schema), cache_root=cache_root)
     if file_format == "parquet":

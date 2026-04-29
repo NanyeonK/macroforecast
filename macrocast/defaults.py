@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Iterable
 
 DEFAULT_PROFILE_NAME = "macrocast-default-v1"
@@ -42,6 +43,7 @@ DEFAULT_PROFILE: dict[str, Any] = {
 _CUSTOM_SOURCE_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
 _CUSTOM_SOURCE_POLICIES = {"official_only", "custom_panel_only", "official_plus_custom"}
 _CUSTOM_SOURCE_FORMATS = {"none", "csv", "parquet"}
+_CUSTOM_SOURCE_PARQUET_SUFFIXES = {".parquet", ".pq"}
 
 
 def _normalize_horizons(horizons: Iterable[int]) -> tuple[int, ...]:
@@ -96,7 +98,7 @@ def _normalize_dataset(dataset: str) -> str:
         raise ValueError(
             "custom_csv/custom_parquet are no longer dataset choices; "
             "choose dataset='fred_md'/'fred_qd'/'fred_sd' and set "
-            "custom_source_policy plus custom_source_format"
+            "custom_source_policy plus custom_source_path"
         )
     if "fred_md" in parts and "fred_qd" in parts:
         raise ValueError("fred_md and fred_qd cannot be combined in one default experiment")
@@ -137,11 +139,12 @@ def _resolve_frequency(dataset: str, frequency: str | None) -> str:
 def _custom_source_contract(
     *,
     dataset: str,
+    frequency: str,
     custom_source_policy: str,
     custom_source_format: str,
     custom_source_schema: str | None,
     custom_source_path: str | None,
-) -> tuple[str | None, str | None]:
+) -> tuple[str, str | None, str | None]:
     if custom_source_schema == "none":
         custom_source_schema = None
     if custom_source_policy not in _CUSTOM_SOURCE_POLICIES:
@@ -151,28 +154,65 @@ def _custom_source_contract(
 
     if custom_source_policy == "official_only":
         if custom_source_format != "none":
-            raise ValueError("custom_source_format must be 'none' when custom_source_policy='official_only'")
+            raise ValueError("custom_source_format applies only when custom_source_policy selects custom data")
         if custom_source_schema is not None:
-            raise ValueError("custom_source_schema applies only when a custom source is selected")
+            raise ValueError("custom_source_schema applies only when custom_source_policy selects custom data")
         if custom_source_path is not None:
-            raise ValueError("custom_source_path applies only when a custom source is selected")
-        return None, None
+            raise ValueError("custom_source_path applies only when custom_source_policy selects custom data")
+        return "none", None, None
 
-    if custom_source_format == "none":
-        raise ValueError("custom_source_format must be 'csv' or 'parquet' when a custom source is selected")
-    if custom_source_schema not in _CUSTOM_SOURCE_SCHEMAS:
-        raise ValueError(
-            "custom sources require custom_source_schema "
-            f"in {sorted(_CUSTOM_SOURCE_SCHEMAS)}"
-        )
     if not custom_source_path:
-        raise ValueError("custom sources require custom_source_path")
+        raise ValueError(
+            "custom sources require custom_source_path; "
+            "the parser is inferred from the .csv/.parquet/.pq extension"
+        )
+    resolved_format = _resolve_custom_source_format(
+        custom_source_path=custom_source_path,
+        custom_source_format=custom_source_format,
+    )
+    resolved_schema = custom_source_schema or _schema_from_route(
+        dataset=dataset,
+        frequency=frequency,
+        custom_source_policy=custom_source_policy,
+    )
+    if resolved_schema not in _CUSTOM_SOURCE_SCHEMAS:
+        raise ValueError(f"custom_source_schema must be one of {sorted(_CUSTOM_SOURCE_SCHEMAS)}")
     if custom_source_policy == "custom_panel_only":
         if "+" in dataset:
             raise ValueError("custom_panel_only supports a single FRED dataset, not a composite")
-        if custom_source_schema != dataset:
-            raise ValueError("custom_panel_only requires custom_source_schema to match dataset")
-    return custom_source_schema, str(custom_source_path)
+        if custom_source_schema is not None and resolved_schema != dataset:
+            raise ValueError("legacy custom_source_schema must match dataset for custom_panel_only")
+    return resolved_format, resolved_schema, str(custom_source_path)
+
+
+def _custom_source_format_from_path(custom_source_path: str) -> str:
+    suffix = Path(str(custom_source_path)).suffix.lower()
+    if suffix == ".csv":
+        return "csv"
+    if suffix in _CUSTOM_SOURCE_PARQUET_SUFFIXES:
+        return "parquet"
+    raise ValueError(
+        "custom_source_path must end with .csv, .parquet, or .pq unless "
+        "legacy custom_source_format is provided"
+    )
+
+
+def _resolve_custom_source_format(*, custom_source_path: str, custom_source_format: str) -> str:
+    try:
+        inferred = _custom_source_format_from_path(custom_source_path)
+    except ValueError:
+        if custom_source_format != "none":
+            return custom_source_format
+        raise
+    if custom_source_format != "none" and custom_source_format != inferred:
+        raise ValueError("custom_source_format conflicts with custom_source_path extension")
+    return custom_source_format if custom_source_format != "none" else inferred
+
+
+def _schema_from_route(*, dataset: str, frequency: str, custom_source_policy: str) -> str:
+    if custom_source_policy == "custom_panel_only" and dataset == "fred_sd":
+        return "fred_sd"
+    return "fred_qd" if frequency == "quarterly" else "fred_md"
 
 
 def build_default_recipe_dict(
@@ -218,14 +258,15 @@ def build_default_recipe_dict(
     if not end:
         raise ValueError("end is required")
     resolved_dataset = _normalize_dataset(dataset)
-    resolved_custom_schema, resolved_custom_path = _custom_source_contract(
+    resolved_frequency = _resolve_frequency(resolved_dataset, frequency)
+    resolved_custom_format, resolved_custom_schema, resolved_custom_path = _custom_source_contract(
         dataset=resolved_dataset,
+        frequency=resolved_frequency,
         custom_source_policy=custom_source_policy,
         custom_source_format=custom_source_format,
         custom_source_schema=custom_source_schema,
         custom_source_path=custom_source_path,
     )
-    resolved_frequency = _resolve_frequency(resolved_dataset, frequency)
     horizon_values = _normalize_horizons(horizons)
     model_values = _normalize_models(model_families, model_family)
     resolved_recipe_id = recipe_id or _default_recipe_id(
@@ -261,6 +302,24 @@ def build_default_recipe_dict(
     if custom_source_policy != "official_only":
         data_leaf["custom_source_path"] = resolved_custom_path
 
+    layer1_fixed_axes = {
+        "dataset": resolved_dataset,
+        "custom_source_policy": custom_source_policy,
+        "official_transform_policy": "apply_official_tcode",
+        "official_transform_scope": "target_and_predictors",
+        "frequency": resolved_frequency,
+        "information_set_type": information_set_type,
+        "fred_sd_frequency_policy": "report_only",
+        "fred_sd_state_group": "all_states",
+        "fred_sd_variable_group": "all_sd_variables",
+        "target_structure": "single_target",
+        "missing_availability": "zero_fill_leading_predictor_gaps",
+    }
+    if custom_source_format != "none":
+        layer1_fixed_axes["custom_source_format"] = resolved_custom_format
+    if custom_source_schema not in {None, "none"}:
+        layer1_fixed_axes["custom_source_schema"] = resolved_custom_schema or "none"
+
     return {
         "recipe_id": resolved_recipe_id,
         "path": {
@@ -277,21 +336,7 @@ def build_default_recipe_dict(
                 },
             },
             "1_data_task": {
-                "fixed_axes": {
-                    "dataset": resolved_dataset,
-                    "custom_source_policy": custom_source_policy,
-                    "custom_source_format": custom_source_format,
-                    "custom_source_schema": resolved_custom_schema or "none",
-                    "official_transform_policy": "apply_official_tcode",
-                    "official_transform_scope": "target_and_predictors",
-                    "frequency": resolved_frequency,
-                    "information_set_type": information_set_type,
-                    "fred_sd_frequency_policy": "report_only",
-                    "fred_sd_state_group": "all_states",
-                    "fred_sd_variable_group": "all_sd_variables",
-                    "target_structure": "single_target",
-                    "missing_availability": "zero_fill_leading_predictor_gaps",
-                },
+                "fixed_axes": layer1_fixed_axes,
                 "leaf_config": data_leaf,
             },
             "2_preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
