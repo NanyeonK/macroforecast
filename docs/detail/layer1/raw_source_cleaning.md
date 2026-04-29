@@ -1,6 +1,6 @@
-# 4.1.4 Raw Source Cleaning
+# 4.1.5 Raw Source Cleaning
 
-- Parent: [4.1 Layer 1: Data Task](index.md)
+- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: raw source cleaning
 
 These policies act on defects already present in the raw source panel before official transforms or FRED t-codes are applied.
@@ -12,8 +12,7 @@ These policies act on defects already present in the raw source panel before off
 
 Boundary rule:
 
-- Layer 1 raw cleaning changes the source panel before FRED transforms/T-codes. That means the transform output can change.
-- Layer 2 missing/outlier policies act after the FRED frame exists. They can mix raw-source defects with transform-induced missing values and model-input preprocessing artifacts.
+- Layer 1 raw cleaning changes the source panel before official transforms/T-codes. That means the transform output can change.
+- Layer 2 missing/outlier policies act after the Layer 1 source frame exists. They can mix raw-source defects with transform-induced missing values and model-input preprocessing artifacts.
 
 Full researchers can choose either phase, but provenance must record which phase was used.
-

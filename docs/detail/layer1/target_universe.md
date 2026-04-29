@@ -1,6 +1,6 @@
 # 4.1.3 Target (y) And Predictor (x) Definitions
 
-- Parent: [4.1 Layer 1: Data Task](index.md)
+- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Target (y) and predictor (x) definitions
 
 This group names the forecasting object and the eligible raw predictor columns.

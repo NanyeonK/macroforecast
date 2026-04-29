@@ -1,4 +1,4 @@
-# 4.1 Layer 1: Data Task
+# 4.1 Layer 1: Data Source, Target y, Predictor x
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Previous: [4.0 Layer 0: Study Scope](../layer0/index.md)
@@ -19,7 +19,7 @@ frequency without choosing a FRED panel. Optional Simple helpers expose
 FRED-SD state/variable selection and FRED-SD frequency evidence policies, but
 the ordinary path keeps Layer 1 mostly defaulted.
 
-Full exposes the complete Layer 1 FRED-frame contract. The live registry keeps hidden compatibility axes for older custom-source recipes, but the Navigator primary tree shows only user-facing decisions. Those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional FRED-SD sub-decisions, and many are defaulted policy controls. `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
+Full exposes the complete Layer 1 source-frame contract. The live registry keeps hidden compatibility axes for older custom-source recipes, but the Navigator primary tree shows only user-facing decisions. Those axes are not all the same depth: some are primary decisions, some are derived/required follow-ups, some are conditional FRED-SD sub-decisions, and many are defaulted policy controls. `state_selection` / `sd_variable_selection` are lower source-load selectors used by explicit FRED-SD selector helpers and group resolution.
 
 ## Hierarchy
 
@@ -33,7 +33,7 @@ Layer 1 should be read as a hierarchy, not a flat checklist.
 | Secondary policy | Predictor (x) Definition | `variable_universe` | Limits eligible candidate x columns before Layer 2 builds representations. |
 | Conditional subgroup | FRED-SD Predictor Scope | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group` | Active only when the FRED source panel includes FRED-SD. |
 | Secondary policy | Raw source quality | `raw_missing_policy`, `raw_outlier_policy` | Handles defects present in raw source data before FRED transforms/T-codes. |
-| Secondary policy | FRED transform / frame availability | `official_transform_policy`, `official_transform_scope`, `missing_availability` | Applies FRED transform codes when available and closes source-frame availability gaps before Layer 2 begins. |
+| Secondary policy | Official transform / frame availability | `official_transform_policy`, `official_transform_scope`, `missing_availability` | Applies FRED transform codes when available and closes source-frame availability gaps before Layer 2 begins. |
 
 ## Decision order
 
@@ -41,13 +41,13 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 
 | Step | Group | Axes |
 |---|---|---|
-| 4.1.1 | [Source and frame](source_frame.md) | `custom_source_policy`, `dataset`, `frequency`; custom paths live in `leaf_config.custom_source_path` |
+| 4.1.1 | [Data source mode / frequency](source_frame.md) | `custom_source_policy`, `dataset`, `frequency`; custom paths live in `leaf_config.custom_source_path` |
 | 4.1.2 | [Forecast-time information](availability_timing.md) | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` |
 | 4.1.3 | [Target (y) and predictor (x) definitions](target_universe.md) | `target_structure`, `variable_universe`; target IDs, horizons, sample dates, and x column lists live in `leaf_config` |
 | 4.1.4 | [FRED-SD predictor scope](fred_sd_source_selection.md) | `fred_sd_frequency_policy`, `fred_sd_state_group`, `fred_sd_variable_group`, hidden `state_selection`, hidden `sd_variable_selection` |
 | 4.1.5 | [Raw source cleaning](raw_source_cleaning.md) | `raw_missing_policy`, `raw_outlier_policy` before FRED transforms/T-codes |
 | 4.1.6 | [Official transforms](official_transforms.md) | `official_transform_policy`, `official_transform_scope` |
-| 4.1.7 | [Frame availability](availability_timing.md) | `missing_availability` after the source frame exists |
+| 4.1.7 | [Frame availability](frame_availability.md) | `missing_availability` after the source frame exists |
 
 ## Defaults and Required Choices
 
@@ -71,15 +71,15 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 | `raw_outlier_policy` | `preserve_raw_outliers` | defaulted; non-default values act before FRED transforms/T-codes |
 | `official_transform_policy` | `apply_official_tcode` | default profile uses official t-codes; `keep_official_raw_scale` preserves raw scale |
 | `official_transform_scope` | `target_and_predictors` | default profile transforms both target and predictors |
-| `missing_availability` | `zero_fill_leading_predictor_gaps` | defaulted after the FRED frame exists |
+| `missing_availability` | `zero_fill_leading_predictor_gaps` | defaulted after the Layer 1 source frame exists |
 
 ## Layer contract
 
 Input:
-- source request and target request.
+- source request, custom-source request when relevant, target y request, and candidate predictor x request.
 
 Output:
-- `layer1_official_frame_v1`;
+- `layer1_official_frame_v1`, the compatibility artifact name for the Layer 1 source-frame handoff;
 - source availability contract;
 - data reports for availability, release lag, missing policy, and FRED-SD source metadata when relevant.
 
@@ -89,7 +89,7 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 
 ## Related reference
 
-- [Layer 1 Data Task Audit](../layer1_data_task_audit.md)
+- [Layer 1 Source-Frame Audit](../layer1_data_task_audit.md)
 - [Data Source and Frame](../../user_guide/data/source.md)
 - [Target (y) And Predictor (x) Definition](../../user_guide/data/target_structure.md)
 - [Data Handling Policies](../../user_guide/data/policies.md)
@@ -98,9 +98,10 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 :maxdepth: 1
 
 source_frame
+availability_timing
 fred_sd_source_selection
 target_universe
 raw_source_cleaning
 official_transforms
-availability_timing
+frame_availability
 ```

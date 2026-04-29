@@ -1,7 +1,7 @@
-# 4.1.1 Source And Frame
+# 4.1.1 Data Source Mode / Frequency
 
-- Parent: [4.1 Layer 1: Data Task](index.md)
-- Current group: Source and frame
+- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Current group: Data Source Mode / Frequency
 
 This group starts the Layer 1 hierarchy. Choose the data source mode first:
 FRED data only, custom data only, or FRED data plus custom data. Then close the
@@ -52,7 +52,9 @@ Contracts:
 - In practical terms, a custom file is acceptable if its date index, column
   shape, and row frequency already match the selected Layer 1 frequency.
   Monthly routes expect monthly rows. Quarterly routes expect quarterly rows.
-- `pseudo_oos_on_revised_data` uses revised data but applies pseudo-OOS availability discipline.
+- Data revision/vintage status is selected later by
+  [4.1.2 Forecast-Time Information](availability_timing.md), not by the source
+  mode itself.
 
 > **Warning:** Custom files are user-supplied source data. The Navigator can
 > enforce the route contract, but it cannot prove that the file's date index,

@@ -2,7 +2,7 @@
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Current: Layer 0
-- Next: [4.1 Layer 1: Data Task](../layer1/index.md)
+- Next: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
 
 Layer 0 defines the study scope and execution discipline before data or models are chosen. It answers: how many targets are in the study, whether the downstream method path is fixed or compared, how failures behave, how deterministic execution should be, and how work may be parallelized.
 

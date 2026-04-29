@@ -273,6 +273,7 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
         "raw_source_quality",
         "official_frame_policy",
     ]
+    assert layer1_groups[-1]["label"] == "Official Transform / Frame Availability"
     assert layer1_groups[0]["level"] == "primary_decision"
     assert layer1_groups[0]["axes"] == [
         "custom_source_policy",
@@ -324,6 +325,7 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert presentation["official_transform_policy"]["default_value"] == "apply_official_tcode"
     assert presentation["official_transform_scope"]["default_value"] == "target_and_predictors"
     assert presentation["missing_availability"]["default_value"] == "zero_fill_leading_predictor_gaps"
+    assert presentation["missing_availability"]["docs_url"].endswith("/detail/layer1/frame_availability.html")
     assert presentation["release_lag_rule"]["default_value"] == "ignore_release_lag"
     assert presentation["contemporaneous_x_rule"]["default_value"] == "forbid_same_period_predictors"
     assert payload["state_engine"]["default_selections"]["information_set_type"] == "final_revised_data"

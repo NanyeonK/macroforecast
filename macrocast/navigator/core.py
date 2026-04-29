@@ -202,7 +202,7 @@ _LAYER_AXIS_GROUPS = {
         },
         {
             "id": "official_frame_policy",
-            "label": "FRED Transform / Frame Availability",
+            "label": "Official Transform / Frame Availability",
             "level": "secondary_policy",
             "summary": "Apply FRED transform codes when available and close source-frame availability gaps.",
             "axes": ("official_transform_policy", "official_transform_scope", "missing_availability"),
