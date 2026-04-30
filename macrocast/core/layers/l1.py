@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from ..dag import DAG, GatePredicate, Node, NodeRef
 from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
-from ..types import L1DataDefinitionArtifact, SeriesMetadata
+from ..types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact
 
 
 class L1Data:
@@ -25,6 +25,15 @@ VariableUniverse = Literal[
     "target_specific_variables",
     "explicit_variable_list",
 ]
+RegimeDefinition = Literal[
+    "none",
+    "external_nber",
+    "external_user_provided",
+    "estimated_markov_switching",
+    "estimated_threshold",
+    "estimated_structural_break",
+]
+RegimeTemporalRule = Literal["expanding_window_per_origin", "rolling_window_per_origin", "block_recompute"]
 
 DATASET_OPTIONS: tuple[Dataset, ...] = ("fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd")
 FRED_SD_DATASETS = frozenset({"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"})
@@ -113,9 +122,26 @@ L1_AXIS_NAMES: tuple[str, ...] = (
     "sample_end_rule",
     "horizon_set",
     "regime_definition",
+    "regime_estimation_temporal_rule",
 )
 
 SWEEPABLE_AXES = frozenset({"dataset"})
+REGIME_OPTIONS: tuple[RegimeDefinition, ...] = (
+    "none",
+    "external_nber",
+    "external_user_provided",
+    "estimated_markov_switching",
+    "estimated_threshold",
+    "estimated_structural_break",
+)
+REGIME_ESTIMATED_OPTIONS = frozenset(
+    {"estimated_markov_switching", "estimated_threshold", "estimated_structural_break"}
+)
+REGIME_TEMPORAL_RULE_OPTIONS: tuple[RegimeTemporalRule, ...] = (
+    "expanding_window_per_origin",
+    "rolling_window_per_origin",
+    "block_recompute",
+)
 
 
 @dataclass(frozen=True)
@@ -129,8 +155,9 @@ class L1LayerExecutionRecord:
     layer_id: Literal["l1"]
     status: Literal["completed", "failed", "skipped_disabled", "skipped_diagnostic_off"]
     artifact: L1DataDefinitionArtifact
+    regime_artifact: L1RegimeMetadataArtifact
     resolved_axes: dict[str, ResolvedAxis]
-    produced_sinks: tuple[str, ...] = ("l1_data_definition_v1",)
+    produced_sinks: tuple[str, ...] = ("l1_data_definition_v1", "l1_regime_metadata_v1")
     sink_hashes: dict[str, str] = field(default_factory=dict)
 
 
@@ -194,9 +221,7 @@ def normalize_to_dag_form(layer: Any | dict[str, Any], layer_id: Literal["l1"] =
         inputs=tuple(inputs),
     )
     nodes[aggregate.id] = aggregate
-    sinks = {"l1_data_definition_v1": aggregate.id}
-    if resolved.get("regime_definition") not in {None, "none"}:
-        sinks["l1_regime_metadata_v1"] = aggregate.id
+    sinks = {"l1_data_definition_v1": aggregate.id, "l1_regime_metadata_v1": aggregate.id}
     return DAG(layer_id="l1", nodes=nodes, sinks=sinks, layer_globals=layer_globals)
 
 
@@ -223,6 +248,10 @@ def resolve_axes_from_raw(
         horizon_set = None
     if horizon_set is None and frequency in {"monthly", "quarterly"}:
         horizon_set = "standard_md" if frequency == "monthly" else "standard_qd"
+    regime_definition = fixed_axes.get("regime_definition", DEFAULT_AXES["regime_definition"])
+    regime_temporal_rule = fixed_axes.get("regime_estimation_temporal_rule")
+    if regime_definition in REGIME_ESTIMATED_OPTIONS and regime_temporal_rule is None:
+        regime_temporal_rule = "expanding_window_per_origin"
 
     resolved = {
         "custom_source_policy": custom_policy,
@@ -236,7 +265,8 @@ def resolve_axes_from_raw(
         "sample_start_rule": fixed_axes.get("sample_start_rule", DEFAULT_AXES["sample_start_rule"]),
         "sample_end_rule": fixed_axes.get("sample_end_rule", DEFAULT_AXES["sample_end_rule"]),
         "horizon_set": horizon_set,
-        "regime_definition": fixed_axes.get("regime_definition", DEFAULT_AXES["regime_definition"]),
+        "regime_definition": regime_definition,
+        "regime_estimation_temporal_rule": regime_temporal_rule,
     }
     if custom_policy == "custom_panel_only" or dataset == "fred_sd":
         resolved["variable_universe"] = None if "variable_universe" not in fixed_axes else fixed_axes["variable_universe"]
@@ -326,6 +356,29 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
     return ValidationReport(tuple(issues))
 
 
+def validate_regime_source_reference(layer: Any | dict[str, Any] | str, selector: Any) -> Any:
+    from ..validator import ValidationReport
+
+    if isinstance(layer, str):
+        layer = parse_layer_yaml(layer)
+    raw = _raw_layer(layer)
+    resolved = resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, raw.get("leaf_config", {}) or {}, tolerate_invalid=True)
+    if (
+        getattr(selector, "layer_ref", None) == "l1"
+        and getattr(selector, "sink_name", None) == "l1_regime_metadata_v1"
+        and resolved.get("regime_definition") == "none"
+    ):
+        return ValidationReport(
+            (
+                _issue(
+                    "l1.l1_regime_metadata_v1",
+                    "l1_regime_metadata_v1 is inactive when regime_definition is none",
+                ),
+            )
+        )
+    return ValidationReport()
+
+
 def build_recipe_with_l1_only(yaml_text: str) -> L1Recipe:
     return L1Recipe(layer=parse_layer_yaml(yaml_text))
 
@@ -344,6 +397,7 @@ def execute_recipe(recipe: L1Recipe) -> L1Manifest:
         layer_id="l1",
         status="completed",
         artifact=artifact,
+        regime_artifact=_regime_artifact_from_resolved(resolved, leaf_config),
         resolved_axes=_resolved_axis_entries(resolved, fixed_axes),
         produced_sinks=tuple(dag.sinks),
     )
@@ -374,6 +428,45 @@ def _artifact_from_resolved(resolved: dict[str, Any], leaf_config: dict[str, Any
     )
 
 
+def _regime_artifact_from_resolved(
+    resolved: dict[str, Any], leaf_config: dict[str, Any]
+) -> L1RegimeMetadataArtifact:
+    definition = resolved["regime_definition"]
+    n_regimes = leaf_config.get("n_regimes", 2)
+    metadata = {
+        "leaf_config": {
+            key: leaf_config[key]
+            for key in (
+                "regime_indicator_path",
+                "regime_dates_list",
+                "transition_variable",
+                "threshold_variable",
+                "n_thresholds",
+                "max_breaks",
+                "break_ic_criterion",
+                "regime_rolling_window_size",
+                "block_recompute_interval",
+            )
+            if key in leaf_config
+        }
+    }
+    if definition == "external_nber":
+        metadata["source_series"] = "USREC"
+    if definition in REGIME_ESTIMATED_OPTIONS:
+        metadata["runtime_status"] = "schema_valid_runtime_estimator_pending"
+    return L1RegimeMetadataArtifact(
+        definition=definition,
+        n_regimes=n_regimes,
+        regime_label_series=None,
+        regime_probabilities=None,
+        transition_matrix=None,
+        estimation_temporal_rule=resolved.get("regime_estimation_temporal_rule")
+        if definition in REGIME_ESTIMATED_OPTIONS
+        else None,
+        estimation_metadata=metadata,
+    )
+
+
 def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
     issues = []
     option_sets = {
@@ -394,6 +487,8 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
         "sample_start_rule": {"earliest_available", "fixed_date", "max_balanced"},
         "sample_end_rule": {"latest_available", "fixed_date"},
         "horizon_set": {"standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"},
+        "regime_definition": set(REGIME_OPTIONS),
+        "regime_estimation_temporal_rule": set(REGIME_TEMPORAL_RULE_OPTIONS),
     }
     for axis_name, allowed in option_sets.items():
         value = fixed_axes.get(axis_name, resolved.get(axis_name))
@@ -534,12 +629,78 @@ def _validate_horizons(leaf_config: dict[str, Any], resolved: dict[str, Any]) ->
 
 
 def _validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
+    from ..validator import Issue, Severity
+
     regime = resolved.get("regime_definition")
     if regime in {None, "none"}:
         return []
-    if regime == "custom" and "regime_source" not in leaf_config:
-        return [_issue("l1.regime_source", "custom regime_definition requires leaf_config.regime_source")]
-    return []
+    issues = []
+    if regime == "external_user_provided":
+        has_path = "regime_indicator_path" in leaf_config
+        has_dates = "regime_dates_list" in leaf_config
+        if has_path == has_dates:
+            issues.append(
+                _issue(
+                    "l1.regime_definition",
+                    "external_user_provided requires exactly one of regime_indicator_path or regime_dates_list",
+                )
+            )
+    if regime in {"external_user_provided", "estimated_markov_switching"}:
+        n_regimes = leaf_config.get("n_regimes", 2)
+        if not isinstance(n_regimes, int) or n_regimes <= 0:
+            issues.append(_issue("l1.n_regimes", "n_regimes must be a positive integer"))
+    if regime == "estimated_threshold":
+        if not isinstance(leaf_config.get("threshold_variable"), str):
+            issues.append(_issue("l1.threshold_variable", "estimated_threshold requires leaf_config.threshold_variable"))
+        if "n_thresholds" in leaf_config and (
+            not isinstance(leaf_config["n_thresholds"], int) or leaf_config["n_thresholds"] <= 0
+        ):
+            issues.append(_issue("l1.n_thresholds", "n_thresholds must be a positive integer"))
+    if regime == "estimated_structural_break":
+        if "max_breaks" in leaf_config and (
+            not isinstance(leaf_config["max_breaks"], int) or leaf_config["max_breaks"] <= 0
+        ):
+            issues.append(_issue("l1.max_breaks", "max_breaks must be a positive integer"))
+        if leaf_config.get("break_ic_criterion", "bic") not in {"aic", "bic"}:
+            issues.append(_issue("l1.break_ic_criterion", "break_ic_criterion must be one of ['aic', 'bic']"))
+    temporal_rule = resolved.get("regime_estimation_temporal_rule")
+    if temporal_rule == "full_sample_once":
+        issues.append(_issue("l1.regime_estimation_temporal_rule", "full_sample_once is rejected because it leaks future data"))
+    if regime in REGIME_ESTIMATED_OPTIONS:
+        if temporal_rule not in REGIME_TEMPORAL_RULE_OPTIONS:
+            issues.append(
+                _issue(
+                    "l1.regime_estimation_temporal_rule",
+                    f"regime_estimation_temporal_rule must be one of {sorted(REGIME_TEMPORAL_RULE_OPTIONS)}",
+                )
+            )
+        if temporal_rule == "rolling_window_per_origin":
+            value = leaf_config.get(
+                "regime_rolling_window_size",
+                60 if resolved.get("frequency") == "monthly" else 20,
+            )
+            if not isinstance(value, int) or value <= 0:
+                issues.append(_issue("l1.regime_rolling_window_size", "regime_rolling_window_size must be a positive integer"))
+        if temporal_rule == "block_recompute":
+            value = leaf_config.get(
+                "block_recompute_interval",
+                12 if resolved.get("frequency") == "monthly" else 4,
+            )
+            if not isinstance(value, int) or value <= 0:
+                issues.append(_issue("l1.block_recompute_interval", "block_recompute_interval must be a positive integer"))
+    elif temporal_rule is not None:
+        issues.append(_issue("l1.regime_estimation_temporal_rule", "regime_estimation_temporal_rule is inactive unless regime_definition is estimated_*"))
+    if regime == "external_nber" and resolved.get("frequency") != "monthly":
+        issues.append(
+            Issue(
+                "l1_external_nber_frequency",
+                Severity.SOFT,
+                "layer",
+                "l1.regime_definition",
+                "USREC is a monthly series; quarterly analysis will use end-of-quarter values",
+            )
+        )
+    return issues
 
 
 def _resolved_horizons(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> tuple[int, ...]:
@@ -566,6 +727,8 @@ def _axis_gates(axis_name: str) -> tuple[GatePredicate, ...]:
         return (GatePredicate(kind="axis_not_in", target="dataset", value=["fred_sd"]),)
     if axis_name in {"target_geography_scope", "predictor_geography_scope"}:
         return (GatePredicate(kind="axis_in", target="dataset", value=list(FRED_SD_DATASETS)),)
+    if axis_name == "regime_estimation_temporal_rule":
+        return (GatePredicate(kind="axis_starts_with", target="regime_definition", value="estimated_"),)
     return ()
 
 
@@ -656,7 +819,7 @@ L1_LAYER_SPEC = LayerImplementationSpec(
         SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_scope", "predictor_geography_scope")),
         SubLayerSpec(id="l1_e", name="Sample window", axes=("sample_start_rule", "sample_end_rule")),
         SubLayerSpec(id="l1_f", name="Horizon set", axes=("horizon_set",)),
-        SubLayerSpec(id="l1_g", name="Regime definition", axes=("regime_definition",)),
+        SubLayerSpec(id="l1_g", name="Regime definition", axes=("regime_definition", "regime_estimation_temporal_rule")),
     ),
     axes={
         "l1_a": {
@@ -698,7 +861,16 @@ L1_LAYER_SPEC = LayerImplementationSpec(
         "l1_f": {
             "horizon_set": AxisSpec("horizon_set", _options(("standard_md", "standard_qd", "single", "custom_list", "range_up_to_h")), "derived", sweepable=False)
         },
-        "l1_g": {"regime_definition": AxisSpec("regime_definition", _options(("none", "custom")), "none", sweepable=False)},
+        "l1_g": {
+            "regime_definition": AxisSpec("regime_definition", _options(REGIME_OPTIONS), "none", sweepable=False),
+            "regime_estimation_temporal_rule": AxisSpec(
+                "regime_estimation_temporal_rule",
+                _options(REGIME_TEMPORAL_RULE_OPTIONS),
+                "expanding_window_per_origin",
+                sweepable=False,
+                gate=GatePredicate(kind="axis_starts_with", target="regime_definition", value="estimated_"),
+            ),
+        },
     },
     ops=(),
 )
@@ -711,6 +883,7 @@ __all__ = [
     "normalize_to_dag_form",
     "resolve_axes",
     "validate_layer",
+    "validate_regime_source_reference",
     "build_recipe_with_l1_only",
     "execute_recipe",
 ]

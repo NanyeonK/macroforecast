@@ -28,6 +28,7 @@ GateKind = Literal[
     "axis_not_equals",
     "axis_in",
     "axis_not_in",
+    "axis_starts_with",
     "node_exists",
     "layer_axis_equals",
 ]

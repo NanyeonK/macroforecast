@@ -363,6 +363,8 @@ def _gate_passes(dag: DAG, gate: GatePredicate, disabled_nodes: set[str]) -> boo
         return value in gate.value
     if gate.kind == "axis_not_in":
         return value not in gate.value
+    if gate.kind == "axis_starts_with":
+        return isinstance(value, str) and value.startswith(gate.value)
     if gate.kind == "node_exists":
         return gate.target in dag.nodes and gate.target not in disabled_nodes
     if gate.kind == "layer_axis_equals":

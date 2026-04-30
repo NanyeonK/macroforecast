@@ -13,11 +13,11 @@ from ..types import (
     ForecastArtifact,
     L0MetaArtifact,
     L1DataDefinitionArtifact,
+    L1RegimeMetadataArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
     Panel,
-    SeriesMetadata,
     TestResultSet,
     TrainingMetadata,
     ImportanceResultSet,
@@ -88,7 +88,7 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
     },
     "l1": {
         "l1_data_definition_v1": L1DataDefinitionArtifact,
-        "l1_regime_metadata_v1": SeriesMetadata,
+        "l1_regime_metadata_v1": L1RegimeMetadataArtifact,
     },
     "l2": {
         "clean_panel_v1": Panel,

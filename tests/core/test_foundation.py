@@ -122,6 +122,35 @@ def test_gate_propagation() -> None:
     assert any("disabled node" in issue.message for issue in result.issues)
 
 
+def test_axis_starts_with_gate_propagation() -> None:
+    active = DAG(
+        layer_id="l1",
+        nodes={
+            "temporal_rule": Node(
+                id="temporal_rule",
+                type="axis",
+                layer_id="l1",
+                op="regime_estimation_temporal_rule",
+                params={"value": "expanding_window_per_origin"},
+                gates=(GatePredicate(kind="axis_starts_with", target="regime_definition", value="estimated_"),),
+            )
+        },
+        sinks={"temporal_rule": "temporal_rule"},
+        layer_globals={"regime_definition": "estimated_markov_switching"},
+    )
+    inactive = DAG(
+        layer_id="l1",
+        nodes=active.nodes,
+        sinks=active.sinks,
+        layer_globals={"regime_definition": "external_nber"},
+    )
+
+    assert validate_dag(active).valid
+    inactive_result = validate_dag(inactive)
+    assert "temporal_rule" in inactive_result.disabled_nodes
+    assert not inactive_result.valid
+
+
 def test_cross_layer_reference() -> None:
     selector = SourceSelector(
         layer_ref="l6",

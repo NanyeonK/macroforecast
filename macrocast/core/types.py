@@ -98,6 +98,24 @@ class L1DataDefinitionArtifact(DataType):
 
 
 @dataclass(frozen=True)
+class L1RegimeMetadataArtifact(DataType):
+    definition: Literal[
+        "none",
+        "external_nber",
+        "external_user_provided",
+        "estimated_markov_switching",
+        "estimated_threshold",
+        "estimated_structural_break",
+    ]
+    n_regimes: int
+    regime_label_series: "Series | None" = None
+    regime_probabilities: "Series | None" = None
+    transition_matrix: Any | None = None
+    estimation_temporal_rule: str | None = None
+    estimation_metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class Panel(DataType):
     shape: tuple[Any, Any] | None = None
     column_names: tuple[str, ...] = ()

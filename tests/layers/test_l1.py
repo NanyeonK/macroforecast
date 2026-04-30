@@ -6,6 +6,7 @@ from macrocast.core.layers.l1 import (
     parse_layer_yaml,
     resolve_axes,
     validate_layer,
+    validate_regime_source_reference,
 )
 
 
@@ -20,10 +21,10 @@ def test_l1_registered_with_spec_correct_class():
 
 
 def test_l1_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS, L1DataDefinitionArtifact, SeriesMetadata
+    from macrocast.core.types import LAYER_SINKS, L1DataDefinitionArtifact, L1RegimeMetadataArtifact
 
     assert LAYER_SINKS["l1"]["l1_data_definition_v1"] is L1DataDefinitionArtifact
-    assert LAYER_SINKS["l1"]["l1_regime_metadata_v1"] is SeriesMetadata
+    assert LAYER_SINKS["l1"]["l1_regime_metadata_v1"] is L1RegimeMetadataArtifact
 
 
 def test_l1_standard_fred_md_yaml_parses():
@@ -258,10 +259,11 @@ def test_l1_regime_sink_gated_by_non_none_regime():
     yaml_text = """
     1_data:
       fixed_axes:
-        regime_definition: custom
+        regime_definition: external_user_provided
       leaf_config:
         target: CPIAUCSL
-        regime_source: nber
+        regime_indicator_path: regimes.csv
+        n_regimes: 2
     """
     dag = normalize_to_dag_form(parse_layer_yaml(yaml_text))
     assert "l1_regime_metadata_v1" in dag.sinks
@@ -278,4 +280,82 @@ def test_l1_manifest_records_resolved_defaults():
     record = manifest.layer_execution_log["l1"]
     assert record.resolved_axes["custom_source_policy"].source == "package_default"
     assert record.resolved_axes["frequency"].value == "monthly"
-    assert record.produced_sinks == ("l1_data_definition_v1",)
+    assert record.produced_sinks == ("l1_data_definition_v1", "l1_regime_metadata_v1")
+
+
+def test_l1_g_default_is_none_and_sink_is_inactive():
+    from macrocast.core import SourceSelector
+
+    yaml_text = """
+    1_data:
+      fixed_axes: {}
+      leaf_config:
+        target: CPIAUCSL
+    """
+    manifest = execute_recipe(build_recipe_with_l1_only(yaml_text))
+    record = manifest.layer_execution_log["l1"]
+    assert record.regime_artifact.definition == "none"
+    assert record.regime_artifact.regime_label_series is None
+    assert record.regime_artifact.estimation_temporal_rule is None
+    assert record.produced_sinks == ("l1_data_definition_v1", "l1_regime_metadata_v1")
+    report = validate_regime_source_reference(
+        parse_layer_yaml(yaml_text),
+        SourceSelector(layer_ref="l1", sink_name="l1_regime_metadata_v1"),
+    )
+    assert report.has_hard_errors
+
+
+def test_l1_g_external_nber_loads_usrec_metadata():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        regime_definition: external_nber
+      leaf_config:
+        target: CPIAUCSL
+    """
+    manifest = execute_recipe(build_recipe_with_l1_only(yaml_text))
+    regime = manifest.layer_execution_log["l1"].regime_artifact
+    assert regime.definition == "external_nber"
+    assert regime.estimation_metadata["source_series"] == "USREC"
+
+
+def test_l1_g_estimated_markov_requires_n_regimes():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        regime_definition: estimated_markov_switching
+      leaf_config:
+        target: CPIAUCSL
+        n_regimes: 0
+    """
+    report = validate_layer(parse_layer_yaml(yaml_text))
+    assert report.has_hard_errors
+    assert any("n_regimes" in issue.message for issue in report.hard_errors)
+
+
+def test_l1_g_full_sample_once_is_schema_rejected():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        regime_definition: estimated_markov_switching
+        regime_estimation_temporal_rule: full_sample_once
+      leaf_config:
+        target: CPIAUCSL
+        n_regimes: 2
+    """
+    report = validate_layer(parse_layer_yaml(yaml_text))
+    assert report.has_hard_errors
+    assert any("full_sample_once" in issue.message for issue in report.hard_errors)
+
+
+def test_l1_g_estimated_threshold_requires_threshold_variable():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        regime_definition: estimated_threshold
+      leaf_config:
+        target: CPIAUCSL
+    """
+    report = validate_layer(parse_layer_yaml(yaml_text))
+    assert report.has_hard_errors
+    assert any("threshold_variable" in issue.message for issue in report.hard_errors)
