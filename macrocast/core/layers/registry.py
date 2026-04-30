@@ -14,16 +14,17 @@ from ..types import (
     L0MetaArtifact,
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
+    L2CleanPanelArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
-    Panel,
     TestResultSet,
     TrainingMetadata,
     ImportanceResultSet,
 )
 from .l0 import L0StudySetup
 from .l1 import L1Data
+from .l2 import L2Preprocessing
 from ..ops.registry import TypeSpec
 
 
@@ -91,7 +92,7 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l1_regime_metadata_v1": L1RegimeMetadataArtifact,
     },
     "l2": {
-        "clean_panel_v1": Panel,
+        "l2_clean_panel_v1": L2CleanPanelArtifact,
     },
     "l3": {
         "features_v1": FeatureBundle,
@@ -128,7 +129,7 @@ LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
     "l0": ("failure_policy", "reproducibility_mode", "compute_mode"),
     "l1": (),
     "l1_5": ("enabled",),
-    "l2": ("cleaning_scope",),
+    "l2": (),
     "l2_5": ("enabled",),
     "l3": (),
     "l3_5": ("enabled",),
@@ -159,16 +160,14 @@ register_layer(
 )(L1Data)
 
 
-@register_layer(
+register_layer(
     id="l2",
     name="Preprocessing",
     category="construction",
-    expected_inputs=("l1.raw_panel_v1",),
-    produces=("l2.clean_panel_v1",),
-    ui_mode="adaptive",
-)
-class L2Preprocessing:
-    pass
+    expected_inputs=("l1_data_definition_v1",),
+    produces=("l2_clean_panel_v1",),
+    ui_mode="list",
+)(L2Preprocessing)
 
 
 @register_layer(

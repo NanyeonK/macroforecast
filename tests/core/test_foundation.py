@@ -40,7 +40,7 @@ def test_minimal_valid_dag() -> None:
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1", subset={"predictors": True}),
+                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1", subset={"predictors": True}),
             ),
             "lag_x": Node(
                 id="lag_x",
@@ -57,7 +57,7 @@ def test_minimal_valid_dag() -> None:
     result = validate_dag(dag)
 
     assert result.valid
-    assert result.node_output_types["src"] is Panel
+    assert issubclass(result.node_output_types["src"], Panel)
     assert result.node_output_types["lag_x"] is LaggedPanel
 
 
@@ -151,6 +151,42 @@ def test_axis_starts_with_gate_propagation() -> None:
     assert not inactive_result.valid
 
 
+def test_combined_gate_propagation() -> None:
+    dag = DAG(
+        layer_id="l2",
+        nodes={
+            "alignment_rule": Node(
+                id="alignment_rule",
+                type="axis",
+                layer_id="l2",
+                op="quarterly_to_monthly_rule",
+                params={"value": "step_backward"},
+                gates=(
+                    GatePredicate(
+                        kind="combined",
+                        target="",
+                        value=(
+                            {"kind": "layer_axis_equals", "target": "l1.frequency", "value": "monthly"},
+                            {"kind": "axis_in", "target": "sd_series_frequency_filter", "value": ["quarterly_only", "both"]},
+                        ),
+                    ),
+                ),
+            ),
+            "filter": Node(
+                id="filter",
+                type="axis",
+                layer_id="l2",
+                op="sd_series_frequency_filter",
+                params={"value": "both"},
+            ),
+        },
+        sinks={"alignment_rule": "alignment_rule"},
+        layer_globals={"frequency": "monthly", "sd_series_frequency_filter": "both"},
+    )
+
+    assert validate_dag(dag).valid
+
+
 def test_cross_layer_reference() -> None:
     selector = SourceSelector(
         layer_ref="l6",
@@ -202,7 +238,7 @@ def test_node_order_does_not_affect_type_resolution() -> None:
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
             ),
         },
         sinks={"lagged_x": "lag_x"},

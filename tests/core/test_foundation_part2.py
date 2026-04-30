@@ -35,7 +35,7 @@ def _sweep_dags() -> dict:
                     type="source",
                     layer_id="l3",
                     op="source",
-                    selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+                    selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
                 ),
                 "lag_x": Node(
                     id="lag_x",
@@ -80,7 +80,7 @@ def test_node_group_sweep_switches_sink_target() -> None:
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
             ),
             "pipeline_a": Node(id="pipeline_a", type="step", layer_id="l3", op="lag", params={"n_lag": 1}, inputs=(NodeRef("src"),)),
             "pipeline_b": Node(id="pipeline_b", type="step", layer_id="l3", op="lag", params={"n_lag": 2}, inputs=(NodeRef("src"),)),
@@ -106,7 +106,7 @@ def test_sweepable_param_validator_rejects_non_sweepable_param() -> None:
                     type="source",
                     layer_id="l3",
                     op="source",
-                    selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+                    selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
                 ),
                 "lag_x": Node(
                     id="lag_x",
@@ -155,15 +155,15 @@ def test_execute_node_uses_source_context_and_cache(tmp_path: Path, mock_clean_p
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
             ),
             "lag_x": Node(id="lag_x", type="step", layer_id="l3", op="lag", params={"n_lag": 2}, inputs=(NodeRef("src"),)),
         },
         sinks={"features_v1": "lag_x"},
     )
 
-    result = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.clean_panel_v1": mock_clean_panel}}, tmp_path)
-    cached = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.clean_panel_v1": mock_clean_panel}}, tmp_path)
+    result = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.l2_clean_panel_v1": mock_clean_panel}}, tmp_path)
+    cached = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.l2_clean_panel_v1": mock_clean_panel}}, tmp_path)
 
     assert result.column_names[:2] == ("INDPRO_lag1", "INDPRO_lag2")
     assert cached == result
@@ -198,7 +198,7 @@ metadata:
   nodes:
     - id: src_clean
       type: source
-      selector: {layer_ref: l2, sink_name: clean_panel_v1, subset: {predictors: true}}
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {predictors: true}}
     - id: lag_x
       type: step
       op: lag
@@ -227,7 +227,7 @@ def test_yaml_dag_form_parses_node_group_sweeps() -> None:
   nodes:
     - id: src_clean
       type: source
-      selector: {layer_ref: l2, sink_name: clean_panel_v1}
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1}
     - {id: pipeline_a, type: step, op: lag, params: {n_lag: 1}, inputs: [src_clean]}
     - {id: pipeline_b, type: step, op: lag, params: {n_lag: 2}, inputs: [src_clean]}
   sinks:

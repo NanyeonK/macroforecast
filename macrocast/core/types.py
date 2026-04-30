@@ -124,6 +124,19 @@ class Panel(DataType):
 
 
 @dataclass(frozen=True)
+class L2CleanPanelArtifact(Panel):
+    panel: Panel = field(default_factory=Panel)
+    column_metadata: dict[str, Any] = field(default_factory=dict)
+    cleaning_log: dict[str, Any] = field(default_factory=dict)
+    n_imputed_cells: int = 0
+    n_outliers_flagged: int = 0
+    n_truncated_obs: int = 0
+    transform_map_applied: dict[str, int] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+    cleaning_temporal_rules: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class LaggedPanel(DataType):
     shape: tuple[Any, Any] | None = None
     column_names: tuple[str, ...] = ()

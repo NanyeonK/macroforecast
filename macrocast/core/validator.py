@@ -354,6 +354,11 @@ def _disabled_nodes(dag: DAG) -> set[str]:
 
 
 def _gate_passes(dag: DAG, gate: GatePredicate, disabled_nodes: set[str]) -> bool:
+    if gate.kind == "combined":
+        return all(
+            _gate_passes(dag, GatePredicate(**condition), disabled_nodes)
+            for condition in gate.value
+        )
     value = _gate_target_value(dag, gate.target)
     if gate.kind == "axis_equals":
         return value == gate.value

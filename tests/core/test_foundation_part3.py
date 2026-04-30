@@ -30,7 +30,7 @@ metadata:
   nodes:
     - id: src_clean
       type: source
-      selector: {layer_ref: l2, sink_name: clean_panel_v1}
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1}
     - id: lag_x
       type: step
       op: lag
