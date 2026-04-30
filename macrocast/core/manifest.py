@@ -289,6 +289,7 @@ def replicate(manifest_path: Path | str) -> ReplicationResult:
     manifest = Manifest.load(manifest_path)
     current_env = capture_runtime_environment(Path.cwd())
     env_diff = compare_environments(manifest.runtime_environment, current_env)
+    install_dependencies(manifest.dependencies, Path.cwd(), run=False)
     recipe = Recipe.from_yaml(manifest.recipe_yaml_full)
     new_manifest = Manifest.initialize(recipe, manifest.recipe_yaml_full, Path.cwd())
     return ReplicationResult(
@@ -297,6 +298,27 @@ def replicate(manifest_path: Path | str) -> ReplicationResult:
         environment_diff=env_diff,
         matching_recipe_hash=manifest.recipe_hash == new_manifest.recipe_hash,
     )
+
+
+def install_dependencies(dependencies: DependencyManifest, target_dir: Path, run: bool = False) -> tuple[Path, ...]:
+    lock_dir = target_dir / "lockfiles"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    if dependencies.python_lockfile_content:
+        path = lock_dir / (Path(dependencies.python_lockfile_path).name or "uv.lock")
+        path.write_text(dependencies.python_lockfile_content, encoding="utf-8")
+        written.append(path)
+        if run:
+            subprocess.run(("uv", "sync", "--locked"), cwd=target_dir, check=True)
+    if dependencies.r_lockfile_content:
+        path = lock_dir / (Path(dependencies.r_lockfile_path or "renv.lock").name)
+        path.write_text(dependencies.r_lockfile_content, encoding="utf-8")
+        written.append(path)
+    if dependencies.julia_manifest:
+        path = lock_dir / (Path(dependencies.julia_manifest_path or "Manifest.toml").name)
+        path.write_text(dependencies.julia_manifest, encoding="utf-8")
+        written.append(path)
+    return tuple(written)
 
 
 def layer_record_from_exception(layer_id: LayerId, started_at: datetime, exc: BaseException) -> LayerExecutionRecord:

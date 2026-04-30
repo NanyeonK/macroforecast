@@ -100,11 +100,7 @@ def execute_node(
         with result_path.open("rb") as fh:
             return pickle.load(fh)
 
-    inputs = [execute_node(dag.node(ref.node_id), dag, runtime_context, cache_dir) for ref in node.inputs]
-    op = get_op(node.op)
-    if op.function is None:
-        raise ValueError(f"{node.layer_id}.{node.id}: op {node.op!r} has no executable function")
-    result = op.function(inputs, node.params)
+    result = _compute_node(node, dag, runtime_context, cache_dir)
 
     cache_path.mkdir(parents=True, exist_ok=True)
     with result_path.open("wb") as fh:
@@ -118,6 +114,35 @@ def execute_node(
     (cache_path / "metadata.json").write_text(canonical_serialize(metadata), encoding="utf-8")
     (cache_path / "created_at.txt").write_text(metadata["created_at"], encoding="utf-8")
     return result
+
+
+def _compute_node(node: Node, dag: DAG, runtime_context: dict[str, Any], cache_dir: Path) -> Any:
+    if node.type == "source":
+        sources = runtime_context.get("sources", {})
+        keys = [node.id]
+        if node.selector is not None:
+            keys.extend(
+                [
+                    f"{node.selector.layer_ref}.{node.selector.sink_name}",
+                    node.selector.sink_name,
+                ]
+            )
+        for key in keys:
+            if key in sources:
+                return sources[key]
+        raise ValueError(f"{node.layer_id}.{node.id}: source value is missing from runtime_context['sources']")
+    if node.type == "axis":
+        return node.params.get("value")
+    if node.type == "sink":
+        if len(node.inputs) != 1:
+            raise ValueError(f"{node.layer_id}.{node.id}: sink node requires exactly one input")
+        return execute_node(dag.node(node.inputs[0].node_id), dag, runtime_context, cache_dir)
+
+    inputs = [execute_node(dag.node(ref.node_id), dag, runtime_context, cache_dir) for ref in node.inputs]
+    op = get_op(node.op)
+    if op.function is None:
+        raise ValueError(f"{node.layer_id}.{node.id}: op {node.op!r} has no executable function")
+    return op.function(inputs, node.params)
 
 
 def _filter_relevant_context(op_name: str, runtime_context: dict[str, Any]) -> dict[str, Any]:

@@ -25,6 +25,7 @@ from .manifest import (
     cell_summary_from_cell,
     compare_environments,
     layer_record_from_exception,
+    install_dependencies,
     replicate,
 )
 from .recipe import Recipe
@@ -160,6 +161,7 @@ __all__ = [
     "get_op",
     "layer_hash",
     "layer_record_from_exception",
+    "install_dependencies",
     "list_layers",
     "list_ops",
     "node_hash",

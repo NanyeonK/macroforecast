@@ -14,6 +14,7 @@ from macrocast.core.manifest import (
     capture_runtime_environment,
     cell_summary_from_cell,
     compare_environments,
+    install_dependencies,
     replicate,
 )
 
@@ -79,6 +80,17 @@ def test_runtime_environment_and_dependency_manifest(tmp_path: Path) -> None:
     assert env.python_version
     assert deps.python_lockfile_content == "locked"
     assert not diff.has_critical_diff
+
+
+def test_install_dependencies_restores_embedded_lockfiles(tmp_path: Path) -> None:
+    (tmp_path / "uv.lock").write_text("locked", encoding="utf-8")
+    deps = capture_dependency_manifest(tmp_path)
+    restore_dir = tmp_path / "restore"
+
+    written = install_dependencies(deps, restore_dir, run=False)
+
+    assert written
+    assert (restore_dir / "lockfiles" / "uv.lock").read_text(encoding="utf-8") == "locked"
 
 
 def test_layer_spec_dataclasses_and_checklist() -> None:

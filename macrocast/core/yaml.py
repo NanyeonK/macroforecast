@@ -65,6 +65,8 @@ def parse_dag_form(layer_yaml: dict[str, Any], layer_id: LayerId) -> DAG:
         for key, value in layer_yaml.items()
         if key not in {"nodes", "edges", "sinks", "fixed_axes", "leaf_config", "sweep_groups"}
     }
+    if "sweep_groups" in layer_yaml:
+        layer_globals["_sweep_groups"] = tuple(layer_yaml["sweep_groups"])
     return DAG(layer_id=layer_id, nodes=nodes, edges=edges, sinks=sinks, layer_globals=layer_globals)
 
 

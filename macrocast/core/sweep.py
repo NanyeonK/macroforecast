@@ -84,6 +84,16 @@ def collect_all_sweeps(dags: dict[LayerId, DAG]) -> tuple[SweepSpec, ...]:
                         values=tuple(value["sweep"]),
                     )
                 )
+        for raw_group in dag.layer_globals.get("_sweep_groups", ()):
+            members = tuple(NodeRef(member) if isinstance(member, str) else member for member in raw_group.get("members", ()))
+            sweeps.append(
+                NodeGroupSweep(
+                    id=raw_group.get("id", raw_group.get("group_id")),
+                    group_id=raw_group.get("id", raw_group.get("group_id")),
+                    layer_id=layer_id,
+                    members=members,
+                )
+            )
     return tuple(sweeps)
 
 
@@ -251,8 +261,9 @@ def _apply_node_group_sweep(
     if spec.layer_id is None or not isinstance(value, NodeRef):
         return dags
     dag = dags[spec.layer_id]
+    member_ids = {member.node_id for member in spec.members}
     sinks = {
-        sink_name: value.node_id if target in {member.node_id for member in spec.members} else target
+        sink_name: value.node_id if sink_name == spec.group_id or target in member_ids else target
         for sink_name, target in dag.sinks.items()
     }
     updated = dict(dags)

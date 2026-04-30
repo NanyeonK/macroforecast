@@ -14,6 +14,7 @@ from macrocast.core import (
     canonical_serialize,
     collect_all_sweeps,
     ensure_cache_layout,
+    execute_node,
     expand_sweeps,
     layer_hash,
     node_hash,
@@ -70,6 +71,31 @@ def test_param_and_external_axis_sweep_expand_grid_and_zip() -> None:
     assert grid_cells[0].cell_id
 
 
+def test_node_group_sweep_switches_sink_target() -> None:
+    dag = DAG(
+        layer_id="l3",
+        nodes={
+            "src": Node(
+                id="src",
+                type="source",
+                layer_id="l3",
+                op="source",
+                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+            ),
+            "pipeline_a": Node(id="pipeline_a", type="step", layer_id="l3", op="lag", params={"n_lag": 1}, inputs=(NodeRef("src"),)),
+            "pipeline_b": Node(id="pipeline_b", type="step", layer_id="l3", op="lag", params={"n_lag": 2}, inputs=(NodeRef("src"),)),
+        },
+        sinks={"pipeline_choice": "pipeline_a"},
+        layer_globals={"_sweep_groups": ({"id": "pipeline_choice", "members": ["pipeline_a", "pipeline_b"]},)},
+    )
+
+    cells = expand_sweeps({"l3": dag})
+
+    assert len(cells) == 2
+    assert cells[0].concrete_dag["l3"].sinks["pipeline_choice"] == "pipeline_a"
+    assert cells[1].concrete_dag["l3"].sinks["pipeline_choice"] == "pipeline_b"
+
+
 def test_sweepable_param_validator_rejects_non_sweepable_param() -> None:
     dags = {
         "l3": DAG(
@@ -118,6 +144,29 @@ def test_cache_hashes_are_stable_and_sensitive_to_param_changes(tmp_path: Path) 
     assert (tmp_path / "nodes").is_dir()
     assert (tmp_path / "cells").is_dir()
     assert (tmp_path / "runtime_context").is_dir()
+
+
+def test_execute_node_uses_source_context_and_cache(tmp_path: Path, mock_clean_panel) -> None:
+    dag = DAG(
+        layer_id="l3",
+        nodes={
+            "src": Node(
+                id="src",
+                type="source",
+                layer_id="l3",
+                op="source",
+                selector=SourceSelector(layer_ref="l2", sink_name="clean_panel_v1"),
+            ),
+            "lag_x": Node(id="lag_x", type="step", layer_id="l3", op="lag", params={"n_lag": 2}, inputs=(NodeRef("src"),)),
+        },
+        sinks={"features_v1": "lag_x"},
+    )
+
+    result = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.clean_panel_v1": mock_clean_panel}}, tmp_path)
+    cached = execute_node(dag.nodes["lag_x"], dag, {"sources": {"l2.clean_panel_v1": mock_clean_panel}}, tmp_path)
+
+    assert result.column_names[:2] == ("INDPRO_lag1", "INDPRO_lag2")
+    assert cached == result
 
 
 def test_yaml_sugar_form_normalizes_to_dag() -> None:
@@ -169,6 +218,28 @@ sweep_combination:
     assert dags["l3"].nodes["lag_x"].params["n_lag"]["sweep"] == [4, 8]
     assert len(recipe.cells) == 2
     assert not report.has_hard_errors
+
+
+def test_yaml_dag_form_parses_node_group_sweeps() -> None:
+    recipe = Recipe.from_yaml(
+        """
+3_feature_engineering:
+  nodes:
+    - id: src_clean
+      type: source
+      selector: {layer_ref: l2, sink_name: clean_panel_v1}
+    - {id: pipeline_a, type: step, op: lag, params: {n_lag: 1}, inputs: [src_clean]}
+    - {id: pipeline_b, type: step, op: lag, params: {n_lag: 2}, inputs: [src_clean]}
+  sinks:
+    pipeline_choice: pipeline_a
+  sweep_groups:
+    - id: pipeline_choice
+      members: [pipeline_a, pipeline_b]
+"""
+    )
+
+    assert len(recipe.cells) == 2
+    assert recipe.cells[1].concrete_dag["l3"].sinks["pipeline_choice"] == "pipeline_b"
 
 
 def test_validation_report_surfaces_hard_errors() -> None:

@@ -11,7 +11,7 @@ from ..types import DataType, Factor, LaggedPanel, MappingArtifact, Panel, Serie
     output_type=(Panel, Series, LaggedPanel, Factor),
 )
 def identity(input_data, params):
-    return input_data
+    return input_data[0] if isinstance(input_data, list) and input_data else input_data
 
 
 @register_op(
@@ -45,7 +45,33 @@ def concat(inputs, params):
     ),
 )
 def lag(input_data, params):
-    raise NotImplementedError("lag runtime execution is not wired in foundation schema")
+    source = input_data[0] if isinstance(input_data, list) else input_data
+    n_lag = int(params.get("n_lag", 4))
+    include_now = bool(params.get("include_contemporaneous", False))
+    if isinstance(source, Panel):
+        base_columns = source.column_names
+        lag_columns = [
+            f"{column}_lag{lag}"
+            for column in base_columns
+            for lag in range(0 if include_now else 1, n_lag + 1)
+        ]
+        width = len(lag_columns)
+        return LaggedPanel(
+            shape=(source.shape[0], width) if source.shape else None,
+            column_names=tuple(lag_columns),
+            n_lag=n_lag,
+        )
+    if isinstance(source, Series):
+        lag_columns = [
+            f"{source.name}_lag{lag}"
+            for lag in range(0 if include_now else 1, n_lag + 1)
+        ]
+        return LaggedPanel(
+            shape=(source.shape[0], len(lag_columns)) if source.shape else None,
+            column_names=tuple(lag_columns),
+            n_lag=n_lag,
+        )
+    raise TypeError(f"lag expected Panel or Series, got {type(source).__name__}")
 
 
 @register_op(

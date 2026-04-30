@@ -76,6 +76,14 @@ class DAG:
     sinks: dict[str, str] = field(default_factory=dict)
     layer_globals: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        node_ids = [node.id for node in self.nodes.values()]
+        if len(set(node_ids)) != len(node_ids):
+            raise ValueError(f"{self.layer_id}: Node IDs must be unique within a DAG")
+        mismatched = [key for key, node in self.nodes.items() if key != node.id]
+        if mismatched:
+            raise ValueError(f"{self.layer_id}: node mapping keys must match node ids: {mismatched}")
+
     def node(self, node_id: str) -> Node:
         try:
             return self.nodes[node_id]

@@ -21,6 +21,16 @@ from macrocast.core import (
 )
 
 
+def test_dag_rejects_node_key_id_mismatch() -> None:
+    with pytest.raises(ValueError, match="node mapping keys must match"):
+        DAG(
+            layer_id="l3",
+            nodes={
+                "a": Node(id="b", type="axis", layer_id="l3", op="demo"),
+            },
+        )
+
+
 def test_minimal_valid_dag() -> None:
     dag = DAG(
         layer_id="l3",
