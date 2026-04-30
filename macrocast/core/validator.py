@@ -423,7 +423,7 @@ def _reachable_from_any_source(dag: DAG, sink_node_id: str) -> bool:
         node = dag.nodes.get(node_id)
         if node is None:
             return False
-        if node.type == "source":
+        if node.type in {"source", "axis"}:
             return True
         return any(visit(parent) for parent in reverse_edges.get(node_id, ()))
 

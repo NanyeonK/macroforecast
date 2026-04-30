@@ -11,6 +11,7 @@ from ..types import (
     FeatureBundle,
     FeatureMetadata,
     ForecastArtifact,
+    L0MetaArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -20,6 +21,7 @@ from ..types import (
     TrainingMetadata,
     ImportanceResultSet,
 )
+from .l0 import L0StudySetup
 from ..ops.registry import TypeSpec
 
 
@@ -79,6 +81,9 @@ def list_layers() -> dict[LayerId, LayerSpec]:
 
 
 LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
+    "l0": {
+        "l0_meta_v1": L0MetaArtifact,
+    },
     "l1": {
         "raw_panel_v1": Panel,
         "regime_metadata_v1": SeriesMetadata,
@@ -134,9 +139,13 @@ LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
 }
 
 
-@register_layer(id="l0", name="Study setup", category="setup", ui_mode="adaptive")
-class L0StudySetup:
-    pass
+register_layer(
+    id="l0",
+    name="Study Setup",
+    category="setup",
+    produces=("l0_meta_v1",),
+    ui_mode="list",
+)(L0StudySetup)
 
 
 @register_layer(id="l1", name="Data", category="construction", produces=("l1.raw_panel_v1",), ui_mode="adaptive")

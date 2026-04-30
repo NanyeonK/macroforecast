@@ -56,6 +56,19 @@ class MappingArtifact(MetadataArtifact):
 
 
 @dataclass(frozen=True)
+class L0MetaArtifact(DataType):
+    failure_policy: Literal["fail_fast", "continue_on_failure"]
+    reproducibility_mode: Literal["seeded_reproducible", "exploratory"]
+    compute_mode: Literal["serial", "parallel"]
+    random_seed: int | None
+    parallel_unit: Literal["models", "horizons", "targets", "oos_dates"] | None
+    n_workers: int | Literal["auto"] | None
+    gpu_deterministic: bool
+    derived_study_scope: str
+    derived_execution_route: str = "comparison_sweep"
+
+
+@dataclass(frozen=True)
 class Panel(DataType):
     shape: tuple[Any, Any] | None = None
     column_names: tuple[str, ...] = ()
@@ -162,3 +175,11 @@ class DiagnosticArtifact(DataType):
     artifact_type: Literal["table", "figure", "json"] | str
     file_paths: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+def __getattr__(name: str) -> Any:
+    if name == "LAYER_SINKS":
+        from .layers.registry import LAYER_SINKS
+
+        return LAYER_SINKS
+    raise AttributeError(name)

@@ -132,3 +132,21 @@ def test_l0_manifest_records_all_resolved():
         entry = l0.resolved_axes[axis]
         assert entry.value is not None
         assert entry.source == "package_default"
+
+
+def test_l0_registered_with_spec_correct_class():
+    from macrocast.core.layers.l0 import L0StudySetup
+    from macrocast.core.layers.registry import get_layer
+
+    spec = get_layer("l0")
+    assert spec.cls is L0StudySetup
+    assert spec.produces == ("l0_meta_v1",)
+    assert spec.ui_mode == "list"
+    assert spec.category == "setup"
+
+
+def test_l0_sink_in_layer_sinks():
+    from macrocast.core.types import LAYER_SINKS
+
+    assert "l0" in LAYER_SINKS
+    assert "l0_meta_v1" in LAYER_SINKS["l0"]

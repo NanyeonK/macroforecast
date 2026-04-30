@@ -6,9 +6,7 @@ from typing import Any, Literal
 
 from ..dag import DAG, Node, NodeRef
 from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
-from ..types import DataType
-from ..validator import Issue, Severity, ValidationReport
-from ..yaml import LayerYamlSpec, parse_recipe_yaml
+from ..types import L0MetaArtifact
 
 
 FailurePolicy = Literal["fail_fast", "continue_on_failure"]
@@ -29,17 +27,8 @@ DEFAULT_FIXED_AXES: dict[str, str] = {
 }
 
 
-@dataclass(frozen=True)
-class L0MetaArtifact(DataType):
-    failure_policy: FailurePolicy
-    reproducibility_mode: ReproducibilityMode
-    compute_mode: ComputeMode
-    random_seed: int | None
-    parallel_unit: ParallelUnit | None
-    n_workers: int | Literal["auto"] | None
-    gpu_deterministic: bool
-    derived_study_scope: str
-    derived_execution_route: str = "comparison_sweep"
+class L0StudySetup:
+    """Layer 0 Study Setup implementation marker."""
 
 
 @dataclass(frozen=True)
@@ -74,14 +63,16 @@ class L0Manifest:
 
 @dataclass(frozen=True)
 class L0Recipe:
-    layer: LayerYamlSpec
+    layer: Any
     targets: tuple[str, ...] = ("target",)
     methods: tuple[str, ...] = ("method",)
 
 
-def parse_layer_yaml(yaml_text: str, layer_id: Literal["l0"] = "l0") -> LayerYamlSpec:
+def parse_layer_yaml(yaml_text: str, layer_id: Literal["l0"] = "l0") -> Any:
     if layer_id != "l0":
         raise ValueError("L0 parser only accepts layer_id='l0'")
+    from ..yaml import LayerYamlSpec, parse_recipe_yaml
+
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("0_meta", {})
     if raw is None:
@@ -91,7 +82,7 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l0"] = "l0") -> LayerYam
     return LayerYamlSpec(layer_id="l0", raw_yaml=raw, enabled=bool(raw.get("enabled", True)))
 
 
-def normalize_to_dag_form(layer: LayerYamlSpec | dict[str, Any], layer_id: Literal["l0"] = "l0") -> DAG:
+def normalize_to_dag_form(layer: Any | dict[str, Any], layer_id: Literal["l0"] = "l0") -> DAG:
     if layer_id != "l0":
         raise ValueError("L0 normalizer only accepts layer_id='l0'")
     raw = _raw_layer(layer)
@@ -147,7 +138,9 @@ def resolve_axes(dag: DAG, recipe_context: dict[str, Any] | None = None) -> dict
     return resolved
 
 
-def validate_layer(layer: LayerYamlSpec | dict[str, Any] | str) -> ValidationReport:
+def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
+    from ..validator import ValidationReport
+
     if isinstance(layer, str):
         layer = parse_layer_yaml(layer)
     raw = _raw_layer(layer)
@@ -320,7 +313,7 @@ L0_LAYER_SPEC = LayerImplementationSpec(
 
 
 def _raw_layer(layer: LayerYamlSpec | dict[str, Any]) -> dict[str, Any]:
-    if isinstance(layer, LayerYamlSpec):
+    if hasattr(layer, "raw_yaml"):
         return layer.raw_yaml
     return layer
 
@@ -369,8 +362,12 @@ def _valid_n_workers(value: Any) -> bool:
 
 
 def _issue(location: str, message: str) -> Issue:
+    from ..validator import Issue, Severity
+
     return Issue("l0_contract", Severity.HARD, "layer", location, message)
 
 
 def _report(location: str, message: str) -> ValidationReport:
+    from ..validator import ValidationReport
+
     return ValidationReport((_issue(location, message),))
