@@ -22,6 +22,8 @@ from ..types import (
     L4TrainingMetadataArtifact,
     L5EvaluationArtifact,
     L6TestsArtifact,
+    L7ImportanceArtifact,
+    L7TransformationAttributionArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -36,6 +38,7 @@ from .l3 import L3FeatureEngineering
 from .l4 import L4ForecastingModel
 from .l5 import L5Evaluation
 from .l6 import L6StatisticalTests
+from .l7 import L7Interpretation
 from ..ops.registry import TypeSpec
 
 
@@ -138,8 +141,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l6_tests_v1": L6TestsArtifact,
     }),
     "l7": {
-        "importance_v1": ImportanceResultSet,
-        "transformation_attribution_v1": MappingArtifact,
+        "l7_importance_v1": L7ImportanceArtifact,
+        "l7_transformation_attribution_v1": L7TransformationAttributionArtifact,
     },
     "l8": {
         "artifacts_v1": ArtifactManifest,
@@ -256,16 +259,14 @@ register_layer(
 )(L6StatisticalTests)
 
 
-@register_layer(
+register_layer(
     id="l7",
     name="Interpretation",
     category="consumption",
-    expected_inputs=("l4.model_artifacts_v1", "l3.features_v1"),
-    produces=("l7.importance_v1",),
-    ui_mode="adaptive",
-)
-class L7Interpretation:
-    pass
+    expected_inputs=("l4_model_artifacts_v1", "l4_forecasts_v1", "l3_features_v1", "l3_metadata_v1", "l5_evaluation_v1", "l6_tests_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
+    produces=("l7_importance_v1", "l7_transformation_attribution_v1"),
+    ui_mode="graph",
+)(L7Interpretation)
 
 
 @register_layer(

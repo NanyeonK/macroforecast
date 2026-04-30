@@ -1,0 +1,18 @@
+7_interpretation:
+  enabled: true
+  nodes:
+    - {id: src_xgb, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: xgb_full}}}
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - id: rolling_shap
+      type: step
+      op: rolling_recompute
+      params: {model_family: xgboost, recompute_step: shap_tree, window: expanding, step_size: 12, recompute_step_params: {check_additivity: true}}
+      inputs: [src_xgb, src_X, src_y]
+  sinks:
+    l7_importance_v1:
+      temporal: rolling_shap
+  fixed_axes:
+    figure_type: auto
+    figure_format: pdf
+    top_k_features_to_show: 15

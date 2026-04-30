@@ -302,6 +302,36 @@ class L6TestsArtifact(DataType):
 
 
 @dataclass(frozen=True)
+class L7ImportanceArtifact(DataType):
+    global_importance: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    local_importance: dict[tuple[Any, ...], Any] | None = None
+    group_importance: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    lineage_importance: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    interaction_values: dict[tuple[Any, ...], Any] | None = None
+    temporal_importance: dict[tuple[Any, ...], Any] | None = None
+    stability_results: dict[tuple[Any, ...], Any] | None = None
+    fevd_results: dict[tuple[Any, ...], Any] | None = None
+    historical_decomposition_results: dict[tuple[Any, ...], Any] | None = None
+    irf_results: dict[tuple[Any, ...], Any] | None = None
+    forecast_decomposition_results: dict[tuple[Any, ...], Any] | None = None
+    variable_inclusion_results: dict[str, Any] = field(default_factory=dict)
+    figures: dict[str, str] = field(default_factory=dict)
+    computation_metadata: dict[str, Any] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class L7TransformationAttributionArtifact(DataType):
+    pipeline_contributions: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    decomposition_method: str = ""
+    loss_function: str = ""
+    baseline_pipeline: str = ""
+    summary_table: pd.DataFrame = field(default_factory=pd.DataFrame)
+    figures: dict[str, str] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class TestResult(DataType):
     test_name: str
     statistic: float

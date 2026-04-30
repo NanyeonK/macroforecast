@@ -1,0 +1,29 @@
+1_data:
+  fixed_axes:
+    dataset: fred_md
+7_interpretation:
+  enabled: true
+  nodes:
+    - {id: src_xgb, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: xgb_full}}}
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_l3_meta, type: source, selector: {layer_ref: l3, sink_name: l3_metadata_v1}}
+    - {id: shap, type: step, op: shap_tree, params: {model_family: xgboost}, inputs: [src_xgb, src_X]}
+    - {id: shap_md_groups, type: step, op: group_aggregate, params: {grouping: mccracken_ng_md_groups, aggregation: sum}, inputs: [shap]}
+    - {id: shap_pipeline_lineage, type: step, op: lineage_attribution, params: {level: pipeline_name, aggregation: sum}, inputs: [shap, src_l3_meta]}
+    - {id: shap_user_block, type: step, op: group_aggregate, params: {grouping: user_defined, aggregation: sum}, inputs: [shap]}
+  sinks:
+    l7_importance_v1:
+      feature_level: shap
+      group_md: shap_md_groups
+      pipeline_lineage: shap_pipeline_lineage
+      user_block: shap_user_block
+  fixed_axes:
+    output_table_format: long
+    figure_type: auto
+    figure_format: pdf
+    latex_table_export: true
+  leaf_config:
+    user_groups:
+      real_activity: [INDPRO, PAYEMS, UNRATE, CMRMTSPL]
+      prices: [CPIAUCSL, PPIFGS, PCEPI]
+      financial: [FEDFUNDS, GS10, BAA, AAA]
