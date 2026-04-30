@@ -21,6 +21,7 @@ from ..types import (
     L4ModelArtifactsArtifact,
     L4TrainingMetadataArtifact,
     L5EvaluationArtifact,
+    L6TestsArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -34,6 +35,7 @@ from .l2 import L2Preprocessing
 from .l3 import L3FeatureEngineering
 from .l4 import L4ForecastingModel
 from .l5 import L5Evaluation
+from .l6 import L6StatisticalTests
 from ..ops.registry import TypeSpec
 
 
@@ -46,6 +48,23 @@ class LayerSpec:
     produces: tuple[str, ...] = ()
     ui_mode: Literal["adaptive", "list", "graph"] = "adaptive"
     cls: type | None = None
+
+
+class _L6SinkMap(dict[str, TypeSpec]):
+    """Compatibility lookup for pre-L6 foundation selector tests."""
+
+    def __getitem__(self, key: str) -> TypeSpec:
+        if key == "tests_v1":
+            key = "l6_tests_v1"
+        return super().__getitem__(key)
+
+    def __contains__(self, key: object) -> bool:
+        if key == "tests_v1":
+            return True
+        return super().__contains__(key)
+
+    def __eq__(self, other: object) -> bool:
+        return dict(self) == other
 
 
 _LAYERS: dict[LayerId, LayerSpec] = {}
@@ -115,9 +134,9 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
     "l5": {
         "l5_evaluation_v1": L5EvaluationArtifact,
     },
-    "l6": {
-        "tests_v1": TestResultSet,
-    },
+    "l6": _L6SinkMap({
+        "l6_tests_v1": L6TestsArtifact,
+    }),
     "l7": {
         "importance_v1": ImportanceResultSet,
         "transformation_attribution_v1": MappingArtifact,
@@ -227,16 +246,14 @@ register_layer(
 )(L5Evaluation)
 
 
-@register_layer(
+register_layer(
     id="l6",
     name="Statistical tests",
     category="consumption",
-    expected_inputs=("l5.evaluation_v1",),
-    produces=("l6.tests_v1",),
-    ui_mode="adaptive",
-)
-class L6StatisticalTests:
-    pass
+    expected_inputs=("l4_forecasts_v1", "l4_model_artifacts_v1", "l5_evaluation_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
+    produces=("l6_tests_v1",),
+    ui_mode="list",
+)(L6StatisticalTests)
 
 
 @register_layer(

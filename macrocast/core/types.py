@@ -288,6 +288,20 @@ class L5EvaluationArtifact(DataType):
 
 
 @dataclass(frozen=True)
+class L6TestsArtifact(DataType):
+    equal_predictive_results: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    nested_results: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    cpa_results: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    multiple_model_results: dict[str, Any] = field(default_factory=dict)
+    density_results: dict[tuple[Any, ...], Any] | None = None
+    direction_results: dict[tuple[Any, ...], Any] | None = None
+    residual_results: dict[tuple[Any, ...], Any] | None = None
+    test_metadata: dict[str, Any] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+    l6_axis_resolved: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class TestResult(DataType):
     test_name: str
     statistic: float

@@ -1,0 +1,66 @@
+1_data:
+  fixed_axes:
+    regime_definition: external_nber
+4_forecasting_model:
+  nodes:
+    - {id: fit_ar1, type: step, op: fit_model, params: {family: ar_p}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}, inputs: [src_X, src_y]}
+    - {id: fit_xgb, type: step, op: fit_model, params: {family: xgboost}, inputs: [src_X, src_y]}
+  forecast_object: point
+5_evaluation:
+  fixed_axes: {}
+6_statistical_tests:
+  enabled: true
+  test_scope: per_target_horizon
+  dependence_correction: newey_west
+  overlap_handling: nw_with_h_minus_1_lag
+  sub_layers:
+    L6_A_equal_predictive:
+      enabled: true
+      fixed_axes:
+        equal_predictive_test: multi
+        loss_function: squared
+        model_pair_strategy: vs_benchmark_only
+        hln_correction: true
+    L6_B_nested:
+      enabled: true
+      fixed_axes:
+        nested_test: multi
+        nested_pair_strategy: vs_benchmark_auto
+        cw_adjustment: true
+        enc_test_one_sided: one_sided
+    L6_C_cpa:
+      enabled: true
+      fixed_axes:
+        cpa_test: giacomini_rossi_2010
+        cpa_window_type: rolling_window
+        cpa_conditioning_info: lagged_loss_difference
+        cpa_critical_value_method: simulated
+    L6_D_multiple_model:
+      enabled: true
+      fixed_axes:
+        multiple_model_test: multi
+        mcs_alpha: 0.10
+        stepm_alpha: 0.10
+        mmt_loss_function: squared
+        bootstrap_method: stationary_bootstrap
+        bootstrap_n_replications: 5000
+        mcs_t_statistic: t_max
+        spa_studentization: consistent
+    L6_F_direction:
+      enabled: true
+      fixed_axes:
+        direction_test: pesaran_timmermann_1992
+        direction_threshold: zero
+        direction_alpha: 0.05
+    L6_G_residual:
+      enabled: true
+      fixed_axes:
+        residual_test: [ljung_box_q, arch_lm, jarque_bera_normality, breusch_godfrey_serial_correlation]
+        residual_lag_count: 10
+        residual_test_scope: per_model_target_horizon
+        residual_alpha: 0.05
+  leaf_config:
+    nw_lag_truncation: auto
+    cpa_rolling_window_size: 60
+    bootstrap_block_length: auto
