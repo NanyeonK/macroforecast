@@ -4,7 +4,7 @@
 
 ## Current capabilities
 
-- **27 operational model families** plus 3 operational-narrow MIDAS routes: AR through MLP, including linear boosting, factor models, SVR, tree ensembles, CatBoost, and MIDAS adapters
+- **24 model families**: AR through MLP, including linear boosting, factor models, SVR, tree ensembles, CatBoost
 - **20 statistical tests**: DM variants, Clark-West, MCS, nested model tests, conditional ability, residual diagnostics
 - **12 importance methods**: SHAP (tree/kernel/linear), permutation, LIME, PDP/ICE/ALE, grouped, stability
 - **4 tuning algorithms**: grid search, random search, Bayesian optimization, genetic algorithm
@@ -19,7 +19,7 @@ macrocast/       # package source
   raw/           # dataset loading
   recipes/       # recipe specification
   preprocessing/ # preprocessing governance
-  registry/      # current public per-axis choice registry (147 axes)
+  registry/      # per-axis choice registry (125 axes, 717 values)
   core/          # Phase 0 DAG foundation scaffold (next execution surface)
   compiler/      # recipe -> execution bridge
   execution/     # runtime engine
@@ -35,6 +35,6 @@ plans/           # internal planning
 - Every new code surface must be documented in `docs/`
 - Grammar is fixed before registry content is expanded
 - One path = one fully specified forecasting study
-- `macrocast/registry` remains authoritative for the current public runtime;
-  `macrocast/core` is the next DAG execution foundation until migration
-  adapters are complete
+- `macrocast/core` is the source of truth for the new DAG execution system;
+  `macrocast/registry` stays frozen for backward compatibility until it can be
+  regenerated from core entries
