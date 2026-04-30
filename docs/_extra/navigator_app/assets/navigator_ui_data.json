@@ -3362,7 +3362,7 @@
       "default_value": "forbid_same_period_predictors",
       "docs_url": "../detail/layer1/availability_timing.html",
       "label": "Same-Period Predictor Rule",
-      "order": 20,
+      "order": 22,
       "question": "Can x observed at the target date enter the forecast?",
       "selection_kind": "defaulted_choice",
       "short_label": "Same-Period x",
@@ -3521,12 +3521,12 @@
       "contract": "FRED-SD state-selection contract. Custom groups require leaf_config.sd_states.",
       "default_value": "all_states",
       "docs_url": "../detail/layer1/fred_sd_source_selection.html",
-      "label": "FRED-SD State Group",
+      "label": "FRED-SD State Scope",
       "order": 10,
-      "question": "Which state set should enter the FRED-SD source frame?",
+      "question": "Which state group should enter the FRED-SD source frame?",
       "selection_kind": "defaulted_choice",
       "short_label": "SD States",
-      "summary": "No-op unless the dataset includes FRED-SD; group choices resolve to explicit state selectors.",
+      "summary": "Shown only when the FRED source panel includes FRED-SD; group choices resolve to state codes.",
       "values": {
         "all_states": {
           "label": "All States (Default)",
@@ -3611,75 +3611,75 @@
       }
     },
     "fred_sd_variable_group": {
-      "contract": "FRED-SD variable-selection contract. Custom groups require leaf_config.sd_variables.",
+      "contract": "FRED-SD series-selection contract. Custom groups require leaf_config.sd_variables.",
       "default_value": "all_sd_variables",
       "docs_url": "../detail/layer1/fred_sd_source_selection.html",
-      "label": "FRED-SD Variable Group",
-      "order": 11,
-      "question": "Which FRED-SD variable family should enter the source frame?",
+      "label": "FRED-SD Series Scope",
+      "order": 12,
+      "question": "Which FRED-SD series family should enter the source frame?",
       "selection_kind": "defaulted_choice",
-      "short_label": "SD Variables",
-      "summary": "No-op unless the dataset includes FRED-SD; group choices resolve to explicit variable selectors.",
+      "short_label": "SD Series",
+      "summary": "Shown only when the FRED source panel includes FRED-SD; group choices resolve to workbook series families.",
       "values": {
         "all_sd_variables": {
-          "label": "All FRED-SD Variables (Default)",
-          "short_label": "All Variables",
-          "summary": "Use all available FRED-SD variable families."
+          "label": "All FRED-SD Series (Default)",
+          "short_label": "All Series",
+          "summary": "Use all available FRED-SD workbook series families."
         },
         "custom_sd_variable_group": {
-          "label": "Custom Variable Group",
+          "label": "Custom Series Group",
           "short_label": "Custom",
-          "summary": "Use variables supplied in leaf_config.sd_variables."
+          "summary": "Use series supplied in leaf_config.sd_variables."
         },
         "direct_analog_high_confidence": {
           "label": "Direct Analog: High Confidence",
           "short_label": "High Confidence",
-          "summary": "Use variables with strong national-panel analogs."
+          "summary": "Use series with strong national-panel analogs."
         },
         "employment_sector": {
           "label": "Employment Sector",
           "short_label": "Employment",
-          "summary": "Use sectoral employment variables."
+          "summary": "Use sectoral employment series."
         },
         "gsp_output": {
           "label": "GSP / Output",
           "short_label": "Output",
-          "summary": "Use output and gross-state-product variables."
+          "summary": "Use output and gross-state-product series."
         },
         "housing": {
           "label": "Housing",
           "short_label": "Housing",
-          "summary": "Use housing-market variables."
+          "summary": "Use housing-market series."
         },
         "income": {
           "label": "Income",
           "short_label": "Income",
-          "summary": "Use income-related variables."
+          "summary": "Use income-related series."
         },
         "labor_market_core": {
           "label": "Labor Market Core",
           "short_label": "Labor Core",
-          "summary": "Use core labor-market variables."
+          "summary": "Use core labor-market series."
         },
         "no_reliable_analog": {
           "label": "No Reliable Analog",
           "short_label": "No Analog",
-          "summary": "Use variables without reliable national-panel analogs."
+          "summary": "Use series without reliable national-panel analogs."
         },
         "provisional_analog_medium": {
           "label": "Provisional Analog: Medium",
           "short_label": "Medium Analog",
-          "summary": "Use variables with provisional national-panel analogs."
+          "summary": "Use series with provisional national-panel analogs."
         },
         "semantic_review_outputs": {
           "label": "Semantic Review Outputs",
           "short_label": "Semantic Review",
-          "summary": "Use variables grouped by semantic review outputs."
+          "summary": "Use series grouped by semantic review outputs."
         },
         "trade": {
           "label": "Trade",
           "short_label": "Trade",
-          "summary": "Use trade-related variables."
+          "summary": "Use trade-related series."
         }
       }
     },
@@ -3733,7 +3733,7 @@
       "default_value": "zero_fill_leading_predictor_gaps",
       "docs_url": "../detail/layer1/frame_availability.html",
       "label": "Frame Availability Policy",
-      "order": 18,
+      "order": 20,
       "question": "How should source-frame availability gaps be handled?",
       "selection_kind": "defaulted_choice",
       "short_label": "Availability",
@@ -3766,11 +3766,11 @@
       "default_value": "apply_official_tcode",
       "docs_url": "../detail/layer1/official_transforms.html",
       "label": "Official Transform Policy",
-      "order": 16,
+      "order": 18,
       "question": "Should FRED-provided transform codes be applied?",
       "selection_kind": "defaulted_choice",
       "short_label": "Official T-Code",
-      "summary": "Controls FRED-MD/QD t-code application while building the FRED frame.",
+      "summary": "Controls FRED-MD/QD t-code application while building the source frame.",
       "values": {
         "apply_official_tcode": {
           "label": "Apply FRED T-Codes (Default)",
@@ -3789,7 +3789,7 @@
       "default_value": "target_and_predictors",
       "docs_url": "../detail/layer1/official_transforms.html",
       "label": "Official Transform Scope",
-      "order": 17,
+      "order": 19,
       "question": "Which columns should official transforms apply to?",
       "selection_kind": "defaulted_choice",
       "short_label": "T-Code Scope",
@@ -3822,7 +3822,7 @@
       "default_value": "preserve_raw_missing",
       "docs_url": "../detail/layer1/raw_source_cleaning.html",
       "label": "Raw Missing Policy",
-      "order": 14,
+      "order": 16,
       "question": "How should missing values already present in the raw source be handled?",
       "selection_kind": "defaulted_choice",
       "short_label": "Raw Missing",
@@ -3855,7 +3855,7 @@
       "default_value": "preserve_raw_outliers",
       "docs_url": "../detail/layer1/raw_source_cleaning.html",
       "label": "Raw Outlier Policy",
-      "order": 15,
+      "order": 17,
       "question": "How should outliers already present in the raw source be handled?",
       "selection_kind": "defaulted_choice",
       "short_label": "Raw Outliers",
@@ -3898,7 +3898,7 @@
       "default_value": "ignore_release_lag",
       "docs_url": "../detail/layer1/availability_timing.html",
       "label": "Publication Lag Rule",
-      "order": 19,
+      "order": 21,
       "question": "When are predictor observations treated as published and usable?",
       "selection_kind": "defaulted_choice",
       "short_label": "Release Lag",
@@ -3954,6 +3954,52 @@
         }
       }
     },
+    "sd_variable_selection": {
+      "contract": "FRED-SD explicit series-list contract. selected_sd_variables requires leaf_config.sd_variables.",
+      "default_value": "all_sd_variables",
+      "docs_url": "../detail/layer1/fred_sd_source_selection.html",
+      "label": "FRED-SD Series List",
+      "order": 13,
+      "question": "Should the FRED-SD series list be supplied explicitly?",
+      "selection_kind": "defaulted_choice",
+      "short_label": "SD Series List",
+      "summary": "Shown only when the FRED source panel includes FRED-SD; selected_sd_variables reads leaf_config.sd_variables.",
+      "values": {
+        "all_sd_variables": {
+          "label": "Use Scope Result (Default)",
+          "short_label": "Scope Result",
+          "summary": "Use all series implied by the selected FRED-SD Series Scope."
+        },
+        "selected_sd_variables": {
+          "label": "Explicit Series List",
+          "short_label": "Explicit List",
+          "summary": "Use series supplied in leaf_config.sd_variables."
+        }
+      }
+    },
+    "state_selection": {
+      "contract": "FRED-SD explicit state-list contract. selected_states requires leaf_config.sd_states.",
+      "default_value": "all_states",
+      "docs_url": "../detail/layer1/fred_sd_source_selection.html",
+      "label": "FRED-SD State List",
+      "order": 11,
+      "question": "Should the FRED-SD state list be supplied explicitly?",
+      "selection_kind": "defaulted_choice",
+      "short_label": "SD State List",
+      "summary": "Shown only when the FRED source panel includes FRED-SD; selected_states reads leaf_config.sd_states.",
+      "values": {
+        "all_states": {
+          "label": "Use Scope Result (Default)",
+          "short_label": "Scope Result",
+          "summary": "Use all states implied by the selected FRED-SD State Scope."
+        },
+        "selected_states": {
+          "label": "Explicit State List",
+          "short_label": "Explicit List",
+          "summary": "Use states supplied in leaf_config.sd_states."
+        }
+      }
+    },
     "study_scope": {
       "contract": "Primary Layer 0 study-shape contract. It derives the Layer 1 target_structure and determines whether downstream method axes are fixed or sweep-aware.",
       "docs_url": "../detail/layer0/study_scope.html",
@@ -3991,7 +4037,7 @@
       "default_value": "single_target",
       "docs_url": "../detail/layer1/target_universe.html",
       "label": "Target (y) Definition",
-      "order": 12,
+      "order": 14,
       "question": "Is y one target series or a set of target series?",
       "selection_kind": "contract_choice",
       "short_label": "Target y",
@@ -4010,30 +4056,30 @@
       }
     },
     "variable_universe": {
-      "contract": "Predictor-x universe contract. Non-default choices require the matching leaf_config column lists or mappings.",
+      "contract": "FRED-MD/QD predictor-x universe contract. Non-default choices require the matching leaf_config column lists or mappings.",
       "default_value": "all_variables",
       "docs_url": "../detail/layer1/target_universe.html",
-      "label": "Predictor (x) Universe",
-      "order": 13,
-      "question": "Which source columns are eligible as candidate predictors x?",
+      "label": "FRED-MD/QD Predictor (x) Universe",
+      "order": 15,
+      "question": "Which FRED-MD/QD columns are eligible as candidate predictors x?",
       "selection_kind": "defaulted_choice",
-      "short_label": "Predictor x",
-      "summary": "Filters candidate x columns before Layer 2 builds lags, factors, feature blocks, or other representations.",
+      "short_label": "MD/QD Predictor x",
+      "summary": "Filters candidate FRED-MD/QD x columns before Layer 2 builds lags, factors, feature blocks, or other representations.",
       "values": {
         "all_variables": {
-          "label": "All Variables (Default)",
-          "short_label": "All",
-          "summary": "Use the full eligible source-column universe."
+          "label": "All MD/QD Variables (Default)",
+          "short_label": "All MD/QD",
+          "summary": "Use the full eligible FRED-MD/QD source-column universe."
         },
         "category_variables": {
-          "label": "Category Variables",
+          "label": "MD/QD Category Variables",
           "short_label": "Category",
-          "summary": "Use columns mapped to a selected category."
+          "summary": "Use FRED-MD/QD columns mapped to a selected category."
         },
         "core_variables": {
-          "label": "Core Variables",
-          "short_label": "Core",
-          "summary": "Use the package's core source-variable subset."
+          "label": "Core MD/QD Variables",
+          "short_label": "Core MD/QD",
+          "summary": "Use the package's core FRED-MD/QD source-variable subset."
         },
         "explicit_variable_list": {
           "label": "Explicit Variable List",
@@ -4097,14 +4143,16 @@
         "axes": [
           "fred_sd_frequency_policy",
           "fred_sd_state_group",
-          "fred_sd_variable_group"
+          "state_selection",
+          "fred_sd_variable_group",
+          "sd_variable_selection"
         ],
         "condition": "Active only when the FRED source panel includes FRED-SD.",
         "id": "fred_sd_source_scope",
         "label": "FRED-SD Predictor Scope",
         "level": "conditional_subgroup",
         "parent_axis": "dataset",
-        "summary": "Restrict FRED-SD native frequency, states, and workbook variables used as candidate x columns."
+        "summary": "Restrict FRED-SD native frequency, state scope, and series scope used as candidate x columns."
       },
       {
         "axes": [
@@ -4831,6 +4879,8 @@
             "residual_diagnostics": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
+            "sd_variable_selection": "all_sd_variables",
+            "state_selection": "all_states",
             "study_scope": "one_target_one_method",
             "target": "INDPRO",
             "target_missing_policy": "none",
@@ -5857,9 +5907,39 @@
             "selected": "all_states"
           },
           {
-            "axis": "fred_sd_variable_group",
+            "axis": "state_selection",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 3,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'selected_states'",
+                "disabled_reason": "state_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_states"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
             "group_condition": "Active only when the FRED source panel includes FRED-SD.",
             "group_id": "fred_sd_source_scope",
             "group_label": "FRED-SD Predictor Scope",
@@ -5951,6 +6031,36 @@
                 "enabled": false,
                 "status": "operational",
                 "value": "custom_sd_variable_group"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_sd_variables"
+          },
+          {
+            "axis": "sd_variable_selection",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 5,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'selected_sd_variables'",
+                "disabled_reason": "sd_variable_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_sd_variables"
               }
             ],
             "parent_axis": "dataset",
@@ -10874,6 +10984,8 @@
             "residual_diagnostics": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "none",
+            "sd_variable_selection": "all_sd_variables",
+            "state_selection": "all_states",
             "study_scope": "one_target_one_method",
             "target": "INDPRO",
             "target_missing_policy": "none",
@@ -11909,9 +12021,39 @@
             "selected": "all_states"
           },
           {
-            "axis": "fred_sd_variable_group",
+            "axis": "state_selection",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 3,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'selected_states'",
+                "disabled_reason": "state_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_states"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
             "group_condition": "Active only when the FRED source panel includes FRED-SD.",
             "group_id": "fred_sd_source_scope",
             "group_label": "FRED-SD Predictor Scope",
@@ -12003,6 +12145,36 @@
                 "enabled": false,
                 "status": "operational",
                 "value": "custom_sd_variable_group"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_sd_variables"
+          },
+          {
+            "axis": "sd_variable_selection",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 5,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'selected_sd_variables'",
+                "disabled_reason": "sd_variable_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_sd_variables"
               }
             ],
             "parent_axis": "dataset",
@@ -16996,6 +17168,8 @@
             "rotation_feature_block": "none",
             "saved_objects": "full_bundle",
             "scaling_policy": "standard",
+            "sd_variable_selection": "all_sd_variables",
+            "state_selection": "all_states",
             "study_scope": "one_target_one_method",
             "target": "INDPRO",
             "target_lag_block": "none",
@@ -18084,9 +18258,39 @@
             "selected": "all_states"
           },
           {
-            "axis": "fred_sd_variable_group",
+            "axis": "state_selection",
             "axis_level": "conditional_subdecision",
             "axis_order_in_group": 3,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'all_states'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_states"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.state_selection = 'selected_states'",
+                "disabled_reason": "state_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_states"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_states"
+          },
+          {
+            "axis": "fred_sd_variable_group",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 4,
             "group_condition": "Active only when the FRED source panel includes FRED-SD.",
             "group_id": "fred_sd_source_scope",
             "group_label": "FRED-SD Predictor Scope",
@@ -18178,6 +18382,36 @@
                 "enabled": false,
                 "status": "operational",
                 "value": "custom_sd_variable_group"
+              }
+            ],
+            "parent_axis": "dataset",
+            "selected": "all_sd_variables"
+          },
+          {
+            "axis": "sd_variable_selection",
+            "axis_level": "conditional_subdecision",
+            "axis_order_in_group": 5,
+            "group_condition": "Active only when the FRED source panel includes FRED-SD.",
+            "group_id": "fred_sd_source_scope",
+            "group_label": "FRED-SD Predictor Scope",
+            "group_level": "conditional_subgroup",
+            "group_order": 5,
+            "layer": "1_data_task",
+            "layer_label": "Layer 1: data source, target y, predictor x",
+            "options": [
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'all_sd_variables'",
+                "disabled_reason": null,
+                "enabled": true,
+                "status": "operational",
+                "value": "all_sd_variables"
+              },
+              {
+                "canonical_path_effect": "path.1_data_task.fixed_axes.sd_variable_selection = 'selected_sd_variables'",
+                "disabled_reason": "sd_variable_selection requires dataset to include fred_sd",
+                "enabled": false,
+                "status": "operational",
+                "value": "selected_sd_variables"
               }
             ],
             "parent_axis": "dataset",
@@ -22909,6 +23143,8 @@
       "reproducibility_mode": "seeded_reproducible",
       "residual_diagnostics": "none",
       "saved_objects": "full_bundle",
+      "sd_variable_selection": "all_sd_variables",
+      "state_selection": "all_states",
       "study_scope": "one_target_one_method",
       "target_structure": "single_target",
       "test_scope": "per_target",
@@ -23115,7 +23351,9 @@
       "variable_universe",
       "fred_sd_frequency_policy",
       "fred_sd_state_group",
+      "state_selection",
       "fred_sd_variable_group",
+      "sd_variable_selection",
       "raw_missing_policy",
       "raw_outlier_policy",
       "official_transform_policy",

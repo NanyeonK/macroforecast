@@ -48,7 +48,9 @@ _TREE_AXES = {
         "variable_universe",
         "fred_sd_frequency_policy",
         "fred_sd_state_group",
+        "state_selection",
         "fred_sd_variable_group",
+        "sd_variable_selection",
         "raw_missing_policy",
         "raw_outlier_policy",
         "official_transform_policy",
@@ -190,8 +192,14 @@ _LAYER_AXIS_GROUPS = {
             "level": "conditional_subgroup",
             "parent_axis": "dataset",
             "condition": "Active only when the FRED source panel includes FRED-SD.",
-            "summary": "Restrict FRED-SD native frequency, states, and workbook variables used as candidate x columns.",
-            "axes": ("fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"),
+            "summary": "Restrict FRED-SD native frequency, state scope, and series scope used as candidate x columns.",
+            "axes": (
+                "fred_sd_frequency_policy",
+                "fred_sd_state_group",
+                "state_selection",
+                "fred_sd_variable_group",
+                "sd_variable_selection",
+            ),
         },
         {
             "id": "raw_source_quality",
@@ -219,7 +227,9 @@ _AXIS_HIERARCHY_LEVELS = {
     "contemporaneous_x_rule": "timing_policy",
     "fred_sd_frequency_policy": "conditional_subdecision",
     "fred_sd_state_group": "conditional_subdecision",
+    "state_selection": "conditional_subdecision",
     "fred_sd_variable_group": "conditional_subdecision",
+    "sd_variable_selection": "conditional_subdecision",
     "target_structure": "contract_derived",
     "variable_universe": "secondary_policy",
     "raw_missing_policy": "secondary_policy",
@@ -249,7 +259,9 @@ _DEFAULT_SELECTIONS = {
     "forecast_object": "point_mean",
     "fred_sd_frequency_policy": "report_only",
     "fred_sd_state_group": "all_states",
+    "state_selection": "all_states",
     "fred_sd_variable_group": "all_sd_variables",
+    "sd_variable_selection": "all_sd_variables",
     "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
@@ -591,9 +603,19 @@ def _selected_importance_methods(
 
 
 def _selection_has_fred_sd(selected: Mapping[str, Any]) -> bool:
+    if str(selected.get("custom_source_policy", "official_only")) == "custom_panel_only":
+        return False
     dataset = str(selected.get("dataset", ""))
     tokens = {token.strip().lower() for token in dataset.replace(",", "+").split("+") if token.strip()}
     return "fred_sd" in tokens
+
+
+def _selection_has_fred_md_qd(selected: Mapping[str, Any]) -> bool:
+    if str(selected.get("custom_source_policy", "official_only")) == "custom_panel_only":
+        return False
+    dataset = str(selected.get("dataset", ""))
+    tokens = {token.strip().lower() for token in dataset.replace(",", "+").split("+") if token.strip()}
+    return bool(tokens.intersection({"fred_md", "fred_qd"}))
 
 
 def _dataset_implied_frequency(dataset: str) -> str | None:
@@ -622,6 +644,8 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
     x_path = str(selected.get("exogenous_x_path_policy", "unavailable"))
     importance = str(selected.get("importance_method", "none"))
     importance_methods = set(_selected_importance_methods(selected))
+    custom_only = custom_source_policy == "custom_panel_only"
+    has_fred_md_qd = _selection_has_fred_md_qd(selected)
 
     if axis_name == "compute_mode":
         if value == "parallel_by_model" and study_scope in {"one_target_one_method", "multiple_targets_one_method"}:
@@ -632,18 +656,28 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
         implied_frequency = _dataset_implied_frequency(dataset)
         if custom_source_policy != "custom_panel_only" and implied_frequency is not None and value != implied_frequency:
             return f"dataset={dataset} requires frequency={implied_frequency}"
+    if axis_name in {"information_set_type", "release_lag_rule"} and custom_only:
+        return f"{axis_name} applies only when the source frame uses FRED data"
     if axis_name == "target_structure":
         requires_multi = _study_scope_requires_multi_target(study_scope)
         if requires_multi and value == "single_target":
             return "multiple-target Study Scope requires target_structure=multi_target"
         if not requires_multi and value == "multi_target":
             return "one-target Study Scope requires target_structure=single_target"
+    if axis_name == "variable_universe" and not has_fred_md_qd:
+        return "Predictor (x) Universe presets apply only to FRED-MD/FRED-QD metadata columns"
     if axis_name == "fred_sd_frequency_policy" and value != "report_only" and not _selection_has_fred_sd(selected):
         return "fred_sd_frequency_policy requires dataset to include fred_sd"
     if axis_name == "fred_sd_state_group" and value != "all_states" and not _selection_has_fred_sd(selected):
         return "fred_sd_state_group requires dataset to include fred_sd"
+    if axis_name == "state_selection" and value != "all_states" and not _selection_has_fred_sd(selected):
+        return "state_selection requires dataset to include fred_sd"
     if axis_name == "fred_sd_variable_group" and value != "all_sd_variables" and not _selection_has_fred_sd(selected):
         return "fred_sd_variable_group requires dataset to include fred_sd"
+    if axis_name == "sd_variable_selection" and value != "all_sd_variables" and not _selection_has_fred_sd(selected):
+        return "sd_variable_selection requires dataset to include fred_sd"
+    if axis_name in {"official_transform_policy", "official_transform_scope"} and not has_fred_md_qd:
+        return f"{axis_name} applies only to FRED-MD/FRED-QD panels with official transform codes"
     if (
         axis_name == "fred_sd_mixed_frequency_representation"
         and value != "calendar_aligned_frame"

@@ -132,6 +132,8 @@
     const datasetTokens = new Set(String(selected.dataset || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
     const hasFredSd = datasetTokens.has("fred_sd");
     const dataset = String(selected.dataset || "");
+    const customOnly = String(selected.custom_source_policy || "official_only") === "custom_panel_only";
+    const usesFredMdQd = hasFredMdQd(selected);
     const impliedFrequency = (dataset === "fred_md" || dataset === "fred_md+fred_sd")
       ? "monthly"
       : ((dataset === "fred_qd" || dataset === "fred_qd+fred_sd") ? "quarterly" : null);
@@ -150,12 +152,18 @@
         return `dataset=${dataset} requires frequency=${impliedFrequency}`;
       }
     }
-    if (axisName === "dataset" && String(selected.custom_source_policy || "official_only") === "custom_panel_only") {
+    if (axisName === "dataset" && customOnly) {
       return "FRED Source Panel is hidden when Data Source Mode is Custom Data Only";
+    }
+    if (["information_set_type", "release_lag_rule"].includes(axisName) && customOnly) {
+      return `${axisName} applies only when the source frame uses FRED data`;
     }
     if (axisName === "target_structure") {
       if (multiTargetScope && value === "single_target") return "multiple-target Study Scope requires target_structure=multi_target";
       if (!multiTargetScope && value === "multi_target") return "one-target Study Scope requires target_structure=single_target";
+    }
+    if (axisName === "variable_universe" && !usesFredMdQd) {
+      return "Predictor (x) Universe presets apply only to FRED-MD/FRED-QD metadata columns";
     }
 
     if (axisName === "fred_sd_frequency_policy" && value !== "report_only" && !hasFredSd) {
@@ -164,8 +172,17 @@
     if (axisName === "fred_sd_state_group" && value !== "all_states" && !hasFredSd) {
       return "fred_sd_state_group requires dataset to include fred_sd";
     }
+    if (axisName === "state_selection" && value !== "all_states" && !hasFredSd) {
+      return "state_selection requires dataset to include fred_sd";
+    }
     if (axisName === "fred_sd_variable_group" && value !== "all_sd_variables" && !hasFredSd) {
       return "fred_sd_variable_group requires dataset to include fred_sd";
+    }
+    if (axisName === "sd_variable_selection" && value !== "all_sd_variables" && !hasFredSd) {
+      return "sd_variable_selection requires dataset to include fred_sd";
+    }
+    if (["official_transform_policy", "official_transform_scope"].includes(axisName) && !usesFredMdQd) {
+      return `${axisName} applies only to FRED-MD/FRED-QD panels with official transform codes`;
     }
     if (axisName === "fred_sd_mixed_frequency_representation" && value !== "calendar_aligned_frame" && !hasFredSd) {
       return "fred_sd_mixed_frequency_representation requires dataset to include fred_sd";
@@ -293,6 +310,17 @@
     return new Set(String(value || "").split(/[,+]/).map((token) => token.trim().toLowerCase()).filter(Boolean));
   }
 
+  function hasFredMdQd(selected) {
+    if (String(selected.custom_source_policy || "official_only") === "custom_panel_only") return false;
+    const tokens = splitDatasetTokens(selected.dataset || "");
+    return tokens.has("fred_md") || tokens.has("fred_qd");
+  }
+
+  function hasFredSd(selected) {
+    if (String(selected.custom_source_policy || "official_only") === "custom_panel_only") return false;
+    return splitDatasetTokens(selected.dataset || "").has("fred_sd");
+  }
+
   function selectionIsDefault(data, engineState, axisName) {
     const fallback = defaultSelection(data, axisName);
     return fallback !== undefined && String(engineState.selections[axisName]) === String(fallback);
@@ -300,19 +328,33 @@
 
   function axisVisibilityReason(data, engineState, axisName) {
     const selected = engineState.selections || {};
-    const hasFredSd = splitDatasetTokens(selected.dataset || "").has("fred_sd");
+    const usesFredSd = hasFredSd(selected);
+    const usesFredMdQd = hasFredMdQd(selected);
     const customOnly = String(selected.custom_source_policy || "official_only") === "custom_panel_only";
 
     if (axisName === "dataset" && customOnly) {
       return "Hidden because Data Source Mode is Custom Data Only.";
     }
-    if (["fred_sd_frequency_policy", "fred_sd_state_group", "fred_sd_variable_group"].includes(axisName)) {
-      if ((customOnly || !hasFredSd) && selectionIsDefault(data, engineState, axisName)) {
+    if (["information_set_type", "release_lag_rule"].includes(axisName)) {
+      if (customOnly && selectionIsDefault(data, engineState, axisName)) {
+        return "Hidden because this choice uses FRED metadata.";
+      }
+    }
+    if (axisName === "variable_universe" && !usesFredMdQd && selectionIsDefault(data, engineState, axisName)) {
+      return "Hidden until Source Panel includes FRED-MD or FRED-QD.";
+    }
+    if (["official_transform_policy", "official_transform_scope"].includes(axisName)) {
+      if (!usesFredMdQd && selectionIsDefault(data, engineState, axisName)) {
+        return "Hidden until Source Panel includes FRED-MD or FRED-QD.";
+      }
+    }
+    if (["fred_sd_frequency_policy", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection"].includes(axisName)) {
+      if ((customOnly || !usesFredSd) && selectionIsDefault(data, engineState, axisName)) {
         return "Hidden until Source Panel includes FRED-SD.";
       }
     }
     if (axisName === "fred_sd_mixed_frequency_representation") {
-      if ((customOnly || !hasFredSd) && selectionIsDefault(data, engineState, axisName)) {
+      if ((customOnly || !usesFredSd) && selectionIsDefault(data, engineState, axisName)) {
         return "Hidden until Source Panel includes FRED-SD.";
       }
     }
@@ -374,14 +416,26 @@
     if (changedAxisName === "custom_source_policy" && next.selections.custom_source_policy === "custom_panel_only") {
       resetDependentSelection(data, next, "fred_sd_frequency_policy");
       resetDependentSelection(data, next, "fred_sd_state_group");
+      resetDependentSelection(data, next, "state_selection");
       resetDependentSelection(data, next, "fred_sd_variable_group");
+      resetDependentSelection(data, next, "sd_variable_selection");
       resetDependentSelection(data, next, "fred_sd_mixed_frequency_representation");
     }
     if (changedAxisName === "dataset" && !splitDatasetTokens(next.selections.dataset || "").has("fred_sd")) {
       resetDependentSelection(data, next, "fred_sd_frequency_policy");
       resetDependentSelection(data, next, "fred_sd_state_group");
+      resetDependentSelection(data, next, "state_selection");
       resetDependentSelection(data, next, "fred_sd_variable_group");
+      resetDependentSelection(data, next, "sd_variable_selection");
       resetDependentSelection(data, next, "fred_sd_mixed_frequency_representation");
+    }
+    if (
+      (changedAxisName === "dataset" || changedAxisName === "custom_source_policy") &&
+      !hasFredMdQd(next.selections || {})
+    ) {
+      resetDependentSelection(data, next, "variable_universe");
+      resetDependentSelection(data, next, "official_transform_policy");
+      resetDependentSelection(data, next, "official_transform_scope");
     }
   }
 
@@ -473,6 +527,14 @@
     const fixedAxes = layer1.fixed_axes || {};
     if (fixedAxes.custom_source_policy === "custom_panel_only") {
       delete fixedAxes.dataset;
+      ["information_set_type", "release_lag_rule", "official_transform_policy", "official_transform_scope"].forEach((axisName) => {
+        if (selectionIsDefault(data, engineState, axisName)) delete fixedAxes[axisName];
+      });
+    }
+    if (!hasFredMdQd(engineState.selections || {})) {
+      ["variable_universe", "official_transform_policy", "official_transform_scope"].forEach((axisName) => {
+        if (selectionIsDefault(data, engineState, axisName)) delete fixedAxes[axisName];
+      });
     }
     return recipe;
   }

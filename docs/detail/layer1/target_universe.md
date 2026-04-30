@@ -3,20 +3,21 @@
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Target (y) and predictor (x) definitions
 
-This group names the forecasting object and the eligible raw predictor columns.
-Layer 1 does not decide how y is transformed, how horizon targets are built, how
-x is lagged, or which feature representation reaches a model. Those decisions
-start in Layer 2.
+This group names the forecasting target y and, for FRED-backed routes, the
+eligible raw predictor x columns. Layer 1 does not decide how y is transformed,
+how horizon targets are built, how x is lagged, or which representation reaches
+a model. Those decisions start in Layer 2.
 
 ## Target (y) Definition
 
-`target_structure` says whether the study forecasts one y series or multiple y
-series. Layer 0 `study_scope` constrains this axis.
+`target_structure` has two user-facing choices: `Single Target` and
+`Multiple Targets`. The canonical recipe values remain `single_target` and
+`multi_target`.
 
 | Value | Required payload | Meaning |
 |---|---|---|
-| `single_target` | `leaf_config.target` | One y series. Required by one-target Study Scope values. |
-| `multi_target` | `leaf_config.targets` | Two or more y series. Required by multiple-target Study Scope values. |
+| `single_target` | `leaf_config.target` | Single Target: one y series. Required by one-target Study Scope values. |
+| `multi_target` | `leaf_config.targets` | Multiple Targets: two or more y series. Required by multiple-target Study Scope values. |
 
 Target payload:
 
@@ -34,37 +35,51 @@ Layer 2 boundary:
   target outlier policies are representation decisions, not source-frame
   identity.
 
-## Predictor (x) Definition
+## FRED-MD/QD Predictor (x) Universe
 
-`variable_universe` filters the source columns that are eligible as candidate
-predictors x before Layer 2 builds lags, factors, feature blocks, rotations, or
-custom representations.
+`variable_universe` is a FRED-MD/QD metadata axis. It filters FRED-MD/FRED-QD
+source columns that are eligible as candidate predictors x before Layer 2
+builds lags, factors, feature blocks, rotations, or custom representations.
 
-| Value | Required payload | Meaning |
+For `custom_source_policy: custom_panel_only` or standalone `dataset: fred_sd`,
+this axis is hidden by default. Custom-only x columns are defined by the custom
+file itself. FRED-SD x columns are defined by state scope and series scope in
+[4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
+
+| Value | Required payload | Meaning for FRED-MD/QD |
 |---|---|---|
-| `all_variables` | none | Use all eligible non-date source columns except the target y columns. |
-| `core_variables` | package metadata | Use the package's core macro subset when metadata are available. |
-| `category_variables` | `leaf_config.variable_universe_category` and category mapping | Use columns in a named category. |
-| `target_specific_variables` | `leaf_config.target_specific_columns` | Use a different x list for each y. |
-| `explicit_variable_list` | `leaf_config.variable_universe_columns` | Use an explicit list of x columns. |
+| `all_variables` | none | Use all eligible non-date source columns except target y. For FRED-MD/QD this means the whole selected FRED panel after source loading and official transform policy. |
+| `core_variables` | none | Use the package core macro subset: `INDPRO`, `PAYEMS`, `CPIAUCSL`, `FEDFUNDS`, `GS10`, `M2SL`, `UNRATE`, when those columns exist in the selected panel. |
+| `category_variables` | `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category` | Use a named category from a user-supplied category map. The map should be built from the FRED-MD/QD all-variable table or another documented study taxonomy. |
+| `target_specific_variables` | `leaf_config.target_specific_columns` | Use a different x list for each y. Write these lists after inspecting the FRED-MD/QD all-variable table. |
+| `explicit_variable_list` | `leaf_config.variable_universe_columns` | Use one explicit x list for all target y series. Write the list after inspecting the FRED-MD/QD all-variable table. |
 
-Custom data rule:
+Current package behavior:
 
-- Custom files do not automatically have FRED category metadata.
-- For custom-only data, the safest choices are `all_variables` or
-  `explicit_variable_list`.
-- `category_variables` and `target_specific_variables` are valid only when the
-  recipe supplies the needed mappings in `leaf_config`.
+- `all_variables` uses the loaded panel columns directly.
+- `core_variables` uses the fixed package subset listed above.
+- `category_variables` does not currently infer built-in FRED category maps at
+  runtime. It requires `leaf_config.variable_universe_category_columns`.
+- `target_specific_variables` and `explicit_variable_list` are user-authored
+  lists. They should be written against the column names visible in the
+  selected FRED-MD/QD panel.
 
-FRED-SD rule:
+Category map example:
 
-- FRED-SD state and workbook-variable filters are handled by
-  [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
-- `variable_universe` still applies after the selected FRED-SD source columns
-  are loaded, so it is a general x-universe filter rather than a FRED-SD source
-  selector.
+```yaml
+path:
+  1_data_task:
+    fixed_axes:
+      variable_universe: category_variables
+    leaf_config:
+      variable_universe_category: labor
+      variable_universe_category_columns:
+        labor: [PAYEMS, UNRATE]
+        prices: [CPIAUCSL]
+        policy: [FEDFUNDS, GS10]
+```
 
-Example:
+Explicit list example:
 
 ```yaml
 path:
@@ -80,7 +95,7 @@ path:
       variable_universe_columns: [RPI, UNRATE, CPIAUCSL, FEDFUNDS]
 ```
 
-Multi-target example:
+Target-specific example:
 
 ```yaml
 path:
@@ -95,3 +110,13 @@ path:
         INDPRO: [RPI, UNRATE, CPIAUCSL]
         UNRATE: [PAYEMS, CLAIMSx, INDPRO]
 ```
+
+FRED-SD rule:
+
+- FRED-SD state and series filters are handled by
+  [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
+- Standalone `fred_sd` should use State Scope / State List and Series Scope /
+  Series List, not `variable_universe`.
+- Composite `fred_md+fred_sd` or `fred_qd+fred_sd` routes use
+  `variable_universe` for the FRED-MD/QD portion and the FRED-SD scope axes for
+  the state-level portion.

@@ -133,7 +133,9 @@ console.log(JSON.stringify({
     target_single: option("target_structure", "single_target"),
     target_multi: option("target_structure", "multi_target"),
     sd_state_west: option("fred_sd_state_group", "census_region_west"),
+    sd_state_selected: option("state_selection", "selected_states"),
     sd_variable_labor: option("fred_sd_variable_group", "labor_market_core"),
+    sd_series_selected: option("sd_variable_selection", "selected_sd_variables"),
     sd_mixed_drop_non_target: option("fred_sd_mixed_frequency_representation", "drop_non_target_native_frequency"),
     sd_mixed_feature_blocks: option("fred_sd_mixed_frequency_representation", "native_frequency_block_payload"),
     sd_mixed_adapter: option("fred_sd_mixed_frequency_representation", "mixed_frequency_model_adapter")
@@ -256,7 +258,9 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
         "variable_universe",
         "fred_sd_frequency_policy",
         "fred_sd_state_group",
+        "state_selection",
         "fred_sd_variable_group",
+        "sd_variable_selection",
         "raw_missing_policy",
         "raw_outlier_policy",
         "official_transform_policy",
@@ -297,6 +301,8 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert sample_axes["contemporaneous_x_rule"]["group_id"] == "forecast_time_information"
     assert sample_axes["fred_sd_state_group"]["group_id"] == "fred_sd_source_scope"
     assert sample_axes["fred_sd_state_group"]["axis_level"] == "conditional_subdecision"
+    assert sample_axes["state_selection"]["group_id"] == "fred_sd_source_scope"
+    assert sample_axes["sd_variable_selection"]["group_id"] == "fred_sd_source_scope"
     assert sample_axes["target_structure"]["group_id"] == "target_y_definition"
     assert sample_axes["target_structure"]["parent_axis"] == "study_scope"
     assert sample_axes["target_structure"]["axis_level"] == "contract_derived"
@@ -316,10 +322,14 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert presentation["information_set_type"]["label"] == "Data Revision / Vintage Regime"
     assert presentation["release_lag_rule"]["label"] == "Publication Lag Rule"
     assert presentation["contemporaneous_x_rule"]["label"] == "Same-Period Predictor Rule"
+    assert presentation["fred_sd_state_group"]["label"] == "FRED-SD State Scope"
+    assert presentation["state_selection"]["label"] == "FRED-SD State List"
+    assert presentation["fred_sd_variable_group"]["label"] == "FRED-SD Series Scope"
+    assert presentation["sd_variable_selection"]["label"] == "FRED-SD Series List"
     assert presentation["target_structure"]["label"] == "Target (y) Definition"
     assert presentation["target_structure"]["contract"].startswith("Target-y cardinality")
     assert presentation["target_structure"]["default_value"] == "single_target"
-    assert presentation["variable_universe"]["label"] == "Predictor (x) Universe"
+    assert presentation["variable_universe"]["label"] == "FRED-MD/QD Predictor (x) Universe"
     assert presentation["raw_missing_policy"]["default_value"] == "preserve_raw_missing"
     assert presentation["raw_outlier_policy"]["default_value"] == "preserve_raw_outliers"
     assert presentation["official_transform_policy"]["default_value"] == "apply_official_tcode"
@@ -331,6 +341,8 @@ def test_navigator_ui_data_exports_layer1_presentation_contract():
     assert payload["state_engine"]["default_selections"]["information_set_type"] == "final_revised_data"
     assert payload["state_engine"]["default_selections"]["target_structure"] == "single_target"
     assert payload["state_engine"]["default_selections"]["variable_universe"] == "all_variables"
+    assert payload["state_engine"]["default_selections"]["state_selection"] == "all_states"
+    assert payload["state_engine"]["default_selections"]["sd_variable_selection"] == "all_sd_variables"
     assert payload["state_engine"]["default_selections"]["raw_missing_policy"] == "preserve_raw_missing"
     assert payload["state_engine"]["default_selections"]["release_lag_rule"] == "ignore_release_lag"
 
@@ -656,12 +668,25 @@ def test_browser_state_engine_matches_layer1_frequency_and_target_gates(tmp_path
     sd_js = _js_state_snapshot(tmp_path, recipe, [("dataset", "fred_sd")])
     assert sd_js["options"]["frequency_monthly"]["enabled"] is True
     assert sd_js["options"]["frequency_quarterly"]["enabled"] is True
+    assert "variable_universe" not in sd_js["visible_axes"]
+    assert "official_transform_policy" not in sd_js["visible_axes"]
+    assert "official_transform_scope" not in sd_js["visible_axes"]
+    assert "fred_sd_state_group" in sd_js["visible_axes"]
+    assert "state_selection" in sd_js["visible_axes"]
+    assert "variable_universe" not in sd_js["edited_recipe"]["path"]["1_data_task"]["fixed_axes"]
 
     custom_js = _js_state_snapshot(tmp_path, recipe, [("custom_source_policy", "custom_panel_only")])
     assert "dataset" not in custom_js["visible_axes"]
+    assert "information_set_type" not in custom_js["visible_axes"]
+    assert "release_lag_rule" not in custom_js["visible_axes"]
+    assert "variable_universe" not in custom_js["visible_axes"]
+    assert "official_transform_policy" not in custom_js["visible_axes"]
+    assert "official_transform_scope" not in custom_js["visible_axes"]
+    assert "contemporaneous_x_rule" in custom_js["visible_axes"]
     assert custom_js["options"]["frequency_monthly"]["enabled"] is True
     assert custom_js["options"]["frequency_quarterly"]["enabled"] is True
     assert "dataset" not in custom_js["edited_recipe"]["path"]["1_data_task"]["fixed_axes"]
+    assert "information_set_type" not in custom_js["edited_recipe"]["path"]["1_data_task"]["fixed_axes"]
 
     multi_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "multiple_targets_compare_methods")])
     assert "multiple-target Study Scope" in multi_js["options"]["target_single"]["disabled_reason"]
@@ -676,8 +701,14 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     assert js["options"]["sd_state_west"]["enabled"] == _option(
         _axis(python_view, "fred_sd_state_group"), "census_region_west"
     )["enabled"]
+    assert js["options"]["sd_state_selected"]["enabled"] == _option(
+        _axis(python_view, "state_selection"), "selected_states"
+    )["enabled"]
     assert js["options"]["sd_variable_labor"]["enabled"] == _option(
         _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
+    )["enabled"]
+    assert js["options"]["sd_series_selected"]["enabled"] == _option(
+        _axis(python_view, "sd_variable_selection"), "selected_sd_variables"
     )["enabled"]
     assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"
@@ -686,6 +717,7 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "native_frequency_block_payload"
     )["enabled"]
     assert "fred_sd" in js["options"]["sd_state_west"]["disabled_reason"]
+    assert "fred_sd" in js["options"]["sd_state_selected"]["disabled_reason"]
     assert "fred_sd" in js["options"]["sd_mixed_drop_non_target"]["disabled_reason"]
     assert "midasr" in js["options"]["midasr_weight_almonp"]["disabled_reason"]
 
@@ -697,8 +729,14 @@ def test_browser_state_engine_matches_python_fred_sd_group_gate(tmp_path: Path):
     assert js["options"]["sd_state_west"]["enabled"] == _option(
         _axis(python_view, "fred_sd_state_group"), "census_region_west"
     )["enabled"]
+    assert js["options"]["sd_state_selected"]["enabled"] == _option(
+        _axis(python_view, "state_selection"), "selected_states"
+    )["enabled"]
     assert js["options"]["sd_variable_labor"]["enabled"] == _option(
         _axis(python_view, "fred_sd_variable_group"), "labor_market_core"
+    )["enabled"]
+    assert js["options"]["sd_series_selected"]["enabled"] == _option(
+        _axis(python_view, "sd_variable_selection"), "selected_sd_variables"
     )["enabled"]
     assert js["options"]["sd_mixed_drop_non_target"]["enabled"] == _option(
         _axis(python_view, "fred_sd_mixed_frequency_representation"), "drop_non_target_native_frequency"

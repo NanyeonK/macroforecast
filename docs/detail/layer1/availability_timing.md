@@ -19,6 +19,16 @@ source frame exists and is documented in [4.1.7 Frame Availability](frame_availa
 | `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` | Publication lag rule. Default ignores publication lag; `series_specific_lag` requires `leaf_config.release_lag_per_series`. |
 | `contemporaneous_x_rule` | `forbid_same_period_predictors`, `allow_same_period_predictors` | Same-period x rule. Default forbids target-date predictors; `allow_same_period_predictors` is an oracle/data-leak benchmark. |
 
+Visibility rule:
+
+- `information_set_type` and `release_lag_rule` are hidden by default for
+  `custom_source_policy: custom_panel_only`, because macrocast cannot infer a
+  FRED vintage or publication-lag discipline from an arbitrary custom file.
+- `contemporaneous_x_rule` remains visible for custom-only studies because it
+  is a supervised-learning alignment rule, not a FRED metadata rule.
+- Imported custom-only recipes with non-default FRED timing choices keep those
+  axes visible so the route can be inspected instead of silently dropped.
+
 Boundary rule:
 
 - `information_set_type` is about revisions/vintages. It answers whether the
