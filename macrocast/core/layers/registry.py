@@ -12,6 +12,7 @@ from ..types import (
     FeatureMetadata,
     ForecastArtifact,
     L0MetaArtifact,
+    L1DataDefinitionArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -22,6 +23,7 @@ from ..types import (
     ImportanceResultSet,
 )
 from .l0 import L0StudySetup
+from .l1 import L1Data
 from ..ops.registry import TypeSpec
 
 
@@ -85,8 +87,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l0_meta_v1": L0MetaArtifact,
     },
     "l1": {
-        "raw_panel_v1": Panel,
-        "regime_metadata_v1": SeriesMetadata,
+        "l1_data_definition_v1": L1DataDefinitionArtifact,
+        "l1_regime_metadata_v1": SeriesMetadata,
     },
     "l2": {
         "clean_panel_v1": Panel,
@@ -148,9 +150,13 @@ register_layer(
 )(L0StudySetup)
 
 
-@register_layer(id="l1", name="Data", category="construction", produces=("l1.raw_panel_v1",), ui_mode="adaptive")
-class L1Data:
-    pass
+register_layer(
+    id="l1",
+    name="Data",
+    category="construction",
+    produces=("l1_data_definition_v1", "l1_regime_metadata_v1"),
+    ui_mode="list",
+)(L1Data)
 
 
 @register_layer(

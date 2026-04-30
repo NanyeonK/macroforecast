@@ -69,6 +69,35 @@ class L0MetaArtifact(DataType):
 
 
 @dataclass(frozen=True)
+class L1DataDefinitionArtifact(DataType):
+    custom_source_policy: Literal["official_only", "custom_panel_only", "official_plus_custom"]
+    dataset: Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] | None
+    frequency: Literal["monthly", "quarterly"]
+    vintage_policy: Literal["current_vintage", "real_time_alfred"] | None
+    target_structure: Literal["single_target", "multi_series_target"]
+    target: str | None = None
+    targets: tuple[str, ...] = ()
+    variable_universe: (
+        Literal[
+            "all_variables",
+            "core_variables",
+            "category_variables",
+            "target_specific_variables",
+            "explicit_variable_list",
+        ]
+        | None
+    ) = None
+    target_geography_scope: Literal["single_state", "all_states", "selected_states"] | None = None
+    predictor_geography_scope: Literal["match_target", "all_states", "selected_states", "national_only"] | None = None
+    sample_start_rule: Literal["earliest_available", "fixed_date", "max_balanced"] = "max_balanced"
+    sample_end_rule: Literal["latest_available", "fixed_date"] = "latest_available"
+    horizon_set: Literal["standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"] = "standard_md"
+    target_horizons: tuple[int, ...] = ()
+    regime_definition: str = "none"
+    leaf_config: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class Panel(DataType):
     shape: tuple[Any, Any] | None = None
     column_names: tuple[str, ...] = ()

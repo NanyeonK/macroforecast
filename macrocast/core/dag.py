@@ -23,7 +23,14 @@ LayerId = Literal[
 LayerCategory = Literal["setup", "construction", "diagnostic", "consumption"]
 NodeType = Literal["source", "axis", "step", "combine", "sink"]
 NodeStatus = Literal["operational", "future", "registry_only"]
-GateKind = Literal["axis_equals", "axis_in", "node_exists", "layer_axis_equals"]
+GateKind = Literal[
+    "axis_equals",
+    "axis_not_equals",
+    "axis_in",
+    "axis_not_in",
+    "node_exists",
+    "layer_axis_equals",
+]
 
 
 @dataclass(frozen=True)
