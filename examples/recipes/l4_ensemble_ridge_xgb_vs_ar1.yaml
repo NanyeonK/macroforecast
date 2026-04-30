@@ -1,0 +1,53 @@
+4_forecasting_model:
+  nodes:
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
+    - id: fit_ar1
+      type: step
+      op: fit_model
+      params: {family: ar_p, n_lag: 1, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      is_benchmark: true
+      inputs: [src_y]
+    - id: predict_ar1
+      type: step
+      op: predict
+      inputs: [fit_ar1]
+    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: cv_path}
+      inputs: [src_X, src_y]
+    - id: predict_ridge
+      type: step
+      op: predict
+      inputs: [fit_ridge, src_X]
+    - id: fit_xgb
+      type: step
+      op: fit_model
+      params: {family: xgboost, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: bayesian_optimization, tuning_objective: cv_mse, validation_method: expanding_walk_forward}
+      inputs: [src_X, src_y]
+    - id: predict_xgb
+      type: step
+      op: predict
+      inputs: [fit_xgb, src_X]
+    - id: ensemble
+      type: combine
+      op: weighted_average_forecast
+      params: {weights_method: dmsfe, dmsfe_theta: 0.95, temporal_rule: expanding_window_per_origin}
+      inputs: [predict_ar1, predict_ridge, predict_xgb]
+  sinks:
+    l4_forecasts_v1: ensemble
+    l4_model_artifacts_v1: [fit_ar1, fit_ridge, fit_xgb]
+    l4_training_metadata_v1: auto
+  leaf_config:
+    cv_path_alphas: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
+    tuning_distributions:
+      learning_rate: {dist: log_uniform, low: 0.001, high: 0.3}
+      max_depth: {dist: int_uniform, low: 3, high: 10}
+      n_estimators: {dist: int_uniform, low: 50, high: 500}
+    tuning_budget: 30
+    n_splits: 5

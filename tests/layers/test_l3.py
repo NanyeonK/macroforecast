@@ -326,4 +326,5 @@ def test_l3_forecast_combination_ops_not_registered_in_l3():
     from macrocast.core.ops import list_ops
 
     forbidden = {"weighted_average_forecast", "dmsfe", "bma", "mallows_cp"}
-    assert forbidden.isdisjoint(list_ops())
+    for op_name in forbidden & set(list_ops()):
+        assert "l3" not in list_ops()[op_name].layer_scope

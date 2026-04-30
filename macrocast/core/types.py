@@ -238,6 +238,36 @@ class ForecastArtifact(DataType):
 
 
 @dataclass(frozen=True)
+class L4ForecastsArtifact(DataType):
+    forecasts: dict[tuple[str, str, int, Any], float] = field(default_factory=dict)
+    forecast_intervals: dict[tuple[str, str, int, Any, float], float] = field(default_factory=dict)
+    forecast_object: Literal["point", "quantile", "density"] = "point"
+    sample_index: pd.DatetimeIndex | None = None
+    targets: tuple[str, ...] = ()
+    horizons: tuple[int, ...] = ()
+    model_ids: tuple[str, ...] = ()
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class L4ModelArtifactsArtifact(DataType):
+    artifacts: dict[str, ModelArtifact] = field(default_factory=dict)
+    is_benchmark: dict[str, bool] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class L4TrainingMetadataArtifact(DataType):
+    forecast_origins: tuple[Any, ...] = ()
+    refit_origins: dict[str, tuple[Any, ...]] = field(default_factory=dict)
+    training_window_per_origin: dict[tuple[str, Any], tuple[Any, Any]] = field(default_factory=dict)
+    runtime_per_origin: dict[tuple[str, Any], float] = field(default_factory=dict)
+    cache_hits_per_origin: dict[tuple[str, Any], bool] = field(default_factory=dict)
+    tuning_log: dict[tuple[str, Any], dict[str, Any]] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class MetricTable(DataType):
     df: pd.DataFrame
     metric_names: tuple[str, ...] = ()

@@ -17,6 +17,9 @@ from ..types import (
     L2CleanPanelArtifact,
     L3FeaturesArtifact,
     L3MetadataArtifact,
+    L4ForecastsArtifact,
+    L4ModelArtifactsArtifact,
+    L4TrainingMetadataArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -28,6 +31,7 @@ from .l0 import L0StudySetup
 from .l1 import L1Data
 from .l2 import L2Preprocessing
 from .l3 import L3FeatureEngineering
+from .l4 import L4ForecastingModel
 from ..ops.registry import TypeSpec
 
 
@@ -102,9 +106,9 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l3_metadata_v1": L3MetadataArtifact,
     },
     "l4": {
-        "forecasts_v1": ForecastArtifact,
-        "model_artifacts_v1": ModelArtifactSet,
-        "training_metadata_v1": TrainingMetadata,
+        "l4_forecasts_v1": L4ForecastsArtifact,
+        "l4_model_artifacts_v1": L4ModelArtifactsArtifact,
+        "l4_training_metadata_v1": L4TrainingMetadataArtifact,
     },
     "l5": {
         "evaluation_v1": MetricTable,
@@ -183,16 +187,14 @@ register_layer(
 )(L3FeatureEngineering)
 
 
-@register_layer(
+register_layer(
     id="l4",
     name="Forecasting model",
     category="construction",
-    expected_inputs=("l3.features_v1",),
-    produces=("l4.forecasts_v1", "l4.model_artifacts_v1"),
-    ui_mode="adaptive",
-)
-class L4ForecastingModel:
-    pass
+    expected_inputs=("l3_features_v1", "l3_metadata_v1", "l1_regime_metadata_v1"),
+    produces=("l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1"),
+    ui_mode="graph",
+)(L4ForecastingModel)
 
 
 @register_layer(id="l1_5", name="Data summary", category="diagnostic", ui_mode="adaptive")

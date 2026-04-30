@@ -68,10 +68,10 @@ def test_invalid_input_type() -> None:
             "models": Node(
                 id="models",
                 type="source",
-                layer_id="l3",
-                op="source",
-                selector=SourceSelector(layer_ref="l4", sink_name="model_artifacts_v1"),
-            ),
+                    layer_id="l3",
+                    op="source",
+                    selector=SourceSelector(layer_ref="l4", sink_name="l4_model_artifacts_v1"),
+                ),
             "lag_models": Node(
                 id="lag_models",
                 type="step",

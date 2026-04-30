@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .registry import Rule, register_op
-from ..types import DataType, Factor, LaggedPanel, MappingArtifact, Panel, Series
+from ..types import DataType, Factor, ForecastArtifact, L4ForecastsArtifact, LaggedPanel, MappingArtifact, Panel, Series
 
 
 @register_op(
@@ -187,6 +187,83 @@ def weighted_concat(inputs, params):
 )
 def simple_average(inputs, params):
     raise NotImplementedError("simple_average runtime execution is not wired in schema layer")
+
+
+@register_op(
+    name="weighted_average_forecast",
+    layer_scope=("l4",),
+    input_types={"default": (ForecastArtifact, L4ForecastsArtifact)},
+    output_type=L4ForecastsArtifact,
+    params_schema={
+        "weights_method": {
+            "type": str,
+            "default": "dmsfe",
+            "sweepable": True,
+            "options": ["equal", "dmsfe", "inverse_msfe", "mallows_cp", "sic_weights", "granger_ramanathan", "cv_optimized"],
+        },
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+        "dmsfe_theta": {"type": float, "default": 0.95, "sweepable": True},
+        "cv_optimized_window": {"type": int, "default": 60, "sweepable": True},
+        "granger_ramanathan_constraint": {"type": str, "default": "sum_to_one", "sweepable": True},
+    },
+    hard_rules=(
+        Rule("hard", lambda dag, nref: len(dag.node(nref.node_id).inputs) >= 2, "weighted_average_forecast requires at least 2 inputs"),
+        Rule(
+            "hard",
+            lambda dag, nref: dag.node(nref.node_id).params.get("temporal_rule", "expanding_window_per_origin") != "full_sample_once",
+            "full_sample_once is rejected for forecast combination temporal_rule",
+        ),
+    ),
+)
+def weighted_average_forecast(inputs, params):
+    raise NotImplementedError("Phase 1 runtime: weighted_average_forecast implementation in execution PR")
+
+
+@register_op(
+    name="median_forecast",
+    layer_scope=("l4",),
+    input_types={"default": (ForecastArtifact, L4ForecastsArtifact)},
+    output_type=L4ForecastsArtifact,
+    hard_rules=(Rule("hard", lambda dag, nref: len(dag.node(nref.node_id).inputs) >= 2, "median_forecast requires at least 2 inputs"),),
+)
+def median_forecast(inputs, params):
+    raise NotImplementedError("Phase 1 runtime: median_forecast implementation in execution PR")
+
+
+@register_op(
+    name="trimmed_mean_forecast",
+    layer_scope=("l4",),
+    input_types={"default": (ForecastArtifact, L4ForecastsArtifact)},
+    output_type=L4ForecastsArtifact,
+    params_schema={"trim_pct": {"type": float, "default": 0.1, "sweepable": True}},
+    hard_rules=(Rule("hard", lambda dag, nref: len(dag.node(nref.node_id).inputs) >= 2, "trimmed_mean_forecast requires at least 2 inputs"),),
+)
+def trimmed_mean_forecast(inputs, params):
+    raise NotImplementedError("Phase 1 runtime: trimmed_mean_forecast implementation in execution PR")
+
+
+@register_op(
+    name="bma_forecast",
+    layer_scope=("l4",),
+    input_types={"default": (ForecastArtifact, L4ForecastsArtifact)},
+    output_type=L4ForecastsArtifact,
+    params_schema={"prior_method": {"type": str, "default": "uniform", "sweepable": True}},
+    hard_rules=(Rule("hard", lambda dag, nref: len(dag.node(nref.node_id).inputs) >= 2, "bma_forecast requires at least 2 inputs"),),
+)
+def bma_forecast(inputs, params):
+    raise NotImplementedError("Phase 1 runtime: bma_forecast implementation in execution PR")
+
+
+@register_op(
+    name="bivariate_ardl_combination",
+    layer_scope=("l4",),
+    input_types={"default": (ForecastArtifact, L4ForecastsArtifact)},
+    output_type=L4ForecastsArtifact,
+    params_schema={"combination_weights_temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True}},
+    hard_rules=(Rule("hard", lambda dag, nref: len(dag.node(nref.node_id).inputs) == 2, "bivariate_ardl_combination requires exactly 2 inputs"),),
+)
+def bivariate_ardl_combination(inputs, params):
+    raise NotImplementedError("Phase 1 runtime: bivariate_ardl_combination implementation in execution PR")
 
 
 @register_op(

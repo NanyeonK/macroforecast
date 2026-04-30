@@ -1,0 +1,27 @@
+4_forecasting_model:
+  nodes:
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
+    - id: fit_ridge
+      type: step
+      op: fit_model
+      params:
+        family: ridge
+        alpha: 1.0
+        forecast_strategy: direct
+        training_start_rule: expanding
+        refit_policy: every_origin
+        search_algorithm: none
+      inputs: [src_X, src_y]
+    - id: predict_ridge
+      type: step
+      op: predict
+      inputs: [fit_ridge, src_X]
+  sinks:
+    l4_forecasts_v1: predict_ridge
+    l4_model_artifacts_v1: fit_ridge
+    l4_training_metadata_v1: auto

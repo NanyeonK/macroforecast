@@ -1,0 +1,37 @@
+1_data:
+  fixed_axes:
+    regime_definition: external_nber
+    target: CPIAUCSL
+4_forecasting_model:
+  nodes:
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
+    - id: src_regime
+      type: source
+      selector: {layer_ref: l1, sink_name: l1_regime_metadata_v1}
+    - id: fit_ridge_per_regime
+      type: step
+      op: fit_model
+      params:
+        family: ridge
+        alpha: 1.0
+        forecast_strategy: direct
+        training_start_rule: expanding
+        refit_policy: every_origin
+        search_algorithm: cv_path
+        regime_wrapper: separate_fit_per_regime
+      inputs: [src_X, src_y, src_regime]
+    - id: predict_ridge
+      type: step
+      op: predict
+      inputs: [fit_ridge_per_regime, src_X, src_regime]
+  sinks:
+    l4_forecasts_v1: predict_ridge
+    l4_model_artifacts_v1: fit_ridge_per_regime
+    l4_training_metadata_v1: auto
+  leaf_config:
+    cv_path_alphas: [0.001, 0.01, 0.1, 1.0]
