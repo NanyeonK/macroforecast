@@ -71,6 +71,7 @@ class Node:
     params: dict[str, Any] = field(default_factory=dict)
     inputs: tuple[NodeRef, ...] = ()
     selector: SourceSelector | None = None
+    pipeline_id: str | None = None
     is_benchmark: bool = False
     enabled: bool = True
     status: NodeStatus = "operational"

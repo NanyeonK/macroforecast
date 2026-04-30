@@ -15,6 +15,8 @@ from ..types import (
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
     L2CleanPanelArtifact,
+    L3FeaturesArtifact,
+    L3MetadataArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -25,6 +27,7 @@ from ..types import (
 from .l0 import L0StudySetup
 from .l1 import L1Data
 from .l2 import L2Preprocessing
+from .l3 import L3FeatureEngineering
 from ..ops.registry import TypeSpec
 
 
@@ -95,8 +98,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l2_clean_panel_v1": L2CleanPanelArtifact,
     },
     "l3": {
-        "features_v1": FeatureBundle,
-        "feature_metadata_v1": FeatureMetadata,
+        "l3_features_v1": L3FeaturesArtifact,
+        "l3_metadata_v1": L3MetadataArtifact,
     },
     "l4": {
         "forecasts_v1": ForecastArtifact,
@@ -170,16 +173,14 @@ register_layer(
 )(L2Preprocessing)
 
 
-@register_layer(
+register_layer(
     id="l3",
     name="Feature engineering",
     category="construction",
-    expected_inputs=("l2.clean_panel_v1", "l1.raw_panel_v1"),
-    produces=("l3.features_v1",),
-    ui_mode="adaptive",
-)
-class L3FeatureEngineering:
-    pass
+    expected_inputs=("l2_clean_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
+    produces=("l3_features_v1", "l3_metadata_v1"),
+    ui_mode="graph",
+)(L3FeatureEngineering)
 
 
 @register_layer(

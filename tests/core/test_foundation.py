@@ -215,7 +215,8 @@ def test_layer_and_op_registries_expose_foundation_contracts() -> None:
     layers = list_layers()
 
     assert layers["l3"].category == "construction"
-    assert layers["l3"].expected_inputs == ("l2.clean_panel_v1", "l1.raw_panel_v1")
+    assert layers["l3"].expected_inputs == ("l2_clean_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1")
+    assert layers["l3"].produces == ("l3_features_v1", "l3_metadata_v1")
     assert get_layer("l7").category == "consumption"
     assert get_op("lag").output_type is LaggedPanel
     assert LAYER_GLOBALS["l6"] == ("test_scope", "dependence_correction", "overlap_handling")

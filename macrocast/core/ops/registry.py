@@ -7,6 +7,7 @@ from ..dag import DAG, LayerId, Node, NodeRef
 from ..types import DataType
 
 RuleSeverity = Literal["hard", "soft"]
+OpStatus = Literal["operational", "future", "registry_only"]
 LayerScope = Literal["universal"] | tuple[LayerId, ...]
 TypeSpec = type[DataType] | tuple[type[DataType], ...]
 
@@ -29,6 +30,7 @@ class OpSpec:
     hard_rules: tuple[Rule, ...] = ()
     soft_rules: tuple[Rule, ...] = ()
     default_figure_type: str | None = None
+    status: OpStatus = "operational"
     function: Callable[..., Any] | None = None
 
     def available_in(self, layer_id: LayerId) -> bool:
@@ -52,6 +54,7 @@ def register_op(
     hard_rules: tuple[Rule, ...] = (),
     soft_rules: tuple[Rule, ...] = (),
     default_figure_type: str | None = None,
+    status: OpStatus = "operational",
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         if name in _OPS:
@@ -65,6 +68,7 @@ def register_op(
             hard_rules=hard_rules,
             soft_rules=soft_rules,
             default_figure_type=default_figure_type,
+            status=status,
             function=func,
         )
         return func

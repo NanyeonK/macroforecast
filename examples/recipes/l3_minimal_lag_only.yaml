@@ -1,0 +1,27 @@
+3_feature_engineering:
+  nodes:
+    - id: src_x
+      type: source
+      selector:
+        layer_ref: l2
+        sink_name: l2_clean_panel_v1
+        subset: {role: predictors}
+    - id: src_y
+      type: source
+      selector:
+        layer_ref: l2
+        sink_name: l2_clean_panel_v1
+        subset: {role: target}
+    - id: lag_x
+      type: step
+      op: lag
+      params: {n_lag: 4, include_contemporaneous: false}
+      inputs: [src_x]
+    - id: y_h1
+      type: step
+      op: target_construction
+      params: {mode: point_forecast, method: direct, horizon: 1}
+      inputs: [src_y]
+  sinks:
+    l3_features_v1: {X_final: lag_x, y_final: y_h1}
+    l3_metadata_v1: auto

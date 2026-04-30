@@ -128,6 +128,7 @@ def _parse_node(raw_node: dict[str, Any], layer_id: LayerId) -> Node:
         params=raw_node.get("params", {}),
         inputs=tuple(_parse_node_ref(ref) for ref in raw_node.get("inputs", ())),
         selector=_parse_selector(selector) if selector else None,
+        pipeline_id=raw_node.get("pipeline_id"),
         is_benchmark=bool(raw_node.get("is_benchmark", False)),
         enabled=bool(raw_node.get("enabled", True)),
         status=raw_node.get("status", "operational"),

@@ -286,6 +286,8 @@ def _node_output_type(
     op = get_op(node.op)
     if not op.available_in(node.layer_id):
         raise ValueError(f"op {node.op!r} is not registered for {node.layer_id}")
+    if getattr(op, "status", "operational") != "operational":
+        raise ValueError(f"op {node.op!r} status {op.status!r} is not executable")
     if not node.inputs:
         raise ValueError(f"op {node.op!r} requires at least one input")
     for input_ref in node.inputs:

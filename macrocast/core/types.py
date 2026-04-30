@@ -174,6 +174,48 @@ class FeatureBundle(DataType):
 
 
 @dataclass(frozen=True)
+class StepRef(DataType):
+    step_node_id: str
+    op: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class ColumnLineage(DataType):
+    column_name: str
+    source_variable_ids: tuple[str, ...] = ()
+    step_chain: tuple[StepRef, ...] = ()
+    pipeline_id: str | None = None
+    cascade_depth: int = 0
+    output_type: str = "Panel"
+
+
+@dataclass(frozen=True)
+class PipelineDefinition(DataType):
+    pipeline_id: str
+    endpoint_node_id: str
+    source_node_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class L3FeaturesArtifact(DataType):
+    X_final: Panel | LaggedPanel | Factor
+    y_final: Series
+    sample_index: pd.DatetimeIndex | None = None
+    horizon_set: tuple[int, ...] = ()
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class L3MetadataArtifact(DataType):
+    column_lineage: dict[str, ColumnLineage] = field(default_factory=dict)
+    pipeline_definitions: dict[str, PipelineDefinition] = field(default_factory=dict)
+    cascade_graph: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    transform_chain: dict[str, tuple[StepRef, ...]] = field(default_factory=dict)
+    source_variables: dict[str, tuple[str, ...]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class ModelArtifact(DataType):
     model_id: str
     family: str

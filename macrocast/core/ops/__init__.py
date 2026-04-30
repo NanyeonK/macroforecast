@@ -4,6 +4,7 @@ from .registry import OpSpec, Rule, clear_op_registry, get_op, list_ops, registe
 
 # Import universal ops for side-effect registration.
 from . import universal as universal
+from . import l3_ops as l3_ops
 
 __all__ = [
     "OpSpec",
