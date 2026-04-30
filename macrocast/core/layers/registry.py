@@ -20,6 +20,7 @@ from ..types import (
     L4ForecastsArtifact,
     L4ModelArtifactsArtifact,
     L4TrainingMetadataArtifact,
+    L5EvaluationArtifact,
     MetricTable,
     MappingArtifact,
     ModelArtifactSet,
@@ -32,6 +33,7 @@ from .l1 import L1Data
 from .l2 import L2Preprocessing
 from .l3 import L3FeatureEngineering
 from .l4 import L4ForecastingModel
+from .l5 import L5Evaluation
 from ..ops.registry import TypeSpec
 
 
@@ -111,9 +113,7 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l4_training_metadata_v1": L4TrainingMetadataArtifact,
     },
     "l5": {
-        "evaluation_v1": MetricTable,
-        "ranking_v1": DataFrameArtifact,
-        "decomposition_v1": MappingArtifact,
+        "l5_evaluation_v1": L5EvaluationArtifact,
     },
     "l6": {
         "tests_v1": TestResultSet,
@@ -217,16 +217,14 @@ class L45GeneratorDiagnostics:
     pass
 
 
-@register_layer(
+register_layer(
     id="l5",
     name="Evaluation",
     category="consumption",
-    expected_inputs=("l4.forecasts_v1",),
-    produces=("l5.evaluation_v1",),
-    ui_mode="adaptive",
-)
-class L5Evaluation:
-    pass
+    expected_inputs=("l4_forecasts_v1", "l4_model_artifacts_v1", "l1_data_definition_v1", "l1_regime_metadata_v1", "l3_metadata_v1"),
+    produces=("l5_evaluation_v1",),
+    ui_mode="list",
+)(L5Evaluation)
 
 
 @register_layer(

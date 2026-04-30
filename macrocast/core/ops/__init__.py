@@ -6,6 +6,7 @@ from .registry import OpSpec, Rule, clear_op_registry, get_op, list_ops, registe
 from . import universal as universal
 from . import l3_ops as l3_ops
 from . import l4_ops as l4_ops
+from . import l5_ops as l5_ops
 
 __all__ = [
     "OpSpec",

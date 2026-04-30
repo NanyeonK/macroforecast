@@ -275,6 +275,19 @@ class MetricTable(DataType):
 
 
 @dataclass(frozen=True)
+class L5EvaluationArtifact(DataType):
+    metrics_table: pd.DataFrame = field(default_factory=pd.DataFrame)
+    ranking_table: pd.DataFrame = field(default_factory=pd.DataFrame)
+    benchmark_relative_metrics: dict[tuple[Any, ...], Any] = field(default_factory=dict)
+    per_regime_metrics: dict[tuple[Any, ...], Any] | None = None
+    decomposition_results: dict[str, Any] | None = None
+    per_state_metrics: dict[tuple[Any, ...], Any] | None = None
+    report_artifacts: dict[str, Any] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+    l5_axis_resolved: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class TestResult(DataType):
     test_name: str
     statistic: float

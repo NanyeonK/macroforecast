@@ -1,0 +1,21 @@
+5_evaluation:
+  fixed_axes:
+    primary_metric: relative_mse
+    point_metrics: [mse, mae, rmse]
+    relative_metrics: [relative_mse, r2_oos]
+    benchmark_window: full_oos
+    benchmark_scope: per_target_horizon
+    agg_time: mean
+    agg_horizon: per_horizon_separate
+    agg_target: per_target_separate
+    oos_period: fixed_dates
+    regime_use: both
+    regime_metrics: [relative_mse]
+    decomposition_target: by_predictor_block
+    decomposition_order: marginal
+    ranking: by_relative_metric
+    report_style: per_target_horizon_panel
+  leaf_config:
+    oos_start_date: 1985-01
+    oos_end_date: 2024-12
+    output_precision: 3
