@@ -99,8 +99,8 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 
 source_frame
 availability_timing
-fred_sd_source_selection
 target_universe
+fred_sd_source_selection
 raw_source_cleaning
 official_transforms
 frame_availability
