@@ -156,6 +156,40 @@ const AXIS_OPTIONS = {
   }
 };
 
+const AXIS_DESCRIPTIONS = {
+  custom_source_policy: "Choose FRED-only, custom-only, or FRED plus custom source data.",
+  dataset: "FRED source panel. Hidden when the study is custom-only.",
+  frequency: "Final analysis frequency. Required for standalone FRED-SD and custom-only routes.",
+  information_set_type: "Data revision or pseudo-real-time vintage regime.",
+  release_lag_rule: "Publication lag rule for predictor availability.",
+  contemporaneous_x_rule: "Controls whether same-period predictors are allowed.",
+  target_structure: "Single target uses target; multi target uses targets.",
+  variable_universe: "FRED-MD/QD predictor universe before Layer 2 representation choices.",
+  fred_sd_frequency_policy: "Native-frequency evidence policy for FRED-SD source columns.",
+  fred_sd_state_group: "State group selector for FRED-SD.",
+  state_selection: "Explicit FRED-SD state-list switch.",
+  fred_sd_variable_group: "Workbook-series group selector for FRED-SD.",
+  sd_variable_selection: "Explicit FRED-SD series-list switch.",
+  raw_missing_policy: "Raw-source missing-value handling before official transforms.",
+  raw_outlier_policy: "Raw-source outlier handling before official transforms.",
+  official_transform_policy: "Whether to apply official FRED-MD/QD transform codes.",
+  official_transform_scope: "Target/predictor scope for official transforms.",
+  missing_availability: "Source-frame availability-gap policy after loading and transforms.",
+  fred_sd_mixed_frequency_representation: "Layer 2 representation rule for FRED-SD mixed native frequencies.",
+  horizon_target_construction: "How future y is constructed for each horizon.",
+  target_transform: "Target-side transformation before modeling.",
+  target_normalization: "Target-side normalization policy.",
+  tcode_policy: "Research preprocessing transform policy.",
+  x_missing_policy: "Predictor missing-data policy after Layer 1.",
+  x_outlier_policy: "Predictor outlier policy after Layer 1.",
+  scaling_policy: "Predictor scaling policy.",
+  primary_metric: "Main metric used for ranking and summaries.",
+  ranking: "How forecast generators are ordered in the evaluation report.",
+  export_format: "External artifact format emitted by Layer 8.",
+  saved_objects: "Artifacts included in the output bundle.",
+  provenance_fields: "Manifest fields used for reproducibility."
+};
+
 const state = {
   selectedLayer: "map",
   selectedNode: null,
@@ -441,42 +475,63 @@ function renderFormLayer(layer, body) {
   ]));
 
   if (layer.id === "l1") {
-    grid.appendChild(sectionFromFields("Data source mode / frequency", [
-      selectAxis("l1", "custom_source_policy"),
-      selectAxis("l1", "dataset"),
-      selectAxis("l1", "frequency"),
-      textField("custom_source_path", state.layers.l1.leaf_config.custom_source_path, (v) => state.layers.l1.leaf_config.custom_source_path = v)
-    ]));
-    grid.appendChild(sectionFromFields("Forecast-time information", [
-      selectAxis("l1", "information_set_type"),
-      selectAxis("l1", "release_lag_rule"),
-      selectAxis("l1", "contemporaneous_x_rule")
-    ]));
-    grid.appendChild(sectionFromFields("Target and predictor definitions", [
+    const sourceFields = [selectAxis("l1", "custom_source_policy")];
+    if (usesFredSource()) sourceFields.push(selectAxis("l1", "dataset"));
+    if (needsFrequencyChoice()) sourceFields.push(selectAxis("l1", "frequency"));
+    if (usesCustomSource()) {
+      sourceFields.push(textField("custom_source_path", state.layers.l1.leaf_config.custom_source_path, (v) => state.layers.l1.leaf_config.custom_source_path = v));
+    }
+    grid.appendChild(sectionFromFields("Data source mode / frequency", sourceFields));
+
+    const timingFields = [];
+    if (!isCustomOnly()) {
+      timingFields.push(selectAxis("l1", "information_set_type"));
+      timingFields.push(selectAxis("l1", "release_lag_rule"));
+    }
+    timingFields.push(selectAxis("l1", "contemporaneous_x_rule"));
+    grid.appendChild(sectionFromFields("Forecast-time information", timingFields));
+
+    const targetFields = [
       selectAxis("l1", "target_structure"),
-      textField("target", state.layers.l1.leaf_config.target, (v) => state.layers.l1.leaf_config.target = v),
-      textAreaField("targets", state.layers.l1.leaf_config.targets.join(", "), (v) => state.layers.l1.leaf_config.targets = splitCsv(v)),
-      textAreaField("horizons", state.layers.l1.leaf_config.horizons.join(", "), (v) => state.layers.l1.leaf_config.horizons = splitCsv(v).map(Number).filter(Boolean)),
-      textField("sample_start_date", state.layers.l1.leaf_config.sample_start_date, (v) => state.layers.l1.leaf_config.sample_start_date = v),
-      textField("sample_end_date", state.layers.l1.leaf_config.sample_end_date, (v) => state.layers.l1.leaf_config.sample_end_date = v),
-      selectAxis("l1", "variable_universe")
-    ]));
-    grid.appendChild(sectionFromFields("FRED-SD predictor scope", [
-      selectAxis("l1", "fred_sd_frequency_policy"),
-      selectAxis("l1", "fred_sd_state_group"),
-      selectAxis("l1", "state_selection"),
-      textAreaField("sd_states", state.layers.l1.leaf_config.sd_states.join(", "), (v) => state.layers.l1.leaf_config.sd_states = splitCsv(v)),
-      selectAxis("l1", "fred_sd_variable_group"),
-      selectAxis("l1", "sd_variable_selection"),
-      textAreaField("sd_variables", state.layers.l1.leaf_config.sd_variables.join(", "), (v) => state.layers.l1.leaf_config.sd_variables = splitCsv(v))
-    ]));
-    grid.appendChild(sectionFromFields("Raw source / official transform / availability", [
+    ];
+    if (state.layers.l1.fixed_axes.target_structure === "single_target") {
+      targetFields.push(textField("target", state.layers.l1.leaf_config.target, (v) => state.layers.l1.leaf_config.target = v));
+    } else {
+      targetFields.push(textAreaField("targets", state.layers.l1.leaf_config.targets.join(", "), (v) => state.layers.l1.leaf_config.targets = splitCsv(v)));
+    }
+    targetFields.push(textAreaField("horizons", state.layers.l1.leaf_config.horizons.join(", "), (v) => state.layers.l1.leaf_config.horizons = splitCsv(v).map(Number).filter(Boolean)));
+    targetFields.push(textField("sample_start_date", state.layers.l1.leaf_config.sample_start_date, (v) => state.layers.l1.leaf_config.sample_start_date = v));
+    targetFields.push(textField("sample_end_date", state.layers.l1.leaf_config.sample_end_date, (v) => state.layers.l1.leaf_config.sample_end_date = v));
+    if (usesFredMdQdMetadata()) targetFields.push(selectAxis("l1", "variable_universe"));
+    grid.appendChild(sectionFromFields("Target and predictor definitions", targetFields));
+
+    if (hasFredSdSource()) {
+      const fredSdFields = [
+        selectAxis("l1", "fred_sd_frequency_policy"),
+        selectAxis("l1", "fred_sd_state_group"),
+        selectAxis("l1", "state_selection")
+      ];
+      if (state.layers.l1.fixed_axes.state_selection === "selected_states") {
+        fredSdFields.push(textAreaField("sd_states", state.layers.l1.leaf_config.sd_states.join(", "), (v) => state.layers.l1.leaf_config.sd_states = splitCsv(v)));
+      }
+      fredSdFields.push(selectAxis("l1", "fred_sd_variable_group"));
+      fredSdFields.push(selectAxis("l1", "sd_variable_selection"));
+      if (state.layers.l1.fixed_axes.sd_variable_selection === "selected_sd_variables") {
+        fredSdFields.push(textAreaField("sd_variables", state.layers.l1.leaf_config.sd_variables.join(", "), (v) => state.layers.l1.leaf_config.sd_variables = splitCsv(v)));
+      }
+      grid.appendChild(sectionFromFields("FRED-SD predictor scope", fredSdFields));
+    }
+
+    const sourceQualityFields = [
       selectAxis("l1", "raw_missing_policy"),
-      selectAxis("l1", "raw_outlier_policy"),
-      selectAxis("l1", "official_transform_policy"),
-      selectAxis("l1", "official_transform_scope"),
-      selectAxis("l1", "missing_availability")
-    ]));
+      selectAxis("l1", "raw_outlier_policy")
+    ];
+    if (usesFredMdQdMetadata()) {
+      sourceQualityFields.push(selectAxis("l1", "official_transform_policy"));
+      sourceQualityFields.push(selectAxis("l1", "official_transform_scope"));
+    }
+    sourceQualityFields.push(selectAxis("l1", "missing_availability"));
+    grid.appendChild(sectionFromFields("Raw source / official transform / availability", sourceQualityFields));
   }
 
   if (layer.id === "l2") {
@@ -874,7 +929,7 @@ function generateYaml() {
   const out = {};
   out.recipe_id = state.recipeName;
   out[state.layers ? "0_meta" : "0_meta"] = state.layers.l0;
-  out["1_data"] = state.layers.l1;
+  out["1_data"] = l1Yaml();
   out["2_preprocessing"] = state.layers.l2;
   out["3_feature_engineering"] = dagYaml("l3");
   out["4_forecasting_model"] = dagYaml("l4");
@@ -886,6 +941,46 @@ function generateYaml() {
     if (diagnostic.enabled) out[layerById(id).key] = diagnostic;
   }
   return toYaml(out);
+}
+
+function l1Yaml() {
+  const layer = clone(state.layers.l1);
+  const fixed = layer.fixed_axes;
+  const leaf = layer.leaf_config;
+
+  if (!usesFredSource()) delete fixed.dataset;
+  if (!needsFrequencyChoice()) delete fixed.frequency;
+  if (!usesCustomSource()) delete leaf.custom_source_path;
+  if (isCustomOnly()) {
+    delete fixed.information_set_type;
+    delete fixed.release_lag_rule;
+  }
+  if (!usesFredMdQdMetadata()) {
+    delete fixed.variable_universe;
+    delete fixed.official_transform_policy;
+    delete fixed.official_transform_scope;
+  }
+  if (!hasFredSdSource()) {
+    delete fixed.fred_sd_frequency_policy;
+    delete fixed.fred_sd_state_group;
+    delete fixed.state_selection;
+    delete fixed.fred_sd_variable_group;
+    delete fixed.sd_variable_selection;
+    delete leaf.sd_states;
+    delete leaf.sd_variables;
+  } else {
+    if (fixed.state_selection !== "selected_states") delete leaf.sd_states;
+    if (fixed.sd_variable_selection !== "selected_sd_variables") delete leaf.sd_variables;
+  }
+  if (fixed.target_structure === "single_target") {
+    delete leaf.targets;
+  } else {
+    delete leaf.target;
+  }
+  for (const [key, value] of Object.entries(leaf)) {
+    if (value === "" || (Array.isArray(value) && value.length === 0)) delete leaf[key];
+  }
+  return layer;
 }
 
 function dagYaml(layerId) {
@@ -919,6 +1014,31 @@ function requiredSinks(layerId) {
   if (layerId === "l4") return ["l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1"];
   if (layerId === "l7") return ["l7_importance_v1"];
   return [];
+}
+
+function isCustomOnly() {
+  return state.layers.l1.fixed_axes.custom_source_policy === "custom_panel_only";
+}
+
+function usesFredSource() {
+  return !isCustomOnly();
+}
+
+function usesCustomSource() {
+  return state.layers.l1.fixed_axes.custom_source_policy !== "official_only";
+}
+
+function hasFredSdSource() {
+  return usesFredSource() && state.layers.l1.fixed_axes.dataset.includes("fred_sd");
+}
+
+function usesFredMdQdMetadata() {
+  if (!usesFredSource()) return false;
+  return state.layers.l1.fixed_axes.dataset.includes("fred_md") || state.layers.l1.fixed_axes.dataset.includes("fred_qd");
+}
+
+function needsFrequencyChoice() {
+  return isCustomOnly() || state.layers.l1.fixed_axes.dataset === "fred_sd";
 }
 
 function sectionFromFields(title, fields) {
@@ -966,20 +1086,20 @@ function textAreaField(label, value, onChange) {
 
 function selectAxis(layerId, axisName) {
   const layer = state.layers[layerId];
-  return selectField(axisName, layer.fixed_axes[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer.fixed_axes[axisName] = v);
+  return selectField(axisName, layer.fixed_axes[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer.fixed_axes[axisName] = v, optionDescription(axisName));
 }
 
 function selectTopLevelAxis(layerId, axisName) {
   const layer = state.layers[layerId];
-  return selectField(axisName, layer[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer[axisName] = v);
+  return selectField(axisName, layer[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer[axisName] = v, optionDescription(axisName));
 }
 
 function selectSubLayerAxis(subLayerName, axisName) {
   const subLayer = state.layers.l6.sub_layers[subLayerName];
-  return selectField(`${subLayerName}.${axisName}`, subLayer.fixed_axes[axisName], AXIS_OPTIONS.l6[axisName], (v) => subLayer.fixed_axes[axisName] = v);
+  return selectField(`${subLayerName}.${axisName}`, subLayer.fixed_axes[axisName], AXIS_OPTIONS.l6[axisName], (v) => subLayer.fixed_axes[axisName] = v, optionDescription(axisName));
 }
 
-function selectField(label, value, options, onChange) {
+function selectField(label, value, options, onChange, describe = null) {
   const field = baseField(label);
   const select = document.createElement("select");
   for (const option of options) {
@@ -991,10 +1111,26 @@ function selectField(label, value, options, onChange) {
   }
   select.addEventListener("change", () => {
     onChange(select.value);
-    renderAfterEdit();
+    render();
   });
   field.appendChild(select);
+  const description = document.createElement("div");
+  description.className = "field-description";
+  description.textContent = describe ? describe(value) : defaultOptionDescription(label, value);
+  field.appendChild(description);
   return field;
+}
+
+function optionDescription(axisName) {
+  return (value) => {
+    const axis = AXIS_DESCRIPTIONS[axisName] || axisName.replaceAll("_", " ");
+    return `${axis} Selected: ${value.replaceAll("_", " ")}.`;
+  };
+}
+
+function defaultOptionDescription(label, value) {
+  if (value === undefined || value === null) return "";
+  return `Selected: ${String(value).replaceAll("_", " ")}.`;
 }
 
 function toggleField(label, checked, onChange) {

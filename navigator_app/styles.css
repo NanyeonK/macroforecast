@@ -366,6 +366,12 @@ button {
   font-size: 11px;
 }
 
+.field-description {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .toggle-line {
   display: flex;
   align-items: center;
