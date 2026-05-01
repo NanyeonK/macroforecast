@@ -30,6 +30,18 @@ def test_all_4_diagnostics_default_disabled():
             assert recipe.layers[layer_id].enabled is False
 
 
+def test_all_4_diagnostics_disabled_have_no_axis_nodes_or_sinks():
+    for layer_id in ["l1_5", "l2_5", "l3_5", "l4_5"]:
+        module = _module(layer_id)
+        yaml_text = f"{layer_id_to_yaml_key(layer_id)}:\n  enabled: false"
+        layer = module.parse_layer_yaml(yaml_text, layer_id)
+        dag = module.normalize_to_dag_form(layer, layer_id)
+        resolved = module.resolve_axes(dag)
+        assert dag.nodes == {}
+        assert dag.sinks == {}
+        assert all(not resolved.get_active(axis) for axis in module.AXIS_NAMES)
+
+
 def test_all_4_diagnostics_have_z_export_sub_layer():
     for layer_id in ["l1_5", "l2_5", "l3_5", "l4_5"]:
         layer_class = get_layer(layer_id).cls

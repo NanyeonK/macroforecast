@@ -77,14 +77,14 @@ researcher-owned.
 The package-native route uses:
 
 ```text
-1_data_task.dataset=fred_md
-1_data_task.official_transform_policy=apply_official_tcode
+1_data.dataset=fred_md
+1_data.official_transform_policy=apply_official_tcode
 2_preprocessing.tcode_policy=official_tcode_then_extra_preprocess
 2_preprocessing.scaling_policy=standard
-3_training.feature_builder=raw_feature_panel
-3_training.model_family=ridge
-3_training.benchmark_family=autoregressive_bic
-4_evaluation.primary_metric=msfe
+3_feature_engineering.op=source/raw-panel-plus-target-construction
+4_forecasting_model.fit_model.family=ridge
+4_forecasting_model.benchmark_forecast.family=autoregressive_bic
+5_evaluation.primary_metric=msfe
 6_stat_tests.equal_predictive=dm
 ```
 
@@ -95,13 +95,13 @@ The key Layer 2 detail is that `t-code + standardize` is not `official_tcode_onl
 This entry exercises the package-owned mixed-frequency route:
 
 ```text
-1_data_task.dataset=fred_sd
-1_data_task.frequency=monthly
+1_data.dataset=fred_sd
+1_data.frequency=monthly
 2_preprocessing.fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter
-3_training.feature_builder=raw_feature_panel
-3_training.model_family=midasr
-3_training.midasr_weight_family=almonp
-3_training.forecast_type=direct
+3_feature_engineering.op=source/raw-panel-plus-target-construction
+4_forecasting_model.fit_model.family=midasr
+4_forecasting_model.fit_model.params.weight_family=almonp
+4_forecasting_model.predict.params.forecast_type=direct
 ```
 
 It is a runtime recipe, not a paper-identical replication. Run it against the

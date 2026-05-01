@@ -76,7 +76,7 @@ OPTIONS = {
     "diagnostic_format": {"png", "pdf", "html", "json", "latex_table", "csv", "multi"},
 }
 
-FACTOR_OPS = {"pca", "sparse_pca", "scaled_pca", "dfm", "varimax_rotation", "partial_least_squares", "random_projection"}
+FACTOR_OPS = {"pca", "sparse_pca", "scaled_pca", "dfm", "varimax", "varimax_rotation", "partial_least_squares", "random_projection"}
 LAG_OPS = {"lag", "seasonal_lag", "ma_increasing_order"}
 
 
@@ -124,6 +124,8 @@ class L3_5Recipe:
 def normalize_to_dag_form(layer: dict[str, Any] | L3_5Layer, layer_id: Literal["l3_5"] = "l3_5", context: dict[str, Any] | None = None) -> DAG:
     raw = layer.raw_yaml if isinstance(layer, L3_5Layer) else layer
     resolved = resolve_axes_from_raw(raw, context=context)
+    if not resolved["enabled"]:
+        return DAG("l3_5", {}, sinks={}, layer_globals={"resolved_axes": resolved})
     nodes: dict[str, Node] = {
         "src_l1_data": Node("src_l1_data", "source", "l3_5", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
         "src_l2_clean": Node("src_l2_clean", "source", "l3_5", "source", selector=SourceSelector("l2", "l2_clean_panel_v1")),
@@ -170,6 +172,20 @@ def resolve_axes_from_raw(raw: dict[str, Any], context: dict[str, Any] | None = 
         **leaf,
     }
     active = {axis: True for axis in AXIS_NAMES}
+    context = context or {}
+    if not values["enabled"]:
+        active = {axis: False for axis in AXIS_NAMES}
+    if not context.get("has_factor_step", False):
+        active["factor_view"] = False
+    if not context.get("has_dfm_step", False):
+        active["dfm_diagnostics"] = False
+    if not context.get("has_lag_step", False):
+        active["lag_view"] = False
+    if not context.get("has_marx_step", False):
+        active["marx_view"] = False
+    if not context.get("has_feature_selection_step", False):
+        active["selection_view"] = False
+        active["stability_metric"] = False
     if values["feature_correlation"] == "none":
         active["correlation_method"] = False
         active["correlation_view"] = False
@@ -206,6 +222,8 @@ def validate_recipe(recipe: L3_5Recipe | dict[str, Any] | str):
 
 def _validate_values(resolved: L3_5ResolvedAxes, fixed: dict[str, Any], context: dict[str, Any]) -> list[Any]:
     issues: list[Any] = []
+    if not resolved["enabled"]:
+        return issues
     for axis, options in OPTIONS.items():
         if resolved.get_active(axis) and isinstance(resolved[axis], str) and resolved[axis] not in options:
             issues.append(_issue(f"l3_5.{axis}", f"invalid value {resolved[axis]!r} for {axis}"))

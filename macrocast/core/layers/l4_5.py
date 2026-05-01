@@ -132,6 +132,8 @@ class L4_5Recipe:
 def normalize_to_dag_form(layer: dict[str, Any] | L4_5Layer, layer_id: Literal["l4_5"] = "l4_5", context: dict[str, Any] | None = None) -> DAG:
     raw = layer.raw_yaml if isinstance(layer, L4_5Layer) else layer
     resolved = resolve_axes_from_raw(raw, context=context)
+    if not resolved["enabled"]:
+        return DAG("l4_5", {}, sinks={}, layer_globals={"resolved_axes": resolved})
     nodes: dict[str, Node] = {
         "src_l4_forecasts": Node("src_l4_forecasts", "source", "l4_5", "source", selector=SourceSelector("l4", "l4_forecasts_v1")),
         "src_l4_models": Node("src_l4_models", "source", "l4_5", "source", selector=SourceSelector("l4", "l4_model_artifacts_v1")),
@@ -177,6 +179,16 @@ def resolve_axes_from_raw(raw: dict[str, Any], context: dict[str, Any] | None = 
         **leaf,
     }
     active = {axis: True for axis in AXIS_NAMES}
+    context = context or {}
+    if not values["enabled"]:
+        active = {axis: False for axis in AXIS_NAMES}
+    if not context.get("has_linear_model", False):
+        active["coef_view_models"] = False
+    if not context.get("has_tuning", False):
+        active["tuning_view"] = False
+    if not context.get("has_ensemble", False):
+        active["ensemble_view"] = False
+        active["weights_over_time_method"] = False
     if values["ensemble_view"] not in {"weights_over_time", "multi"}:
         active["weights_over_time_method"] = False
     return L4_5ResolvedAxes(values, active)
@@ -211,6 +223,8 @@ def validate_recipe(recipe: L4_5Recipe | dict[str, Any] | str):
 
 def _validate_values(resolved: L4_5ResolvedAxes, fixed: dict[str, Any], leaf: dict[str, Any], context: dict[str, Any]) -> list[Any]:
     issues: list[Any] = []
+    if not resolved["enabled"]:
+        return issues
     for axis, options in OPTIONS.items():
         if resolved.get_active(axis) and isinstance(resolved[axis], str) and resolved[axis] not in options:
             issues.append(_issue(f"l4_5.{axis}", f"invalid value {resolved[axis]!r} for {axis}"))

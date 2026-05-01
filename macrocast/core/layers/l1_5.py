@@ -117,6 +117,8 @@ class L1_5Recipe:
 def normalize_to_dag_form(layer: dict[str, Any] | L1_5Layer, layer_id: Literal["l1_5"] = "l1_5", context: dict[str, Any] | None = None) -> DAG:
     raw = layer.raw_yaml if isinstance(layer, L1_5Layer) else layer
     resolved = resolve_axes_from_raw(raw, context=context)
+    if not resolved["enabled"]:
+        return DAG("l1_5", {}, sinks={}, layer_globals={"resolved_axes": resolved})
     nodes: dict[str, Node] = {
         "src_l1_data": Node("src_l1_data", "source", "l1_5", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
     }
@@ -156,6 +158,8 @@ def resolve_axes_from_raw(raw: dict[str, Any], context: dict[str, Any] | None = 
         **leaf,
     }
     active = {axis: True for axis in AXIS_NAMES}
+    if not values["enabled"]:
+        active = {axis: False for axis in AXIS_NAMES}
     if values["stationarity_test"] == "none":
         active["stationarity_test_scope"] = False
     return L1_5ResolvedAxes(values, active)
@@ -189,6 +193,8 @@ def validate_recipe(recipe: L1_5Recipe | dict[str, Any] | str):
 
 def _validate_values(resolved: L1_5ResolvedAxes, context: dict[str, Any]) -> list[Any]:
     issues: list[Any] = []
+    if not resolved["enabled"]:
+        return issues
     for axis, options in OPTIONS.items():
         if resolved.get_active(axis) and isinstance(resolved[axis], str) and resolved[axis] not in options:
             issues.append(_issue(f"l1_5.{axis}", f"invalid value {resolved[axis]!r} for {axis}"))

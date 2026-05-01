@@ -325,6 +325,28 @@ def test_l3_target_construction_horizon_with_sweep_works():
 def test_l3_forecast_combination_ops_not_registered_in_l3():
     from macrocast.core.ops import list_ops
 
-    forbidden = {"weighted_average_forecast", "dmsfe", "bma", "mallows_cp"}
+    forbidden = {
+        "weighted_average_forecast",
+        "median_forecast",
+        "trimmed_mean_forecast",
+        "bma_forecast",
+        "bivariate_ardl_combination",
+        "dmsfe",
+        "bma",
+        "mallows_cp",
+    }
     for op_name in forbidden & set(list_ops()):
         assert "l3" not in list_ops()[op_name].layer_scope
+
+
+def test_l3_rejects_l4_forecast_combination_nodes():
+    for op_name in ["median_forecast", "trimmed_mean_forecast", "bma_forecast", "bivariate_ardl_combination"]:
+        yaml_text = _base_nodes(f"    - {{id: bad_combine, type: combine, op: {op_name}, inputs: [src_x, src_x]}}")
+        assert validate_layer(parse_layer_yaml(yaml_text)).has_hard_errors
+
+
+def test_l3_canonical_design_op_aliases_registered():
+    from macrocast.core.ops import list_ops
+
+    for op_name in ["varimax", "polynomial", "kernel", "nystroem"]:
+        assert "l3" in list_ops()[op_name].layer_scope

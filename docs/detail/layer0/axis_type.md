@@ -1,13 +1,14 @@
-# Layer 0 Appendix: axis_type
+# Legacy Note: `axis_type`
 
-`axis_type` is registry grammar for how an axis is selected:
+`axis_type` is not a user-facing Layer 0 axis in the current layer-contract system.
 
-- fixed;
-- sweep;
-- nested sweep;
-- conditional;
-- derived.
+Current behavior:
 
-Users normally do not set `axis_type` directly. They express it through the YAML section where an axis appears: `fixed_axes`, `sweep_axes`, or `conditional_axes`. Derived axes are resolved by the compiler.
+- list layers expose `fixed_axes` and non-sweepable evaluation/export axes;
+- graph layers expose explicit DAG nodes and sinks;
+- sweep behavior is inferred from recipe structure where supported;
+- L0 axes are not sweepable.
 
-Current detailed source: [Design Stage 0: axis_type](../../user_guide/design.md#axis-type).
+Do not set `axis_type` directly in new recipes.
+
+See [Layer 0](index.md) and [Layer Contract Design](../../user_guide/design.md).

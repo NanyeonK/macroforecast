@@ -1872,7 +1872,7 @@ def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_na
         return _pct_change_like(inputs[0], periods=int(params.get("n_periods", 1)))
     if op == "cumsum":
         return inputs[0].cumsum()
-    if op == "polynomial_expansion":
+    if op in {"polynomial_expansion", "polynomial"}:
         return _polynomial_expansion(_as_frame(inputs[0]), degree=int(params.get("degree", 2)))
     if op == "interaction":
         return _interaction_terms(_as_frame(inputs[0]))

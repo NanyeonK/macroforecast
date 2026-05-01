@@ -41,6 +41,29 @@ def test_l8_default_saved_objects_active_components():
     assert "importance" in resolved["saved_objects"]
 
 
+def test_l8_default_saved_objects_active_diagnostics():
+    resolved = resolve_axes(
+        parse_recipe_yaml(
+            "1_5_data_summary:\n"
+            "  enabled: true\n"
+            "2_5_pre_post_preprocessing:\n"
+            "  enabled: true\n"
+            "3_5_feature_diagnostics:\n"
+            "  enabled: true\n"
+            "4_5_generator_diagnostics:\n"
+            "  enabled: true\n"
+            "8_output:\n"
+            "  fixed_axes: {}\n"
+        ).layers["l8"].dag
+    )
+    assert {
+        "diagnostics_l1_5",
+        "diagnostics_l2_5",
+        "diagnostics_l3_5",
+        "diagnostics_l4_5",
+    } <= set(resolved["saved_objects"])
+
+
 def test_l8_axes_not_sweepable():
     layer = parse_layer_yaml("8_output:\n  fixed_axes:\n    export_format: {sweep: [json_csv, json_parquet]}\n", "l8")
     assert validate_layer(layer).has_hard_errors
@@ -49,6 +72,11 @@ def test_l8_axes_not_sweepable():
 def test_l8_latex_tables_requires_l5_active():
     recipe = parse_recipe_yaml("5_evaluation:\n  fixed_axes: {}\n8_output:\n  fixed_axes:\n    export_format: latex_tables\n")
     assert validate_recipe(recipe).has_hard_errors is False
+
+
+def test_l8_latex_tables_rejects_explicit_l5_disabled():
+    recipe = parse_recipe_yaml("5_evaluation:\n  enabled: false\n8_output:\n  fixed_axes:\n    export_format: latex_tables\n")
+    assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l8_model_artifacts_format_pickle_default():

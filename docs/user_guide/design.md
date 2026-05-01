@@ -1,221 +1,110 @@
-# Design (Stage 0)
+# Layer Contract Design
 
-Stage 0 decides **the execution grammar**: which unit of work is run or compared, how axes sweep, how failures are handled, how deterministic the run is, and how work is parallelised. The simple default path uses the small operational subset needed for a one-cell comparison or a controlled model comparison.
+macrocast is organized as explicit layer contracts. Each layer either exposes a list of axes or a DAG of nodes. The contract is the public interface: recipe YAML, Navigator choices, validators, runtime artifacts, and L8 manifests must agree on the same layer IDs, sink names, and option names.
 
-Simple exposes only `study_scope` at this stage. Full exposes all four user-facing axes, but the three execution-policy axes can be omitted to use defaults.
+## Layer Map
 
-**At a glance (defaults):**
-- `study_scope = one_target_one_method` — one target, one forecasting path, one `comparison_sweep` cell.
-- `axis_type = fixed` per axis — set to `sweep` only on the axis you are varying.
-- `failure_policy = fail_fast` — stop on the first error.
-- `reproducibility_mode = seeded_reproducible` — Python + numpy seeded; torch optional.
-- `compute_mode = serial` — no parallelism.
-
-Deviate when you explicitly want multiple targets, method comparisons, looser error handling, stricter determinism, or compute speedups.
-
----
-
-## 0.1 `study_scope`
-
-**Selection question**: How many targets and methods should the study compare?
-
-**Default**: `one_target_one_method` for one fixed single-target path.
-
-A one-path forecast is the one-cell case of `comparison_sweep`. A controlled model, feature, preprocessing, or representation comparison is the multi-cell case of the same grammar.
-
-### Value catalog
-
-| Value | Status | When to use | Verify |
-|---|---|---|---|
-| `one_target_one_method` | operational | One target, one fixed method path. | `tree_context["route_contract"] == "single_cell_executable"` |
-| `one_target_compare_methods` | operational | One target with one or more supported method sweeps. | `tree_context["route_contract"] == "sweep_runner_executable"` when sweeps are present. |
-| `multiple_targets_one_method` | operational | Multiple targets with one fixed method path. | `target_structure == "multi_target"`; one shared multi-target run. |
-| `multiple_targets_compare_methods` | operational | Multiple targets with one or more supported method sweeps. | `target_structure == "multi_target"`; sweep runner parent when sweeps are present. |
-
-### Compatibility guards
-
-- `one_target_*` scopes require `target_structure = single_target`.
-- `multiple_targets_*` scopes require `target_structure = multi_target`.
-- Replication Library entries are normal YAML recipes; replication is not a Layer 0 Study Scope branch.
-
-### Functions & features
-
-- Auto-derivation: `macrocast.registry.stage0.study_scope.derive_study_scope_default`.
-- Runners: `execute_recipe` for one-cell scopes, `compile_sweep_plan` / `execute_sweep` when downstream axes are swept.
-
-### Recipe usage
-
-```yaml
-# Controlled model comparison: variants are executed by execute_sweep().
-path:
-  0_meta:
-    fixed_axes:
-      study_scope: one_target_compare_methods
-  3_training:
-    sweep_axes:
-      model_family: [ar, ridge, lasso]
+```text
+L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
+        |      |      |       |
+       L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
 
----
-
-## 0.2 `axis_type`
-
-**Selection question**: For a given axis, is it held fixed, swept, derived from other axes, or chosen by a rule?
-
-**Default**: `fixed` — you set the axis to one value and it stays there.
-
-Applies **per axis**, not per recipe. The compiler derives this from how the axis appears in `path["<layer>"]` (`fixed_axes` vs. `sweep_axes` vs. `conditional_axes`), so you almost never set it directly.
-
-### Value catalog
-
-| Value | Status | When to use | Verify |
+| Layer | Category | Mode | Purpose |
 |---|---|---|---|
-| `fixed` | operational (default) | Default. Axis takes one value for the whole study. | Axis appears under `fixed_axes` in the layer spec. |
-| `sweep` | operational | Axis varies across the sweep plan. | Axis appears under `sweep_axes`; each variant in `study_manifest.variants[*]`. |
-| `nested_sweep` | operational | Two axes sweep together with a nested dependency. | Nested list structure in `sweep_axes`; variants enumerate the outer×inner product. |
-| `conditional` | operational | Axis value that depends on another axis resolution. | Axis appears under `conditional_axes`; value is tracked in the tree_context for provenance (no runtime rule engine in v1.0). |
-| `derived` | operational | Axis value inferred from the compiler (never user-supplied). | Manifest shows the derived value; not present in input YAML. |
+| L0 | setup | list | runtime policy: failure handling, reproducibility, compute layout |
+| L1 | construction | list | data source, target, predictor universe, geography, sample, horizons, regimes |
+| L2 | construction | list | raw-to-clean preprocessing |
+| L3 | construction | graph | feature engineering and target construction |
+| L4 | construction | graph | model fitting, forecasting, benchmarks, ensembles, tuning |
+| L5 | consumption | list | metrics, benchmark-relative evaluation, aggregation, ranking |
+| L6 | consumption | list | statistical tests; default off |
+| L7 | consumption | graph | interpretation, importance, transformation attribution; default off |
+| L8 | consumption | list | export, saved objects, provenance, artifact layout |
+| L1.5 | diagnostic | list | raw data summary; default off |
+| L2.5 | diagnostic | list | pre/post preprocessing comparison; default off |
+| L3.5 | diagnostic | list | feature diagnostics; default off |
+| L4.5 | diagnostic | list | model-fit and generator diagnostics; default off |
 
-### Functions & features
+## Rules That Matter
 
-- Discovery: `macrocast.compiler.build._build_axis_selections` reads the three layer-spec forms and tags each axis with its `selection_mode`.
-- Derivation: `macrocast.compiler.build._resolve_derived_axes` handles `derived`; rule registry for `conditional`.
+- L0-L4 are the sweepable construction surface. L5-L8 and diagnostics describe, test, interpret, or export existing cells.
+- L3, L4, and L7 are graph layers. Use `nodes` and `sinks`; fixed-axis sugar is not accepted for L3/L4.
+- L6, L7, and all `.5` diagnostic layers are default off. When a diagnostic layer has `enabled: false`, it produces no DAG nodes and no sink.
+- L8 derives default `saved_objects` from active upstream layers. Active diagnostics are exported as `diagnostics_l1_5`, `diagnostics_l2_5`, `diagnostics_l3_5`, and `diagnostics_l4_5`.
+- Forecast combination belongs in L4. L3 rejects L4 forecast-combine ops.
+- `study_scope` is not a Layer 0 axis in the current layer-contract system. It is derived into manifest metadata when needed.
 
-### Recipe usage
+## Core Data Flow
+
+L1 defines raw data and regime metadata. L2 consumes L1 and emits the cleaned panel. L3 consumes cleaned data plus optional raw/regime access, then emits `l3_features_v1` and `l3_metadata_v1`. L4 consumes L3 features and emits forecasts, model artifacts, and training metadata. L5 consumes forecasts and produces evaluation artifacts. L6 and L7 are optional consumption layers. L8 collects all active sinks into an export manifest.
+
+Diagnostics are side branches. They inspect upstream artifacts but do not modify construction-layer sinks.
+
+## YAML Shape
+
+Minimal construction path:
 
 ```yaml
-# nested_sweep: sweep model_family first; for quantile_linear, also sweep forecast_object.
-path:
-  3_training:
-    sweep_axes:
-      model_family: [ar, ridge, quantile_linear]
-    conditional_axes:
-      forecast_object:
-        rule: quantile_model_requires_point_median
+1_data:
+  fixed_axes:
+    dataset: fred_md
+  leaf_config:
+    target: CPIAUCSL
+
+2_preprocessing:
+  fixed_axes: {}
+
+3_feature_engineering:
+  nodes:
+    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: x_lag, type: step, op: lag, params: {n_lag: 4}, inputs: [src_x]}
+    - {id: y_h, type: step, op: target_construction, params: {horizon: 1}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: x_lag, y_final: y_h}
+    l3_metadata_v1: auto
+
+4_forecasting_model:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}, inputs: [src_X, src_y]}
+    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
+  sinks:
+    l4_forecasts_v1: predict_ridge
+    l4_model_artifacts_v1: fit_ridge
+    l4_training_metadata_v1: auto
+
+5_evaluation:
+  fixed_axes: {}
+
+8_output:
+  fixed_axes: {}
 ```
 
----
-
-## 0.3 `failure_policy`
-
-**Selection question**: What happens when a variant / cell fails at runtime?
-
-**Default**: `fail_fast` — the first failure aborts the study so you can investigate. You can leave this axis out of a recipe unless you want a more tolerant run.
-
-Loosen when you're running a large sweep and want a partial report rather than an abort.
-
-### Value catalog
-
-| Value | Status | When to use | Verify |
-|---|---|---|---|
-| `fail_fast` | operational (default) | Default. Any single-recipe run; sweeps during recipe development. | No change — run aborts on first error. |
-| `skip_failed_cell` | operational | Large sweeps where the failure of one variant shouldn't stop the others. | `study_manifest["summary"]["skipped"]` and per-variant `compiler_status` / `compiler_blocked_reasons` record compile-invalid cells. |
-| `skip_failed_model` | operational | Same pattern scoped to model families. | Failed variants remain in `study_manifest["sweep_plan"]["variants"]`. |
-| `save_partial_results` | operational | Flush artefacts before aborting — useful when you want what completed so far. | Partial `run/` directories persist. |
-| `warn_only` | operational | Never stop; emit a `RuntimeWarning` per failure. | stderr warnings plus per-variant status in `study_manifest`. |
-
-### Functions & features
-
-- Dispatch: `macrocast.execution.sweep_runner._extract_parent_failure_policy`, `_CONTINUE_ON_VARIANT_FAILURE` frozenset.
-- Ablation: `macrocast.studies.ablation._ensure_baseline_failure_policy` auto-upgrades the baseline to `skip_failed_cell` unless the user sets something stricter.
-
-### Recipe usage
+Optional diagnostics:
 
 ```yaml
-# 100-variant sweep — skip any cell that crashes instead of aborting.
-path:
-  0_meta:
-    fixed_axes:
-      failure_policy: skip_failed_cell
-  3_training:
-    sweep_axes:
-      model_family: [ar, ridge, lasso, ...]
+1_5_data_summary:
+  enabled: true
+  fixed_axes: {}
+
+3_5_feature_diagnostics:
+  enabled: true
+  fixed_axes:
+    comparison_stages: raw_vs_cleaned_vs_features
+
+8_output:
+  fixed_axes:
+    saved_objects: [forecasts, metrics, ranking, diagnostics_all]
 ```
 
----
+## Naming Notes
 
-## 0.4 `reproducibility_mode`
+- Layer IDs in code are lower-snake: `l1`, `l3_5`, `l8`.
+- YAML layer keys are numeric names: `1_data`, `3_feature_engineering`, `4_5_generator_diagnostics`.
+- Sink names are versioned: `l3_features_v1`, `l4_forecasts_v1`, `l8_artifacts_v1`.
+- L3 supports canonical design names such as `varimax`, `polynomial`, `kernel`, and `nystroem`, while retaining compatibility aliases such as `varimax_rotation`, `polynomial_expansion`, `kernel_features`, and `nystroem_features`.
 
-**Selection question**: How hard do you want to pin the stochastic components?
-
-**Default**: `seeded_reproducible` with seed `42` — Python `random`, numpy, and torch (if available) are seeded; no cudnn / BLAS determinism. You can leave this axis out of a recipe unless you want stricter or looser behavior.
-
-Escalate when you need bit-identical reruns (paper replication) or when you don't care at all (exploratory drafting).
-
-### Value catalog
-
-| Value | Status | When to use | Verify |
-|---|---|---|---|
-| `seeded_reproducible` | operational (default) | You want the same result across reruns on the same machine without strict deterministic-library flags. | `manifest["reproducibility_applied"]["mode"] == "seeded_reproducible"`. |
-| `best_effort` | operational | Same seed application as `seeded_reproducible`, but labeled as non-strict for CI/regression interpretation. | `manifest["reproducibility_applied"]["mode"] == "best_effort"`. |
-| `strict_reproducible` | operational | Paper replication — bit-identical across machines. | `torch.use_deterministic_algorithms(True)`; `CUBLAS_WORKSPACE_CONFIG=:4096:8`; `RuntimeWarning` if `PYTHONHASHSEED` is unset. |
-| `exploratory` | operational | Research drafting — don't seed at all. | manifest records `exploratory`; no seeds applied. |
-
-### Functions & features
-
-- Helper: `macrocast.execution.seed_policy.apply_reproducibility_mode(mode, seed, configure_torch=True)`.
-- Called by `execute_recipe` before any stochastic step; result stored in `manifest["reproducibility_applied"]`.
-
-### Recipe usage
-
-```yaml
-# Paper replication — strict determinism.
-path:
-  0_meta:
-    fixed_axes:
-      reproducibility_mode: strict_reproducible
-    leaf_config:
-      random_seed: 42
-```
-
----
-
-## 0.5 `compute_mode`
-
-**Selection question**: How should execution work be laid out?
-
-**Default**: `serial` — one variant / horizon / target / origin at a time. You can leave this axis out of a recipe unless the run has a natural parallel work unit.
-
-Pick a parallel mode when wall-clock matters and the chosen level actually has multiple units of work. Navigator disables scope-incompatible choices: `parallel_by_model` requires a Study Scope that compares methods, and `parallel_by_target` requires a multiple-target Study Scope.
-
-### Value catalog
-
-| Value | Status | When to use | Verify |
-|---|---|---|---|
-| `serial` | operational (default) | Default. Any run where wall-clock isn't the bottleneck. | No parallelism; straight `for`-loop. |
-| `parallel_by_model` | operational | Method-comparison Study Scope with many model_family variants. | `ThreadPoolExecutor(max_workers=min(n_variants, 4))` in `sweep_runner._run_variant`. |
-| `parallel_by_horizon` | operational | Recipe with multiple horizons per target. | Pool inside `_rows_for_horizon` when `len(horizons) > 1`. |
-| `parallel_by_target` | operational | Multiple-target Study Scope. | Pool inside `execute_recipe` when `len(targets) > 1`. |
-| `parallel_by_oos_date` | operational | Long OOS windows — origin-level parallelism. | Pool inside `_rows_for_horizon` stage-2 when `len(origin_plan) > 1`. |
-
-A parallel mode that doesn't have multiple units of work (e.g. `parallel_by_horizon` with a single-horizon recipe) is a silent no-op — not an error.
-
-### Functions & features
-
-- `macrocast.execution.sweep_runner.execute_sweep._extract_parent_compute_mode`.
-- `macrocast.execution.build._build_predictions` handles `parallel_by_horizon` / `parallel_by_oos_date`.
-- `macrocast.execution.build.execute_recipe` handles `parallel_by_target`.
-
-### Recipe usage
-
-```yaml
-# 30-variant model sweep on a multi-core box.
-path:
-  0_meta:
-    fixed_axes:
-      compute_mode: parallel_by_model
-  3_training:
-    sweep_axes:
-      model_family: [ar, ridge, lasso, elasticnet, ..., xgboost, lightgbm, mlp]
-```
-
----
-
-## Design (Stage 0) takeaways
-
-- Four user-facing axes plus internal YAML grammar keep the operational surface narrow. Researchers who do not need failure-policy changes, stricter reproducibility, or parallelism write Layer 0 mostly by omission.
-- Runner dispatch flows from `study_scope`. One fixed path and a controlled sweep both use the `comparison_sweep` route; the difference is whether any downstream `sweep_axes` are present.
-- `failure_policy` + `reproducibility_mode` + `compute_mode` are three defaulted execution dials. Pick per-run, and let Navigator show which compute choices are disabled by the chosen Study Scope.
-- Every resolved value lands in `manifest.json` — when a run does something unexpected, read the manifest before anything else.
-
-Next: [Data (Stage 1)](data/index.md).
+Next: [Data](data/index.md).

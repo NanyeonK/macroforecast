@@ -4,8 +4,9 @@
 
 ## Current capabilities
 
-- **Layer-contract runtime**: L1-L8 plus L1.5-L4.5 diagnostic artifacts
-  materialize through `macrocast.core.runtime.execute_minimal_forecast`.
+- **Layer-contract runtime**: L0-L8 plus L1.5-L4.5 diagnostics define
+  explicit list and DAG contracts. The minimal runtime materializes the core
+  forecasting path through `macrocast.core.runtime.execute_minimal_forecast`.
 - **Data**: custom panels and official FRED-MD/FRED-QD raw adapters are
   supported in the core path; FRED-SD is available in the broader execution
   engine and remains provisional in the core path.
@@ -16,8 +17,13 @@
 - **Evaluation**: point metrics, benchmark-relative metrics, rankings, L6
   lightweight statistical tests, L7 basic importance, and L8 file export are
   materialized.
-- **Diagnostics**: L1.5-L4.5 generate JSON diagnostic artifacts. Figure/table
-  rendering is still a specialized runtime task.
+- **Diagnostics**: L1.5-L4.5 are default-off side branches. With
+  `enabled: false` they produce no DAG nodes and no sink; with `enabled: true`
+  L8 can export them through `diagnostics_l1_5` through `diagnostics_l4_5` or
+  `diagnostics_all`.
+- **Layer boundaries**: L3 owns feature engineering, L4 owns forecasting and
+  forecast combination, L5 owns evaluation, L6 owns statistical tests, L7 owns
+  interpretation, and L8 owns exported artifacts and manifests.
 
 See `docs/getting_started/runtime_support.md` for the current support matrix.
 

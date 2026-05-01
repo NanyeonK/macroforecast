@@ -36,13 +36,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      - name: Check navigator app data is current
+      - name: Check navigator app assets exist
         run: |
-          macrocast-navigate export-ui-data --output docs/_extra/navigator_app/assets/navigator_ui_data.json --check
+          test -f docs/_html_extra/navigator_app/index.html
+          test -f docs/_html_extra/navigator_app/app.js
+          test -f docs/_html_extra/navigator_app/styles.css
 
       - name: Build Sphinx HTML (fail on warning)
         run: |
           sphinx-build -W -b html docs docs/_build/html
+
+      - name: Check navigator app was included in docs build
+        run: |
+          test -f docs/_build/html/navigator_app/index.html
+          test -f docs/_build/html/navigator_app/app.js
+          test -f docs/_build/html/navigator_app/styles.css
 
       - name: Check no xref_missing beyond suppressed
         run: |

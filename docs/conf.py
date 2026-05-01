@@ -61,7 +61,7 @@ myst_heading_anchors = 3
 html_theme = "sphinx_rtd_theme"
 html_title = "macrocast"
 html_static_path: list[str] = []
-html_extra_path = ["_extra"]
+html_extra_path = ["_html_extra"]
 
 html_theme_options = {
     "navigation_depth": 4,

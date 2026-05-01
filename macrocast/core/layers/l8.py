@@ -305,19 +305,25 @@ def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
     l5 = root.get("5_evaluation", {}) or {}
     l5_fixed = l5.get("fixed_axes", {}) or {}
     l7 = root.get("7_interpretation", {}) or {}
+    diagnostic_layers = {
+        "l1_5": "1_5_data_summary",
+        "l2_5": "2_5_pre_post_preprocessing",
+        "l3_5": "3_5_feature_diagnostics",
+        "l4_5": "4_5_generator_diagnostics",
+    }
     return {
         "forecast_object": l4.get("forecast_object", "point"),
         "has_fred_sd": l1_fixed.get("dataset", "fred_md") in {"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"},
         "regime_definition": l1_fixed.get("regime_definition", "none"),
         "has_ensemble": any(isinstance(node, dict) and node.get("type") == "combine" for node in l4_nodes),
         "uses_r_model": any(isinstance(node, dict) and (node.get("params", {}) or {}).get("family") == "glmboost" for node in l4_nodes),
-        "l5_active": "5_evaluation" in root or True,
+        "l5_active": bool(l5.get("enabled", True)),
         "l5_decomposition_active": l5_fixed.get("decomposition_target", "none") != "none",
         "regime_metrics_active": l5_fixed.get("regime_use", "pooled") != "pooled",
         "l6_enabled": bool((root.get("6_statistical_tests", {}) or {}).get("enabled", False)),
         "l7_enabled": bool(l7.get("enabled", False)),
         "l7_transformation_attribution": "l7_transformation_attribution_v1" in (l7.get("sinks", {}) or {}),
-        "active_diagnostics": tuple(key for key in ("l1_5", "l2_5", "l3_5", "l4_5") if (root.get(key, {}) or {}).get("enabled", False)),
+        "active_diagnostics": tuple(layer_id for layer_id, yaml_key in diagnostic_layers.items() if (root.get(yaml_key, {}) or {}).get("enabled", False)),
     }
 
 

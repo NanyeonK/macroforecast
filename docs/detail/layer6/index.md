@@ -1,34 +1,69 @@
-# 4.6 Layer 6: Statistical Tests
+# Layer 6: Statistical Tests
 
-- Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.5 Layer 5: Output / Provenance](../layer5/index.md)
+- Parent: [Detail: Layer Contracts](../index.md)
+- Previous: [Layer 5](../layer5/index.md)
 - Current: Layer 6
-- Next: [4.7 Layer 7: Interpretation / Importance](../layer7/index.md)
+- Next: [Layer 7](../layer7/index.md)
 
-Layer 6 owns statistical testing over forecast errors, loss differences, density or interval outputs, directional outcomes, and residual diagnostics.
+Layer 6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires `enabled: true`. Individual sub-layers also require their own `enabled: true`.
 
-## Decision order
+## Contract
 
-| Group | Axes |
-|---|---|
-| Test families | `equal_predictive`, `nested`, `cpa_instability`, `multiple_model`, `density_interval`, `direction`, `residual_diagnostics` |
-| Scope and dependence | `test_scope`, `dependence_correction`, `overlap_handling` |
+Inputs:
 
-## Canonical names
-
-Layer 6 uses split test-family axes only. Select `equal_predictive`, `nested`, `cpa_instability`, `multiple_model`, `density_interval`, `direction`, or `residual_diagnostics` under `fixed_axes`; leave a family at `none` when inactive. There is no single catch-all test axis in generated recipes.
-
-## Layer contract
-
-Input:
-- predictions and evaluation outputs;
-- forecast-object type from Layer 3;
-- overlap and dependence assumptions.
+- `l4_forecasts_v1`;
+- `l4_model_artifacts_v1`;
+- `l5_evaluation_v1`;
+- `l1_data_definition_v1`;
+- optional `l1_regime_metadata_v1`.
 
 Output:
-- statistical-test artifacts and manifest entries.
 
-## Related reference
+- `l6_tests_v1`.
 
-- [Layer Contract Ledger](../layer_contract_ledger.md)
-- [Artifacts and Manifest](../artifacts_and_manifest.md)
+## Globals
+
+- `test_scope`;
+- `dependence_correction`;
+- `overlap_handling`.
+
+## Sub-Layers
+
+| Sub-layer | Purpose |
+|---|---|
+| L6.A | equal predictive ability tests |
+| L6.B | nested model tests |
+| L6.C | conditional predictive ability and instability |
+| L6.D | multiple model tests |
+| L6.E | density and interval tests |
+| L6.F | direction tests |
+| L6.G | residual diagnostics |
+
+## Gates
+
+- `enabled: false` disables all sub-layers.
+- Benchmark-only pair strategies require an L4 benchmark.
+- Density/interval tests require quantile or density forecasts.
+- CPA regime conditioning requires an active L1 regime.
+- `overlap_handling: none` is rejected for overlapping horizons.
+- Bootstrap replications below 100 are hard errors; below 500 are warnings.
+
+## Example
+
+```yaml
+6_statistical_tests:
+  enabled: true
+  test_scope: per_target_horizon
+  dependence_correction: newey_west
+  sub_layers:
+    L6_A_equal_predictive:
+      enabled: true
+      fixed_axes:
+        equal_predictive_test: dm_diebold_mariano
+        model_pair_strategy: vs_benchmark_only
+    L6_D_multiple_model:
+      enabled: true
+      fixed_axes:
+        multiple_model_test: mcs_hansen
+        mcs_alpha: 0.10
+```

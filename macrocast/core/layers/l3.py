@@ -30,6 +30,10 @@ ALLOWED_SOURCE_SUBSET_KEYS = frozenset(
 FORECAST_COMBINATION_OPS = frozenset(
     {
         "weighted_average_forecast",
+        "median_forecast",
+        "trimmed_mean_forecast",
+        "bma_forecast",
+        "bivariate_ardl_combination",
         "dmsfe",
         "bma",
         "mallows_cp",

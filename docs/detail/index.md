@@ -1,17 +1,28 @@
-# 4. Detail (code): Full
+# Detail: Layer Contracts
 
-Detail (code) is the **Full** interface for macrocast. Use it when Simple code is not enough and you need exact control over the layer path, YAML, runtime contracts, artifacts, or custom researcher methods.
+Detail docs describe the Full interface for macrocast recipes. Full means that layer keys, axes, DAG nodes, sink names, runtime artifacts, and L8 manifests follow the same contract.
 
-Full means:
+## Main Flow
 
-- every layer decision is explicit or compiler-derived from an explicit rule;
-- disabled choices and forced choices are part of the contract;
-- YAML paths, Python builders, runtime artifacts, and manifests must agree;
-- custom methods enter through documented Layer 2 or Layer 3 contracts.
+```text
+L0 -> L1 -> L2 -> L3 -> L4 -> L5 -> L6 -> L7 -> L8
+```
 
-Layer 0 is the bridge between Simple and Full. Simple asks for Study Scope only, then applies default execution policies. Full shows all four user-facing Layer 0 axes. When a Full recipe omits defaulted policy axes, the compiler/runtime use the documented defaults and record the resolved values in manifests.
+- L0-L2 and L5-L8 are list-style layers.
+- L3, L4, and L7 are graph-style layers.
+- L6 and L7 are default off.
+- L8 is always the external export boundary.
 
-Read the layers in order. Earlier layers define the data and representation contract that later layers consume.
+## Diagnostic Hooks
+
+```text
+L1.5 <- L1
+L2.5 <- L1 + L2
+L3.5 <- L1 + L2 + L3
+L4.5 <- L4 + L3
+```
+
+Diagnostics are default off. With `enabled: false`, they create no DAG nodes and no sink. With `enabled: true`, they emit diagnostic artifacts that L8 can include through `diagnostics_l1_5`, `diagnostics_l2_5`, `diagnostics_l3_5`, `diagnostics_l4_5`, or `diagnostics_all`.
 
 ## Full Layer Documents
 
@@ -27,16 +38,11 @@ layer4/index
 layer5/index
 layer6/index
 layer7/index
+layer8/index
 ```
 
-## Navigation Rule
+## Related Reference
 
-Each layer page shows only local context:
-
-- parent: Detail (code);
-- current layer;
-- previous layer when one exists;
-- next layer when one exists;
-- lower-level axis pages only for the current layer.
-
-Legacy audit and compatibility pages remain linkable from relevant layer pages, but they are not part of the main Full navigation spine.
+- [Layer Boundary Contract](layer_boundary_contract.md)
+- [Artifacts and Manifest](artifacts_and_manifest.md)
+- [Recipe Layers](recipe_layers.md)

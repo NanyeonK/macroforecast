@@ -159,6 +159,11 @@ def varimax_rotation(inputs, params):
     _stub(inputs, params)
 
 
+@register_op(name="varimax", layer_scope=("l3",), input_types={"default": Factor}, output_type=Factor)
+def varimax(inputs, params):
+    _stub(inputs, params)
+
+
 @_factor_op("partial_least_squares", extra_rules=(Rule("hard", _has_target_signal_input, "partial_least_squares requires target_signal input port"),))
 def partial_least_squares(inputs, params):
     _stub(inputs, params)
@@ -189,8 +194,13 @@ def hamilton_filter(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="polynomial_expansion", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel, params_schema={"degree": {"type": int, "default": 2, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),), soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3, "very high polynomial degree, consider kernel_features instead"),))
+@register_op(name="polynomial_expansion", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel, params_schema={"degree": {"type": int, "default": 2, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),), soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3, "very high polynomial degree, consider kernel instead"),))
 def polynomial_expansion(inputs, params):
+    _stub(inputs, params)
+
+
+@register_op(name="polynomial", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel, params_schema={"degree": {"type": int, "default": 2, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),), soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3, "very high polynomial degree, consider kernel"),))
+def polynomial(inputs, params):
     _stub(inputs, params)
 
 
@@ -204,8 +214,18 @@ def kernel_features(inputs, params):
     _stub(inputs, params)
 
 
+@_factor_op("kernel", input_type=Panel, output_type=Panel)
+def kernel(inputs, params):
+    _stub(inputs, params)
+
+
 @_factor_op("nystroem_features", input_type=Panel, output_type=Panel)
 def nystroem_features(inputs, params):
+    _stub(inputs, params)
+
+
+@_factor_op("nystroem", input_type=Panel, output_type=Panel)
+def nystroem(inputs, params):
     _stub(inputs, params)
 
 

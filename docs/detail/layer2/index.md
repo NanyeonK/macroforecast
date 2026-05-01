@@ -3,7 +3,7 @@
 - Parent: [4. Detail (code): Full](../index.md)
 - Previous: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
 - Current: Layer 2
-- Next: [4.3 Layer 3: Forecast Generator](../layer3/index.md)
+- Next: [Layer 3: Feature Engineering](../layer3/index.md)
 
 Layer 2 owns representation construction after Layer 1 produces the source frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the source frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.
 
@@ -33,7 +33,3 @@ Output:
 - auxiliary payloads for narrow advanced routes.
 
 ## Related reference
-
-- [Layer 2 Feature Representation](../layer2_feature_representation.md)
-- [Layer 2 Closure Ledger](../layer2_closure_ledger.md)
-- [Layer 2 / Layer 3 Sweep Contract](../layer2_layer3_sweep_contract.md)

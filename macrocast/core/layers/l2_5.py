@@ -114,6 +114,8 @@ class L2_5Recipe:
 def normalize_to_dag_form(layer: dict[str, Any] | L2_5Layer, layer_id: Literal["l2_5"] = "l2_5", context: dict[str, Any] | None = None) -> DAG:
     raw = layer.raw_yaml if isinstance(layer, L2_5Layer) else layer
     resolved = resolve_axes_from_raw(raw)
+    if not resolved["enabled"]:
+        return DAG("l2_5", {}, sinks={}, layer_globals={"resolved_axes": resolved})
     nodes: dict[str, Node] = {
         "src_l1_data": Node("src_l1_data", "source", "l2_5", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
         "src_l2_clean": Node("src_l2_clean", "source", "l2_5", "source", selector=SourceSelector("l2", "l2_clean_panel_v1")),
@@ -146,6 +148,8 @@ def resolve_axes_from_raw(raw: dict[str, Any]) -> L2_5ResolvedAxes:
     values["enabled"] = bool(raw.get("enabled", False))
     values["leaf_config"] = raw.get("leaf_config", {}) or {}
     active = {axis: True for axis in AXIS_NAMES}
+    if not values["enabled"]:
+        active = {axis: False for axis in AXIS_NAMES}
     if values["correlation_shift"] == "none":
         active["correlation_method"] = False
     return L2_5ResolvedAxes(values, active)
@@ -178,6 +182,8 @@ def validate_recipe(recipe: L2_5Recipe | dict[str, Any] | str):
 
 def _validate_values(resolved: L2_5ResolvedAxes) -> list[Any]:
     issues: list[Any] = []
+    if not resolved["enabled"]:
+        return issues
     for axis, options in OPTIONS.items():
         if resolved.get_active(axis) and isinstance(resolved[axis], str) and resolved[axis] not in options:
             issues.append(_issue(f"l2_5.{axis}", f"invalid value {resolved[axis]!r} for {axis}"))

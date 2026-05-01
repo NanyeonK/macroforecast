@@ -42,11 +42,8 @@ Executes every variant under `output_root`, sharing a FRED cache and
 writing a Schema v1 `study_manifest.json` at the root.
 
 Failure behavior is controlled by the parent recipe's Layer 0
-`failure_policy`. With `skip_failed_cell`, compile-invalid variants are not
-executed. They are recorded as `status="skipped"`, their variant directory
-contains `compiler_manifest.json`, and the root manifest records
-`compiler_status`, `compiler_blocked_reasons`, and
-`layer3_capability_cell`.
+`failure_policy`. Current public values are `fail_fast`, `continue_on_error`,
+and `collect_errors`.
 
 ## Dataclasses
 
@@ -56,7 +53,7 @@ contains `compiler_manifest.json`, and the root manifest records
 - `parent_recipe_id: str`
 - `parent_recipe_dict: dict`
 - `axes_swept: tuple[str, ...]` — layer-qualified names, e.g.
-  `("3_training.model_family",)`
+  `("4_forecasting_model.fit_model.params.family",)`
 - `variants: tuple[SweepVariant, ...]`
 - `size: int` — number of variants
 

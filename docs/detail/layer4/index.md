@@ -1,39 +1,69 @@
-# 4.4 Layer 4: Evaluation
+# Layer 4: Forecasting Model
 
-- Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.3 Layer 3: Forecast Generator](../layer3/index.md)
+- Parent: [Detail: Layer Contracts](../index.md)
+- Previous: [Layer 3](../layer3/index.md)
 - Current: Layer 4
-- Next: [4.5 Layer 5: Output / Provenance](../layer5/index.md)
+- Next: [Layer 5](../layer5/index.md)
 
-Layer 4 owns evaluation of forecast artifacts. It chooses metric families, benchmark comparison scope, aggregation, ranking, reporting style, regime use, decomposition, and OOS period.
+Layer 4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer.
 
-## Decision order
+## Contract
 
-| Group | Axes |
+Inputs:
+
+- `l3_features_v1`;
+- `l3_metadata_v1`;
+- optional `l1_regime_metadata_v1`.
+
+Outputs:
+
+- `l4_forecasts_v1`;
+- `l4_model_artifacts_v1`;
+- `l4_training_metadata_v1`.
+
+## Sub-Layers
+
+| Slot | Purpose |
 |---|---|
-| Metrics | `primary_metric`, `point_metrics`, `density_metrics`, `direction_metrics`, `relative_metrics`, `economic_metrics` |
-| Benchmark comparison | `benchmark_window`, `benchmark_scope` |
-| Aggregation | `agg_time`, `agg_horizon`, `agg_target` |
-| Reporting | `ranking`, `report_style` |
-| Regimes and decomposition | `regime_definition`, `regime_use`, `regime_metrics`, `decomposition_target`, `decomposition_order` |
-| Evaluation window | `oos_period` |
+| L4.A | model selection and forecast-combine nodes |
+| L4.B | forecast strategy |
+| L4.C | training window and refit policy |
+| L4.D | tuning |
 
-## Canonical names
+## Benchmark Contract
 
-Layer 4 values are lower-snake canonical IDs. Generated YAML should use values such as `msfe`, `relative_msfe`, `full_out_of_sample_average`, `nber_recession`, and `evaluation_only`. Mixed-case metric labels are display labels only, not recipe IDs.
+A benchmark is not a separate axis. Mark exactly one `fit_model` node with `is_benchmark: true`. L5 and L6 detect the benchmark from L4 model artifacts. Zero benchmark nodes is valid; two or more benchmark nodes is a hard error.
 
-## Layer contract
+## Forecast Combination
 
-Input:
-- forecast payloads and predictions from Layer 3;
-- provenance needed to compare against benchmarks.
+Forecast combination belongs in L4 and consumes forecast artifacts:
 
-Output:
-- metrics;
-- evaluation summaries;
-- ranking and decomposition artifacts where selected.
+- `weighted_average_forecast`;
+- `median_forecast`;
+- `trimmed_mean_forecast`;
+- `bma_forecast`;
+- `bivariate_ardl_combination`.
 
-## Related reference
+`weighted_average_forecast.weights_method` supports `equal`, `dmsfe`, `inverse_msfe`, `mallows_cp`, `sic_weights`, `granger_ramanathan`, and `cv_optimized`. `full_sample_once` is rejected for forecast-combination temporal rules.
+
+## Example
+
+```yaml
+4_forecasting_model:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - {id: fit_ar, type: step, op: fit_model, params: {family: ar_p}, is_benchmark: true, inputs: [src_y]}
+    - {id: predict_ar, type: step, op: predict, inputs: [fit_ar]}
+    - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}, inputs: [src_X, src_y]}
+    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
+    - {id: ensemble, type: combine, op: weighted_average_forecast, params: {weights_method: dmsfe}, inputs: [predict_ar, predict_ridge]}
+  sinks:
+    l4_forecasts_v1: ensemble
+    l4_model_artifacts_v1: [fit_ar, fit_ridge]
+    l4_training_metadata_v1: auto
+```
+
+## Related Reference
 
 - [Artifacts and Manifest](../artifacts_and_manifest.md)
-- [Layer Contract Ledger](../layer_contract_ledger.md)

@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from macrocast.navigator import (
@@ -89,11 +90,16 @@ def _recipe_with_axis(recipe: dict, layer: str, axis: str, value: str) -> dict:
     return out
 
 
+def _skip_static_navigator_app_if_missing() -> None:
+    root = Path(__file__).resolve().parents[1]
+    if not (root / "docs/_extra/navigator_app/assets/state_engine.js").exists():
+        pytest.skip("static navigator app was removed from docs/_extra")
+
+
 def _js_state_snapshot(tmp_path: Path, recipe: dict, actions: list[tuple[str, str]]) -> dict:
+    _skip_static_navigator_app_if_missing()
     node = shutil.which("node")
     if node is None:
-        import pytest
-
         pytest.skip("node is not installed")
     recipe_path = _write_recipe(tmp_path / "recipe.yaml", recipe)
     data_path = tmp_path / "navigator_ui_data.json"
@@ -580,10 +586,9 @@ def test_navigator_topology_uses_current_layer_specs_for_l0_l1_l2():
 
 
 def test_navigator_generated_yaml_validates_all_current_layers(tmp_path: Path):
+    _skip_static_navigator_app_if_missing()
     node = shutil.which("node")
     if node is None:
-        import pytest
-
         pytest.skip("node is not installed")
 
     data_path = tmp_path / "navigator_ui_data.json"
@@ -633,10 +638,9 @@ eval(code + "\nstate.data = data; state.sampleIndex = 0; console.log(canonicalRe
 
 
 def test_navigator_generated_yaml_validates_each_active_choice(tmp_path: Path):
+    _skip_static_navigator_app_if_missing()
     node = shutil.which("node")
     if node is None:
-        import pytest
-
         pytest.skip("node is not installed")
 
     data_path = tmp_path / "navigator_ui_data.json"

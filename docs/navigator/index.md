@@ -8,15 +8,9 @@ L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
        L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
 
-Open the interactive app:
-
-```{raw} html
-<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p>
-```
-
 ## What The App Shows First
 
-The first screen is no longer an axis list. It starts with the registered layer topology:
+The Navigator contract starts with the registered layer topology:
 
 - main layer flow from setup through output;
 - diagnostic hooks L1.5-L4.5 as default-off side branches;
@@ -25,7 +19,13 @@ The first screen is no longer an axis list. It starts with the registered layer 
 - sub-layer and axis counts from the runtime registry;
 - runtime support labels for selected options.
 
-The older compatibility axis explorer remains below the canonical layer map. Use it for branch-level compatibility checks and YAML preview, but treat the layer map as the source of truth for package architecture.
+Compatibility checks and YAML previews should treat the layer map as the source of truth for package architecture.
+
+Open the current MVP app:
+
+```{raw} html
+<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p>
+```
 
 ## Canonical Layer Roles
 
@@ -46,6 +46,7 @@ The older compatibility axis explorer remains below the canonical layer map. Use
 
 | Page | Purpose |
 |---|---|
+| [UI Redesign Plan](../navigator_ui_redesign_plan.md) | Plan for the new layer/DAG recipe IDE replacing the removed static app. |
 | [Tree Navigator](tree_navigator.md) | Explain the canonical layer map and the remaining compatibility axis explorer. |
 | [Path Resolver](path_resolver.md) | Compile YAML and show execution status, warnings, blocked reasons, and capability matrix. |
 | [Compatibility Engine](compatibility_engine.md) | Explain constraint rules such as model/feature compatibility, forecast-object metrics, and importance-method restrictions. |
@@ -64,6 +65,7 @@ The older compatibility axis explorer remains below the canonical layer map. Use
 ```{toctree}
 :maxdepth: 1
 
+../navigator_ui_redesign_plan
 tree_navigator
 path_resolver
 compatibility_engine

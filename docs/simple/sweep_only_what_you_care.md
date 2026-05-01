@@ -30,11 +30,11 @@ MVP aliases:
 
 | Alias | Internal axis | Runtime status |
 |-------|---------------|----------------|
-| `model`, `models`, `model_family` | `3_training.model_family` | executable |
+| `model`, `models`, `model_family` | `4_forecasting_model.fit_model.params.family` | executable |
 | `scaling`, `scaling_policy` | `2_preprocessing.scaling_policy` | full-route executable; simple exposure pending result-contract docs |
 | `missing`, `x_missing`, `x_missing_policy` | `2_preprocessing.x_missing_policy` | full-route executable; simple exposure pending result-contract docs |
 | `preprocessor`, `custom_preprocessor` | `2_preprocessing.custom_preprocessor` | fixed custom preprocessor executable; sweep blocked |
-| `target_transformer` | `2_preprocessing.target_transformer` | fixed transformer executable for autoreg path; sweep blocked |
+| `target_transformer` | `3_feature_engineering.target_construction` | fixed transformer executable for autoreg path; sweep blocked |
 
 A single-value choice becomes a fixed axis. A multi-value choice becomes a sweep axis.
 
@@ -50,9 +50,8 @@ recipe = exp.to_recipe_dict()
 ```
 
 Representation and preprocessing sweeps are a full-route feature first. The
-full Layer 0 grammar can route Layer 2 x Layer 3 grids to the sweep runner, and
-the detailed contract is in
-`docs/detail/layer2_layer3_sweep_contract.md`. The simple API will expose this
-only after the public naming and result-summary contract is stable.
+full layer contract can route Layer 2 x Layer 3 x Layer 4 grids to the sweep runner.
+The simple API will expose this only after the public naming and result-summary
+contract is stable.
 
 Full grids, ablations, replications, benchmark suites, and multi-target wrappers follow the same rule: they are internal/full routes first, simple routes later.
