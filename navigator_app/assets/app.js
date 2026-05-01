@@ -31,7 +31,6 @@ const els = {
   pathSource: document.getElementById("path-source"),
   treePath: document.getElementById("tree-path"),
   runtimeSupport: document.getElementById("runtime-support"),
-  layerTopology: document.getElementById("layer-topology"),
 };
 
 function escapeHtml(value) {
@@ -221,76 +220,6 @@ function layerDescription(layer) {
 function layerNumber(layer) {
   const match = String(layer || "").match(/^(\d+)/);
   return match ? match[1] : "";
-}
-
-function layerTopologySpec() {
-  return (state.data && state.data.layer_topology) || { nodes: [], edges: [], main_flow: [] };
-}
-
-function topologyNodeById() {
-  return new Map((layerTopologySpec().nodes || []).map((node) => [node.id, node]));
-}
-
-function topologyNodeCard(node) {
-  const modeLabel = node.ui_mode === "graph" ? "DAG" : "List";
-  const sinkList = (node.produces || []).slice(0, 3).join(", ");
-  const extraSinks = (node.produces || []).length > 3 ? ` +${(node.produces || []).length - 3}` : "";
-  return `
-    <article class="topology-node topology-${escapeHtml(node.group || node.category)} topology-mode-${escapeHtml(node.ui_mode)}" data-topology-layer="${escapeHtml(node.id)}">
-      <div class="topology-node-head">
-        <span class="topology-layer-id">${escapeHtml(node.id.toUpperCase().replace("_", "."))}</span>
-        <span class="topology-mode">${escapeHtml(modeLabel)}</span>
-      </div>
-      <h3>${escapeHtml(node.label || node.name)}</h3>
-      <p>${escapeHtml(humanizeToken(node.category))} · ${escapeHtml(String(node.axis_count || 0))} axes · ${escapeHtml(String(node.sub_layer_count || 0))} sub-layers</p>
-      ${sinkList ? `<code>${escapeHtml(sinkList)}${escapeHtml(extraSinks)}</code>` : ""}
-    </article>
-  `;
-}
-
-function renderLayerTopology() {
-  if (!els.layerTopology) return;
-  const topology = layerTopologySpec();
-  const byId = topologyNodeById();
-  const mainNodes = (topology.main_flow || []).map((id) => byId.get(id)).filter(Boolean);
-  const diagnostics = (topology.nodes || []).filter((node) => node.category === "diagnostic");
-  const graphLayers = (topology.nodes || []).filter((node) => node.ui_mode === "graph");
-  const edgeText = (topology.edges || [])
-    .slice(0, 10)
-    .map((edge) => `${String(edge.from || "").toUpperCase()} -> ${String(edge.to || "").toUpperCase()} via ${edge.sink}`)
-    .join("\n");
-  els.layerTopology.innerHTML = `
-    <div class="topology-heading">
-      <div>
-        <p class="eyebrow">Pipeline architecture</p>
-        <h2>Layer and DAG Map</h2>
-      </div>
-      <div class="topology-legend">
-        <span><strong>${escapeHtml(String(mainNodes.length))}</strong> main layers</span>
-        <span><strong>${escapeHtml(String(diagnostics.length))}</strong> diagnostics</span>
-        <span><strong>${escapeHtml(String(graphLayers.length))}</strong> graph/DAG layers</span>
-      </div>
-    </div>
-    <div class="topology-main-flow">
-      ${mainNodes.map(topologyNodeCard).join('<span class="topology-arrow">→</span>')}
-    </div>
-    <div class="topology-secondary">
-      <section>
-        <div class="topology-subhead">
-          <h3>Diagnostic side branches</h3>
-          <p class="source-note">Default-off layers hook into construction sinks without blocking the main DAG.</p>
-        </div>
-        <div class="topology-diagnostics">${diagnostics.map(topologyNodeCard).join("")}</div>
-      </section>
-      <section>
-        <div class="topology-subhead">
-          <h3>Sink handoffs</h3>
-          <p class="source-note">Edges are inferred from registered expected_inputs and produced sinks.</p>
-        </div>
-        <pre class="topology-edges">${escapeHtml(edgeText || "No registered sink edges.")}</pre>
-      </section>
-    </div>
-  `;
 }
 
 function orderedLayers() {
@@ -638,7 +567,6 @@ function renderYaml() {
 function render() {
   setDefaultAxis();
   renderSampleSelect();
-  renderLayerTopology();
   renderSummary();
   renderPathHeader();
   renderRuntimeSupport();
@@ -794,7 +722,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260501-layer-dag");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260501-runtime-support");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();
