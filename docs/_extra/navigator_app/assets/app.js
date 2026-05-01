@@ -40,41 +40,40 @@ const els = {
 };
 
 const CANONICAL_SUB_LAYERS = {
-  l0: ["L0.A study scope", "L0.B execution policy", "L0.C reproducibility", "L0.D compute mode"],
-  l1: ["L1.A data source", "L1.B target and horizons", "L1.C predictors", "L1.D geography", "L1.G regimes"],
+  l0: ["L0.A Execution policy"],
+  l1: ["L1.A Source selection", "L1.B Target definition", "L1.C Predictor universe", "L1.D Geography scope", "L1.E Sample window", "L1.F Horizon set", "L1.G Regime definition"],
   l1_5: ["L1.5.A sample coverage", "L1.5.B univariate summary", "L1.5.C stationarity", "L1.5.D missing and outlier", "L1.5.E correlation", "L1.5.Z export"],
-  l2: ["L2.A target construction", "L2.B transforms", "L2.C missing and outliers", "L2.D scaling", "L2.E features"],
+  l2: ["L2.A FRED-SD frequency alignment", "L2.B Transform", "L2.C Outlier handling", "L2.D Imputation", "L2.E Frame edge"],
   l2_5: ["L2.5.A comparison", "L2.5.B distribution shift", "L2.5.C correlation shift", "L2.5.D cleaning summary", "L2.5.Z export"],
-  l3: ["L3.A source nodes", "L3.B feature DAG", "L3.C sinks"],
+  l3: ["L3.A Target construction", "L3.B Feature pipelines", "L3.C Pipeline combine", "L3.D Feature selection"],
   l3_5: ["L3.5.A comparison", "L3.5.B factor inspection", "L3.5.C feature correlation", "L3.5.D lag inspection", "L3.5.E selection", "L3.5.Z export"],
-  l4: ["L4.A model DAG", "L4.B forecasts", "L4.C model artifacts", "L4.D training metadata"],
+  l4: ["L4.A Model selection", "L4.B Forecast strategy", "L4.C Training window", "L4.D Tuning"],
   l4_5: ["L4.5.A fit", "L4.5.B scale", "L4.5.C window stability", "L4.5.D tuning", "L4.5.E ensemble", "L4.5.Z export"],
   l5: ["L5.A metrics", "L5.B benchmark", "L5.C aggregation", "L5.D slicing and decomposition", "L5.E ranking"],
   l6: ["L6 globals", "L6_A_equal_predictive", "L6_B_nested", "L6_C_cpa", "L6_D_multiple_model", "L6_E_density_interval", "L6_F_direction", "L6_G_residual"],
-  l7: ["L7.A importance DAG", "L7.B output shape"],
+  l7: ["L7.A Importance DAG", "L7.B Output shape"],
   l8: ["L8_A_export_format", "L8_B_saved_objects", "L8_C_provenance", "L8_D_artifact_granularity"],
 };
 
 const CANONICAL_AXIS_GROUPS = {
   l0: {
-    "L0.A study scope": ["study_scope"],
-    "L0.B execution policy": ["failure_policy"],
-    "L0.C reproducibility": ["reproducibility_mode"],
-    "L0.D compute mode": ["compute_mode"],
+    "L0.A Execution policy": ["failure_policy", "reproducibility_mode", "compute_mode"],
   },
   l1: {
-    "L1.A data source": ["custom_source_policy", "dataset", "frequency", "information_set_type", "release_lag_rule", "contemporaneous_x_rule"],
-    "L1.B target and horizons": ["target_structure"],
-    "L1.C predictors": ["variable_universe", "fred_sd_variable_group", "sd_variable_selection"],
-    "L1.D geography": ["fred_sd_state_group", "state_selection"],
-    "L1.G regimes": ["regime_definition"],
+    "L1.A Source selection": ["custom_source_policy", "dataset", "frequency", "vintage_policy"],
+    "L1.B Target definition": ["target_structure"],
+    "L1.C Predictor universe": ["variable_universe"],
+    "L1.D Geography scope": ["target_geography_scope", "predictor_geography_scope"],
+    "L1.E Sample window": ["sample_start_rule", "sample_end_rule"],
+    "L1.F Horizon set": ["horizon_set"],
+    "L1.G Regime definition": ["regime_definition", "regime_estimation_temporal_rule"],
   },
   l2: {
-    "L2.A target construction": ["horizon_target_construction", "target_transform", "target_normalization"],
-    "L2.B transforms": ["tcode_policy", "transform_policy", "transform_scope", "fred_sd_mixed_frequency_representation"],
-    "L2.C missing and outliers": ["x_missing_policy", "x_outlier_policy", "outlier_policy", "outlier_action", "imputation_policy"],
-    "L2.D scaling": ["scaling_policy"],
-    "L2.E features": ["target_lag_block", "x_lag_feature_block", "factor_feature_block", "level_feature_block"],
+    "L2.A FRED-SD frequency alignment": ["sd_series_frequency_filter", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule"],
+    "L2.B Transform": ["transform_policy", "transform_scope"],
+    "L2.C Outlier handling": ["outlier_policy", "outlier_action", "outlier_scope"],
+    "L2.D Imputation": ["imputation_policy", "imputation_temporal_rule", "imputation_scope"],
+    "L2.E Frame edge": ["frame_edge_policy", "frame_edge_scope"],
   },
   l5: {
     "L5.A metrics": ["primary_metric", "point_metrics", "density_metrics", "direction_metrics", "relative_metrics"],
@@ -94,8 +93,8 @@ const CANONICAL_AXIS_GROUPS = {
     "L6_G_residual": ["residual_test", "residual_lag_count", "residual_test_scope", "residual_alpha"],
   },
   l7: {
-    "L7.A importance DAG": ["enabled"],
-    "L7.B output shape": ["output_table_format", "figure_type", "top_k_features_to_show", "precision_digits", "figure_dpi", "figure_format", "latex_table_export", "markdown_table_export"],
+    "L7.A Importance DAG": ["enabled"],
+    "L7.B Output shape": ["output_table_format", "figure_type", "top_k_features_to_show", "precision_digits", "figure_dpi", "figure_format", "latex_table_export", "markdown_table_export"],
   },
   l8: {
     "L8_A_export_format": ["export_format", "compression"],
@@ -117,74 +116,87 @@ const TREE_LAYER_ALIASES = {
 
 const GRAPH_LAYER_SECTIONS = {
   l3: {
-    "L3.A source nodes": {
-      summary: "Feature DAG starts from cleaned panels, targets, and metadata.",
+    "L3.A Target construction": {
+      summary: "Build y at the requested forecast horizon before feature pipelines feed models.",
       columns: [
         { label: "Sources", items: [
-          { name: "l2_clean_panel_v1", kind: "source", summary: "Clean predictor and target panel from L2." },
-          { name: "l1_data_definition_v1", kind: "source", summary: "Target, horizon, dataset, and calendar metadata." },
-          { name: "l1_regime_metadata_v1", kind: "gated source", summary: "Available only when regime support is active." },
+          { name: "L2 cleaned target", kind: "source", summary: "Standard y input after L2 preprocessing." },
+          { name: "L1 raw target", kind: "source", summary: "Optional raw-level target access for level pipelines." },
         ] },
-        { label: "Routing", items: [
-          { name: "source selector", kind: "node", summary: "Select X, y, metadata, or regime inputs for feature steps." },
+        { label: "Target step", items: [
+          { name: "target_construction", kind: "step", summary: "Creates direct, cumulative, or horizon-specific target series." },
         ] },
-        { label: "Feeds", items: [
-          { name: "L3.B feature DAG", kind: "edge", summary: "Source outputs connect into feature transform nodes." },
+        { label: "Rules", items: [
+          { name: "L3.A only", kind: "validation", summary: "target_construction belongs in the target-construction section." },
         ] },
       ],
     },
-    "L3.B feature DAG": {
-      summary: "Users compose source -> transform -> sink nodes. This is not a fixed-axis panel.",
+    "L3.B Feature pipelines": {
+      summary: "Compose parallel feature branches from cleaned, raw, regime, or prior pipeline outputs.",
       columns: [
+        { label: "Sources", items: [
+          { name: "l2_clean_panel_v1", kind: "source", summary: "Default predictor panel." },
+          { name: "l1_data_definition_v1 raw", kind: "source", summary: "Raw feature access for level or transformation attribution pipelines." },
+          { name: "l1_regime_metadata_v1", kind: "gated source", summary: "Available when regime support is active." },
+        ] },
         { label: "Transform nodes", items: [
           { name: "lag / seasonal_lag", kind: "step", summary: "Build target or predictor lag blocks." },
           { name: "pca / scaled_pca / dfm", kind: "step", summary: "Factor and dimensionality-reduction blocks." },
-          { name: "feature_selection", kind: "step", summary: "Selection node for sparse feature sets." },
           { name: "ma_increasing_order", kind: "step", summary: "MARX increasing-order moving-average block." },
         ] },
-        { label: "Composition", items: [
+        { label: "Cascade", items: [
           { name: "parallel branches", kind: "DAG pattern", summary: "Multiple feature pipelines can feed one final feature sink." },
-          { name: "lineage metadata", kind: "metadata", summary: "Each output column keeps source and pipeline lineage for L5/L7." },
-        ] },
-        { label: "Validation", items: [
-          { name: "acyclic graph", kind: "rule", summary: "Steps form a directed acyclic graph; no layer-level sweep axes." },
+          { name: "pipeline output source", kind: "beta", summary: "One pipeline can feed another within maximum cascade depth." },
         ] },
       ],
     },
-    "L3.C sinks": {
-      summary: "Feature DAG resolves into feature and metadata artifacts consumed by L4 and L7.",
+    "L3.C Pipeline combine": {
+      summary: "Merge parallel feature blocks into the final X matrix while preserving lineage.",
       columns: [
+        { label: "Combine nodes", items: [
+          { name: "concat", kind: "combine", summary: "Append feature blocks column-wise." },
+          { name: "weighted_concat / simple_average", kind: "combine", summary: "Structured feature block combination." },
+          { name: "hierarchical_pca", kind: "combine", summary: "Reduce grouped blocks after combining." },
+        ] },
+        { label: "Metadata", items: [
+          { name: "column lineage", kind: "metadata", summary: "Tracks source node, pipeline, step, and transform history." },
+        ] },
+      ],
+    },
+    "L3.D Feature selection": {
+      summary: "Optional post-combine feature subset selection before emitting L3 sinks.",
+      columns: [
+        { label: "Selection", items: [
+          { name: "feature_selection", kind: "step", summary: "Variance, correlation, lasso, or user-list selection policies." },
+          { name: "future selectors", kind: "future", summary: "Boruta, RFE, lasso path, stability, and genetic search are future/schema-only." },
+        ] },
         { label: "Sinks", items: [
           { name: "l3_features_v1", kind: "sink", summary: "Final X/y feature matrices." },
-          { name: "l3_metadata_v1", kind: "sink", summary: "Column lineage, pipeline names, and transform provenance." },
-        ] },
-        { label: "Consumers", items: [
-          { name: "L4 forecast DAG", kind: "downstream", summary: "Model training reads l3_features_v1." },
-          { name: "L7 interpretation", kind: "downstream", summary: "Importance and lineage attribution read both L3 sinks." },
+          { name: "l3_metadata_v1", kind: "sink", summary: "Lineage and pipeline metadata for L5/L7." },
         ] },
       ],
     },
   },
   l4: {
-    "L4.A model DAG": {
-      summary: "L4 composes model fit, benchmark, tuning, and ensemble nodes.",
+    "L4.A Model selection": {
+      summary: "Choose model family nodes, benchmark flags, and optional forecast-combination nodes.",
       columns: [
         { label: "Sources", items: [
           { name: "l3_features_v1", kind: "source", summary: "Training and forecast design matrices." },
           { name: "l3_metadata_v1", kind: "source", summary: "Feature lineage for model artifacts." },
         ] },
         { label: "Model nodes", items: [
-          { name: "fit_model", kind: "step", summary: "Family-specific model fitting and optional tuning." },
-          { name: "benchmark_model", kind: "step", summary: "Produces artifacts flagged with is_benchmark." },
-          { name: "combine_forecasts", kind: "step", summary: "Optional ensemble combination over model outputs." },
+          { name: "fit_model", kind: "step", summary: "Family-specific model fitting." },
+          { name: "is_benchmark", kind: "flag", summary: "Benchmark detection uses the L4 artifact flag, not an L5 axis." },
+          { name: "weighted_average_forecast / median_forecast", kind: "combine", summary: "Optional ensemble combination inside L4.A." },
         ] },
         { label: "Rules", items: [
           { name: "model_id lineage", kind: "metadata", summary: "Every forecast and artifact keeps model_id for L5/L6/L7." },
         ] },
       ],
     },
-    "L4.B forecasts": {
-      summary: "Forecast nodes emit point, quantile, or density forecast objects.",
+    "L4.B Forecast strategy": {
+      summary: "Define direct, iterated, path-average, or forecast-object behavior.",
       columns: [
         { label: "Forecast nodes", items: [
           { name: "predict_direct", kind: "step", summary: "Direct h-step forecasts." },
@@ -197,34 +209,36 @@ const GRAPH_LAYER_SECTIONS = {
         ] },
       ],
     },
-    "L4.C model artifacts": {
-      summary: "Artifacts carry fitted models, benchmark flags, and runtime metadata.",
+    "L4.C Training window": {
+      summary: "Set expanding, rolling, fixed, or OOS-origin training window behavior.",
       columns: [
-        { label: "Artifact fields", items: [
-          { name: "model_artifact", kind: "sink payload", summary: "Fitted model or runtime stub metadata." },
-          { name: "is_benchmark", kind: "flag", summary: "Benchmark detection for L5/L6 uses this flag." },
+        { label: "Window policies", items: [
+          { name: "expanding_window", kind: "strategy", summary: "Train on all data available at each origin." },
+          { name: "rolling_window", kind: "strategy", summary: "Train on a fixed-size recent history." },
+          { name: "fixed_window", kind: "strategy", summary: "Use one fixed training sample." },
         ] },
-        { label: "Sink", items: [
-          { name: "l4_model_artifacts_v1", kind: "sink", summary: "Consumed by L5, L6, and L7." },
+        { label: "Metadata", items: [
+          { name: "l4_training_metadata_v1", kind: "sink", summary: "Records window plans, durations, warnings, and seeds." },
         ] },
       ],
     },
-    "L4.D training metadata": {
-      summary: "Training window, tuning, and reproducibility information for diagnostics and provenance.",
+    "L4.D Tuning": {
+      summary: "Configure optional hyperparameter search for model-family nodes.",
       columns: [
-        { label: "Metadata", items: [
-          { name: "window_plan", kind: "metadata", summary: "Expanding, rolling, or fixed-window training plan." },
+        { label: "Search", items: [
+          { name: "search_algorithm", kind: "axis", summary: "None, grid, random, Bayesian, or family-specific search." },
           { name: "tuning_history", kind: "metadata", summary: "Search traces when tuning is active." },
-          { name: "runtime_log", kind: "metadata", summary: "Training duration, warnings, and seeds." },
         ] },
-        { label: "Sink", items: [
-          { name: "l4_training_metadata_v1", kind: "sink", summary: "Consumed by L4.5 and L8." },
+        { label: "Sinks", items: [
+          { name: "l4_forecasts_v1", kind: "sink", summary: "Forecast outputs." },
+          { name: "l4_model_artifacts_v1", kind: "sink", summary: "Fitted artifacts and benchmark flags." },
+          { name: "l4_training_metadata_v1", kind: "sink", summary: "Training and tuning metadata." },
         ] },
       ],
     },
   },
   l7: {
-    "L7.A importance DAG": {
+    "L7.A Importance DAG": {
       summary: "Interpretation is a source -> importance step -> aggregation -> sink DAG.",
       columns: [
         { label: "Sources", items: [
@@ -250,6 +264,8 @@ const MULTI_SELECT_AXES = new Set([
   "density_metrics",
   "direction_metrics",
   "relative_metrics",
+  "summary_metrics",
+  "distribution_metric",
   "coverage_levels",
   "residual_test",
   "saved_objects",
@@ -261,6 +277,8 @@ const DEFAULT_MULTI_SELECTIONS = {
   density_metrics: ["log_score", "crps"],
   direction_metrics: [],
   relative_metrics: ["relative_mse", "r2_oos"],
+  summary_metrics: ["mean", "sd", "min", "max", "n_missing"],
+  distribution_metric: ["mean_change", "sd_change", "ks_statistic"],
   coverage_levels: ["0.5", "0.9", "0.95"],
   residual_test: ["ljung_box_q", "arch_lm", "jarque_bera_normality"],
   saved_objects: ["forecasts", "metrics", "ranking"],
@@ -287,16 +305,16 @@ const CANONICAL_AXIS_OPTIONS = {
   benchmark_window: ["full_oos", "rolling", "expanding"],
   benchmark_scope: ["all_targets_horizons", "per_target", "per_horizon", "per_target_horizon"],
   agg_time: ["mean", "median", "weighted_recent", "per_subperiod"],
-  agg_horizon: ["pooled", "per_horizon", "short_medium_long"],
-  agg_target: ["pooled", "per_target", "target_group"],
-  agg_state: ["pooled", "per_state", "per_region"],
-  oos_period: ["full", "user_defined", "rolling_origin"],
-  regime_use: ["pooled", "per_regime", "regime_interaction"],
-  regime_metrics: ["same_metrics", "separate_metrics"],
-  decomposition_target: ["none", "by_predictor_block", "by_period", "by_regime", "by_state"],
-  decomposition_order: ["sequential", "shapley", "leave_one_out"],
-  ranking: ["primary_metric", "all_metrics", "pareto"],
-  report_style: ["compact", "full", "paper_table"],
+  agg_horizon: ["per_horizon_separate", "mean", "per_horizon_then_mean"],
+  agg_target: ["per_target_separate", "mean", "weighted"],
+  agg_state: ["pool_states", "per_state_separate", "weighted_average", "top_k_worst"],
+  oos_period: ["full_oos", "fixed_dates", "rolling_window", "multiple_subperiods"],
+  regime_use: ["pooled", "per_regime", "both"],
+  regime_metrics: ["same_as_primary", "all_metrics", "custom_list"],
+  decomposition_target: ["none", "by_target", "by_horizon", "by_predictor_block", "by_oos_period", "by_state", "by_regime"],
+  decomposition_order: ["marginal", "sequential", "shapley", "interaction_first_order"],
+  ranking: ["by_primary_metric", "by_relative_metric", "by_average_rank", "borda_count", "mcs_inclusion"],
+  report_style: ["single_table", "per_target_horizon_panel", "heatmap", "forest_plot", "latex_table", "markdown_table"],
   enabled: ["true", "false"],
   test_scope: ["per_target_horizon", "per_target", "per_horizon", "pooled"],
   dependence_correction: ["newey_west", "andrews", "parzen_kernel", "none"],
@@ -524,12 +542,12 @@ function docsLink(axisName) {
 
 function layerDescription(layer) {
   const descriptions = {
-    "0_meta": "4 user-facing decisions in order: study scope, failure handling, reproducibility, and compute layout. axis_type is internal YAML grammar.",
-    "1_data_task": "Data source, target y, and predictor x source frame: source mode, frequency, forecast-time information, target y, predictor x, raw source quality, transforms, and availability.",
-    "2_preprocessing": "Representation construction after the Layer 1 source frame: t-codes, target construction, feature blocks, scaling, selection, and custom preprocessing.",
-    "3_training": "Forecast generation: model, benchmark, forecast object, future-X path, windows, and tuning.",
-    "4_evaluation": "Evaluation choices: metrics, benchmark comparison, aggregation, ranking, regimes, decomposition, and OOS period.",
-    "5_output_provenance": "Output and provenance: export format, saved objects, provenance fields, and artifact granularity.",
+    "0_meta": "Study runtime policy: failure handling, reproducibility, and compute layout. study_scope is derived from recipe shape.",
+    "1_data_task": "Data contract: source, target, predictor universe, geography, sample window, horizons, and regimes.",
+    "2_preprocessing": "Cleaned panel construction: frequency alignment, transforms, outliers, imputation, and frame edge handling. Scaling belongs in L3.",
+    "3_training": "Feature engineering DAG: target construction, feature pipelines, pipeline combine, and optional feature selection.",
+    "4_evaluation": "Forecast DAG: model selection, forecast strategy, training window, and tuning.",
+    "5_output_provenance": "Evaluation choices: metrics, benchmark comparison, aggregation, slicing, decomposition, ranking, and reports.",
     "6_stat_tests": "Statistical tests over forecasts, losses, density or interval outputs, direction, and residual diagnostics.",
     "7_importance": "Interpretation and importance outputs: method family, scope, aggregation, temporal shape, and detailed reports.",
   };
@@ -600,6 +618,7 @@ function normalizeSubLayerName(value) {
 
 function axesForSubLayer(node, subLayer) {
   if ((GRAPH_LAYER_SECTIONS[node.id] || {})[subLayer]) return [];
+  if (node.sub_layer_axes && node.sub_layer_axes[subLayer]) return node.sub_layer_axes[subLayer];
   const grouped = CANONICAL_AXIS_GROUPS[node.id] || {};
   const axes = effectiveAxesForNode(node);
   if (grouped[subLayer]) return grouped[subLayer].filter((axis) => axes.includes(axis));
@@ -671,6 +690,10 @@ function renderAxisButton(axisName) {
 }
 
 function optionRecordsForAxis(axisName) {
+  const topologyOptions = (layerTopologySpec().nodes || [])
+    .map((node) => (node.axis_options || {})[axisName])
+    .find((records) => Array.isArray(records) && records.length);
+  if (topologyOptions) return topologyOptions;
   const hardcoded = CANONICAL_AXIS_OPTIONS[axisName];
   if (hardcoded) {
     return hardcoded.map((value) => ({

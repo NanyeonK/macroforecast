@@ -542,6 +542,43 @@ def test_navigator_ui_data_exports_registered_layer_topology():
     assert any(edge["from"] == "l4" and edge["to"] == "l5" for edge in topology["edges"])
 
 
+def test_navigator_topology_uses_current_layer_specs_for_l0_l1_l2():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    nodes = {node["id"]: node for node in payload["layer_topology"]["nodes"]}
+
+    assert nodes["l0"]["sub_layers"] == ["L0.A Execution policy"]
+    assert nodes["l0"]["axes"] == ["failure_policy", "reproducibility_mode", "compute_mode"]
+    assert "study_scope" not in nodes["l0"]["axes"]
+
+    assert nodes["l1"]["sub_layers"] == [
+        "L1.A Source selection",
+        "L1.B Target definition",
+        "L1.C Predictor universe",
+        "L1.D Geography scope",
+        "L1.E Sample window",
+        "L1.F Horizon set",
+        "L1.G Regime definition",
+    ]
+    assert nodes["l1"]["sub_layer_axes"]["L1.E Sample window"] == ["sample_start_rule", "sample_end_rule"]
+    assert nodes["l1"]["sub_layer_axes"]["L1.F Horizon set"] == ["horizon_set"]
+    assert "information_set_type" not in nodes["l1"]["axes"]
+    assert "fred_sd_variable_group" not in nodes["l1"]["axes"]
+
+    assert nodes["l2"]["sub_layers"] == [
+        "L2.A FRED-SD frequency alignment",
+        "L2.B Transform",
+        "L2.C Outlier handling",
+        "L2.D Imputation",
+        "L2.E Frame edge",
+    ]
+    assert "scaling_policy" not in nodes["l2"]["axes"]
+    assert nodes["l2"]["sub_layer_axes"]["L2.D Imputation"] == [
+        "imputation_policy",
+        "imputation_temporal_rule",
+        "imputation_scope",
+    ]
+
+
 def test_navigator_ui_data_exports_runtime_support_metadata():
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
     support = payload["runtime_support"]

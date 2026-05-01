@@ -8,6 +8,10 @@ import yaml
 
 from ..registry import get_axis_registry
 from ..core.layers.registry import get_layer, list_layers
+from ..core.layer_specs import LayerImplementationSpec
+from ..core.layers.l0 import L0_LAYER_SPEC
+from ..core.layers.l1 import L1_LAYER_SPEC
+from ..core.layers.l2 import L2_LAYER_SPEC
 from .core import (
     NAVIGATOR_SCHEMA_VERSION,
     OPERATIONAL_NARROW_CONTRACTS,
@@ -150,19 +154,19 @@ _RUNTIME_SUPPORT = {
         },
         "2_preprocessing": {
             "label": "Core runtime",
-            "summary": "Transform codes, missing/outlier policies, scaling, lags, factor blocks, and selection have local execution coverage for supported options.",
+            "summary": "Frequency alignment, transform codes, missing/outlier policies, imputation, and frame-edge rules have local execution coverage for supported options. Scaling, lags, factors, and selection are L3 decisions.",
         },
         "3_training": {
             "label": "Core runtime plus stubs",
-            "summary": "Linear, benchmark, AR, and lightweight sklearn paths run; advanced families may remain schema-only or plugin-backed.",
+            "summary": "Feature DAG schema is broad; local runtime supports a narrow cleaned-panel path while advanced feature ops remain schema-only or deferred.",
         },
         "4_evaluation": {
-            "label": "Core runtime",
-            "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, and decomposition materialize runtime artifacts.",
+            "label": "Core runtime plus stubs",
+            "summary": "Linear, benchmark, AR, and lightweight sklearn forecast paths run; advanced families and full DAG op execution may remain schema-only or plugin-backed.",
         },
         "5_output_provenance": {
             "label": "Core runtime",
-            "summary": "JSON/CSV exports, manifests, selected objects, diagnostics, tests, and importance summaries write to disk.",
+            "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, export, and manifest paths materialize runtime artifacts for supported workflows.",
         },
         "6_stat_tests": {
             "label": "Lightweight runtime",
@@ -235,6 +239,47 @@ _LAYER_TOPOLOGY_GROUPS = {
 
 _LAYER_TOPOLOGY_MAIN_FLOW = ("l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8")
 
+_IMPLEMENTATION_SPECS: dict[str, LayerImplementationSpec] = {
+    "l0": L0_LAYER_SPEC,
+    "l1": L1_LAYER_SPEC,
+    "l2": L2_LAYER_SPEC,
+}
+
+_GRAPH_LAYER_SUB_LAYERS: dict[str, list[str]] = {
+    "l3": ["L3.A Target construction", "L3.B Feature pipelines", "L3.C Pipeline combine", "L3.D Feature selection"],
+    "l4": ["L4.A Model selection", "L4.B Forecast strategy", "L4.C Training window", "L4.D Tuning"],
+    "l7": ["L7.A Importance DAG", "L7.B Output shape"],
+}
+
+_LIST_LAYER_SUB_LAYERS: dict[str, list[str]] = {
+    "l5": ["L5.A metrics", "L5.B benchmark", "L5.C aggregation", "L5.D slicing and decomposition", "L5.E ranking"],
+}
+
+
+def _display_sub_layer_name(layer_id: str, index: int, name: str) -> str:
+    base = layer_id.upper().replace("_", ".")
+    letter = chr(ord("A") + index)
+    return f"{base}.{letter} {name}"
+
+
+def _axis_options_from_spec(spec: LayerImplementationSpec) -> dict[str, list[dict[str, Any]]]:
+    options: dict[str, list[dict[str, Any]]] = {}
+    for axis_group in spec.axes.values():
+        for axis_name, axis_spec in axis_group.items():
+            options[axis_name] = [
+                {
+                    "value": option.value,
+                    "label": option.label,
+                    "summary": option.description,
+                    "status": option.status,
+                    "enabled": option.status != "future",
+                    "disabled_reason": "future option" if option.status == "future" else None,
+                    "default": axis_spec.default == option.value,
+                }
+                for option in axis_spec.options
+            ]
+    return options
+
 
 def _layer_axis_count(cls: type) -> int:
     if not hasattr(cls, "list_axes"):
@@ -258,10 +303,39 @@ def layer_topology() -> dict[str, Any]:
             continue
         spec = get_layer(layer_id)
         cls = spec.cls
-        sub_layers = getattr(cls, "sub_layers", {}) if cls is not None else {}
-        layer_globals = getattr(cls, "layer_globals", {}) if cls is not None else {}
-        axes = list(cls.list_axes()) if cls is not None and hasattr(cls, "list_axes") else []
-        global_names = list(layer_globals) if isinstance(layer_globals, dict) else list(layer_globals or ())
+        implementation_spec = _IMPLEMENTATION_SPECS.get(layer_id)
+        sub_layer_axes: dict[str, list[str]] = {}
+        axis_options: dict[str, list[dict[str, Any]]] = {}
+        if implementation_spec is not None:
+            sub_layer_names = [
+                _display_sub_layer_name(layer_id, index, sub_layer.name)
+                for index, sub_layer in enumerate(implementation_spec.sub_layers)
+            ]
+            sub_layer_axes = {
+                _display_sub_layer_name(layer_id, index, sub_layer.name): list(sub_layer.axes)
+                for index, sub_layer in enumerate(implementation_spec.sub_layers)
+            }
+            axes = [axis for sub_layer in implementation_spec.sub_layers for axis in sub_layer.axes]
+            global_names = list(implementation_spec.layer_globals)
+            axis_options = _axis_options_from_spec(implementation_spec)
+        else:
+            sub_layers = getattr(cls, "sub_layers", {}) if cls is not None else {}
+            sub_layer_names = list(sub_layers)
+            layer_globals = getattr(cls, "layer_globals", {}) if cls is not None else {}
+            axes = list(cls.list_axes()) if cls is not None and hasattr(cls, "list_axes") else []
+            global_names = list(layer_globals) if isinstance(layer_globals, dict) else list(layer_globals or ())
+            if isinstance(sub_layers, dict):
+                for name, sub_layer in sub_layers.items():
+                    sub_layer_axes[name] = list(getattr(sub_layer, "axes", ()) or ())
+            elif cls is not None and hasattr(cls, "list_sublayers"):
+                try:
+                    sub_layer_names = list(cls.list_sublayers())
+                except TypeError:
+                    sub_layer_names = sub_layer_names
+            if layer_id in _GRAPH_LAYER_SUB_LAYERS:
+                sub_layer_names = list(_GRAPH_LAYER_SUB_LAYERS[layer_id])
+            if layer_id in _LIST_LAYER_SUB_LAYERS:
+                sub_layer_names = list(_LIST_LAYER_SUB_LAYERS[layer_id])
         nodes.append(
             {
                 "id": layer_id,
@@ -272,10 +346,12 @@ def layer_topology() -> dict[str, Any]:
                 "ui_mode": spec.ui_mode,
                 "expected_inputs": list(spec.expected_inputs),
                 "produces": list(spec.produces),
-                "sub_layers": list(sub_layers),
+                "sub_layers": sub_layer_names,
+                "sub_layer_axes": sub_layer_axes,
                 "layer_globals": global_names,
                 "axes": axes,
-                "sub_layer_count": len(sub_layers),
+                "axis_options": axis_options,
+                "sub_layer_count": len(sub_layer_names),
                 "layer_global_count": len(global_names),
                 "axis_count": len(axes),
             }
