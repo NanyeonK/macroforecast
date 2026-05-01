@@ -1,6 +1,6 @@
 # 0. Getting Started
 
-This page is intentionally small. Install the package, then choose one of three usage paths.
+Install the package, then choose the execution surface that matches your recipe.
 
 ## Install
 
@@ -21,74 +21,46 @@ print("macrocast imported")
 
 For optional model and interpretation backends, see [Installation](../install.md).
 
-## Three usage paths
+## Execution Paths
 
 | Path | Use when | Start with |
 |---|---|---|
-| Navigator path | You want to see valid choices, disabled branches, and YAML before running anything. | [Open Navigator App](../navigator_app/index.html) |
-| Simple code | You want a quick forecast, model comparison, or small sweep from Python. | [Simple Docs](../simple/index.md) |
-| Detail code / YAML | You need exact layer control, custom methods, replication, or auditable contracts. | [Detail Docs](../detail/index.md) |
+| Core layer-contract runtime | You want the current L1-L8 artifact path, diagnostics, L6/L7 lightweight artifacts, and L8 output directory. | [Quickstart](quickstart.md) |
+| Runtime support matrix | You need to know what is actually executed today versus schema-only. | [Runtime Support Matrix](runtime_support.md) |
+| Simple code | You want the older high-level Python facade. | [Simple Docs](../simple/index.md) |
+| Detail docs | You need exact layer contracts, artifact contracts, or custom hooks. | [Detail Docs](../detail/index.md) |
 
-## Path 1: Navigator to YAML to CLI
-
-1. Open the [Navigator App](../navigator_app/index.html).
-2. Choose each layer in order.
-3. Inspect disabled branches and compatibility messages.
-4. Export the YAML recipe.
-5. Run the recipe:
-
-```bash
-macrocast-navigate resolve recipe.yaml
-macrocast-navigate run recipe.yaml --output-root results/my-run
-```
-
-## Path 2: Simple Python code
+## Core Runtime In One Screen
 
 ```python
-import macrocast as mc
+from macrocast.core import execute_minimal_forecast
 
-result = mc.forecast(
-    dataset="fred_md",
-    target="INDPRO",
-    start="1980-01",
-    end="2019-12",
-    horizons=[1, 3, 6],
-)
+result = execute_minimal_forecast(open("my_layer_recipe.yaml").read())
+print(result.sink("l5_evaluation_v1").metrics_table)
 ```
 
-For comparisons:
-
-```python
-exp = mc.Experiment(
-    dataset="fred_md",
-    target="INDPRO",
-    start="1980-01",
-    end="2019-12",
-    horizons=[1, 3, 6],
-)
-
-result = exp.compare_models(["ar", "ridge", "lasso"]).run()
-```
-
-## Path 3: Detail code / YAML
-
-Use the full layer grammar when you need exact decisions:
+Layer-contract recipes use top-level blocks such as:
 
 ```yaml
-path:
-  0_meta:
-    fixed_axes:
-      study_scope: one_target_one_method
-  1_data_task:
-    fixed_axes:
-      dataset: fred_md
-      target_structure: single_target
-  3_training:
-    fixed_axes:
-      model_family: ridge
+1_data:
+  fixed_axes: {...}
+2_preprocessing:
+  fixed_axes: {...}
+3_feature_engineering:
+  nodes: [...]
+4_forecasting_model:
+  nodes: [...]
+5_evaluation:
+  fixed_axes: {...}
+8_output:
+  fixed_axes: {...}
 ```
 
-The full contract is documented layer by layer in [Detail Docs](../detail/index.md).
+Read [Quickstart](quickstart.md) for a complete runnable recipe.
+
+## Legacy Paths
+
+The repository still contains legacy compiler and simple-facade docs. Those paths remain useful for existing recipes, but they do not describe the full L0-L8 layer-contract runtime. When in doubt, check [Runtime Support Matrix](runtime_support.md).
 
 ```{toctree}
 :hidden:
@@ -96,6 +68,7 @@ The full contract is documented layer by layer in [Detail Docs](../detail/index.
 
 quickstart
 first_study
+runtime_support
 understanding_output
 stages_reference
 ../install

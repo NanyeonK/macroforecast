@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your First Study: Ridge vs Lasso on FRED-MD &mdash; macrocast</title>
+  <title>Your First Study: Ridge With Diagnostics, Tests, Importance, And Export &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -22,7 +22,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Understanding Output" href="understanding_output.html" />
+    <link rel="next" title="Runtime Support Matrix" href="runtime_support.html" />
     <link rel="prev" title="Quickstart" href="quickstart.html" /> 
 </head>
 
@@ -48,9 +48,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">0. Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="understanding_output.html">Understanding Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (0 and 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (Legacy Stage 0 and 1)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../install.html">Installation</a></li>
 </ul>
 </li>
@@ -79,7 +80,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">0. Getting Started</a></li>
-      <li class="breadcrumb-item active">Your First Study: Ridge vs Lasso on FRED-MD</li>
+      <li class="breadcrumb-item active">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/getting_started/first_study.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -89,180 +90,153 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="your-first-study-ridge-vs-lasso-on-fred-md">
-<h1>Your First Study: Ridge vs Lasso on FRED-MD<a class="headerlink" href="#your-first-study-ridge-vs-lasso-on-fred-md" title="Link to this heading"></a></h1>
-<p>This walkthrough designs a complete forecasting comparison study from scratch. By the end, you will have:</p>
+  <section id="your-first-study-ridge-with-diagnostics-tests-importance-and-export">
+<h1>Your First Study: Ridge With Diagnostics, Tests, Importance, And Export<a class="headerlink" href="#your-first-study-ridge-with-diagnostics-tests-importance-and-export" title="Link to this heading"></a></h1>
+<p>This walkthrough builds a complete core layer-contract study. It uses the current supported runtime path: custom panel data, L3 lag features, L4 linear sklearn forecasting, L5 point metrics, optional diagnostic layers, lightweight L6 tests, L7 linear importance, and L8 file export.</p>
+<p>For the exact support boundary, see <a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a>.</p>
+<section id="study-design">
+<h2>Study Design<a class="headerlink" href="#study-design" title="Link to this heading"></a></h2>
+<p>Fixed design:</p>
 <ul class="simple">
-<li><p>Compared Ridge and Lasso on INDPRO (Industrial Production)</p></li>
-<li><p>Used EM imputation and standard scaling</p></li>
-<li><p>Run a Diebold-Mariano test</p></li>
-<li><p>Computed permutation importance</p></li>
-</ul>
-<section id="step-1-choose-your-fixed-design">
-<h2>Step 1: Choose your fixed design<a class="headerlink" href="#step-1-choose-your-fixed-design" title="Link to this heading"></a></h2>
-<p>The <strong>fixed design</strong> defines the comparison environment. Everything here stays constant across models:</p>
-<ul class="simple">
-<li><p><strong>Dataset</strong>: <code class="docutils literal notranslate"><span class="pre">fred_md</span></code> (FRED-MD monthly macro panel)</p></li>
-<li><p><strong>Information set</strong>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code> (latest available data, not real-time vintages)</p></li>
-<li><p><strong>Framework</strong>: <code class="docutils literal notranslate"><span class="pre">expanding</span></code> (expanding training window)</p></li>
-<li><p><strong>Benchmark</strong>: <code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code> (AR model with BIC-selected lag order)</p></li>
-<li><p><strong>Horizons</strong>: 1, 3, 6, 12 months ahead</p></li>
-</ul>
-<p>These choices go in <code class="docutils literal notranslate"><span class="pre">0_meta</span></code>, <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code>, and the <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> of <code class="docutils literal notranslate"><span class="pre">3_training</span></code>.</p>
-</section>
-<section id="step-2-choose-your-varying-design">
-<h2>Step 2: Choose your varying design<a class="headerlink" href="#step-2-choose-your-varying-design" title="Link to this heading"></a></h2>
-<p>The <strong>varying design</strong> is your research question — what you want to compare:</p>
-<ul class="simple">
-<li><p><strong>Model families</strong>: Ridge and Lasso (these go in <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code>)</p></li>
+<li><p>Data: custom monthly panel</p></li>
+<li><p>Target: <code class="docutils literal notranslate"><span class="pre">y</span></code></p></li>
+<li><p>Horizon: 1 month ahead</p></li>
+<li><p>Features: one lag of all predictors</p></li>
+<li><p>Model: expanding-window ridge regression</p></li>
+<li><p>Evaluation: MSE/RMSE/MAE</p></li>
+<li><p>Output: forecasts, metrics, ranking, tests, importance, diagnostics</p></li>
 </ul>
 </section>
-<section id="step-3-choose-preprocessing">
-<h2>Step 3: Choose preprocessing<a class="headerlink" href="#step-3-choose-preprocessing" title="Link to this heading"></a></h2>
-<p>For a data-rich panel like FRED-MD, we need to handle missing values and scale predictors:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code>: <code class="docutils literal notranslate"><span class="pre">em_impute</span></code> (EM algorithm, train-only fit)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">scaling_policy</span></code>: <code class="docutils literal notranslate"><span class="pre">standard</span></code> (zero mean, unit variance, train-only fit)</p></li>
-</ul>
-</section>
-<section id="step-4-write-the-yaml-recipe">
-<h2>Step 4: Write the YAML recipe<a class="headerlink" href="#step-4-write-the-yaml-recipe" title="Link to this heading"></a></h2>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">recipe_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge-vs-lasso-indpro</span>
+<section id="recipe">
+<h2>Recipe<a class="headerlink" href="#recipe" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
+<span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
+<span class="w">    </span><span class="nt">horizon_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_list</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">y</span>
+<span class="w">    </span><span class="nt">target_horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">custom_panel_inline</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">date</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2020-01-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-02-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-03-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-04-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-05-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-06-01</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6.0</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">x1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6.0</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">x2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
 
-<span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_compare_methods</span>
+<span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no_transform</span>
+<span class="w">    </span><span class="nt">outlier_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">    </span><span class="nt">imputation_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none_propagate</span>
+<span class="w">    </span><span class="nt">frame_edge_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keep_unbalanced</span>
 
-<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">information_set_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">final_revised_data</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target</span>
-<span class="w">      </span><span class="nt">benchmark_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">autoregressive_bic</span>
-<span class="w">      </span><span class="nt">evaluation_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_level</span>
-<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
-<span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">12</span><span class="p p-Indicator">]</span>
+<span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">target</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">lag</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">n_lag</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">target_construction</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="nv">point_forecast</span><span class="p p-Indicator">,</span><span class="nt"> method</span><span class="p">:</span><span class="w"> </span><span class="nv">direct</span><span class="p p-Indicator">,</span><span class="nt"> horizon</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l3_features_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">X_final</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_x</span><span class="p p-Indicator">,</span><span class="nt"> y_final</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">l3_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
 
-<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">target_transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_level</span>
-<span class="w">      </span><span class="nt">x_transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_level</span>
-<span class="w">      </span><span class="nt">tcode_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extra_preprocess_only</span>
-<span class="w">      </span><span class="nt">target_missing_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">x_missing_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">em_impute</span>
-<span class="w">      </span><span class="nt">target_outlier_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">x_outlier_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">scaling_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standard</span>
-<span class="w">      </span><span class="nt">dimensionality_reduction_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">feature_selection_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">preprocess_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extra_only</span>
-<span class="w">      </span><span class="nt">preprocess_fit_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">train_only</span>
-<span class="w">      </span><span class="nt">inverse_transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">representation_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_only</span>
-<span class="w">      </span><span class="nt">tcode_application_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">target_transform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">level</span>
-<span class="w">      </span><span class="nt">target_normalization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">target_domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unconstrained</span>
-<span class="w">      </span><span class="nt">scaling_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">columnwise</span>
-<span class="w">      </span><span class="nt">additional_preprocessing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="w">      </span><span class="nt">x_lag_creation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no_predictor_lags</span>
-<span class="w">      </span><span class="nt">feature_grouping</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="nt"> min_train_size</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="nv">direct</span><span class="p p-Indicator">,</span><span class="nt"> training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="nv">expanding</span><span class="p p-Indicator">,</span><span class="nt"> refit_policy</span><span class="p">:</span><span class="w"> </span><span class="nv">every_origin</span><span class="p p-Indicator">,</span><span class="nt"> search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="nv">none</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">predict_ridge</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">predict</span><span class="p p-Indicator">,</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_ridge</span>
+<span class="w">    </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
+<span class="w">    </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
 
-<span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">framework</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
-<span class="w">      </span><span class="nt">feature_builder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw_feature_panel</span>
-<span class="w">    </span><span class="nt">sweep_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lasso</span><span class="p p-Indicator">]</span>
+<span class="nt">5_evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">primary_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mse</span>
+<span class="w">    </span><span class="nt">point_metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">mse</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rmse</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">mae</span><span class="p p-Indicator">]</span>
 
-<span class="w">  </span><span class="nt">4_evaluation</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">primary_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">msfe</span>
+<span class="nt">1_5_data_summary</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">2_5_pre_post_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">3_5_feature_diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">4_5_generator_diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="w">  </span><span class="nt">6_stat_tests</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">equal_predictive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dm</span>
+<span class="nt">6_statistical_tests</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">sub_layers</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">L6_F_direction</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">L6_G_residual</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="w">  </span><span class="nt">7_importance</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">importance_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">permutation_importance</span>
-</pre></div>
-</div>
-<p>Save this as <code class="docutils literal notranslate"><span class="pre">my_study.yaml</span></code>.</p>
-</section>
-<section id="step-5-compile-and-inspect">
-<h2>Step 5: Compile and inspect<a class="headerlink" href="#step-5-compile-and-inspect" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_recipe_yaml</span>
+<span class="nt">7_interpretation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_model</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l4</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l4_model_artifacts_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_id</span><span class="p">:</span><span class="w"> </span><span class="nv">fit_ridge</span><span class="p p-Indicator">}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model_native_linear_coef</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_model</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l7_importance_v1</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">global</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">compile_recipe_yaml</span><span class="p">(</span><span class="s2">&quot;my_study.yaml&quot;</span><span class="p">)</span>
-<span class="n">compiled</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compiled</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Execution status: </span><span class="si">{</span><span class="n">compiled</span><span class="o">.</span><span class="n">execution_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warnings: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">compiled</span><span class="o">.</span><span class="n">warnings</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tree context route: </span><span class="si">{</span><span class="n">compiled</span><span class="o">.</span><span class="n">tree_context</span><span class="p">[</span><span class="s1">&#39;route_owner&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>If the status is <code class="docutils literal notranslate"><span class="pre">&quot;executable&quot;</span></code>, your study is ready to run. If not, the warnings tell you exactly what is unsupported.</p>
-</section>
-<section id="step-6-execute">
-<h2>Step 6: Execute<a class="headerlink" href="#step-6-execute" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_compiled_recipe</span>
-
-<span class="n">execution</span> <span class="o">=</span> <span class="n">run_compiled_recipe</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">output_root</span><span class="o">=</span><span class="s2">&quot;runs/&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Artifacts saved to: </span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nt">8_output</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">saved_objects</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">forecasts</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">metrics</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ranking</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">tests</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">importance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">diagnostics_all</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">output_directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./macrocast_output/first_study/</span>
 </pre></div>
 </div>
 </section>
-<section id="step-7-analyze-results">
-<h2>Step 7: Analyze results<a class="headerlink" href="#step-7-analyze-results" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<section id="execute">
+<h2>Execute<a class="headerlink" href="#execute" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
-<span class="n">art</span> <span class="o">=</span> <span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span>
-
-<span class="c1"># Predictions</span>
-<span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">art</span><span class="si">}</span><span class="s2">/predictions.csv&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;horizon&quot;</span><span class="p">)[[</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark_squared_error&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-
-<span class="c1"># Metrics</span>
-<span class="n">metrics</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">art</span><span class="si">}</span><span class="s2">/metrics.json&quot;</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;metrics_by_horizon&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2">: MSFE=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;msfe&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, relative MSFE=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;relative_msfe&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, OOS_R2=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;oos_r2&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="c1"># DM test</span>
-<span class="n">dm</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">art</span><span class="si">}</span><span class="s2">/stat_test_dm.json&quot;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">DM test: stat=</span><span class="si">{</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;statistic&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, p=</span><span class="si">{</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;p_value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">dm</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  =&gt; Model significantly differs from benchmark at 5</span><span class="si">% le</span><span class="s2">vel&quot;</span><span class="p">)</span>
-
-<span class="c1"># Importance</span>
-<span class="n">imp</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">art</span><span class="si">}</span><span class="s2">/importance_permutation_importance.json&quot;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Top 5 important features:&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">imp</span><span class="p">[</span><span class="s2">&quot;feature_importances&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;importance&quot;</span><span class="p">]))[:</span><span class="mi">5</span><span class="p">]:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">feat</span><span class="p">[</span><span class="s1">&#39;feature&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">feat</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_study.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="inspect-results">
+<h2>Inspect Results<a class="headerlink" href="#inspect-results" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ranking_table</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l6_tests_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">direction_results</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l7_importance_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">global_importance</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exported_files</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="what-you-learned">
-<h2>What you learned<a class="headerlink" href="#what-you-learned" title="Link to this heading"></a></h2>
+<h2>What You Learned<a class="headerlink" href="#what-you-learned" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Fixed axes</strong> define the fair comparison environment (dataset, framework, benchmark)</p></li>
-<li><p><strong>Sweep axes</strong> define what varies (model_family)</p></li>
-<li><p><strong>Preprocessing governance</strong> ensures both models see identical preprocessed data</p></li>
-<li><p><strong>Statistical tests</strong> quantify whether performance differences are significant</p></li>
-<li><p><strong>Importance methods</strong> explain which variables drive the forecast</p></li>
+<li><p>L1-L4 construct forecasts from a fixed information set.</p></li>
+<li><p>L5 evaluates forecast accuracy.</p></li>
+<li><p>L1.5-L4.5 provide non-blocking diagnostic artifacts.</p></li>
+<li><p>L6 adds lightweight inference artifacts when enabled.</p></li>
+<li><p>L7 adds importance artifacts when enabled.</p></li>
+<li><p>L8 writes a directory that can be inspected without rerunning the study.</p></li>
 </ul>
 </section>
 <section id="next-steps">
-<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="understanding_output.html"><span class="std std-doc">Understanding Output</span></a> — every artifact explained</p></li>
-<li><p><a class="reference internal" href="../user_guide/design.html"><span class="std std-doc">User Guide: Design (Stage 0)</span></a> — six axes that decide study shape.</p></li>
-<li><p><a class="reference internal" href="../user_guide/data/index.html"><span class="std std-doc">User Guide: Data (Stage 1)</span></a> — source data, forecast-time information, Target (y) Definition, and Predictor (x) Definition.</p></li>
-<li><p><a class="reference internal" href="stages_reference.html"><span class="std std-doc">Stages Reference</span></a> — cheat sheet with every operational value.</p></li>
+<li><p><a class="reference internal" href="understanding_output.html"><span class="std std-doc">Understanding Output</span></a> — every current core runtime artifact</p></li>
+<li><p><a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a> — what is runtime-supported today</p></li>
 </ul>
 </section>
 </section>
@@ -272,7 +246,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="understanding_output.html" class="btn btn-neutral float-right" title="Understanding Output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="runtime_support.html" class="btn btn-neutral float-right" title="Runtime Support Matrix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -48,9 +48,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">0. Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="understanding_output.html">Understanding Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (0 and 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (Legacy Stage 0 and 1)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../install.html">Installation</a></li>
 </ul>
 </li>
@@ -90,7 +91,7 @@
              
   <section id="getting-started">
 <h1>0. Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
-<p>This page is intentionally small. Install the package, then choose one of three usage paths.</p>
+<p>Install the package, then choose the execution surface that matches your recipe.</p>
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Link to this heading"></a></h2>
 <p>For active development, install from the repository:</p>
@@ -106,8 +107,8 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </div>
 <p>For optional model and interpretation backends, see <a class="reference internal" href="../install.html"><span class="std std-doc">Installation</span></a>.</p>
 </section>
-<section id="three-usage-paths">
-<h2>Three usage paths<a class="headerlink" href="#three-usage-paths" title="Link to this heading"></a></h2>
+<section id="execution-paths">
+<h2>Execution Paths<a class="headerlink" href="#execution-paths" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Path</p></th>
@@ -116,78 +117,53 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Navigator path</p></td>
-<td><p>You want to see valid choices, disabled branches, and YAML before running anything.</p></td>
-<td><p><a class="reference internal" href="#../navigator_app/index.html"><span class="xref myst">Open Navigator App</span></a></p></td>
+<tr class="row-even"><td><p>Core layer-contract runtime</p></td>
+<td><p>You want the current L1-L8 artifact path, diagnostics, L6/L7 lightweight artifacts, and L8 output directory.</p></td>
+<td><p><a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Simple code</p></td>
-<td><p>You want a quick forecast, model comparison, or small sweep from Python.</p></td>
+<tr class="row-odd"><td><p>Runtime support matrix</p></td>
+<td><p>You need to know what is actually executed today versus schema-only.</p></td>
+<td><p><a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Simple code</p></td>
+<td><p>You want the older high-level Python facade.</p></td>
 <td><p><a class="reference internal" href="../simple/index.html"><span class="std std-doc">Simple Docs</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p>Detail code / YAML</p></td>
-<td><p>You need exact layer control, custom methods, replication, or auditable contracts.</p></td>
+<tr class="row-odd"><td><p>Detail docs</p></td>
+<td><p>You need exact layer contracts, artifact contracts, or custom hooks.</p></td>
 <td><p><a class="reference internal" href="../detail/index.html"><span class="std std-doc">Detail Docs</span></a></p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="path-1-navigator-to-yaml-to-cli">
-<h2>Path 1: Navigator to YAML to CLI<a class="headerlink" href="#path-1-navigator-to-yaml-to-cli" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Open the <a class="reference internal" href="#../navigator_app/index.html"><span class="xref myst">Navigator App</span></a>.</p></li>
-<li><p>Choose each layer in order.</p></li>
-<li><p>Inspect disabled branches and compatibility messages.</p></li>
-<li><p>Export the YAML recipe.</p></li>
-<li><p>Run the recipe:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>resolve<span class="w"> </span>recipe.yaml
-macrocast-navigate<span class="w"> </span>run<span class="w"> </span>recipe.yaml<span class="w"> </span>--output-root<span class="w"> </span>results/my-run
-</pre></div>
-</div>
-</section>
-<section id="path-2-simple-python-code">
-<h2>Path 2: Simple Python code<a class="headerlink" href="#path-2-simple-python-code" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
+<section id="core-runtime-in-one-screen">
+<h2>Core Runtime In One Screen<a class="headerlink" href="#core-runtime-in-one-screen" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
-    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
-    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
-    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
-<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_layer_recipe.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For comparisons:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
-    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
-    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
-    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
-<span class="p">)</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<p>Layer-contract recipes use top-level blocks such as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">...</span><span class="p p-Indicator">}</span>
+<span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">...</span><span class="p p-Indicator">}</span>
+<span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
+<span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">...</span><span class="p p-Indicator">]</span>
+<span class="nt">5_evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">...</span><span class="p p-Indicator">}</span>
+<span class="nt">8_output</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">...</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
+<p>Read <a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a> for a complete runnable recipe.</p>
 </section>
-<section id="path-3-detail-code-yaml">
-<h2>Path 3: Detail code / YAML<a class="headerlink" href="#path-3-detail-code-yaml" title="Link to this heading"></a></h2>
-<p>Use the full layer grammar when you need exact decisions:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
-<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
-<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target</span>
-<span class="w">  </span><span class="nt">3_training</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
-</pre></div>
-</div>
-<p>The full contract is documented layer by layer in <a class="reference internal" href="../detail/index.html"><span class="std std-doc">Detail Docs</span></a>.</p>
+<section id="legacy-paths">
+<h2>Legacy Paths<a class="headerlink" href="#legacy-paths" title="Link to this heading"></a></h2>
+<p>The repository still contains legacy compiler and simple-facade docs. Those paths remain useful for existing recipes, but they do not describe the full L0-L8 layer-contract runtime. When in doubt, check <a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a>.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>

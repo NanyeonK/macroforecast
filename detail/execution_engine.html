@@ -81,32 +81,50 @@
              
   <section id="execution-engine">
 <h1>Execution Engine<a class="headerlink" href="#execution-engine" title="Link to this heading"></a></h1>
-<p>The execution engine turns a compiled recipe into forecasts, metrics, and artifacts.</p>
-<p>Current responsibilities include:</p>
+<p>macrocast currently has two execution surfaces.</p>
+<section id="core-layer-contract-runtime">
+<h2>Core Layer-Contract Runtime<a class="headerlink" href="#core-layer-contract-runtime" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code> executes the L1-L8 layer-contract path used by the new schema.</p>
+<p>Current responsibilities:</p>
 <ul class="simple">
-<li><p>raw data loading and cache selection</p></li>
-<li><p>optional FRED-SD component loading with FRED-MD/FRED-QD frequency resolution</p></li>
-<li><p>data-task transformations</p></li>
-<li><p>preprocessing</p></li>
-<li><p>model execution</p></li>
-<li><p>benchmark execution</p></li>
-<li><p>metric computation</p></li>
-<li><p>statistical tests</p></li>
-<li><p>importance artifacts</p></li>
-<li><p>manifest writing</p></li>
+<li><p>L1 data materialization for custom panels and official FRED-MD/FRED-QD raw adapters</p></li>
+<li><p>L2 preprocessing materialization</p></li>
+<li><p>L3 deterministic feature DAG execution</p></li>
+<li><p>L4 expanding-window sklearn linear model execution</p></li>
+<li><p>L5 point metric and benchmark-relative metric computation</p></li>
+<li><p>L1.5-L4.5 diagnostic artifact materialization</p></li>
+<li><p>L6 lightweight statistical-test artifact materialization</p></li>
+<li><p>L7 basic importance artifact materialization</p></li>
+<li><p>L8 output directory and manifest writing</p></li>
 </ul>
-<p>This page should eventually document the final module boundaries after the engine is split into smaller components.</p>
-<p>Target boundaries:</p>
+<p>The core runtime is the preferred path for validating new layer specs and for reproducible linear-model smoke studies.</p>
+</section>
+<section id="legacy-experiment-engine">
+<h2>Legacy Experiment Engine<a class="headerlink" href="#legacy-experiment-engine" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code> and <code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code> continue to support older recipe surfaces and broader experiment tests. Some older docs and examples still refer to this path. Those outputs may use legacy filenames such as <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics.json</span></code>, or <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>.</p>
+</section>
+<section id="current-boundaries">
+<h2>Current Boundaries<a class="headerlink" href="#current-boundaries" title="Link to this heading"></a></h2>
+<p>The core runtime intentionally does not yet implement every schema-visible method. Advanced tree/deep/VAR model execution, exact bootstrap statistical tests, SHAP backends, rendered figures, Parquet/LaTeX/HTML export, compression, and replication APIs remain specialized runtime work.</p>
+<p>See <a class="reference internal" href="../getting_started/runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a> for the current per-layer boundary.</p>
+</section>
+<section id="target-boundaries">
+<h2>Target Boundaries<a class="headerlink" href="#target-boundaries" title="Link to this heading"></a></h2>
+<p>Long term, runtime code should split into smaller modules:</p>
 <ul class="simple">
 <li><p>orchestration</p></li>
-<li><p>data task</p></li>
+<li><p>data loading</p></li>
 <li><p>preprocessing runner</p></li>
+<li><p>feature runner</p></li>
 <li><p>model runner</p></li>
-<li><p>benchmark runner</p></li>
 <li><p>metrics runner</p></li>
-<li><p>optional artifact runners</p></li>
+<li><p>statistical-test runner</p></li>
+<li><p>importance runner</p></li>
+<li><p>diagnostic renderer</p></li>
 <li><p>artifact and manifest writer</p></li>
 </ul>
+<p>The current <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime</span></code> file is a bridge: it keeps the layer-contract path executable while those module boundaries mature.</p>
+</section>
 </section>
 
 

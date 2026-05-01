@@ -22,8 +22,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Stages Reference (0 and 1)" href="stages_reference.html" />
-    <link rel="prev" title="Your First Study: Ridge vs Lasso on FRED-MD" href="first_study.html" /> 
+    <link rel="next" title="Stages Reference (Legacy Stage 0 and 1)" href="stages_reference.html" />
+    <link rel="prev" title="Runtime Support Matrix" href="runtime_support.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,9 +48,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">0. Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Understanding Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (0 and 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (Legacy Stage 0 and 1)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../install.html">Installation</a></li>
 </ul>
 </li>
@@ -91,32 +92,36 @@
              
   <section id="understanding-output">
 <h1>Understanding Output<a class="headerlink" href="#understanding-output" title="Link to this heading"></a></h1>
-<p>Every macrocast execution writes a set of artifacts to a run directory. This guide explains each one.</p>
-<section id="artifact-directory-structure">
-<h2>Artifact directory structure<a class="headerlink" href="#artifact-directory-structure" title="Link to this heading"></a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runs</span><span class="o">/</span>
-  <span class="p">{</span><span class="n">recipe_id</span><span class="p">}</span><span class="n">__</span><span class="p">{</span><span class="n">target</span><span class="p">}</span><span class="n">__h</span><span class="p">{</span><span class="n">horizons</span><span class="p">}</span><span class="o">/</span>
-    <span class="n">manifest</span><span class="o">.</span><span class="n">json</span>               <span class="c1"># Full provenance record</span>
-    <span class="n">layer1_official_frame</span><span class="o">.</span><span class="n">json</span>  <span class="c1"># Layer 1 FRED frame handoff contract</span>
-    <span class="n">fred_sd_series_metadata</span><span class="o">.</span><span class="n">json</span> <span class="c1"># FRED-SD selected panel metadata, if used</span>
-    <span class="n">fred_sd_frequency_report</span><span class="o">.</span><span class="n">json</span> <span class="c1"># FRED-SD frequency composition, if used</span>
-    <span class="n">predictions</span><span class="o">.</span><span class="n">csv</span>             <span class="c1"># OOS prediction table</span>
-    <span class="n">prediction_row_schema</span><span class="o">.</span><span class="n">json</span>   <span class="c1"># Versioned predictions.csv column contract</span>
-    <span class="n">metrics</span><span class="o">.</span><span class="n">json</span>                <span class="c1"># Per-horizon evaluation metrics</span>
-    <span class="n">comparison_summary</span><span class="o">.</span><span class="n">json</span>     <span class="c1"># Model vs benchmark summary</span>
-    <span class="n">evaluation_summary</span><span class="o">.</span><span class="n">json</span>     <span class="c1"># Layer 4 evaluation contract summary</span>
-    <span class="n">evaluation_report</span><span class="o">.</span><span class="n">md</span>        <span class="c1"># Optional report when report_style=markdown_table</span>
-    <span class="n">tuning_result</span><span class="o">.</span><span class="n">json</span>          <span class="c1"># HP tuning result</span>
-    <span class="n">summary</span><span class="o">.</span><span class="n">txt</span>                 <span class="c1"># Human-readable summary</span>
-    <span class="n">data_preview</span><span class="o">.</span><span class="n">csv</span>            <span class="c1"># Raw data sample</span>
-    <span class="n">stat_test_</span><span class="p">{</span><span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">json</span>       <span class="c1"># Statistical test result (if requested)</span>
-    <span class="n">importance_</span><span class="p">{</span><span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">json</span>      <span class="c1"># Importance result (if requested)</span>
+<p>This page documents the current <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime</span></code> output shape. Older <code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code> runs may still write legacy files such as <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics.json</span></code>, and <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>; the layer-contract runtime writes the L8 directory described here.</p>
+<section id="l8-directory-structure">
+<h2>L8 Directory Structure<a class="headerlink" href="#l8-directory-structure" title="Link to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">8_output</span></code> enabled, <code class="docutils literal notranslate"><span class="pre">execute_minimal_forecast</span></code> writes to <code class="docutils literal notranslate"><span class="pre">leaf_config.output_directory</span></code>.</p>
+<p>Typical directory:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>macrocast_output/&lt;name&gt;/
+  manifest.json              # L8 provenance and saved object inventory
+  recipe.json                # JSON copy of the resolved input recipe
+  summary/
+    metrics_all_cells.csv    # L5 metrics table
+    ranking.csv              # L5 ranking table
+  cell_001/
+    forecasts.csv            # L4 point forecasts
+    clean_panel.csv          # optional, when saved_objects includes clean_panel
+    raw_panel.csv            # optional, when saved_objects includes raw_panel
+    feature_metadata.json    # optional, when saved_objects includes feature_metadata
+  diagnostics/
+    l1_5_diagnostic_v1.json  # optional
+    l2_5_diagnostic_v1.json  # optional
+    l3_5_diagnostic_v1.json  # optional
+    l4_5_diagnostic_v1.json  # optional
+  tests_summary.json         # optional, when L6 is saved
+  importance_summary.json    # optional, when L7 is saved
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">L8ArtifactsArtifact.exported_files</span></code> records the files written during the run.</p>
 </section>
-<section id="predictions-csv">
-<h2>predictions.csv<a class="headerlink" href="#predictions-csv" title="Link to this heading"></a></h2>
-<p>The core output table. Each row is one (forecast origin, target date, horizon) triple:</p>
+<section id="forecasts-csv">
+<h2>forecasts.csv<a class="headerlink" href="#forecasts-csv" title="Link to this heading"></a></h2>
+<p>One row per <code class="docutils literal notranslate"><span class="pre">(model_id,</span> <span class="pre">target,</span> <span class="pre">horizon,</span> <span class="pre">origin)</span></code> forecast.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Column</p></th>
@@ -124,299 +129,138 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
-<td><p>Forecast target variable name</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_id</span></code></p></td>
+<td><p>L4 fit node id</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code></p></td>
-<td><p>Model executor used</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p>Forecast target</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_name</span></code></p></td>
-<td><p>Benchmark family</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>Forecast horizon</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
-<td><p>Forecast horizon (months ahead)</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">origin</span></code></p></td>
+<td><p>Forecast origin date</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">origin_date</span></code></p></td>
-<td><p>Last date in training window</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_date</span></code></p></td>
-<td><p>Date being forecast</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y_true</span></code></p></td>
-<td><p>Actual realized value</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_pred</span></code></p></td>
-<td><p>Model forecast</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_pred</span></code></p></td>
-<td><p>Benchmark forecast</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
-<td><p>y_true - y_pred</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">squared_error</span></code></p></td>
-<td><p>error^2</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_error</span></code></p></td>
-<td><p>y_true - benchmark_pred</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">training_window_size</span></code></p></td>
-<td><p>Number of observations in training window</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast</span></code></p></td>
+<td><p>Point forecast</p></td>
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal notranslate"><span class="pre">prediction_row_schema.json</span></code> records <code class="docutils literal notranslate"><span class="pre">prediction_row_schema_v1</span></code>: required
-base columns, observed columns, optional payload column groups, dtypes, payload
-families, and forecast objects. Treat it as the stable contract for consumers
-that parse <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>.</p>
 </section>
-<section id="layer1-official-frame-json">
-<h2>layer1_official_frame.json<a class="headerlink" href="#layer1-official-frame-json" title="Link to this heading"></a></h2>
-<p>Layer 1 writes this file before Layer 2 representation construction. It records
-<code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>, the exact FRED frame contract used by the run:
-source metadata, target and horizon identity, frame shape/index/columns,
-information-set provenance, raw missing/outlier handling, missing-availability,
-release-lag, variable-universe choices, official transform/T-code evidence,
-data warnings, and data reports.</p>
-<p>Use this file when comparing runs that differ in data vintage, release-lag,
-raw missing/outlier handling, or official transform policy. The manifest keeps a
-compact <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_summary</span></code>, while this file owns the full contract.</p>
-</section>
-<section id="fred-sd-series-metadata-json">
-<h2>fred_sd_series_metadata.json<a class="headerlink" href="#fred-sd-series-metadata-json" title="Link to this heading"></a></h2>
-<p>Runs that include FRED-SD write <code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata.json</span></code>. It records
-<code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata_v1</span></code>: selected states, selected SD variables, source
-sheets, canonical <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> columns, per-column observed windows, and
-native-frequency counts inferred from the non-missing calendar. For composite
-FRED-MD/FRED-QD + FRED-SD runs, this file describes the FRED-SD component before
-generic post-load <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> filtering.</p>
-</section>
-<section id="fred-sd-frequency-report-json">
-<h2>fred_sd_frequency_report.json<a class="headerlink" href="#fred-sd-frequency-report-json" title="Link to this heading"></a></h2>
-<p>Runs that include FRED-SD also write <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report.json</span></code>. It records
-<code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report_v1</span></code>: native-frequency counts, single-vs-mixed status,
-monthly/quarterly mix flags, and state/variable breakdowns derived from the
-selected FRED-SD series metadata. Use it to audit whether a selected state panel
-needs an explicit mixed-frequency decision before comparing representations.</p>
-</section>
-<section id="metrics-json">
-<h2>metrics.json<a class="headerlink" href="#metrics-json" title="Link to this heading"></a></h2>
-<p>Per-horizon evaluation metrics:</p>
+<section id="metrics-all-cells-csv">
+<h2>metrics_all_cells.csv<a class="headerlink" href="#metrics-all-cells-csv" title="Link to this heading"></a></h2>
+<p>L5 point and relative metrics. Current core runtime materializes:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Metric</p></th>
 <th class="head"><p>Definition</p></th>
-<th class="head"><p>Interpretation</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">msfe</span></code></p></td>
-<td><p>Mean squared forecast error</p></td>
-<td><p>Lower is better</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mse</span></code></p></td>
+<td><p>Mean squared error</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rmse</span></code></p></td>
-<td><p>Root MSFE</p></td>
-<td><p>Same scale as target</p></td>
+<td><p>Square root of MSE</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mae</span></code></p></td>
 <td><p>Mean absolute error</p></td>
-<td><p>Robust to outliers</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mape</span></code></p></td>
-<td><p>Mean absolute percentage error</p></td>
-<td><p>Scale-independent</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">relative_mse</span></code></p></td>
+<td><p>Model MSE divided by benchmark MSE, when exactly one benchmark exists</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">relative_msfe</span></code></p></td>
-<td><p>MSFE_model / MSFE_benchmark</p></td>
-<td><p>&lt; 1 means model beats benchmark</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r2_oos</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">relative_mse</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">oos_r2</span></code></p></td>
-<td><p>1 - relative MSFE</p></td>
-<td><p>&gt; 0 means model beats benchmark</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">relative_mae</span></code></p></td>
+<td><p>Model MAE divided by benchmark MAE</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">csfe</span></code></p></td>
-<td><p>Cumulative squared forecast error</p></td>
-<td><p>Time-aggregated loss</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_win_rate</span></code></p></td>
-<td><p>Fraction of dates where model &lt; benchmark</p></td>
-<td><p>Higher is better</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">directional_accuracy</span></code></p></td>
-<td><p>Fraction of correct direction forecasts</p></td>
-<td><p>Higher is better</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code></p></td>
+<td><p>Benchmark MSE minus model MSE</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="evaluation-summary-json">
-<h2>evaluation_summary.json<a class="headerlink" href="#evaluation-summary-json" title="Link to this heading"></a></h2>
-<p>Layer 4 writes a canonical summary of the selected evaluation contract. This
-file does not recompute forecasts. It records:</p>
+<section id="ranking-csv">
+<h2>ranking.csv<a class="headerlink" href="#ranking-csv" title="Link to this heading"></a></h2>
+<p>The L5 ranking table sorted by the resolved ranking metric. For loss metrics, lower is better. For <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code> and <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, higher is better.</p>
+</section>
+<section id="tests-summary-json">
+<h2>tests_summary.json<a class="headerlink" href="#tests-summary-json" title="Link to this heading"></a></h2>
+<p>L6 writes a JSON representation of <code class="docutils literal notranslate"><span class="pre">L6TestsArtifact</span></code> when <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> includes <code class="docutils literal notranslate"><span class="pre">tests</span></code>.</p>
+<p>Current core runtime can populate:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">equal_predictive_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nested_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cpa_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_model_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">direction_results</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">residual_results</span></code></p></li>
+</ul>
+<p>The values are descriptive/minimal test dictionaries. Exact bootstrap MCS/SPA/RC/StepM, HAC critical values, and density/interval tests require specialized runtime support.</p>
+</section>
+<section id="importance-summary-json">
+<h2>importance_summary.json<a class="headerlink" href="#importance-summary-json" title="Link to this heading"></a></h2>
+<p>L7 writes a JSON representation of <code class="docutils literal notranslate"><span class="pre">L7ImportanceArtifact</span></code> when <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> includes <code class="docutils literal notranslate"><span class="pre">importance</span></code>.</p>
+<p>Current core runtime can populate:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">global_importance</span></code> from linear coefficients and permutation-style importance,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group_importance</span></code> from <code class="docutils literal notranslate"><span class="pre">group_aggregate</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lineage_importance</span></code> from L3 metadata,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">L7TransformationAttributionArtifact</span></code> when <code class="docutils literal notranslate"><span class="pre">l7_transformation_attribution_v1</span></code> is requested.</p></li>
+</ul>
+<p>Advanced SHAP backends, neural-gradient methods, VAR FEVD/IRF, and figure rendering are outside the current core runtime path.</p>
+</section>
+<section id="diagnostic-json-files">
+<h2>Diagnostic JSON Files<a class="headerlink" href="#diagnostic-json-files" title="Link to this heading"></a></h2>
+<p>Diagnostic layers are non-blocking. They produce <code class="docutils literal notranslate"><span class="pre">DiagnosticArtifact</span></code> JSON payloads when enabled:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><th class="head"><p>Sink</p></th>
+<th class="head"><p>Contents</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contract_version</span></code></p></td>
-<td><p>Evaluation summary schema version</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1_5_diagnostic_v1</span></code></p></td>
+<td><p>sample coverage, univariate summaries, missing/outlier audit, optional correlation</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_spec</span></code></p></td>
-<td><p>Exact Layer 4 choices used at runtime</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l2_5_diagnostic_v1</span></code></p></td>
+<td><p>raw-vs-clean comparison, distribution shift, cleaning effect summary</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">summary.primary_metric</span></code></p></td>
-<td><p>Metric selected for headline ranking</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l3_5_diagnostic_v1</span></code></p></td>
+<td><p>raw/clean/features comparison, feature summary, lineage summary, lag/factor/selection metadata</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">summary.by_horizon</span></code></p></td>
-<td><p>Per-horizon model, benchmark, and winner records</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">summary.overall_equal_weight</span></code></p></td>
-<td><p>Equal-weight aggregate when available</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">summary.selected_metric_availability</span></code></p></td>
-<td><p>Whether each selected metric family is materialized by the current payload</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l4_5_diagnostic_v1</span></code></p></td>
+<td><p>forecast/model/training summaries, fit summary, window summary</p></td>
 </tr>
 </tbody>
 </table>
-<p>When <code class="docutils literal notranslate"><span class="pre">evaluation_spec.report_style=markdown_table</span></code>, execution also writes
-<code class="docutils literal notranslate"><span class="pre">evaluation_report.md</span></code>. When <code class="docutils literal notranslate"><span class="pre">report_style=latex_table</span></code>, it writes
-<code class="docutils literal notranslate"><span class="pre">evaluation_report.tex</span></code>. <code class="docutils literal notranslate"><span class="pre">report_style=tidy_dataframe</span></code> keeps the structured
-JSON summary only.</p>
-</section>
-<section id="stat-test-name-json">
-<h2>stat_test_{name}.json<a class="headerlink" href="#stat-test-name-json" title="Link to this heading"></a></h2>
-<p>Statistical test results. The structure depends on the test:</p>
-<p><strong>Diebold-Mariano (dm, dm_hln, dm_modified):</strong></p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dm&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;statistic&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-2.145</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;p_value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.032</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;loss_differential_mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.0023</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;n_observations&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Interpretation: p &lt; 0.05 means model and benchmark have significantly different predictive ability.</p>
-<p><strong>Clark-West (cw):</strong></p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cw&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;statistic&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.987</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;p_value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.047</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;mspe_adjusted&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0015</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Interpretation: Use for nested models (when the benchmark is nested within the model).</p>
-<p><strong>Model Confidence Set (mcs):</strong></p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcs&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;confidence_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;lasso&quot;</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">&quot;eliminated&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">&quot;alpha&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Interpretation: The confidence set contains models that are not significantly worse than the best.</p>
-</section>
-<section id="importance-name-json">
-<h2>importance_{name}.json<a class="headerlink" href="#importance-name-json" title="Link to this heading"></a></h2>
-<p>Feature importance results. Structure depends on the method:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
-  &quot;method&quot;: &quot;permutation_importance&quot;,
-  &quot;model_family&quot;: &quot;ridge&quot;,
-  &quot;feature_importances&quot;: [
-    {&quot;feature&quot;: &quot;UNRATE&quot;, &quot;importance&quot;: 0.0234},
-    {&quot;feature&quot;: &quot;CPIAUCSL&quot;, &quot;importance&quot;: 0.0189},
-    ...
-  ]
-}
-</pre></div>
-</div>
+<p>The current core runtime writes JSON metadata only. PNG/PDF/HTML/LaTeX rendering is a future specialized diagnostics renderer.</p>
 </section>
 <section id="manifest-json">
 <h2>manifest.json<a class="headerlink" href="#manifest-json" title="Link to this heading"></a></h2>
-<p>The complete provenance record. Key fields:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Content</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">recipe_id</span></code></p></td>
-<td><p>Study identifier</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tree_context</span></code></p></td>
-<td><p>Full axis selection record (fixed/sweep/conditional)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_contract</span></code></p></td>
-<td><p>Exact preprocessing configuration</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">layer1_official_frame_contract</span></code></p></td>
-<td><p>Versioned Layer 1 official-frame handoff</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">layer1_official_frame_file</span></code></p></td>
-<td><p>Full Layer 1 official-frame contract artifact</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata_file</span></code></p></td>
-<td><p>FRED-SD selected-panel metadata artifact, if present</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report_file</span></code></p></td>
-<td><p>FRED-SD frequency-composition artifact, if present</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_spec</span></code></p></td>
-<td><p>Model family, feature builder, executor name</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_spec</span></code></p></td>
-<td><p>Benchmark family and configuration</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_spec</span></code></p></td>
-<td><p>Layer 4 evaluation choices</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_summary_file</span></code></p></td>
-<td><p>Canonical Layer 4 summary artifact</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_report_file</span></code></p></td>
-<td><p>Optional human/table report artifact</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stat_test_spec</span></code></p></td>
-<td><p>Statistical test requested</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">importance_spec</span></code></p></td>
-<td><p>Importance method requested</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tuning_result</span></code></p></td>
-<td><p>HP tuning result (best_hp, trials, score)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_spec</span></code></p></td>
-<td><p>Reproducibility mode and seed</p></td>
-</tr>
-</tbody>
-</table>
+<p>The L8 manifest records:</p>
+<ul class="simple">
+<li><p>runtime environment summary,</p></li>
+<li><p>recipe hash,</p></li>
+<li><p>saved object list,</p></li>
+<li><p>upstream sink names,</p></li>
+<li><p>exported file list,</p></li>
+<li><p>dependency lockfile paths when detected.</p></li>
+</ul>
+<p>It is designed to make the output directory inspectable without rerunning the forecast.</p>
 </section>
-<section id="tuning-result-json">
-<h2>tuning_result.json<a class="headerlink" href="#tuning-result-json" title="Link to this heading"></a></h2>
-<p>Hyperparameter tuning result:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;tuning_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;model_family&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ridge_autoreg_v0&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;search_algorithm&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;best_hp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">  </span><span class="nt">&quot;best_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;total_trials&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;total_time_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
-<span class="p">}</span>
+<section id="in-memory-sinks">
+<h2>In-Memory Sinks<a class="headerlink" href="#in-memory-sinks" title="Link to this heading"></a></h2>
+<p>The filesystem output is a projection of the in-memory runtime result:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l6_tests_v1&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l7_importance_v1&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When tuning is enabled (via <code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code> in the recipe), this contains the selected hyperparameters and search statistics.</p>
-<p><strong>See also:</strong></p>
-<ul class="simple">
-<li><p><a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart</span></a> — run your first study</p></li>
-<li><p><a class="reference internal" href="../user_guide/data/index.html"><span class="std std-doc">User Guide: Data (Stage 1)</span></a> — data axes that shape metric inputs. <code class="docutils literal notranslate"><span class="pre">oos_period</span></code> is now a Layer 4 evaluation axis, with old data-layer placement kept as a compatibility alias.</p></li>
-<li><p><a class="reference internal" href="stages_reference.html"><span class="std std-doc">Stages Reference</span></a> — cheat sheet with every operational value.</p></li>
-</ul>
+<p>Use in-memory sinks for tests and notebooks. Use L8 output for handoff, audit, and replication folders.</p>
 </section>
 </section>
 
@@ -424,8 +268,8 @@ JSON summary only.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="first_study.html" class="btn btn-neutral float-left" title="Your First Study: Ridge vs Lasso on FRED-MD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="stages_reference.html" class="btn btn-neutral float-right" title="Stages Reference (0 and 1)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="runtime_support.html" class="btn btn-neutral float-left" title="Runtime Support Matrix" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="stages_reference.html" class="btn btn-neutral float-right" title="Stages Reference (Legacy Stage 0 and 1)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

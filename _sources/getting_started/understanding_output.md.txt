@@ -1,215 +1,130 @@
 # Understanding Output
 
-Every macrocast execution writes a set of artifacts to a run directory. This guide explains each one.
+This page documents the current `macrocast.core.runtime` output shape. Older `macrocast.execution` runs may still write legacy files such as `predictions.csv`, `metrics.json`, and `artifact_manifest.json`; the layer-contract runtime writes the L8 directory described here.
 
-## Artifact directory structure
+## L8 Directory Structure
 
-```
-runs/
-  {recipe_id}__{target}__h{horizons}/
-    manifest.json               # Full provenance record
-    layer1_official_frame.json  # Layer 1 FRED frame handoff contract
-    fred_sd_series_metadata.json # FRED-SD selected panel metadata, if used
-    fred_sd_frequency_report.json # FRED-SD frequency composition, if used
-    predictions.csv             # OOS prediction table
-    prediction_row_schema.json   # Versioned predictions.csv column contract
-    metrics.json                # Per-horizon evaluation metrics
-    comparison_summary.json     # Model vs benchmark summary
-    evaluation_summary.json     # Layer 4 evaluation contract summary
-    evaluation_report.md        # Optional report when report_style=markdown_table
-    tuning_result.json          # HP tuning result
-    summary.txt                 # Human-readable summary
-    data_preview.csv            # Raw data sample
-    stat_test_{name}.json       # Statistical test result (if requested)
-    importance_{name}.json      # Importance result (if requested)
-```
+With `8_output` enabled, `execute_minimal_forecast` writes to `leaf_config.output_directory`.
 
-## predictions.csv
-
-The core output table. Each row is one (forecast origin, target date, horizon) triple:
-
-| Column | Meaning |
-|--------|---------|
-| `target` | Forecast target variable name |
-| `model_name` | Model executor used |
-| `benchmark_name` | Benchmark family |
-| `horizon` | Forecast horizon (months ahead) |
-| `origin_date` | Last date in training window |
-| `target_date` | Date being forecast |
-| `y_true` | Actual realized value |
-| `y_pred` | Model forecast |
-| `benchmark_pred` | Benchmark forecast |
-| `error` | y_true - y_pred |
-| `squared_error` | error^2 |
-| `benchmark_error` | y_true - benchmark_pred |
-| `training_window_size` | Number of observations in training window |
-
-`prediction_row_schema.json` records `prediction_row_schema_v1`: required
-base columns, observed columns, optional payload column groups, dtypes, payload
-families, and forecast objects. Treat it as the stable contract for consumers
-that parse `predictions.csv`.
-
-## layer1_official_frame.json
-
-Layer 1 writes this file before Layer 2 representation construction. It records
-`layer1_official_frame_v1`, the exact FRED frame contract used by the run:
-source metadata, target and horizon identity, frame shape/index/columns,
-information-set provenance, raw missing/outlier handling, missing-availability,
-release-lag, variable-universe choices, official transform/T-code evidence,
-data warnings, and data reports.
-
-Use this file when comparing runs that differ in data vintage, release-lag,
-raw missing/outlier handling, or official transform policy. The manifest keeps a
-compact `layer1_official_frame_summary`, while this file owns the full contract.
-
-## fred_sd_series_metadata.json
-
-Runs that include FRED-SD write `fred_sd_series_metadata.json`. It records
-`fred_sd_series_metadata_v1`: selected states, selected SD variables, source
-sheets, canonical `VARIABLE_STATE` columns, per-column observed windows, and
-native-frequency counts inferred from the non-missing calendar. For composite
-FRED-MD/FRED-QD + FRED-SD runs, this file describes the FRED-SD component before
-generic post-load `variable_universe` filtering.
-
-## fred_sd_frequency_report.json
-
-Runs that include FRED-SD also write `fred_sd_frequency_report.json`. It records
-`fred_sd_frequency_report_v1`: native-frequency counts, single-vs-mixed status,
-monthly/quarterly mix flags, and state/variable breakdowns derived from the
-selected FRED-SD series metadata. Use it to audit whether a selected state panel
-needs an explicit mixed-frequency decision before comparing representations.
-
-## metrics.json
-
-Per-horizon evaluation metrics:
-
-| Metric | Definition | Interpretation |
-|--------|-----------|----------------|
-| `msfe` | Mean squared forecast error | Lower is better |
-| `rmse` | Root MSFE | Same scale as target |
-| `mae` | Mean absolute error | Robust to outliers |
-| `mape` | Mean absolute percentage error | Scale-independent |
-| `relative_msfe` | MSFE_model / MSFE_benchmark | < 1 means model beats benchmark |
-| `oos_r2` | 1 - relative MSFE | > 0 means model beats benchmark |
-| `csfe` | Cumulative squared forecast error | Time-aggregated loss |
-| `benchmark_win_rate` | Fraction of dates where model < benchmark | Higher is better |
-| `directional_accuracy` | Fraction of correct direction forecasts | Higher is better |
-
-## evaluation_summary.json
-
-Layer 4 writes a canonical summary of the selected evaluation contract. This
-file does not recompute forecasts. It records:
-
-| Field | Meaning |
-|-------|---------|
-| `contract_version` | Evaluation summary schema version |
-| `evaluation_spec` | Exact Layer 4 choices used at runtime |
-| `summary.primary_metric` | Metric selected for headline ranking |
-| `summary.by_horizon` | Per-horizon model, benchmark, and winner records |
-| `summary.overall_equal_weight` | Equal-weight aggregate when available |
-| `summary.selected_metric_availability` | Whether each selected metric family is materialized by the current payload |
-
-When `evaluation_spec.report_style=markdown_table`, execution also writes
-`evaluation_report.md`. When `report_style=latex_table`, it writes
-`evaluation_report.tex`. `report_style=tidy_dataframe` keeps the structured
-JSON summary only.
-
-## stat_test_{name}.json
-
-Statistical test results. The structure depends on the test:
-
-**Diebold-Mariano (dm, dm_hln, dm_modified):**
-```json
-{
-  "test": "dm",
-  "statistic": -2.145,
-  "p_value": 0.032,
-  "loss_differential_mean": -0.0023,
-  "n_observations": 120
-}
-```
-Interpretation: p < 0.05 means model and benchmark have significantly different predictive ability.
-
-**Clark-West (cw):**
-```json
-{
-  "test": "cw",
-  "statistic": 1.987,
-  "p_value": 0.047,
-  "mspe_adjusted": 0.0015
-}
-```
-Interpretation: Use for nested models (when the benchmark is nested within the model).
-
-**Model Confidence Set (mcs):**
-```json
-{
-  "test": "mcs",
-  "confidence_set": ["ridge", "lasso"],
-  "eliminated": ["ar"],
-  "alpha": 0.1
-}
-```
-Interpretation: The confidence set contains models that are not significantly worse than the best.
-
-## importance_{name}.json
-
-Feature importance results. Structure depends on the method:
+Typical directory:
 
 ```text
-{
-  "method": "permutation_importance",
-  "model_family": "ridge",
-  "feature_importances": [
-    {"feature": "UNRATE", "importance": 0.0234},
-    {"feature": "CPIAUCSL", "importance": 0.0189},
-    ...
-  ]
-}
+macrocast_output/<name>/
+  manifest.json              # L8 provenance and saved object inventory
+  recipe.json                # JSON copy of the resolved input recipe
+  summary/
+    metrics_all_cells.csv    # L5 metrics table
+    ranking.csv              # L5 ranking table
+  cell_001/
+    forecasts.csv            # L4 point forecasts
+    clean_panel.csv          # optional, when saved_objects includes clean_panel
+    raw_panel.csv            # optional, when saved_objects includes raw_panel
+    feature_metadata.json    # optional, when saved_objects includes feature_metadata
+  diagnostics/
+    l1_5_diagnostic_v1.json  # optional
+    l2_5_diagnostic_v1.json  # optional
+    l3_5_diagnostic_v1.json  # optional
+    l4_5_diagnostic_v1.json  # optional
+  tests_summary.json         # optional, when L6 is saved
+  importance_summary.json    # optional, when L7 is saved
 ```
+
+`L8ArtifactsArtifact.exported_files` records the files written during the run.
+
+## forecasts.csv
+
+One row per `(model_id, target, horizon, origin)` forecast.
+
+| Column | Meaning |
+|---|---|
+| `model_id` | L4 fit node id |
+| `target` | Forecast target |
+| `horizon` | Forecast horizon |
+| `origin` | Forecast origin date |
+| `forecast` | Point forecast |
+
+## metrics_all_cells.csv
+
+L5 point and relative metrics. Current core runtime materializes:
+
+| Metric | Definition |
+|---|---|
+| `mse` | Mean squared error |
+| `rmse` | Square root of MSE |
+| `mae` | Mean absolute error |
+| `relative_mse` | Model MSE divided by benchmark MSE, when exactly one benchmark exists |
+| `r2_oos` | `1 - relative_mse` |
+| `relative_mae` | Model MAE divided by benchmark MAE |
+| `mse_reduction` | Benchmark MSE minus model MSE |
+
+## ranking.csv
+
+The L5 ranking table sorted by the resolved ranking metric. For loss metrics, lower is better. For `r2_oos` and `mse_reduction`, higher is better.
+
+## tests_summary.json
+
+L6 writes a JSON representation of `L6TestsArtifact` when `saved_objects` includes `tests`.
+
+Current core runtime can populate:
+
+- `equal_predictive_results`
+- `nested_results`
+- `cpa_results`
+- `multiple_model_results`
+- `direction_results`
+- `residual_results`
+
+The values are descriptive/minimal test dictionaries. Exact bootstrap MCS/SPA/RC/StepM, HAC critical values, and density/interval tests require specialized runtime support.
+
+## importance_summary.json
+
+L7 writes a JSON representation of `L7ImportanceArtifact` when `saved_objects` includes `importance`.
+
+Current core runtime can populate:
+
+- `global_importance` from linear coefficients and permutation-style importance,
+- `group_importance` from `group_aggregate`,
+- `lineage_importance` from L3 metadata,
+- `L7TransformationAttributionArtifact` when `l7_transformation_attribution_v1` is requested.
+
+Advanced SHAP backends, neural-gradient methods, VAR FEVD/IRF, and figure rendering are outside the current core runtime path.
+
+## Diagnostic JSON Files
+
+Diagnostic layers are non-blocking. They produce `DiagnosticArtifact` JSON payloads when enabled:
+
+| Sink | Contents |
+|---|---|
+| `l1_5_diagnostic_v1` | sample coverage, univariate summaries, missing/outlier audit, optional correlation |
+| `l2_5_diagnostic_v1` | raw-vs-clean comparison, distribution shift, cleaning effect summary |
+| `l3_5_diagnostic_v1` | raw/clean/features comparison, feature summary, lineage summary, lag/factor/selection metadata |
+| `l4_5_diagnostic_v1` | forecast/model/training summaries, fit summary, window summary |
+
+The current core runtime writes JSON metadata only. PNG/PDF/HTML/LaTeX rendering is a future specialized diagnostics renderer.
 
 ## manifest.json
 
-The complete provenance record. Key fields:
+The L8 manifest records:
 
-| Field | Content |
-|-------|---------|
-| `recipe_id` | Study identifier |
-| `tree_context` | Full axis selection record (fixed/sweep/conditional) |
-| `preprocess_contract` | Exact preprocessing configuration |
-| `layer1_official_frame_contract` | Versioned Layer 1 official-frame handoff |
-| `layer1_official_frame_file` | Full Layer 1 official-frame contract artifact |
-| `fred_sd_series_metadata_file` | FRED-SD selected-panel metadata artifact, if present |
-| `fred_sd_frequency_report_file` | FRED-SD frequency-composition artifact, if present |
-| `model_spec` | Model family, feature builder, executor name |
-| `benchmark_spec` | Benchmark family and configuration |
-| `evaluation_spec` | Layer 4 evaluation choices |
-| `evaluation_summary_file` | Canonical Layer 4 summary artifact |
-| `evaluation_report_file` | Optional human/table report artifact |
-| `stat_test_spec` | Statistical test requested |
-| `importance_spec` | Importance method requested |
-| `tuning_result` | HP tuning result (best_hp, trials, score) |
-| `reproducibility_spec` | Reproducibility mode and seed |
+- runtime environment summary,
+- recipe hash,
+- saved object list,
+- upstream sink names,
+- exported file list,
+- dependency lockfile paths when detected.
 
-## tuning_result.json
+It is designed to make the output directory inspectable without rerunning the forecast.
 
-Hyperparameter tuning result:
+## In-Memory Sinks
 
-```json
-{
-  "tuning_enabled": false,
-  "model_family": "ridge_autoreg_v0",
-  "search_algorithm": "none",
-  "best_hp": {},
-  "best_score": null,
-  "total_trials": 0,
-  "total_time_seconds": 0.0
-}
+The filesystem output is a projection of the in-memory runtime result:
+
+```python
+result.sink("l4_forecasts_v1")
+result.sink("l5_evaluation_v1")
+result.sink("l6_tests_v1")
+result.sink("l7_importance_v1")
+result.sink("l8_artifacts_v1")
 ```
 
-When tuning is enabled (via `search_algorithm` in the recipe), this contains the selected hyperparameters and search statistics.
-
-**See also:**
-- [Quickstart](quickstart.md) — run your first study
-- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — data axes that shape metric inputs. `oos_period` is now a Layer 4 evaluation axis, with old data-layer placement kept as a compatibility alias.
-- [Stages Reference](stages_reference.md) — cheat sheet with every operational value.
+Use in-memory sinks for tests and notebooks. Use L8 output for handoff, audit, and replication folders.

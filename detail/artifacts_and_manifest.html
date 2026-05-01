@@ -81,161 +81,101 @@
              
   <section id="artifacts-and-manifest">
 <h1>Artifacts And Manifest<a class="headerlink" href="#artifacts-and-manifest" title="Link to this heading"></a></h1>
-<p>Artifacts are the durable outputs of an experiment. The manifest is the audit trail.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Experiment.run()</span></code> wraps these files with:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ExperimentRunResult</span></code> for one executable recipe</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ExperimentSweepResult</span></code> for controlled variation sweeps</p></li>
-</ul>
-<p>The facade does not replace artifacts. It reads saved files and exposes
-<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">comparison</span></code>, and <code class="docutils literal notranslate"><span class="pre">manifest</span></code> directly to researchers.
-Use <code class="docutils literal notranslate"><span class="pre">metrics_json</span></code> and <code class="docutils literal notranslate"><span class="pre">comparison_json</span></code> when the exact artifact payload matters.</p>
-<p>Layer 4 evaluation writes <code class="docutils literal notranslate"><span class="pre">evaluation_summary.json</span></code> for every run. It records
-the selected evaluation spec, primary metric, per-horizon summary, aggregation
-choices, and metric-family availability. If <code class="docutils literal notranslate"><span class="pre">report_style=markdown_table</span></code>, the
-run also writes <code class="docutils literal notranslate"><span class="pre">evaluation_report.md</span></code>; if <code class="docutils literal notranslate"><span class="pre">report_style=latex_table</span></code>, it writes
-<code class="docutils literal notranslate"><span class="pre">evaluation_report.tex</span></code>.</p>
-<p>Layer 1 writes <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code> for every run. It records
-<code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code>: the resolved FRED frame handed to Layer 2,
-including source metadata, target/horizon identity, frame shape and columns,
-information-set provenance, raw missing/outlier choices, missing-availability,
-release-lag, variable-universe rules, official transform/T-code evidence, data
-warnings, and data reports.</p>
-<p>FRED-SD runs also write <code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata.json</span></code>. It records
-<code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata_v1</span></code>: the selected state/variable panel, source sheets,
-per-column observed windows, and inferred native-frequency counts for the
-FRED-SD component. For composite FRED-MD/FRED-QD + FRED-SD runs, this file
-describes the FRED-SD component before generic post-load column filtering.</p>
-<p>FRED-SD runs also write <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report.json</span></code>. It records
-<code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report_v1</span></code>: frequency-composition counts, status flags, and
-state/variable breakdowns derived from the selected FRED-SD series metadata.
-This report tells downstream policy whether the selected panel is
-single-frequency, mixed-frequency, or partly unknown.</p>
-<p>Layer 5 writes <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code> for every run. It is the stable
-inventory of files that were actually materialized under the selected
-<code class="docutils literal notranslate"><span class="pre">output_spec</span></code>.</p>
-<p>Layer 6 writes statistical-test artifacts only for <code class="docutils literal notranslate"><span class="pre">saved_objects=full_bundle</span></code>
-and only when at least one split test-family axis is active. The aggregate file
-is <code class="docutils literal notranslate"><span class="pre">stat_tests.json</span></code>; per-test compatibility sidecars such as
-<code class="docutils literal notranslate"><span class="pre">stat_test_dm_modified.json</span></code> are also written when a single test payload is
-materialized. The run manifest records
-<code class="docutils literal notranslate"><span class="pre">stat_test_contract=layer6_stat_test_split_v1</span></code> and the resolved
-<code class="docutils literal notranslate"><span class="pre">stat_test_spec</span></code>.</p>
-<p>Layer 7 writes importance artifacts only for <code class="docutils literal notranslate"><span class="pre">saved_objects=full_bundle</span></code> and
-only when at least one split importance-family axis is active. The aggregate
-file is <code class="docutils literal notranslate"><span class="pre">importance_artifacts.json</span></code>; per-method compatibility sidecars such as
-<code class="docutils literal notranslate"><span class="pre">importance_minimal.json</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_tree_shap.json</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">importance_permutation_importance.json</span></code> are written for active methods. The run
-manifest records <code class="docutils literal notranslate"><span class="pre">importance_contract=layer7_importance_split_v1</span></code>, the resolved
-<code class="docutils literal notranslate"><span class="pre">importance_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_file</span></code>, and <code class="docutils literal notranslate"><span class="pre">importance_files</span></code>.</p>
-<section id="output-spec">
-<h2>Output Spec<a class="headerlink" href="#output-spec" title="Link to this heading"></a></h2>
+<p>Artifacts are durable outputs of an experiment. The manifest is the audit trail.</p>
+<p>This page distinguishes current core L8 artifacts from legacy experiment artifacts.</p>
+<section id="core-l8-artifacts">
+<h2>Core L8 Artifacts<a class="headerlink" href="#core-l8-artifacts" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code> writes L8 artifacts when the recipe includes <code class="docutils literal notranslate"><span class="pre">8_output</span></code>.</p>
+<p>Baseline layout:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>output_directory/
+  manifest.json or manifest.jsonl
+  recipe.json
+  summary/
+    metrics_all_cells.csv
+    ranking.csv
+  cell_001/
+    forecasts.csv
+  diagnostics/
+    *_diagnostic_v1.json
+  tests_summary.json
+  importance_summary.json
+</pre></div>
+</div>
+<p>The exact files depend on <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code>.</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Axis</p></th>
-<th class="head"><p>Operational values</p></th>
-<th class="head"><p>Effect</p></th>
+<tr class="row-odd"><th class="head"><p>Saved object</p></th>
+<th class="head"><p>File currently written</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_format</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">all</span></code></p></td>
-<td><p>Controls structured metric/comparison sidecar formats. <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> remain stable baseline files.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cell_001/forecasts.csv</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">predictions_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictions_and_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">full_bundle</span></code></p></td>
-<td><p>Controls the minimum object family saved by runtime.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">summary/metrics_all_cells.csv</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code></p></td>
-<td><p>Controls extra provenance fields such as package version, git commit, and config hash.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ranking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">summary/ranking.csv</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">aggregated</span></code></p></td>
-<td><p>Writes one aggregated run directory. Per-target/per-horizon/hierarchical layouts are registry-only or future.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tests_summary.json</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">importance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">importance_summary.json</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cell_001/feature_metadata.json</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cell_001/clean_panel.csv</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cell_001/raw_panel.csv</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code> through <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">diagnostics/&lt;sink&gt;.json</span></code></p></td>
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal notranslate"><span class="pre">saved_objects=predictions_only</span></code> writes the required manifest files, run
-summary, prediction table, and forecast payload files when present.
-<code class="docutils literal notranslate"><span class="pre">saved_objects=predictions_and_metrics</span></code> adds metrics, comparison, Layer 4
-evaluation summary, optional evaluation report, and regime summaries.
-<code class="docutils literal notranslate"><span class="pre">saved_objects=full_bundle</span></code> additionally writes data preview, feature fit-state,
-tuning, statistical-test, and importance artifacts when available.</p>
-<p><code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code> uses <code class="docutils literal notranslate"><span class="pre">layer5_output_artifact_manifest_v1</span></code>:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;contract_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;layer5_output_artifact_manifest_v1&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;output_spec&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;export_format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;saved_objects&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;full_bundle&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;provenance_fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;full&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;artifact_granularity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aggregated&quot;</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;artifact_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;artifacts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;predictions.csv&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;artifact_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;predictions&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;5_output_provenance&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;csv&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prediction_row_schema.json&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;artifact_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prediction_row_schema&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;5_output_provenance&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;json&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;layer1_official_frame.json&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;artifact_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;layer1_official_frame&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1_data_task&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;json&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fred_sd_series_metadata.json&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;artifact_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fred_sd_series_metadata&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1_data_task&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;json&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fred_sd_frequency_report.json&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;artifact_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fred_sd_frequency_report&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1_data_task&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;json&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>The manifest records <code class="docutils literal notranslate"><span class="pre">artifact_manifest_file</span></code>, <code class="docutils literal notranslate"><span class="pre">output_artifact_contract</span></code>,
-<code class="docutils literal notranslate"><span class="pre">saved_objects_effective</span></code>, <code class="docutils literal notranslate"><span class="pre">artifact_granularity_effective</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">artifact_count</span></code>. <code class="docutils literal notranslate"><span class="pre">prediction_row_schema.json</span></code> uses
-<code class="docutils literal notranslate"><span class="pre">prediction_row_schema_v1</span></code> and is the versioned column contract for
-<code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>. <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code> uses
-<code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code> and is the versioned upstream-frame contract for
-Layer 2 representation builders. <code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata.json</span></code> and
-<code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report.json</span></code> are present only when the selected dataset
-includes FRED-SD.</p>
-<p>This page should continue expanding:</p>
+<p><code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code> expands to the four diagnostic saved objects.</p>
+</section>
+<section id="l8-manifest">
+<h2>L8 Manifest<a class="headerlink" href="#l8-manifest" title="Link to this heading"></a></h2>
+<p>The core L8 manifest records:</p>
 <ul class="simple">
-<li><p>output directory layout</p></li>
-<li><p>forecasts artifact</p></li>
-<li><p>metrics artifact</p></li>
-<li><p>evaluation summary artifact</p></li>
-<li><p>comparison summary</p></li>
-<li><p>sweep manifest</p></li>
-<li><p>raw-data manifest</p></li>
-<li><p>custom method provenance</p></li>
-<li><p>default profile provenance</p></li>
-<li><p>package version and environment metadata</p></li>
+<li><p>recipe hash,</p></li>
+<li><p>package/runtime version marker,</p></li>
+<li><p>Python/runtime environment fields,</p></li>
+<li><p>dependency lockfile paths when present,</p></li>
+<li><p>saved objects,</p></li>
+<li><p>upstream sink inventory,</p></li>
+<li><p>exported files.</p></li>
 </ul>
-<p>Design requirements:</p>
+<p><code class="docutils literal notranslate"><span class="pre">L8ArtifactsArtifact</span></code> also exposes <code class="docutils literal notranslate"><span class="pre">output_directory</span></code>, <code class="docutils literal notranslate"><span class="pre">exported_files</span></code>, <code class="docutils literal notranslate"><span class="pre">artifact_count</span></code>, and <code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code> in memory.</p>
+</section>
+<section id="legacy-experiment-artifacts">
+<h2>Legacy Experiment Artifacts<a class="headerlink" href="#legacy-experiment-artifacts" title="Link to this heading"></a></h2>
+<p>The older experiment engine can write files such as:</p>
 <ul class="simple">
-<li><p>every run records resolved defaults</p></li>
-<li><p>every custom method records its registered name</p></li>
-<li><p>every sweep variant is traceable to axis values</p></li>
-<li><p>artifacts are readable without rerunning the experiment</p></li>
-<li><p>result objects point back to artifact paths</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prediction_row_schema.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_summary.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluation_summary.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stat_test_*.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">importance_*.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code></p></li>
+</ul>
+<p>These remain documented for backward compatibility, but new L0-L8 layer-contract recipes should use the core L8 output contract above.</p>
+</section>
+<section id="design-requirements">
+<h2>Design Requirements<a class="headerlink" href="#design-requirements" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>every run records resolved defaults where possible,</p></li>
+<li><p>every output can be read without rerunning the experiment,</p></li>
+<li><p>diagnostic outputs are non-blocking,</p></li>
+<li><p>advanced render/export formats must not be reported as materialized until the corresponding runtime writer exists.</p></li>
 </ul>
 </section>
 </section>

@@ -22,7 +22,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Your First Study: Ridge vs Lasso on FRED-MD" href="first_study.html" />
+    <link rel="next" title="Your First Study: Ridge With Diagnostics, Tests, Importance, And Export" href="first_study.html" />
     <link rel="prev" title="0. Getting Started" href="index.html" /> 
 </head>
 
@@ -48,9 +48,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">0. Getting Started</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge vs Lasso on FRED-MD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="understanding_output.html">Understanding Output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (0 and 1)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stages_reference.html">Stages Reference (Legacy Stage 0 and 1)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../install.html">Installation</a></li>
 </ul>
 </li>
@@ -91,145 +92,146 @@
              
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
-<p>Run your first macrocast forecast in under 5 minutes.</p>
-<section id="option-a-from-a-yaml-recipe">
-<h2>Option A: From a YAML recipe<a class="headerlink" href="#option-a-from-a-yaml-recipe" title="Link to this heading"></a></h2>
-<p>The fastest way to run a study is from a pre-written YAML recipe:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_recipe_yaml</span><span class="p">,</span> <span class="n">run_compiled_recipe</span>
+<p>Run a core layer-contract forecast in under 5 minutes.</p>
+<p>This quickstart uses <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code>. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.</p>
+<p>For the exact support boundary, read <a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a>.</p>
+<section id="run-a-minimal-core-recipe">
+<h2>Run A Minimal Core Recipe<a class="headerlink" href="#run-a-minimal-core-recipe" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
-<span class="c1"># Compile the recipe</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">compile_recipe_yaml</span><span class="p">(</span><span class="s2">&quot;examples/recipes/model-benchmark.yaml&quot;</span><span class="p">)</span>
+<span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">1_data:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    custom_source_policy: custom_panel_only</span>
+<span class="s2">    frequency: monthly</span>
+<span class="s2">    horizon_set: custom_list</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    target: y</span>
+<span class="s2">    target_horizons: [1]</span>
+<span class="s2">    custom_panel_inline:</span>
+<span class="s2">      date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]</span>
+<span class="s2">      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]</span>
+<span class="s2">      x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]</span>
+<span class="s2">      x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]</span>
 
-<span class="c1"># Check if it is executable</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">compiled</span><span class="o">.</span><span class="n">execution_status</span><span class="p">)</span>  <span class="c1"># &quot;executable&quot;</span>
+<span class="s2">2_preprocessing:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    transform_policy: no_transform</span>
+<span class="s2">    outlier_policy: none</span>
+<span class="s2">    imputation_policy: none_propagate</span>
+<span class="s2">    frame_edge_policy: keep_unbalanced</span>
 
-<span class="c1"># Run</span>
-<span class="n">execution</span> <span class="o">=</span> <span class="n">run_compiled_recipe</span><span class="p">(</span>
-    <span class="n">result</span><span class="o">.</span><span class="n">compiled</span><span class="p">,</span>
-    <span class="n">output_root</span><span class="o">=</span><span class="s2">&quot;runs/&quot;</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="s2">3_feature_engineering:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}</span>
+<span class="s2">    - {id: lag_x, type: step, op: lag, params: </span><span class="si">{n_lag: 1}</span><span class="s2">, inputs: [src_X]}</span>
+<span class="s2">    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
+<span class="s2">    l3_metadata_v1: auto</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Artifacts saved to: </span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This runs an AR model against a zero-change benchmark on FRED-MD INDPRO at horizons 1 and 3, using an expanding window.</p>
-</section>
-<section id="option-b-from-a-python-dict">
-<h2>Option B: From a Python dict<a class="headerlink" href="#option-b-from-a-python-dict" title="Link to this heading"></a></h2>
-<p>You can also define the recipe as a Python dictionary:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_recipe_dict</span><span class="p">,</span> <span class="n">run_compiled_recipe</span>
+<span class="s2">4_forecasting_model:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}</span>
+<span class="s2">    - id: fit_ridge</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: fit_model</span>
+<span class="s2">      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}</span>
+<span class="s2">      inputs: [src_X, src_y]</span>
+<span class="s2">    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l4_forecasts_v1: predict_ridge</span>
+<span class="s2">    l4_model_artifacts_v1: fit_ridge</span>
+<span class="s2">    l4_training_metadata_v1: auto</span>
 
-<span class="n">recipe</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;recipe_id&quot;</span><span class="p">:</span> <span class="s2">&quot;my-first-study&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;0_meta&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;study_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;one_target_one_method&quot;</span><span class="p">}</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;1_data_task&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;information_set_type&quot;</span><span class="p">:</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_structure&quot;</span><span class="p">:</span> <span class="s2">&quot;single_target&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;benchmark_family&quot;</span><span class="p">:</span> <span class="s2">&quot;autoregressive_bic&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;evaluation_scale&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;leaf_config&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;horizons&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;2_preprocessing&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;target_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;x_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;tcode_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_missing_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;x_outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;scaling_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;preprocess_order&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;inverse_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;representation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_only&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;tcode_application_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_transform&quot;</span><span class="p">:</span> <span class="s2">&quot;level&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_normalization&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target_domain&quot;</span><span class="p">:</span> <span class="s2">&quot;unconstrained&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;scaling_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;columnwise&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;additional_preprocessing&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;x_lag_creation&quot;</span><span class="p">:</span> <span class="s2">&quot;no_predictor_lags&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;feature_grouping&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;3_training&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;framework&quot;</span><span class="p">:</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;sweep_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;model_family&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;4_evaluation&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;primary_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;msfe&quot;</span><span class="p">},</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;6_stat_tests&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;equal_predictive&quot;</span><span class="p">:</span> <span class="s2">&quot;dm&quot;</span><span class="p">},</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;7_importance&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;importance_method&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">},</span>
-        <span class="p">},</span>
-    <span class="p">},</span>
-<span class="p">}</span>
+<span class="s2">5_evaluation:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    primary_metric: mse</span>
+<span class="s2">    point_metrics: [mse, rmse, mae]</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">compile_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">compiled</span><span class="o">.</span><span class="n">execution_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="s2">8_output:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    saved_objects: [forecasts, metrics, ranking]</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    output_directory: ./macrocast_output/quickstart/</span>
+<span class="s2">&quot;&quot;&quot;</span>
 
-<span class="n">execution</span> <span class="o">=</span> <span class="n">run_compiled_recipe</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">compiled</span><span class="p">,</span> <span class="n">output_root</span><span class="o">=</span><span class="s2">&quot;runs/&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Artifacts: </span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="what-just-happened">
-<h2>What just happened?<a class="headerlink" href="#what-just-happened" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p><strong>Compile</strong>: macrocast validated all axis selections against the registry, built a design (Stage 0) grammar frame via <code class="docutils literal notranslate"><span class="pre">build_design_frame</span></code>, and confirmed the recipe is executable.</p></li>
-<li><p><strong>Execute</strong>: The runtime loaded FRED-MD data, built an expanding-window out-of-sample evaluation, fitted Ridge at each forecast origin, computed predictions and the AR-BIC benchmark, and ran a Diebold-Mariano test.</p></li>
-<li><p><strong>Artifacts</strong>: The run directory contains <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics.json</span></code>, <code class="docutils literal notranslate"><span class="pre">stat_test_dm.json</span></code>, <code class="docutils literal notranslate"><span class="pre">comparison_summary.json</span></code>, <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, and <code class="docutils literal notranslate"><span class="pre">tuning_result.json</span></code>.</p></li>
-</ol>
-</section>
-<section id="reading-the-results">
-<h2>Reading the results<a class="headerlink" href="#reading-the-results" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-<span class="c1"># Load predictions</span>
-<span class="n">predictions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">/predictions.csv&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">[[</span><span class="s2">&quot;origin_date&quot;</span><span class="p">,</span> <span class="s2">&quot;target_date&quot;</span><span class="p">,</span> <span class="s2">&quot;y_true&quot;</span><span class="p">,</span> <span class="s2">&quot;y_pred&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
-
-<span class="c1"># Load metrics</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">/metrics.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">metrics</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">horizon</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;metrics_by_horizon&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">horizon</span><span class="si">}</span><span class="s2">: MSFE=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;msfe&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, OOS R2=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;oos_r2&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="c1"># Load DM test</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">execution</span><span class="o">.</span><span class="n">artifact_dir</span><span class="si">}</span><span class="s2">/stat_test_dm.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">dm</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DM statistic: </span><span class="si">{</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;statistic&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, p-value: </span><span class="si">{</span><span class="n">dm</span><span class="p">[</span><span class="s1">&#39;p_value&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<section id="what-gets-materialized">
+<h2>What Gets Materialized<a class="headerlink" href="#what-gets-materialized" title="Link to this heading"></a></h2>
+<p>The result object is an in-memory sink map:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">)</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span>
+<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ranking_table</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>With <code class="docutils literal notranslate"><span class="pre">8_output</span></code> enabled, the runtime writes:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>macrocast_output/quickstart/
+  manifest.json
+  recipe.json
+  summary/
+    metrics_all_cells.csv
+    ranking.csv
+  cell_001/
+    forecasts.csv
+</pre></div>
+</div>
+</section>
+<section id="enabling-diagnostics-tests-and-importance">
+<h2>Enabling Diagnostics, Tests, And Importance<a class="headerlink" href="#enabling-diagnostics-tests-and-importance" title="Link to this heading"></a></h2>
+<p>Add these blocks when needed:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_5_data_summary</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">2_5_pre_post_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">3_5_feature_diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">4_5_generator_diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">6_statistical_tests</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">sub_layers</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">L6_G_residual</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">7_interpretation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_model</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l4</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l4_model_artifacts_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_id</span><span class="p">:</span><span class="w"> </span><span class="nv">fit_ridge</span><span class="p p-Indicator">}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model_native_linear_coef</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_model</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l7_importance_v1</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">global</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
+</pre></div>
+</div>
+</section>
+<section id="legacy-compiler-path">
+<h2>Legacy Compiler Path<a class="headerlink" href="#legacy-compiler-path" title="Link to this heading"></a></h2>
+<p>Older docs and recipes that use <code class="docutils literal notranslate"><span class="pre">macrocast.compiler.compile_recipe_yaml</span></code> still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.</p>
 </section>
 <section id="next-steps">
-<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="first_study.html"><span class="std std-doc">Your First Study</span></a> — design a complete model comparison with preprocessing and importance</p></li>
-<li><p><a class="reference internal" href="understanding_output.html"><span class="std std-doc">Understanding Output</span></a> — detailed guide to every artifact</p></li>
+<li><p><a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a> — current support boundary</p></li>
+<li><p><a class="reference internal" href="first_study.html"><span class="std std-doc">Your First Study</span></a> — extend the quickstart to diagnostics, L6, L7, and L8 export</p></li>
+<li><p><a class="reference internal" href="understanding_output.html"><span class="std std-doc">Understanding Output</span></a> — output directory and artifact guide</p></li>
 </ul>
-<p><strong>See also:</strong> <a class="reference internal" href="../install.html"><span class="std std-doc">Installation</span></a> | <a class="reference internal" href="../api/index.html"><span class="std std-doc">API Reference</span></a></p>
 </section>
 </section>
 
@@ -238,7 +240,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="0. Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="first_study.html" class="btn btn-neutral float-right" title="Your First Study: Ridge vs Lasso on FRED-MD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="first_study.html" class="btn btn-neutral float-right" title="Your First Study: Ridge With Diagnostics, Tests, Importance, And Export" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
