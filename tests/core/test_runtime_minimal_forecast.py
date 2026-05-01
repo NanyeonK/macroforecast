@@ -98,3 +98,33 @@ def test_execute_minimal_forecast_rejects_exhaustive_min_train_size():
 
     with pytest.raises(ValueError, match="min_train_size < aligned observation count"):
         execute_minimal_forecast(yaml_text)
+
+
+def test_execute_minimal_forecast_runs_l3_concat_and_scale_dag():
+    yaml_text = MINIMAL_RECIPE.replace(
+        "    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}",
+        """    - {id: lag_1, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
+    - {id: lag_2, type: step, op: lag, params: {n_lag: 2}, inputs: [src_X]}
+    - {id: joined_x, type: combine, op: concat, inputs: [lag_1, lag_2]}
+    - {id: lag_x, type: step, op: scale, params: {method: zscore}, inputs: [joined_x]}""",
+    )
+    result = execute_minimal_forecast(yaml_text)
+    l3_features = result.sink("l3_features_v1")
+
+    assert l3_features.X_final.shape == (3, 6)
+    assert "x1_lag2" in l3_features.X_final.column_names
+    assert result.sink("l5_evaluation_v1").metrics_table.iloc[0]["model_id"] == "fit_ridge"
+
+
+def test_execute_minimal_forecast_runs_l3_transform_before_lag():
+    yaml_text = MINIMAL_RECIPE.replace(
+        "    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}",
+        """    - {id: logged_x, type: step, op: log, inputs: [src_X]}
+    - {id: diffed_x, type: step, op: diff, params: {n_diff: 1}, inputs: [logged_x]}
+    - {id: lag_x, type: step, op: lag, params: {n_lag: 1, include_contemporaneous: true}, inputs: [diffed_x]}""",
+    )
+    result = execute_minimal_forecast(yaml_text)
+    l3_features = result.sink("l3_features_v1")
+
+    assert l3_features.X_final.shape[1] == 4
+    assert "x1_lag0" in l3_features.X_final.column_names
