@@ -5,10 +5,29 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from sklearn.linear_model import Ridge
 
+from .layers import l3 as l3_layer
+from .layers import l4 as l4_layer
+from .layers import l5 as l5_layer
 from .layers import l1 as l1_layer
 from .layers import l2 as l2_layer
-from .types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact, L2CleanPanelArtifact, Panel, PanelMetadata
+from .types import (
+    L1DataDefinitionArtifact,
+    L1RegimeMetadataArtifact,
+    L2CleanPanelArtifact,
+    L3FeaturesArtifact,
+    L3MetadataArtifact,
+    L4ForecastsArtifact,
+    L4ModelArtifactsArtifact,
+    L4TrainingMetadataArtifact,
+    L5EvaluationArtifact,
+    ModelArtifact,
+    Panel,
+    PanelMetadata,
+    Series,
+    SeriesMetadata,
+)
 from .yaml import parse_recipe_yaml
 
 
@@ -39,6 +58,31 @@ def execute_l1_l2(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
             "l1_data_definition_v1": l1_artifact,
             "l1_regime_metadata_v1": regime_artifact,
             "l2_clean_panel_v1": l2_artifact,
+        },
+        resolved_axes={"l1": l1_axes, "l2": dict(l2_axes)},
+    )
+
+
+def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
+    """Run the minimal L1-L5 runtime path for custom-panel ridge forecasts."""
+
+    root = parse_recipe_yaml(recipe_yaml_or_root) if isinstance(recipe_yaml_or_root, str) else recipe_yaml_or_root
+    l1_artifact, regime_artifact, l1_axes = materialize_l1(root)
+    l2_artifact, l2_axes = materialize_l2(root, l1_artifact)
+    l3_features, l3_metadata = materialize_l3_minimal(root, l1_artifact, l2_artifact)
+    l4_forecasts, l4_models, l4_training = materialize_l4_minimal(root, l3_features)
+    l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts)
+    return RuntimeResult(
+        artifacts={
+            "l1_data_definition_v1": l1_artifact,
+            "l1_regime_metadata_v1": regime_artifact,
+            "l2_clean_panel_v1": l2_artifact,
+            "l3_features_v1": l3_features,
+            "l3_metadata_v1": l3_metadata,
+            "l4_forecasts_v1": l4_forecasts,
+            "l4_model_artifacts_v1": l4_models,
+            "l4_training_metadata_v1": l4_training,
+            "l5_evaluation_v1": l5_eval,
         },
         resolved_axes={"l1": l1_axes, "l2": dict(l2_axes)},
     )
@@ -122,6 +166,150 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
         },
     )
     return artifact, resolved
+
+
+def materialize_l3_minimal(
+    recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact, l2_artifact: L2CleanPanelArtifact
+) -> tuple[L3FeaturesArtifact, L3MetadataArtifact]:
+    raw = recipe_root.get("3_feature_engineering", {}) or {}
+    report = l3_layer.validate_layer(raw, recipe_context=_l3_context(l1_artifact))
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    params = _minimal_l3_params(raw)
+    df = l2_artifact.panel.data.copy()
+    target_name = l1_artifact.target or (l1_artifact.targets[0] if l1_artifact.targets else None)
+    if not target_name or target_name not in df.columns:
+        raise ValueError("minimal L3 runtime requires target column in L2 clean panel")
+    horizon = int(params.get("horizon", l1_artifact.target_horizons[0] if l1_artifact.target_horizons else 1))
+    n_lag = int(params.get("n_lag", 1))
+
+    predictor_columns = [column for column in df.columns if column != target_name]
+    X = _lagged_predictors(df[predictor_columns], n_lag=n_lag)
+    y = df[target_name].shift(-horizon).rename(target_name)
+    aligned = pd.concat([X, y], axis=1).dropna(axis=0, how="any")
+    X_aligned = aligned[X.columns]
+    y_aligned = aligned[target_name]
+    return (
+        L3FeaturesArtifact(
+            X_final=_panel_from_frame(X_aligned, metadata={"stage": "l3_X_final", "n_lag": n_lag}),
+            y_final=Series(
+                shape=y_aligned.shape,
+                name=target_name,
+                metadata=SeriesMetadata(values={"stage": "l3_y_final", "horizon": horizon, "data": y_aligned}),
+            ),
+            sample_index=pd.DatetimeIndex(aligned.index),
+            horizon_set=(horizon,),
+        ),
+        l3_layer.build_metadata_artifact(raw),
+    )
+
+
+def materialize_l4_minimal(
+    recipe_root: dict[str, Any], l3_features: L3FeaturesArtifact
+) -> tuple[L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact]:
+    raw = recipe_root.get("4_forecasting_model", {}) or {}
+    report = l4_layer.validate_layer(raw, recipe_context={"horizon_set": set(l3_features.horizon_set)})
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    fit_node = _first_node(raw, op="fit_model")
+    if fit_node is None:
+        raise ValueError("minimal L4 runtime requires a fit_model node")
+    params = fit_node.get("params", {}) or {}
+    family = params.get("family", "ridge")
+    if family != "ridge":
+        raise NotImplementedError("minimal L4 runtime currently supports family=ridge only")
+    X = l3_features.X_final.data
+    y = l3_features.y_final.metadata.values.get("data")
+    if not isinstance(y, pd.Series):
+        raise ValueError("minimal L4 runtime requires L3 y_final series data")
+    alpha = float(params.get("alpha", 1.0))
+    model = Ridge(alpha=alpha)
+    model.fit(X, y)
+    fitted = pd.Series(model.predict(X), index=X.index, name="forecast")
+    model_id = fit_node.get("id", "fit_model")
+    target = l3_features.y_final.name
+    horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
+    forecasts = {(model_id, target, horizon, origin): float(value) for origin, value in fitted.items()}
+    return (
+        L4ForecastsArtifact(
+            forecasts=forecasts,
+            forecast_object="point",
+            sample_index=pd.DatetimeIndex(X.index),
+            targets=(target,),
+            horizons=(horizon,),
+            model_ids=(model_id,),
+            upstream_hashes={},
+        ),
+        L4ModelArtifactsArtifact(
+            artifacts={
+                model_id: ModelArtifact(
+                    model_id=model_id,
+                    family="ridge",
+                    fitted_object=model,
+                    framework="sklearn",
+                    fit_metadata={"alpha": alpha, "n_obs": len(X)},
+                    feature_names=tuple(X.columns),
+                )
+            },
+            is_benchmark={model_id: bool(fit_node.get("is_benchmark", False))},
+        ),
+        L4TrainingMetadataArtifact(forecast_origins=tuple(X.index), refit_origins={model_id: tuple(X.index)}),
+    )
+
+
+def materialize_l5_minimal(
+    recipe_root: dict[str, Any],
+    l1_artifact: L1DataDefinitionArtifact,
+    l3_features: L3FeaturesArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+) -> L5EvaluationArtifact:
+    raw = recipe_root.get("5_evaluation", {"fixed_axes": {}}) or {"fixed_axes": {}}
+    context = {
+        "forecast_object": l4_forecasts.forecast_object,
+        "target_structure": l1_artifact.target_structure,
+        "regime_definition": l1_artifact.regime_definition,
+        "has_fred_sd": bool(l1_artifact.dataset and "fred_sd" in l1_artifact.dataset),
+        "has_benchmark": False,
+    }
+    report = l5_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    actual = l3_features.y_final.metadata.values.get("data")
+    if not isinstance(actual, pd.Series):
+        raise ValueError("minimal L5 runtime requires L3 y_final series data")
+    rows: list[dict[str, Any]] = []
+    for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+        if origin not in actual.index:
+            continue
+        error = float(actual.loc[origin]) - float(forecast)
+        rows.append(
+            {
+                "model_id": model_id,
+                "target": target,
+                "horizon": horizon,
+                "origin": origin,
+                "squared_error": error**2,
+                "absolute_error": abs(error),
+            }
+        )
+    if not rows:
+        metrics = pd.DataFrame(columns=["model_id", "target", "horizon", "mse", "rmse", "mae"])
+    else:
+        errors = pd.DataFrame(rows)
+        metrics = errors.groupby(["model_id", "target", "horizon"], as_index=False).agg(mse=("squared_error", "mean"), mae=("absolute_error", "mean"))
+        metrics["rmse"] = metrics["mse"] ** 0.5
+    if metrics.empty:
+        ranking = pd.DataFrame()
+    else:
+        ranking = metrics.sort_values("mse").assign(
+            rank_method="by_primary_metric",
+            rank_value=lambda frame: range(1, len(frame) + 1),
+        )
+    return L5EvaluationArtifact(
+        metrics_table=metrics,
+        ranking_table=ranking,
+        l5_axis_resolved=dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)),
+    )
 
 
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:
@@ -330,10 +518,44 @@ def _panel_from_frame(frame: pd.DataFrame, metadata: dict[str, Any]) -> Panel:
     )
 
 
+def _minimal_l3_params(raw: dict[str, Any]) -> dict[str, Any]:
+    lag_node = _first_node(raw, op="lag")
+    target_node = _first_node(raw, op="target_construction")
+    lag_params = lag_node.get("params", {}) if lag_node else {}
+    target_params = target_node.get("params", {}) if target_node else {}
+    return {
+        "n_lag": lag_params.get("n_lag", 1),
+        "horizon": target_params.get("horizon", 1),
+    }
+
+
+def _lagged_predictors(frame: pd.DataFrame, n_lag: int) -> pd.DataFrame:
+    if n_lag < 1:
+        raise ValueError("minimal L3 runtime requires n_lag >= 1")
+    lagged = []
+    for lag in range(1, n_lag + 1):
+        lagged.append(frame.shift(lag).add_suffix(f"_lag{lag}"))
+    return pd.concat(lagged, axis=1)
+
+
+def _first_node(raw: dict[str, Any], *, op: str) -> dict[str, Any] | None:
+    for node in raw.get("nodes", ()) or ():
+        if isinstance(node, dict) and node.get("op") == op:
+            return node
+    return None
+
+
 def _l1_context(artifact: L1DataDefinitionArtifact) -> dict[str, Any]:
     return {
         "custom_source_policy": artifact.custom_source_policy,
         "dataset": artifact.dataset,
         "frequency": artifact.frequency,
         "custom_has_tcode_column": bool(artifact.leaf_config.get("custom_tcode_map")),
+    }
+
+
+def _l3_context(artifact: L1DataDefinitionArtifact) -> dict[str, Any]:
+    return {
+        "horizons": set(artifact.target_horizons),
+        "regime_definition": artifact.regime_definition,
     }
