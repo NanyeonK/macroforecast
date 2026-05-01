@@ -647,12 +647,31 @@ input {
 }
 
 .dag-node {
+  display: block;
+  width: 100%;
+  text-align: left;
   position: relative;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px;
   background: var(--panel-subtle);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dag-node:hover,
+.dag-node:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
+}
+
+.dag-node.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .dag-node + .dag-node {

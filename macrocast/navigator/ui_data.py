@@ -7,7 +7,7 @@ from typing import Any
 import yaml
 
 from ..registry import get_axis_registry
-from ..core.layers.registry import get_layer, list_layers
+from ..core.layers.registry import LAYER_GLOBALS, get_layer, list_layers
 from ..core.layer_specs import LayerImplementationSpec
 from ..core.layers.l0 import L0_LAYER_SPEC
 from ..core.layers.l1 import L1_LAYER_SPEC
@@ -253,6 +253,10 @@ _GRAPH_LAYER_SUB_LAYERS: dict[str, list[str]] = {
 
 _LIST_LAYER_SUB_LAYERS: dict[str, list[str]] = {
     "l5": ["L5.A metrics", "L5.B benchmark", "L5.C aggregation", "L5.D slicing and decomposition", "L5.E ranking"],
+    "l1_5": ["L1.5.A Sample coverage", "L1.5.B Univariate summary", "L1.5.C Stationarity", "L1.5.D Missing and outlier", "L1.5.E Correlation", "L1.5.Z Export"],
+    "l2_5": ["L2.5.A Comparison", "L2.5.B Distribution shift", "L2.5.C Correlation shift", "L2.5.D Cleaning summary", "L2.5.Z Export"],
+    "l3_5": ["L3.5.A Comparison", "L3.5.B Factor inspection", "L3.5.C Feature correlation", "L3.5.D Lag inspection", "L3.5.E Selection", "L3.5.Z Export"],
+    "l4_5": ["L4.5.A Fit", "L4.5.B Scale", "L4.5.C Window stability", "L4.5.D Tuning", "L4.5.E Ensemble", "L4.5.Z Export"],
 }
 
 
@@ -324,6 +328,8 @@ def layer_topology() -> dict[str, Any]:
             layer_globals = getattr(cls, "layer_globals", {}) if cls is not None else {}
             axes = list(cls.list_axes()) if cls is not None and hasattr(cls, "list_axes") else []
             global_names = list(layer_globals) if isinstance(layer_globals, dict) else list(layer_globals or ())
+            if not global_names:
+                global_names = list(LAYER_GLOBALS.get(layer_id, ()))
             if isinstance(sub_layers, dict):
                 for name, sub_layer in sub_layers.items():
                     sub_layer_axes[name] = list(getattr(sub_layer, "axes", ()) or ())
@@ -335,7 +341,13 @@ def layer_topology() -> dict[str, Any]:
             if layer_id in _GRAPH_LAYER_SUB_LAYERS:
                 sub_layer_names = list(_GRAPH_LAYER_SUB_LAYERS[layer_id])
             if layer_id in _LIST_LAYER_SUB_LAYERS:
+                original_names = list(sub_layer_names)
                 sub_layer_names = list(_LIST_LAYER_SUB_LAYERS[layer_id])
+                if original_names and sub_layer_axes:
+                    sub_layer_axes = {
+                        friendly: sub_layer_axes.get(original, [])
+                        for friendly, original in zip(sub_layer_names, original_names, strict=False)
+                    }
         nodes.append(
             {
                 "id": layer_id,

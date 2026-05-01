@@ -5117,33 +5117,35 @@
         "group": "diagnostic",
         "id": "l1_5",
         "label": "L1.5 Data Summary",
-        "layer_global_count": 0,
-        "layer_globals": [],
+        "layer_global_count": 1,
+        "layer_globals": [
+          "enabled"
+        ],
         "name": "Data summary",
         "produces": [
           "l1_5_diagnostic_v1"
         ],
         "sub_layer_axes": {
-          "L1_5_A_sample_coverage": [
+          "L1.5.A Sample coverage": [
             "coverage_view"
           ],
-          "L1_5_B_univariate_summary": [
+          "L1.5.B Univariate summary": [
             "summary_metrics",
             "summary_split"
           ],
-          "L1_5_C_stationarity_tests": [
+          "L1.5.C Stationarity": [
             "stationarity_test",
             "stationarity_test_scope"
           ],
-          "L1_5_D_missing_outlier_audit": [
+          "L1.5.D Missing and outlier": [
             "missing_view",
             "outlier_view"
           ],
-          "L1_5_E_correlation_pre_cleaning": [
+          "L1.5.E Correlation": [
             "correlation_method",
             "correlation_view"
           ],
-          "L1_5_Z_export": [
+          "L1.5.Z Export": [
             "diagnostic_format",
             "attach_to_manifest",
             "figure_dpi",
@@ -5152,12 +5154,12 @@
         },
         "sub_layer_count": 6,
         "sub_layers": [
-          "L1_5_A_sample_coverage",
-          "L1_5_B_univariate_summary",
-          "L1_5_C_stationarity_tests",
-          "L1_5_D_missing_outlier_audit",
-          "L1_5_E_correlation_pre_cleaning",
-          "L1_5_Z_export"
+          "L1.5.A Sample coverage",
+          "L1.5.B Univariate summary",
+          "L1.5.C Stationarity",
+          "L1.5.D Missing and outlier",
+          "L1.5.E Correlation",
+          "L1.5.Z Export"
         ],
         "ui_mode": "list"
       },
@@ -5729,30 +5731,32 @@
         "group": "diagnostic",
         "id": "l2_5",
         "label": "L2.5 Pre/Post",
-        "layer_global_count": 0,
-        "layer_globals": [],
+        "layer_global_count": 1,
+        "layer_globals": [
+          "enabled"
+        ],
         "name": "Pre vs post preprocessing",
         "produces": [
           "l2_5_diagnostic_v1"
         ],
         "sub_layer_axes": {
-          "L2_5_A_comparison_axis": [
+          "L2.5.A Comparison": [
             "comparison_pair",
             "comparison_output_form"
           ],
-          "L2_5_B_distribution_shift": [
+          "L2.5.B Distribution shift": [
             "distribution_metric",
             "distribution_view"
           ],
-          "L2_5_C_correlation_shift": [
+          "L2.5.C Correlation shift": [
             "correlation_shift",
             "correlation_method"
           ],
-          "L2_5_D_cleaning_effect_summary": [
+          "L2.5.D Cleaning summary": [
             "cleaning_summary_view",
             "t_code_application_log"
           ],
-          "L2_5_Z_export": [
+          "L2.5.Z Export": [
             "diagnostic_format",
             "attach_to_manifest",
             "figure_dpi",
@@ -5761,11 +5765,11 @@
         },
         "sub_layer_count": 5,
         "sub_layers": [
-          "L2_5_A_comparison_axis",
-          "L2_5_B_distribution_shift",
-          "L2_5_C_correlation_shift",
-          "L2_5_D_cleaning_effect_summary",
-          "L2_5_Z_export"
+          "L2.5.A Comparison",
+          "L2.5.B Distribution shift",
+          "L2.5.C Correlation shift",
+          "L2.5.D Cleaning summary",
+          "L2.5.Z Export"
         ],
         "ui_mode": "list"
       },
@@ -5829,35 +5833,37 @@
         "group": "diagnostic",
         "id": "l3_5",
         "label": "L3.5 Feature Diagnostics",
-        "layer_global_count": 0,
-        "layer_globals": [],
+        "layer_global_count": 1,
+        "layer_globals": [
+          "enabled"
+        ],
         "name": "Feature diagnostics",
         "produces": [
           "l3_5_diagnostic_v1"
         ],
         "sub_layer_axes": {
-          "L3_5_A_comparison_axis": [
+          "L3.5.A Comparison": [
             "comparison_stages",
             "comparison_output_form"
           ],
-          "L3_5_B_factor_block_inspection": [
+          "L3.5.B Factor inspection": [
             "factor_view",
             "dfm_diagnostics"
           ],
-          "L3_5_C_feature_correlation": [
+          "L3.5.C Feature correlation": [
             "feature_correlation",
             "correlation_method",
             "correlation_view"
           ],
-          "L3_5_D_lag_block_inspection": [
+          "L3.5.D Lag inspection": [
             "lag_view",
             "marx_view"
           ],
-          "L3_5_E_selected_features_post_selection": [
+          "L3.5.E Selection": [
             "selection_view",
             "stability_metric"
           ],
-          "L3_5_Z_export": [
+          "L3.5.Z Export": [
             "diagnostic_format",
             "attach_to_manifest",
             "figure_dpi",
@@ -5866,12 +5872,12 @@
         },
         "sub_layer_count": 6,
         "sub_layers": [
-          "L3_5_A_comparison_axis",
-          "L3_5_B_factor_block_inspection",
-          "L3_5_C_feature_correlation",
-          "L3_5_D_lag_block_inspection",
-          "L3_5_E_selected_features_post_selection",
-          "L3_5_Z_export"
+          "L3.5.A Comparison",
+          "L3.5.B Factor inspection",
+          "L3.5.C Feature correlation",
+          "L3.5.D Lag inspection",
+          "L3.5.E Selection",
+          "L3.5.Z Export"
         ],
         "ui_mode": "list"
       },
@@ -5934,33 +5940,35 @@
         "group": "diagnostic",
         "id": "l4_5",
         "label": "L4.5 Generator Diagnostics",
-        "layer_global_count": 0,
-        "layer_globals": [],
+        "layer_global_count": 1,
+        "layer_globals": [
+          "enabled"
+        ],
         "name": "Generator diagnostics",
         "produces": [
           "l4_5_diagnostic_v1"
         ],
         "sub_layer_axes": {
-          "L4_5_A_in_sample_fit": [
+          "L4.5.A Fit": [
             "fit_view",
             "fit_per_origin"
           ],
-          "L4_5_B_forecast_scale_view": [
+          "L4.5.B Scale": [
             "forecast_scale_view",
             "back_transform_method"
           ],
-          "L4_5_C_window_stability": [
+          "L4.5.C Window stability": [
             "window_view",
             "coef_view_models"
           ],
-          "L4_5_D_tuning_history": [
+          "L4.5.D Tuning": [
             "tuning_view"
           ],
-          "L4_5_E_ensemble_diagnostics": [
+          "L4.5.E Ensemble": [
             "ensemble_view",
             "weights_over_time_method"
           ],
-          "L4_5_Z_export": [
+          "L4.5.Z Export": [
             "diagnostic_format",
             "attach_to_manifest",
             "figure_dpi",
@@ -5969,12 +5977,12 @@
         },
         "sub_layer_count": 6,
         "sub_layers": [
-          "L4_5_A_in_sample_fit",
-          "L4_5_B_forecast_scale_view",
-          "L4_5_C_window_stability",
-          "L4_5_D_tuning_history",
-          "L4_5_E_ensemble_diagnostics",
-          "L4_5_Z_export"
+          "L4.5.A Fit",
+          "L4.5.B Scale",
+          "L4.5.C Window stability",
+          "L4.5.D Tuning",
+          "L4.5.E Ensemble",
+          "L4.5.Z Export"
         ],
         "ui_mode": "list"
       },

@@ -579,6 +579,59 @@ def test_navigator_topology_uses_current_layer_specs_for_l0_l1_l2():
     ]
 
 
+def test_navigator_generated_yaml_validates_all_current_layers(tmp_path: Path):
+    node = shutil.which("node")
+    if node is None:
+        import pytest
+
+        pytest.skip("node is not installed")
+
+    data_path = tmp_path / "navigator_ui_data.json"
+    write_navigator_ui_data(data_path, sample_paths=("examples/recipes/model-benchmark.yaml",))
+    script = r"""
+const fs = require("fs");
+const data = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+let code = fs.readFileSync("docs/_extra/navigator_app/assets/app.js", "utf8");
+code = code.replace(/boot\(\)\.catch\(\(error\) => \{[\s\S]*?\n\}\);/, "");
+global.document = { getElementById: () => ({}), body: {} };
+global.window = { addEventListener: () => {}, location: { search: "" } };
+global.navigator = {};
+global.URLSearchParams = class { get(){ return null; } };
+global.fetch = async () => { throw new Error("fetch disabled"); };
+eval(code + "\nstate.data = data; state.sampleIndex = 0; console.log(canonicalRecipeYaml());");
+"""
+    result = subprocess.run(
+        [node, "-e", script, str(data_path)],
+        check=True,
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+    )
+    generated = yaml.safe_load(result.stdout)
+
+    from macrocast.core.layers import l0, l1, l1_5, l2, l2_5, l3, l3_5, l4, l4_5, l5, l6, l7, l8
+
+    modules = [
+        ("0_meta", "l0", l0),
+        ("1_data", "l1", l1),
+        ("2_preprocessing", "l2", l2),
+        ("3_feature_engineering", "l3", l3),
+        ("4_forecasting_model", "l4", l4),
+        ("5_evaluation", "l5", l5),
+        ("6_statistical_tests", "l6", l6),
+        ("7_interpretation", "l7", l7),
+        ("8_output", "l8", l8),
+        ("1_5_data_summary", "l1_5", l1_5),
+        ("2_5_pre_post_preprocessing", "l2_5", l2_5),
+        ("3_5_feature_diagnostics", "l3_5", l3_5),
+        ("4_5_generator_diagnostics", "l4_5", l4_5),
+    ]
+    for yaml_key, layer_id, module in modules:
+        layer_yaml = yaml.safe_dump({yaml_key: generated[yaml_key]}, sort_keys=False)
+        layer = module.parse_layer_yaml(layer_yaml, layer_id)
+        assert module.validate_layer(layer).has_hard_errors is False, yaml_key
+
+
 def test_navigator_ui_data_exports_runtime_support_metadata():
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
     support = payload["runtime_support"]
