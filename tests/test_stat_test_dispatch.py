@@ -133,6 +133,7 @@ def test_determinism(predictions: pd.DataFrame) -> None:
 
 
 def test_axis_names_contains_eight_entries() -> None:
-    assert len(AXIS_NAMES) == 8
+    assert len(AXIS_NAMES) == 9
     assert "equal_predictive" in AXIS_NAMES
+    assert "equal_predictive_test" in AXIS_NAMES
     assert "test_scope" in AXIS_NAMES

@@ -8,10 +8,9 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type='enum',
     default_policy='fixed',
     entries=(
-        EnumRegistryEntry(id='expanding', description='expanding', status='operational', priority='A'),
+        EnumRegistryEntry(id='full_oos', description='full out-of-sample period', status='operational', priority='A'),
         EnumRegistryEntry(id='rolling', description='rolling', status='operational', priority='A'),
-        EnumRegistryEntry(id='fixed', description='fixed', status='operational', priority='A'),
-        EnumRegistryEntry(id='paper_exact_window', description='paper exact window', status='registry_only', priority='A'),
+        EnumRegistryEntry(id='expanding', description='expanding', status='operational', priority='A'),
     ),
     compatible_with={},
     incompatible_with={},

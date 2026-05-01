@@ -19,6 +19,7 @@ from macrocast.navigator import (
 )
 from macrocast.navigator.cli import main as navigator_main
 from macrocast.navigator.presentation import AXIS_PRESENTATION_SCHEMA_VERSION, AXIS_PRESENTATION_MAP
+from macrocast.registry import get_axis_registry
 
 
 def _recipe(**training_overrides):
@@ -96,6 +97,39 @@ def _skip_static_navigator_app_if_missing() -> None:
         pytest.skip("static navigator app was removed from docs/_extra")
 
 
+def _static_axis_options() -> dict[str, dict[str, list[str]]]:
+    root = Path(__file__).resolve().parents[1]
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    script = r"""
+const fs = require("fs");
+const code = fs.readFileSync("docs/_html_extra/navigator_app/app.js", "utf8");
+const marker = "const AXIS_OPTIONS = ";
+const start = code.indexOf(marker);
+if (start === -1) throw new Error("AXIS_OPTIONS not found");
+const firstBrace = code.indexOf("{", start);
+let depth = 0;
+let end = -1;
+for (let i = firstBrace; i < code.length; i++) {
+  const ch = code[i];
+  if (ch === "{") depth += 1;
+  if (ch === "}") depth -= 1;
+  if (depth === 0) { end = i + 1; break; }
+}
+if (end === -1) throw new Error("AXIS_OPTIONS end not found");
+console.log(JSON.stringify(eval("(" + code.slice(firstBrace, end) + ")")));
+"""
+    result = subprocess.run(
+        [node, "-e", script],
+        check=True,
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    return json.loads(result.stdout)
+
+
 def test_static_navigator_app_exposes_docs_layer_options():
     root = Path(__file__).resolve().parents[1]
     app_js = root / "docs/_html_extra/navigator_app/app.js"
@@ -137,6 +171,31 @@ def test_static_navigator_app_exposes_docs_layer_options():
     }
     lingering = sorted(token for token in removed_tokens if token in source)
     assert lingering == []
+
+
+def test_static_navigator_app_axis_options_match_registry():
+    registry = get_axis_registry()
+    ui_options = _static_axis_options()
+
+    missing_axes = []
+    mismatched_values = []
+    for layer_options in ui_options.values():
+        for axis_name, values in layer_options.items():
+            entry = registry.get(axis_name)
+            if entry is None:
+                missing_axes.append(axis_name)
+                continue
+            if tuple(values) != tuple(entry.allowed_values):
+                mismatched_values.append(
+                    {
+                        "axis": axis_name,
+                        "ui": tuple(values),
+                        "registry": tuple(entry.allowed_values),
+                    }
+                )
+
+    assert sorted(missing_axes) == []
+    assert mismatched_values == []
 
 
 def test_static_navigator_app_hides_conditional_layer1_controls():
@@ -217,12 +276,11 @@ console.log(JSON.stringify({
     midasr_weight_almonp: option("midasr_weight_family", "almonp"),
     model_random_forest: option("model_family", "random_forest"),
     model_quantile_linear: option("model_family", "quantile_linear"),
-    equal_dm: option("equal_predictive", "dm"),
-    equal_dm_hln: option("equal_predictive", "dm_hln"),
+    equal_dm: option("equal_predictive_test", "dm_diebold_mariano"),
+    equal_gw: option("equal_predictive_test", "gw_giacomini_white"),
     density_pit: option("density_interval", "pit_uniformity"),
     direction_binomial: option("direction", "binomial_hit"),
-    compute_parallel_by_model: option("compute_mode", "parallel_by_model"),
-    compute_parallel_by_target: option("compute_mode", "parallel_by_target"),
+    compute_parallel: option("compute_mode", "parallel"),
     frequency_monthly: option("frequency", "monthly"),
     frequency_quarterly: option("frequency", "quarterly"),
     target_single: option("target_structure", "single_target"),
@@ -287,7 +345,7 @@ def test_navigation_tree_populates_downstream_defaults():
     view = build_navigation_view(_recipe())
 
     assert _axis(view, "export_format")["selected"] == "json"
-    assert _axis(view, "saved_objects")["selected"] == "full_bundle"
+    assert _axis(view, "saved_objects")["selected"] == "forecasts"
     assert _axis(view, "regime_definition")["selected"] == "none"
     assert _axis(view, "test_scope")["selected"] == "per_target"
     assert _axis(view, "overlap_handling")["selected"] == "allow_overlap"
@@ -323,7 +381,8 @@ def test_navigator_ui_data_exports_layer0_presentation_contract():
     assert presentation["compute_mode"]["selection_kind"] == "defaulted_choice"
     assert presentation["compute_mode"]["default_value"] == "serial"
     assert presentation["compute_mode"]["values"]["serial"]["label"] == "Serial (Default)"
-    assert presentation["compute_mode"]["values"]["parallel_by_model"]["label"] == "Parallelize Model Variants"
+    assert presentation["compute_mode"]["values"]["parallel"]["label"] == "Parallel"
+    assert "parallel_by_model" not in presentation["compute_mode"]["values"]
     assert "parallel_by_trial" not in presentation["compute_mode"]["values"]
     assert "distributed_cluster" not in presentation["compute_mode"]["values"]
     assert payload["state_engine"]["default_selections"]["compute_mode"] == "serial"
@@ -447,29 +506,11 @@ def test_navigation_compute_layout_respects_study_scope():
     compute_axis = _axis(view, "compute_mode")
 
     assert _option(compute_axis, "serial")["enabled"] is True
-    assert _option(compute_axis, "parallel_by_horizon")["enabled"] is True
-    assert _option(compute_axis, "parallel_by_oos_date")["enabled"] is True
-    assert "compares methods" in _option(compute_axis, "parallel_by_model")["disabled_reason"]
-    assert "multiple targets" in _option(compute_axis, "parallel_by_target")["disabled_reason"]
+    assert _option(compute_axis, "parallel")["enabled"] is True
     assert {option["value"] for option in compute_axis["options"]} == {
         "serial",
-        "parallel_by_model",
-        "parallel_by_horizon",
-        "parallel_by_target",
-        "parallel_by_oos_date",
+        "parallel",
     }
-
-    compare_methods_recipe = _recipe()
-    compare_methods_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "one_target_compare_methods"
-    compare_methods_axis = _axis(build_navigation_view(compare_methods_recipe), "compute_mode")
-    assert _option(compare_methods_axis, "parallel_by_model")["enabled"] is True
-    assert "multiple targets" in _option(compare_methods_axis, "parallel_by_target")["disabled_reason"]
-
-    multi_target_recipe = _recipe()
-    multi_target_recipe["path"]["0_meta"]["fixed_axes"]["study_scope"] = "multiple_targets_one_method"
-    multi_target_axis = _axis(build_navigation_view(multi_target_recipe), "compute_mode")
-    assert "compares methods" in _option(multi_target_axis, "parallel_by_model")["disabled_reason"]
-    assert _option(multi_target_axis, "parallel_by_target")["enabled"] is True
 
 
 def test_navigation_layer1_frequency_respects_dataset():
@@ -582,21 +623,19 @@ def test_navigation_layer6_forecast_object_family_gates(tmp_path: Path):
 def test_navigation_layer6_split_hac_compatibility():
     recipe = _recipe()
     recipe["path"]["6_stat_tests"]["fixed_axes"] = {
-        "equal_predictive": "dm_hln",
-        "dependence_correction": "nw_hac",
-        "overlap_handling": "evaluate_with_hac",
+        "equal_predictive_test": "dm_diebold_mariano",
+        "dependence_correction": "newey_west",
+        "overlap_handling": "nw_with_h_minus_1_lag",
     }
     view = build_navigation_view(recipe)
 
-    equal_axis = _axis(view, "equal_predictive")
+    equal_axis = _axis(view, "equal_predictive_test")
     correction_axis = _axis(view, "dependence_correction")
     overlap_axis = _axis(view, "overlap_handling")
 
-    assert _option(equal_axis, "dm_hln")["enabled"] is True
-    assert _option(correction_axis, "nw_hac")["enabled"] is True
-    assert _option(overlap_axis, "evaluate_with_hac")["enabled"] is True
-    assert _option(equal_axis, "dm")["enabled"] is False
-    assert "HAC-capable" in _option(equal_axis, "dm")["disabled_reason"]
+    assert _option(equal_axis, "dm_diebold_mariano")["enabled"] is True
+    assert _option(correction_axis, "newey_west")["enabled"] is True
+    assert _option(overlap_axis, "nw_with_h_minus_1_lag")["enabled"] is True
 
 
 def test_replication_library_writes_yaml(tmp_path: Path):
@@ -896,25 +935,26 @@ def test_browser_state_engine_matches_python_quantile_model_gate(tmp_path: Path)
 
 def test_browser_state_engine_matches_python_hac_gate(tmp_path: Path):
     recipe = _recipe()
-    hac_recipe = _recipe_with_axis(recipe, "6_stat_tests", "equal_predictive", "dm_hln")
-    hac_recipe = _recipe_with_axis(hac_recipe, "6_stat_tests", "dependence_correction", "nw_hac")
-    hac_recipe = _recipe_with_axis(hac_recipe, "6_stat_tests", "overlap_handling", "evaluate_with_hac")
+    hac_recipe = _recipe_with_axis(recipe, "6_stat_tests", "equal_predictive_test", "dm_diebold_mariano")
+    hac_recipe = _recipe_with_axis(hac_recipe, "6_stat_tests", "dependence_correction", "newey_west")
+    hac_recipe = _recipe_with_axis(hac_recipe, "6_stat_tests", "overlap_handling", "nw_with_h_minus_1_lag")
     python_view = build_navigation_view(hac_recipe)
     js = _js_state_snapshot(
         tmp_path,
         recipe,
         [
-            ("equal_predictive", "dm_hln"),
-            ("dependence_correction", "nw_hac"),
-            ("overlap_handling", "evaluate_with_hac"),
+            ("equal_predictive_test", "dm_diebold_mariano"),
+            ("dependence_correction", "newey_west"),
+            ("overlap_handling", "nw_with_h_minus_1_lag"),
         ],
     )
 
-    assert js["options"]["equal_dm"]["enabled"] == _option(_axis(python_view, "equal_predictive"), "dm")["enabled"]
-    assert js["options"]["equal_dm_hln"]["enabled"] == _option(
-        _axis(python_view, "equal_predictive"), "dm_hln"
+    assert js["options"]["equal_dm"]["enabled"] == _option(
+        _axis(python_view, "equal_predictive_test"), "dm_diebold_mariano"
     )["enabled"]
-    assert "HAC-capable" in js["options"]["equal_dm"]["disabled_reason"]
+    assert js["options"]["equal_gw"]["enabled"] == _option(
+        _axis(python_view, "equal_predictive_test"), "gw_giacomini_white"
+    )["enabled"]
 
 
 def test_browser_state_engine_matches_compute_layout_scope_gate(tmp_path: Path):
@@ -922,18 +962,9 @@ def test_browser_state_engine_matches_compute_layout_scope_gate(tmp_path: Path):
     python_view = build_navigation_view(recipe)
     js = _js_state_snapshot(tmp_path, recipe, [])
 
-    assert js["options"]["compute_parallel_by_model"]["enabled"] == _option(
-        _axis(python_view, "compute_mode"), "parallel_by_model"
+    assert js["options"]["compute_parallel"]["enabled"] == _option(
+        _axis(python_view, "compute_mode"), "parallel"
     )["enabled"]
-    assert js["options"]["compute_parallel_by_target"]["enabled"] == _option(
-        _axis(python_view, "compute_mode"), "parallel_by_target"
-    )["enabled"]
-    assert "compares methods" in js["options"]["compute_parallel_by_model"]["disabled_reason"]
-    assert "multiple targets" in js["options"]["compute_parallel_by_target"]["disabled_reason"]
-
-    compare_js = _js_state_snapshot(tmp_path, recipe, [("study_scope", "one_target_compare_methods")])
-    assert compare_js["options"]["compute_parallel_by_model"]["enabled"] is True
-    assert "multiple targets" in compare_js["options"]["compute_parallel_by_target"]["disabled_reason"]
 
 
 def test_browser_state_engine_matches_layer1_frequency_and_target_gates(tmp_path: Path):

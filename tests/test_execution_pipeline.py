@@ -2256,26 +2256,27 @@ def test_execute_recipe_parquet_export_writes_parquet_artifacts(tmp_path: Path) 
     assert not (run_dir / "tuning_result.json").exists()
 
 
-def test_execute_recipe_rejects_unimplemented_artifact_granularity(tmp_path: Path) -> None:
-    with __import__("pytest").raises(ExecutionError, match="artifact_granularity='per_target'"):
-        execute_recipe(
-            recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
-            preprocess=_preprocess_raw_only(),
-            output_root=tmp_path,
-            local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
-            provenance_payload={
-                "compiler": {
-                    "output_spec": {
-                        "export_format": "json",
-                        "saved_objects": "full_bundle",
-                        "provenance_fields": "full",
-                        "artifact_granularity": "per_target",
-                    },
-                    "importance_spec": {"importance_method": "none"},
-                    "stat_test_spec": {},
-                }
-            },
-        )
+def test_execute_recipe_accepts_per_target_artifact_granularity(tmp_path: Path) -> None:
+    result = execute_recipe(
+        recipe=_recipe(benchmark_config={"minimum_train_size": 5, "rolling_window_size": 5}),
+        preprocess=_preprocess_raw_only(),
+        output_root=tmp_path,
+        local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
+        provenance_payload={
+            "compiler": {
+                "output_spec": {
+                    "export_format": "json",
+                    "saved_objects": "full_bundle",
+                    "provenance_fields": "full",
+                    "artifact_granularity": "per_target",
+                },
+                "importance_spec": {"importance_method": "none"},
+                "stat_test_spec": {},
+            }
+        },
+    )
+    manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
+    assert manifest["artifact_granularity_effective"] == "per_target"
 
 
 
@@ -2392,7 +2393,7 @@ def test_execute_recipe_stage6_stat_test_manifest_preserves_dependence_correctio
         provenance_payload={"compiler": {"stat_test_spec": {"equal_predictive": "dm_modified", "dependence_correction": "nw_hac_auto"}}},
     )
     manifest = json.loads((tmp_path / result.run.artifact_subdir / "manifest.json").read_text())
-    assert manifest["stat_test_spec"]["dependence_correction"] == "nw_hac_auto"
+    assert manifest["stat_test_spec"]["dependence_correction"] == "andrews"
 
 
 def test_execute_recipe_stage6_split_stat_test_contract(tmp_path: Path) -> None:

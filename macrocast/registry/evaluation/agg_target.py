@@ -8,10 +8,8 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type='enum',
     default_policy='fixed',
     entries=(
-        EnumRegistryEntry(id='equal_weight', description='equal weight', status='operational', priority='A'),
-        EnumRegistryEntry(id='scale_adjusted_weighting', description='scale adjusted weight', status='registry_only', priority='B'),
-        EnumRegistryEntry(id='economic_priority_weighting', description='economic priority weight', status='future', priority='B'),
-        EnumRegistryEntry(id='report_separately_only', description='report separately only', status='operational', priority='A'),
+        EnumRegistryEntry(id='pool_targets', description='pool targets', status='operational', priority='A'),
+        EnumRegistryEntry(id='per_target_separate', description='report each target separately', status='operational', priority='A'),
     ),
     compatible_with={},
     incompatible_with={},

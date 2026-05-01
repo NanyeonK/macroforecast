@@ -110,6 +110,7 @@ _TREE_AXES = {
         "agg_time",
         "agg_horizon",
         "agg_target",
+        "agg_state",
         "ranking",
         "report_style",
         "regime_definition",
@@ -121,12 +122,17 @@ _TREE_AXES = {
     ),
     "5_output_provenance": (
         "export_format",
+        "compression",
         "saved_objects",
+        "model_artifacts_format",
         "provenance_fields",
+        "manifest_format",
         "artifact_granularity",
+        "naming_convention",
     ),
     "6_stat_tests": (
-        "equal_predictive",
+        "equal_predictive_test",
+        "model_pair_strategy",
         "nested",
         "cpa_instability",
         "multiple_model",
@@ -265,29 +271,35 @@ _DEFAULT_SELECTIONS = {
     "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
     "exogenous_x_path_policy": "unavailable",
     "recursive_x_model_family": "none",
-    "primary_metric": "msfe",
-    "point_metrics": "msfe",
-    "relative_metrics": "relative_msfe",
-    "direction_metrics": "directional_accuracy",
-    "density_metrics": "pinball_loss",
-    "benchmark_window": "expanding",
-    "benchmark_scope": "same_for_all",
-    "agg_time": "full_out_of_sample_average",
-    "agg_horizon": "equal_weight",
-    "agg_target": "report_separately_only",
-    "ranking": "mean_metric_rank",
-    "report_style": "tidy_dataframe",
+    "primary_metric": "mse",
+    "point_metrics": "mse",
+    "relative_metrics": "relative_mse",
+    "direction_metrics": "success_ratio",
+    "density_metrics": "log_score",
+    "benchmark_window": "full_oos",
+    "benchmark_scope": "all_targets_horizons",
+    "agg_time": "mean",
+    "agg_horizon": "per_horizon_separate",
+    "agg_target": "per_target_separate",
+    "agg_state": "pool_states",
+    "ranking": "by_primary_metric",
+    "report_style": "single_table",
     "regime_definition": "none",
-    "regime_use": "evaluation_only",
+    "regime_use": "pooled",
     "regime_metrics": "all_main_metrics_by_regime",
-    "decomposition_target": "preprocessing_effect",
-    "decomposition_order": "marginal_effect_only",
-    "oos_period": "all_oos_data",
+    "decomposition_target": "none",
+    "decomposition_order": "marginal",
+    "oos_period": "full_oos",
     "export_format": "json",
-    "saved_objects": "full_bundle",
-    "provenance_fields": "full",
-    "artifact_granularity": "aggregated",
-    "equal_predictive": "none",
+    "compression": "none",
+    "saved_objects": "forecasts",
+    "model_artifacts_format": "pickle",
+    "provenance_fields": "recipe_yaml_full",
+    "manifest_format": "json",
+    "artifact_granularity": "per_cell",
+    "naming_convention": "descriptive",
+    "equal_predictive_test": "none",
+    "model_pair_strategy": "vs_benchmark_only",
     "nested": "none",
     "cpa_instability": "none",
     "multiple_model": "none",
@@ -481,7 +493,7 @@ _IMPORTANCE_SPLIT_AXES = frozenset(IMPORTANCE_AXIS_NAMES)
 _IMPORTANCE_META_AXES = frozenset(IMPORTANCE_META_AXIS_NAMES)
 _LOCAL_IMPORTANCE_METHODS = frozenset({"kernel_shap", "lime", "feature_ablation"})
 _STAT_TEST_SPLIT_AXES = (
-    "equal_predictive",
+    "equal_predictive_test",
     "nested",
     "cpa_instability",
     "multiple_model",
@@ -647,11 +659,6 @@ def _compatibility_reason(axis_name: str, value: str, selected: Mapping[str, Any
     custom_only = custom_source_policy == "custom_panel_only"
     has_fred_md_qd = _selection_has_fred_md_qd(selected)
 
-    if axis_name == "compute_mode":
-        if value == "parallel_by_model" and study_scope in {"one_target_one_method", "multiple_targets_one_method"}:
-            return "parallel_by_model is active only when Study Scope compares methods"
-        if value == "parallel_by_target" and study_scope in {"one_target_one_method", "one_target_compare_methods"}:
-            return "parallel_by_target is active only when Study Scope has multiple targets"
     if axis_name == "frequency":
         implied_frequency = _dataset_implied_frequency(dataset)
         if custom_source_policy != "custom_panel_only" and implied_frequency is not None and value != implied_frequency:

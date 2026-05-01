@@ -7550,20 +7550,36 @@ def _write_jsonl(path: Path, payload: Sequence[Mapping[str, object]]) -> None:
 
 def _output_spec(provenance_payload: dict | None) -> dict[str, object]:
     compiler = (provenance_payload or {}).get('compiler', {}) if provenance_payload else {}
-    return dict(compiler.get('output_spec', {'export_format': 'json', 'saved_objects': 'full_bundle', 'provenance_fields': 'full', 'artifact_granularity': 'aggregated'}))
+    return dict(compiler.get('output_spec', {'export_format': 'json', 'saved_objects': 'forecasts', 'provenance_fields': 'recipe_yaml_full', 'artifact_granularity': 'per_cell'}))
 
 
 _OUTPUT_ARTIFACT_CONTRACT_VERSION = "layer5_output_artifact_manifest_v1"
 _STAT_TEST_CONTRACT_VERSION = "layer6_stat_test_split_v1"
-_SUPPORTED_SAVED_OBJECTS = {"predictions_only", "predictions_and_metrics", "full_bundle"}
-_SUPPORTED_ARTIFACT_GRANULARITY = {"aggregated"}
+_SUPPORTED_SAVED_OBJECTS = {
+    "predictions_only",
+    "predictions_and_metrics",
+    "full_bundle",
+    "forecasts",
+    "forecast_intervals",
+    "metrics",
+    "ranking",
+    "decomposition",
+    "regime_metrics",
+    "state_metrics",
+    "model_artifacts",
+    "combination_weights",
+    "feature_metadata",
+    "clean_panel",
+    "raw_panel",
+}
+_SUPPORTED_ARTIFACT_GRANULARITY = {"aggregated", "per_cell", "per_target", "per_horizon", "per_target_horizon", "flat"}
 
 
 def _validate_output_spec(output_spec: Mapping[str, object]) -> tuple[str, str, str, str]:
     export_format = str(output_spec.get("export_format", "json"))
-    saved_objects = str(output_spec.get("saved_objects", "full_bundle"))
-    provenance_fields = str(output_spec.get("provenance_fields", "full"))
-    artifact_granularity = str(output_spec.get("artifact_granularity", "aggregated"))
+    saved_objects = str(output_spec.get("saved_objects", "forecasts"))
+    provenance_fields = str(output_spec.get("provenance_fields", "recipe_yaml_full"))
+    artifact_granularity = str(output_spec.get("artifact_granularity", "per_cell"))
     if saved_objects not in _SUPPORTED_SAVED_OBJECTS:
         raise ExecutionError(
             f"saved_objects={saved_objects!r} is not operational in the current Layer 5 runtime; "
@@ -10220,9 +10236,9 @@ def execute_recipe(
     compute_mode_spec = _compute_mode_spec(provenance_payload)
     output_spec = _output_spec(provenance_payload)
     export_format, saved_objects, provenance_fields, artifact_granularity = _validate_output_spec(output_spec)
-    write_predictions = saved_objects in {"predictions_only", "predictions_and_metrics", "full_bundle"}
-    write_metrics = saved_objects in {"predictions_and_metrics", "full_bundle"}
-    write_full_bundle = saved_objects == "full_bundle"
+    write_predictions = saved_objects in {"predictions_only", "predictions_and_metrics", "full_bundle", "forecasts"}
+    write_metrics = saved_objects in {"predictions_and_metrics", "full_bundle", "forecasts", "metrics", "ranking"}
+    write_full_bundle = saved_objects in {"full_bundle", "forecasts"}
     artifact_records: list[dict[str, object]] = []
 
     def _record_artifact(filename: str, *, artifact_type: str, layer: str, file_format: str | None = None) -> None:

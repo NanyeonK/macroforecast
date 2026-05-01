@@ -9,24 +9,9 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type='enum',
     default_policy='fixed',
     entries=(
-        EnumRegistryEntry(
-            id='all_oos_data',
-            description='all oos data (no filter, default)',
-            status='operational',
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='recession_only_oos',
-            description='recession only oos',
-            status='operational',
-            priority='A',
-        ),
-        EnumRegistryEntry(
-            id='expansion_only_oos',
-            description='expansion only oos',
-            status='operational',
-            priority='A',
-        ),
+        EnumRegistryEntry(id='full_oos', description='full out-of-sample period', status='operational', priority='A'),
+        EnumRegistryEntry(id='fixed_dates', description='fixed OOS start/end dates', status='operational', priority='A'),
+        EnumRegistryEntry(id='multiple_subperiods', description='multiple named OOS subperiods', status='operational', priority='A'),
     ),
     compatible_with={},
     incompatible_with={},

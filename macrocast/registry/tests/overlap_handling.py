@@ -9,18 +9,9 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type="enum",
     default_policy="fixed",
     entries=(
-        EnumRegistryEntry(
-            id="allow_overlap",
-            description="Allow overlapping forecast-error rows without forcing HAC correction",
-            status="operational",
-            priority="A",
-        ),
-        EnumRegistryEntry(
-            id="evaluate_with_hac",
-            description="Require HAC-capable Layer 6 tests for overlapping long-horizon errors",
-            status="operational",
-            priority="A",
-        ),
+        EnumRegistryEntry(id="nw_with_h_minus_1_lag", description="Newey-West with h-1 lags for overlapping forecast errors", status="operational", priority="A"),
+        EnumRegistryEntry(id="west_1996_adjustment", description="West (1996) overlap adjustment", status="operational", priority="A"),
+        EnumRegistryEntry(id="none", description="No overlap adjustment", status="operational", priority="A"),
     ),
     compatible_with={},
     incompatible_with={},

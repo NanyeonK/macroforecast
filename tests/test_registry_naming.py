@@ -13,13 +13,16 @@ from macrocast.registry.naming import (
 
 def test_naming_alias_maps_are_closed() -> None:
     assert AXIS_NAME_ALIASES == {}
-    assert AXIS_VALUE_ALIASES == {}
+    assert AXIS_VALUE_ALIASES[("relative_metrics", "relative_msfe")] == "relative_mse"
+    assert AXIS_VALUE_ALIASES[("primary_metric", "msfe")] == "mse"
+    assert AXIS_VALUE_ALIASES[("oos_period", "all_oos_data")] == "full_oos"
 
 
 def test_canonical_axis_helpers_are_identity_only() -> None:
     assert canonical_axis_name("information_set_type") == "information_set_type"
     assert canonical_axis_name("info_set") == "info_set"
-    assert canonical_axis_value("relative_metrics", "relative_msfe") == "relative_msfe"
+    assert canonical_axis_name("equal_predictive") == "equal_predictive"
+    assert canonical_axis_value("relative_metrics", "relative_msfe") == "relative_mse"
     assert canonical_axis_value("relative_metrics", "relative_MSFE") == "relative_MSFE"
 
 
@@ -35,10 +38,10 @@ def test_canonicalize_recipe_path_preserves_canonical_ids() -> None:
 
     canonical = canonicalize_recipe_path(recipe)
 
-    assert canonical["path"]["4_evaluation"]["fixed_axes"]["relative_metrics"] == "relative_msfe"
+    assert canonical["path"]["4_evaluation"]["fixed_axes"]["relative_metrics"] == "relative_mse"
     assert canonical["path"]["4_evaluation"]["sweep_axes"]["agg_time"] == [
         "none",
-        "full_out_of_sample_average",
+        "mean",
     ]
 
 
@@ -76,7 +79,7 @@ def test_canonical_recipe_compiles_to_canonical_ids() -> None:
     assert result.manifest["data_task_spec"]["target_structure"] == "single_target"
     assert result.manifest["model_spec"]["model_family"] == "random_forest"
     assert result.manifest["benchmark_spec"]["benchmark_family"] == "autoregressive_bic"
-    assert result.manifest["evaluation_spec"]["relative_metrics"] == "relative_msfe"
+    assert result.manifest["evaluation_spec"]["relative_metrics"] == "relative_mse"
     assert result.manifest["output_spec"]["export_format"] == "json_csv"
     assert result.manifest["stat_test_spec"]["density_interval"] == "pit_uniformity"
     assert result.manifest["stat_test_spec"]["residual_diagnostics"] == "full_residual_diagnostics"

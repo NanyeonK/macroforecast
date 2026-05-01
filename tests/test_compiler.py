@@ -829,7 +829,8 @@ def test_axis_governance_table_includes_reproducibility_mode() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["reproducibility_mode"]["current_status"]["seeded_reproducible"] == "operational"
-    assert by_name["reproducibility_mode"]["current_status"]["strict_reproducible"] == "operational"
+    assert by_name["reproducibility_mode"]["current_status"]["exploratory"] == "operational"
+    assert "strict_reproducible" not in by_name["reproducibility_mode"]["current_status"]
 
 
 def test_compile_seeded_reproducible_requires_random_seed() -> None:
@@ -926,7 +927,7 @@ def test_axis_governance_table_includes_failure_policy() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["failure_policy"]["current_status"]["fail_fast"] == "operational"
-    assert by_name["failure_policy"]["current_status"]["skip_failed_model"] == "operational"
+    assert by_name["failure_policy"]["current_status"]["continue_on_failure"] == "operational"
 
 
 def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
@@ -958,12 +959,12 @@ def test_compile_failure_policy_spec_preserved_in_manifest() -> None:
     assert compile_result.manifest["tree_context"]["failure_policy"] == "fail_fast"
 
 
-def test_compile_warn_only_is_now_executable() -> None:
-    """warn_only flipped to operational in the 0.4 cleanup — compile should pass as executable."""
+def test_compile_continue_on_failure_is_executable() -> None:
+    """continue_on_failure is the public failure policy for recoverable failures."""
     recipe = {
         "recipe_id": "warn-only-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "failure_policy": "warn_only"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "failure_policy": "continue_on_failure"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -992,15 +993,15 @@ def test_compile_warn_only_is_now_executable() -> None:
 def test_axis_governance_table_marks_skip_failed_model_operational() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
-    assert by_name["failure_policy"]["current_status"]["skip_failed_model"] == "operational"
-    assert by_name["failure_policy"]["current_status"]["save_partial_results"] == "operational"
+    assert by_name["failure_policy"]["current_status"]["continue_on_failure"] == "operational"
+    assert "skip_failed_model" not in by_name["failure_policy"]["current_status"]
 
 
-def test_compile_skip_failed_model_recipe_is_executable() -> None:
+def test_compile_continue_on_failure_recipe_is_executable() -> None:
     recipe = {
         "recipe_id": "skip-failed-model-executable",
         "path": {
-            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "failure_policy": "skip_failed_model"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "failure_policy": "continue_on_failure"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1022,7 +1023,7 @@ def test_compile_skip_failed_model_recipe_is_executable() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable"
-    assert compile_result.manifest["failure_policy_spec"]["failure_policy"] == "skip_failed_model"
+    assert compile_result.manifest["failure_policy_spec"]["failure_policy"] == "continue_on_failure"
 
 
 
@@ -1030,7 +1031,8 @@ def test_axis_governance_table_includes_compute_mode() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
     assert by_name["compute_mode"]["current_status"]["serial"] == "operational"
-    assert by_name["compute_mode"]["current_status"]["parallel_by_model"] == "operational"
+    assert by_name["compute_mode"]["current_status"]["parallel"] == "operational"
+    assert "parallel_by_model" not in by_name["compute_mode"]["current_status"]
     assert "parallel_by_trial" not in by_name["compute_mode"]["current_status"]
     assert "distributed_cluster" not in by_name["compute_mode"]["current_status"]
 
@@ -1064,11 +1066,11 @@ def test_compile_compute_mode_spec_defaults_to_serial() -> None:
     assert compile_result.manifest["tree_context"]["compute_mode"] == "serial"
 
 
-def test_compile_parallel_by_model_is_executable() -> None:
+def test_compile_parallel_is_executable() -> None:
     recipe = {
         "recipe_id": "parallel-by-model-provenance",
         "path": {
-            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "compute_mode": "parallel_by_model"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "compute_mode": "parallel"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1090,7 +1092,7 @@ def test_compile_parallel_by_model_is_executable() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable"
-    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "parallel_by_model"
+    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "parallel"
     assert compile_result.manifest["warnings"] == []
 
 
@@ -1098,15 +1100,14 @@ def test_compile_parallel_by_model_is_executable() -> None:
 def test_axis_governance_table_marks_parallel_compute_modes_operational() -> None:
     table = axis_governance_table()
     by_name = {row["axis_name"]: row for row in table}
-    assert by_name["compute_mode"]["current_status"]["parallel_by_model"] == "operational"
-    assert by_name["compute_mode"]["current_status"]["parallel_by_horizon"] == "operational"
+    assert by_name["compute_mode"]["current_status"]["parallel"] == "operational"
 
 
-def test_compile_parallel_by_model_recipe_is_executable() -> None:
+def test_compile_parallel_recipe_is_executable() -> None:
     recipe = {
         "recipe_id": "parallel-by-model-executable",
         "path": {
-            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "compute_mode": "parallel_by_model"}},
+            "0_meta": {"fixed_axes": {"study_scope": "one_target_one_method", "compute_mode": "parallel"}},
             "1_data_task": {
                 "fixed_axes": {"dataset": "fred_md", "information_set_type": "final_revised_data", "target_structure": "single_target"},
                 "leaf_config": {"target": "INDPRO", "horizons": [1, 3]},
@@ -1128,7 +1129,7 @@ def test_compile_parallel_by_model_recipe_is_executable() -> None:
     }
     compile_result = compile_recipe_dict(recipe)
     assert compile_result.compiled.execution_status == "executable"
-    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "parallel_by_model"
+    assert compile_result.manifest["compute_mode_spec"]["compute_mode"] == "parallel"
 
 
 
@@ -3292,8 +3293,8 @@ def test_axis_governance_table_marks_stage4_eval_axes_operational() -> None:
     assert by_name["primary_metric"]["current_status"]["rmse"] == "operational"
     assert by_name["primary_metric"]["current_status"]["mae"] == "operational"
     assert by_name["primary_metric"]["current_status"]["mape"] == "operational"
-    assert by_name["relative_metrics"]["current_status"]["relative_rmse"] == "operational"
-    assert by_name["direction_metrics"]["current_status"]["directional_accuracy"] == "operational"
+    assert by_name["relative_metrics"]["current_status"]["relative_mse"] == "operational"
+    assert by_name["direction_metrics"]["current_status"]["success_ratio"] == "operational"
     assert by_name["regime_definition"]["current_status"]["nber_recession"] == "operational"
     assert by_name["regime_definition"]["current_status"]["user_defined_regime"] == "operational"
 
@@ -3301,11 +3302,11 @@ def test_axis_governance_table_marks_stage4_eval_axes_operational() -> None:
 def test_compiled_manifest_records_stage4_evaluation_defaults() -> None:
     compile_result = compile_recipe_yaml("examples/recipes/model-benchmark.yaml")
     spec = compile_result.manifest["evaluation_spec"]
-    assert spec["primary_metric"] == "msfe"
-    assert spec["relative_metrics"] == "relative_msfe"
-    assert spec["direction_metrics"] == "directional_accuracy"
+    assert spec["primary_metric"] == "mse"
+    assert spec["relative_metrics"] == "relative_mse"
+    assert spec["direction_metrics"] == "success_ratio"
     assert spec["regime_definition"] == "none"
-    assert spec["oos_period"] == "all_oos_data"
+    assert spec["oos_period"] == "full_oos"
 
 
 def test_compile_primary_metric_rmse_recipe_is_executable() -> None:
@@ -3341,9 +3342,9 @@ def test_compile_manifest_includes_output_spec_defaults() -> None:
     output_spec = compile_result.manifest["output_spec"]
     assert output_spec == {
         "export_format": "json",
-        "saved_objects": "full_bundle",
-        "provenance_fields": "full",
-        "artifact_granularity": "aggregated",
+        "saved_objects": "forecasts",
+        "provenance_fields": "recipe_yaml_full",
+        "artifact_granularity": "per_cell",
     }
 
 
@@ -3353,6 +3354,7 @@ def test_compile_extended_stage6_stat_test_manifest() -> None:
     stat_test_spec = compile_result.manifest["stat_test_spec"]
     assert stat_test_spec == {
         "equal_predictive": "none",
+        "equal_predictive_test": "none",
         "nested": "none",
         "cpa_instability": "none",
         "multiple_model": "none",
@@ -3360,8 +3362,8 @@ def test_compile_extended_stage6_stat_test_manifest() -> None:
         "direction": "none",
         "residual_diagnostics": "none",
         "test_scope": "per_target",
-        "dependence_correction": "none",
-        "overlap_handling": "allow_overlap",
+        "dependence_correction": "newey_west",
+        "overlap_handling": "nw_with_h_minus_1_lag",
     }
 
 
@@ -3394,9 +3396,9 @@ def test_compile_stage6_split_stat_test_manifest() -> None:
             "4_evaluation": {"fixed_axes": {"primary_metric": "msfe"}},
             "5_output_provenance": {"leaf_config": {"benchmark_config": {"minimum_train_size": 5}}},
             "6_stat_tests": {"fixed_axes": {
-                "equal_predictive": "dm_hln",
-                "dependence_correction": "nw_hac",
-                "overlap_handling": "evaluate_with_hac",
+                "equal_predictive_test": "dm_diebold_mariano",
+                "dependence_correction": "newey_west",
+                "overlap_handling": "nw_with_h_minus_1_lag",
                 "test_scope": "per_target",
             }},
             "7_importance": {"fixed_axes": {"importance_method": "none"}},
@@ -3406,10 +3408,10 @@ def test_compile_stage6_split_stat_test_manifest() -> None:
     stat_test_spec = compile_result.manifest["stat_test_spec"]
     assert compile_result.compiled.execution_status == "executable"
     assert "stat_test" not in stat_test_spec
-    assert stat_test_spec["equal_predictive"] == "dm_hln"
-    assert stat_test_spec["dependence_correction"] == "nw_hac"
-    assert stat_test_spec["overlap_handling"] == "evaluate_with_hac"
-    assert compile_result.manifest["data_task_spec"]["overlap_handling"] == "evaluate_with_hac"
+    assert stat_test_spec["equal_predictive_test"] == "dm_diebold_mariano"
+    assert stat_test_spec["dependence_correction"] == "newey_west"
+    assert stat_test_spec["overlap_handling"] == "nw_with_h_minus_1_lag"
+    assert compile_result.manifest["data_task_spec"]["overlap_handling"] == "nw_with_h_minus_1_lag"
 
 
 

@@ -79,7 +79,7 @@ When sources disagree, apply this order:
 
 ## Current Audit Findings
 
-The current codebase still has migration gaps:
+Current alignment status:
 
 - Layer 1 runtime validation now accepts the registry-backed public axes used
   by docs/UI, including `information_set_type`, `release_lag_rule`,
@@ -88,13 +88,31 @@ The current codebase still has migration gaps:
 - Layer 1 uses registry value `multi_target` in docs/UI and public examples.
   Older design notes may say `multi_series_target`; runtime validation accepts
   it as a compatibility alias and normalizes to `multi_target`.
+- Navigator UI exposed option lists are tested against the registry. Shared
+  UI/registry/core option lists currently have zero value mismatches.
+- L0 public values are `compute_mode={serial, parallel}`,
+  `failure_policy={fail_fast, continue_on_failure}`, and
+  `reproducibility_mode={seeded_reproducible, exploratory}`. Legacy values such
+  as `parallel_by_model`, `warn_only`, and `strict_reproducible` are
+  compatibility inputs only.
+- Layer 5, Layer 6, and Layer 8 public registry options have been aligned with
+  the Navigator defaults for evaluation metrics, statistical-test controls, and
+  output/provenance artifact selections.
+- Legacy recipe values such as `msfe`, `relative_msfe`, `oos_r2`,
+  `all_oos_data`, `nw_hac`, and `dm_hln` are canonicalized through
+  `macrocast/registry/naming.py`; generated UI and new recipes should use
+  `mse`, `relative_mse`, `r2_oos`, `full_oos`, `newey_west`, and
+  `dm_diebold_mariano`.
+
+Remaining migration gaps:
+
 - Layer 2 docs/UI expose canonical representation axes such as
   `horizon_target_construction`, `target_transform`, `x_missing_policy`,
   `feature_block_combination`, and `feature_builder`, while
   `macrocast/core/layers/l2.py` still validates an older cleaning-only axis
   set.
-- Layer 5 docs/UI can emit context-inactive axes unless generation prunes them
-  against recipe context.
+- Full docs pages do not yet enumerate every registry value automatically, so
+  docs coverage remains a separate generation task.
 
 These are implementation gaps. The registry plus current L0-L8 public layer
 contract remains the source of truth.

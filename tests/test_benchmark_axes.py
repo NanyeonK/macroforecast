@@ -47,13 +47,11 @@ def test_benchmark_family_operational_set():
 
 def test_benchmark_window_operational_set():
     statuses = _by_id(BW)
-    for name in ("expanding", "rolling", "fixed"):
+    for name in ("full_oos", "rolling", "expanding"):
         assert statuses.get(name) == "operational", f"{name} got {statuses.get(name)}"
-    assert statuses.get("paper_exact_window") in ("registry_only", "future")
 
 
 def test_benchmark_scope_operational_set():
     statuses = _by_id(BS)
-    for name in ("same_for_all", "target_specific", "horizon_specific"):
+    for name in ("all_targets_horizons", "per_target_horizon"):
         assert statuses.get(name) == "operational", f"{name} got {statuses.get(name)}"
-    assert statuses.get("target_horizon_specific") in ("registry_only", "future")

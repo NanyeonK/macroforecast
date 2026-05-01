@@ -1001,7 +1001,7 @@ L1_LAYER_SPEC = LayerImplementationSpec(
             ),
             "fred_sd_frequency_policy": AxisSpec("fred_sd_frequency_policy", _options(("report_only", "allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency")), "report_only", sweepable=False),
         },
-        "l1_b": {"target_structure": AxisSpec("target_structure", _options(("single_target", "multi_series_target", "multi_target")), "single_target", sweepable=False)},
+        "l1_b": {"target_structure": AxisSpec("target_structure", _options(("single_target", "multi_target")), "single_target", sweepable=False)},
         "l1_c": {
             "variable_universe": AxisSpec(
                 "variable_universe",

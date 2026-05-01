@@ -28,7 +28,7 @@ OPERATIONAL_VALUES = {
         "none", "mincer_zarnowitz", "ljung_box", "arch_lm", "bias_test", "full_residual_diagnostics",
         "autocorrelation_of_errors", "serial_dependence_loss_diff",
     },
-    "test_scope": {"per_target"},
+    "test_scope": {"per_target_horizon", "per_target", "per_horizon", "pooled"},
 }
 
 PLANNED_PRESENT = {
@@ -74,10 +74,7 @@ def test_axis_has_expected_planned_values(axis_name: str) -> None:
 
 def test_scope_runtime_status_matches_current_orchestration() -> None:
     entry = get_axis_registry_entry("test_scope")
+    assert entry.current_status["per_target_horizon"] == "operational"
     assert entry.current_status["per_target"] == "operational"
-    assert entry.current_status["per_horizon"] == "registry_only"
-    assert entry.current_status["per_model_pair"] == "registry_only"
-    assert entry.current_status["benchmark_vs_all"] == "registry_only"
-    assert entry.current_status["full_grid_pairwise"] == "future"
-    assert entry.current_status["regime_specific_tests"] == "future"
-    assert entry.current_status["subsample_tests"] == "future"
+    assert entry.current_status["per_horizon"] == "operational"
+    assert entry.current_status["pooled"] == "operational"

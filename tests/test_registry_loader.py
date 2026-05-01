@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 147
+EXPECTED_AXIS_COUNT = 154
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -124,9 +124,7 @@ def test_registry_loader_discovers_reproducibility_mode_meta_axis() -> None:
     assert "reproducibility_mode" in registry
     entry = get_axis_registry_entry("reproducibility_mode")
     assert entry.allowed_values == (
-        "strict_reproducible",
         "seeded_reproducible",
-        "best_effort",
         "exploratory",
     )
 
@@ -139,10 +137,7 @@ def test_registry_loader_discovers_failure_policy_meta_axis() -> None:
     entry = get_axis_registry_entry("failure_policy")
     assert entry.allowed_values == (
         "fail_fast",
-        "skip_failed_cell",
-        "skip_failed_model",
-        "save_partial_results",
-        "warn_only",
+        "continue_on_failure",
     )
     assert set(entry.current_status.values()) == {"operational"}
 
@@ -155,10 +150,7 @@ def test_registry_loader_discovers_compute_mode_meta_axis() -> None:
     entry = get_axis_registry_entry("compute_mode")
     assert entry.allowed_values == (
         "serial",
-        "parallel_by_model",
-        "parallel_by_horizon",
-        "parallel_by_target",
-        "parallel_by_oos_date",
+        "parallel",
     )
 
 
@@ -517,20 +509,29 @@ def test_registry_loader_expands_stage3_model_family_axis() -> None:
 
 def test_registry_loader_discovers_stage5_output_axes() -> None:
     registry = get_axis_registry()
-    expected = {"saved_objects", "provenance_fields", "export_format", "artifact_granularity"}
+    expected = {
+        "saved_objects",
+        "provenance_fields",
+        "export_format",
+        "artifact_granularity",
+        "compression",
+        "model_artifacts_format",
+        "manifest_format",
+        "naming_convention",
+    }
     assert expected.issubset(registry)
     assert registry["saved_objects"].layer == "5_output_provenance"
-    assert registry["saved_objects"].current_status["full_bundle"] == "operational"
-    assert registry["saved_objects"].current_status["predictions_and_metrics"] == "operational"
-    assert registry["saved_objects"].current_status["predictions_only"] == "operational"
-    assert registry["saved_objects"].current_status["none"] == "registry_only"
-    assert registry["saved_objects"].current_status["models_only"] == "future"
-    assert registry["saved_objects"].current_status["data_only"] == "future"
-    assert registry["artifact_granularity"].current_status["aggregated"] == "operational"
-    assert registry["artifact_granularity"].current_status["per_target"] == "registry_only"
-    assert registry["artifact_granularity"].current_status["per_target_horizon"] == "future"
-    assert registry["artifact_granularity"].current_status["hierarchical"] == "future"
+    assert registry["saved_objects"].current_status["forecasts"] == "operational"
+    assert registry["saved_objects"].current_status["metrics"] == "operational"
+    assert registry["saved_objects"].current_status["ranking"] == "operational"
+    assert registry["saved_objects"].current_status["model_artifacts"] == "operational"
+    assert registry["artifact_granularity"].current_status["per_cell"] == "operational"
+    assert registry["artifact_granularity"].current_status["per_target"] == "operational"
+    assert registry["artifact_granularity"].current_status["per_horizon"] == "operational"
+    assert registry["artifact_granularity"].current_status["per_target_horizon"] == "operational"
     assert registry["export_format"].current_status["parquet"] == "operational"
+    assert registry["compression"].current_status["none"] == "operational"
+    assert registry["manifest_format"].current_status["json"] == "operational"
 
 
 
@@ -540,10 +541,13 @@ def test_registry_loader_discovers_stage6_test_axes() -> None:
     assert registry["multiple_model"].current_status["mcs"] == "operational"
     assert registry["multiple_model"].current_status["spa"] == "operational"
     assert registry["residual_diagnostics"].current_status["full_residual_diagnostics"] == "operational"
-    assert registry["dependence_correction"].current_status["block_bootstrap"] == "operational"
+    assert registry["dependence_correction"].current_status["newey_west"] == "operational"
+    assert registry["dependence_correction"].current_status["andrews"] == "operational"
     assert registry["test_scope"].current_status["per_target"] == "operational"
-    assert registry["test_scope"].current_status["per_horizon"] == "registry_only"
-    assert registry["test_scope"].current_status["full_grid_pairwise"] == "future"
+    assert registry["test_scope"].current_status["per_horizon"] == "operational"
+    assert registry["test_scope"].current_status["pooled"] == "operational"
+    assert registry["equal_predictive_test"].current_status["dm_diebold_mariano"] == "operational"
+    assert registry["model_pair_strategy"].current_status["vs_benchmark_only"] == "operational"
 
 
 

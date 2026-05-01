@@ -177,7 +177,7 @@ def test_forecast_default_runs_and_records_default_profile(tmp_path: Path) -> No
     assert manifest["compiler"]["leaf_config"]["default_profile"] == DEFAULT_PROFILE_NAME
     assert manifest["model_spec"]["model_family"] == "ar"
     assert manifest["benchmark_name"] == "zero_change"
-    assert manifest["evaluation_spec"]["primary_metric"] == "msfe"
+    assert manifest["evaluation_spec"]["primary_metric"] == "mse"
     assert manifest["data_task_spec"]["sample_start_date"] == FIXTURE_START
     assert manifest["data_task_spec"]["sample_end_date"] == FIXTURE_END
     assert manifest["data_task_spec"]["official_transform_policy"] == "apply_official_tcode"

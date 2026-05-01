@@ -16,8 +16,8 @@ from macrocast.registry.build import _discover_axis_definitions
 PROMOTED: tuple[tuple[str, str], ...] = (
     # 0_meta
     ("axis_type", "nested_sweep"),
-    ("reproducibility_mode", "strict_reproducible"),
-    ("failure_policy", "skip_failed_cell"),
+    ("reproducibility_mode", "seeded_reproducible"),
+    ("failure_policy", "continue_on_failure"),
     # 1_data_task metadata
     ("information_set_type", "pseudo_oos_on_revised_data"),
     # 3_training
@@ -34,16 +34,14 @@ PROMOTED: tuple[tuple[str, str], ...] = (
     ("lookback", "horizon_specific_lookback"),
     ("horizon_modelization", "recursive_one_step_model"),
     # 4_evaluation
-    ("agg_horizon", "report_separately_only"),
-    ("agg_target", "equal_weight"),
-    ("decomposition_order", "marginal_effect_only"),
+    ("agg_horizon", "per_horizon_separate"),
+    ("agg_target", "pool_targets"),
+    ("decomposition_order", "marginal"),
     ("report_style", "latex_table"),
-    ("report_style", "markdown_table"),
-    ("ranking", "mean_metric_rank"),
-    ("ranking", "median_metric_rank"),
-    ("ranking", "win_count"),
-    ("ranking", "benchmark_beat_frequency"),
-    ("ranking", "mcs_inclusion_priority"),
+    ("ranking", "by_primary_metric"),
+    ("ranking", "by_relative_metric"),
+    ("ranking", "by_average_rank"),
+    ("ranking", "mcs_inclusion"),
 )
 
 

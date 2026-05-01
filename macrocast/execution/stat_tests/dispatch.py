@@ -19,6 +19,7 @@ from macrocast.registry.naming import canonical_axis_value
 
 STAT_TEST_AXIS_NAMES: tuple[str, ...] = (
     "equal_predictive",
+    "equal_predictive_test",
     "nested",
     "cpa_instability",
     "multiple_model",
@@ -35,6 +36,7 @@ AXIS_NAMES: tuple[str, ...] = STAT_TEST_AXIS_NAMES + META_AXIS_NAMES
 
 DEFAULT_STAT_TEST_SPEC: dict[str, str] = {
     "equal_predictive": "none",
+    "equal_predictive_test": "none",
     "nested": "none",
     "cpa_instability": "none",
     "multiple_model": "none",
@@ -42,8 +44,8 @@ DEFAULT_STAT_TEST_SPEC: dict[str, str] = {
     "direction": "none",
     "residual_diagnostics": "none",
     "test_scope": "per_target",
-    "dependence_correction": "none",
-    "overlap_handling": "allow_overlap",
+    "dependence_correction": "newey_west",
+    "overlap_handling": "nw_with_h_minus_1_lag",
 }
 
 
@@ -54,7 +56,10 @@ def canonicalize_stat_test_spec(raw_spec: dict[str, Any] | None) -> dict[str, st
     if raw_spec:
         for key in spec:
             if key in raw_spec:
-                spec[key] = canonical_axis_value(key, str(raw_spec[key]))
+                if key == "equal_predictive":
+                    spec[key] = str(raw_spec[key])
+                else:
+                    spec[key] = canonical_axis_value(key, str(raw_spec[key]))
     return spec
 
 
@@ -114,25 +119,35 @@ def _build_handlers(
         _compute_wilcoxon_signed_rank,
     )
 
-    block_bootstrap = dependence_correction == "block_bootstrap"
+    runtime_dependence_correction = {
+        "newey_west": "nw_hac",
+        "andrews": "nw_hac_auto",
+        "parzen_kernel": "nw_hac",
+    }.get(dependence_correction, dependence_correction)
+    block_bootstrap = runtime_dependence_correction == "block_bootstrap"
 
     return {
+        "equal_predictive_test": {
+            "dm_diebold_mariano":     lambda: _compute_dm_test(predictions),
+            "gw_giacomini_white":     lambda: _compute_dm_hln_test(predictions, dependence_correction=runtime_dependence_correction),
+            "multi":                  lambda: _compute_dm_hln_test(predictions, dependence_correction=runtime_dependence_correction),
+        },
         "equal_predictive": {
             "dm":                    lambda: _compute_dm_test(predictions),
-            "dm_hln":                lambda: _compute_dm_hln_test(predictions, dependence_correction=dependence_correction),
-            "dm_modified":           lambda: _compute_dm_modified_test(predictions, dependence_correction=dependence_correction),
+            "dm_hln":                lambda: _compute_dm_hln_test(predictions, dependence_correction=runtime_dependence_correction),
+            "dm_modified":           lambda: _compute_dm_modified_test(predictions, dependence_correction=runtime_dependence_correction),
             "paired_t_on_loss_diff": lambda: _compute_paired_t_on_loss_diff(predictions),
             "wilcoxon_signed_rank":  lambda: _compute_wilcoxon_signed_rank(predictions),
         },
         "nested": {
             "cw":                            lambda: _compute_cw_test(predictions),
-            "enc_new":                       lambda: _compute_enc_new_test(predictions, dependence_correction=dependence_correction),
+            "enc_new":                       lambda: _compute_enc_new_test(predictions, dependence_correction=runtime_dependence_correction),
             "mse_f":                         lambda: _compute_mse_f_test(predictions),
-            "mse_t":                         lambda: _compute_mse_t_test(predictions, dependence_correction=dependence_correction),
+            "mse_t":                         lambda: _compute_mse_t_test(predictions, dependence_correction=runtime_dependence_correction),
             "forecast_encompassing_nested":  lambda: _compute_forecast_encompassing_nested(predictions),
         },
         "cpa_instability": {
-            "cpa":                lambda: _compute_cpa_test(predictions, dependence_correction=dependence_correction),
+            "cpa":                lambda: _compute_cpa_test(predictions, dependence_correction=runtime_dependence_correction),
             "rossi":              lambda: _compute_rossi_test(predictions),
             "rolling_dm":         lambda: _compute_rolling_dm_test(predictions),
             "cusum_on_loss":      lambda: _compute_cusum_on_loss(predictions),

@@ -13,13 +13,14 @@ from macrocast.registry.build import _discover_axis_definitions
 
 
 METADATA_FLIPS = (
-    ("agg_time", "rolling_average"),
-    ("agg_time", "regime_subsample_average"),
-    ("agg_time", "pre_post_break_average"),
-    ("decomposition_target", "preprocessing_effect"),
-    ("decomposition_target", "feature_representation_effect"),
-    ("decomposition_target", "feature_builder_effect"),
-    ("decomposition_target", "benchmark_effect"),
+    ("agg_time", "mean"),
+    ("agg_time", "median"),
+    ("agg_time", "per_subperiod"),
+    ("decomposition_target", "none"),
+    ("decomposition_target", "by_horizon"),
+    ("decomposition_target", "by_target"),
+    ("decomposition_target", "by_state"),
+    ("decomposition_target", "by_regime"),
     # training + meta
     ("embargo_gap", "fixed_gap"),
     ("embargo_gap", "horizon_gap"),
@@ -40,11 +41,10 @@ def test_metadata_flip_is_operational(axis, value):
 def test_test_scope_metadata_statuses_match_layer6_runtime_contract():
     defs = _discover_axis_definitions()
     statuses = {entry.id: entry.status for entry in defs["test_scope"].entries}
+    assert statuses["per_target_horizon"] == "operational"
     assert statuses["per_target"] == "operational"
-    assert statuses["benchmark_vs_all"] == "registry_only"
-    assert statuses["full_grid_pairwise"] == "future"
-    assert statuses["regime_specific_tests"] == "future"
-    assert statuses["subsample_tests"] == "future"
+    assert statuses["per_horizon"] == "operational"
+    assert statuses["pooled"] == "operational"
 
 
 def test_layer7_detail_axis_metadata_statuses_match_runtime_contract():

@@ -8,10 +8,8 @@ AXIS_DEFINITION = AxisDefinition(
     axis_type='enum',
     default_policy='fixed',
     entries=(
-        EnumRegistryEntry(id='equal_weight', description='equal weight', status='operational', priority='A'),
-        EnumRegistryEntry(id='short_horizon_weighted', description='short horizon weighted', status='registry_only', priority='B'),
-        EnumRegistryEntry(id='long_horizon_weighted', description='long horizon weighted', status='registry_only', priority='B'),
-        EnumRegistryEntry(id='report_separately_only', description='report separately only', status='operational', priority='A'),
+        EnumRegistryEntry(id='pool_horizons', description='pool forecast horizons', status='operational', priority='A'),
+        EnumRegistryEntry(id='per_horizon_separate', description='report each horizon separately', status='operational', priority='A'),
     ),
     compatible_with={},
     incompatible_with={},

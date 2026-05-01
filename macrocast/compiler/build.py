@@ -1538,7 +1538,7 @@ def _data_task_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[s
         # Compatibility mirror: `oos_period` is a Layer 4 evaluation axis.
         # Keep it in data_task_spec for older runtime/readers until the
         # migration window closes, but treat evaluation_spec as canonical.
-        "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
+        "oos_period": _selection_value(selection_map, "oos_period", default="full_oos"),
         "missing_availability": _selection_value(selection_map, "missing_availability", default="zero_fill_leading_predictor_gaps"),
         "raw_missing_policy": _selection_value(selection_map, "raw_missing_policy", default="preserve_raw_missing"),
         "raw_outlier_policy": _selection_value(selection_map, "raw_outlier_policy", default="preserve_raw_outliers"),
@@ -3145,10 +3145,10 @@ def _layer2_representation_spec(
 
 def _evaluation_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[str, Any]) -> dict[str, Any]:
     return {
-        "primary_metric": _selection_value(selection_map, "primary_metric", default="msfe"),
-        "point_metrics": _selection_value(selection_map, "point_metrics", default="msfe"),
-        "relative_metrics": _selection_value(selection_map, "relative_metrics", default="relative_msfe"),
-        "direction_metrics": _selection_value(selection_map, "direction_metrics", default="directional_accuracy"),
+        "primary_metric": _selection_value(selection_map, "primary_metric", default="mse"),
+        "point_metrics": _selection_value(selection_map, "point_metrics", default="mse"),
+        "relative_metrics": _selection_value(selection_map, "relative_metrics", default="relative_mse"),
+        "direction_metrics": _selection_value(selection_map, "direction_metrics", default="success_ratio"),
         "density_metrics": _selection_value(selection_map, "density_metrics", default="pinball_loss"),
         "economic_metrics": _selection_value(selection_map, "economic_metrics", default="utility_gain"),
         "benchmark_window": _selection_value(selection_map, "benchmark_window", default="expanding"),
@@ -3163,7 +3163,7 @@ def _evaluation_spec(selection_map: dict[str, AxisSelection], leaf_config: dict[
         "regime_metrics": _selection_value(selection_map, "regime_metrics", default="all_main_metrics_by_regime"),
         "decomposition_target": _selection_value(selection_map, "decomposition_target", default="preprocessing_effect"),
         "decomposition_order": _selection_value(selection_map, "decomposition_order", default="marginal_effect_only"),
-        "oos_period": _selection_value(selection_map, "oos_period", default="all_oos_data"),
+        "oos_period": _selection_value(selection_map, "oos_period", default="full_oos"),
         "regime_start": leaf_config.get("regime_start"),
         "regime_end": leaf_config.get("regime_end"),
     }
@@ -3846,7 +3846,7 @@ def _execution_status(
         if getattr(preprocess_contract, "evaluation_scale", "raw_level") not in {"raw_level", "original_scale"}:
             blocked.append("target_transformer runtime currently supports raw-scale evaluation only")
 
-    if failure_policy not in {"fail_fast", "skip_failed_cell", "skip_failed_model", "save_partial_results", "warn_only"}:
+    if failure_policy not in {"fail_fast", "continue_on_failure", "skip_failed_cell", "skip_failed_model", "save_partial_results", "warn_only"}:
         not_supported.append(
             f"failure_policy {failure_policy!r} is not supported by the current runtime slice"
         )
@@ -3860,7 +3860,7 @@ def _execution_status(
         )
     )
     compute_mode = _selection_value(selection_map, "compute_mode", default="serial")
-    if compute_mode not in {"serial", "parallel_by_model", "parallel_by_horizon", "parallel_by_target", "parallel_by_oos_date"}:
+    if compute_mode not in {"serial", "parallel", "parallel_by_model", "parallel_by_horizon", "parallel_by_target", "parallel_by_oos_date"}:
         not_supported.append(
             f"compute_mode {compute_mode!r} is not supported by the current runtime slice"
         )
@@ -3984,17 +3984,17 @@ def compile_recipe_yaml(path: str | Path) -> CompileResult:
 def _output_spec(selection_map):
     return {
         "export_format": _selection_value(selection_map, "export_format", default="json"),
-        "saved_objects": _selection_value(selection_map, "saved_objects", default="full_bundle"),
-        "provenance_fields": _selection_value(selection_map, "provenance_fields", default="full"),
-        "artifact_granularity": _selection_value(selection_map, "artifact_granularity", default="aggregated"),
+        "saved_objects": _selection_value(selection_map, "saved_objects", default="forecasts"),
+        "provenance_fields": _selection_value(selection_map, "provenance_fields", default="recipe_yaml_full"),
+        "artifact_granularity": _selection_value(selection_map, "artifact_granularity", default="per_cell"),
     }
 
 
 def _stat_test_spec(selection_map: dict[str, AxisSelection]) -> dict[str, str]:
     raw = {
         "test_scope": _selection_value(selection_map, "test_scope", default="per_target"),
-        "dependence_correction": _selection_value(selection_map, "dependence_correction", default="none"),
-        "overlap_handling": _selection_value(selection_map, "overlap_handling", default="allow_overlap"),
+        "dependence_correction": _selection_value(selection_map, "dependence_correction", default="newey_west"),
+        "overlap_handling": _selection_value(selection_map, "overlap_handling", default="nw_with_h_minus_1_lag"),
     }
     for axis in STAT_TEST_AXIS_NAMES:
         raw[axis] = _selection_value(selection_map, axis, default="none")
