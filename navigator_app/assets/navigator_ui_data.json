@@ -4497,8 +4497,74 @@
     ],
     "nodes": [
       {
-        "axes": [],
-        "axis_count": 0,
+        "axes": [
+          "failure_policy",
+          "reproducibility_mode",
+          "compute_mode"
+        ],
+        "axis_count": 3,
+        "axis_options": {
+          "compute_mode": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Serial",
+              "status": "operational",
+              "summary": "Use one worker.",
+              "value": "serial"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Parallel",
+              "status": "operational",
+              "summary": "Use multiple workers over a leaf_config unit.",
+              "value": "parallel"
+            }
+          ],
+          "failure_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fail fast",
+              "status": "operational",
+              "summary": "Stop on first cell failure.",
+              "value": "fail_fast"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Continue on failure",
+              "status": "operational",
+              "summary": "Record failed cells and continue.",
+              "value": "continue_on_failure"
+            }
+          ],
+          "reproducibility_mode": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Seeded reproducible",
+              "status": "operational",
+              "summary": "Use a fixed random seed.",
+              "value": "seeded_reproducible"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Exploratory",
+              "status": "operational",
+              "summary": "Do not fix stochastic seeds.",
+              "value": "exploratory"
+            }
+          ]
+        },
         "category": "setup",
         "expected_inputs": [],
         "group": "setup",
@@ -4510,13 +4576,469 @@
         "produces": [
           "l0_meta_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {
+          "L0.A Execution policy": [
+            "failure_policy",
+            "reproducibility_mode",
+            "compute_mode"
+          ]
+        },
+        "sub_layer_count": 1,
+        "sub_layers": [
+          "L0.A Execution policy"
+        ],
         "ui_mode": "list"
       },
       {
-        "axes": [],
-        "axis_count": 0,
+        "axes": [
+          "custom_source_policy",
+          "dataset",
+          "frequency",
+          "vintage_policy",
+          "target_structure",
+          "variable_universe",
+          "target_geography_scope",
+          "predictor_geography_scope",
+          "sample_start_rule",
+          "sample_end_rule",
+          "horizon_set",
+          "regime_definition",
+          "regime_estimation_temporal_rule"
+        ],
+        "axis_count": 13,
+        "axis_options": {
+          "custom_source_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Official Only",
+              "status": "operational",
+              "summary": "",
+              "value": "official_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Custom Panel Only",
+              "status": "operational",
+              "summary": "",
+              "value": "custom_panel_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Official Plus Custom",
+              "status": "operational",
+              "summary": "",
+              "value": "official_plus_custom"
+            }
+          ],
+          "dataset": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fred Md",
+              "status": "operational",
+              "summary": "",
+              "value": "fred_md"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fred Qd",
+              "status": "operational",
+              "summary": "",
+              "value": "fred_qd"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fred Sd",
+              "status": "operational",
+              "summary": "",
+              "value": "fred_sd"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fred Md+Fred Sd",
+              "status": "operational",
+              "summary": "",
+              "value": "fred_md+fred_sd"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fred Qd+Fred Sd",
+              "status": "operational",
+              "summary": "",
+              "value": "fred_qd+fred_sd"
+            }
+          ],
+          "frequency": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Monthly",
+              "status": "operational",
+              "summary": "",
+              "value": "monthly"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Quarterly",
+              "status": "operational",
+              "summary": "",
+              "value": "quarterly"
+            }
+          ],
+          "horizon_set": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Standard Md",
+              "status": "operational",
+              "summary": "",
+              "value": "standard_md"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Standard Qd",
+              "status": "operational",
+              "summary": "",
+              "value": "standard_qd"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Single",
+              "status": "operational",
+              "summary": "",
+              "value": "single"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Custom List",
+              "status": "operational",
+              "summary": "",
+              "value": "custom_list"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Range Up To H",
+              "status": "operational",
+              "summary": "",
+              "value": "range_up_to_h"
+            }
+          ],
+          "predictor_geography_scope": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Match Target",
+              "status": "operational",
+              "summary": "",
+              "value": "match_target"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "All States",
+              "status": "operational",
+              "summary": "",
+              "value": "all_states"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Selected States",
+              "status": "operational",
+              "summary": "",
+              "value": "selected_states"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "National Only",
+              "status": "operational",
+              "summary": "",
+              "value": "national_only"
+            }
+          ],
+          "regime_definition": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "None",
+              "status": "operational",
+              "summary": "",
+              "value": "none"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "External Nber",
+              "status": "operational",
+              "summary": "",
+              "value": "external_nber"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "External User Provided",
+              "status": "operational",
+              "summary": "",
+              "value": "external_user_provided"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Estimated Markov Switching",
+              "status": "operational",
+              "summary": "",
+              "value": "estimated_markov_switching"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Estimated Threshold",
+              "status": "operational",
+              "summary": "",
+              "value": "estimated_threshold"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Estimated Structural Break",
+              "status": "operational",
+              "summary": "",
+              "value": "estimated_structural_break"
+            }
+          ],
+          "regime_estimation_temporal_rule": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Expanding Window Per Origin",
+              "status": "operational",
+              "summary": "",
+              "value": "expanding_window_per_origin"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Rolling Window Per Origin",
+              "status": "operational",
+              "summary": "",
+              "value": "rolling_window_per_origin"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Block Recompute",
+              "status": "operational",
+              "summary": "",
+              "value": "block_recompute"
+            }
+          ],
+          "sample_end_rule": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Latest Available",
+              "status": "operational",
+              "summary": "",
+              "value": "latest_available"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fixed Date",
+              "status": "operational",
+              "summary": "",
+              "value": "fixed_date"
+            }
+          ],
+          "sample_start_rule": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Earliest Available",
+              "status": "operational",
+              "summary": "",
+              "value": "earliest_available"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Fixed Date",
+              "status": "operational",
+              "summary": "",
+              "value": "fixed_date"
+            },
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Max Balanced",
+              "status": "operational",
+              "summary": "",
+              "value": "max_balanced"
+            }
+          ],
+          "target_geography_scope": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Single State",
+              "status": "operational",
+              "summary": "",
+              "value": "single_state"
+            },
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "All States",
+              "status": "operational",
+              "summary": "",
+              "value": "all_states"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Selected States",
+              "status": "operational",
+              "summary": "",
+              "value": "selected_states"
+            }
+          ],
+          "target_structure": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Single Target",
+              "status": "operational",
+              "summary": "",
+              "value": "single_target"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Multi Series Target",
+              "status": "operational",
+              "summary": "",
+              "value": "multi_series_target"
+            }
+          ],
+          "variable_universe": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "All Variables",
+              "status": "operational",
+              "summary": "",
+              "value": "all_variables"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Core Variables",
+              "status": "operational",
+              "summary": "",
+              "value": "core_variables"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Category Variables",
+              "status": "operational",
+              "summary": "",
+              "value": "category_variables"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target Specific Variables",
+              "status": "operational",
+              "summary": "",
+              "value": "target_specific_variables"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Explicit Variable List",
+              "status": "operational",
+              "summary": "",
+              "value": "explicit_variable_list"
+            }
+          ],
+          "vintage_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Current Vintage",
+              "status": "operational",
+              "summary": "",
+              "value": "current_vintage"
+            },
+            {
+              "default": false,
+              "disabled_reason": "future option",
+              "enabled": false,
+              "label": "Real-Time ALFRED",
+              "status": "future",
+              "summary": "",
+              "value": "real_time_alfred"
+            }
+          ]
+        },
         "category": "construction",
         "expected_inputs": [],
         "group": "construction",
@@ -4529,8 +5051,45 @@
           "l1_data_definition_v1",
           "l1_regime_metadata_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {
+          "L1.A Source selection": [
+            "custom_source_policy",
+            "dataset",
+            "frequency",
+            "vintage_policy"
+          ],
+          "L1.B Target definition": [
+            "target_structure"
+          ],
+          "L1.C Predictor universe": [
+            "variable_universe"
+          ],
+          "L1.D Geography scope": [
+            "target_geography_scope",
+            "predictor_geography_scope"
+          ],
+          "L1.E Sample window": [
+            "sample_start_rule",
+            "sample_end_rule"
+          ],
+          "L1.F Horizon set": [
+            "horizon_set"
+          ],
+          "L1.G Regime definition": [
+            "regime_definition",
+            "regime_estimation_temporal_rule"
+          ]
+        },
+        "sub_layer_count": 7,
+        "sub_layers": [
+          "L1.A Source selection",
+          "L1.B Target definition",
+          "L1.C Predictor universe",
+          "L1.D Geography scope",
+          "L1.E Sample window",
+          "L1.F Horizon set",
+          "L1.G Regime definition"
+        ],
         "ui_mode": "list"
       },
       {
@@ -4550,6 +5109,7 @@
           "latex_export"
         ],
         "axis_count": 13,
+        "axis_options": {},
         "category": "diagnostic",
         "expected_inputs": [
           "l1_data_definition_v1"
@@ -4563,6 +5123,33 @@
         "produces": [
           "l1_5_diagnostic_v1"
         ],
+        "sub_layer_axes": {
+          "L1_5_A_sample_coverage": [
+            "coverage_view"
+          ],
+          "L1_5_B_univariate_summary": [
+            "summary_metrics",
+            "summary_split"
+          ],
+          "L1_5_C_stationarity_tests": [
+            "stationarity_test",
+            "stationarity_test_scope"
+          ],
+          "L1_5_D_missing_outlier_audit": [
+            "missing_view",
+            "outlier_view"
+          ],
+          "L1_5_E_correlation_pre_cleaning": [
+            "correlation_method",
+            "correlation_view"
+          ],
+          "L1_5_Z_export": [
+            "diagnostic_format",
+            "attach_to_manifest",
+            "figure_dpi",
+            "latex_export"
+          ]
+        },
         "sub_layer_count": 6,
         "sub_layers": [
           "L1_5_A_sample_coverage",
@@ -4591,6 +5178,484 @@
           "frame_edge_scope"
         ],
         "axis_count": 13,
+        "axis_options": {
+          "frame_edge_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Truncate To Balanced",
+              "status": "operational",
+              "summary": "",
+              "value": "truncate_to_balanced"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Drop Unbalanced Series",
+              "status": "operational",
+              "summary": "",
+              "value": "drop_unbalanced_series"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Keep Unbalanced",
+              "status": "operational",
+              "summary": "",
+              "value": "keep_unbalanced"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Zero Fill Leading",
+              "status": "operational",
+              "summary": "",
+              "value": "zero_fill_leading"
+            }
+          ],
+          "frame_edge_scope": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target And Predictors",
+              "status": "operational",
+              "summary": "",
+              "value": "target_and_predictors"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Predictors Only",
+              "status": "operational",
+              "summary": "",
+              "value": "predictors_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target Only",
+              "status": "operational",
+              "summary": "",
+              "value": "target_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Not Applicable",
+              "status": "operational",
+              "summary": "",
+              "value": "not_applicable"
+            }
+          ],
+          "imputation_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Em Factor",
+              "status": "operational",
+              "summary": "",
+              "value": "em_factor"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Em Multivariate",
+              "status": "operational",
+              "summary": "",
+              "value": "em_multivariate"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Mean",
+              "status": "operational",
+              "summary": "",
+              "value": "mean"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Forward Fill",
+              "status": "operational",
+              "summary": "",
+              "value": "forward_fill"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Linear Interpolation",
+              "status": "operational",
+              "summary": "",
+              "value": "linear_interpolation"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "None Propagate",
+              "status": "operational",
+              "summary": "",
+              "value": "none_propagate"
+            }
+          ],
+          "imputation_scope": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target And Predictors",
+              "status": "operational",
+              "summary": "",
+              "value": "target_and_predictors"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Predictors Only",
+              "status": "operational",
+              "summary": "",
+              "value": "predictors_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target Only",
+              "status": "operational",
+              "summary": "",
+              "value": "target_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Not Applicable",
+              "status": "operational",
+              "summary": "",
+              "value": "not_applicable"
+            }
+          ],
+          "imputation_temporal_rule": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Expanding Window Per Origin",
+              "status": "operational",
+              "summary": "",
+              "value": "expanding_window_per_origin"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Rolling Window Per Origin",
+              "status": "operational",
+              "summary": "",
+              "value": "rolling_window_per_origin"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Block Recompute",
+              "status": "operational",
+              "summary": "",
+              "value": "block_recompute"
+            }
+          ],
+          "monthly_to_quarterly_rule": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Quarterly Average",
+              "status": "operational",
+              "summary": "",
+              "value": "quarterly_average"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Quarterly Endpoint",
+              "status": "operational",
+              "summary": "",
+              "value": "quarterly_endpoint"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Quarterly Sum",
+              "status": "operational",
+              "summary": "",
+              "value": "quarterly_sum"
+            }
+          ],
+          "outlier_action": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Flag As Nan",
+              "status": "operational",
+              "summary": "",
+              "value": "flag_as_nan"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Replace With Median",
+              "status": "operational",
+              "summary": "",
+              "value": "replace_with_median"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Replace With Cap Value",
+              "status": "operational",
+              "summary": "",
+              "value": "replace_with_cap_value"
+            },
+            {
+              "default": false,
+              "disabled_reason": "future option",
+              "enabled": false,
+              "label": "Keep With Indicator",
+              "status": "future",
+              "summary": "",
+              "value": "keep_with_indicator"
+            }
+          ],
+          "outlier_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Mccracken Ng Iqr",
+              "status": "operational",
+              "summary": "",
+              "value": "mccracken_ng_iqr"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Winsorize",
+              "status": "operational",
+              "summary": "",
+              "value": "winsorize"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Zscore Threshold",
+              "status": "operational",
+              "summary": "",
+              "value": "zscore_threshold"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "None",
+              "status": "operational",
+              "summary": "",
+              "value": "none"
+            }
+          ],
+          "outlier_scope": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target And Predictors",
+              "status": "operational",
+              "summary": "",
+              "value": "target_and_predictors"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Predictors Only",
+              "status": "operational",
+              "summary": "",
+              "value": "predictors_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target Only",
+              "status": "operational",
+              "summary": "",
+              "value": "target_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Not Applicable",
+              "status": "operational",
+              "summary": "",
+              "value": "not_applicable"
+            }
+          ],
+          "quarterly_to_monthly_rule": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Linear Interpolation",
+              "status": "operational",
+              "summary": "",
+              "value": "linear_interpolation"
+            },
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Step Backward",
+              "status": "operational",
+              "summary": "",
+              "value": "step_backward"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Step Forward",
+              "status": "operational",
+              "summary": "",
+              "value": "step_forward"
+            },
+            {
+              "default": false,
+              "disabled_reason": "future option",
+              "enabled": false,
+              "label": "Chow Lin",
+              "status": "future",
+              "summary": "",
+              "value": "chow_lin"
+            }
+          ],
+          "sd_series_frequency_filter": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Monthly Only",
+              "status": "operational",
+              "summary": "",
+              "value": "monthly_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Quarterly Only",
+              "status": "operational",
+              "summary": "",
+              "value": "quarterly_only"
+            },
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Both",
+              "status": "operational",
+              "summary": "",
+              "value": "both"
+            }
+          ],
+          "transform_policy": [
+            {
+              "default": true,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Apply Official Tcode",
+              "status": "operational",
+              "summary": "",
+              "value": "apply_official_tcode"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "No Transform",
+              "status": "operational",
+              "summary": "",
+              "value": "no_transform"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Custom Tcode",
+              "status": "operational",
+              "summary": "",
+              "value": "custom_tcode"
+            }
+          ],
+          "transform_scope": [
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target And Predictors",
+              "status": "operational",
+              "summary": "",
+              "value": "target_and_predictors"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Predictors Only",
+              "status": "operational",
+              "summary": "",
+              "value": "predictors_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Target Only",
+              "status": "operational",
+              "summary": "",
+              "value": "target_only"
+            },
+            {
+              "default": false,
+              "disabled_reason": null,
+              "enabled": true,
+              "label": "Not Applicable",
+              "status": "operational",
+              "summary": "",
+              "value": "not_applicable"
+            }
+          ]
+        },
         "category": "construction",
         "expected_inputs": [
           "l1_data_definition_v1"
@@ -4604,8 +5669,39 @@
         "produces": [
           "l2_clean_panel_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {
+          "L2.A FRED-SD frequency alignment": [
+            "sd_series_frequency_filter",
+            "quarterly_to_monthly_rule",
+            "monthly_to_quarterly_rule"
+          ],
+          "L2.B Transform": [
+            "transform_policy",
+            "transform_scope"
+          ],
+          "L2.C Outlier handling": [
+            "outlier_policy",
+            "outlier_action",
+            "outlier_scope"
+          ],
+          "L2.D Imputation": [
+            "imputation_policy",
+            "imputation_temporal_rule",
+            "imputation_scope"
+          ],
+          "L2.E Frame edge": [
+            "frame_edge_policy",
+            "frame_edge_scope"
+          ]
+        },
+        "sub_layer_count": 5,
+        "sub_layers": [
+          "L2.A FRED-SD frequency alignment",
+          "L2.B Transform",
+          "L2.C Outlier handling",
+          "L2.D Imputation",
+          "L2.E Frame edge"
+        ],
         "ui_mode": "list"
       },
       {
@@ -4624,6 +5720,7 @@
           "latex_export"
         ],
         "axis_count": 12,
+        "axis_options": {},
         "category": "diagnostic",
         "expected_inputs": [
           "l1_data_definition_v1",
@@ -4638,6 +5735,30 @@
         "produces": [
           "l2_5_diagnostic_v1"
         ],
+        "sub_layer_axes": {
+          "L2_5_A_comparison_axis": [
+            "comparison_pair",
+            "comparison_output_form"
+          ],
+          "L2_5_B_distribution_shift": [
+            "distribution_metric",
+            "distribution_view"
+          ],
+          "L2_5_C_correlation_shift": [
+            "correlation_shift",
+            "correlation_method"
+          ],
+          "L2_5_D_cleaning_effect_summary": [
+            "cleaning_summary_view",
+            "t_code_application_log"
+          ],
+          "L2_5_Z_export": [
+            "diagnostic_format",
+            "attach_to_manifest",
+            "figure_dpi",
+            "latex_export"
+          ]
+        },
         "sub_layer_count": 5,
         "sub_layers": [
           "L2_5_A_comparison_axis",
@@ -4651,6 +5772,7 @@
       {
         "axes": [],
         "axis_count": 0,
+        "axis_options": {},
         "category": "construction",
         "expected_inputs": [
           "l2_clean_panel_v1",
@@ -4667,8 +5789,14 @@
           "l3_features_v1",
           "l3_metadata_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {},
+        "sub_layer_count": 4,
+        "sub_layers": [
+          "L3.A Target construction",
+          "L3.B Feature pipelines",
+          "L3.C Pipeline combine",
+          "L3.D Feature selection"
+        ],
         "ui_mode": "graph"
       },
       {
@@ -4690,6 +5818,7 @@
           "latex_export"
         ],
         "axis_count": 15,
+        "axis_options": {},
         "category": "diagnostic",
         "expected_inputs": [
           "l1_data_definition_v1",
@@ -4706,6 +5835,35 @@
         "produces": [
           "l3_5_diagnostic_v1"
         ],
+        "sub_layer_axes": {
+          "L3_5_A_comparison_axis": [
+            "comparison_stages",
+            "comparison_output_form"
+          ],
+          "L3_5_B_factor_block_inspection": [
+            "factor_view",
+            "dfm_diagnostics"
+          ],
+          "L3_5_C_feature_correlation": [
+            "feature_correlation",
+            "correlation_method",
+            "correlation_view"
+          ],
+          "L3_5_D_lag_block_inspection": [
+            "lag_view",
+            "marx_view"
+          ],
+          "L3_5_E_selected_features_post_selection": [
+            "selection_view",
+            "stability_metric"
+          ],
+          "L3_5_Z_export": [
+            "diagnostic_format",
+            "attach_to_manifest",
+            "figure_dpi",
+            "latex_export"
+          ]
+        },
         "sub_layer_count": 6,
         "sub_layers": [
           "L3_5_A_comparison_axis",
@@ -4720,6 +5878,7 @@
       {
         "axes": [],
         "axis_count": 0,
+        "axis_options": {},
         "category": "construction",
         "expected_inputs": [
           "l3_features_v1",
@@ -4737,8 +5896,14 @@
           "l4_model_artifacts_v1",
           "l4_training_metadata_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {},
+        "sub_layer_count": 4,
+        "sub_layers": [
+          "L4.A Model selection",
+          "L4.B Forecast strategy",
+          "L4.C Training window",
+          "L4.D Tuning"
+        ],
         "ui_mode": "graph"
       },
       {
@@ -4758,6 +5923,7 @@
           "latex_export"
         ],
         "axis_count": 13,
+        "axis_options": {},
         "category": "diagnostic",
         "expected_inputs": [
           "l4_forecasts_v1",
@@ -4774,6 +5940,33 @@
         "produces": [
           "l4_5_diagnostic_v1"
         ],
+        "sub_layer_axes": {
+          "L4_5_A_in_sample_fit": [
+            "fit_view",
+            "fit_per_origin"
+          ],
+          "L4_5_B_forecast_scale_view": [
+            "forecast_scale_view",
+            "back_transform_method"
+          ],
+          "L4_5_C_window_stability": [
+            "window_view",
+            "coef_view_models"
+          ],
+          "L4_5_D_tuning_history": [
+            "tuning_view"
+          ],
+          "L4_5_E_ensemble_diagnostics": [
+            "ensemble_view",
+            "weights_over_time_method"
+          ],
+          "L4_5_Z_export": [
+            "diagnostic_format",
+            "attach_to_manifest",
+            "figure_dpi",
+            "latex_export"
+          ]
+        },
         "sub_layer_count": 6,
         "sub_layers": [
           "L4_5_A_in_sample_fit",
@@ -4807,6 +6000,7 @@
           "report_style"
         ],
         "axis_count": 18,
+        "axis_options": {},
         "category": "consumption",
         "expected_inputs": [
           "l4_forecasts_v1",
@@ -4824,8 +6018,15 @@
         "produces": [
           "l5_evaluation_v1"
         ],
-        "sub_layer_count": 0,
-        "sub_layers": [],
+        "sub_layer_axes": {},
+        "sub_layer_count": 5,
+        "sub_layers": [
+          "L5.A metrics",
+          "L5.B benchmark",
+          "L5.C aggregation",
+          "L5.D slicing and decomposition",
+          "L5.E ranking"
+        ],
         "ui_mode": "list"
       },
       {
@@ -4869,6 +6070,7 @@
           "residual_alpha"
         ],
         "axis_count": 37,
+        "axis_options": {},
         "category": "consumption",
         "expected_inputs": [
           "l4_forecasts_v1",
@@ -4890,6 +6092,55 @@
         "produces": [
           "l6_tests_v1"
         ],
+        "sub_layer_axes": {
+          "L6_A_equal_predictive": [
+            "equal_predictive_test",
+            "loss_function",
+            "model_pair_strategy",
+            "hln_correction"
+          ],
+          "L6_B_nested": [
+            "nested_test",
+            "nested_pair_strategy",
+            "cw_adjustment",
+            "enc_test_one_sided"
+          ],
+          "L6_C_cpa": [
+            "cpa_test",
+            "cpa_window_type",
+            "cpa_conditioning_info",
+            "cpa_critical_value_method"
+          ],
+          "L6_D_multiple_model": [
+            "multiple_model_test",
+            "mcs_alpha",
+            "mmt_loss_function",
+            "bootstrap_method",
+            "bootstrap_n_replications",
+            "bootstrap_block_length",
+            "mcs_t_statistic",
+            "spa_studentization",
+            "stepm_alpha"
+          ],
+          "L6_E_density_interval": [
+            "density_test",
+            "interval_test",
+            "coverage_levels",
+            "pit_n_bins",
+            "pit_test_horizon_dependence"
+          ],
+          "L6_F_direction": [
+            "direction_test",
+            "direction_threshold",
+            "direction_alpha"
+          ],
+          "L6_G_residual": [
+            "residual_test",
+            "residual_lag_count",
+            "residual_test_scope",
+            "residual_alpha"
+          ]
+        },
         "sub_layer_count": 7,
         "sub_layers": [
           "L6_A_equal_predictive",
@@ -4915,6 +6166,7 @@
           "markdown_table_export"
         ],
         "axis_count": 9,
+        "axis_options": {},
         "category": "consumption",
         "expected_inputs": [
           "l4_model_artifacts_v1",
@@ -4936,10 +6188,11 @@
           "l7_importance_v1",
           "l7_transformation_attribution_v1"
         ],
+        "sub_layer_axes": {},
         "sub_layer_count": 2,
         "sub_layers": [
-          "L7.A",
-          "L7.B"
+          "L7.A Importance DAG",
+          "L7.B Output shape"
         ],
         "ui_mode": "graph"
       },
@@ -4955,6 +6208,7 @@
           "naming_convention"
         ],
         "axis_count": 8,
+        "axis_options": {},
         "category": "consumption",
         "expected_inputs": [
           "l0_meta_v1",
@@ -4980,6 +6234,24 @@
         "produces": [
           "l8_artifacts_v1"
         ],
+        "sub_layer_axes": {
+          "L8_A_export_format": [
+            "export_format",
+            "compression"
+          ],
+          "L8_B_saved_objects": [
+            "saved_objects",
+            "model_artifacts_format"
+          ],
+          "L8_C_provenance": [
+            "provenance_fields",
+            "manifest_format"
+          ],
+          "L8_D_artifact_granularity": [
+            "artifact_granularity",
+            "naming_convention"
+          ]
+        },
         "sub_layer_count": 4,
         "sub_layers": [
           "L8_A_export_format",
@@ -5448,19 +6720,19 @@
       },
       "2_preprocessing": {
         "label": "Core runtime",
-        "summary": "Transform codes, missing/outlier policies, scaling, lags, factor blocks, and selection have local execution coverage for supported options."
+        "summary": "Frequency alignment, transform codes, missing/outlier policies, imputation, and frame-edge rules have local execution coverage for supported options. Scaling, lags, factors, and selection are L3 decisions."
       },
       "3_training": {
         "label": "Core runtime plus stubs",
-        "summary": "Linear, benchmark, AR, and lightweight sklearn paths run; advanced families may remain schema-only or plugin-backed."
+        "summary": "Feature DAG schema is broad; local runtime supports a narrow cleaned-panel path while advanced feature ops remain schema-only or deferred."
       },
       "4_evaluation": {
-        "label": "Core runtime",
-        "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, and decomposition materialize runtime artifacts."
+        "label": "Core runtime plus stubs",
+        "summary": "Linear, benchmark, AR, and lightweight sklearn forecast paths run; advanced families and full DAG op execution may remain schema-only or plugin-backed."
       },
       "5_output_provenance": {
         "label": "Core runtime",
-        "summary": "JSON/CSV exports, manifests, selected objects, diagnostics, tests, and importance summaries write to disk."
+        "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, export, and manifest paths materialize runtime artifacts for supported workflows."
       },
       "6_stat_tests": {
         "label": "Lightweight runtime",
