@@ -153,6 +153,38 @@ def test_static_navigator_app_hides_conditional_layer1_controls():
     assert "delete leaf.target" in source
 
 
+def test_static_navigator_app_exports_parseable_default_yaml():
+    root = Path(__file__).resolve().parents[1]
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    script = r"""
+const fs = require("fs");
+let code = fs.readFileSync("docs/_html_extra/navigator_app/app.js", "utf8");
+const bootIndex = code.lastIndexOf('$("#recipeName").addEventListener');
+if (bootIndex === -1) throw new Error("boot block not found");
+code = code.slice(0, bootIndex);
+eval(code + "\nconsole.log(generateYaml());\n");
+"""
+    result = subprocess.run(
+        [node, "-e", script],
+        check=True,
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    generated = yaml.safe_load(result.stdout)
+
+    assert generated["1_data"]["fixed_axes"]["target_structure"] == "multi_target"
+    assert "target" not in generated["1_data"]["leaf_config"]
+    assert generated["1_data"]["leaf_config"]["targets"] == ["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL", "RPI"]
+    assert "fred_sd_frequency_policy" not in generated["1_data"]["fixed_axes"]
+    assert isinstance(generated["3_feature_engineering"]["nodes"], list)
+    assert generated["8_output"]["leaf_config"]["descriptive_naming_template"] == (
+        "{model_family}_{forecast_strategy}_h{horizon}"
+    )
+
+
 def _js_state_snapshot(tmp_path: Path, recipe: dict, actions: list[tuple[str, str]]) -> dict:
     _skip_static_navigator_app_if_missing()
     node = shutil.which("node")
