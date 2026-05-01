@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+import platform
 from typing import Any
 
 import pandas as pd
 from sklearn.linear_model import ElasticNet, Lasso, LinearRegression
 from sklearn.linear_model import Ridge
 
+from .layers import l6 as l6_layer
+from .layers import l7 as l7_layer
+from .layers import l8 as l8_layer
 from .layers import l3 as l3_layer
 from .layers import l4 as l4_layer
 from .layers import l5 as l5_layer
@@ -24,9 +28,15 @@ from .types import (
     L4ModelArtifactsArtifact,
     L4TrainingMetadataArtifact,
     L5EvaluationArtifact,
+    L6TestsArtifact,
+    L7ImportanceArtifact,
+    L7TransformationAttributionArtifact,
+    L8ArtifactsArtifact,
+    L8Manifest,
     ModelArtifact,
     Panel,
     PanelMetadata,
+    RuntimeEnvironment,
     Series,
     SeriesMetadata,
 )
@@ -74,19 +84,34 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
     l3_features, l3_metadata = materialize_l3_minimal(root, l1_artifact, l2_artifact)
     l4_forecasts, l4_models, l4_training = materialize_l4_minimal(root, l3_features)
     l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts, l4_models)
+    artifacts: dict[str, Any] = {
+        "l1_data_definition_v1": l1_artifact,
+        "l1_regime_metadata_v1": regime_artifact,
+        "l2_clean_panel_v1": l2_artifact,
+        "l3_features_v1": l3_features,
+        "l3_metadata_v1": l3_metadata,
+        "l4_forecasts_v1": l4_forecasts,
+        "l4_model_artifacts_v1": l4_models,
+        "l4_training_metadata_v1": l4_training,
+        "l5_evaluation_v1": l5_eval,
+    }
+    resolved_axes: dict[str, dict[str, Any]] = {"l1": l1_axes, "l2": dict(l2_axes), "l5": dict(l5_eval.l5_axis_resolved)}
+    if "6_statistical_tests" in root:
+        l6_tests, l6_axes = materialize_l6_stub(root, l1_artifact, l4_forecasts, l4_models)
+        artifacts["l6_tests_v1"] = l6_tests
+        resolved_axes["l6"] = l6_axes
+    if "7_interpretation" in root:
+        l7_importance, l7_transform, l7_axes = materialize_l7_stub(root)
+        artifacts["l7_importance_v1"] = l7_importance
+        artifacts["l7_transformation_attribution_v1"] = l7_transform
+        resolved_axes["l7"] = l7_axes
+    if "8_output" in root:
+        l8_artifacts, l8_axes = materialize_l8_stub(root, artifacts)
+        artifacts["l8_artifacts_v1"] = l8_artifacts
+        resolved_axes["l8"] = l8_axes
     return RuntimeResult(
-        artifacts={
-            "l1_data_definition_v1": l1_artifact,
-            "l1_regime_metadata_v1": regime_artifact,
-            "l2_clean_panel_v1": l2_artifact,
-            "l3_features_v1": l3_features,
-            "l3_metadata_v1": l3_metadata,
-            "l4_forecasts_v1": l4_forecasts,
-            "l4_model_artifacts_v1": l4_models,
-            "l4_training_metadata_v1": l4_training,
-            "l5_evaluation_v1": l5_eval,
-        },
-        resolved_axes={"l1": l1_axes, "l2": dict(l2_axes)},
+        artifacts=artifacts,
+        resolved_axes=resolved_axes,
     )
 
 
@@ -397,6 +422,80 @@ def materialize_l5_minimal(
         ranking_table=ranking,
         l5_axis_resolved=dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)),
     )
+
+
+def materialize_l6_stub(
+    recipe_root: dict[str, Any],
+    l1_artifact: L1DataDefinitionArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact,
+) -> tuple[L6TestsArtifact, dict[str, Any]]:
+    raw = recipe_root.get("6_statistical_tests", {}) or {}
+    context = {
+        "forecast_object": l4_forecasts.forecast_object,
+        "has_benchmark": any(l4_models.is_benchmark.values()),
+        "regime_definition": l1_artifact.regime_definition,
+        "horizons": set(l4_forecasts.horizons),
+    }
+    report = l6_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l6_layer.resolve_axes_from_raw(raw, context=context)
+    if any(isinstance(value, dict) and value.get("enabled") for key, value in resolved.items() if key.startswith("L6_")):
+        raise NotImplementedError("L6 statistical test execution is deferred; disabled L6 materializes an empty artifact")
+    axes = _plain_axes(resolved)
+    return L6TestsArtifact(test_metadata={"runtime": "schema_only_empty"}, l6_axis_resolved=axes), axes
+
+
+def materialize_l7_stub(recipe_root: dict[str, Any]) -> tuple[L7ImportanceArtifact, L7TransformationAttributionArtifact, dict[str, Any]]:
+    raw = recipe_root.get("7_interpretation", {}) or {}
+    report = l7_layer.validate_layer(raw, recipe_context=recipe_root)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l7_layer.resolve_axes_from_raw(raw)
+    if resolved.get("enabled"):
+        raise NotImplementedError("L7 importance execution is deferred; disabled L7 materializes empty artifacts")
+    axes = _plain_axes(resolved)
+    return (
+        L7ImportanceArtifact(computation_metadata={"runtime": "schema_only_empty"}),
+        L7TransformationAttributionArtifact(),
+        axes,
+    )
+
+
+def materialize_l8_stub(recipe_root: dict[str, Any], upstream_artifacts: dict[str, Any]) -> tuple[L8ArtifactsArtifact, dict[str, Any]]:
+    raw = recipe_root.get("8_output", {}) or {}
+    context = l8_layer._recipe_context(recipe_root)
+    report = l8_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l8_layer.resolve_axes_from_raw(raw, context=context)
+    axes = _plain_axes(resolved)
+    output_directory = Path(axes["leaf_config"]["output_directory"])
+    manifest = L8Manifest(
+        python_version=platform.python_version(),
+        random_seed_used=((recipe_root.get("0_meta", {}) or {}).get("fixed_axes", {}) or {}).get("random_seed"),
+        runtime_environment=RuntimeEnvironment(os_name=platform.system(), python_version=platform.python_version(), cpu_info=platform.machine()),
+    )
+    return (
+        L8ArtifactsArtifact(
+            output_directory=output_directory,
+            manifest=manifest,
+            artifact_count=0,
+            upstream_hashes={name: "runtime_unhashed" for name in sorted(upstream_artifacts)},
+        ),
+        axes,
+    )
+
+
+def _plain_axes(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _plain_axes(item) for key, item in value.items() if key != "_active"}
+    if isinstance(value, list):
+        return [_plain_axes(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_plain_axes(item) for item in value)
+    return value
 
 
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:

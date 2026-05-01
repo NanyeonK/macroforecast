@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from macrocast.core import execute_minimal_forecast
+from macrocast.core.types import L6TestsArtifact, L7ImportanceArtifact, L8ArtifactsArtifact
 
 
 MINIMAL_RECIPE = """
@@ -121,6 +122,45 @@ def test_execute_minimal_forecast_computes_l5_relative_metrics_against_benchmark
     assert benchmark_row["relative_mse"] == pytest.approx(1.0)
     assert benchmark_row["r2_oos"] == pytest.approx(0.0)
     assert l5_eval.ranking_table.iloc[0]["rank_method"] == "by_primary_metric"
+
+
+def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
+    yaml_text = (
+        MINIMAL_RECIPE
+        + """
+6_statistical_tests: {}
+7_interpretation:
+  enabled: false
+8_output:
+  fixed_axes: {}
+"""
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+
+    assert isinstance(result.sink("l6_tests_v1"), L6TestsArtifact)
+    assert result.sink("l6_tests_v1").l6_axis_resolved["enabled"] is False
+    assert isinstance(result.sink("l7_importance_v1"), L7ImportanceArtifact)
+    assert isinstance(result.sink("l8_artifacts_v1"), L8ArtifactsArtifact)
+    assert result.sink("l8_artifacts_v1").output_directory.as_posix().startswith("macrocast_output/default_recipe/")
+    assert "l6_tests_v1" in result.sink("l8_artifacts_v1").upstream_hashes
+    assert result.resolved_axes["l8"]["export_format"] == "json_csv"
+
+
+def test_execute_minimal_forecast_rejects_enabled_l6_runtime_stub():
+    yaml_text = (
+        MINIMAL_RECIPE
+        + """
+6_statistical_tests:
+  enabled: true
+  sub_layers:
+    L6_D_multiple_model:
+      enabled: true
+"""
+    )
+
+    with pytest.raises(NotImplementedError, match="L6 statistical test execution is deferred"):
+        execute_minimal_forecast(yaml_text)
 
 
 def test_execute_minimal_forecast_rejects_non_ridge_family():
