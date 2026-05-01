@@ -111,7 +111,85 @@
 <li><p>layer globals;</p></li>
 <li><p>axes or output controls.</p></li>
 </ul>
-<p>Graph/DAG layers do not have one flat axis list. Their decisions live in YAML <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>.</p>
+<p>Graph/DAG layers do not have one flat axis list. Their decisions live in YAML <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>. The UI now exposes clickable DAG items and writes a runnable YAML template from the selected layer axes plus selected DAG items.</p>
+</section>
+<section id="canonical-sub-layers">
+<h2>Canonical Sub-Layers<a class="headerlink" href="#canonical-sub-layers" title="Link to this heading"></a></h2>
+<p>The layer map should expose every main and diagnostic sub-layer below. If a sub-layer is absent in the UI, treat that as a UI bug rather than a design change.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer</p></th>
+<th class="head"><p>UI mode</p></th>
+<th class="head"><p>Sub-layers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L0</p></td>
+<td><p>list</p></td>
+<td><p>L0.A Execution policy</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1</p></td>
+<td><p>list</p></td>
+<td><p>L1.A Source selection; L1.B Target definition; L1.C Predictor universe; L1.D Geography scope; L1.E Sample window; L1.F Horizon set; L1.G Regime definition</p></td>
+</tr>
+<tr class="row-even"><td><p>L2</p></td>
+<td><p>list</p></td>
+<td><p>L2.A FRED-SD frequency alignment; L2.B Transform; L2.C Outlier handling; L2.D Imputation; L2.E Frame edge</p></td>
+</tr>
+<tr class="row-odd"><td><p>L3</p></td>
+<td><p>graph</p></td>
+<td><p>L3.A Target construction; L3.B Feature pipelines; L3.C Pipeline combine; L3.D Feature selection</p></td>
+</tr>
+<tr class="row-even"><td><p>L4</p></td>
+<td><p>graph</p></td>
+<td><p>L4.A Model selection; L4.B Forecast strategy; L4.C Training window; L4.D Tuning</p></td>
+</tr>
+<tr class="row-odd"><td><p>L5</p></td>
+<td><p>list</p></td>
+<td><p>L5.A Metrics; L5.B Benchmark; L5.C Aggregation; L5.D Slicing and decomposition; L5.E Ranking</p></td>
+</tr>
+<tr class="row-even"><td><p>L6</p></td>
+<td><p>list</p></td>
+<td><p>L6 globals; L6_A_equal_predictive; L6_B_nested; L6_C_cpa; L6_D_multiple_model; L6_E_density_interval; L6_F_direction; L6_G_residual</p></td>
+</tr>
+<tr class="row-odd"><td><p>L7</p></td>
+<td><p>graph</p></td>
+<td><p>L7.A Importance DAG; L7.B Output shape</p></td>
+</tr>
+<tr class="row-even"><td><p>L8</p></td>
+<td><p>list</p></td>
+<td><p>L8_A_export_format; L8_B_saved_objects; L8_C_provenance; L8_D_artifact_granularity</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1.5</p></td>
+<td><p>list</p></td>
+<td><p>L1.5.A Sample coverage; L1.5.B Univariate summary; L1.5.C Stationarity; L1.5.D Missing and outlier; L1.5.E Correlation; L1.5.Z Export</p></td>
+</tr>
+<tr class="row-even"><td><p>L2.5</p></td>
+<td><p>list</p></td>
+<td><p>L2.5.A Comparison; L2.5.B Distribution shift; L2.5.C Correlation shift; L2.5.D Cleaning summary; L2.5.Z Export</p></td>
+</tr>
+<tr class="row-odd"><td><p>L3.5</p></td>
+<td><p>list</p></td>
+<td><p>L3.5.A Comparison; L3.5.B Factor inspection; L3.5.C Feature correlation; L3.5.D Lag inspection; L3.5.E Selection; L3.5.Z Export</p></td>
+</tr>
+<tr class="row-even"><td><p>L4.5</p></td>
+<td><p>list</p></td>
+<td><p>L4.5.A Fit; L4.5.B Scale; L4.5.C Window stability; L4.5.D Tuning; L4.5.E Ensemble; L4.5.Z Export</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="yaml-generation-contract">
+<h2>YAML Generation Contract<a class="headerlink" href="#yaml-generation-contract" title="Link to this heading"></a></h2>
+<p>The YAML preview is generated from the canonical workbench, not the legacy compatibility explorer.</p>
+<ul class="simple">
+<li><p>List layers write <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> from selected sub-layer axes.</p></li>
+<li><p>Layer-global controls, including diagnostic <code class="docutils literal notranslate"><span class="pre">enabled</span></code>, are selectable and written into YAML.</p></li>
+<li><p>Graph layers write template DAGs with <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>.</p></li>
+<li><p>Clicked DAG items are stored in <code class="docutils literal notranslate"><span class="pre">leaf_config.navigator_selected_dag_items</span></code> so the YAML records the graph design choices that shaped the template.</p></li>
+<li><p>Multi-select axes write YAML lists.</p></li>
+</ul>
+<p>The generated YAML is intended as a valid starting recipe. Advanced graph editing can still refine node IDs, custom leaf config, and model-specific parameters after download.</p>
 </section>
 <section id="compatibility-axis-explorer">
 <h2>2. Compatibility Axis Explorer<a class="headerlink" href="#compatibility-axis-explorer" title="Link to this heading"></a></h2>

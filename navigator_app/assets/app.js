@@ -10,6 +10,7 @@ const state = {
   activeSubLayer: null,
   activeCanonicalAxis: null,
   canonicalSelections: {},
+  dagSelections: {},
 };
 
 const els = {
@@ -296,6 +297,106 @@ const DEFAULT_MULTI_SELECTIONS = {
   ],
 };
 
+const DEFAULT_SINGLE_SELECTIONS = {
+  enabled: "false",
+  primary_metric: "mse",
+  benchmark_window: "full_oos",
+  benchmark_scope: "all_targets_horizons",
+  agg_time: "mean",
+  agg_horizon: "per_horizon_separate",
+  agg_target: "per_target_separate",
+  agg_state: "pool_states",
+  oos_period: "full_oos",
+  regime_use: "pooled",
+  regime_metrics: "same_as_primary",
+  decomposition_target: "none",
+  decomposition_order: "marginal",
+  ranking: "by_primary_metric",
+  report_style: "single_table",
+  test_scope: "per_target_horizon",
+  dependence_correction: "newey_west",
+  overlap_handling: "nw_with_h_minus_1_lag",
+  equal_predictive_test: "dm_diebold_mariano",
+  loss_function: "squared",
+  model_pair_strategy: "vs_benchmark_only",
+  hln_correction: "true",
+  nested_test: "clark_west",
+  nested_pair_strategy: "vs_benchmark_auto",
+  cw_adjustment: "true",
+  enc_test_one_sided: "one_sided",
+  cpa_test: "giacomini_rossi_2010",
+  cpa_window_type: "rolling_window",
+  cpa_conditioning_info: "none",
+  cpa_critical_value_method: "simulated",
+  multiple_model_test: "mcs_hansen",
+  mcs_alpha: "0.10",
+  mmt_loss_function: "squared",
+  bootstrap_method: "stationary_bootstrap",
+  bootstrap_n_replications: "1000",
+  bootstrap_block_length: "auto",
+  mcs_t_statistic: "t_max",
+  spa_studentization: "consistent",
+  stepm_alpha: "0.10",
+  density_test: "pit_berkowitz",
+  interval_test: "christoffersen_conditional_coverage",
+  pit_n_bins: "10",
+  pit_test_horizon_dependence: "nw_correction",
+  direction_test: "pesaran_timmermann_1992",
+  direction_threshold: "zero",
+  direction_alpha: "0.05",
+  residual_lag_count: "derived",
+  residual_test_scope: "per_model_target_horizon",
+  residual_alpha: "0.05",
+  output_table_format: "long",
+  figure_type: "auto",
+  top_k_features_to_show: "20",
+  precision_digits: "4",
+  figure_dpi: "300",
+  figure_format: "pdf",
+  latex_table_export: "true",
+  markdown_table_export: "false",
+  export_format: "json_csv",
+  compression: "none",
+  model_artifacts_format: "pickle",
+  manifest_format: "json",
+  artifact_granularity: "per_cell",
+  naming_convention: "descriptive",
+  coverage_view: "multi",
+  summary_split: "full_sample",
+  stationarity_test: "none",
+  stationarity_test_scope: "target_and_predictors",
+  missing_view: "multi",
+  outlier_view: "iqr_flag",
+  correlation_method: "pearson",
+  correlation_view: "none",
+  comparison_pair: "raw_vs_final_clean",
+  comparison_output_form: "multi",
+  distribution_view: "multi",
+  correlation_shift: "none",
+  cleaning_summary_view: "multi",
+  t_code_application_log: "summary",
+  diagnostic_format: "pdf",
+  attach_to_manifest: "true",
+  latex_export: "true",
+  comparison_stages: "cleaned_vs_features",
+  factor_view: "multi",
+  dfm_diagnostics: "multi",
+  feature_correlation: "cross_block",
+  lag_view: "multi",
+  marx_view: "weight_decay_visualization",
+  selection_view: "multi",
+  stability_metric: "jaccard",
+  fit_view: "multi",
+  fit_per_origin: "last_origin_only",
+  forecast_scale_view: "both_overlay",
+  back_transform_method: "auto",
+  window_view: "multi",
+  coef_view_models: "all_linear_models",
+  tuning_view: "multi",
+  ensemble_view: "multi",
+  weights_over_time_method: "stacked_area",
+};
+
 const CANONICAL_AXIS_OPTIONS = {
   primary_metric: ["mse", "rmse", "mae", "relative_mse", "r2_oos", "log_score", "crps"],
   point_metrics: ["mse", "rmse", "mae", "mape", "medae", "theil_u1", "theil_u2"],
@@ -362,12 +463,48 @@ const CANONICAL_AXIS_OPTIONS = {
   markdown_table_export: ["true", "false"],
   export_format: ["json", "csv", "parquet", "json_csv", "json_parquet", "latex_tables", "markdown_report", "html_report", "all"],
   compression: ["none", "gzip", "zip"],
-  saved_objects: ["forecasts", "forecast_intervals", "metrics", "ranking", "decomposition", "regime_metrics", "state_metrics", "model_artifacts", "combination_weights", "feature_metadata", "clean_panel", "raw_panel", "diagnostics_all", "tests", "importance", "transformation_attribution"],
+  saved_objects: ["forecasts", "forecast_intervals", "metrics", "ranking", "decomposition", "regime_metrics", "state_metrics", "model_artifacts", "combination_weights", "feature_metadata", "clean_panel", "raw_panel", "diagnostics_l1_5", "diagnostics_l2_5", "diagnostics_l3_5", "diagnostics_l4_5", "diagnostics_all", "tests", "importance", "transformation_attribution"],
   model_artifacts_format: ["pickle", "joblib", "onnx", "pmml"],
   provenance_fields: ["recipe_yaml_full", "recipe_hash", "package_version", "python_version", "r_version", "julia_version", "dependency_lockfile", "git_commit_sha", "git_branch_name", "data_revision_tag", "random_seed_used", "runtime_environment", "runtime_duration", "cell_resolved_axes"],
   manifest_format: ["json", "yaml", "json_lines"],
   artifact_granularity: ["per_cell", "per_target", "per_horizon", "per_target_horizon", "flat"],
   naming_convention: ["cell_id", "descriptive", "recipe_hash", "custom"],
+  coverage_view: ["per_series_start_end", "panel_balance_matrix", "observation_count", "multi"],
+  summary_metrics: ["mean", "sd", "min", "max", "skew", "kurtosis", "n_obs", "n_missing"],
+  summary_split: ["full_sample", "pre_oos_only", "per_decade", "per_regime"],
+  stationarity_test: ["none", "adf", "pp", "kpss", "multi"],
+  stationarity_test_scope: ["target_only", "predictors_only", "target_and_predictors"],
+  missing_view: ["heatmap", "per_series_count", "longest_gap", "multi"],
+  outlier_view: ["none", "zscore_flag", "iqr_flag", "multi"],
+  correlation_method: ["pearson", "spearman", "kendall"],
+  correlation_view: ["none", "full_matrix", "clustered_heatmap", "top_k_per_target", "top_k"],
+  comparison_pair: ["raw_vs_final_clean", "raw_vs_tcoded", "raw_vs_outlier_handled", "raw_vs_imputed", "multi_stage"],
+  comparison_output_form: ["side_by_side_summary", "overlay_timeseries", "difference_table", "distribution_shift", "multi"],
+  distribution_metric: ["mean_change", "sd_change", "skew_change", "kurtosis_change", "ks_statistic"],
+  distribution_view: ["summary_table", "qq_plot", "histogram_overlay", "multi"],
+  correlation_shift: ["none", "delta_matrix", "pre_post_overlay"],
+  cleaning_summary_view: ["n_imputed_per_series", "n_outliers_flagged", "n_truncated_obs", "multi"],
+  t_code_application_log: ["none", "summary", "per_series_detail"],
+  diagnostic_format: ["png", "pdf", "html", "json", "latex_table", "csv", "multi"],
+  attach_to_manifest: ["true", "false"],
+  latex_export: ["true", "false"],
+  comparison_stages: ["cleaned_vs_features", "raw_vs_cleaned_vs_features", "features_only"],
+  factor_view: ["scree_plot", "cumulative_variance", "loadings_heatmap", "factor_timeseries", "multi"],
+  dfm_diagnostics: ["none", "idiosyncratic_acf", "factor_var_stability", "multi"],
+  feature_correlation: ["none", "within_block", "cross_block", "with_target", "multi"],
+  lag_view: ["autocorrelation_per_lag", "partial_autocorrelation", "lag_correlation_decay", "multi"],
+  marx_view: ["none", "weight_decay_visualization"],
+  selection_view: ["selected_list", "selection_count_per_origin", "selection_stability", "multi"],
+  stability_metric: ["jaccard", "kuncheva"],
+  fit_view: ["fitted_vs_actual", "residual_time", "residual_acf", "residual_qq", "multi"],
+  fit_per_origin: ["last_origin_only", "every_n_origins", "all_origins"],
+  forecast_scale_view: ["transformed_only", "back_transformed_only", "both_overlay"],
+  back_transform_method: ["auto", "manual_function"],
+  window_view: ["rolling_train_loss", "rolling_coef", "first_vs_last_window_forecast", "parameter_stability", "multi"],
+  coef_view_models: ["all_linear_models", "user_list"],
+  tuning_view: ["objective_trace", "hyperparameter_path", "cv_score_distribution", "multi"],
+  ensemble_view: ["weights_over_time", "weight_concentration", "member_contribution", "multi"],
+  weights_over_time_method: ["line_plot", "stacked_area", "heatmap"],
 };
 
 function escapeHtml(value) {
@@ -731,6 +868,16 @@ function selectedCanonicalValues(axisName, records) {
     if (defaults) return defaults.filter((value) => records.some((record) => String(record.value) === String(value)));
     return records.filter((record) => record.enabled !== false).slice(0, 1).map((record) => record.value);
   }
+  const explicitDefault = DEFAULT_SINGLE_SELECTIONS[axisName];
+  if (explicitDefault && records.some((record) => String(record.value) === String(explicitDefault) && record.enabled !== false)) {
+    return [explicitDefault];
+  }
+  const recordDefault = records.find((record) => record.default && record.enabled !== false);
+  if (recordDefault) return [recordDefault.value];
+  const presentedDefault = defaultValue(axisName);
+  if (presentedDefault && records.some((record) => String(record.value) === String(presentedDefault) && record.enabled !== false)) {
+    return [presentedDefault];
+  }
   const enabled = records.find((record) => record.enabled !== false);
   return [(enabled || records[0]).value];
 }
@@ -758,6 +905,7 @@ function renderCanonicalOption(record, axisName, selectedValues) {
 function renderGraphSubLayerPanel(node, subLayer) {
   const section = graphSectionForSubLayer(node, subLayer);
   if (!section) return "";
+  const selected = new Set(selectedDagItems(node.id));
   return `
     <div class="dag-panel">
       <div class="axis-option-head">
@@ -765,16 +913,17 @@ function renderGraphSubLayerPanel(node, subLayer) {
         <strong>${escapeHtml(subLayer)}</strong>
       </div>
       <p class="source-note">${escapeHtml(section.summary || "Graph layer section.")}</p>
+      <p class="source-note">Click DAG items to include them in the generated YAML template.</p>
       <div class="dag-flow">
         ${(section.columns || []).map((column) => `
           <section class="dag-column">
             <h4>${escapeHtml(column.label)}</h4>
             ${(column.items || []).map((item) => `
-              <div class="dag-node">
+              <button type="button" class="dag-node${selected.has(dagItemKey(subLayer, item)) ? " selected" : ""}" data-dag-layer="${escapeHtml(node.id)}" data-dag-sub-layer="${escapeHtml(subLayer)}" data-dag-item="${escapeHtml(item.name)}">
                 <span>${escapeHtml(item.kind || "node")}</span>
                 <strong>${escapeHtml(item.name)}</strong>
                 <p>${escapeHtml(item.summary || "")}</p>
-              </div>
+              </button>
             `).join("")}
           </section>
         `).join("")}
@@ -829,6 +978,22 @@ function applyCanonicalSelection(axisName, value) {
   }
 }
 
+function selectedDagItems(layerId) {
+  return state.dagSelections[layerId] || [];
+}
+
+function dagItemKey(subLayer, item) {
+  return `${subLayer}::${item.name}`;
+}
+
+function toggleDagItem(layerId, subLayer, itemName) {
+  const current = selectedDagItems(layerId);
+  const key = `${subLayer}::${itemName}`;
+  state.dagSelections[layerId] = current.includes(key)
+    ? current.filter((item) => item !== key)
+    : [...current, key];
+}
+
 function renderLayerDetail() {
   if (!els.layerDetail) return;
   const node = activeNode();
@@ -840,7 +1005,8 @@ function renderLayerDetail() {
   const activeSubLayer = ensureActiveSubLayer(node);
   const subLayerAxes = activeSubLayer ? axesForSubLayer(node, activeSubLayer) : (node.axes || []);
   const graphSection = activeSubLayer ? graphSectionForSubLayer(node, activeSubLayer) : null;
-  if (!state.activeCanonicalAxis || !subLayerAxes.includes(state.activeCanonicalAxis)) {
+  const selectableAxes = [...(node.layer_globals || []), ...subLayerAxes];
+  if (!state.activeCanonicalAxis || !selectableAxes.includes(state.activeCanonicalAxis)) {
     state.activeCanonicalAxis = subLayerAxes[0] || null;
   }
   const modeText = node.ui_mode === "graph"
@@ -875,7 +1041,7 @@ function renderLayerDetail() {
       </section>
       <section>
         <h3>Layer globals</h3>
-        ${formatList(node.layer_globals, "No layer-global axes.")}
+        ${(node.layer_globals || []).length ? `<div class="canonical-axis-grid">${(node.layer_globals || []).map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No layer-global axes.</p>`}
       </section>
       <section>
         <h3>Selected sub-layer</h3>
@@ -1265,8 +1431,257 @@ function renderPathAxis(axis, axisIdx, current) {
   `;
 }
 
+const LAYER_YAML_KEYS = {
+  l0: "0_meta",
+  l1: "1_data",
+  l2: "2_preprocessing",
+  l1_5: "1_5_data_summary",
+  l2_5: "2_5_pre_post_preprocessing",
+  l3_5: "3_5_feature_diagnostics",
+  l4_5: "4_5_generator_diagnostics",
+  l5: "5_evaluation",
+  l6: "6_statistical_tests",
+  l7: "7_interpretation",
+  l8: "8_output",
+};
+
+function coerceYamlScalar(value) {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^-?\d+$/.test(String(value))) return Number(value);
+  if (/^-?\d+\.\d+$/.test(String(value))) return Number(value);
+  return value;
+}
+
+function selectedAxisYamlValue(axisName) {
+  const records = optionRecordsForAxis(axisName);
+  const selected = selectedCanonicalValues(axisName, records);
+  if (Array.isArray(selected)) {
+    if (isMultiSelectAxis(axisName)) return selected.map(coerceYamlScalar);
+    return coerceYamlScalar(selected[0]);
+  }
+  return coerceYamlScalar(selected);
+}
+
+function fixedAxesForNode(node, axes) {
+  return (axes || []).reduce((acc, axisName) => {
+    const records = optionRecordsForAxis(axisName);
+    if (!records.length) return acc;
+    acc[axisName] = selectedAxisYamlValue(axisName);
+    return acc;
+  }, {});
+}
+
+function selectedDatasetIncludes(token) {
+  const dataset = String(selectedAxisYamlValue("dataset") || "");
+  return dataset.split("+").includes(token);
+}
+
+function l5FixedAxes(node) {
+  const axes = fixedAxesForNode(node, node.axes || []);
+  const regime = selectedAxisYamlValue("regime_definition");
+  const targetStructure = selectedAxisYamlValue("target_structure");
+
+  // The template L4 DAG emits point forecasts. Drop density-only controls
+  // unless a density/quantile forecast DAG is added later.
+  delete axes.density_metrics;
+  // Benchmark-relative controls require execution context from L4 artifacts.
+  // The navigator emits a portable starter recipe, so leave these to L5
+  // defaults or explicit user edits once benchmark artifacts exist.
+  delete axes.relative_metrics;
+  delete axes.benchmark_window;
+  delete axes.benchmark_scope;
+
+  if (targetStructure !== "multi_series_target") {
+    delete axes.agg_target;
+  }
+  if (!selectedDatasetIncludes("fred_sd")) {
+    delete axes.agg_state;
+  }
+  if (regime === "none") {
+    delete axes.regime_use;
+    delete axes.regime_metrics;
+  } else if (!["per_regime", "both"].includes(axes.regime_use)) {
+    delete axes.regime_metrics;
+  }
+  if (axes.decomposition_target === "none") {
+    delete axes.decomposition_order;
+  }
+  return axes;
+}
+
+function diagnosticExportAxes() {
+  return {
+    diagnostic_format: selectedAxisYamlValue("diagnostic_format"),
+    attach_to_manifest: selectedAxisYamlValue("attach_to_manifest"),
+    figure_dpi: selectedAxisYamlValue("figure_dpi"),
+    latex_export: selectedAxisYamlValue("latex_export"),
+  };
+}
+
+function diagnosticFixedAxes(layerId, node) {
+  if (layerId === "l3_5") {
+    return {
+      comparison_stages: selectedAxisYamlValue("comparison_stages"),
+      comparison_output_form: selectedAxisYamlValue("comparison_output_form"),
+      feature_correlation: selectedAxisYamlValue("feature_correlation"),
+      correlation_method: selectedAxisYamlValue("correlation_method"),
+      correlation_view: "clustered_heatmap",
+      ...diagnosticExportAxes(),
+    };
+  }
+  if (layerId === "l4_5") {
+    return {
+      fit_view: selectedAxisYamlValue("fit_view"),
+      fit_per_origin: selectedAxisYamlValue("fit_per_origin"),
+      forecast_scale_view: selectedAxisYamlValue("forecast_scale_view"),
+      back_transform_method: selectedAxisYamlValue("back_transform_method"),
+      window_view: selectedAxisYamlValue("window_view"),
+      ...diagnosticExportAxes(),
+    };
+  }
+  return fixedAxesForNode(node, node.axes || []);
+}
+
+function yamlQuote(value) {
+  if (typeof value !== "string") return String(value);
+  if (!value || /[:#\[\]{},&*?|\-<>=!%@`]/.test(value) || /^\d/.test(value) || ["true", "false", "null"].includes(value)) {
+    return JSON.stringify(value);
+  }
+  return value;
+}
+
+function yamlDump(value, indent = 0) {
+  const pad = " ".repeat(indent);
+  if (Array.isArray(value)) {
+    if (!value.length) return "[]";
+    return value.map((item) => {
+      if (item && typeof item === "object") {
+        const dumped = yamlDump(item, indent + 2);
+        return `${pad}- ${dumped.trimStart()}`;
+      }
+      return `${pad}- ${yamlQuote(item)}`;
+    }).join("\n");
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value).filter(([, item]) => item !== undefined);
+    if (!entries.length) return "{}";
+    return entries.map(([key, item]) => {
+      if (Array.isArray(item) && !item.length) return `${pad}${key}: []`;
+      if (item && typeof item === "object" && !Array.isArray(item) && !Object.keys(item).length) return `${pad}${key}: {}`;
+      if (item && typeof item === "object") {
+        const dumped = yamlDump(item, indent + 2);
+        return `${pad}${key}:\n${dumped}`;
+      }
+      return `${pad}${key}: ${yamlQuote(item)}`;
+    }).join("\n");
+  }
+  return `${pad}${yamlQuote(value)}`;
+}
+
+function selectedDagSummary(layerId) {
+  return selectedDagItems(layerId).map((item) => item.replace("::", " / "));
+}
+
+function l3DagYaml() {
+  return {
+    nodes: [
+      { id: "src_X", type: "source", selector: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", subset: { role: "predictors" } } },
+      { id: "src_y", type: "source", selector: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", subset: { role: "target" } } },
+      { id: "y_h", type: "step", op: "target_construction", params: { horizon: 1, mode: "point_forecast", method: "direct" }, inputs: ["src_y"] },
+      { id: "X_lag", type: "step", op: "lag", params: { n_lag: 1 }, inputs: ["src_X"], pipeline_id: "baseline_lag" },
+    ],
+    sinks: {
+      l3_features_v1: { X_final: "X_lag", y_final: "y_h" },
+      l3_metadata_v1: "auto",
+    },
+    leaf_config: { navigator_selected_dag_items: selectedDagSummary("l3") },
+  };
+}
+
+function l4DagYaml() {
+  return {
+    nodes: [
+      { id: "src_features", type: "source", selector: { layer_ref: "l3", sink_name: "l3_features_v1" } },
+      { id: "fit_ar_benchmark", type: "step", op: "fit_model", params: { family: "ar_p", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: true },
+      { id: "fit_ridge", type: "step", op: "fit_model", params: { family: "ridge", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: false },
+      { id: "predict_ridge", type: "step", op: "predict", params: { forecast_object: "point" }, inputs: ["fit_ridge"] },
+    ],
+    sinks: {
+      l4_forecasts_v1: "predict_ridge",
+      l4_model_artifacts_v1: ["fit_ar_benchmark", "fit_ridge"],
+      l4_training_metadata_v1: "auto",
+    },
+    leaf_config: { navigator_selected_dag_items: selectedDagSummary("l4") },
+  };
+}
+
+function l7DagYaml(node) {
+  const outputAxes = fixedAxesForNode(node, (node.sub_layer_axes || {})["L7.B Output shape"] || CANONICAL_AXIS_GROUPS.l7["L7.B Output shape"]);
+  return {
+    enabled: selectedAxisYamlValue("enabled"),
+    nodes: [
+      { id: "src_model", type: "source", selector: { layer_ref: "l4", sink_name: "l4_model_artifacts_v1", subset: { model_id: "fit_ridge" } } },
+      { id: "src_X", type: "source", selector: { layer_ref: "l3", sink_name: "l3_features_v1", subset: { component: "X_final" } } },
+      { id: "importance", type: "step", op: "shap_kernel", params: { n_samples_background: 100, link_function: "identity" }, inputs: ["src_model", "src_X"] },
+    ],
+    sinks: { l7_importance_v1: { global: "importance" } },
+    fixed_axes: outputAxes,
+    leaf_config: { navigator_selected_dag_items: selectedDagSummary("l7") },
+  };
+}
+
+function l6Yaml(node) {
+  const subLayerAxes = node.sub_layer_axes || CANONICAL_AXIS_GROUPS.l6 || {};
+  const out = {
+    enabled: selectedAxisYamlValue("enabled"),
+    test_scope: selectedAxisYamlValue("test_scope"),
+    dependence_correction: selectedAxisYamlValue("dependence_correction"),
+    overlap_handling: selectedAxisYamlValue("overlap_handling"),
+    sub_layers: {},
+  };
+  Object.entries(subLayerAxes).forEach(([subLayer, axes]) => {
+    if (subLayer === "L6 globals") return;
+    out.sub_layers[subLayer] = {
+      enabled: false,
+      fixed_axes: fixedAxesForNode(node, axes),
+    };
+  });
+  return out;
+}
+
+function canonicalRecipeYaml() {
+  const byId = topologyNodeById();
+  const recipe = { recipe_id: "macrocast-navigator-designed" };
+  ["l0", "l1", "l2"].forEach((layerId) => {
+    const node = byId.get(layerId);
+    recipe[LAYER_YAML_KEYS[layerId]] = { fixed_axes: fixedAxesForNode(node, node.axes || []) };
+    if (layerId === "l1") {
+      recipe[LAYER_YAML_KEYS[layerId]].leaf_config = { target: "INDPRO" };
+    }
+  });
+  recipe["3_feature_engineering"] = l3DagYaml();
+  recipe["4_forecasting_model"] = l4DagYaml();
+  const l5 = byId.get("l5");
+  recipe[LAYER_YAML_KEYS.l5] = { fixed_axes: l5FixedAxes(l5) };
+  const l6 = byId.get("l6");
+  recipe[LAYER_YAML_KEYS.l6] = l6Yaml(l6);
+  const l7 = byId.get("l7");
+  recipe[LAYER_YAML_KEYS.l7] = l7DagYaml(l7);
+  const l8 = byId.get("l8");
+  recipe[LAYER_YAML_KEYS.l8] = { fixed_axes: fixedAxesForNode(l8, l8.axes || []) };
+  ["l1_5", "l2_5", "l3_5", "l4_5"].forEach((layerId) => {
+    const node = byId.get(layerId);
+    recipe[LAYER_YAML_KEYS[layerId]] = {
+      enabled: selectedAxisYamlValue("enabled"),
+      fixed_axes: diagnosticFixedAxes(layerId, node),
+    };
+  });
+  return `${yamlDump(recipe)}\n`;
+}
+
 function renderYaml() {
-  els.yamlPreview.textContent = NavigatorStateEngine.recipeYaml(state.data, currentSource(), state.engineState);
+  els.yamlPreview.textContent = canonicalRecipeYaml();
 }
 
 function render() {
@@ -1377,6 +1792,12 @@ function bindEvents() {
       if (optionButton && state.activeCanonicalAxis) {
         applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
         render();
+        return;
+      }
+      const dagButton = event.target.closest("[data-dag-item]");
+      if (dagButton) {
+        toggleDagItem(dagButton.dataset.dagLayer, dagButton.dataset.dagSubLayer, dagButton.dataset.dagItem);
+        render();
       }
     });
     els.layerDetail.addEventListener("keydown", (event) => {
@@ -1384,15 +1805,18 @@ function bindEvents() {
       const subLayerButton = event.target.closest("[data-sub-layer]");
       const axisButton = event.target.closest("[data-canonical-axis]");
       const optionButton = event.target.closest("[data-canonical-option]");
-      if (!subLayerButton && !axisButton && !optionButton) return;
+      const dagButton = event.target.closest("[data-dag-item]");
+      if (!subLayerButton && !axisButton && !optionButton && !dagButton) return;
       event.preventDefault();
       if (subLayerButton) {
         state.activeSubLayer = subLayerButton.dataset.subLayer;
         state.activeCanonicalAxis = null;
       } else if (axisButton) {
         state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
-      } else if (state.activeCanonicalAxis) {
+      } else if (optionButton && state.activeCanonicalAxis) {
         applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
+      } else if (dagButton) {
+        toggleDagItem(dagButton.dataset.dagLayer, dagButton.dataset.dagSubLayer, dagButton.dataset.dagItem);
       }
       render();
     });
@@ -1441,6 +1865,8 @@ function bindEvents() {
 
   els.resetPath.addEventListener("click", () => {
     resetEngineState();
+    state.canonicalSelections = {};
+    state.dagSelections = {};
     render();
   });
 
@@ -1489,7 +1915,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260501-canonical-layer-redesign");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260501-dag-yaml-diagnostics");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();
