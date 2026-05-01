@@ -14,6 +14,8 @@ from .layers import l7 as l7_layer
 from .layers import l8 as l8_layer
 from .layers import l1_5 as l1_5_layer
 from .layers import l2_5 as l2_5_layer
+from .layers import l3_5 as l3_5_layer
+from .layers import l4_5 as l4_5_layer
 from .layers import l3 as l3_layer
 from .layers import l4 as l4_layer
 from .layers import l5 as l5_layer
@@ -117,6 +119,14 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
         l2_5_artifact, l2_5_axes = materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact)
         artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
         resolved_axes["l2_5"] = l2_5_axes
+    if "3_5_feature_diagnostics" in root:
+        l3_5_artifact, l3_5_axes = materialize_l3_5_diagnostic(root, l1_artifact, l2_artifact, l3_features, l3_metadata)
+        artifacts["l3_5_diagnostic_v1"] = l3_5_artifact
+        resolved_axes["l3_5"] = l3_5_axes
+    if "4_5_generator_diagnostics" in root:
+        l4_5_artifact, l4_5_axes = materialize_l4_5_diagnostic(root, l3_features, l4_forecasts, l4_models, l4_training)
+        artifacts["l4_5_diagnostic_v1"] = l4_5_artifact
+        resolved_axes["l4_5"] = l4_5_axes
     if "6_statistical_tests" in root:
         l6_tests, l6_axes = materialize_l6_stub(root, l1_artifact, l4_forecasts, l4_models)
         artifacts["l6_tests_v1"] = l6_tests
@@ -291,6 +301,88 @@ def materialize_l2_5_diagnostic(
     )
 
 
+def materialize_l3_5_diagnostic(
+    recipe_root: dict[str, Any],
+    l1_artifact: L1DataDefinitionArtifact,
+    l2_artifact: L2CleanPanelArtifact,
+    l3_features: L3FeaturesArtifact,
+    l3_metadata: L3MetadataArtifact,
+) -> tuple[DiagnosticArtifact, dict[str, Any]]:
+    raw = recipe_root.get("3_5_feature_diagnostics", {}) or {}
+    context = l3_5_layer._recipe_context(recipe_root)
+    report = l3_5_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l3_5_layer.resolve_axes_from_raw(raw, context=context)
+    axes = _plain_axes(resolved)
+    if not resolved.get("enabled", False):
+        return _disabled_diagnostic("l1+l2+l3", axes), axes
+
+    raw_frame = l1_artifact.raw_panel.data.copy()
+    clean_frame = l2_artifact.panel.data.copy()
+    feature_frame = l3_features.X_final.data.copy()
+    metadata = {
+        "runtime": "core_l3_5_diagnostic",
+        "axis_resolved": axes,
+        "comparison": _diagnostic_l3_comparison(raw_frame, clean_frame, feature_frame, l3_features),
+        "feature_summary": _diagnostic_feature_summary(feature_frame),
+        "lineage_summary": _diagnostic_l3_lineage_summary(l3_metadata),
+        "factor_block": {"active": bool(context.get("has_factor_step")), "n_factors_to_show": axes.get("leaf_config", {}).get("n_factors_to_show", 8)},
+        "lag_block": _diagnostic_l3_lag_summary(feature_frame, active=bool(context.get("has_lag_step"))),
+        "selection_summary": {"active": bool(context.get("has_feature_selection_step"))},
+    }
+    if axes.get("feature_correlation") != "none":
+        metadata["feature_correlation"] = feature_frame.corr(method=axes.get("correlation_method", "pearson"), numeric_only=True)
+    return (
+        DiagnosticArtifact(
+            layer_hooked="l1+l2+l3",
+            artifact_type="json",
+            metadata=metadata,
+            enabled=True,
+        ),
+        axes,
+    )
+
+
+def materialize_l4_5_diagnostic(
+    recipe_root: dict[str, Any],
+    l3_features: L3FeaturesArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact,
+    l4_training: L4TrainingMetadataArtifact,
+) -> tuple[DiagnosticArtifact, dict[str, Any]]:
+    raw = recipe_root.get("4_5_generator_diagnostics", {}) or {}
+    context = l4_5_layer._recipe_context(recipe_root)
+    report = l4_5_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l4_5_layer.resolve_axes_from_raw(raw, context=context)
+    axes = _plain_axes(resolved)
+    if not resolved.get("enabled", False):
+        return _disabled_diagnostic("l4", axes), axes
+
+    actual = l3_features.y_final.metadata.values.get("data")
+    metadata = {
+        "runtime": "core_l4_5_diagnostic",
+        "axis_resolved": axes,
+        "forecast_summary": _diagnostic_l4_forecast_summary(l4_forecasts),
+        "model_summary": _diagnostic_l4_model_summary(l4_models),
+        "training_summary": _diagnostic_l4_training_summary(l4_training),
+        "fit_summary": _diagnostic_l4_fit_summary(l4_forecasts, actual if isinstance(actual, pd.Series) else None),
+    }
+    if axes.get("window_view") != "none":
+        metadata["window_stability"] = _diagnostic_l4_window_summary(l4_training)
+    return (
+        DiagnosticArtifact(
+            layer_hooked="l4",
+            artifact_type="json",
+            metadata=metadata,
+            enabled=True,
+        ),
+        axes,
+    )
+
+
 def _disabled_diagnostic(layer_hooked: str, axes: dict[str, Any]) -> DiagnosticArtifact:
     return DiagnosticArtifact(
         layer_hooked=layer_hooked,
@@ -381,6 +473,121 @@ def _diagnostic_distribution_shift(raw_frame: pd.DataFrame, clean_frame: pd.Data
                 values[metric] = _ks_statistic(raw.dropna(), clean.dropna())
         shifts[column] = values
     return shifts
+
+
+def _diagnostic_l3_comparison(
+    raw_frame: pd.DataFrame, clean_frame: pd.DataFrame, feature_frame: pd.DataFrame, l3_features: L3FeaturesArtifact
+) -> dict[str, Any]:
+    return {
+        "raw_shape": raw_frame.shape,
+        "clean_shape": clean_frame.shape,
+        "feature_shape": feature_frame.shape,
+        "y_shape": l3_features.y_final.shape,
+        "sample_start": _iso_or_none(l3_features.sample_index[0]) if l3_features.sample_index is not None and len(l3_features.sample_index) else None,
+        "sample_end": _iso_or_none(l3_features.sample_index[-1]) if l3_features.sample_index is not None and len(l3_features.sample_index) else None,
+        "raw_missing_total": int(raw_frame.isna().sum().sum()),
+        "clean_missing_total": int(clean_frame.isna().sum().sum()),
+        "feature_missing_total": int(feature_frame.isna().sum().sum()),
+    }
+
+
+def _diagnostic_feature_summary(feature_frame: pd.DataFrame) -> dict[str, Any]:
+    return {
+        "n_obs": int(len(feature_frame)),
+        "n_features": int(len(feature_frame.columns)),
+        "columns": tuple(str(column) for column in feature_frame.columns),
+        "missing_by_feature": feature_frame.isna().sum().astype(int).to_dict(),
+    }
+
+
+def _diagnostic_l3_lineage_summary(l3_metadata: L3MetadataArtifact) -> dict[str, Any]:
+    pipeline_ids = sorted({lineage.pipeline_id for lineage in l3_metadata.column_lineage.values() if lineage.pipeline_id})
+    return {
+        "n_column_lineage": len(l3_metadata.column_lineage),
+        "n_pipeline_definitions": len(l3_metadata.pipeline_definitions),
+        "pipeline_ids": tuple(pipeline_ids),
+        "source_variables": {key: tuple(value) for key, value in l3_metadata.source_variables.items()},
+    }
+
+
+def _diagnostic_l3_lag_summary(feature_frame: pd.DataFrame, *, active: bool) -> dict[str, Any]:
+    lag_columns = [
+        str(column)
+        for column in feature_frame.columns
+        if "_lag" in str(column) or "_ma" in str(column) or "_s" in str(column)
+    ]
+    return {"active": active, "lag_feature_count": len(lag_columns), "lag_features": tuple(lag_columns)}
+
+
+def _diagnostic_l4_forecast_summary(l4_forecasts: L4ForecastsArtifact) -> dict[str, Any]:
+    return {
+        "n_forecasts": len(l4_forecasts.forecasts),
+        "forecast_object": l4_forecasts.forecast_object,
+        "model_ids": tuple(l4_forecasts.model_ids),
+        "targets": tuple(l4_forecasts.targets),
+        "horizons": tuple(l4_forecasts.horizons),
+        "sample_start": _iso_or_none(l4_forecasts.sample_index[0]) if l4_forecasts.sample_index is not None and len(l4_forecasts.sample_index) else None,
+        "sample_end": _iso_or_none(l4_forecasts.sample_index[-1]) if l4_forecasts.sample_index is not None and len(l4_forecasts.sample_index) else None,
+    }
+
+
+def _diagnostic_l4_model_summary(l4_models: L4ModelArtifactsArtifact) -> dict[str, Any]:
+    return {
+        model_id: {
+            "family": artifact.family,
+            "framework": artifact.framework,
+            "n_features": len(artifact.feature_names),
+            "is_benchmark": bool(l4_models.is_benchmark.get(model_id, False)),
+            "fit_metadata": dict(artifact.fit_metadata),
+        }
+        for model_id, artifact in l4_models.artifacts.items()
+    }
+
+
+def _diagnostic_l4_training_summary(l4_training: L4TrainingMetadataArtifact) -> dict[str, Any]:
+    return {
+        "n_forecast_origins": len(l4_training.forecast_origins),
+        "forecast_origins": tuple(_iso_or_none(origin) for origin in l4_training.forecast_origins),
+        "refit_origin_count": {model_id: len(origins) for model_id, origins in l4_training.refit_origins.items()},
+        "training_window_count": len(l4_training.training_window_per_origin),
+    }
+
+
+def _diagnostic_l4_fit_summary(l4_forecasts: L4ForecastsArtifact, actual: pd.Series | None) -> dict[str, dict[str, float | int | None]]:
+    if actual is None:
+        return {}
+    rows: list[dict[str, Any]] = []
+    for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+        if origin not in actual.index:
+            continue
+        error = float(actual.loc[origin]) - float(forecast)
+        rows.append({"model_id": model_id, "target": target, "horizon": horizon, "squared_error": error**2, "absolute_error": abs(error)})
+    if not rows:
+        return {}
+    frame = pd.DataFrame(rows)
+    summary = frame.groupby(["model_id", "target", "horizon"]).agg(
+        n=("squared_error", "size"),
+        mse=("squared_error", "mean"),
+        mae=("absolute_error", "mean"),
+    )
+    return {
+        f"{model_id}|{target}|h{horizon}": {"n": int(values["n"]), "mse": float(values["mse"]), "mae": float(values["mae"])}
+        for (model_id, target, horizon), values in summary.iterrows()
+    }
+
+
+def _diagnostic_l4_window_summary(l4_training: L4TrainingMetadataArtifact) -> dict[str, Any]:
+    by_model: dict[str, list[tuple[Any, Any, Any]]] = {}
+    for (model_id, origin), window in l4_training.training_window_per_origin.items():
+        by_model.setdefault(model_id, []).append((origin, window[0], window[1]))
+    return {
+        model_id: {
+            "n_windows": len(windows),
+            "first_window": tuple(_iso_or_none(value) for value in min(windows, key=lambda row: row[0])) if windows else (),
+            "last_window": tuple(_iso_or_none(value) for value in max(windows, key=lambda row: row[0])) if windows else (),
+        }
+        for model_id, windows in by_model.items()
+    }
 
 
 def materialize_l3_minimal(

@@ -132,6 +132,10 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
   enabled: true
 2_5_pre_post_preprocessing:
   enabled: true
+3_5_feature_diagnostics:
+  enabled: true
+4_5_generator_diagnostics:
+  enabled: true
 6_statistical_tests: {}
 7_interpretation:
   enabled: false
@@ -148,11 +152,56 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     assert isinstance(result.sink("l8_artifacts_v1"), L8ArtifactsArtifact)
     assert result.sink("l1_5_diagnostic_v1").enabled is True
     assert result.sink("l2_5_diagnostic_v1").enabled is True
+    assert result.sink("l3_5_diagnostic_v1").enabled is True
+    assert result.sink("l4_5_diagnostic_v1").enabled is True
     assert result.sink("l8_artifacts_v1").output_directory.as_posix().startswith("macrocast_output/default_recipe/")
     assert "l1_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l2_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
+    assert "l3_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
+    assert "l4_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l6_tests_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert result.resolved_axes["l8"]["export_format"] == "json_csv"
+
+
+def test_execute_minimal_forecast_materializes_l3_5_diagnostic():
+    yaml_text = (
+        MINIMAL_RECIPE
+        + """
+3_5_feature_diagnostics:
+  enabled: true
+"""
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+    diagnostic = result.sink("l3_5_diagnostic_v1")
+
+    assert diagnostic.enabled is True
+    assert diagnostic.layer_hooked == "l1+l2+l3"
+    assert diagnostic.metadata["comparison"]["feature_shape"] == (4, 2)
+    assert diagnostic.metadata["feature_summary"]["n_features"] == 2
+    assert diagnostic.metadata["lag_block"]["active"] is True
+    assert diagnostic.metadata["lag_block"]["lag_feature_count"] == 2
+    assert "feature_correlation" in diagnostic.metadata
+
+
+def test_execute_minimal_forecast_materializes_l4_5_diagnostic():
+    yaml_text = (
+        MINIMAL_RECIPE
+        + """
+4_5_generator_diagnostics:
+  enabled: true
+"""
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+    diagnostic = result.sink("l4_5_diagnostic_v1")
+
+    assert diagnostic.enabled is True
+    assert diagnostic.layer_hooked == "l4"
+    assert diagnostic.metadata["forecast_summary"]["n_forecasts"] == 2
+    assert diagnostic.metadata["model_summary"]["fit_ridge"]["family"] == "ridge"
+    assert diagnostic.metadata["training_summary"]["refit_origin_count"] == {"fit_ridge": 2}
+    assert diagnostic.metadata["fit_summary"]["fit_ridge|y|h1"]["n"] == 2
 
 
 def test_execute_minimal_forecast_rejects_enabled_l6_runtime_stub():
