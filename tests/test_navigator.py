@@ -525,6 +525,17 @@ def test_navigator_cli_writes_replication_yaml(tmp_path: Path):
     assert payload["path"]["3_training"]["fixed_axes"]["model_family"] == "ridge"
 
 
+def test_navigator_ui_data_exports_runtime_support_metadata():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    support = payload["runtime_support"]
+
+    assert support["schema_version"] == "navigator_runtime_support_v1"
+    assert support["status_map"]["operational"] == "runtime_supported"
+    assert support["status_map"]["registry_only"] == "schema_only"
+    assert "runtime_supported" in support["legend"]
+    assert support["layer_notes"]["6_stat_tests"]["label"] == "Lightweight runtime"
+
+
 def test_navigator_ui_data_export_roundtrip(tmp_path: Path):
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
 

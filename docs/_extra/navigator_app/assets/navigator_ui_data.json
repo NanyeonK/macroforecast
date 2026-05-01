@@ -4631,6 +4631,74 @@
       "short_description": "Fixture-safe FRED-SD direct forecast using Layer 2 native-frequency adapter payloads and the built-in Layer 3 midasr/almonp restricted MIDAS executor."
     }
   ],
+  "runtime_support": {
+    "layer_notes": {
+      "0_meta": {
+        "label": "Runtime planner",
+        "summary": "Study scope, reproducibility, and serial/local execution controls are active runtime inputs."
+      },
+      "1_data_task": {
+        "label": "Core runtime",
+        "summary": "FRED-MD/FRED-QD fixtures, custom panels, target definitions, and availability checks execute locally."
+      },
+      "2_preprocessing": {
+        "label": "Core runtime",
+        "summary": "Transform codes, missing/outlier policies, scaling, lags, factor blocks, and selection have local execution coverage for supported options."
+      },
+      "3_training": {
+        "label": "Core runtime plus stubs",
+        "summary": "Linear, benchmark, AR, and lightweight sklearn paths run; advanced families may remain schema-only or plugin-backed."
+      },
+      "4_evaluation": {
+        "label": "Core runtime",
+        "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, and decomposition materialize runtime artifacts."
+      },
+      "5_output_provenance": {
+        "label": "Core runtime",
+        "summary": "JSON/CSV exports, manifests, selected objects, diagnostics, tests, and importance summaries write to disk."
+      },
+      "6_stat_tests": {
+        "label": "Lightweight runtime",
+        "summary": "Enabled tests produce deterministic lightweight results for point-forecast workflows; density and heavy bootstrap methods remain limited."
+      },
+      "7_importance": {
+        "label": "Lightweight runtime",
+        "summary": "Linear coefficients, permutation-style importance, group/lineage aggregation, and transformation attribution run; full SHAP and deep methods remain schema-oriented."
+      }
+    },
+    "legend": {
+      "future": {
+        "label": "Future",
+        "summary": "Design placeholder rejected by validation or unavailable at runtime."
+      },
+      "plugin_required": {
+        "label": "Plugin required",
+        "summary": "Needs a registered external callable or integration supplied by the user."
+      },
+      "runtime_supported": {
+        "label": "Runtime supported",
+        "summary": "Implemented in the current local execution path for ordinary recipes."
+      },
+      "schema_only": {
+        "label": "Schema only",
+        "summary": "Valid grammar or planning surface, but no full runtime path is open yet."
+      },
+      "supported_with_contract": {
+        "label": "Supported with contract",
+        "summary": "Implemented for the documented narrow contract; companion choices still matter."
+      }
+    },
+    "schema_version": "navigator_runtime_support_v1",
+    "status_map": {
+      "external_plugin": "plugin_required",
+      "future": "future",
+      "gated_named": "schema_only",
+      "not_supported_yet": "schema_only",
+      "operational": "runtime_supported",
+      "operational_narrow": "supported_with_contract",
+      "registry_only": "schema_only"
+    }
+  },
   "samples": [
     {
       "id": "examples/recipes/model-benchmark.yaml",

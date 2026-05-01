@@ -105,6 +105,84 @@ def layer_axis_groups() -> dict[str, list[dict[str, Any]]]:
     }
 
 
+_RUNTIME_SUPPORT = {
+    "schema_version": "navigator_runtime_support_v1",
+    "status_map": {
+        "operational": "runtime_supported",
+        "operational_narrow": "supported_with_contract",
+        "registry_only": "schema_only",
+        "gated_named": "schema_only",
+        "not_supported_yet": "schema_only",
+        "external_plugin": "plugin_required",
+        "future": "future",
+    },
+    "legend": {
+        "runtime_supported": {
+            "label": "Runtime supported",
+            "summary": "Implemented in the current local execution path for ordinary recipes.",
+        },
+        "supported_with_contract": {
+            "label": "Supported with contract",
+            "summary": "Implemented for the documented narrow contract; companion choices still matter.",
+        },
+        "schema_only": {
+            "label": "Schema only",
+            "summary": "Valid grammar or planning surface, but no full runtime path is open yet.",
+        },
+        "plugin_required": {
+            "label": "Plugin required",
+            "summary": "Needs a registered external callable or integration supplied by the user.",
+        },
+        "future": {
+            "label": "Future",
+            "summary": "Design placeholder rejected by validation or unavailable at runtime.",
+        },
+    },
+    "layer_notes": {
+        "0_meta": {
+            "label": "Runtime planner",
+            "summary": "Study scope, reproducibility, and serial/local execution controls are active runtime inputs.",
+        },
+        "1_data_task": {
+            "label": "Core runtime",
+            "summary": "FRED-MD/FRED-QD fixtures, custom panels, target definitions, and availability checks execute locally.",
+        },
+        "2_preprocessing": {
+            "label": "Core runtime",
+            "summary": "Transform codes, missing/outlier policies, scaling, lags, factor blocks, and selection have local execution coverage for supported options.",
+        },
+        "3_training": {
+            "label": "Core runtime plus stubs",
+            "summary": "Linear, benchmark, AR, and lightweight sklearn paths run; advanced families may remain schema-only or plugin-backed.",
+        },
+        "4_evaluation": {
+            "label": "Core runtime",
+            "summary": "Point metrics, benchmark-relative metrics, aggregation, slicing, ranking, and decomposition materialize runtime artifacts.",
+        },
+        "5_output_provenance": {
+            "label": "Core runtime",
+            "summary": "JSON/CSV exports, manifests, selected objects, diagnostics, tests, and importance summaries write to disk.",
+        },
+        "6_stat_tests": {
+            "label": "Lightweight runtime",
+            "summary": "Enabled tests produce deterministic lightweight results for point-forecast workflows; density and heavy bootstrap methods remain limited.",
+        },
+        "7_importance": {
+            "label": "Lightweight runtime",
+            "summary": "Linear coefficients, permutation-style importance, group/lineage aggregation, and transformation attribution run; full SHAP and deep methods remain schema-oriented.",
+        },
+    },
+}
+
+
+def runtime_support() -> dict[str, Any]:
+    return {
+        "schema_version": _RUNTIME_SUPPORT["schema_version"],
+        "status_map": dict(_RUNTIME_SUPPORT["status_map"]),
+        "legend": {key: dict(value) for key, value in _RUNTIME_SUPPORT["legend"].items()},
+        "layer_notes": {key: dict(value) for key, value in _RUNTIME_SUPPORT["layer_notes"].items()},
+    }
+
 def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dict[str, Any]:
     root = _repo_root()
     paths = sample_paths or _DEFAULT_SAMPLE_PATHS
@@ -119,6 +197,7 @@ def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dic
         "axis_catalog": axis_catalog(),
         "axis_presentation": axis_presentation(),
         "operational_narrow_contracts": [dict(item) for item in OPERATIONAL_NARROW_CONTRACTS],
+        "runtime_support": runtime_support(),
         "state_engine": navigator_state_engine_spec(),
         "samples": [_read_sample(path, root) for path in paths],
         "replications": list_replication_entries(),
