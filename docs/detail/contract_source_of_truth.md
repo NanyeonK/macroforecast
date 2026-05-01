@@ -81,13 +81,13 @@ When sources disagree, apply this order:
 
 The current codebase still has migration gaps:
 
-- Layer 1 docs/UI expose registry-backed public axes such as
-  `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule`,
-  `raw_missing_policy`, `official_transform_policy`, and
-  `missing_availability`, while `macrocast/core/layers/l1.py` still rejects
-  several of them as unknown.
-- Layer 1 uses `multi_target` in docs/UI and registry-backed public examples,
-  while `macrocast/core/layers/l1.py` still expects `multi_series_target`.
+- Layer 1 runtime validation now accepts the registry-backed public axes used
+  by docs/UI, including `information_set_type`, `release_lag_rule`,
+  `contemporaneous_x_rule`, `raw_missing_policy`,
+  `official_transform_policy`, and `missing_availability`.
+- Layer 1 uses registry value `multi_target` in docs/UI and public examples.
+  Older design notes may say `multi_series_target`; runtime validation accepts
+  it as a compatibility alias and normalizes to `multi_target`.
 - Layer 2 docs/UI expose canonical representation axes such as
   `horizon_target_construction`, `target_transform`, `x_missing_policy`,
   `feature_block_combination`, and `feature_builder`, while

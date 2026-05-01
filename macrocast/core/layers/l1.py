@@ -17,7 +17,7 @@ CustomSourcePolicy = Literal["official_only", "custom_panel_only", "official_plu
 Dataset = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 Frequency = Literal["monthly", "quarterly"]
 VintagePolicy = Literal["current_vintage", "real_time_alfred"]
-TargetStructure = Literal["single_target", "multi_series_target"]
+TargetStructure = Literal["single_target", "multi_target", "multi_series_target"]
 VariableUniverse = Literal[
     "all_variables",
     "core_variables",
@@ -99,9 +99,20 @@ VALID_STATE_CODES = frozenset(
 DEFAULT_AXES: dict[str, Any] = {
     "custom_source_policy": "official_only",
     "dataset": "fred_md",
+    "information_set_type": "final_revised_data",
     "vintage_policy": "current_vintage",
     "target_structure": "single_target",
     "variable_universe": "all_variables",
+    "fred_sd_frequency_policy": "report_only",
+    "state_selection": "all_states",
+    "sd_variable_selection": "all_sd_variables",
+    "missing_availability": "zero_fill_leading_predictor_gaps",
+    "raw_missing_policy": "preserve_raw_missing",
+    "raw_outlier_policy": "preserve_raw_outliers",
+    "release_lag_rule": "ignore_release_lag",
+    "contemporaneous_x_rule": "allow_same_period_predictors",
+    "official_transform_policy": "apply_official_tcode",
+    "official_transform_scope": "target_and_predictors",
     "target_geography_scope": "all_states",
     "predictor_geography_scope": "match_target",
     "sample_start_rule": "max_balanced",
@@ -113,9 +124,22 @@ L1_AXIS_NAMES: tuple[str, ...] = (
     "custom_source_policy",
     "dataset",
     "frequency",
+    "information_set_type",
     "vintage_policy",
     "target_structure",
     "variable_universe",
+    "fred_sd_frequency_policy",
+    "fred_sd_state_group",
+    "state_selection",
+    "fred_sd_variable_group",
+    "sd_variable_selection",
+    "missing_availability",
+    "raw_missing_policy",
+    "raw_outlier_policy",
+    "release_lag_rule",
+    "contemporaneous_x_rule",
+    "official_transform_policy",
+    "official_transform_scope",
     "target_geography_scope",
     "predictor_geography_scope",
     "sample_start_rule",
@@ -236,6 +260,9 @@ def resolve_axes_from_raw(
 ) -> dict[str, Any]:
     custom_policy = fixed_axes.get("custom_source_policy", DEFAULT_AXES["custom_source_policy"])
     dataset = None if custom_policy == "custom_panel_only" else fixed_axes.get("dataset", DEFAULT_AXES["dataset"])
+    target_structure = _canonical_target_structure(
+        fixed_axes.get("target_structure", DEFAULT_AXES["target_structure"])
+    )
     frequency = fixed_axes.get("frequency")
     if _is_sweep_marker(dataset):
         dataset = DEFAULT_AXES["dataset"]
@@ -257,9 +284,22 @@ def resolve_axes_from_raw(
         "custom_source_policy": custom_policy,
         "dataset": dataset,
         "frequency": frequency,
+        "information_set_type": fixed_axes.get("information_set_type", DEFAULT_AXES["information_set_type"]),
         "vintage_policy": None if custom_policy == "custom_panel_only" else fixed_axes.get("vintage_policy", "current_vintage"),
-        "target_structure": fixed_axes.get("target_structure", DEFAULT_AXES["target_structure"]),
+        "target_structure": target_structure,
         "variable_universe": fixed_axes.get("variable_universe", DEFAULT_AXES["variable_universe"]),
+        "fred_sd_frequency_policy": fixed_axes.get("fred_sd_frequency_policy"),
+        "fred_sd_state_group": fixed_axes.get("fred_sd_state_group"),
+        "state_selection": fixed_axes.get("state_selection"),
+        "fred_sd_variable_group": fixed_axes.get("fred_sd_variable_group"),
+        "sd_variable_selection": fixed_axes.get("sd_variable_selection"),
+        "missing_availability": fixed_axes.get("missing_availability", DEFAULT_AXES["missing_availability"]),
+        "raw_missing_policy": fixed_axes.get("raw_missing_policy", DEFAULT_AXES["raw_missing_policy"]),
+        "raw_outlier_policy": fixed_axes.get("raw_outlier_policy", DEFAULT_AXES["raw_outlier_policy"]),
+        "release_lag_rule": fixed_axes.get("release_lag_rule", DEFAULT_AXES["release_lag_rule"]),
+        "contemporaneous_x_rule": fixed_axes.get("contemporaneous_x_rule", DEFAULT_AXES["contemporaneous_x_rule"]),
+        "official_transform_policy": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_policy", DEFAULT_AXES["official_transform_policy"]),
+        "official_transform_scope": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_scope", DEFAULT_AXES["official_transform_scope"]),
         "target_geography_scope": None,
         "predictor_geography_scope": None,
         "sample_start_rule": fixed_axes.get("sample_start_rule", DEFAULT_AXES["sample_start_rule"]),
@@ -271,6 +311,11 @@ def resolve_axes_from_raw(
     if custom_policy == "custom_panel_only" or dataset == "fred_sd":
         resolved["variable_universe"] = None if "variable_universe" not in fixed_axes else fixed_axes["variable_universe"]
     if dataset in FRED_SD_DATASETS:
+        resolved["fred_sd_frequency_policy"] = fixed_axes.get("fred_sd_frequency_policy", DEFAULT_AXES["fred_sd_frequency_policy"])
+        resolved["fred_sd_state_group"] = fixed_axes.get("fred_sd_state_group")
+        resolved["state_selection"] = fixed_axes.get("state_selection", DEFAULT_AXES["state_selection"])
+        resolved["fred_sd_variable_group"] = fixed_axes.get("fred_sd_variable_group")
+        resolved["sd_variable_selection"] = fixed_axes.get("sd_variable_selection", DEFAULT_AXES["sd_variable_selection"])
         resolved["target_geography_scope"] = fixed_axes.get("target_geography_scope", "all_states")
         resolved["predictor_geography_scope"] = fixed_axes.get("predictor_geography_scope", "match_target")
     if tolerate_invalid:
@@ -306,6 +351,7 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
     issues.extend(_validate_geography(leaf_config, resolved))
     issues.extend(_validate_sample_window(leaf_config, resolved))
     issues.extend(_validate_horizons(leaf_config, resolved))
+    issues.extend(_validate_public_data_policy_axes(leaf_config, resolved))
     issues.extend(_validate_regime(leaf_config, resolved))
 
     if resolved.get("custom_source_policy") == "custom_panel_only":
@@ -318,14 +364,14 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
                 "custom_panel_only makes FRED-specific axes inactive",
             )
         )
-    if resolved.get("target_structure") == "multi_series_target" and len(leaf_config.get("targets", ()) or ()) == 1:
+    if resolved.get("target_structure") in {"multi_series_target", "multi_target"} and len(leaf_config.get("targets", ()) or ()) == 1:
         issues.append(
             Issue(
                 "l1_target_structure",
                 Severity.SOFT,
                 "layer",
                 "l1.target_structure",
-                "multi_series_target used with a single target; consider single_target",
+                "multi_target used with a single target; consider single_target",
             )
         )
     columns = leaf_config.get("variable_universe_columns")
@@ -473,8 +519,9 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
         "custom_source_policy": {"official_only", "custom_panel_only", "official_plus_custom"},
         "dataset": set(DATASET_OPTIONS),
         "frequency": {"monthly", "quarterly"},
+        "information_set_type": {"final_revised_data", "pseudo_oos_on_revised_data"},
         "vintage_policy": {"current_vintage", "real_time_alfred"},
-        "target_structure": {"single_target", "multi_series_target"},
+        "target_structure": {"single_target", "multi_series_target", "multi_target"},
         "variable_universe": {
             "all_variables",
             "core_variables",
@@ -482,6 +529,70 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
             "target_specific_variables",
             "explicit_variable_list",
         },
+        "fred_sd_frequency_policy": {
+            "report_only",
+            "allow_mixed_frequency",
+            "reject_mixed_known_frequency",
+            "require_single_known_frequency",
+        },
+        "fred_sd_state_group": {
+            "all_states",
+            "census_region_northeast",
+            "census_region_midwest",
+            "census_region_south",
+            "census_region_west",
+            "census_division_new_england",
+            "census_division_middle_atlantic",
+            "census_division_east_north_central",
+            "census_division_west_north_central",
+            "census_division_south_atlantic",
+            "census_division_east_south_central",
+            "census_division_west_south_central",
+            "census_division_mountain",
+            "census_division_pacific",
+            "contiguous_48_plus_dc",
+            "custom_state_group",
+        },
+        "state_selection": {"all_states", "selected_states"},
+        "fred_sd_variable_group": {
+            "all_sd_variables",
+            "labor_market_core",
+            "employment_sector",
+            "gsp_output",
+            "housing",
+            "trade",
+            "income",
+            "direct_analog_high_confidence",
+            "provisional_analog_medium",
+            "semantic_review_outputs",
+            "no_reliable_analog",
+            "custom_sd_variable_group",
+        },
+        "sd_variable_selection": {"all_sd_variables", "selected_sd_variables"},
+        "missing_availability": {
+            "require_complete_rows",
+            "keep_available_rows",
+            "impute_predictors_only",
+            "zero_fill_leading_predictor_gaps",
+        },
+        "raw_missing_policy": {
+            "preserve_raw_missing",
+            "zero_fill_leading_predictor_missing_before_tcode",
+            "impute_raw_predictors",
+            "drop_raw_missing_rows",
+        },
+        "raw_outlier_policy": {
+            "preserve_raw_outliers",
+            "winsorize_raw",
+            "iqr_clip_raw",
+            "mad_clip_raw",
+            "zscore_clip_raw",
+            "set_raw_outliers_to_missing",
+        },
+        "release_lag_rule": {"ignore_release_lag", "fixed_lag_all_series", "series_specific_lag"},
+        "contemporaneous_x_rule": {"allow_same_period_predictors", "forbid_same_period_predictors"},
+        "official_transform_policy": {"apply_official_tcode", "keep_official_raw_scale"},
+        "official_transform_scope": {"target_only", "predictors_only", "target_and_predictors", "none"},
         "target_geography_scope": {"single_state", "all_states", "selected_states"},
         "predictor_geography_scope": {"match_target", "all_states", "selected_states", "national_only"},
         "sample_start_rule": {"earliest_available", "fixed_date", "max_balanced"},
@@ -538,7 +649,7 @@ def _validate_target(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> l
         return [] if isinstance(leaf_config.get("target"), str) else [_issue("l1.target", "single_target requires leaf_config.target string")]
     targets = leaf_config.get("targets")
     if not isinstance(targets, list) or not targets:
-        return [_issue("l1.targets", "multi_series_target requires non-empty leaf_config.targets list")]
+        return [_issue("l1.targets", "multi_target requires non-empty leaf_config.targets list")]
     return []
 
 
@@ -572,6 +683,17 @@ def _validate_geography(leaf_config: dict[str, Any], resolved: dict[str, Any]) -
     issues = []
     dataset = resolved.get("dataset")
     if dataset not in FRED_SD_DATASETS:
+        for axis_name in (
+            "fred_sd_frequency_policy",
+            "fred_sd_state_group",
+            "state_selection",
+            "fred_sd_variable_group",
+            "sd_variable_selection",
+        ):
+            if resolved.get(axis_name) is not None:
+                issues.append(_issue(f"l1.{axis_name}", f"{axis_name} requires a FRED-SD dataset"))
+        if issues:
+            return issues
         if "target_geography_scope" in resolved and resolved.get("target_geography_scope") is None:
             return issues
     target_scope = resolved.get("target_geography_scope")
@@ -588,6 +710,34 @@ def _validate_geography(leaf_config: dict[str, Any], resolved: dict[str, Any]) -
         issues.extend(_validate_state_list("predictor_states", leaf_config.get("predictor_states")))
     if predictor_scope == "national_only" and dataset == "fred_sd":
         issues.append(_issue("l1.predictor_geography_scope", "national_only requires a dataset with fred_md or fred_qd"))
+    if resolved.get("state_selection") == "selected_states":
+        issues.extend(_validate_state_list("sd_states", leaf_config.get("sd_states")))
+    if resolved.get("sd_variable_selection") == "selected_sd_variables":
+        sd_variables = leaf_config.get("sd_variables")
+        if not isinstance(sd_variables, list) or not sd_variables:
+            issues.append(_issue("l1.sd_variables", "selected_sd_variables requires non-empty leaf_config.sd_variables"))
+    if resolved.get("fred_sd_state_group") == "custom_state_group" and not any(
+        key in leaf_config for key in ("sd_state_group_members", "sd_state_groups")
+    ):
+        issues.append(_issue("l1.sd_state_group_members", "custom_state_group requires leaf_config.sd_state_group_members or sd_state_groups"))
+    if resolved.get("fred_sd_variable_group") == "custom_sd_variable_group" and not any(
+        key in leaf_config for key in ("sd_variable_group_members", "sd_variable_groups")
+    ):
+        issues.append(_issue("l1.sd_variable_group_members", "custom_sd_variable_group requires leaf_config.sd_variable_group_members or sd_variable_groups"))
+    return issues
+
+
+def _validate_public_data_policy_axes(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
+    issues = []
+    imputation_methods = {"mean", "median", "ffill", "bfill"}
+    if resolved.get("missing_availability") == "impute_predictors_only" and leaf_config.get("x_imputation") not in imputation_methods:
+        issues.append(_issue("l1.x_imputation", "impute_predictors_only requires leaf_config.x_imputation in ['bfill', 'ffill', 'mean', 'median']"))
+    if resolved.get("raw_missing_policy") == "impute_raw_predictors" and leaf_config.get("raw_x_imputation") not in imputation_methods:
+        issues.append(_issue("l1.raw_x_imputation", "impute_raw_predictors requires leaf_config.raw_x_imputation in ['bfill', 'ffill', 'mean', 'median']"))
+    if resolved.get("release_lag_rule") == "series_specific_lag":
+        lag_map = leaf_config.get("release_lag_per_series")
+        if not isinstance(lag_map, dict) or not lag_map:
+            issues.append(_issue("l1.release_lag_per_series", "series_specific_lag requires non-empty leaf_config.release_lag_per_series"))
     return issues
 
 
@@ -732,6 +882,8 @@ def _axis_gates(axis_name: str) -> tuple[GatePredicate, ...]:
         return (GatePredicate(kind="axis_not_in", target="dataset", value=["fred_sd"]),)
     if axis_name in {"target_geography_scope", "predictor_geography_scope"}:
         return (GatePredicate(kind="axis_in", target="dataset", value=list(FRED_SD_DATASETS)),)
+    if axis_name in {"fred_sd_frequency_policy", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection"}:
+        return (GatePredicate(kind="axis_in", target="dataset", value=list(FRED_SD_DATASETS)),)
     if axis_name == "regime_estimation_temporal_rule":
         return (GatePredicate(kind="axis_starts_with", target="regime_definition", value="estimated_"),)
     return ()
@@ -751,6 +903,12 @@ def _targets_from_leaf_config(leaf_config: dict[str, Any], resolved: dict[str, A
     if resolved["target_structure"] == "single_target":
         return (leaf_config.get("target"),) if isinstance(leaf_config.get("target"), str) else ()
     return tuple(leaf_config.get("targets", ()) or ())
+
+
+def _canonical_target_structure(value: Any) -> Any:
+    if value == "multi_series_target":
+        return "multi_target"
+    return value
 
 
 def _resolved_axis_entries(resolved: dict[str, Any], fixed_axes: dict[str, Any]) -> dict[str, ResolvedAxis]:
@@ -818,10 +976,10 @@ L1_LAYER_SPEC = LayerImplementationSpec(
     ui_mode="list",
     layer_globals=(),
     sub_layers=(
-        SubLayerSpec(id="l1_a", name="Source selection", axes=("custom_source_policy", "dataset", "frequency", "vintage_policy")),
+        SubLayerSpec(id="l1_a", name="Source selection", axes=("custom_source_policy", "dataset", "frequency", "information_set_type", "vintage_policy", "fred_sd_frequency_policy")),
         SubLayerSpec(id="l1_b", name="Target definition", axes=("target_structure",)),
-        SubLayerSpec(id="l1_c", name="Predictor universe", axes=("variable_universe",)),
-        SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_scope", "predictor_geography_scope")),
+        SubLayerSpec(id="l1_c", name="Predictor universe", axes=("variable_universe", "missing_availability", "raw_missing_policy", "raw_outlier_policy", "release_lag_rule", "contemporaneous_x_rule", "official_transform_policy", "official_transform_scope")),
+        SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_scope", "predictor_geography_scope", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection")),
         SubLayerSpec(id="l1_e", name="Sample window", axes=("sample_start_rule", "sample_end_rule")),
         SubLayerSpec(id="l1_f", name="Horizon set", axes=("horizon_set",)),
         SubLayerSpec(id="l1_g", name="Regime definition", axes=("regime_definition", "regime_estimation_temporal_rule")),
@@ -831,6 +989,7 @@ L1_LAYER_SPEC = LayerImplementationSpec(
             "custom_source_policy": AxisSpec("custom_source_policy", _options(("official_only", "custom_panel_only", "official_plus_custom")), "official_only", sweepable=False),
             "dataset": AxisSpec("dataset", _options(DATASET_OPTIONS), "fred_md", sweepable=True),
             "frequency": AxisSpec("frequency", _options(("monthly", "quarterly")), "derived", sweepable=False),
+            "information_set_type": AxisSpec("information_set_type", _options(("final_revised_data", "pseudo_oos_on_revised_data")), "final_revised_data", sweepable=False),
             "vintage_policy": AxisSpec(
                 "vintage_policy",
                 (
@@ -840,15 +999,23 @@ L1_LAYER_SPEC = LayerImplementationSpec(
                 "current_vintage",
                 sweepable=False,
             ),
+            "fred_sd_frequency_policy": AxisSpec("fred_sd_frequency_policy", _options(("report_only", "allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency")), "report_only", sweepable=False),
         },
-        "l1_b": {"target_structure": AxisSpec("target_structure", _options(("single_target", "multi_series_target")), "single_target", sweepable=False)},
+        "l1_b": {"target_structure": AxisSpec("target_structure", _options(("single_target", "multi_series_target", "multi_target")), "single_target", sweepable=False)},
         "l1_c": {
             "variable_universe": AxisSpec(
                 "variable_universe",
                 _options(("all_variables", "core_variables", "category_variables", "target_specific_variables", "explicit_variable_list")),
                 "all_variables",
                 sweepable=False,
-            )
+            ),
+            "missing_availability": AxisSpec("missing_availability", _options(("require_complete_rows", "keep_available_rows", "impute_predictors_only", "zero_fill_leading_predictor_gaps")), "zero_fill_leading_predictor_gaps", sweepable=False),
+            "raw_missing_policy": AxisSpec("raw_missing_policy", _options(("preserve_raw_missing", "zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows")), "preserve_raw_missing", sweepable=False),
+            "raw_outlier_policy": AxisSpec("raw_outlier_policy", _options(("preserve_raw_outliers", "winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing")), "preserve_raw_outliers", sweepable=False),
+            "release_lag_rule": AxisSpec("release_lag_rule", _options(("ignore_release_lag", "fixed_lag_all_series", "series_specific_lag")), "ignore_release_lag", sweepable=False),
+            "contemporaneous_x_rule": AxisSpec("contemporaneous_x_rule", _options(("allow_same_period_predictors", "forbid_same_period_predictors")), "allow_same_period_predictors", sweepable=False),
+            "official_transform_policy": AxisSpec("official_transform_policy", _options(("apply_official_tcode", "keep_official_raw_scale")), "apply_official_tcode", sweepable=False),
+            "official_transform_scope": AxisSpec("official_transform_scope", _options(("target_only", "predictors_only", "target_and_predictors", "none")), "target_and_predictors", sweepable=False),
         },
         "l1_d": {
             "target_geography_scope": AxisSpec("target_geography_scope", _options(("single_state", "all_states", "selected_states")), "all_states", sweepable=False),
@@ -858,6 +1025,10 @@ L1_LAYER_SPEC = LayerImplementationSpec(
                 "match_target",
                 sweepable=False,
             ),
+            "fred_sd_state_group": AxisSpec("fred_sd_state_group", _options(("all_states", "census_region_northeast", "census_region_midwest", "census_region_south", "census_region_west", "census_division_new_england", "census_division_middle_atlantic", "census_division_east_north_central", "census_division_west_north_central", "census_division_south_atlantic", "census_division_east_south_central", "census_division_west_south_central", "census_division_mountain", "census_division_pacific", "contiguous_48_plus_dc", "custom_state_group")), "all_states", sweepable=False),
+            "state_selection": AxisSpec("state_selection", _options(("all_states", "selected_states")), "all_states", sweepable=False),
+            "fred_sd_variable_group": AxisSpec("fred_sd_variable_group", _options(("all_sd_variables", "labor_market_core", "employment_sector", "gsp_output", "housing", "trade", "income", "direct_analog_high_confidence", "provisional_analog_medium", "semantic_review_outputs", "no_reliable_analog", "custom_sd_variable_group")), "all_sd_variables", sweepable=False),
+            "sd_variable_selection": AxisSpec("sd_variable_selection", _options(("all_sd_variables", "selected_sd_variables")), "all_sd_variables", sweepable=False),
         },
         "l1_e": {
             "sample_start_rule": AxisSpec("sample_start_rule", _options(("earliest_available", "fixed_date", "max_balanced")), "max_balanced", sweepable=False),

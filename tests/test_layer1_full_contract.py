@@ -4,6 +4,7 @@ import pytest
 
 from macrocast.compiler.build import compile_recipe_dict
 from macrocast.compiler.errors import CompileValidationError
+from macrocast.core.layers import l1
 
 
 def _recipe() -> dict:
@@ -520,3 +521,52 @@ def test_layer1_raw_outlier_policy_records_before_tcode_contract() -> None:
     assert data_task["raw_outlier_policy"] == "iqr_clip_raw"
     assert data_task["raw_outlier_columns"] == ["INDPRO"]
     assert axis_layers["raw_outlier_policy"] == "1_data_task"
+
+
+def test_core_l1_validator_accepts_public_registry_axes() -> None:
+    report = l1.validate_layer(
+        {
+            "fixed_axes": {
+                "dataset": "fred_md+fred_sd",
+                "frequency": "monthly",
+                "information_set_type": "final_revised_data",
+                "target_structure": "multi_target",
+                "fred_sd_frequency_policy": "report_only",
+                "state_selection": "selected_states",
+                "sd_variable_selection": "selected_sd_variables",
+                "missing_availability": "impute_predictors_only",
+                "raw_missing_policy": "impute_raw_predictors",
+                "raw_outlier_policy": "iqr_clip_raw",
+                "release_lag_rule": "series_specific_lag",
+                "contemporaneous_x_rule": "forbid_same_period_predictors",
+                "official_transform_policy": "apply_official_tcode",
+                "official_transform_scope": "target_and_predictors",
+            },
+            "leaf_config": {
+                "targets": ["CPIAUCSL", "UNRATE"],
+                "sd_states": ["CA", "TX"],
+                "sd_variables": ["UR", "BPPRIVSA"],
+                "x_imputation": "median",
+                "raw_x_imputation": "median",
+                "release_lag_per_series": {"CPIAUCSL": 1},
+            },
+        }
+    )
+
+    assert not report.has_hard_errors
+
+
+def test_core_l1_validator_rejects_fred_sd_axes_without_fred_sd_dataset() -> None:
+    report = l1.validate_layer(
+        {
+            "fixed_axes": {
+                "dataset": "fred_md",
+                "target_structure": "single_target",
+                "state_selection": "selected_states",
+            },
+            "leaf_config": {"target": "CPIAUCSL", "sd_states": ["CA"]},
+        }
+    )
+
+    assert report.has_hard_errors
+    assert "requires a FRED-SD dataset" in report.hard_errors[0].message

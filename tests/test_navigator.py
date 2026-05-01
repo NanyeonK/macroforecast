@@ -656,8 +656,8 @@ def test_navigator_topology_uses_current_layer_specs_for_l0_l1_l2():
     ]
     assert nodes["l1"]["sub_layer_axes"]["L1.E Sample window"] == ["sample_start_rule", "sample_end_rule"]
     assert nodes["l1"]["sub_layer_axes"]["L1.F Horizon set"] == ["horizon_set"]
-    assert "information_set_type" not in nodes["l1"]["axes"]
-    assert "fred_sd_variable_group" not in nodes["l1"]["axes"]
+    assert "information_set_type" in nodes["l1"]["sub_layer_axes"]["L1.A Source selection"]
+    assert "fred_sd_variable_group" in nodes["l1"]["sub_layer_axes"]["L1.D Geography scope"]
 
     assert nodes["l2"]["sub_layers"] == [
         "L2.A FRED-SD frequency alignment",
