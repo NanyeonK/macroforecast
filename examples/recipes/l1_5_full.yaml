@@ -1,0 +1,17 @@
+1_5_data_summary:
+  enabled: true
+  fixed_axes:
+    coverage_view: multi
+    summary_metrics: [mean, sd, min, max, skew, kurtosis, n_obs, n_missing]
+    summary_split: per_decade
+    stationarity_test: multi
+    stationarity_test_scope: target_and_predictors
+    missing_view: multi
+    outlier_view: multi
+    correlation_view: clustered_heatmap
+    diagnostic_format: multi
+    attach_to_manifest: true
+  leaf_config:
+    outlier_threshold_iqr: 10.0
+    correlation_top_k: 30
+    figure_dpi: 300

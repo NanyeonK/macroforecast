@@ -41,6 +41,8 @@ from .l5 import L5Evaluation
 from .l6 import L6StatisticalTests
 from .l7 import L7Interpretation
 from .l8 import L8Output
+from .l1_5 import L1_5DataSummary
+from .l2_5 import L2_5PrePostPreprocessing
 from ..ops.registry import TypeSpec
 
 
@@ -149,8 +151,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
     "l8": {
         "l8_artifacts_v1": L8ArtifactsArtifact,
     },
-    "l1_5": {"diagnostic_v1": DiagnosticArtifact},
-    "l2_5": {"diagnostic_v1": DiagnosticArtifact},
+    "l1_5": {"l1_5_diagnostic_v1": DiagnosticArtifact},
+    "l2_5": {"l2_5_diagnostic_v1": DiagnosticArtifact},
     "l3_5": {"diagnostic_v1": DiagnosticArtifact},
     "l4_5": {"diagnostic_v1": DiagnosticArtifact},
 }
@@ -221,14 +223,24 @@ register_layer(
 )(L4ForecastingModel)
 
 
-@register_layer(id="l1_5", name="Data summary", category="diagnostic", ui_mode="adaptive")
-class L15DataSummary:
-    pass
+register_layer(
+    id="l1_5",
+    name="Data summary",
+    category="diagnostic",
+    expected_inputs=("l1_data_definition_v1",),
+    produces=("l1_5_diagnostic_v1",),
+    ui_mode="list",
+)(L1_5DataSummary)
 
 
-@register_layer(id="l2_5", name="Pre vs post", category="diagnostic", ui_mode="adaptive")
-class L25PrePost:
-    pass
+register_layer(
+    id="l2_5",
+    name="Pre vs post preprocessing",
+    category="diagnostic",
+    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1"),
+    produces=("l2_5_diagnostic_v1",),
+    ui_mode="list",
+)(L2_5PrePostPreprocessing)
 
 
 @register_layer(id="l3_5", name="Feature diagnostics", category="diagnostic", ui_mode="adaptive")

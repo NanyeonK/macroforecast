@@ -403,10 +403,11 @@ class ImportanceResultSet(DataType):
 
 @dataclass(frozen=True)
 class DiagnosticArtifact(DataType):
-    layer_hooked: str
-    artifact_type: Literal["table", "figure", "json"] | str
+    layer_hooked: str = ""
+    artifact_type: Literal["table", "figure", "json"] | str = "json"
     file_paths: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
+    enabled: bool = False
 
 
 def __getattr__(name: str) -> Any:
