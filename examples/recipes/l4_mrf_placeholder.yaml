@@ -1,0 +1,29 @@
+4_forecasting_model:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - id: fit_mrf
+      type: step
+      op: fit_model
+      params:
+        family: macroeconomic_random_forest
+        n_trees: 50
+        mtry: 0.3
+        block_size: 12
+        n_lags_y_for_gtvp: 4
+        prior_strength: 0.05
+        forecast_strategy: direct
+        training_start_rule: expanding
+        refit_policy: every_n_origins
+        search_algorithm: none
+      inputs: [src_X, src_y]
+    - id: predict_mrf
+      type: step
+      op: predict
+      inputs: [fit_mrf, src_X]
+  sinks:
+    l4_forecasts_v1: predict_mrf
+    l4_model_artifacts_v1: fit_mrf
+    l4_training_metadata_v1: auto
+  leaf_config:
+    refit_interval: 6

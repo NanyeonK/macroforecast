@@ -1,0 +1,13 @@
+5_evaluation:
+  fixed_axes:
+    primary_metric: relative_mse
+    point_metrics: [mse, mae]
+    relative_metrics: [relative_mse, r2_oos]
+    agg_target: per_target_separate
+    agg_horizon: per_horizon_separate
+    ranking: by_relative_metric
+    report_style: latex_table
+  leaf_config:
+    latex_caption: "Out-of-sample relative MSE for inflation forecasting models"
+    latex_label: "tab:relative_mse"
+    output_precision: 3

@@ -1,0 +1,8 @@
+8_output:
+  fixed_axes:
+    export_format: latex_tables
+    saved_objects: [forecasts, metrics, ranking, tests, importance]
+    artifact_granularity: per_target_horizon
+    manifest_format: json
+  leaf_config:
+    output_directory: ./paper_tables/

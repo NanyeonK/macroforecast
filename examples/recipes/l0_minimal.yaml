@@ -1,0 +1,6 @@
+metadata:
+  name: l0_minimal
+  description: Minimal Layer 0 setup recipe.
+
+0_meta:
+  fixed_axes: {}

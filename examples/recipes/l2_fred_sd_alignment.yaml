@@ -1,0 +1,22 @@
+metadata:
+  name: l2_fred_sd_alignment
+  description: Layer 2 FRED-SD frequency alignment schema example.
+
+0_meta:
+  fixed_axes: {}
+
+1_data:
+  fixed_axes:
+    dataset: fred_md+fred_sd
+    frequency: monthly
+  leaf_config:
+    target: CPIAUCSL
+
+2_preprocessing:
+  fixed_axes:
+    sd_series_frequency_filter: both
+    quarterly_to_monthly_rule: step_backward
+    transform_policy: apply_official_tcode
+    outlier_policy: mccracken_ng_iqr
+    imputation_policy: em_factor
+    frame_edge_policy: truncate_to_balanced

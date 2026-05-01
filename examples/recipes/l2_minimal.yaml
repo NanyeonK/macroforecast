@@ -1,0 +1,14 @@
+metadata:
+  name: l2_minimal
+  description: Minimal Layer 2 McCracken-Ng preprocessing recipe.
+
+0_meta:
+  fixed_axes: {}
+
+1_data:
+  fixed_axes: {}
+  leaf_config:
+    target: CPIAUCSL
+
+2_preprocessing:
+  fixed_axes: {}

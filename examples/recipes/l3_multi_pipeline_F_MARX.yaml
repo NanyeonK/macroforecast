@@ -1,0 +1,50 @@
+3_feature_engineering:
+  nodes:
+    - id: src_x
+      type: source
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+    - id: factors
+      type: step
+      op: pca
+      params: {n_components: 8, temporal_rule: expanding_window_per_origin}
+      pipeline_id: F
+      inputs: [src_x]
+    - id: lag_F
+      type: step
+      op: lag
+      params: {n_lag: 4}
+      inputs: [factors]
+    - id: marx
+      type: step
+      op: ma_increasing_order
+      params: {max_order: 12}
+      pipeline_id: MARX
+      inputs: [src_x]
+    - id: pca_marx
+      type: step
+      op: pca
+      params: {n_components: 4, temporal_rule: expanding_window_per_origin}
+      inputs: [marx]
+    - id: lag_MARX
+      type: step
+      op: lag
+      params: {n_lag: 4}
+      inputs: [pca_marx]
+    - id: combined
+      type: combine
+      op: concat
+      params: {axis: column}
+      inputs: [lag_F, lag_MARX]
+    - id: y_h
+      type: step
+      op: target_construction
+      params: {mode: cumulative_average, method: direct, horizon: 6}
+      inputs: [src_y]
+  sinks:
+    l3_features_v1: {X_final: combined, y_final: y_h}
+    l3_metadata_v1: auto
+  leaf_config:
+    max_cascade_depth: 2

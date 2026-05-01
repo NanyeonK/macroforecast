@@ -1,0 +1,16 @@
+4_5_generator_diagnostics:
+  enabled: true
+  fixed_axes:
+    fit_view: multi
+    fit_per_origin: every_n_origins
+    forecast_scale_view: both_overlay
+    back_transform_method: auto
+    window_view: multi
+    coef_view_models: all_linear_models
+    tuning_view: multi
+    ensemble_view: multi
+    weights_over_time_method: stacked_area
+    diagnostic_format: multi
+  leaf_config:
+    fit_n_origins_step: 24
+    coef_top_k: 15

@@ -1,0 +1,12 @@
+2_5_pre_post_preprocessing:
+  enabled: true
+  fixed_axes:
+    comparison_pair: multi_stage
+    comparison_output_form: multi
+    distribution_metric: [mean_change, sd_change, skew_change, kurtosis_change, ks_statistic]
+    distribution_view: multi
+    correlation_shift: delta_matrix
+    correlation_method: pearson
+    cleaning_summary_view: multi
+    t_code_application_log: per_series_detail
+    diagnostic_format: multi

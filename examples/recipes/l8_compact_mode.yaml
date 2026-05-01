@@ -1,0 +1,9 @@
+8_output:
+  fixed_axes:
+    export_format: json_parquet
+    saved_objects: [forecasts, metrics, ranking]
+    artifact_granularity: per_cell
+    naming_convention: cell_id
+    manifest_format: json_lines
+  leaf_config:
+    output_directory: ./large_sweep_output/

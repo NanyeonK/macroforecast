@@ -1,0 +1,32 @@
+4_forecasting_model:
+  nodes:
+    - {id: fit_ar1, type: step, op: fit_model, params: {family: ar_p}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}, inputs: [src_X, src_y]}
+  forecast_object: point
+5_evaluation:
+  fixed_axes: {}
+6_statistical_tests:
+  enabled: true
+  test_scope: per_target_horizon
+  dependence_correction: newey_west
+  overlap_handling: nw_with_h_minus_1_lag
+  sub_layers:
+    L6_A_equal_predictive:
+      enabled: true
+      fixed_axes:
+        equal_predictive_test: dm_diebold_mariano
+        loss_function: squared
+        model_pair_strategy: vs_benchmark_only
+        hln_correction: true
+    L6_D_multiple_model:
+      enabled: true
+      fixed_axes:
+        multiple_model_test: mcs_hansen
+        mcs_alpha: 0.10
+        mmt_loss_function: squared
+        bootstrap_method: stationary_bootstrap
+        bootstrap_n_replications: 1000
+        bootstrap_block_length: auto
+        mcs_t_statistic: t_max
+  leaf_config:
+    nw_lag_truncation: auto

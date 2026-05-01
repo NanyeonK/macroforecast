@@ -1,0 +1,19 @@
+7_interpretation:
+  enabled: true
+  nodes:
+    - {id: src_xgb, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: xgb_full}}}
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - {id: shap, type: step, op: shap_tree, params: {model_family: xgboost, check_additivity: true}, inputs: [src_xgb, src_X]}
+    - {id: perm, type: step, op: permutation_importance, params: {model_family: xgboost, n_repeats: 10, loss_function: squared}, inputs: [src_xgb, src_X, src_y]}
+    - {id: pdp, type: step, op: partial_dependence, params: {model_family: xgboost, grid_resolution: 50, kind: average}, inputs: [src_xgb, src_X]}
+    - {id: ale, type: step, op: accumulated_local_effect, params: {model_family: xgboost, n_bins: 20, centered: true}, inputs: [src_xgb, src_X]}
+  sinks:
+    l7_importance_v1:
+      global: [shap, perm]
+      marginal: [pdp, ale]
+  fixed_axes:
+    output_table_format: multi
+    figure_type: auto
+    top_k_features_to_show: 20
+    figure_format: multi

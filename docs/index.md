@@ -35,6 +35,21 @@ Use Detail docs when you need exact layer control, YAML shape, runtime artifacts
 
 [Open Detail Docs](detail/index.md)
 
+### 5. FRED-Dataset
+
+Use FRED-Dataset docs when you need the current FRED-MD, FRED-QD, or FRED-SD
+column dictionary before writing target y, predictor x, or custom-source
+recipes.
+
+[Open FRED-Dataset Docs](fred_dataset/index.md)
+
+### Foundation Core
+
+Use Foundation Core docs when you need the Phase 0 DAG schema, registry
+migration contract, or next-generation layer implementation path.
+
+[Open Foundation Core](foundation_core.md)
+
 ## Reference
 
 Use API Reference after you know which path you want.
@@ -50,6 +65,8 @@ philosophy
 navigator/index
 simple/index
 detail/index
+fred_dataset/index
+foundation_core
 api/index
 CONVENTIONS
 ```

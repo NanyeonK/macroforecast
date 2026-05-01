@@ -1,0 +1,16 @@
+7_interpretation:
+  enabled: true
+  nodes:
+    - {id: src_l4_all_cells, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {all_cells: true}}}
+    - {id: src_l5_metrics, type: source, selector: {layer_ref: l5, sink_name: l5_evaluation_v1, subset: {component: metrics_table}}}
+    - id: trans_attr
+      type: step
+      op: transformation_attribution
+      params: {decomposition_method: shapley_over_pipelines, loss_function: mse, baseline_pipeline: ar_only}
+      inputs: [src_l4_all_cells, src_l5_metrics]
+  sinks:
+    l7_transformation_attribution_v1: trans_attr
+  fixed_axes:
+    figure_type: auto
+    figure_format: pdf
+    latex_table_export: true

@@ -20,6 +20,7 @@ macrocast/       # package source
   recipes/       # recipe specification
   preprocessing/ # preprocessing governance
   registry/      # per-axis choice registry (125 axes, 717 values)
+  core/          # Phase 0 DAG foundation scaffold (next execution surface)
   compiler/      # recipe -> execution bridge
   execution/     # runtime engine
   tuning/        # HP optimization
@@ -34,3 +35,6 @@ plans/           # internal planning
 - Every new code surface must be documented in `docs/`
 - Grammar is fixed before registry content is expanded
 - One path = one fully specified forecasting study
+- `macrocast/core` is the source of truth for the new DAG execution system;
+  `macrocast/registry` stays frozen for backward compatibility until it can be
+  regenerated from core entries

@@ -1,0 +1,19 @@
+3_5_feature_diagnostics:
+  enabled: true
+  fixed_axes:
+    comparison_stages: raw_vs_cleaned_vs_features
+    comparison_output_form: multi
+    factor_view: multi
+    dfm_diagnostics: multi
+    feature_correlation: multi
+    correlation_method: pearson
+    correlation_view: clustered_heatmap
+    lag_view: multi
+    marx_view: weight_decay_visualization
+    selection_view: multi
+    stability_metric: jaccard
+    diagnostic_format: multi
+  leaf_config:
+    n_factors_to_show: 12
+    loading_top_k_per_factor: 15
+    correlation_top_k: 50

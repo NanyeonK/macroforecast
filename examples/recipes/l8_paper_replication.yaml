@@ -1,0 +1,10 @@
+8_output:
+  fixed_axes:
+    export_format: all
+    saved_objects: [forecasts, metrics, ranking, decomposition, model_artifacts, feature_metadata, diagnostics_all, tests, importance, transformation_attribution]
+    artifact_granularity: per_cell
+    naming_convention: descriptive
+    manifest_format: json
+  leaf_config:
+    output_directory: ./paper_replication/coulombe_2021/
+    descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}_{combine_method}"
