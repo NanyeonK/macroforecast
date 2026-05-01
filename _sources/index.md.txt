@@ -1,58 +1,62 @@
 # macrocast
 
-macrocast is a research-oriented macro forecasting package organized around explicit layer contracts and reproducible artifacts.
+macrocast is a research-oriented forecasting package for economists and macro-finance researchers. The docs are organized around decisions first and API signatures last.
 
-## Canonical Architecture
+## Choose Your Entry Point
 
-```text
-L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
-        |      |      |       |
-       L1.5   L2.5   L3.5    L4.5 diagnostics
-```
+### 0. Getting Started
 
-- `list` layers expose ordered sub-layers and axes.
-- `graph` layers expose DAG nodes, inputs, steps, and sinks.
-- diagnostic `.5` layers are default-off side branches.
-- L8 exports the reproducible output directory and manifest.
-
-## Entry Points
-
-### Getting Started
-
-Install macrocast and choose between the Navigator, YAML runtime, or simple Python facade.
+Install macrocast and choose one of three usage paths: Navigator/YAML/CLI, Simple Python code, or full Detail code/YAML.
 
 [Open Getting Started](getting_started/index.md)
 
-### Navigator
+Read the current runtime support matrix before relying on advanced layers in a
+paper workflow. The core layer-contract runtime currently executes the
+custom-panel/linear-model path end to end and materializes lightweight L6/L7/L8
+artifacts; advanced methods remain schema-visible but require specialized
+runtime backends.
 
-Use the Navigator when you need to see the canonical layer/DAG map, diagnostic hooks, runtime support status, and compatibility rules.
+[Open Runtime Support Matrix](getting_started/runtime_support.md)
+
+### 1. Philosophy
+
+Read this when you want the package rules: explicit defaults, layer contracts, reproducible artifacts, and custom researcher methods beside built-ins.
+
+[Read Philosophy](philosophy.md)
+
+### 2. Navigator
+
+Use the Navigator when you need a constraint-aware decision tree. It shows selectable options, disabled options, disabled reasons, canonical path effects, and YAML generation.
 
 - [Open Navigator App](navigator_app/index.html)
 - [Navigator Docs](navigator/index.md)
 
-### Runtime Support
-
-Read this before relying on advanced layers in a paper workflow. It separates current runtime execution from schema-only surfaces.
-
-[Open Runtime Support Matrix](getting_started/runtime_support.md)
-
-### Simple Python API
+### 3. Simple (code)
 
 Use Simple docs when you want forecasting code without reading every layer contract first.
 
 [Open Simple Docs](simple/index.md)
 
-### Detail Docs
+### 4. Detail (code)
 
 Use Detail docs when you need exact layer control, YAML shape, runtime artifacts, or custom method hooks.
 
 [Open Detail Docs](detail/index.md)
 
-### FRED Dataset Docs
+### 5. FRED-Dataset
 
-Use FRED docs when you need FRED-MD, FRED-QD, or FRED-SD column references before writing target or predictor recipes.
+Use FRED-Dataset docs when you need the current FRED-MD, FRED-QD, or FRED-SD
+column dictionary before writing target y, predictor x, or custom-source
+recipes.
 
 [Open FRED-Dataset Docs](fred_dataset/index.md)
+
+### Foundation Core
+
+Use Foundation Core docs when you need the Phase 0 DAG schema, registry
+migration contract, or next-generation layer implementation path.
+
+[Open Foundation Core](foundation_core.md)
 
 ## Reference
 

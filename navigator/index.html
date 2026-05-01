@@ -46,7 +46,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">0. Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Navigator Docs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tree_navigator.html">Tree Navigator</a></li>
@@ -90,79 +90,17 @@
              
   <section id="navigator-docs">
 <h1>Navigator Docs<a class="headerlink" href="#navigator-docs" title="Link to this heading"></a></h1>
-<p>The Navigator is the visual front door for the canonical macrocast layer system:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(DAG) -&gt; L4(DAG) -&gt; L5 -&gt; L6 -&gt; L7(DAG) -&gt; L8
-        |      |      |       |
-       L1.5   L2.5   L3.5    L4.5 diagnostics
-</pre></div>
-</div>
+<p>The navigator is the primary documentation surface for choosing a macrocast study path. It is built for packages where the number of valid combinations is large enough that API documentation alone becomes misleading.</p>
 <p>Open the interactive app:</p>
-<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p><section id="what-the-app-shows-first">
-<h2>What The App Shows First<a class="headerlink" href="#what-the-app-shows-first" title="Link to this heading"></a></h2>
-<p>The first screen is no longer an axis list. It starts with the registered layer topology:</p>
+<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p><p>The navigator answers these questions before execution:</p>
 <ul class="simple">
-<li><p>main layer flow from setup through output;</p></li>
-<li><p>diagnostic hooks L1.5-L4.5 as default-off side branches;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">list</span></code> versus <code class="docutils literal notranslate"><span class="pre">graph</span></code> UI mode per layer;</p></li>
-<li><p>upstream sink inputs and produced sinks;</p></li>
-<li><p>sub-layer and axis counts from the runtime registry;</p></li>
-<li><p>runtime support labels for selected options.</p></li>
+<li><p>which options are selectable at the current node;</p></li>
+<li><p>which options are disabled;</p></li>
+<li><p>why each disabled option is disabled;</p></li>
+<li><p>how each selection changes the canonical path;</p></li>
+<li><p>which paper-style replication paths are close to the current route;</p></li>
+<li><p>how to generate a YAML recipe preview and run the compiled recipe.</p></li>
 </ul>
-<p>The older compatibility axis explorer remains below the canonical layer map. Use it for branch-level compatibility checks and YAML preview, but treat the layer map as the source of truth for package architecture.</p>
-</section>
-<section id="canonical-layer-roles">
-<h2>Canonical Layer Roles<a class="headerlink" href="#canonical-layer-roles" title="Link to this heading"></a></h2>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Layer</p></th>
-<th class="head text-right"><p>UI mode</p></th>
-<th class="head"><p>Role</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>L0</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Study setup, reproducibility, failure and compute policies.</p></td>
-</tr>
-<tr class="row-odd"><td><p>L1</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Data definition, target/predictor frame, regime metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p>L2</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Cleaning and preprocessing into the clean panel.</p></td>
-</tr>
-<tr class="row-odd"><td><p>L3</p></td>
-<td class="text-right"><p>graph</p></td>
-<td><p>Feature engineering DAG, final features, feature metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p>L4</p></td>
-<td class="text-right"><p>graph</p></td>
-<td><p>Forecast/model DAG, forecasts, model artifacts, training metadata.</p></td>
-</tr>
-<tr class="row-odd"><td><p>L5</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Evaluation metrics, aggregation, slicing, ranking.</p></td>
-</tr>
-<tr class="row-even"><td><p>L6</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Statistical tests over L4/L5 artifacts.</p></td>
-</tr>
-<tr class="row-odd"><td><p>L7</p></td>
-<td class="text-right"><p>graph</p></td>
-<td><p>Interpretation and importance DAG.</p></td>
-</tr>
-<tr class="row-even"><td><p>L8</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Output, provenance, manifest, file artifacts.</p></td>
-</tr>
-<tr class="row-odd"><td><p>L1.5-L4.5</p></td>
-<td class="text-right"><p>list</p></td>
-<td><p>Diagnostic hooks attached to construction sinks.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="pages">
 <h2>Pages<a class="headerlink" href="#pages" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
@@ -173,10 +111,10 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="tree_navigator.html"><span class="std std-doc">Tree Navigator</span></a></p></td>
-<td><p>Explain the canonical layer map and the remaining compatibility axis explorer.</p></td>
+<td><p>Show selectable and disabled branches for every Layer 0-7 axis.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="path_resolver.html"><span class="std std-doc">Path Resolver</span></a></p></td>
-<td><p>Compile YAML and show execution status, warnings, blocked reasons, and capability matrix.</p></td>
+<td><p>Compile a YAML path and show execution status, warnings, blocked reasons, and capability matrix.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="compatibility_engine.html"><span class="std std-doc">Compatibility Engine</span></a></p></td>
 <td><p>Explain constraint rules such as model/feature compatibility, forecast-object metrics, and importance-method restrictions.</p></td>
@@ -193,13 +131,19 @@
 <section id="recommended-flow">
 <h2>Recommended Flow<a class="headerlink" href="#recommended-flow" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
-<li><p>Start with the layer map and select the layer you are designing.</p></li>
-<li><p>For L3/L4/L7, think in DAG nodes: sources, steps, combines, and sinks.</p></li>
-<li><p>For list layers, inspect sub-layers and axes in the layer detail panel.</p></li>
-<li><p>Use the compatibility axis explorer only when you need option-level disabled reasons.</p></li>
-<li><p>Download or write YAML and run <code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">resolve</span></code> before execution.</p></li>
-<li><p>Execute with <code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">run</span></code> or the core runtime API.</p></li>
+<li><p>Start from a default recipe, a replication entry, or a hand-written YAML.</p></li>
+<li><p>Use the Navigator App to change path choices in the browser, inspect disabled branches, and preview the YAML diff.</p></li>
+<li><p>Load a replication entry or import an existing recipe YAML when you want the tree state to start from a known route.</p></li>
+<li><p>Download the generated YAML and run <code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">resolve</span></code> to confirm authoritative compiler status before execution.</p></li>
+<li><p>Run the resolved YAML with <code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">run</span></code>.</p></li>
+<li><p>Move to Detailed Docs or API Reference only when extending internals or writing custom plugins.</p></li>
 </ol>
+<p>The browser app exports the same registry-backed rule metadata as the CLI through <code class="docutils literal notranslate"><span class="pre">navigator_state_engine_v1</span></code>. It is designed for fast path exploration: selections immediately update disabled branches, compatibility messages, resolver-preview status, and YAML preview output. The CLI resolver remains the authoritative compile check because it can see the local runtime, optional backends, and execution environment.</p>
+</section>
+<section id="boundary">
+<h2>Boundary<a class="headerlink" href="#boundary" title="Link to this heading"></a></h2>
+<p>Layers 0-3 are forecast-construction contracts. Bad choices here can prevent forecast generation or create leakage, so the navigator is strict.</p>
+<p>Layers 4-7 consume forecast artifacts: evaluation, output, statistical tests, and interpretation. These layers still have contracts, but they do not build the forecast representation.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tree_navigator.html">Tree Navigator</a></li>
