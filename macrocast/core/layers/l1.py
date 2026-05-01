@@ -504,8 +504,13 @@ def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str
     custom_policy = resolved["custom_source_policy"]
     dataset = resolved["dataset"]
     if custom_policy == "custom_panel_only":
-        if "custom_source_path" not in leaf_config:
-            issues.append(_issue("l1.custom_source_path", "custom_panel_only requires leaf_config.custom_source_path"))
+        if not any(key in leaf_config for key in ("custom_source_path", "custom_panel_inline", "custom_panel_records")):
+            issues.append(
+                _issue(
+                    "l1.custom_source_path",
+                    "custom_panel_only requires leaf_config.custom_source_path, custom_panel_inline, or custom_panel_records",
+                )
+            )
         if "dataset" in fixed_axes:
             issues.append(_issue("l1.dataset", "dataset is inactive when custom_source_policy=custom_panel_only"))
     if custom_policy == "official_plus_custom":

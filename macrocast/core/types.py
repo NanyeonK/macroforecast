@@ -95,6 +95,7 @@ class L1DataDefinitionArtifact(DataType):
     horizon_set: Literal["standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"] = "standard_md"
     target_horizons: tuple[int, ...] = ()
     regime_definition: str = "none"
+    raw_panel: "Panel" = field(default_factory=lambda: Panel())
     leaf_config: dict[str, Any] = field(default_factory=dict)
 
 
@@ -118,6 +119,7 @@ class L1RegimeMetadataArtifact(DataType):
 
 @dataclass(frozen=True)
 class Panel(DataType):
+    data: pd.DataFrame = field(default_factory=pd.DataFrame)
     shape: tuple[Any, Any] | None = None
     column_names: tuple[str, ...] = ()
     index: pd.DatetimeIndex | None = None
