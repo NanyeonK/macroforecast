@@ -996,17 +996,48 @@ function toYaml(value, indent = 0) {
   const pad = " ".repeat(indent);
   if (Array.isArray(value)) {
     if (!value.length) return "[]";
-    if (value.every((item) => typeof item !== "object")) return `[${value.join(", ")}]`;
-    return value.map((item) => `${pad}- ${toYaml(item, indent + 2).trimStart()}`).join("\n");
+    if (value.every(isScalarValue)) return `[${value.map(scalarToYaml).join(", ")}]`;
+    return value.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return `${pad}- ${toYaml(item, indent + 2).trim()}`;
+      }
+      const entries = Object.entries(item);
+      if (!entries.length) return `${pad}- {}`;
+      return entries.map(([key, val], index) => {
+        const prefix = index === 0 ? `${pad}- ` : `${pad}  `;
+        if (isInlineYamlValue(val)) return `${prefix}${key}: ${toYaml(val, indent + 2).trim()}`;
+        return `${prefix}${key}:\n${toYaml(val, indent + 4)}`;
+      }).join("\n");
+    }).join("\n");
   }
   if (value && typeof value === "object") {
+    const entries = Object.entries(value);
+    if (!entries.length) return "{}";
     return Object.entries(value).map(([key, val]) => {
-      if (val && typeof val === "object" && !Array.isArray(val)) return `${pad}${key}:\n${toYaml(val, indent + 2)}`;
+      if (isInlineYamlValue(val)) return `${pad}${key}: ${toYaml(val, indent + 2).trim()}`;
+      if (val && typeof val === "object") return `${pad}${key}:\n${toYaml(val, indent + 2)}`;
       return `${pad}${key}: ${toYaml(val, indent + 2).trim()}`;
     }).join("\n");
   }
-  if (typeof value === "string") return value;
+  if (isScalarValue(value)) return scalarToYaml(value);
   return String(value);
+}
+
+function isScalarValue(value) {
+  return value === null || ["string", "number", "boolean"].includes(typeof value);
+}
+
+function scalarToYaml(value) {
+  if (value === null) return "null";
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value === "") return '""';
+  return /^[A-Za-z0-9_+.-]+$/.test(value) ? value : JSON.stringify(value);
+}
+
+function isInlineYamlValue(value) {
+  return isScalarValue(value)
+    || (Array.isArray(value) && value.every(isScalarValue))
+    || (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0);
 }
 
 function requiredSinks(layerId) {
