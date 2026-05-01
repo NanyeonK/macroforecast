@@ -43,6 +43,8 @@ from .l7 import L7Interpretation
 from .l8 import L8Output
 from .l1_5 import L1_5DataSummary
 from .l2_5 import L2_5PrePostPreprocessing
+from .l3_5 import L3_5FeatureDiagnostics
+from .l4_5 import L4_5GeneratorDiagnostics
 from ..ops.registry import TypeSpec
 
 
@@ -153,8 +155,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
     },
     "l1_5": {"l1_5_diagnostic_v1": DiagnosticArtifact},
     "l2_5": {"l2_5_diagnostic_v1": DiagnosticArtifact},
-    "l3_5": {"diagnostic_v1": DiagnosticArtifact},
-    "l4_5": {"diagnostic_v1": DiagnosticArtifact},
+    "l3_5": {"l3_5_diagnostic_v1": DiagnosticArtifact},
+    "l4_5": {"l4_5_diagnostic_v1": DiagnosticArtifact},
 }
 
 
@@ -243,14 +245,24 @@ register_layer(
 )(L2_5PrePostPreprocessing)
 
 
-@register_layer(id="l3_5", name="Feature diagnostics", category="diagnostic", ui_mode="adaptive")
-class L35FeatureDiagnostics:
-    pass
+register_layer(
+    id="l3_5",
+    name="Feature diagnostics",
+    category="diagnostic",
+    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1"),
+    produces=("l3_5_diagnostic_v1",),
+    ui_mode="list",
+)(L3_5FeatureDiagnostics)
 
 
-@register_layer(id="l4_5", name="Generator diagnostics", category="diagnostic", ui_mode="adaptive")
-class L45GeneratorDiagnostics:
-    pass
+register_layer(
+    id="l4_5",
+    name="Generator diagnostics",
+    category="diagnostic",
+    expected_inputs=("l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1", "l3_features_v1"),
+    produces=("l4_5_diagnostic_v1",),
+    ui_mode="list",
+)(L4_5GeneratorDiagnostics)
 
 
 register_layer(
