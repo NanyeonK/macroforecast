@@ -536,6 +536,8 @@ def test_navigator_ui_data_exports_registered_layer_topology():
     assert nodes["l3"]["ui_mode"] == "graph"
     assert nodes["l7"]["ui_mode"] == "graph"
     assert nodes["l1_5"]["category"] == "diagnostic"
+    assert "L6_D_multiple_model" in nodes["l6"]["sub_layers"]
+    assert "saved_objects" in nodes["l8"]["axes"]
     assert "l8_artifacts_v1" in nodes["l8"]["produces"]
     assert any(edge["from"] == "l4" and edge["to"] == "l5" for edge in topology["edges"])
 

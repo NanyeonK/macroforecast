@@ -1,36 +1,24 @@
-# 0. Getting Started
+# Getting Started
 
-Install the package, then choose the execution surface that matches your recipe.
+Start from the canonical layer system, not from the legacy stage labels.
 
-## Install
-
-For active development, install from the repository:
-
-```bash
-git clone https://github.com/NanyeonK/macrocast.git
-cd macrocast
-pip install -e .
+```text
+L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
+        |      |      |       |
+       L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
 
-Verify the import:
-
-```python
-import macrocast
-print("macrocast imported")
-```
-
-For optional model and interpretation backends, see [Installation](../install.md).
-
-## Execution Paths
+## Choose Your Path
 
 | Path | Use when | Start with |
 |---|---|---|
-| Core layer-contract runtime | You want the current L1-L8 artifact path, diagnostics, L6/L7 lightweight artifacts, and L8 output directory. | [Quickstart](quickstart.md) |
-| Runtime support matrix | You need to know what is actually executed today versus schema-only. | [Runtime Support Matrix](runtime_support.md) |
-| Simple code | You want the older high-level Python facade. | [Simple Docs](../simple/index.md) |
-| Detail docs | You need exact layer contracts, artifact contracts, or custom hooks. | [Detail Docs](../detail/index.md) |
+| Interactive layer design | You want to see the layer/DAG architecture before writing YAML. | [Navigator App](../navigator_app/index.html) |
+| Runnable core recipe | You want the current L1-L8 artifact path and output directory. | [Quickstart](quickstart.md) |
+| Runtime support matrix | You need to know what is executed today versus schema-only. | [Runtime Support Matrix](runtime_support.md) |
+| Existing simple API | You want the older high-level Python facade. | [Simple Docs](../simple/index.md) |
+| Contract detail | You need exact layer contracts, artifacts, or custom hooks. | [Detail Docs](../detail/index.md) |
 
-## Core Runtime In One Screen
+## Minimal Runtime Call
 
 ```python
 from macrocast.core import execute_minimal_forecast
@@ -39,7 +27,9 @@ result = execute_minimal_forecast(open("my_layer_recipe.yaml").read())
 print(result.sink("l5_evaluation_v1").metrics_table)
 ```
 
-Layer-contract recipes use top-level blocks such as:
+## YAML Shape
+
+List layers use `fixed_axes` and optional `leaf_config`. Graph layers use `nodes` and `sinks`.
 
 ```yaml
 1_data:
@@ -48,19 +38,23 @@ Layer-contract recipes use top-level blocks such as:
   fixed_axes: {...}
 3_feature_engineering:
   nodes: [...]
+  sinks: {...}
 4_forecasting_model:
   nodes: [...]
+  sinks: {...}
 5_evaluation:
   fixed_axes: {...}
+6_statistical_tests:
+  enabled: true
+  sub_layers: {...}
+7_interpretation:
+  nodes: [...]
+  sinks: {...}
 8_output:
   fixed_axes: {...}
 ```
 
 Read [Quickstart](quickstart.md) for a complete runnable recipe.
-
-## Legacy Paths
-
-The repository still contains legacy compiler and simple-facade docs. Those paths remain useful for existing recipes, but they do not describe the full L0-L8 layer-contract runtime. When in doubt, check [Runtime Support Matrix](runtime_support.md).
 
 ```{toctree}
 :hidden:
