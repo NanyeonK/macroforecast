@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from ..registry import get_axis_registry
+from ..core.layers.registry import get_layer, list_layers
 from .core import (
     NAVIGATOR_SCHEMA_VERSION,
     OPERATIONAL_NARROW_CONTRACTS,
@@ -183,6 +184,110 @@ def runtime_support() -> dict[str, Any]:
         "layer_notes": {key: dict(value) for key, value in _RUNTIME_SUPPORT["layer_notes"].items()},
     }
 
+
+_LAYER_TOPOLOGY_ORDER = (
+    "l0",
+    "l1",
+    "l1_5",
+    "l2",
+    "l2_5",
+    "l3",
+    "l3_5",
+    "l4",
+    "l4_5",
+    "l5",
+    "l6",
+    "l7",
+    "l8",
+)
+
+_LAYER_TOPOLOGY_LABELS = {
+    "l0": "L0 Study Setup",
+    "l1": "L1 Data",
+    "l1_5": "L1.5 Data Summary",
+    "l2": "L2 Preprocessing",
+    "l2_5": "L2.5 Pre/Post",
+    "l3": "L3 Feature DAG",
+    "l3_5": "L3.5 Feature Diagnostics",
+    "l4": "L4 Forecast DAG",
+    "l4_5": "L4.5 Generator Diagnostics",
+    "l5": "L5 Evaluation",
+    "l6": "L6 Statistical Tests",
+    "l7": "L7 Interpretation DAG",
+    "l8": "L8 Output",
+}
+
+_LAYER_TOPOLOGY_GROUPS = {
+    "l0": "setup",
+    "l1": "construction",
+    "l2": "construction",
+    "l3": "construction",
+    "l4": "construction",
+    "l1_5": "diagnostic",
+    "l2_5": "diagnostic",
+    "l3_5": "diagnostic",
+    "l4_5": "diagnostic",
+    "l5": "consumption",
+    "l6": "consumption",
+    "l7": "consumption",
+    "l8": "output",
+}
+
+_LAYER_TOPOLOGY_MAIN_FLOW = ("l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8")
+
+
+def _layer_axis_count(cls: type) -> int:
+    if not hasattr(cls, "list_axes"):
+        return 0
+    try:
+        return len(cls.list_axes())
+    except TypeError:
+        return 0
+
+
+def layer_topology() -> dict[str, Any]:
+    registered = list_layers()
+    sink_owner = {
+        sink: layer_id
+        for layer_id, spec in registered.items()
+        for sink in spec.produces
+    }
+    nodes = []
+    for layer_id in _LAYER_TOPOLOGY_ORDER:
+        if layer_id not in registered:
+            continue
+        spec = get_layer(layer_id)
+        cls = spec.cls
+        sub_layers = getattr(cls, "sub_layers", {}) if cls is not None else {}
+        layer_globals = getattr(cls, "layer_globals", {}) if cls is not None else {}
+        nodes.append(
+            {
+                "id": layer_id,
+                "label": _LAYER_TOPOLOGY_LABELS.get(layer_id, spec.name),
+                "name": spec.name,
+                "category": spec.category,
+                "group": _LAYER_TOPOLOGY_GROUPS.get(layer_id, spec.category),
+                "ui_mode": spec.ui_mode,
+                "expected_inputs": list(spec.expected_inputs),
+                "produces": list(spec.produces),
+                "sub_layer_count": len(sub_layers),
+                "layer_global_count": len(layer_globals),
+                "axis_count": _layer_axis_count(cls) if cls is not None else 0,
+            }
+        )
+    dependency_edges = []
+    for node in nodes:
+        for sink_name in node["expected_inputs"]:
+            source = sink_owner.get(sink_name)
+            if source:
+                dependency_edges.append({"from": source, "to": node["id"], "sink": sink_name, "kind": "sink"})
+    return {
+        "schema_version": "navigator_layer_topology_v1",
+        "main_flow": list(_LAYER_TOPOLOGY_MAIN_FLOW),
+        "nodes": nodes,
+        "edges": dependency_edges,
+    }
+
 def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dict[str, Any]:
     root = _repo_root()
     paths = sample_paths or _DEFAULT_SAMPLE_PATHS
@@ -193,6 +298,7 @@ def navigator_ui_data(sample_paths: tuple[str | Path, ...] | None = None) -> dic
         "replication_library_version": REPLICATION_LIBRARY_VERSION,
         "layer_labels": dict(_LAYER_LABELS),
         "layer_axis_groups": layer_axis_groups(),
+        "layer_topology": layer_topology(),
         "tree_axes": {layer: list(axes) for layer, axes in _TREE_AXES.items()},
         "axis_catalog": axis_catalog(),
         "axis_presentation": axis_presentation(),

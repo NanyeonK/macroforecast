@@ -525,6 +525,21 @@ def test_navigator_cli_writes_replication_yaml(tmp_path: Path):
     assert payload["path"]["3_training"]["fixed_axes"]["model_family"] == "ridge"
 
 
+
+def test_navigator_ui_data_exports_registered_layer_topology():
+    payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
+    topology = payload["layer_topology"]
+    nodes = {node["id"]: node for node in topology["nodes"]}
+
+    assert topology["schema_version"] == "navigator_layer_topology_v1"
+    assert topology["main_flow"] == ["l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8"]
+    assert nodes["l3"]["ui_mode"] == "graph"
+    assert nodes["l7"]["ui_mode"] == "graph"
+    assert nodes["l1_5"]["category"] == "diagnostic"
+    assert "l8_artifacts_v1" in nodes["l8"]["produces"]
+    assert any(edge["from"] == "l4" and edge["to"] == "l5" for edge in topology["edges"])
+
+
 def test_navigator_ui_data_exports_runtime_support_metadata():
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
     support = payload["runtime_support"]
