@@ -632,6 +632,87 @@ eval(code + "\nstate.data = data; state.sampleIndex = 0; console.log(canonicalRe
         assert module.validate_layer(layer).has_hard_errors is False, yaml_key
 
 
+def test_navigator_generated_yaml_validates_each_active_choice(tmp_path: Path):
+    node = shutil.which("node")
+    if node is None:
+        import pytest
+
+        pytest.skip("node is not installed")
+
+    data_path = tmp_path / "navigator_ui_data.json"
+    write_navigator_ui_data(data_path, sample_paths=("examples/recipes/model-benchmark.yaml",))
+    script = r"""
+const fs = require("fs");
+const data = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+let code = fs.readFileSync("docs/_extra/navigator_app/assets/app.js", "utf8");
+code = code.replace(/boot\(\)\.catch\(\(error\) => \{[\s\S]*?\n\}\);/, "");
+global.document = { getElementById: () => ({}), body: {} };
+global.window = { addEventListener: () => {}, location: { search: "" } };
+global.navigator = {};
+global.URLSearchParams = class { get(){ return null; } };
+global.fetch = async () => { throw new Error("fetch disabled"); };
+eval(code + `
+state.data = data; state.sampleIndex = 0;
+const layerKeys = {l0:"0_meta", l1:"1_data", l2:"2_preprocessing", l5:"5_evaluation", l6:"6_statistical_tests", l7:"7_interpretation", l8:"8_output", l1_5:"1_5_data_summary", l2_5:"2_5_pre_post_preprocessing", l3_5:"3_5_feature_diagnostics", l4_5:"4_5_generator_diagnostics"};
+const cases = [];
+const missing = [];
+for (const n of data.layer_topology.nodes) {
+  if (!layerKeys[n.id]) continue;
+  for (const axis of n.axes || []) {
+    const records = optionRecordsForAxis(axis, n.id);
+    if (!records.length) missing.push([n.id, axis]);
+    for (const rec of records) {
+      if (rec.enabled === false) continue;
+      state.canonicalSelections = {};
+      state.dagSelections = {};
+      state.canonicalSelections[axisSelectionKey(n.id, axis)] = isMultiSelectAxis(axis) ? [rec.value] : rec.value;
+      cases.push({layer: n.id, yaml_key: layerKeys[n.id], axis, value: rec.value, yaml: canonicalRecipeYaml()});
+    }
+  }
+}
+console.log(JSON.stringify({missing, cases}));
+`);
+"""
+    result = subprocess.run(
+        [node, "-e", script, str(data_path)],
+        check=True,
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+    )
+    payload = json.loads(result.stdout)
+    assert payload["missing"] == []
+
+    from macrocast.core.layers import l0, l1, l1_5, l2, l2_5, l3_5, l4_5, l5, l6, l7, l8
+
+    modules = {
+        "l0": l0,
+        "l1": l1,
+        "l2": l2,
+        "l5": l5,
+        "l6": l6,
+        "l7": l7,
+        "l8": l8,
+        "l1_5": l1_5,
+        "l2_5": l2_5,
+        "l3_5": l3_5,
+        "l4_5": l4_5,
+    }
+    failures = []
+    for case in payload["cases"]:
+        module = modules[case["layer"]]
+        if hasattr(module, "parse_recipe_yaml") and hasattr(module, "validate_recipe"):
+            report = module.validate_recipe(module.parse_recipe_yaml(case["yaml"]))
+        else:
+            generated = yaml.safe_load(case["yaml"])
+            layer_yaml = yaml.safe_dump({case["yaml_key"]: generated[case["yaml_key"]]}, sort_keys=False)
+            layer = module.parse_layer_yaml(layer_yaml, case["layer"])
+            report = module.validate_layer(layer)
+        if report.has_hard_errors:
+            failures.append((case["layer"], case["axis"], case["value"]))
+    assert failures == []
+
+
 def test_navigator_ui_data_exports_runtime_support_metadata():
     payload = navigator_ui_data(("examples/recipes/model-benchmark.yaml",))
     support = payload["runtime_support"]
