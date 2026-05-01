@@ -30,7 +30,6 @@ const els = {
   resetPath: document.getElementById("reset-path"),
   pathSource: document.getElementById("path-source"),
   treePath: document.getElementById("tree-path"),
-  runtimeSupport: document.getElementById("runtime-support"),
 };
 
 function escapeHtml(value) {
@@ -134,54 +133,6 @@ function defaultValue(axisName) {
 function isDefaultSelection(axisName, value) {
   const fallback = defaultValue(axisName);
   return fallback !== null && String(fallback) === String(value);
-}
-
-function runtimeSupportSpec() {
-  return (state.data && state.data.runtime_support) || {};
-}
-
-function runtimeStatusKey(option) {
-  const status = option && option.status ? option.status : "registry_only";
-  return (runtimeSupportSpec().status_map || {})[status] || "schema_only";
-}
-
-function runtimeStatusMeta(key) {
-  const legend = runtimeSupportSpec().legend || {};
-  return legend[key] || { label: humanizeToken(key), summary: "" };
-}
-
-function runtimeBadge(option) {
-  const key = runtimeStatusKey(option);
-  const meta = runtimeStatusMeta(key);
-  return `<span class="runtime-badge runtime-${escapeHtml(key)}" title="${escapeHtml(meta.summary || meta.label)}">${escapeHtml(meta.label)}</span>`;
-}
-
-function renderRuntimeSupport() {
-  if (!els.runtimeSupport) return;
-  const spec = runtimeSupportSpec();
-  const layerNote = ((spec.layer_notes || {})[state.layerFilter]) || {};
-  const legend = spec.legend || {};
-  const layerAxes = allAxes().filter((axis) => axis.layer === state.layerFilter);
-  const selectedCounts = layerAxes.reduce((acc, axis) => {
-    const selected = axisSelectedOption(axis);
-    const key = runtimeStatusKey(selected);
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const chips = Object.entries(legend).map(([key, meta]) => `
-    <span class="support-chip runtime-${escapeHtml(key)}">
-      <strong>${escapeHtml(String(selectedCounts[key] || 0))}</strong>
-      ${escapeHtml(meta.label)}
-    </span>
-  `).join("");
-  els.runtimeSupport.innerHTML = `
-    <div>
-      <p class="eyebrow">Runtime support</p>
-      <h2>${escapeHtml(layerNote.label || "Runtime status")}</h2>
-      <p class="source-note">${escapeHtml(layerNote.summary || "Selected options are classified by current runtime support, separate from schema validity.")}</p>
-    </div>
-    <div class="support-grid">${chips}</div>
-  `;
 }
 
 function axisSelectedOption(axis) {
@@ -419,7 +370,6 @@ function renderOptions() {
       ${axis.group_label ? `<span><strong>Group:</strong> ${escapeHtml(axis.group_label)}</span>` : ""}
       ${(axis.axis_level || axis.group_level) ? `<span><strong>Level:</strong> ${escapeHtml(hierarchyLevelLabel(axis.axis_level || axis.group_level))}</span>` : ""}
       ${presentation.selection_kind ? `<span><strong>Selection type:</strong> ${escapeHtml(humanizeToken(presentation.selection_kind))}</span>` : ""}
-      <span><strong>Runtime:</strong> ${runtimeBadge(axisSelectedOption(axis))}</span>
     </div>
     ${selectedSummary ? `<p class="decision-selected">${escapeHtml(selectedSummary)}</p>` : ""}
     ${presentation.warning ? `<p class="decision-warning"><strong>Check docs:</strong> ${escapeHtml(presentation.warning)}</p>` : ""}
@@ -440,7 +390,7 @@ function renderOptions() {
         <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
             <span>${escapeHtml(optionLabel)}</span>
-            <span class="status-stack"><span class="status">${escapeHtml(statusLabel)}</span>${runtimeBadge(option)}</span>
+            <span class="status">${escapeHtml(statusLabel)}</span>
           </div>
           <div class="option-code">YAML value: ${escapeHtml(option.value)}</div>
           ${summary ? `<p class="option-summary">${escapeHtml(summary)}</p>` : ""}
@@ -569,7 +519,6 @@ function render() {
   renderSampleSelect();
   renderSummary();
   renderPathHeader();
-  renderRuntimeSupport();
   renderAxisList();
   renderOptions();
   renderTreePath();
@@ -722,7 +671,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260501-runtime-support");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260429-l1-target-x-design");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();
