@@ -52,10 +52,6 @@ jobs:
           test -f docs/_build/html/navigator_app/app.js
           test -f docs/_build/html/navigator_app/styles.css
 
-      - name: Check no xref_missing beyond suppressed
-        run: |
-          ! sphinx-build -b linkcheck docs docs/_build/linkcheck 2>&1 | grep -E 'broken:' || true
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
