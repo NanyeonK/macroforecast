@@ -7,6 +7,8 @@ const state = {
   engineState: null,
   loadedSource: null,
   activeTopologyLayer: "l0",
+  activeSubLayer: null,
+  activeCanonicalAxis: null,
 };
 
 const els = {
@@ -34,6 +36,52 @@ const els = {
   runtimeSupport: document.getElementById("runtime-support"),
   layerTopology: document.getElementById("layer-topology"),
   layerDetail: document.getElementById("layer-detail"),
+};
+
+const CANONICAL_SUB_LAYERS = {
+  l0: ["L0.A study scope", "L0.B execution policy", "L0.C reproducibility", "L0.D compute mode"],
+  l1: ["L1.A data source", "L1.B target and horizons", "L1.C predictors", "L1.D geography", "L1.G regimes"],
+  l1_5: ["L1.5.A sample coverage", "L1.5.B univariate summary", "L1.5.C stationarity", "L1.5.D missing and outlier", "L1.5.E correlation", "L1.5.Z export"],
+  l2: ["L2.A target construction", "L2.B transforms", "L2.C missing and outliers", "L2.D scaling", "L2.E features"],
+  l2_5: ["L2.5.A comparison", "L2.5.B distribution shift", "L2.5.C correlation shift", "L2.5.D cleaning summary", "L2.5.Z export"],
+  l3: ["L3.A source nodes", "L3.B feature DAG", "L3.C sinks"],
+  l3_5: ["L3.5.A comparison", "L3.5.B factor inspection", "L3.5.C feature correlation", "L3.5.D lag inspection", "L3.5.E selection", "L3.5.Z export"],
+  l4: ["L4.A model DAG", "L4.B forecasts", "L4.C model artifacts", "L4.D training metadata"],
+  l4_5: ["L4.5.A fit", "L4.5.B scale", "L4.5.C window stability", "L4.5.D tuning", "L4.5.E ensemble", "L4.5.Z export"],
+  l5: ["L5.A metrics", "L5.B benchmark", "L5.C aggregation", "L5.D slicing and decomposition", "L5.E ranking"],
+  l6: ["L6 globals", "L6_A_equal_predictive", "L6_B_nested", "L6_C_cpa", "L6_D_multiple_model", "L6_E_density_interval", "L6_F_direction", "L6_G_residual"],
+  l7: ["L7.A importance DAG", "L7.B output shape"],
+  l8: ["L8_A_export_format", "L8_B_saved_objects", "L8_C_provenance", "L8_D_artifact_granularity"],
+};
+
+const CANONICAL_AXIS_GROUPS = {
+  l5: {
+    "L5.A metrics": ["primary_metric", "point_metrics", "density_metrics", "direction_metrics", "relative_metrics"],
+    "L5.B benchmark": ["benchmark_window", "benchmark_scope"],
+    "L5.C aggregation": ["agg_time", "agg_horizon", "agg_target", "agg_state"],
+    "L5.D slicing and decomposition": ["oos_period", "regime_use", "regime_metrics", "decomposition_target", "decomposition_order"],
+    "L5.E ranking": ["ranking", "report_style"],
+  },
+  l6: {
+    "L6 globals": ["enabled", "test_scope", "dependence_correction", "overlap_handling"],
+    "L6_A_equal_predictive": ["equal_predictive_test", "loss_function", "model_pair_strategy", "hln_correction"],
+    "L6_B_nested": ["nested_test", "nested_pair_strategy", "cw_adjustment", "enc_test_one_sided"],
+    "L6_C_cpa": ["cpa_test", "cpa_window_type", "cpa_conditioning_info", "cpa_critical_value_method"],
+    "L6_D_multiple_model": ["multiple_model_test", "mcs_alpha", "mmt_loss_function", "bootstrap_method", "bootstrap_n_replications", "bootstrap_block_length", "mcs_t_statistic", "spa_studentization", "stepm_alpha"],
+    "L6_E_density_interval": ["density_test", "interval_test", "coverage_levels", "pit_n_bins", "pit_test_horizon_dependence"],
+    "L6_F_direction": ["direction_test", "direction_threshold", "direction_alpha"],
+    "L6_G_residual": ["residual_test", "residual_lag_count", "residual_test_scope", "residual_alpha"],
+  },
+  l7: {
+    "L7.A importance DAG": ["enabled"],
+    "L7.B output shape": ["output_table_format", "figure_type", "top_k_features_to_show", "precision_digits", "figure_dpi", "figure_format", "latex_table_export", "markdown_table_export"],
+  },
+  l8: {
+    "L8_A_export_format": ["export_format", "compression"],
+    "L8_B_saved_objects": ["saved_objects", "model_artifacts_format"],
+    "L8_C_provenance": ["provenance_fields", "manifest_format"],
+    "L8_D_artifact_granularity": ["artifact_granularity", "naming_convention"],
+  },
 };
 
 function escapeHtml(value) {
@@ -258,19 +306,89 @@ function formatList(items, emptyText) {
   return `<div class="detail-chip-grid">${values.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`;
 }
 
+function subLayersForNode(node) {
+  const explicit = node.sub_layers || [];
+  if (explicit.length) return explicit;
+  return CANONICAL_SUB_LAYERS[node.id] || [];
+}
+
+function normalizeSubLayerName(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function axesForSubLayer(node, subLayer) {
+  const grouped = CANONICAL_AXIS_GROUPS[node.id] || {};
+  if (grouped[subLayer]) return grouped[subLayer].filter((axis) => (node.axes || []).includes(axis));
+  const axes = node.axes || [];
+  const normalized = normalizeSubLayerName(subLayer);
+  const letterMatch = normalized.match(/\bl\d+(?:\s+5)?\s+([a-z])\b/);
+  const letter = letterMatch ? letterMatch[1] : "";
+  const keywordMatches = axes.filter((axis) => {
+    const a = normalizeSubLayerName(axis);
+    return normalized.split(" ").some((token) => token.length > 3 && a.includes(token));
+  });
+  if (keywordMatches.length) return keywordMatches;
+  if (!letter) return axes;
+  const subLayers = subLayersForNode(node);
+  const index = Math.max(0, subLayers.indexOf(subLayer));
+  const chunkSize = Math.max(1, Math.ceil(axes.length / Math.max(1, subLayers.length)));
+  return axes.slice(index * chunkSize, (index + 1) * chunkSize);
+}
+
+function activeNode() {
+  const byId = topologyNodeById();
+  return byId.get(state.activeTopologyLayer) || byId.get("l0") || (layerTopologySpec().nodes || [])[0];
+}
+
+function ensureActiveSubLayer(node) {
+  const subLayers = subLayersForNode(node);
+  if (!subLayers.length) {
+    state.activeSubLayer = null;
+    return null;
+  }
+  if (!state.activeSubLayer || !subLayers.includes(state.activeSubLayer)) {
+    state.activeSubLayer = subLayers[0];
+  }
+  return state.activeSubLayer;
+}
+
+function renderSubLayerButton(node, subLayer, idx) {
+  const axes = axesForSubLayer(node, subLayer);
+  const active = subLayer === state.activeSubLayer ? " active" : "";
+  return `
+    <button type="button" class="sublayer-card${active}" data-sub-layer="${escapeHtml(subLayer)}">
+      <span>${escapeHtml(String(idx + 1).padStart(2, "0"))}</span>
+      <strong>${escapeHtml(subLayer)}</strong>
+      <em>${escapeHtml(String(axes.length))} axes</em>
+    </button>
+  `;
+}
+
+function renderAxisButton(axisName) {
+  const active = axisName === state.activeCanonicalAxis ? " active" : "";
+  return `
+    <button type="button" class="canonical-axis${active}" data-canonical-axis="${escapeHtml(axisName)}">
+      <span>${escapeHtml(axisName)}</span>
+    </button>
+  `;
+}
+
 function renderLayerDetail() {
   if (!els.layerDetail) return;
-  const byId = topologyNodeById();
-  const node = byId.get(state.activeTopologyLayer) || byId.get("l0") || (layerTopologySpec().nodes || [])[0];
+  const node = activeNode();
   if (!node) {
     els.layerDetail.innerHTML = `<p class="muted">No registered layer metadata available.</p>`;
     return;
   }
+  const subLayers = subLayersForNode(node);
+  const activeSubLayer = ensureActiveSubLayer(node);
+  const subLayerAxes = activeSubLayer ? axesForSubLayer(node, activeSubLayer) : (node.axes || []);
+  if (!state.activeCanonicalAxis || !subLayerAxes.includes(state.activeCanonicalAxis)) {
+    state.activeCanonicalAxis = subLayerAxes[0] || null;
+  }
   const modeText = node.ui_mode === "graph"
     ? "Graph/DAG layer: users compose source, step, and sink nodes."
     : "List layer: users resolve ordered axes and sub-layer sections.";
-  const axisPreview = (node.axes || []).slice(0, 18);
-  const axisOverflow = (node.axes || []).length > axisPreview.length ? [`+${(node.axes || []).length - axisPreview.length} more axes`] : [];
   const inputCount = (node.expected_inputs || []).length;
   const sinkCount = (node.produces || []).length;
   els.layerDetail.innerHTML = `
@@ -301,17 +419,23 @@ function renderLayerDetail() {
     </div>
 
     <div class="definition-grid">
-      <section>
+      <section class="definition-wide">
         <h3>Sub-layers</h3>
-        ${formatList(node.sub_layers, node.ui_mode === "graph" ? "DAG body defines the steps." : "No explicit sub-layer sections.")}
+        ${subLayers.length ? `<div class="sublayer-grid">${subLayers.map((subLayer, idx) => renderSubLayerButton(node, subLayer, idx)).join("")}</div>` : `<p class="empty-note">No explicit sub-layer sections.</p>`}
       </section>
       <section>
         <h3>Layer globals</h3>
         ${formatList(node.layer_globals, "No layer-global axes.")}
       </section>
+      <section>
+        <h3>Selected sub-layer</h3>
+        <p class="selected-sublayer">${escapeHtml(activeSubLayer || "Layer-level controls")}</p>
+        <p class="source-note">${escapeHtml(subLayerAxes.length ? `${subLayerAxes.length} axis/control entries available.` : "This sub-layer is configured by DAG nodes or runtime metadata.")}</p>
+      </section>
       <section class="definition-wide">
         <h3>Axes / output controls</h3>
-        ${formatList([...axisPreview, ...axisOverflow], "This layer is configured by DAG nodes or registry defaults, not a fixed axis list.")}
+        ${subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`}
+        ${state.activeCanonicalAxis ? `<div class="axis-focus"><span>Selected axis</span><strong>${escapeHtml(state.activeCanonicalAxis)}</strong></div>` : ""}
       </section>
     </div>
   `;
@@ -685,16 +809,14 @@ function renderYaml() {
 }
 
 function render() {
-  setDefaultAxis();
   renderSampleSelect();
   renderLayerTopology();
   renderLayerDetail();
-  renderSummary();
-  renderPathHeader();
-  renderRuntimeSupport();
-  renderAxisList();
-  renderOptions();
-  renderTreePath();
+  if (els.pathSource) {
+    els.pathSource.textContent = state.loadedSource
+      ? `loaded: ${state.loadedSource.label || state.loadedSource.id}`
+      : `sample: ${currentSample().label}`;
+  }
   renderYaml();
 }
 
@@ -737,11 +859,12 @@ function bindEvents() {
     state.sampleIndex = Number(event.target.value);
     state.loadedSource = null;
     state.activeAxis = null;
+    state.activeCanonicalAxis = null;
     resetEngineState();
     render();
   });
 
-  els.axisSearch.addEventListener("input", (event) => {
+  if (els.axisSearch) els.axisSearch.addEventListener("input", (event) => {
     state.axisFilter = event.target.value;
     render();
   });
@@ -758,6 +881,8 @@ function bindEvents() {
       const card = event.target.closest("[data-topology-layer]");
       if (!card) return;
       state.activeTopologyLayer = card.dataset.topologyLayer;
+      state.activeSubLayer = null;
+      state.activeCanonicalAxis = null;
       render();
     });
     els.layerTopology.addEventListener("keydown", (event) => {
@@ -766,18 +891,51 @@ function bindEvents() {
       if (!card) return;
       event.preventDefault();
       state.activeTopologyLayer = card.dataset.topologyLayer;
+      state.activeSubLayer = null;
+      state.activeCanonicalAxis = null;
       render();
     });
   }
 
-  els.axisList.addEventListener("click", (event) => {
+  if (els.layerDetail) {
+    els.layerDetail.addEventListener("click", (event) => {
+      const subLayerButton = event.target.closest("[data-sub-layer]");
+      if (subLayerButton) {
+        state.activeSubLayer = subLayerButton.dataset.subLayer;
+        state.activeCanonicalAxis = null;
+        render();
+        return;
+      }
+      const axisButton = event.target.closest("[data-canonical-axis]");
+      if (axisButton) {
+        state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
+        render();
+      }
+    });
+    els.layerDetail.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const subLayerButton = event.target.closest("[data-sub-layer]");
+      const axisButton = event.target.closest("[data-canonical-axis]");
+      if (!subLayerButton && !axisButton) return;
+      event.preventDefault();
+      if (subLayerButton) {
+        state.activeSubLayer = subLayerButton.dataset.subLayer;
+        state.activeCanonicalAxis = null;
+      } else {
+        state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
+      }
+      render();
+    });
+  }
+
+  if (els.axisList) els.axisList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-axis]");
     if (!button) return;
     state.activeAxis = button.dataset.axis;
     render();
   });
 
-  els.optionList.addEventListener("click", (event) => {
+  if (els.optionList) els.optionList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-option]");
     if (!button || button.disabled) return;
     const axis = allAxes().find((item) => item.axis === state.activeAxis);
@@ -786,7 +944,7 @@ function bindEvents() {
     render();
   });
 
-  els.treePath.addEventListener("click", (event) => {
+  if (els.treePath) els.treePath.addEventListener("click", (event) => {
     if (event.target.closest("a")) return;
     const axisItem = event.target.closest("[data-tree-axis]");
     const layerItem = event.target.closest("[data-tree-layer]");
@@ -797,7 +955,7 @@ function bindEvents() {
     render();
   });
 
-  els.treePath.addEventListener("keydown", (event) => {
+  if (els.treePath) els.treePath.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     if (event.target.closest("a")) return;
     const axisItem = event.target.closest("[data-tree-axis]");
