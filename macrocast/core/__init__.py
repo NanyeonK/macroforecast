@@ -29,6 +29,7 @@ from .manifest import (
     replicate,
 )
 from .recipe import Recipe
+from .runtime import RuntimeResult, execute_l1_l2, materialize_l1, materialize_l2
 from .selectors import SourceContext, resolve_source_selector
 from .sweep import (
     Cell,
@@ -132,6 +133,7 @@ __all__ = [
     "ResolvedAxis",
     "Rule",
     "RuntimeEnvironment",
+    "RuntimeResult",
     "Series",
     "SourceContext",
     "SourceSelector",
@@ -154,6 +156,7 @@ __all__ = [
     "combine_sweeps",
     "compare_environments",
     "ensure_cache_layout",
+    "execute_l1_l2",
     "execute_node",
     "expand_sweeps",
     "generate_cell_id",
@@ -164,6 +167,8 @@ __all__ = [
     "install_dependencies",
     "list_layers",
     "list_ops",
+    "materialize_l1",
+    "materialize_l2",
     "node_hash",
     "normalize_to_dag_form",
     "parse_dag_form",
