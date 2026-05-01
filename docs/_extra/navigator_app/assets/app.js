@@ -56,6 +56,37 @@ const CANONICAL_SUB_LAYERS = {
 };
 
 const CANONICAL_AXIS_GROUPS = {
+  l0: {
+    "L0.A study scope": ["study_scope"],
+    "L0.B execution policy": ["failure_policy"],
+    "L0.C reproducibility": ["reproducibility_mode"],
+    "L0.D compute mode": ["compute_mode"],
+  },
+  l1: {
+    "L1.A data source": ["custom_source_policy", "dataset", "frequency", "information_set_type", "release_lag_rule", "contemporaneous_x_rule"],
+    "L1.B target and horizons": ["target_structure"],
+    "L1.C predictors": ["variable_universe", "fred_sd_variable_group", "sd_variable_selection"],
+    "L1.D geography": ["fred_sd_state_group", "state_selection"],
+    "L1.G regimes": ["regime_definition"],
+  },
+  l2: {
+    "L2.A target construction": ["horizon_target_construction", "target_transform", "target_normalization"],
+    "L2.B transforms": ["tcode_policy", "transform_policy", "transform_scope", "fred_sd_mixed_frequency_representation"],
+    "L2.C missing and outliers": ["x_missing_policy", "x_outlier_policy", "outlier_policy", "outlier_action", "imputation_policy"],
+    "L2.D scaling": ["scaling_policy"],
+    "L2.E features": ["target_lag_block", "x_lag_feature_block", "factor_feature_block", "level_feature_block"],
+  },
+  l3: {
+    "L3.A source nodes": ["model_family", "benchmark_family"],
+    "L3.B feature DAG": ["framework", "outer_window", "refit_policy", "min_train_size", "training_start_rule"],
+    "L3.C sinks": ["forecast_type", "forecast_object", "exogenous_x_path_policy", "recursive_x_model_family", "midasr_weight_family"],
+  },
+  l4: {
+    "L4.A model DAG": ["model_family", "benchmark_family", "midasr_weight_family"],
+    "L4.B forecasts": ["forecast_type", "forecast_object", "exogenous_x_path_policy", "recursive_x_model_family"],
+    "L4.C model artifacts": ["framework", "outer_window", "refit_policy"],
+    "L4.D training metadata": ["min_train_size", "training_start_rule"],
+  },
   l5: {
     "L5.A metrics": ["primary_metric", "point_metrics", "density_metrics", "direction_metrics", "relative_metrics"],
     "L5.B benchmark": ["benchmark_window", "benchmark_scope"],
@@ -83,6 +114,18 @@ const CANONICAL_AXIS_GROUPS = {
     "L8_C_provenance": ["provenance_fields", "manifest_format"],
     "L8_D_artifact_granularity": ["artifact_granularity", "naming_convention"],
   },
+};
+
+const TREE_LAYER_ALIASES = {
+  l0: "0_meta",
+  l1: "1_data_task",
+  l2: "2_preprocessing",
+  l3: "3_training",
+  l4: "3_training",
+  l5: "4_evaluation",
+  l6: "6_stat_tests",
+  l7: "7_importance",
+  l8: "5_output_provenance",
 };
 
 const CANONICAL_AXIS_OPTIONS = {
@@ -387,14 +430,28 @@ function subLayersForNode(node) {
   return CANONICAL_SUB_LAYERS[node.id] || [];
 }
 
+function treeAxesForNode(node) {
+  const treeLayer = TREE_LAYER_ALIASES[node.id];
+  if (!treeLayer) return [];
+  return allAxes()
+    .filter((axis) => axis.layer === treeLayer)
+    .map((axis) => axis.axis);
+}
+
+function effectiveAxesForNode(node) {
+  const declared = node.axes || [];
+  if (declared.length) return declared;
+  return treeAxesForNode(node);
+}
+
 function normalizeSubLayerName(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function axesForSubLayer(node, subLayer) {
   const grouped = CANONICAL_AXIS_GROUPS[node.id] || {};
-  if (grouped[subLayer]) return grouped[subLayer].filter((axis) => (node.axes || []).includes(axis));
-  const axes = node.axes || [];
+  const axes = effectiveAxesForNode(node);
+  if (grouped[subLayer]) return grouped[subLayer].filter((axis) => axes.includes(axis));
   const normalized = normalizeSubLayerName(subLayer);
   const letterMatch = normalized.match(/\bl\d+(?:\s+5)?\s+([a-z])\b/);
   const letter = letterMatch ? letterMatch[1] : "";
@@ -539,6 +596,7 @@ function renderLayerDetail() {
   const modeText = node.ui_mode === "graph"
     ? "Graph/DAG layer: users compose source, step, and sink nodes."
     : "List layer: users resolve ordered axes and sub-layer sections.";
+  const layerAxes = effectiveAxesForNode(node);
   const inputCount = (node.expected_inputs || []).length;
   const sinkCount = (node.produces || []).length;
   els.layerDetail.innerHTML = `
@@ -553,19 +611,8 @@ function renderLayerDetail() {
         <span><strong>${escapeHtml(String(inputCount))}</strong> inputs</span>
         <span><strong>${escapeHtml(String(sinkCount))}</strong> sinks</span>
         <span><strong>${escapeHtml(String(node.sub_layer_count || 0))}</strong> sub-layers</span>
-        <span><strong>${escapeHtml(String(node.axis_count || 0))}</strong> axes</span>
+        <span><strong>${escapeHtml(String(layerAxes.length))}</strong> axes</span>
       </div>
-    </div>
-
-    <div class="handoff-grid">
-      <section class="handoff-card">
-        <h3>Inputs</h3>
-        ${formatList(node.expected_inputs, "No upstream sink inputs.")}
-      </section>
-      <section class="handoff-card">
-        <h3>Produces</h3>
-        ${formatList(node.produces, "No produced sinks registered.")}
-      </section>
     </div>
 
     <div class="definition-grid">
@@ -586,6 +633,17 @@ function renderLayerDetail() {
         <h3>Axes / output controls</h3>
         ${subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`}
         ${renderCanonicalOptionsPanel(state.activeCanonicalAxis)}
+      </section>
+    </div>
+
+    <div class="handoff-grid">
+      <section class="handoff-card">
+        <h3>Inputs</h3>
+        ${formatList(node.expected_inputs, "No upstream sink inputs.")}
+      </section>
+      <section class="handoff-card">
+        <h3>Produces</h3>
+        ${formatList(node.produces, "No produced sinks registered.")}
       </section>
     </div>
   `;

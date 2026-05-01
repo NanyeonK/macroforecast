@@ -123,6 +123,10 @@ button:hover,
   gap: 16px;
 }
 
+.recipe-controls-hidden {
+  display: none;
+}
+
 .inspector .panel,
 .layer-detail {
   padding: 16px;
@@ -309,8 +313,8 @@ input {
 
 .layer-hero {
   display: grid;
-  grid-template-columns: 118px minmax(0, 1fr) minmax(220px, 340px);
-  gap: 18px;
+  grid-template-columns: 86px minmax(0, 1fr) minmax(190px, 280px);
+  gap: 12px;
   align-items: stretch;
 }
 
@@ -318,11 +322,11 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 116px;
+  min-height: 84px;
   border-radius: 10px;
   background: #101828;
   color: #fff;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 900;
 }
 
@@ -331,16 +335,16 @@ input {
 }
 
 .layer-hero-copy h2 {
-  margin-bottom: 8px;
-  font-size: 30px;
+  margin-bottom: 6px;
+  font-size: 24px;
   line-height: 1.08;
 }
 
 .layer-hero-copy p:last-child {
   max-width: 760px;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.42;
 }
 
 .layer-metrics {
@@ -353,14 +357,14 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 54px;
-  padding: 10px;
+  min-height: 38px;
+  padding: 8px;
   border-radius: 9px;
 }
 
 .layer-metrics strong {
   color: var(--text);
-  font-size: 20px;
+  font-size: 17px;
 }
 
 .handoff-grid,
