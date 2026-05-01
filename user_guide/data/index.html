@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data (Stage 1) &mdash; macrocast</title>
+  <title>Data &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
@@ -69,7 +69,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Data (Stage 1)</li>
+      <li class="breadcrumb-item active">Data</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -79,12 +79,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="data-stage-1">
-<h1>Data (Stage 1)<a class="headerlink" href="#data-stage-1" title="Link to this heading"></a></h1>
-<p>Stage 1 answers: <strong>what source frame, target y, and predictor x universe does
-this study start from?</strong> Stage 0 fixes study scope and execution grammar. Stage
-1 fills that grammar with source data, forecast-time information, target y, and
-candidate predictor x columns.</p>
+  <section id="data">
+<h1>Data<a class="headerlink" href="#data" title="Link to this heading"></a></h1>
+<p>Layer 1 answers: <strong>what source frame, target y, and predictor x universe does
+this study start from?</strong> Layer 0 fixes runtime policy. Layer 1 defines source
+data, forecast-time information, target y, and candidate predictor x columns.</p>
 <p>Layer 1 contains canonical registry axes plus a small number of hidden
 compatibility/helper selectors. The primary Navigator tree shows the
 user-facing decisions; <code class="docutils literal notranslate"><span class="pre">state_selection</span></code> and <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> are hidden
@@ -134,16 +133,15 @@ lower selectors used by FRED-SD helper resolution.</p>
 not choose a FRED Source Panel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code>: choose a FRED Source Panel and append custom columns.</p></li>
 </ul>
-<p>Stage 1 does not choose model family, benchmark, researcher preprocessing,
+<p>Layer 1 does not choose model family, benchmark, researcher preprocessing,
 feature representation, or evaluation metrics. Those belong to Layer 2 and
 later.</p>
-<section id="relation-to-stage-0">
-<h2>Relation To Stage 0<a class="headerlink" href="#relation-to-stage-0" title="Link to this heading"></a></h2>
-<p>Stage 0 <a class="reference internal" href="../design.html"><span class="std std-doc">design</span></a> sets the study grammar:
-<code class="docutils literal notranslate"><span class="pre">study_scope</span></code>, failure handling, reproducibility, and compute layout. Stage 1
-uses that grammar. For example, one-target Study Scope values force
-<code class="docutils literal notranslate"><span class="pre">target_structure=single_target</span></code>; multiple-target Study Scope values force
-<code class="docutils literal notranslate"><span class="pre">target_structure=multi_target</span></code>.</p>
+<section id="relation-to-layer-contracts">
+<h2>Relation To Layer Contracts<a class="headerlink" href="#relation-to-layer-contracts" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="../design.html"><span class="std std-doc">Layer Contract Design</span></a> defines the current L0-L8 map. L1 fixes
+the data task: source, target, predictor universe, geography, sample window,
+horizons, and regimes. Layer 0 handles runtime policy plus derived manifest
+metadata.</p>
 </section>
 <section id="operational-status">
 <h2>Operational Status<a class="headerlink" href="#operational-status" title="Link to this heading"></a></h2>
@@ -156,13 +154,12 @@ uses that grammar. For example, one-target Study Scope values force
 <li><p>raw-source missing/outlier handling before official transforms;</p></li>
 <li><p>FRED transform scope and frame availability.</p></li>
 </ul>
-<p>Moved out of Layer 1:</p>
+<p>Not owned by Layer 1:</p>
 <ul class="simple">
-<li><p>Layer 2: target representation, x representation, feature blocks, factor and
-rotation construction, researcher preprocessing.</p></li>
-<li><p>Layer 3: model family, benchmark family, forecast type/object, training
-window, tuning.</p></li>
-<li><p>Layer 4+: evaluation, outputs, statistical tests, interpretation.</p></li>
+<li><p>Layer 2: raw-to-clean preprocessing.</p></li>
+<li><p>Layer 3: feature engineering and target construction.</p></li>
+<li><p>Layer 4: model fitting, forecasts, benchmarks, ensembles, and tuning.</p></li>
+<li><p>Layer 5+: evaluation, statistical tests, interpretation, and output.</p></li>
 </ul>
 </section>
 <section id="data-sources">

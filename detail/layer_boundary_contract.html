@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
@@ -81,293 +81,130 @@
              
   <section id="layer-boundary-contract">
 <h1>Layer Boundary Contract<a class="headerlink" href="#layer-boundary-contract" title="Link to this heading"></a></h1>
-<p>Date: 2026-04-22</p>
-<p>This document is the canonical boundary contract for the recipe layers after the
-Layer 1/2 cleanup decision.</p>
-<p>For named runtime and extension schemas, use
-<code class="docutils literal notranslate"><span class="pre">layer_contract_ledger.md</span></code> as the canonical status ledger. This page owns the
-layer-role split; the ledger owns contract status, producer, consumer,
-validation, and backlog.</p>
-<section id="layer-0-study-design">
-<h2>Layer 0: Study Design<a class="headerlink" href="#layer-0-study-design" title="Link to this heading"></a></h2>
-<p>Owns study grammar and execution shape:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></li>
-</ul>
-<p>Layer 0 must not know dataset semantics, preprocessing semantics, model
-families, or metrics.</p>
+<p>This page records the current public layer boundaries.</p>
+<section id="canonical-flow">
+<h2>Canonical Flow<a class="headerlink" href="#canonical-flow" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3 -&gt; L4 -&gt; L5 -&gt; L6 -&gt; L7 -&gt; L8
+</pre></div>
+</div>
+<p>Diagnostics attach as side branches:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L1.5 &lt;- L1
+L2.5 &lt;- L1 + L2
+L3.5 &lt;- L1 + L2 + L3
+L4.5 &lt;- L4 + L3
+</pre></div>
+</div>
 </section>
-<section id="layer-1-fred-data-frame">
-<h2>Layer 1: FRED Data Frame<a class="headerlink" href="#layer-1-fred-data-frame" title="Link to this heading"></a></h2>
-<p>Owns the FRED data frame before researcher-specific transformations:</p>
-<ul class="simple">
-<li><p>dataset identity</p></li>
-<li><p>source adapter / loader</p></li>
-<li><p>frequency</p></li>
-<li><p>information set and release-lag availability</p></li>
-<li><p>target identity, horizons, sample start/end</p></li>
-<li><p>FRED-provided transformation policy and target/X transform scope</p></li>
-<li><p>FRED availability handling</p></li>
-<li><p>raw-source missing/outlier policy before FRED transforms/T-codes
-(<code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>)</p></li>
-<li><p>raw eligible variable universe</p></li>
-<li><p>contemporaneous information-set rule</p></li>
-</ul>
-<p>Layer 1 output is a FRED frame plus provenance reports. Runtime records
-that handoff as <code class="docutils literal notranslate"><span class="pre">layer1_official_frame_v1</span></code> in <code class="docutils literal notranslate"><span class="pre">layer1_official_frame.json</span></code>,
-with a compact summary in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and an artifact entry in
-<code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>. It should be enough to reproduce “what data were
-available to the study” before model-specific choices.</p>
-<p>In full mode, Layer 1 may clean or flag raw-source missing values and
-raw-source outliers before FRED transforms/T-codes. That order must be
-recorded because it differs from imputing or clipping after transformed model
-inputs already exist.</p>
-</section>
-<section id="layer-2-research-preprocessing-feature-representation">
-<h2>Layer 2: Research Preprocessing / Feature Representation<a class="headerlink" href="#layer-2-research-preprocessing-feature-representation" title="Link to this heading"></a></h2>
-<p>Owns transformations and feature representations researchers can vary within
-the same FRED data frame:</p>
-<ul class="simple">
-<li><p>target transforms beyond FRED-provided codes</p></li>
-<li><p>X transforms beyond FRED-provided codes</p></li>
-<li><p>scaling and normalization</p></li>
-<li><p>post-transform/model-input missing imputation algorithms</p></li>
-<li><p>post-transform/model-input outlier handling</p></li>
-<li><p>smoothing / filters</p></li>
-<li><p>PCA, static factors, dimensionality reduction</p></li>
-<li><p>feature selection</p></li>
-<li><p>predictor family and feature-block selection</p></li>
-<li><p>feature builders that construct the model input matrix <code class="docutils literal notranslate"><span class="pre">Z</span></code></p></li>
-<li><p>factor count and other representation dimensions</p></li>
-<li><p>deterministic features, including trends, seasonals, and break dummies</p></li>
-<li><p>custom preprocessors</p></li>
-<li><p>fit scope and leakage discipline</p></li>
-<li><p>inverse transform and evaluation scale</p></li>
-</ul>
-<p>Layer 2 can handle values that originated as raw-source missing/outliers, but
-only after Layer 1 has produced the selected official or raw feature frame. In
-that case the treatment may be mixed with transform-induced missing values and
-other preprocessing artifacts; full provenance should preserve that ordering.</p>
-<p>Layer 2’s canonical output is <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>/<code class="docutils literal notranslate"><span class="pre">Z_pred</span></code>, plus feature names, block
-metadata, and fit state for train-window preprocessing. The newly defined
-feature-block grammar is:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_set</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target_lag_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">factor_feature_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">level_feature_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rotation_feature_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">temporal_feature_block</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code></p></li>
-</ul>
-<p>These axes are the canonical Layer 2 language. Supported runtime slices now
-read explicit blocks first for executor-family dispatch, fixed target lags,
-fixed X lags, and static PCA factors. The coarse <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>,
-<code class="docutils literal notranslate"><span class="pre">predictor_family</span></code>, <code class="docutils literal notranslate"><span class="pre">data_richness_mode</span></code>, and <code class="docutils literal notranslate"><span class="pre">factor_count</span></code> bridge remains
-accepted as compatibility/provenance because those names define <code class="docutils literal notranslate"><span class="pre">Z</span></code>, not
-estimator behavior. New manifests should read the preferred
-<code class="docutils literal notranslate"><span class="pre">compatibility_source</span></code> key for that provenance; <code class="docutils literal notranslate"><span class="pre">source_bridge</span></code> remains as a
-legacy manifest alias. Downstream importance artifacts should likewise prefer
-<code class="docutils literal notranslate"><span class="pre">feature_runtime_builder</span></code> plus <code class="docutils literal notranslate"><span class="pre">legacy_feature_builder</span></code>; <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>
-remains a compatibility alias for existing readers.</p>
-<p>Evaluation decomposition uses <code class="docutils literal notranslate"><span class="pre">feature_representation</span></code> as the canonical
-component name for these axes. The old component name <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code> remains
-accepted as a decomposition-plan alias.</p>
-</section>
-<section id="layer-3-forecast-generator">
-<h2>Layer 3: Forecast Generator<a class="headerlink" href="#layer-3-forecast-generator" title="Link to this heading"></a></h2>
-<p>Owns all choices that generate forecasts:</p>
-<ul class="simple">
-<li><p>forecast generator family, currently exposed as compatibility axis <code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></li>
-<li><p>registered custom forecast generator/model</p></li>
-<li><p>baseline generator role assignment, currently exposed as compatibility axis
-<code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></li>
-<li><p>direct vs iterated forecast generation</p></li>
-<li><p>forecast object, including mean/median/quantile</p></li>
-<li><p>training window, refit policy, min train size, training start rule</p></li>
-<li><p>model lag counts and horizon modelization</p></li>
-<li><p>validation split, hyperparameter search, tuning objective, budget</p></li>
-<li><p>estimator seed use, early stopping, and convergence handling</p></li>
-</ul>
-<p>Canonical cleanup:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code> remains the public compatibility axis, but its canonical
-meaning is forecast generator family.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> remains the public compatibility axis, but its canonical
-meaning is baseline generator role assignment.</p></li>
-<li><p>benchmarks belong here because they produce forecasts; they are forecast
-generators assigned the benchmark/baseline role, not a separate model species.</p></li>
-<li><p>Layer 3 owns estimator seed use, early stopping, and convergence handling,
-but not all runtime discipline.</p></li>
-</ul>
-<p>Runtime discipline is split by layer:</p>
+<section id="boundary-table">
+<h2>Boundary Table<a class="headerlink" href="#boundary-table" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Discipline</p></th>
-<th class="head"><p>Owner</p></th>
+<tr class="row-odd"><th class="head"><p>Layer</p></th>
+<th class="head"><p>Owns</p></th>
+<th class="head"><p>Consumes</p></th>
+<th class="head"><p>Produces</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Experiment execution control: failure policy, compute mode, reproducibility mode, broad cache/checkpoint policy</p></td>
-<td><p>Layer 0</p></td>
+<tr class="row-even"><td><p>L0</p></td>
+<td><p>runtime policy</p></td>
+<td><p>none</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l0_meta_v1</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Data timing: vintage, release lag, contemporaneous information, and availability</p></td>
-<td><p>Layer 1</p></td>
+<tr class="row-odd"><td><p>L1</p></td>
+<td><p>data definition</p></td>
+<td><p>none</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l1_regime_metadata_v1</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Estimator training behavior: validation split, tuning, early stopping, convergence, model-specific seed use</p></td>
-<td><p>Layer 3</p></td>
+<tr class="row-even"><td><p>L2</p></td>
+<td><p>preprocessing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L3</p></td>
+<td><p>feature engineering and target construction</p></td>
+<td><p>L1 raw/regime access, <code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L4</p></td>
+<td><p>model fitting, forecasts, benchmarks, ensembles, tuning</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code>, optional regimes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l4_forecasts_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l4_model_artifacts_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l4_training_metadata_v1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L5</p></td>
+<td><p>evaluation metrics and ranking</p></td>
+<td><p>L4 forecasts/artifacts, L1 data/regimes, L3 metadata</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l5_evaluation_v1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L6</p></td>
+<td><p>statistical tests</p></td>
+<td><p>L4, L5, L1 metadata</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l6_tests_v1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L7</p></td>
+<td><p>interpretation and importance</p></td>
+<td><p>L4, L3, L5, optional L6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l7_importance_v1</span></code>, optional <code class="docutils literal notranslate"><span class="pre">l7_transformation_attribution_v1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L8</p></td>
+<td><p>export and provenance</p></td>
+<td><p>all active upstream sinks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l8_artifacts_v1</span></code></p></td>
 </tr>
 </tbody>
 </table>
-<p>Layer 3 consumes <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>/<code class="docutils literal notranslate"><span class="pre">Z_pred</span></code> from Layer 2 and fits/predicts with a model
-or benchmark. Its canonical contract is:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>fit_predict(forecast_generator, Layer2Representation, training_spec) -&gt; forecast_payload
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">forecast_payload_v1</span></code> contains <code class="docutils literal notranslate"><span class="pre">y_pred</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_bic</span></code>, and
-optional <code class="docutils literal notranslate"><span class="pre">tuning_payload</span></code>. The runtime coerces legacy executor dictionaries into
-this contract and records <code class="docutils literal notranslate"><span class="pre">forecast_payload_contract=forecast_payload_v1</span></code> in
-forecast metadata when available.</p>
-<p>Typed scalar payload families are also Layer 3 contracts. Direction, interval,
-and density currently wrap supported scalar point generators and emit explicit
-payload artifacts. Their detailed producer/consumer/status definitions live in
-<code class="docutils literal notranslate"><span class="pre">layer_contract_ledger.md</span></code>.</p>
-<p>Layer 3 may validate that a selected forecast generator can consume the Layer 2
-handoff, but it must not decide how <code class="docutils literal notranslate"><span class="pre">Z</span></code> was built. The following remain Layer 2
-facts even when old recipes pass them through training-shaped fields:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>, <code class="docutils literal notranslate"><span class="pre">predictor_family</span></code>, <code class="docutils literal notranslate"><span class="pre">data_richness_mode</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">factor_count</span></code>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target_lag_block</span></code>, <code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_feature_block</span></code>,
-<code class="docutils literal notranslate"><span class="pre">level_feature_block</span></code>, <code class="docutils literal notranslate"><span class="pre">temporal_feature_block</span></code>, <code class="docutils literal notranslate"><span class="pre">rotation_feature_block</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code>;</p></li>
-<li><p>missing/outlier/scaling/selection/normalization choices that change model
-inputs;</p></li>
-<li><p>custom feature blocks and custom matrix preprocessors.</p></li>
-</ul>
-<p>The main split is fixed target-lag features versus AR order selection.
-<code class="docutils literal notranslate"><span class="pre">target_lag_block=fixed_target_lags</span></code> is Layer 2 feature construction. AR BIC
-lag selection is Layer 3 estimator behavior.</p>
-<p>During migration, legacy recipe paths may still place Layer 2 axes near
-training settings. Runtime dispatch should prefer the Layer 2 block spec when
-it is present, and keep old fields only as compatibility/provenance aliases.</p>
 </section>
-<section id="layer-4-evaluation">
-<h2>Layer 4: Evaluation<a class="headerlink" href="#layer-4-evaluation" title="Link to this heading"></a></h2>
-<p>Owns scoring and reporting of forecasts:</p>
+<section id="non-negotiable-rules">
+<h2>Non-Negotiable Rules<a class="headerlink" href="#non-negotiable-rules" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>primary metric</p></li>
-<li><p>point, relative, density, direction, economic metric families</p></li>
-<li><p>aggregation over time, horizon, and target</p></li>
-<li><p>ranking and report style</p></li>
-<li><p>regime-specific evaluation subsets</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">oos_period</span></code>, because recession/expansion-only OOS selection is an evaluation
-subset filter over already-built forecast origins</p></li>
+<li><p>L3 owns panel and target construction. It does not own forecast combination.</p></li>
+<li><p>L4 owns forecast generation and forecast combination.</p></li>
+<li><p>L5 owns descriptive evaluation. It does not own inferential p-values.</p></li>
+<li><p>L6 owns inferential tests and is default off.</p></li>
+<li><p>L7 owns interpretation and is default off.</p></li>
+<li><p>L8 owns file export, saved object selection, provenance, and artifact layout.</p></li>
+<li><p>Diagnostics do not mutate construction sinks.</p></li>
 </ul>
-<p>Layer 4 should not fit models, transform predictors/target, or run statistical tests.
-During migration, <code class="docutils literal notranslate"><span class="pre">data_task_spec.oos_period</span></code> remains a compatibility mirror,
-but <code class="docutils literal notranslate"><span class="pre">evaluation_spec.oos_period</span></code> is the canonical runtime input.</p>
-<p>Runtime output must include <code class="docutils literal notranslate"><span class="pre">evaluation_summary.json</span></code>. It is the Layer 4
-contract artifact that records the selected primary metric, per-horizon
-summary, selected metric-family availability, aggregation choices, and optional
-report target. <code class="docutils literal notranslate"><span class="pre">report_style=markdown_table</span></code> may add <code class="docutils literal notranslate"><span class="pre">evaluation_report.md</span></code>;
-<code class="docutils literal notranslate"><span class="pre">report_style=latex_table</span></code> may add <code class="docutils literal notranslate"><span class="pre">evaluation_report.tex</span></code>. Statistical tests
-remain Layer 6 artifacts even when they consume the same forecast-error table.</p>
 </section>
-<section id="layer-5-artifacts">
-<h2>Layer 5: Artifacts<a class="headerlink" href="#layer-5-artifacts" title="Link to this heading"></a></h2>
-<p>Owns what gets saved:</p>
+<section id="diagnostic-default-off-contract">
+<h2>Diagnostic Default-Off Contract<a class="headerlink" href="#diagnostic-default-off-contract" title="Link to this heading"></a></h2>
+<p>For L1.5-L4.5:</p>
 <ul class="simple">
-<li><p>export format</p></li>
-<li><p>saved object set</p></li>
-<li><p>provenance field depth</p></li>
-<li><p>artifact granularity</p></li>
+<li><p>absent layer key: no diagnostic layer;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code>: no DAG nodes, no sink, all axes inactive;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code>: diagnostic DAG and sink are available;</p></li>
+<li><p>L8 can include active diagnostics through explicit saved objects or <code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code>.</p></li>
 </ul>
-<p>Runtime output must include <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>. It is the Layer 5
-inventory contract for files that were actually materialized. The current
-runtime supports aggregated run-directory artifacts only. Operational
-<code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> values are <code class="docutils literal notranslate"><span class="pre">predictions_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictions_and_metrics</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">full_bundle</span></code>; no-save, model-only, data-only, per-target, per-target-horizon,
-and hierarchical layouts remain non-operational until dedicated serializers and
-result-object readers exist.</p>
 </section>
-<section id="layer-6-inference">
-<h2>Layer 6: Inference<a class="headerlink" href="#layer-6-inference" title="Link to this heading"></a></h2>
-<p>Owns statistical inference over forecast errors:</p>
-<ul class="simple">
-<li><p>canonical split-axis statistical-test spec</p></li>
-<li><p>equal predictive ability tests</p></li>
-<li><p>nested model tests</p></li>
-<li><p>multiple model tests</p></li>
-<li><p>density/interval tests</p></li>
-<li><p>direction tests</p></li>
-<li><p>residual diagnostics</p></li>
-<li><p>dependence correction / HAC policy</p></li>
-<li><p>overlap handling for dependent long-horizon forecast errors</p></li>
-<li><p>test scope</p></li>
-</ul>
-<p>Runtime manifests include <code class="docutils literal notranslate"><span class="pre">stat_test_spec</span></code> under
-<code class="docutils literal notranslate"><span class="pre">layer6_stat_test_split_v1</span></code>. The canonical fields are
-<code class="docutils literal notranslate"><span class="pre">equal_predictive</span></code>, <code class="docutils literal notranslate"><span class="pre">nested</span></code>, <code class="docutils literal notranslate"><span class="pre">cpa_instability</span></code>, <code class="docutils literal notranslate"><span class="pre">multiple_model</span></code>,
-<code class="docutils literal notranslate"><span class="pre">density_interval</span></code>, <code class="docutils literal notranslate"><span class="pre">direction</span></code>, <code class="docutils literal notranslate"><span class="pre">residual_diagnostics</span></code>, <code class="docutils literal notranslate"><span class="pre">test_scope</span></code>,
-<code class="docutils literal notranslate"><span class="pre">dependence_correction</span></code>, and <code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code>. The legacy
-<code class="docutils literal notranslate"><span class="pre">stat_test</span></code> field remains accepted as a compatibility alias and is routed into
-the matching split axis.</p>
-<p>Layer 6 writes <code class="docutils literal notranslate"><span class="pre">stat_tests.json</span></code> when at least one test-family axis is active
-and <code class="docutils literal notranslate"><span class="pre">saved_objects=full_bundle</span></code>. Per-test sidecars such as
-<code class="docutils literal notranslate"><span class="pre">stat_test_dm_modified.json</span></code> remain compatibility files for existing readers.
-<code class="docutils literal notranslate"><span class="pre">test_scope=per_target</span></code> is the only currently operational scope; per-horizon,
-pairwise, regime-specific, and subsample orchestration are named but not open.</p>
-</section>
-<section id="layer-7-interpretation">
-<h2>Layer 7: Interpretation<a class="headerlink" href="#layer-7-interpretation" title="Link to this heading"></a></h2>
-<p>Owns interpretation after forecasts and metrics exist:</p>
-<ul class="simple">
-<li><p>canonical split-axis importance spec</p></li>
-<li><p>legacy single <code class="docutils literal notranslate"><span class="pre">importance_method</span></code> routing</p></li>
-<li><p>model-native coefficient / impurity importance</p></li>
-<li><p>model-agnostic permutation and ablation families</p></li>
-<li><p>SHAP families</p></li>
-<li><p>partial-dependence profile families</p></li>
-<li><p>local-surrogate families</p></li>
-<li><p>grouped and stability families</p></li>
-<li><p>importance scope, aggregation, output style, temporal snapshot, and
-gradient-path gates</p></li>
-</ul>
-<p>Runtime manifests include <code class="docutils literal notranslate"><span class="pre">importance_spec</span></code> under
-<code class="docutils literal notranslate"><span class="pre">layer7_importance_split_v1</span></code>. The canonical family axes are
-<code class="docutils literal notranslate"><span class="pre">importance_model_native</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_model_agnostic</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_shap</span></code>,
-<code class="docutils literal notranslate"><span class="pre">importance_local_surrogate</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_partial_dependence</span></code>,
-<code class="docutils literal notranslate"><span class="pre">importance_grouped</span></code>, and <code class="docutils literal notranslate"><span class="pre">importance_stability</span></code>. The legacy
-<code class="docutils literal notranslate"><span class="pre">importance_method</span></code> field remains accepted as a compatibility alias and is
-routed into the matching split axis.</p>
-<p>Layer 7 writes <code class="docutils literal notranslate"><span class="pre">importance_artifacts.json</span></code> when at least one importance-family
-axis is active and <code class="docutils literal notranslate"><span class="pre">saved_objects=full_bundle</span></code>. Per-method sidecars such as
-<code class="docutils literal notranslate"><span class="pre">importance_tree_shap.json</span></code> and <code class="docutils literal notranslate"><span class="pre">importance_minimal.json</span></code> remain compatibility
-files for existing readers. <code class="docutils literal notranslate"><span class="pre">importance_scope=global</span></code>,
-<code class="docutils literal notranslate"><span class="pre">importance_aggregation=mean_abs</span></code>, <code class="docutils literal notranslate"><span class="pre">importance_output_style=ranked_table</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">importance_temporal=static_snapshot</span></code> are the current operational defaults;
-time paths, both-scope orchestration, alternative aggregation reductions, and
-gradient-path reports are named but not open.</p>
-</section>
-<section id="compatibility">
-<h2>Compatibility<a class="headerlink" href="#compatibility" title="Link to this heading"></a></h2>
-<p>Existing recipes may still place migrated axes at their old layer path. The
-compiler accepts that during migration. New docs, examples, and generated recipes
-should move toward canonical ownership.</p>
-<p>For FRED-provided transformations, canonical Layer 1 axes are
-<code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code> and <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>. The older Layer 2
-t-code fields remain compatibility inputs for legacy recipes. New generated
-recipes should use the Layer 1 axes; the compiler derives any runtime
-<code class="docutils literal notranslate"><span class="pre">PreprocessContract</span></code> fallback fields from those Layer 1 choices, and execution
-reads <code class="docutils literal notranslate"><span class="pre">data_task_spec</span></code> first. <code class="docutils literal notranslate"><span class="pre">data_task_spec[&quot;official_transform_source&quot;]</span></code> and
-runtime t-code reports record whether the choice came from canonical Layer 1
-axes or from the legacy <code class="docutils literal notranslate"><span class="pre">PreprocessContract</span></code> bridge.</p>
+<section id="naming">
+<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head"><p>Current name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L3 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3_feature_engineering</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L4 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L5 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5_evaluation</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L6 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">6_statistical_tests</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L7 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">7_interpretation</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L8 YAML key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8_output</span></code></p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 

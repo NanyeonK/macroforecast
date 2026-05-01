@@ -7,7 +7,7 @@ corresponding user-guide chapter for conceptual background.
 
 | Module | User-guide companion |
 |--------|---------------------|
-| [`macrocast.design`](design.md) | [Design (Stage 0): Study Grammar](../user_guide/design.md) |
+| [`macrocast.design`](design.md) | [Layer Contract Design](../user_guide/design.md) |
 | [`macrocast.raw`](raw.md) | [Raw Data](../user_guide/raw.md) |
 | [`macrocast.recipes`](recipes.md) | [Recipes](../user_guide/recipes.md) |
 | [`macrocast.preprocessing`](preprocessing.md) | [Preprocessing](../user_guide/preprocessing.md) |

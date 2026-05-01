@@ -22,7 +22,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Tree Navigator" href="tree_navigator.html" />
+    <link rel="next" title="Navigator UI Redesign Plan" href="../navigator_ui_redesign_plan.html" />
     <link rel="prev" title="1. Philosophy" href="../philosophy.html" /> 
 </head>
 
@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Navigator Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../navigator_ui_redesign_plan.html">Navigator UI Redesign Plan</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tree_navigator.html">Tree Navigator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="path_resolver.html">Path Resolver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="compatibility_engine.html">Compatibility Engine</a></li>
@@ -57,7 +58,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
@@ -96,10 +97,9 @@
        L1.5   L2.5   L3.5    L4.5 diagnostics
 </pre></div>
 </div>
-<p>Open the interactive app:</p>
-<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p><section id="what-the-app-shows-first">
+<section id="what-the-app-shows-first">
 <h2>What The App Shows First<a class="headerlink" href="#what-the-app-shows-first" title="Link to this heading"></a></h2>
-<p>The first screen is no longer an axis list. It starts with the registered layer topology:</p>
+<p>The Navigator contract starts with the registered layer topology:</p>
 <ul class="simple">
 <li><p>main layer flow from setup through output;</p></li>
 <li><p>diagnostic hooks L1.5-L4.5 as default-off side branches;</p></li>
@@ -108,8 +108,9 @@
 <li><p>sub-layer and axis counts from the runtime registry;</p></li>
 <li><p>runtime support labels for selected options.</p></li>
 </ul>
-<p>The older compatibility axis explorer remains below the canonical layer map. Use it for branch-level compatibility checks and YAML preview, but treat the layer map as the source of truth for package architecture.</p>
-</section>
+<p>Compatibility checks and YAML previews should treat the layer map as the source of truth for package architecture.</p>
+<p>Open the current MVP app:</p>
+<p><a class="reference external" href="../navigator_app/index.html">Open Navigator App</a></p></section>
 <section id="canonical-layer-roles">
 <h2>Canonical Layer Roles<a class="headerlink" href="#canonical-layer-roles" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
@@ -172,19 +173,22 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="tree_navigator.html"><span class="std std-doc">Tree Navigator</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../navigator_ui_redesign_plan.html"><span class="std std-doc">UI Redesign Plan</span></a></p></td>
+<td><p>Plan for the new layer/DAG recipe IDE replacing the removed static app.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tree_navigator.html"><span class="std std-doc">Tree Navigator</span></a></p></td>
 <td><p>Explain the canonical layer map and the remaining compatibility axis explorer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="path_resolver.html"><span class="std std-doc">Path Resolver</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="path_resolver.html"><span class="std std-doc">Path Resolver</span></a></p></td>
 <td><p>Compile YAML and show execution status, warnings, blocked reasons, and capability matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="compatibility_engine.html"><span class="std std-doc">Compatibility Engine</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="compatibility_engine.html"><span class="std std-doc">Compatibility Engine</span></a></p></td>
 <td><p>Explain constraint rules such as model/feature compatibility, forecast-object metrics, and importance-method restrictions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="replication_library.html"><span class="std std-doc">Replication Library</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="replication_library.html"><span class="std std-doc">Replication Library</span></a></p></td>
 <td><p>Start from known paper-style routes, inspect exact paths, generate YAML, and understand deviations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="yaml_execution.html"><span class="std std-doc">YAML and Execution</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="yaml_execution.html"><span class="std std-doc">YAML and Execution</span></a></p></td>
 <td><p>Save a selected path as YAML, run it from CLI, and reproduce the same route in a notebook.</p></td>
 </tr>
 </tbody>
@@ -202,6 +206,7 @@
 </ol>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../navigator_ui_redesign_plan.html">Navigator UI Redesign Plan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tree_navigator.html">Tree Navigator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="path_resolver.html">Path Resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compatibility_engine.html">Compatibility Engine</a></li>
@@ -217,7 +222,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../philosophy.html" class="btn btn-neutral float-left" title="1. Philosophy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tree_navigator.html" class="btn btn-neutral float-right" title="Tree Navigator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../navigator_ui_redesign_plan.html" class="btn btn-neutral float-right" title="Navigator UI Redesign Plan" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

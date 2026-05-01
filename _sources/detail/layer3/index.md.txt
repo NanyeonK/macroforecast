@@ -1,42 +1,72 @@
-# 4.3 Layer 3: Forecast Generator
+# Layer 3: Feature Engineering
 
-- Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.2 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
+- Parent: [Detail: Layer Contracts](../index.md)
+- Previous: [Layer 2](../layer2/index.md)
 - Current: Layer 3
-- Next: [4.4 Layer 4: Evaluation](../layer4/index.md)
+- Next: [Layer 4](../layer4/index.md)
 
-Layer 3 owns forecast generation. It consumes Layer 2 representation contracts and chooses model, benchmark, forecast type/object, future-X path policy, training windows, and tuning behavior.
+Layer 3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit `nodes` and `sinks`.
 
-## Decision order
+## Contract
 
-| Group | Axes |
+Inputs:
+
+- `l2_clean_panel_v1`;
+- optional raw L1 access for level/raw-feature pipelines;
+- optional `l1_regime_metadata_v1`;
+- optional L3 pipeline outputs for cascade features.
+
+Outputs:
+
+- `l3_features_v1` with `X_final` and `y_final`;
+- `l3_metadata_v1` for lineage and downstream interpretation.
+
+## Sub-Layers
+
+| Slot | Purpose |
 |---|---|
-| Generator family | `model_family`, `midasr_weight_family`, `benchmark_family` |
-| Forecast object | `forecast_type`, `forecast_object` |
-| Future X / recursive paths | `exogenous_x_path_policy`, `recursive_x_model_family` |
-| Runtime framework | `framework`, `outer_window`, `refit_policy` |
-| Training window | `min_train_size`, `training_start_rule`, `y_lag_count` |
-| Tuning | `search_algorithm`, `tuning_objective`, `tuning_budget`, `validation_location`, `validation_size_rule` |
+| L3.A | target construction |
+| L3.B | feature pipelines |
+| L3.C | pipeline combine |
+| L3.D | feature selection |
 
-## Canonical names
+## Important Rules
 
-Layer 3 uses explicit generator-family, benchmark-role, forecast-object, training-window, and tuning IDs. Generated recipes and Navigator paths emit the canonical IDs listed in the registry. Retired glued abbreviations are not documented as supported choices.
+- L3 is DAG-only. `fixed_axes` sugar is rejected.
+- `target_construction` must appear exactly once and must be the `y_final` sink.
+- `X_final` must be panel-like; `y_final` must be series-like.
+- Cascade sources can reference previous L3 pipeline outputs, but cycles and ambiguous pipeline endpoints are hard errors.
+- Forecast combination belongs in L4. L3 rejects `weighted_average_forecast`, `median_forecast`, `trimmed_mean_forecast`, `bma_forecast`, `bivariate_ardl_combination`, and retired combine aliases.
 
-## Layer contract
+## Operational Step Families
 
-Input:
-- `layer2_representation_v1`;
-- Layer 0 runtime policy;
-- Layer 1 task metadata.
+Representative operational ops:
 
-Output:
-- forecast payloads;
-- predictions;
-- training/tuning metadata;
-- model and benchmark artifacts.
+- stationary transforms: `log`, `diff`, `log_diff`, `pct_change`;
+- lag and aggregation: `lag`, `seasonal_lag`, `ma_window`, `ma_increasing_order`, `cumsum`;
+- scaling and reductions: `scale`, `pca`, `sparse_pca`, `scaled_pca`, `dfm`, `varimax`, `partial_least_squares`, `random_projection`;
+- feature expansion: `polynomial`, `interaction`, `kernel`, `nystroem`;
+- auxiliary: `regime_indicator`, `season_dummy`, `time_trend`, `holiday`;
+- combine: `concat`, `interact`, `hierarchical_pca`, `weighted_concat`, `simple_average`;
+- selection: `feature_selection`.
 
-## Related reference
+Compatibility aliases remain available where older recipes used them: `varimax_rotation`, `polynomial_expansion`, `kernel_features`, and `nystroem_features`.
 
-- [Layer 3 Training Audit](../layer3_training_audit.md)
-- [Raw Panel Iterated Contract](../raw_panel_iterated_contract.md)
-- [Custom Extensions](../custom_extensions.md)
+## Example
+
+```yaml
+3_feature_engineering:
+  nodes:
+    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: pca, type: step, op: pca, params: {n_components: 8, temporal_rule: expanding_window_per_origin}, inputs: [src_x]}
+    - {id: lag_pca, type: step, op: lag, params: {n_lag: 4}, inputs: [pca]}
+    - {id: y_h, type: step, op: target_construction, params: {mode: cumulative_average, horizon: 6}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: lag_pca, y_final: y_h}
+    l3_metadata_v1: auto
+```
+
+## Related Reference
+
+- [Layer Boundary Contract](../layer_boundary_contract.md)

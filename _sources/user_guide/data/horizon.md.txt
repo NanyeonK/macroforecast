@@ -52,7 +52,7 @@ path:
   1_data_task:
     fixed_axes:
       min_train_size: fixed_years
-  5_output_provenance:
+  8_output:
     leaf_config:
       benchmark_config:
         minimum_train_size: 5        # interpreted as 5 years
@@ -132,7 +132,7 @@ path:
 ```yaml
 # Giacomini-White-style recession-only evaluation
 path:
-  4_evaluation:
+  5_evaluation:
     fixed_axes:
       oos_period: recession_only_oos
 ```
@@ -189,7 +189,7 @@ path:
 - Every value in every 1.3 axis listed here is operational in v1.0. `oos_period` is operational through the Layer 4 `evaluation_spec`.
 - `min_train_size` exposes the five rules already implemented in `raw.windowing`, now live in the main execution path.
 - `training_start_rule = fixed_start` unlocks calendar-exact replication of published paper samples via `leaf_config.training_start_date`.
-- `oos_period` delivers NBER regime conditioning without recipe-side date bookkeeping. Use `path.4_evaluation.fixed_axes.oos_period`; the compiler still accepts the old Layer 1 placement as a compatibility alias.
+- `oos_period` delivers NBER regime conditioning without recipe-side date bookkeeping. Use `path.5_evaluation.fixed_axes.oos_period`; the compiler still accepts the old Layer 1 placement as a compatibility alias.
 - `overlap_handling = evaluate_with_hac` wires the HAC requirement into compile-time validation rather than leaving it implicit in stat-test choice. Use `path.6_stat_tests.fixed_axes.overlap_handling`; old Layer 1 placement remains a compatibility alias.
 
 Next group: 1.4 Benchmark & predictor universe (coming).

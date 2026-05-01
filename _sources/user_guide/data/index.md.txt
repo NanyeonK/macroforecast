@@ -1,9 +1,8 @@
-# Data (Stage 1)
+# Data
 
-Stage 1 answers: **what source frame, target y, and predictor x universe does
-this study start from?** Stage 0 fixes study scope and execution grammar. Stage
-1 fills that grammar with source data, forecast-time information, target y, and
-candidate predictor x columns.
+Layer 1 answers: **what source frame, target y, and predictor x universe does
+this study start from?** Layer 0 fixes runtime policy. Layer 1 defines source
+data, forecast-time information, target y, and candidate predictor x columns.
 
 Layer 1 contains canonical registry axes plus a small number of hidden
 compatibility/helper selectors. The primary Navigator tree shows the
@@ -27,17 +26,16 @@ The first Layer 1 decision is `custom_source_policy`:
   not choose a FRED Source Panel.
 - `official_plus_custom`: choose a FRED Source Panel and append custom columns.
 
-Stage 1 does not choose model family, benchmark, researcher preprocessing,
+Layer 1 does not choose model family, benchmark, researcher preprocessing,
 feature representation, or evaluation metrics. Those belong to Layer 2 and
 later.
 
-## Relation To Stage 0
+## Relation To Layer Contracts
 
-Stage 0 [design](../design.md) sets the study grammar:
-`study_scope`, failure handling, reproducibility, and compute layout. Stage 1
-uses that grammar. For example, one-target Study Scope values force
-`target_structure=single_target`; multiple-target Study Scope values force
-`target_structure=multi_target`.
+[Layer Contract Design](../design.md) defines the current L0-L8 map. L1 fixes
+the data task: source, target, predictor universe, geography, sample window,
+horizons, and regimes. Layer 0 handles runtime policy plus derived manifest
+metadata.
 
 ## Operational Status
 
@@ -50,13 +48,12 @@ Kept in Layer 1:
 - raw-source missing/outlier handling before official transforms;
 - FRED transform scope and frame availability.
 
-Moved out of Layer 1:
+Not owned by Layer 1:
 
-- Layer 2: target representation, x representation, feature blocks, factor and
-  rotation construction, researcher preprocessing.
-- Layer 3: model family, benchmark family, forecast type/object, training
-  window, tuning.
-- Layer 4+: evaluation, outputs, statistical tests, interpretation.
+- Layer 2: raw-to-clean preprocessing.
+- Layer 3: feature engineering and target construction.
+- Layer 4: model fitting, forecasts, benchmarks, ensembles, and tuning.
+- Layer 5+: evaluation, statistical tests, interpretation, and output.
 
 ## Data Sources
 

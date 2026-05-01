@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4. Detail (code): Full &mdash; macrocast</title>
+  <title>Detail: Layer Contracts &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -50,15 +50,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Detail (code): Full</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Detail: Layer Contracts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="layer0/index.html">4.0 Layer 0: Study Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer3/index.html">4.3 Layer 3: Forecast Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer4/index.html">4.4 Layer 4: Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer5/index.html">4.5 Layer 5: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer6/index.html">4.6 Layer 6: Statistical Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer8/index.html">Layer 8: Output / Provenance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
@@ -81,7 +82,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">4. Detail (code): Full</li>
+      <li class="breadcrumb-item active">Detail: Layer Contracts</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -91,18 +92,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="detail-code-full">
-<h1>4. Detail (code): Full<a class="headerlink" href="#detail-code-full" title="Link to this heading"></a></h1>
-<p>Detail (code) is the <strong>Full</strong> interface for macrocast. Use it when Simple code is not enough and you need exact control over the layer path, YAML, runtime contracts, artifacts, or custom researcher methods.</p>
-<p>Full means:</p>
+  <section id="detail-layer-contracts">
+<h1>Detail: Layer Contracts<a class="headerlink" href="#detail-layer-contracts" title="Link to this heading"></a></h1>
+<p>Detail docs describe the Full interface for macrocast recipes. Full means that layer keys, axes, DAG nodes, sink names, runtime artifacts, and L8 manifests follow the same contract.</p>
+<section id="main-flow">
+<h2>Main Flow<a class="headerlink" href="#main-flow" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3 -&gt; L4 -&gt; L5 -&gt; L6 -&gt; L7 -&gt; L8
+</pre></div>
+</div>
 <ul class="simple">
-<li><p>every layer decision is explicit or compiler-derived from an explicit rule;</p></li>
-<li><p>disabled choices and forced choices are part of the contract;</p></li>
-<li><p>YAML paths, Python builders, runtime artifacts, and manifests must agree;</p></li>
-<li><p>custom methods enter through documented Layer 2 or Layer 3 contracts.</p></li>
+<li><p>L0-L2 and L5-L8 are list-style layers.</p></li>
+<li><p>L3, L4, and L7 are graph-style layers.</p></li>
+<li><p>L6 and L7 are default off.</p></li>
+<li><p>L8 is always the external export boundary.</p></li>
 </ul>
-<p>Layer 0 is the bridge between Simple and Full. Simple asks for Study Scope only, then applies default execution policies. Full shows all four user-facing Layer 0 axes. When a Full recipe omits defaulted policy axes, the compiler/runtime use the documented defaults and record the resolved values in manifests.</p>
-<p>Read the layers in order. Earlier layers define the data and representation contract that later layers consume.</p>
+</section>
+<section id="diagnostic-hooks">
+<h2>Diagnostic Hooks<a class="headerlink" href="#diagnostic-hooks" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L1.5 &lt;- L1
+L2.5 &lt;- L1 + L2
+L3.5 &lt;- L1 + L2 + L3
+L4.5 &lt;- L4 + L3
+</pre></div>
+</div>
+<p>Diagnostics are default off. With <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code>, they create no DAG nodes and no sink. With <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code>, they emit diagnostic artifacts that L8 can include through <code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code>, or <code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code>.</p>
+</section>
 <section id="full-layer-documents">
 <h2>Full Layer Documents<a class="headerlink" href="#full-layer-documents" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
@@ -111,25 +125,22 @@
 <li class="toctree-l1"><a class="reference internal" href="layer0/index.html">4.0 Layer 0: Study Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer3/index.html">4.3 Layer 3: Forecast Generator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer4/index.html">4.4 Layer 4: Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer5/index.html">4.5 Layer 5: Output / Provenance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer6/index.html">4.6 Layer 6: Statistical Tests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer8/index.html">Layer 8: Output / Provenance</a></li>
 </ul>
 </div>
 </section>
-<section id="navigation-rule">
-<h2>Navigation Rule<a class="headerlink" href="#navigation-rule" title="Link to this heading"></a></h2>
-<p>Each layer page shows only local context:</p>
+<section id="related-reference">
+<h2>Related Reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>parent: Detail (code);</p></li>
-<li><p>current layer;</p></li>
-<li><p>previous layer when one exists;</p></li>
-<li><p>next layer when one exists;</p></li>
-<li><p>lower-level axis pages only for the current layer.</p></li>
+<li><p><a class="reference internal" href="layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a></p></li>
+<li><p><a class="reference internal" href="artifacts_and_manifest.html"><span class="std std-doc">Artifacts and Manifest</span></a></p></li>
+<li><p><a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a></p></li>
 </ul>
-<p>Legacy audit and compatibility pages remain linkable from relevant layer pages, but they are not part of the main Full navigation spine.</p>
 </section>
 </section>
 

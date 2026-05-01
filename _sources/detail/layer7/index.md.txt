@@ -1,37 +1,59 @@
-# 4.7 Layer 7: Interpretation / Importance
+# Layer 7: Interpretation / Importance
 
-- Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.6 Layer 6: Statistical Tests](../layer6/index.md)
+- Parent: [Detail: Layer Contracts](../index.md)
+- Previous: [Layer 6](../layer6/index.md)
 - Current: Layer 7
+- Next: [Layer 8](../layer8/index.md)
 
-Layer 7 owns interpretation and importance outputs. It consumes trained generators, prediction artifacts, and feature representation metadata.
+Layer 7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML.
 
-## Decision order
+## Contract
 
-| Group | Axes |
+Inputs:
+
+- `l4_model_artifacts_v1`;
+- `l4_forecasts_v1`;
+- `l3_features_v1`;
+- `l3_metadata_v1`;
+- `l5_evaluation_v1`;
+- optional `l6_tests_v1`;
+- optional L1 data/regime metadata.
+
+Outputs:
+
+- `l7_importance_v1`;
+- `l7_transformation_attribution_v1` when transformation attribution is used.
+
+## Sub-Layers
+
+| Slot | Purpose |
 |---|---|
-| Router and scope | `importance_method`, `importance_scope` |
-| Method families | `importance_model_native`, `importance_model_agnostic`, `importance_shap`, `importance_local_surrogate`, `importance_partial_dependence`, `importance_grouped`, `importance_stability` |
-| Output shape | `importance_aggregation`, `importance_output_style`, `importance_temporal`, `importance_gradient_path` |
+| L7.A | importance DAG body |
+| L7.B | output shape and export axes |
 
-## Naming migration
+## Compatibility Rules
 
-Layer 7 already uses lower-snake canonical IDs for the current importance
-sub-axes. This pass does not rename Layer 7 values; the important cleanup is
-that Layer 7 remains separated from Layer 6 statistical tests and Layer 5
-artifact export.
+- Tree SHAP and tree-native importance require tree model families.
+- Linear SHAP, coefficient importance, and forecast decomposition require linear model families.
+- Deep attribution ops require neural-network model families.
+- VAR-specific ops require VAR or BVAR families.
+- `mrf_gtvp` requires `macroeconomic_random_forest`.
+- MCS-filtered sources require active L6 MCS.
+- L7 output axes are not sweepable.
 
-## Layer contract
+## Example
 
-Input:
-- trained model or generator artifacts;
-- Layer 2 feature names and representation metadata;
-- predictions and evaluation context.
-
-Output:
-- importance artifacts, local explanations, curves, grouped/stability reports, and manifest entries.
-
-## Related reference
-
-- [Layer Contract Ledger](../layer_contract_ledger.md)
-- [Custom Extensions](../custom_extensions.md)
+```yaml
+7_interpretation:
+  enabled: true
+  nodes:
+    - {id: src_model, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: xgb_full}}}
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_l3_meta, type: source, selector: {layer_ref: l3, sink_name: l3_metadata_v1}}
+    - {id: shap, type: step, op: shap_tree, params: {model_family: xgboost}, inputs: [src_model, src_X]}
+    - {id: lineage, type: step, op: lineage_attribution, params: {level: pipeline_name}, inputs: [shap, src_l3_meta]}
+  sinks:
+    l7_importance_v1: {global: shap, lineage: lineage}
+  fixed_axes:
+    figure_type: auto
+```

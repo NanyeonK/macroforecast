@@ -22,7 +22,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.3 Layer 3: Forecast Generator" href="../layer3/index.html" />
+    <link rel="next" title="Layer 3: Feature Engineering" href="../layer3/index.html" />
     <link rel="prev" title="4.1.7 Frame Availability" href="../layer1/frame_availability.html" /> 
 </head>
 
@@ -50,15 +50,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Detail: Layer Contracts</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../layer0/index.html">4.0 Layer 0: Study Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">4.2 Layer 2: Representation / Research Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer3/index.html">4.3 Layer 3: Forecast Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">4.4 Layer 4: Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">4.5 Layer 5: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer6/index.html">4.6 Layer 6: Statistical Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer8/index.html">Layer 8: Output / Provenance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
@@ -81,7 +82,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">4. Detail (code): Full</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Detail: Layer Contracts</a></li>
       <li class="breadcrumb-item active">4.2 Layer 2: Representation / Research Preprocessing</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer2/index.md" class="fa fa-github"> Edit on GitHub</a>
@@ -98,7 +99,7 @@
 <li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">4. Detail (code): Full</span></a></p></li>
 <li><p>Previous: <a class="reference internal" href="../layer1/index.html"><span class="std std-doc">4.1 Layer 1: Data Source, Target y, Predictor x</span></a></p></li>
 <li><p>Current: Layer 2</p></li>
-<li><p>Next: <a class="reference internal" href="../layer3/index.html"><span class="std std-doc">4.3 Layer 3: Forecast Generator</span></a></p></li>
+<li><p>Next: <a class="reference internal" href="../layer3/index.html"><span class="std std-doc">Layer 3: Feature Engineering</span></a></p></li>
 </ul>
 <p>Layer 2 owns representation construction after Layer 1 produces the source frame. It supports research preprocessing choices such as t-code handling, target construction, missing/outlier handling after the source frame, scaling, feature blocks, factor blocks, lag blocks, rotations, feature selection, and custom representation hooks.</p>
 <section id="decision-order">
@@ -150,11 +151,6 @@
 </section>
 <section id="related-reference">
 <h2>Related reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../layer2_feature_representation.html"><span class="std std-doc">Layer 2 Feature Representation</span></a></p></li>
-<li><p><a class="reference internal" href="../layer2_closure_ledger.html"><span class="std std-doc">Layer 2 Closure Ledger</span></a></p></li>
-<li><p><a class="reference internal" href="../layer2_layer3_sweep_contract.html"><span class="std std-doc">Layer 2 / Layer 3 Sweep Contract</span></a></p></li>
-</ul>
 </section>
 </section>
 
@@ -163,7 +159,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../layer1/frame_availability.html" class="btn btn-neutral float-left" title="4.1.7 Frame Availability" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../layer3/index.html" class="btn btn-neutral float-right" title="4.3 Layer 3: Forecast Generator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../layer3/index.html" class="btn btn-neutral float-right" title="Layer 3: Feature Engineering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

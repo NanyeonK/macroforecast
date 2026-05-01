@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Layer 0 Appendix: axis_type &mdash; macrocast</title>
+  <title>Legacy Note: axis_type &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
@@ -69,7 +69,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Layer 0 Appendix: axis_type</li>
+      <li class="breadcrumb-item active">Legacy Note: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer0/axis_type.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -79,18 +79,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="layer-0-appendix-axis-type">
-<h1>Layer 0 Appendix: axis_type<a class="headerlink" href="#layer-0-appendix-axis-type" title="Link to this heading"></a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code> is registry grammar for how an axis is selected:</p>
+  <section id="legacy-note-axis-type">
+<h1>Legacy Note: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code><a class="headerlink" href="#legacy-note-axis-type" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code> is not a user-facing Layer 0 axis in the current layer-contract system.</p>
+<p>Current behavior:</p>
 <ul class="simple">
-<li><p>fixed;</p></li>
-<li><p>sweep;</p></li>
-<li><p>nested sweep;</p></li>
-<li><p>conditional;</p></li>
-<li><p>derived.</p></li>
+<li><p>list layers expose <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> and non-sweepable evaluation/export axes;</p></li>
+<li><p>graph layers expose explicit DAG nodes and sinks;</p></li>
+<li><p>sweep behavior is inferred from recipe structure where supported;</p></li>
+<li><p>L0 axes are not sweepable.</p></li>
 </ul>
-<p>Users normally do not set <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> directly. They express it through the YAML section where an axis appears: <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code>, or <code class="docutils literal notranslate"><span class="pre">conditional_axes</span></code>. Derived axes are resolved by the compiler.</p>
-<p>Current detailed source: <a class="reference internal" href="../../user_guide/design.html#axis-type"><span class="std std-ref">Design Stage 0: axis_type</span></a>.</p>
+<p>Do not set <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> directly in new recipes.</p>
+<p>See <a class="reference internal" href="index.html"><span class="std std-doc">Layer 0</span></a> and <a class="reference internal" href="../../user_guide/design.html"><span class="std std-doc">Layer Contract Design</span></a>.</p>
 </section>
 
 

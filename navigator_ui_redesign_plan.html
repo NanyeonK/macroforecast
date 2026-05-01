@@ -1,0 +1,589 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Navigator UI Redesign Plan &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=19216117"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tree Navigator" href="navigator/tree_navigator.html" />
+    <link rel="prev" title="Navigator Docs" href="navigator/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="navigator/index.html">Navigator Docs</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Navigator UI Redesign Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="navigator/index.html">Navigator Docs</a></li>
+      <li class="breadcrumb-item active">Navigator UI Redesign Plan</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/navigator_ui_redesign_plan.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="navigator-ui-redesign-plan">
+<h1>Navigator UI Redesign Plan<a class="headerlink" href="#navigator-ui-redesign-plan" title="Link to this heading"></a></h1>
+<p>This plan replaces the removed static Navigator app with a new recipe IDE for
+the current L0-L8 layer contract system.</p>
+<section id="goal">
+<h2>Goal<a class="headerlink" href="#goal" title="Link to this heading"></a></h2>
+<p>Build a UI where non-technical researchers can construct a broad, valid
+macroforecast recipe while technical users can inspect and edit the exact layer
+contracts, DAG nodes, sinks, and generated YAML.</p>
+<p>The UI must make L3, L4, and L7 DAG layers first-class. Users should be able to
+click, drag, connect, edit, and revisit graph choices without hand-writing YAML.</p>
+</section>
+<section id="product-shape">
+<h2>Product Shape<a class="headerlink" href="#product-shape" title="Link to this heading"></a></h2>
+<p>The app is a dark, Cursor-inspired workspace:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>top bar
+left layer rail | main workspace | right inspector
+bottom panel
+</pre></div>
+</div>
+<p>It is not a dashboard and not a marketing page. It is a research workflow IDE.</p>
+</section>
+<section id="required-layers">
+<h2>Required Layers<a class="headerlink" href="#required-layers" title="Link to this heading"></a></h2>
+<p>All layers are visible in the left rail:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer</p></th>
+<th class="head"><p>UI mode</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L0</p></td>
+<td><p>form</p></td>
+<td><p>on</p></td>
+<td><p>setup, failure policy, reproducibility, compute</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1</p></td>
+<td><p>form</p></td>
+<td><p>on</p></td>
+<td><p>data source, targets, horizons, predictor universe</p></td>
+</tr>
+<tr class="row-even"><td><p>L1.5</p></td>
+<td><p>form/diagnostic</p></td>
+<td><p>off</p></td>
+<td><p>raw data diagnostics</p></td>
+</tr>
+<tr class="row-odd"><td><p>L2</p></td>
+<td><p>form</p></td>
+<td><p>on</p></td>
+<td><p>preprocessing and clean panel</p></td>
+</tr>
+<tr class="row-even"><td><p>L2.5</p></td>
+<td><p>form/diagnostic</p></td>
+<td><p>off</p></td>
+<td><p>pre/post preprocessing diagnostics</p></td>
+</tr>
+<tr class="row-odd"><td><p>L3</p></td>
+<td><p>DAG</p></td>
+<td><p>on</p></td>
+<td><p>feature engineering and target construction</p></td>
+</tr>
+<tr class="row-even"><td><p>L3.5</p></td>
+<td><p>form/diagnostic</p></td>
+<td><p>off</p></td>
+<td><p>feature diagnostics</p></td>
+</tr>
+<tr class="row-odd"><td><p>L4</p></td>
+<td><p>DAG</p></td>
+<td><p>on</p></td>
+<td><p>model fitting, forecasts, benchmarks, ensembles</p></td>
+</tr>
+<tr class="row-even"><td><p>L4.5</p></td>
+<td><p>form/diagnostic</p></td>
+<td><p>off</p></td>
+<td><p>generator and model diagnostics</p></td>
+</tr>
+<tr class="row-odd"><td><p>L5</p></td>
+<td><p>form</p></td>
+<td><p>on</p></td>
+<td><p>evaluation metrics, aggregation, ranking</p></td>
+</tr>
+<tr class="row-even"><td><p>L6</p></td>
+<td><p>form</p></td>
+<td><p>off</p></td>
+<td><p>statistical tests</p></td>
+</tr>
+<tr class="row-odd"><td><p>L7</p></td>
+<td><p>DAG</p></td>
+<td><p>off</p></td>
+<td><p>interpretation and importance</p></td>
+</tr>
+<tr class="row-even"><td><p>L8</p></td>
+<td><p>form</p></td>
+<td><p>on</p></td>
+<td><p>output, provenance, saved objects</p></td>
+</tr>
+</tbody>
+</table>
+<p>Diagnostic <code class="docutils literal notranslate"><span class="pre">.5</span></code> layers are default off, but they are never hidden.</p>
+</section>
+<section id="default-preset">
+<h2>Default Preset<a class="headerlink" href="#default-preset" title="Link to this heading"></a></h2>
+<p>Primary preset: <code class="docutils literal notranslate"><span class="pre">Broad</span> <span class="pre">Multi-Target</span> <span class="pre">FRED-MD</span></code>.</p>
+<p>Defaults are intentionally broad and non-technical.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
+<span class="w">    </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target</span>
+<span class="w">    </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all_variables</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">INDPRO</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">PAYEMS</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">RPI</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">12</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>Other defaults:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Area</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L0 failure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fail_fast</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L0 reproducibility</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code>, seed 42</p></td>
+</tr>
+<tr class="row-even"><td><p>L0 compute</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">serial</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L2</p></td>
+<td><p>minimal preprocessing; official transforms where supported</p></td>
+</tr>
+<tr class="row-even"><td><p>L3</p></td>
+<td><p>broad source passthrough plus target construction</p></td>
+</tr>
+<tr class="row-odd"><td><p>L4 model</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L4 benchmark</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L5 metrics</p></td>
+<td><p>MSFE, RMSE, MAE, ranking</p></td>
+</tr>
+<tr class="row-even"><td><p>L6</p></td>
+<td><p>off</p></td>
+</tr>
+<tr class="row-odd"><td><p>L7</p></td>
+<td><p>off</p></td>
+</tr>
+<tr class="row-even"><td><p>L1.5-L4.5</p></td>
+<td><p>off but visible</p></td>
+</tr>
+<tr class="row-odd"><td><p>L8</p></td>
+<td><p>forecasts, metrics, ranking, manifest, recipe YAML</p></td>
+</tr>
+</tbody>
+</table>
+<p>Open question for implementation: the exact runtime-valid L3/L4 starter DAG
+should be generated from the layer modules rather than hard-coded in the UI.</p>
+</section>
+<section id="main-screens">
+<h2>Main Screens<a class="headerlink" href="#main-screens" title="Link to this heading"></a></h2>
+<section id="workspace">
+<h3>Workspace<a class="headerlink" href="#workspace" title="Link to this heading"></a></h3>
+<p>The first screen is the editable workspace.</p>
+<ul class="simple">
+<li><p>left layer rail;</p></li>
+<li><p>center contract map or selected layer editor;</p></li>
+<li><p>right inspector;</p></li>
+<li><p>bottom YAML/validation panel.</p></li>
+</ul>
+</section>
+<section id="layer-contract-map">
+<h3>Layer Contract Map<a class="headerlink" href="#layer-contract-map" title="Link to this heading"></a></h3>
+<p>The map shows:</p>
+<ul class="simple">
+<li><p>L0-L8 main flow;</p></li>
+<li><p>L1.5-L4.5 diagnostic side branches;</p></li>
+<li><p>layer mode: form or DAG;</p></li>
+<li><p>produced sinks;</p></li>
+<li><p>consumed upstream sinks;</p></li>
+<li><p>status: default, edited, invalid, disabled, active.</p></li>
+</ul>
+<p>Clicking any layer opens it.</p>
+</section>
+<section id="list-layer-editor">
+<h3>List Layer Editor<a class="headerlink" href="#list-layer-editor" title="Link to this heading"></a></h3>
+<p>Used by L0, L1, L2, L5, L6, L8, and diagnostics.</p>
+<p>Requirements:</p>
+<ul class="simple">
+<li><p>dense grouped controls;</p></li>
+<li><p>visible defaults;</p></li>
+<li><p>edited markers;</p></li>
+<li><p>reset section/reset layer;</p></li>
+<li><p>inactive axis explanation;</p></li>
+<li><p>validation inline and in bottom panel.</p></li>
+</ul>
+</section>
+<section id="dag-layer-editor">
+<h3>DAG Layer Editor<a class="headerlink" href="#dag-layer-editor" title="Link to this heading"></a></h3>
+<p>Used by L3, L4, and L7.</p>
+<p>Required interactions:</p>
+<ul class="simple">
+<li><p>add source node;</p></li>
+<li><p>add step node;</p></li>
+<li><p>add combine node;</p></li>
+<li><p>add sink node or bind required sink;</p></li>
+<li><p>drag node;</p></li>
+<li><p>connect edge;</p></li>
+<li><p>delete node/edge;</p></li>
+<li><p>duplicate node;</p></li>
+<li><p>auto-layout;</p></li>
+<li><p>reset layout;</p></li>
+<li><p>click node/edge/sink to edit in inspector.</p></li>
+</ul>
+<p>Graph constraints:</p>
+<ul class="simple">
+<li><p>L3 must produce <code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code> with <code class="docutils literal notranslate"><span class="pre">X_final</span></code> and <code class="docutils literal notranslate"><span class="pre">y_final</span></code>.</p></li>
+<li><p>L3 must produce or auto-produce <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code>.</p></li>
+<li><p>Forecast combination is forbidden in L3.</p></li>
+<li><p>L4 consumes L3 features and owns forecasts, models, benchmarks, ensembles,
+and tuning.</p></li>
+<li><p>L4 must produce <code class="docutils literal notranslate"><span class="pre">l4_forecasts_v1</span></code>, <code class="docutils literal notranslate"><span class="pre">l4_model_artifacts_v1</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">l4_training_metadata_v1</span></code>.</p></li>
+<li><p>L7 is disabled by default and only validates sinks when enabled.</p></li>
+</ul>
+</section>
+<section id="diagnostics-editor">
+<h3>Diagnostics Editor<a class="headerlink" href="#diagnostics-editor" title="Link to this heading"></a></h3>
+<p>Each <code class="docutils literal notranslate"><span class="pre">.5</span></code> layer has:</p>
+<ul class="simple">
+<li><p>on/off toggle;</p></li>
+<li><p>preset selector: <code class="docutils literal notranslate"><span class="pre">minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, <code class="docutils literal notranslate"><span class="pre">custom</span></code>;</p></li>
+<li><p>active axes;</p></li>
+<li><p>validation issues;</p></li>
+<li><p>downstream L8 saved-object effect.</p></li>
+</ul>
+<p>When off, the UI states: <code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">nodes,</span> <span class="pre">no</span> <span class="pre">sink</span></code>.</p>
+</section>
+<section id="inspector">
+<h3>Inspector<a class="headerlink" href="#inspector" title="Link to this heading"></a></h3>
+<p>The inspector edits the current selection.</p>
+<p>Selection types:</p>
+<ul class="simple">
+<li><p>layer;</p></li>
+<li><p>diagnostic layer;</p></li>
+<li><p>node;</p></li>
+<li><p>edge;</p></li>
+<li><p>sink binding;</p></li>
+<li><p>validation issue;</p></li>
+<li><p>saved object.</p></li>
+</ul>
+<p>The inspector always shows:</p>
+<ul class="simple">
+<li><p>id;</p></li>
+<li><p>role;</p></li>
+<li><p>params;</p></li>
+<li><p>default value;</p></li>
+<li><p>current value;</p></li>
+<li><p>reset action;</p></li>
+<li><p>validation messages.</p></li>
+</ul>
+</section>
+<section id="bottom-panel">
+<h3>Bottom Panel<a class="headerlink" href="#bottom-panel" title="Link to this heading"></a></h3>
+<p>Tabs:</p>
+<ul class="simple">
+<li><p>YAML preview;</p></li>
+<li><p>validation;</p></li>
+<li><p>contract;</p></li>
+<li><p>run command;</p></li>
+<li><p>debug JSON.</p></li>
+</ul>
+<p>YAML is generated from state. Importing YAML reconstructs state.</p>
+</section>
+</section>
+<section id="state-model">
+<h2>State Model<a class="headerlink" href="#state-model" title="Link to this heading"></a></h2>
+<p>The UI should store one normalized recipe workspace state:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>workspace
+  metadata
+  preset
+  layerSelections
+  diagnosticSelections
+  dagLayers
+    l3
+    l4
+    l7
+  layout
+  validation
+  yamlProjection
+</pre></div>
+</div>
+<p>Important rules:</p>
+<ul class="simple">
+<li><p>UI state is canonical while editing.</p></li>
+<li><p>YAML is a projection of UI state.</p></li>
+<li><p>Import parses YAML into UI state.</p></li>
+<li><p>Manual DAG layout is stored separately from recipe semantics.</p></li>
+<li><p>Validation errors should reference both UI location and YAML path.</p></li>
+</ul>
+</section>
+<section id="technical-architecture">
+<h2>Technical Architecture<a class="headerlink" href="#technical-architecture" title="Link to this heading"></a></h2>
+<p>Recommended app stack:</p>
+<ul class="simple">
+<li><p>Vite;</p></li>
+<li><p>React;</p></li>
+<li><p>TypeScript;</p></li>
+<li><p>React Flow for DAG canvas;</p></li>
+<li><p>Zustand or equivalent small store;</p></li>
+<li><p>CodeMirror for YAML preview;</p></li>
+<li><p>Zod or generated schemas for client-side validation;</p></li>
+<li><p>Playwright for visual and interaction tests.</p></li>
+</ul>
+<p>Suggested source layout:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>apps/navigator/
+  src/
+    app/
+    components/
+    dag/
+    layers/
+    state/
+    validation/
+    yaml/
+    styles/
+</pre></div>
+</div>
+<p>Docs build should link to the app only after the app is built and verified.</p>
+</section>
+<section id="data-contracts">
+<h2>Data Contracts<a class="headerlink" href="#data-contracts" title="Link to this heading"></a></h2>
+<p>The UI needs generated JSON from Python:</p>
+<ul class="simple">
+<li><p>layer topology;</p></li>
+<li><p>layer ids and YAML keys;</p></li>
+<li><p>layer modes;</p></li>
+<li><p>axes and values;</p></li>
+<li><p>defaults;</p></li>
+<li><p>diagnostic defaults;</p></li>
+<li><p>DAG op registry;</p></li>
+<li><p>required sinks;</p></li>
+<li><p>source selectors;</p></li>
+<li><p>validation rules;</p></li>
+<li><p>starter presets.</p></li>
+</ul>
+<p>Do not reuse the deleted static app JSON as the new source of truth. Generate a
+new compact schema from the current <code class="docutils literal notranslate"><span class="pre">macrocast.core.layers</span></code> modules.</p>
+</section>
+<section id="validation-model">
+<h2>Validation Model<a class="headerlink" href="#validation-model" title="Link to this heading"></a></h2>
+<p>Validation runs in two levels:</p>
+<ol class="arabic simple">
+<li><p>client-side immediate validation for missing fields, bad edges, invalid
+required sinks, inactive diagnostics, and obvious boundary violations;</p></li>
+<li><p>Python validation through layer parsers and runtime validators before export
+or run handoff.</p></li>
+</ol>
+<p>The UI should classify messages:</p>
+<ul class="simple">
+<li><p>hard error;</p></li>
+<li><p>warning;</p></li>
+<li><p>inactive choice;</p></li>
+<li><p>missing default;</p></li>
+<li><p>boundary violation;</p></li>
+<li><p>runtime unsupported.</p></li>
+</ul>
+</section>
+<section id="mvp">
+<h2>MVP<a class="headerlink" href="#mvp" title="Link to this heading"></a></h2>
+<p>MVP scope:</p>
+<ul class="simple">
+<li><p>app shell;</p></li>
+<li><p>layer rail with L0-L8 and L1.5-L4.5;</p></li>
+<li><p>broad multi-target FRED-MD preset;</p></li>
+<li><p>form editors for L0, L1, L2, L5, L6, L8, diagnostics;</p></li>
+<li><p>DAG editors for L3 and L4 with starter nodes;</p></li>
+<li><p>L7 disabled but visible;</p></li>
+<li><p>YAML preview;</p></li>
+<li><p>validation panel;</p></li>
+<li><p>import/export YAML;</p></li>
+<li><p>Playwright desktop screenshot and core interaction tests.</p></li>
+</ul>
+<p>Out of MVP:</p>
+<ul class="simple">
+<li><p>direct server-side run execution;</p></li>
+<li><p>results dashboard;</p></li>
+<li><p>collaborative editing;</p></li>
+<li><p>mobile DAG editing;</p></li>
+<li><p>full custom plugin marketplace.</p></li>
+</ul>
+</section>
+<section id="implementation-phases">
+<h2>Implementation Phases<a class="headerlink" href="#implementation-phases" title="Link to this heading"></a></h2>
+<section id="phase-1-contracts-and-skeleton">
+<h3>Phase 1: Contracts And Skeleton<a class="headerlink" href="#phase-1-contracts-and-skeleton" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">DESIGN.md</span></code>.</p></li>
+<li><p>Add this redesign plan.</p></li>
+<li><p>Define new UI JSON contract.</p></li>
+<li><p>Create app shell and layer rail.</p></li>
+<li><p>Render default preset state.</p></li>
+</ul>
+</section>
+<section id="phase-2-forms-and-defaults">
+<h3>Phase 2: Forms And Defaults<a class="headerlink" href="#phase-2-forms-and-defaults" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Implement form layers.</p></li>
+<li><p>Implement diagnostics toggles.</p></li>
+<li><p>Show defaults, edited markers, reset actions.</p></li>
+<li><p>Generate YAML from form state.</p></li>
+</ul>
+</section>
+<section id="phase-3-dag-editors">
+<h3>Phase 3: DAG Editors<a class="headerlink" href="#phase-3-dag-editors" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Implement L3 and L4 canvas.</p></li>
+<li><p>Add node palette.</p></li>
+<li><p>Add inspector param editing.</p></li>
+<li><p>Add required sink binding.</p></li>
+<li><p>Add boundary validation.</p></li>
+</ul>
+</section>
+<section id="phase-4-import-validation-export">
+<h3>Phase 4: Import, Validation, Export<a class="headerlink" href="#phase-4-import-validation-export" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Import YAML into state.</p></li>
+<li><p>Run Python validators.</p></li>
+<li><p>Show validation issue locations.</p></li>
+<li><p>Export YAML and run command.</p></li>
+</ul>
+</section>
+<section id="phase-5-verification">
+<h3>Phase 5: Verification<a class="headerlink" href="#phase-5-verification" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Add unit tests for state projection.</p></li>
+<li><p>Add Playwright tests for layer edit, DAG edit, import/export.</p></li>
+<li><p>Add screenshot checks for desktop and narrow desktop.</p></li>
+<li><p>Remove or rewrite remaining static-app-only tests.</p></li>
+</ul>
+</section>
+</section>
+<section id="acceptance-criteria">
+<h2>Acceptance Criteria<a class="headerlink" href="#acceptance-criteria" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>User can start with <code class="docutils literal notranslate"><span class="pre">Broad</span> <span class="pre">Multi-Target</span> <span class="pre">FRED-MD</span></code>.</p></li>
+<li><p>User can see and toggle <code class="docutils literal notranslate"><span class="pre">.5</span></code> diagnostics.</p></li>
+<li><p>User can edit a prior layer choice after moving forward.</p></li>
+<li><p>User can build and edit L3/L4 DAGs through click/drag/connect.</p></li>
+<li><p>UI prevents forecast combination in L3.</p></li>
+<li><p>UI shows required sinks and missing sink errors.</p></li>
+<li><p>YAML preview updates after each edit.</p></li>
+<li><p>Exported YAML validates through current layer modules.</p></li>
+<li><p>Sphinx docs build without static Navigator app assets.</p></li>
+<li><p>Tests do not depend on deleted static app files.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="navigator/index.html" class="btn btn-neutral float-left" title="Navigator Docs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="navigator/tree_navigator.html" class="btn btn-neutral float-right" title="Tree Navigator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

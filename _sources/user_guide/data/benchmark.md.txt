@@ -65,9 +65,13 @@ path:
     leaf_config:
       paper_forecast_series:
         INDPRO: ...   # pd.Series keyed by date
-  3_training:
-    fixed_axes:
-      benchmark_family: paper_specific_benchmark
+  4_forecasting_model:
+    nodes:
+      - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+      - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+      - {id: paper_benchmark, type: step, op: benchmark_forecast, params: {family: paper_specific_benchmark}, inputs: [src_X, src_y]}
+    sinks:
+      l4_forecasts_v1: paper_benchmark
 ```
 
 ---
@@ -106,10 +110,13 @@ path:
       predictor_family: explicit_variable_list
     leaf_config:
       handpicked_columns: [RPI, UNRATE, CPIAUCSL]
-  3_training:
-    fixed_axes:
-      feature_builder: raw_feature_panel
-      model_family: ridge
+  3_feature_engineering:
+    nodes:
+      - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+      - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+      - {id: y_h, type: step, op: target_construction, params: {horizon: 1}, inputs: [src_y]}
+    sinks:
+      l3_features_v1: {X_final: src_x, y_final: y_h}
 ```
 
 ---
@@ -201,10 +208,12 @@ path:
       deterministic_components: break_dummies
     leaf_config:
       break_dates: ["2008-09-01", "2020-03-01"]
-  3_training:
-    fixed_axes:
-      feature_builder: raw_feature_panel
-      model_family: ridge
+  3_feature_engineering:
+    nodes:
+      - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+      - {id: break_x, type: step, op: deterministic_components, params: {component: break_dummies}, inputs: [src_x]}
+    sinks:
+      l3_features_v1: {X_final: break_x}
 ```
 
 ---

@@ -96,7 +96,6 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 
 ## Related reference
 
-- [Layer 1 Source-Frame Audit](../layer1_data_task_audit.md)
 - [Data Source and Frame](../../user_guide/data/source.md)
 - [Target (y) And Predictor (x) Definition](../../user_guide/data/target_structure.md)
 - [Data Handling Policies](../../user_guide/data/policies.md)

@@ -12,7 +12,7 @@ L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
 
 | Path | Use when | Start with |
 |---|---|---|
-| Interactive layer design | You want to see the layer/DAG architecture before writing YAML. | [Navigator App](../navigator_app/index.html) |
+| Layer design | You want to see the layer/DAG architecture before writing YAML. | [Navigator Docs](../navigator/index.md) |
 | Runnable core recipe | You want the current L1-L8 artifact path and output directory. | [Quickstart](quickstart.md) |
 | Runtime support matrix | You need to know what is executed today versus schema-only. | [Runtime Support Matrix](runtime_support.md) |
 | Existing simple API | You want the older high-level Python facade. | [Simple Docs](../simple/index.md) |
@@ -64,6 +64,5 @@ quickstart
 first_study
 runtime_support
 understanding_output
-stages_reference
 ../install
 ```

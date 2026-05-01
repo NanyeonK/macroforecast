@@ -50,7 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
@@ -133,11 +133,8 @@ Cartesian).</p>
 <p>Executes every variant under <code class="docutils literal notranslate"><span class="pre">output_root</span></code>, sharing a FRED cache and
 writing a Schema v1 <code class="docutils literal notranslate"><span class="pre">study_manifest.json</span></code> at the root.</p>
 <p>Failure behavior is controlled by the parent recipe’s Layer 0
-<code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>. With <code class="docutils literal notranslate"><span class="pre">skip_failed_cell</span></code>, compile-invalid variants are not
-executed. They are recorded as <code class="docutils literal notranslate"><span class="pre">status=&quot;skipped&quot;</span></code>, their variant directory
-contains <code class="docutils literal notranslate"><span class="pre">compiler_manifest.json</span></code>, and the root manifest records
-<code class="docutils literal notranslate"><span class="pre">compiler_status</span></code>, <code class="docutils literal notranslate"><span class="pre">compiler_blocked_reasons</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">layer3_capability_cell</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">failure_policy</span></code>. Current public values are <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">continue_on_error</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">collect_errors</span></code>.</p>
 </section>
 <section id="dataclasses">
 <h2>Dataclasses<a class="headerlink" href="#dataclasses" title="Link to this heading"></a></h2>
@@ -148,7 +145,7 @@ contains <code class="docutils literal notranslate"><span class="pre">compiler_m
 <li><p><code class="docutils literal notranslate"><span class="pre">parent_recipe_id:</span> <span class="pre">str</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parent_recipe_dict:</span> <span class="pre">dict</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">axes_swept:</span> <span class="pre">tuple[str,</span> <span class="pre">...]</span></code> — layer-qualified names, e.g.
-<code class="docutils literal notranslate"><span class="pre">(&quot;3_training.model_family&quot;,)</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">(&quot;4_forecasting_model.fit_model.params.family&quot;,)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">variants:</span> <span class="pre">tuple[SweepVariant,</span> <span class="pre">...]</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">size:</span> <span class="pre">int</span></code> — number of variants</p></li>
 </ul>

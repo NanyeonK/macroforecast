@@ -60,7 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="read_results.html">Read Results</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
@@ -125,7 +125,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">3_training.model_family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model.fit_model.params.family</span></code></p></td>
 <td><p>executable</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scaling</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_policy</span></code></p></td>
@@ -141,7 +141,7 @@
 <td><p>fixed custom preprocessor executable; sweep blocked</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_transformer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">2_preprocessing.target_transformer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3_feature_engineering.target_construction</span></code></p></td>
 <td><p>fixed transformer executable for autoreg path; sweep blocked</p></td>
 </tr>
 </tbody>
@@ -158,10 +158,9 @@
 </pre></div>
 </div>
 <p>Representation and preprocessing sweeps are a full-route feature first. The
-full Layer 0 grammar can route Layer 2 x Layer 3 grids to the sweep runner, and
-the detailed contract is in
-<code class="docutils literal notranslate"><span class="pre">docs/detail/layer2_layer3_sweep_contract.md</span></code>. The simple API will expose this
-only after the public naming and result-summary contract is stable.</p>
+full layer contract can route Layer 2 x Layer 3 x Layer 4 grids to the sweep runner.
+The simple API will expose this only after the public naming and result-summary
+contract is stable.</p>
 <p>Full grids, ablations, replications, benchmark suites, and multi-target wrappers follow the same rule: they are internal/full routes first, simple routes later.</p>
 </section>
 

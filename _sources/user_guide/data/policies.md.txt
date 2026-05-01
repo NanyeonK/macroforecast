@@ -215,10 +215,13 @@ path:
   1_data_task:
     fixed_axes:
       contemporaneous_x_rule: allow_same_period_predictors
-  3_training:
-    fixed_axes:
-      feature_builder: raw_feature_panel
-      model_family: ridge
+  3_feature_engineering:
+    nodes:
+      - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+      - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+      - {id: y_h, type: step, op: target_construction, params: {horizon: 1}, inputs: [src_y]}
+    sinks:
+      l3_features_v1: {X_final: src_x, y_final: y_h}
 ```
 
 ---

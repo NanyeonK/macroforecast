@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4.6 Layer 6: Statistical Tests &mdash; macrocast</title>
+  <title>Layer 6: Statistical Tests &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -22,8 +22,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.7 Layer 7: Interpretation / Importance" href="../layer7/index.html" />
-    <link rel="prev" title="4.5 Layer 5: Output / Provenance" href="../layer5/index.html" /> 
+    <link rel="next" title="Layer 7: Interpretation / Importance" href="../layer7/index.html" />
+    <link rel="prev" title="Layer 5: Evaluation" href="../layer5/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,15 +50,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Detail: Layer Contracts</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../layer0/index.html">4.0 Layer 0: Study Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer3/index.html">4.3 Layer 3: Forecast Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">4.4 Layer 4: Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">4.5 Layer 5: Output / Provenance</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">4.6 Layer 6: Statistical Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer8/index.html">Layer 8: Output / Provenance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
@@ -81,8 +82,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">4. Detail (code): Full</a></li>
-      <li class="breadcrumb-item active">4.6 Layer 6: Statistical Tests</li>
+          <li class="breadcrumb-item"><a href="../index.html">Detail: Layer Contracts</a></li>
+      <li class="breadcrumb-item active">Layer 6: Statistical Tests</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer6/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -93,55 +94,100 @@
            <div itemprop="articleBody">
              
   <section id="layer-6-statistical-tests">
-<h1>4.6 Layer 6: Statistical Tests<a class="headerlink" href="#layer-6-statistical-tests" title="Link to this heading"></a></h1>
+<h1>Layer 6: Statistical Tests<a class="headerlink" href="#layer-6-statistical-tests" title="Link to this heading"></a></h1>
 <ul class="simple">
-<li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">4. Detail (code): Full</span></a></p></li>
-<li><p>Previous: <a class="reference internal" href="../layer5/index.html"><span class="std std-doc">4.5 Layer 5: Output / Provenance</span></a></p></li>
+<li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">Detail: Layer Contracts</span></a></p></li>
+<li><p>Previous: <a class="reference internal" href="../layer5/index.html"><span class="std std-doc">Layer 5</span></a></p></li>
 <li><p>Current: Layer 6</p></li>
-<li><p>Next: <a class="reference internal" href="../layer7/index.html"><span class="std std-doc">4.7 Layer 7: Interpretation / Importance</span></a></p></li>
+<li><p>Next: <a class="reference internal" href="../layer7/index.html"><span class="std std-doc">Layer 7</span></a></p></li>
 </ul>
-<p>Layer 6 owns statistical testing over forecast errors, loss differences, density or interval outputs, directional outcomes, and residual diagnostics.</p>
-<section id="decision-order">
-<h2>Decision order<a class="headerlink" href="#decision-order" title="Link to this heading"></a></h2>
+<p>Layer 6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code>. Individual sub-layers also require their own <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code>.</p>
+<section id="contract">
+<h2>Contract<a class="headerlink" href="#contract" title="Link to this heading"></a></h2>
+<p>Inputs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l4_forecasts_v1</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l4_model_artifacts_v1</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l5_evaluation_v1</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code>;</p></li>
+<li><p>optional <code class="docutils literal notranslate"><span class="pre">l1_regime_metadata_v1</span></code>.</p></li>
+</ul>
+<p>Output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l6_tests_v1</span></code>.</p></li>
+</ul>
+</section>
+<section id="globals">
+<h2>Globals<a class="headerlink" href="#globals" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">test_scope</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dependence_correction</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code>.</p></li>
+</ul>
+</section>
+<section id="sub-layers">
+<h2>Sub-Layers<a class="headerlink" href="#sub-layers" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Group</p></th>
-<th class="head"><p>Axes</p></th>
+<tr class="row-odd"><th class="head"><p>Sub-layer</p></th>
+<th class="head"><p>Purpose</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Test families</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">equal_predictive</span></code>, <code class="docutils literal notranslate"><span class="pre">nested</span></code>, <code class="docutils literal notranslate"><span class="pre">cpa_instability</span></code>, <code class="docutils literal notranslate"><span class="pre">multiple_model</span></code>, <code class="docutils literal notranslate"><span class="pre">density_interval</span></code>, <code class="docutils literal notranslate"><span class="pre">direction</span></code>, <code class="docutils literal notranslate"><span class="pre">residual_diagnostics</span></code></p></td>
+<tr class="row-even"><td><p>L6.A</p></td>
+<td><p>equal predictive ability tests</p></td>
 </tr>
-<tr class="row-odd"><td><p>Scope and dependence</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">test_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">dependence_correction</span></code>, <code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code></p></td>
+<tr class="row-odd"><td><p>L6.B</p></td>
+<td><p>nested model tests</p></td>
+</tr>
+<tr class="row-even"><td><p>L6.C</p></td>
+<td><p>conditional predictive ability and instability</p></td>
+</tr>
+<tr class="row-odd"><td><p>L6.D</p></td>
+<td><p>multiple model tests</p></td>
+</tr>
+<tr class="row-even"><td><p>L6.E</p></td>
+<td><p>density and interval tests</p></td>
+</tr>
+<tr class="row-odd"><td><p>L6.F</p></td>
+<td><p>direction tests</p></td>
+</tr>
+<tr class="row-even"><td><p>L6.G</p></td>
+<td><p>residual diagnostics</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="canonical-names">
-<h2>Canonical names<a class="headerlink" href="#canonical-names" title="Link to this heading"></a></h2>
-<p>Layer 6 uses split test-family axes only. Select <code class="docutils literal notranslate"><span class="pre">equal_predictive</span></code>, <code class="docutils literal notranslate"><span class="pre">nested</span></code>, <code class="docutils literal notranslate"><span class="pre">cpa_instability</span></code>, <code class="docutils literal notranslate"><span class="pre">multiple_model</span></code>, <code class="docutils literal notranslate"><span class="pre">density_interval</span></code>, <code class="docutils literal notranslate"><span class="pre">direction</span></code>, or <code class="docutils literal notranslate"><span class="pre">residual_diagnostics</span></code> under <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code>; leave a family at <code class="docutils literal notranslate"><span class="pre">none</span></code> when inactive. There is no single catch-all test axis in generated recipes.</p>
-</section>
-<section id="layer-contract">
-<h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
-<p>Input:</p>
+<section id="gates">
+<h2>Gates<a class="headerlink" href="#gates" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>predictions and evaluation outputs;</p></li>
-<li><p>forecast-object type from Layer 3;</p></li>
-<li><p>overlap and dependence assumptions.</p></li>
-</ul>
-<p>Output:</p>
-<ul class="simple">
-<li><p>statistical-test artifacts and manifest entries.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code> disables all sub-layers.</p></li>
+<li><p>Benchmark-only pair strategies require an L4 benchmark.</p></li>
+<li><p>Density/interval tests require quantile or density forecasts.</p></li>
+<li><p>CPA regime conditioning requires an active L1 regime.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overlap_handling:</span> <span class="pre">none</span></code> is rejected for overlapping horizons.</p></li>
+<li><p>Bootstrap replications below 100 are hard errors; below 500 are warnings.</p></li>
 </ul>
 </section>
-<section id="related-reference">
-<h2>Related reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../layer_contract_ledger.html"><span class="std std-doc">Layer Contract Ledger</span></a></p></li>
-<li><p><a class="reference internal" href="../artifacts_and_manifest.html"><span class="std std-doc">Artifacts and Manifest</span></a></p></li>
-</ul>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">6_statistical_tests</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">test_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">per_target_horizon</span>
+<span class="w">  </span><span class="nt">dependence_correction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">newey_west</span>
+<span class="w">  </span><span class="nt">sub_layers</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">L6_A_equal_predictive</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">equal_predictive_test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dm_diebold_mariano</span>
+<span class="w">        </span><span class="nt">model_pair_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vs_benchmark_only</span>
+<span class="w">    </span><span class="nt">L6_D_multiple_model</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">multiple_model_test</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mcs_hansen</span>
+<span class="w">        </span><span class="nt">mcs_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -149,8 +195,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../layer5/index.html" class="btn btn-neutral float-left" title="4.5 Layer 5: Output / Provenance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../layer7/index.html" class="btn btn-neutral float-right" title="4.7 Layer 7: Interpretation / Importance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../layer5/index.html" class="btn btn-neutral float-left" title="Layer 5: Evaluation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../layer7/index.html" class="btn btn-neutral float-right" title="Layer 7: Interpretation / Importance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
@@ -81,32 +81,21 @@
              
   <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading"></a></h1>
-<p>In-depth documentation for every macrocast axis whose per-axis walk is complete.</p>
-<section id="stage-0-design">
-<h2>Stage 0 — Design<a class="headerlink" href="#stage-0-design" title="Link to this heading"></a></h2>
-<p><a class="reference internal" href="design.html"><span class="std std-doc">Design (Stage 0)</span></a> — axes that decide the execution grammar:</p>
+<p>Use the user guide for the current layer-contract interface. The older stage-numbered pages remain linked where useful, but the canonical runtime map is now L0-L8 plus L1.5-L4.5 diagnostics.</p>
+<section id="design">
+<h2>Design<a class="headerlink" href="#design" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="design.html"><span class="std std-doc">Layer Contract Design</span></a> explains the current architecture:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> — one target or multiple targets, with one fixed method path or a controlled method comparison.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">axis_type</span></code> — fixed / sweep / nested / conditional / derived per axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> — how to handle per-cell failures.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> — how strict to make determinism.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — serial by default, or a Study Scope-compatible parallel work layout.</p></li>
+<li><p>list layers vs. graph layers;</p></li>
+<li><p>construction, diagnostic, and consumption categories;</p></li>
+<li><p>default-off semantics for L6, L7, and <code class="docutils literal notranslate"><span class="pre">.5</span></code> diagnostics;</p></li>
+<li><p>YAML layer keys and versioned sink names;</p></li>
+<li><p>L8 export and manifest behavior.</p></li>
 </ul>
 </section>
-<section id="stage-1-data">
-<h2>Stage 1 — Data<a class="headerlink" href="#stage-1-data" title="Link to this heading"></a></h2>
-<p><a class="reference internal" href="data/index.html"><span class="std std-doc">Data (Stage 1)</span></a> — thirteen canonical axes after the layer-boundary migration, with historical/migrated detail pages kept for reference:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="data/source.html"><span class="std std-doc">1.1 Source &amp; Frame</span></a> — <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>.</p></li>
-<li><p><a class="reference internal" href="data/target_structure.html"><span class="std std-doc">1.2 Target Structure</span></a> — <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>.</p></li>
-<li><p><a class="reference internal" href="data/horizon.html"><span class="std std-doc">1.3 Horizon &amp; Evaluation Window</span></a> — <code class="docutils literal notranslate"><span class="pre">min_train_size</span></code>, <code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">oos_period</span></code>, <code class="docutils literal notranslate"><span class="pre">overlap_handling</span></code>.</p></li>
-<li><p><a class="reference internal" href="data/benchmark.html"><span class="std std-doc">1.4 Benchmark &amp; Predictor Universe</span></a> — <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code>, <code class="docutils literal notranslate"><span class="pre">predictor_family</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code>, <code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code>.</p></li>
-<li><p><a class="reference internal" href="data/policies.html"><span class="std std-doc">1.5 Data Handling Policies</span></a> — <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code>.</p></li>
-</ul>
-</section>
-<section id="stages-2-through-7">
-<h2>Stages 2 through 7<a class="headerlink" href="#stages-2-through-7" title="Link to this heading"></a></h2>
-<p>Not yet in the user-facing docs. Plan files live under <code class="docutils literal notranslate"><span class="pre">plans/</span></code> in the repo; docs land when each per-axis walk completes.</p>
+<section id="data">
+<h2>Data<a class="headerlink" href="#data" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="data/index.html"><span class="std std-doc">Data</span></a> contains the older per-axis data guide. Treat it as a data-task reference, not as the complete layer-contract map.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>

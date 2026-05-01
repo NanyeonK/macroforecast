@@ -23,9 +23,9 @@ Install macrocast and choose between the Navigator, YAML runtime, or simple Pyth
 
 [Open Getting Started](getting_started/index.md)
 
-### Navigator
+### Navigator Docs
 
-Use the Navigator when you need to see the canonical layer/DAG map, diagnostic hooks, runtime support status, and compatibility rules.
+Use the Navigator docs when you need to see the canonical layer/DAG map, diagnostic hooks, runtime support status, and compatibility rules.
 
 - [Open Navigator App](navigator_app/index.html)
 - [Navigator Docs](navigator/index.md)

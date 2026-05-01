@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4.3 Layer 3: Forecast Generator &mdash; macrocast</title>
+  <title>Layer 3: Feature Engineering &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -22,7 +22,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.4 Layer 4: Evaluation" href="../layer4/index.html" />
+    <link rel="next" title="Layer 4: Forecasting Model" href="../layer4/index.html" />
     <link rel="prev" title="4.2 Layer 2: Representation / Research Preprocessing" href="../layer2/index.html" /> 
 </head>
 
@@ -50,15 +50,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Detail: Layer Contracts</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../layer0/index.html">4.0 Layer 0: Study Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">4.3 Layer 3: Forecast Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">4.4 Layer 4: Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">4.5 Layer 5: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer6/index.html">4.6 Layer 6: Statistical Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layer8/index.html">Layer 8: Output / Provenance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
@@ -81,8 +82,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">4. Detail (code): Full</a></li>
-      <li class="breadcrumb-item active">4.3 Layer 3: Forecast Generator</li>
+          <li class="breadcrumb-item"><a href="../index.html">Detail: Layer Contracts</a></li>
+      <li class="breadcrumb-item active">Layer 3: Feature Engineering</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer3/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -92,71 +93,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="layer-3-forecast-generator">
-<h1>4.3 Layer 3: Forecast Generator<a class="headerlink" href="#layer-3-forecast-generator" title="Link to this heading"></a></h1>
+  <section id="layer-3-feature-engineering">
+<h1>Layer 3: Feature Engineering<a class="headerlink" href="#layer-3-feature-engineering" title="Link to this heading"></a></h1>
 <ul class="simple">
-<li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">4. Detail (code): Full</span></a></p></li>
-<li><p>Previous: <a class="reference internal" href="../layer2/index.html"><span class="std std-doc">4.2 Layer 2: Representation / Research Preprocessing</span></a></p></li>
+<li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">Detail: Layer Contracts</span></a></p></li>
+<li><p>Previous: <a class="reference internal" href="../layer2/index.html"><span class="std std-doc">Layer 2</span></a></p></li>
 <li><p>Current: Layer 3</p></li>
-<li><p>Next: <a class="reference internal" href="../layer4/index.html"><span class="std std-doc">4.4 Layer 4: Evaluation</span></a></p></li>
+<li><p>Next: <a class="reference internal" href="../layer4/index.html"><span class="std std-doc">Layer 4</span></a></p></li>
 </ul>
-<p>Layer 3 owns forecast generation. It consumes Layer 2 representation contracts and chooses model, benchmark, forecast type/object, future-X path policy, training windows, and tuning behavior.</p>
-<section id="decision-order">
-<h2>Decision order<a class="headerlink" href="#decision-order" title="Link to this heading"></a></h2>
+<p>Layer 3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit <code class="docutils literal notranslate"><span class="pre">nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>.</p>
+<section id="contract">
+<h2>Contract<a class="headerlink" href="#contract" title="Link to this heading"></a></h2>
+<p>Inputs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code>;</p></li>
+<li><p>optional raw L1 access for level/raw-feature pipelines;</p></li>
+<li><p>optional <code class="docutils literal notranslate"><span class="pre">l1_regime_metadata_v1</span></code>;</p></li>
+<li><p>optional L3 pipeline outputs for cascade features.</p></li>
+</ul>
+<p>Outputs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code> with <code class="docutils literal notranslate"><span class="pre">X_final</span></code> and <code class="docutils literal notranslate"><span class="pre">y_final</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code> for lineage and downstream interpretation.</p></li>
+</ul>
+</section>
+<section id="sub-layers">
+<h2>Sub-Layers<a class="headerlink" href="#sub-layers" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Group</p></th>
-<th class="head"><p>Axes</p></th>
+<tr class="row-odd"><th class="head"><p>Slot</p></th>
+<th class="head"><p>Purpose</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Generator family</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code>, <code class="docutils literal notranslate"><span class="pre">midasr_weight_family</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></p></td>
+<tr class="row-even"><td><p>L3.A</p></td>
+<td><p>target construction</p></td>
 </tr>
-<tr class="row-odd"><td><p>Forecast object</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">forecast_type</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_object</span></code></p></td>
+<tr class="row-odd"><td><p>L3.B</p></td>
+<td><p>feature pipelines</p></td>
 </tr>
-<tr class="row-even"><td><p>Future X / recursive paths</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">exogenous_x_path_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">recursive_x_model_family</span></code></p></td>
+<tr class="row-even"><td><p>L3.C</p></td>
+<td><p>pipeline combine</p></td>
 </tr>
-<tr class="row-odd"><td><p>Runtime framework</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">framework</span></code>, <code class="docutils literal notranslate"><span class="pre">outer_window</span></code>, <code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Training window</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">min_train_size</span></code>, <code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">y_lag_count</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Tuning</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code>, <code class="docutils literal notranslate"><span class="pre">tuning_objective</span></code>, <code class="docutils literal notranslate"><span class="pre">tuning_budget</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_location</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_size_rule</span></code></p></td>
+<tr class="row-odd"><td><p>L3.D</p></td>
+<td><p>feature selection</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="canonical-names">
-<h2>Canonical names<a class="headerlink" href="#canonical-names" title="Link to this heading"></a></h2>
-<p>Layer 3 uses explicit generator-family, benchmark-role, forecast-object, training-window, and tuning IDs. Generated recipes and Navigator paths emit the canonical IDs listed in the registry. Retired glued abbreviations are not documented as supported choices.</p>
+<section id="important-rules">
+<h2>Important Rules<a class="headerlink" href="#important-rules" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>L3 is DAG-only. <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> sugar is rejected.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_construction</span></code> must appear exactly once and must be the <code class="docutils literal notranslate"><span class="pre">y_final</span></code> sink.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_final</span></code> must be panel-like; <code class="docutils literal notranslate"><span class="pre">y_final</span></code> must be series-like.</p></li>
+<li><p>Cascade sources can reference previous L3 pipeline outputs, but cycles and ambiguous pipeline endpoints are hard errors.</p></li>
+<li><p>Forecast combination belongs in L4. L3 rejects <code class="docutils literal notranslate"><span class="pre">weighted_average_forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">median_forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">trimmed_mean_forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">bma_forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">bivariate_ardl_combination</span></code>, and retired combine aliases.</p></li>
+</ul>
 </section>
-<section id="layer-contract">
-<h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
-<p>Input:</p>
+<section id="operational-step-families">
+<h2>Operational Step Families<a class="headerlink" href="#operational-step-families" title="Link to this heading"></a></h2>
+<p>Representative operational ops:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">layer2_representation_v1</span></code>;</p></li>
-<li><p>Layer 0 runtime policy;</p></li>
-<li><p>Layer 1 task metadata.</p></li>
+<li><p>stationary transforms: <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">log_diff</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change</span></code>;</p></li>
+<li><p>lag and aggregation: <code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">ma_window</span></code>, <code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum</span></code>;</p></li>
+<li><p>scaling and reductions: <code class="docutils literal notranslate"><span class="pre">scale</span></code>, <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm</span></code>, <code class="docutils literal notranslate"><span class="pre">varimax</span></code>, <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code>, <code class="docutils literal notranslate"><span class="pre">random_projection</span></code>;</p></li>
+<li><p>feature expansion: <code class="docutils literal notranslate"><span class="pre">polynomial</span></code>, <code class="docutils literal notranslate"><span class="pre">interaction</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, <code class="docutils literal notranslate"><span class="pre">nystroem</span></code>;</p></li>
+<li><p>auxiliary: <code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>, <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>, <code class="docutils literal notranslate"><span class="pre">time_trend</span></code>, <code class="docutils literal notranslate"><span class="pre">holiday</span></code>;</p></li>
+<li><p>combine: <code class="docutils literal notranslate"><span class="pre">concat</span></code>, <code class="docutils literal notranslate"><span class="pre">interact</span></code>, <code class="docutils literal notranslate"><span class="pre">hierarchical_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">weighted_concat</span></code>, <code class="docutils literal notranslate"><span class="pre">simple_average</span></code>;</p></li>
+<li><p>selection: <code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>.</p></li>
 </ul>
-<p>Output:</p>
-<ul class="simple">
-<li><p>forecast payloads;</p></li>
-<li><p>predictions;</p></li>
-<li><p>training/tuning metadata;</p></li>
-<li><p>model and benchmark artifacts.</p></li>
-</ul>
+<p>Compatibility aliases remain available where older recipes used them: <code class="docutils literal notranslate"><span class="pre">varimax_rotation</span></code>, <code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code>, and <code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code>.</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">target</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">pca</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">pca</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">n_components</span><span class="p">:</span><span class="w"> </span><span class="nv">8</span><span class="p p-Indicator">,</span><span class="nt"> temporal_rule</span><span class="p">:</span><span class="w"> </span><span class="nv">expanding_window_per_origin</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_x</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_pca</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">lag</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">n_lag</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">pca</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">target_construction</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="nv">cumulative_average</span><span class="p p-Indicator">,</span><span class="nt"> horizon</span><span class="p">:</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l3_features_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">X_final</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_pca</span><span class="p p-Indicator">,</span><span class="nt"> y_final</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">l3_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</pre></div>
+</div>
 </section>
 <section id="related-reference">
-<h2>Related reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
+<h2>Related Reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../layer3_training_audit.html"><span class="std std-doc">Layer 3 Training Audit</span></a></p></li>
-<li><p><a class="reference internal" href="../raw_panel_iterated_contract.html"><span class="std std-doc">Raw Panel Iterated Contract</span></a></p></li>
-<li><p><a class="reference internal" href="../custom_extensions.html"><span class="std std-doc">Custom Extensions</span></a></p></li>
+<li><p><a class="reference internal" href="../layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a></p></li>
 </ul>
 </section>
 </section>
@@ -166,7 +193,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../layer2/index.html" class="btn btn-neutral float-left" title="4.2 Layer 2: Representation / Research Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../layer4/index.html" class="btn btn-neutral float-right" title="4.4 Layer 4: Evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../layer4/index.html" class="btn btn-neutral float-right" title="Layer 4: Forecasting Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
