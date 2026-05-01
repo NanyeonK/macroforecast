@@ -196,6 +196,7 @@ const AXIS_DESCRIPTIONS = {
 
 const state = {
   selectedLayer: "map",
+  mapFocusLayer: "l1",
   selectedNode: null,
   connectingFrom: null,
   bottomTab: "yaml",
@@ -288,7 +289,7 @@ const state = {
       enabled: false,
       test_scope: "per_target_horizon",
       dependence_correction: "newey_west",
-      overlap_handling: "newey_west",
+      overlap_handling: "nw_with_h_minus_1_lag",
       sub_layers: {
         L6_A_equal_predictive: {
           enabled: false,
@@ -450,22 +451,101 @@ function renderWorkspace() {
 }
 
 function renderMap(body) {
-  const grid = document.createElement("div");
-  grid.className = "map-grid";
-  for (const layer of layerDefs) {
-    const card = document.createElement("button");
-    card.className = `map-card ${layer.mode === "diagnostic" ? "diagnostic" : ""}`;
-    card.innerHTML = `
-      <div class="map-card-title">
-        <span>${layer.id.toUpperCase()} ${layer.name}</span>
-        <span class="pill">${layer.mode}</span>
-      </div>
-      <div class="map-card-body">${layer.role}<br>Status: ${layerStatus(layer.id)}</div>
-    `;
-    card.addEventListener("click", () => selectLayer(layer.id));
-    grid.appendChild(card);
+  const shell = document.createElement("div");
+  shell.className = "contract-flow";
+
+  const lanes = document.createElement("div");
+  lanes.className = "flow-lanes";
+  const mainLayers = layerDefs.filter((layer) => !layer.id.includes("_5"));
+  for (const layer of mainLayers) {
+    lanes.appendChild(flowLayerCard(layer));
+    const diagnostics = layerDefs.filter((candidate) => candidate.parent === layer.id);
+    for (const diagnostic of diagnostics) lanes.appendChild(flowDiagnosticChip(diagnostic));
   }
-  body.appendChild(grid);
+
+  const legend = document.createElement("div");
+  legend.className = "flow-legend";
+  legend.innerHTML = `
+    <span><i class="legend-dot configured"></i>configured</span>
+    <span><i class="legend-dot optional"></i>optional/off</span>
+    <span><i class="legend-dot dag"></i>DAG editable</span>
+    <span><i class="legend-dot diagnostic"></i>.5 diagnostic</span>
+  `;
+
+  const focus = layerById(state.mapFocusLayer) || layerById("l1");
+  const strip = document.createElement("div");
+  strip.className = "focus-strip";
+  strip.innerHTML = `
+    <div>
+      <div class="eyebrow">Selected Contract Layer</div>
+      <h2>${focus.id.toUpperCase()} ${focus.name}</h2>
+      <p>${focus.role}</p>
+    </div>
+    <button class="primary-button" data-action="edit-focus">Edit ${focus.id.toUpperCase()}</button>
+  `;
+  strip.querySelector("[data-action='edit-focus']").addEventListener("click", () => selectLayer(focus.id));
+
+  shell.appendChild(legend);
+  shell.appendChild(lanes);
+  shell.appendChild(strip);
+  body.appendChild(shell);
+}
+
+function flowLayerCard(layer) {
+  const card = document.createElement("button");
+  const isFocus = state.mapFocusLayer === layer.id;
+  const isDag = layer.mode.includes("dag");
+  card.className = `flow-card ${isFocus ? "focused" : ""} ${isDag ? "dag" : ""} ${layerStatus(layer.id)}`;
+  card.innerHTML = `
+    <div class="flow-card-head">
+      <span class="flow-id">${layer.id.toUpperCase()}</span>
+      <span class="pill">${layer.mode}</span>
+    </div>
+    <div class="flow-title">${layer.name}</div>
+    <div class="flow-role">${layer.role}</div>
+    ${flowLayerFacts(layer.id)}
+  `;
+  card.addEventListener("click", () => {
+    state.mapFocusLayer = layer.id;
+    render();
+  });
+  return card;
+}
+
+function flowDiagnosticChip(layer) {
+  const chip = document.createElement("button");
+  const status = layerStatus(layer.id);
+  chip.className = `flow-diagnostic ${state.mapFocusLayer === layer.id ? "focused" : ""} ${status}`;
+  chip.innerHTML = `<span>${layer.id.toUpperCase()}</span><span>${layer.name}</span>`;
+  chip.addEventListener("click", () => {
+    state.mapFocusLayer = layer.id;
+    render();
+  });
+  return chip;
+}
+
+function flowLayerFacts(layerId) {
+  if (layerId === "l1") {
+    const fixed = state.layers.l1.fixed_axes;
+    const leaf = state.layers.l1.leaf_config;
+    const targets = fixed.target_structure === "single_target" ? leaf.target : `${leaf.targets.length} targets`;
+    return `<div class="flow-facts"><span>${fixed.dataset || "custom"}</span><span>${targets}</span><span>h=${leaf.horizons.join(",")}</span></div>`;
+  }
+  if (layerId === "l3" || layerId === "l4" || layerId === "l7") {
+    const dag = state.dags[layerId];
+    return `<div class="flow-facts"><span>${dag.nodes.length} nodes</span><span>${dag.edges.length} edges</span><span>${dag.enabled ? "on" : "off"}</span></div>`;
+  }
+  if (layerId === "l5") {
+    const fixed = state.layers.l5.fixed_axes;
+    return `<div class="flow-facts"><span>${fixed.primary_metric}</span><span>${fixed.ranking}</span></div>`;
+  }
+  if (layerId === "l6") {
+    return `<div class="flow-facts"><span>${state.layers.l6.enabled ? "enabled" : "off"}</span><span>${state.layers.l6.test_scope}</span></div>`;
+  }
+  if (layerId === "l8") {
+    return `<div class="flow-facts"><span>${state.layers.l8.fixed_axes.export_format}</span><span>${state.layers.l8.fixed_axes.artifact_granularity}</span></div>`;
+  }
+  return `<div class="flow-facts"><span>${layerStatus(layerId)}</span></div>`;
 }
 
 function renderFormLayer(layer, body) {
@@ -780,7 +860,7 @@ function renderInspector() {
   body.innerHTML = "";
   const layer = layerById(state.selectedLayer);
   if (!layer) {
-    body.appendChild(contractSummary());
+    body.appendChild(mapFocusInspector());
     return;
   }
 
@@ -856,6 +936,30 @@ function contractSummary() {
     readonlyField("targets", state.layers.l1.leaf_config.targets.join(", ")),
     readonlyField("horizons", state.layers.l1.leaf_config.horizons.join(", "))
   ]);
+}
+
+function mapFocusInspector() {
+  const layer = layerById(state.mapFocusLayer) || layerById("l1");
+  const fields = [
+    readonlyField("layer", `${layer.id.toUpperCase()} ${layer.name}`),
+    readonlyField("mode", layer.mode),
+    readonlyField("status", layerStatus(layer.id)),
+    readonlyField("role", layer.role),
+    buttonField(`Edit ${layer.id.toUpperCase()}`, () => selectLayer(layer.id))
+  ];
+  if (state.dags[layer.id]) {
+    const dag = state.dags[layer.id];
+    fields.splice(3, 0, readonlyField("nodes", String(dag.nodes.length)));
+    fields.splice(4, 0, readonlyField("edges", String(dag.edges.length)));
+    fields.splice(5, 0, readonlyField("required sinks", requiredSinks(layer.id).join(", ")));
+  }
+  if (layer.id === "l1") {
+    const fixed = state.layers.l1.fixed_axes;
+    const leaf = state.layers.l1.leaf_config;
+    fields.splice(3, 0, readonlyField("source", `${fixed.custom_source_policy} / ${fixed.dataset || "custom"}`));
+    fields.splice(4, 0, readonlyField("targets", fixed.target_structure === "single_target" ? leaf.target : leaf.targets.join(", ")));
+  }
+  return sectionFromFields("Map Selection", fields);
 }
 
 function renderBottomPanel() {
