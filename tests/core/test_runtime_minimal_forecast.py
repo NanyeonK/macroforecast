@@ -163,6 +163,32 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     assert result.resolved_axes["l8"]["export_format"] == "json_csv"
 
 
+def test_execute_minimal_forecast_writes_l8_runtime_exports(tmp_path):
+    output_dir = tmp_path / "macrocast_export"
+    yaml_text = (
+        MINIMAL_RECIPE
+        + f"""
+6_statistical_tests: {{}}
+8_output:
+  fixed_axes:
+    saved_objects: [forecasts, metrics, ranking, tests]
+  leaf_config:
+    output_directory: {output_dir.as_posix()}
+"""
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+    l8_artifacts = result.sink("l8_artifacts_v1")
+
+    assert l8_artifacts.artifact_count >= 5
+    assert (output_dir / "manifest.json").exists()
+    assert (output_dir / "recipe.json").exists()
+    assert (output_dir / "summary" / "metrics_all_cells.csv").exists()
+    assert (output_dir / "summary" / "ranking.csv").exists()
+    assert (output_dir / "cell_001" / "forecasts.csv").exists()
+    assert (output_dir / "tests_summary.json").exists()
+
+
 def test_execute_minimal_forecast_materializes_l3_5_diagnostic():
     yaml_text = (
         MINIMAL_RECIPE
@@ -204,20 +230,84 @@ def test_execute_minimal_forecast_materializes_l4_5_diagnostic():
     assert diagnostic.metadata["fit_summary"]["fit_ridge|y|h1"]["n"] == 2
 
 
-def test_execute_minimal_forecast_rejects_enabled_l6_runtime_stub():
+def test_execute_minimal_forecast_materializes_enabled_l6_runtime():
     yaml_text = (
-        MINIMAL_RECIPE
+        MINIMAL_RECIPE.replace(
+            """    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]""",
+            """    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]
+    - id: fit_ols
+      type: step
+      op: fit_model
+      is_benchmark: true
+      params: {family: ols, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]""",
+        ).replace("l4_model_artifacts_v1: fit_ridge", "l4_model_artifacts_v1: [fit_ridge, fit_ols]")
         + """
 6_statistical_tests:
   enabled: true
   sub_layers:
+    L6_A_equal_predictive:
+      enabled: true
     L6_D_multiple_model:
+      enabled: true
+    L6_F_direction:
+      enabled: true
+    L6_G_residual:
       enabled: true
 """
     )
 
-    with pytest.raises(NotImplementedError, match="L6 statistical test execution is deferred"):
-        execute_minimal_forecast(yaml_text)
+    result = execute_minimal_forecast(yaml_text)
+    l6_tests = result.sink("l6_tests_v1")
+
+    assert isinstance(l6_tests, L6TestsArtifact)
+    assert l6_tests.test_metadata["runtime"] == "core_l6_minimal"
+    assert l6_tests.equal_predictive_results
+    assert "mcs_inclusion" in l6_tests.multiple_model_results
+    assert l6_tests.direction_results
+    assert l6_tests.residual_results
+
+
+def test_execute_minimal_forecast_materializes_enabled_l7_importance():
+    yaml_text = (
+        MINIMAL_RECIPE
+        + """
+7_interpretation:
+  enabled: true
+  nodes:
+    - id: src_model
+      type: source
+      selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: fit_ridge}}
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: linear_imp
+      type: step
+      op: model_native_linear_coef
+      params: {model_family: ridge}
+      inputs: [src_model, src_X]
+  sinks:
+    l7_importance_v1:
+      global: linear_imp
+"""
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+    importance = result.sink("l7_importance_v1")
+
+    assert importance.computation_metadata["runtime"] == "core_l7_minimal"
+    assert len(importance.global_importance) == 1
+    table = next(iter(importance.global_importance.values()))
+    assert set(table["feature"]) == {"x1_lag1", "x2_lag1"}
+    assert "importance" in table.columns
 
 
 def test_execute_minimal_forecast_rejects_non_ridge_family():
