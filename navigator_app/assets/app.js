@@ -9,6 +9,7 @@ const state = {
   activeTopologyLayer: "l0",
   activeSubLayer: null,
   activeCanonicalAxis: null,
+  canonicalSelections: {},
 };
 
 const els = {
@@ -82,6 +83,80 @@ const CANONICAL_AXIS_GROUPS = {
     "L8_C_provenance": ["provenance_fields", "manifest_format"],
     "L8_D_artifact_granularity": ["artifact_granularity", "naming_convention"],
   },
+};
+
+const CANONICAL_AXIS_OPTIONS = {
+  primary_metric: ["mse", "rmse", "mae", "relative_mse", "r2_oos", "log_score", "crps"],
+  point_metrics: ["mse", "rmse", "mae", "mape", "medae", "theil_u1", "theil_u2"],
+  density_metrics: ["log_score", "crps", "interval_score", "coverage_rate"],
+  direction_metrics: ["success_ratio", "pesaran_timmermann_metric"],
+  relative_metrics: ["relative_mse", "r2_oos", "relative_mae", "mse_reduction"],
+  benchmark_window: ["full_oos", "rolling", "expanding"],
+  benchmark_scope: ["all_targets_horizons", "per_target", "per_horizon", "per_target_horizon"],
+  agg_time: ["mean", "median", "weighted_recent", "per_subperiod"],
+  agg_horizon: ["pooled", "per_horizon", "short_medium_long"],
+  agg_target: ["pooled", "per_target", "target_group"],
+  agg_state: ["pooled", "per_state", "per_region"],
+  oos_period: ["full", "user_defined", "rolling_origin"],
+  regime_use: ["pooled", "per_regime", "regime_interaction"],
+  regime_metrics: ["same_metrics", "separate_metrics"],
+  decomposition_target: ["none", "by_predictor_block", "by_period", "by_regime", "by_state"],
+  decomposition_order: ["sequential", "shapley", "leave_one_out"],
+  ranking: ["primary_metric", "all_metrics", "pareto"],
+  report_style: ["compact", "full", "paper_table"],
+  enabled: ["true", "false"],
+  test_scope: ["per_target_horizon", "per_target", "per_horizon", "pooled"],
+  dependence_correction: ["newey_west", "andrews", "parzen_kernel", "none"],
+  overlap_handling: ["nw_with_h_minus_1_lag", "west_1996_adjustment", "none"],
+  equal_predictive_test: ["dm_diebold_mariano", "gw_giacomini_white", "multi"],
+  loss_function: ["squared", "absolute", "lin_lin_asymmetric", "custom"],
+  model_pair_strategy: ["vs_benchmark_only", "all_pairs", "user_list"],
+  hln_correction: ["true", "false"],
+  nested_test: ["clark_west", "enc_new", "enc_t", "multi"],
+  nested_pair_strategy: ["vs_benchmark_auto", "auto_detect", "user_list"],
+  cw_adjustment: ["true", "false"],
+  enc_test_one_sided: ["one_sided", "two_sided"],
+  cpa_test: ["giacomini_rossi_2010", "rossi_sekhposyan", "multi"],
+  cpa_window_type: ["rolling_window", "recursive"],
+  cpa_conditioning_info: ["none", "lagged_loss_difference", "regime", "external_indicator"],
+  cpa_critical_value_method: ["simulated", "bootstrap", "asymptotic"],
+  multiple_model_test: ["mcs_hansen", "spa_hansen", "reality_check_white", "step_m_romano_wolf", "multi"],
+  mcs_alpha: ["0.10", "0.05", "0.25"],
+  mmt_loss_function: ["squared", "absolute"],
+  bootstrap_method: ["stationary_bootstrap", "block_bootstrap", "circular_bootstrap"],
+  bootstrap_n_replications: ["1000", "5000", "custom"],
+  bootstrap_block_length: ["auto", "custom_int"],
+  mcs_t_statistic: ["t_max", "t_range"],
+  spa_studentization: ["consistent", "lower", "upper"],
+  stepm_alpha: ["0.10", "0.05", "0.25"],
+  density_test: ["pit_kolmogorov_smirnov", "pit_berkowitz", "pit_anderson_darling", "pit_ljung_box", "multi"],
+  interval_test: ["kupiec_unconditional_coverage", "christoffersen_independence", "christoffersen_conditional_coverage", "dynamic_quantile_test", "multi"],
+  coverage_levels: ["0.5", "0.9", "0.95", "custom_list"],
+  pit_n_bins: ["10", "20", "custom_int"],
+  pit_test_horizon_dependence: ["nw_correction", "none"],
+  direction_test: ["pesaran_timmermann_1992", "henriksson_merton", "multi"],
+  direction_threshold: ["zero", "median", "user_defined"],
+  direction_alpha: ["0.05", "0.10", "0.01"],
+  residual_test: ["ljung_box_q", "arch_lm", "jarque_bera_normality", "breusch_godfrey_serial_correlation", "durbin_watson", "multi"],
+  residual_lag_count: ["derived", "10", "4", "custom_int"],
+  residual_test_scope: ["per_model", "per_model_target_horizon"],
+  residual_alpha: ["0.05", "0.10", "0.01"],
+  output_table_format: ["wide", "long", "multi"],
+  figure_type: ["auto", "bar_global", "beeswarm", "heatmap", "multi"],
+  top_k_features_to_show: ["20", "10", "50", "custom_int"],
+  precision_digits: ["4", "3", "6"],
+  figure_dpi: ["300", "150", "600"],
+  figure_format: ["png", "pdf", "svg", "multi"],
+  latex_table_export: ["true", "false"],
+  markdown_table_export: ["true", "false"],
+  export_format: ["json", "csv", "parquet", "json_csv", "json_parquet", "latex_tables", "markdown_report", "html_report", "all"],
+  compression: ["none", "gzip", "zip"],
+  saved_objects: ["forecasts", "forecast_intervals", "metrics", "ranking", "decomposition", "regime_metrics", "state_metrics", "model_artifacts", "combination_weights", "feature_metadata", "clean_panel", "raw_panel", "diagnostics_all", "tests", "importance", "transformation_attribution"],
+  model_artifacts_format: ["pickle", "joblib", "onnx", "pmml"],
+  provenance_fields: ["recipe_yaml_full", "recipe_hash", "package_version", "python_version", "r_version", "julia_version", "dependency_lockfile", "git_commit_sha", "git_branch_name", "data_revision_tag", "random_seed_used", "runtime_environment", "runtime_duration", "cell_resolved_axes"],
+  manifest_format: ["json", "yaml", "json_lines"],
+  artifact_granularity: ["per_cell", "per_target", "per_horizon", "per_target_horizon", "flat"],
+  naming_convention: ["cell_id", "descriptive", "recipe_hash", "custom"],
 };
 
 function escapeHtml(value) {
@@ -366,10 +441,85 @@ function renderSubLayerButton(node, subLayer, idx) {
 
 function renderAxisButton(axisName) {
   const active = axisName === state.activeCanonicalAxis ? " active" : "";
+  const options = optionRecordsForAxis(axisName);
   return `
     <button type="button" class="canonical-axis${active}" data-canonical-axis="${escapeHtml(axisName)}">
       <span>${escapeHtml(axisName)}</span>
+      <em>${escapeHtml(String(options.length))} options</em>
     </button>
+  `;
+}
+
+function optionRecordsForAxis(axisName) {
+  const hardcoded = CANONICAL_AXIS_OPTIONS[axisName];
+  if (hardcoded) {
+    return hardcoded.map((value) => ({
+      value,
+      status: value === "onnx" || value === "pmml" ? "future" : "operational",
+      enabled: value !== "onnx" && value !== "pmml",
+      disabled_reason: value === "onnx" || value === "pmml" ? "future option" : null,
+    }));
+  }
+  const treeAxis = allAxes().find((axis) => axis.axis === axisName);
+  if (treeAxis && treeAxis.options) return treeAxis.options;
+  const catalog = state.data && state.data.axis_catalog && state.data.axis_catalog[axisName];
+  if (catalog && catalog.allowed_values) {
+    return catalog.allowed_values.map((value) => ({
+      value,
+      status: (catalog.current_status || {})[value] || "operational",
+      enabled: ((catalog.current_status || {})[value] || "operational") !== "future",
+      disabled_reason: ((catalog.current_status || {})[value] || "operational") === "future" ? "future option" : null,
+    }));
+  }
+  return [];
+}
+
+function selectedCanonicalOption(axisName, records) {
+  if (state.canonicalSelections[axisName]) return state.canonicalSelections[axisName];
+  if (!records.length) return "";
+  const enabled = records.find((record) => record.enabled !== false);
+  return (enabled || records[0]).value;
+}
+
+function renderCanonicalOption(record, axisName, selectedValue) {
+  const selected = String(record.value) === String(selectedValue) ? " selected" : "";
+  const disabled = record.enabled === false ? " disabled" : "";
+  const disabledAttr = record.enabled === false ? " disabled" : "";
+  return `
+    <button type="button" class="axis-choice${selected}${disabled}" data-canonical-option="${escapeHtml(record.value)}"${disabledAttr}>
+      <strong>${escapeHtml(record.value)}</strong>
+      <span>${escapeHtml(record.status || "operational")}</span>
+      ${record.disabled_reason ? `<em>${escapeHtml(record.disabled_reason)}</em>` : ""}
+    </button>
+  `;
+}
+
+function renderCanonicalOptionsPanel(axisName) {
+  if (!axisName) return `<p class="empty-note">Select an axis to see available options.</p>`;
+  const records = optionRecordsForAxis(axisName);
+  if (!records.length) {
+    return `
+      <div class="axis-option-panel">
+        <div class="axis-option-head">
+          <span>Selected axis</span>
+          <strong>${escapeHtml(axisName)}</strong>
+        </div>
+        <p class="empty-note">No fixed option list is registered for this axis. Configure it with leaf_config or DAG node params.</p>
+      </div>
+    `;
+  }
+  const selected = selectedCanonicalOption(axisName, records);
+  return `
+    <div class="axis-option-panel">
+      <div class="axis-option-head">
+        <span>Selected axis</span>
+        <strong>${escapeHtml(axisName)}</strong>
+        <em>selected: ${escapeHtml(selected)}</em>
+      </div>
+      <div class="axis-choice-grid">
+        ${records.map((record) => renderCanonicalOption(record, axisName, selected)).join("")}
+      </div>
+    </div>
   `;
 }
 
@@ -435,7 +585,7 @@ function renderLayerDetail() {
       <section class="definition-wide">
         <h3>Axes / output controls</h3>
         ${subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`}
-        ${state.activeCanonicalAxis ? `<div class="axis-focus"><span>Selected axis</span><strong>${escapeHtml(state.activeCanonicalAxis)}</strong></div>` : ""}
+        ${renderCanonicalOptionsPanel(state.activeCanonicalAxis)}
       </section>
     </div>
   `;
@@ -910,19 +1060,28 @@ function bindEvents() {
       if (axisButton) {
         state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
         render();
+        return;
+      }
+      const optionButton = event.target.closest("[data-canonical-option]");
+      if (optionButton && state.activeCanonicalAxis) {
+        state.canonicalSelections[state.activeCanonicalAxis] = optionButton.dataset.canonicalOption;
+        render();
       }
     });
     els.layerDetail.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       const subLayerButton = event.target.closest("[data-sub-layer]");
       const axisButton = event.target.closest("[data-canonical-axis]");
-      if (!subLayerButton && !axisButton) return;
+      const optionButton = event.target.closest("[data-canonical-option]");
+      if (!subLayerButton && !axisButton && !optionButton) return;
       event.preventDefault();
       if (subLayerButton) {
         state.activeSubLayer = subLayerButton.dataset.subLayer;
         state.activeCanonicalAxis = null;
-      } else {
+      } else if (axisButton) {
         state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
+      } else if (state.activeCanonicalAxis) {
+        state.canonicalSelections[state.activeCanonicalAxis] = optionButton.dataset.canonicalOption;
       }
       render();
     });
