@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from ..dag import DAG, Node, NodeRef
@@ -216,7 +216,7 @@ def execute_recipe(recipe: L0Recipe) -> L0Manifest:
         messages = "; ".join(issue.message for issue in report.hard_errors)
         raise ValueError(messages)
 
-    started = datetime.now(UTC)
+    started = datetime.now(timezone.utc)
     dag = normalize_to_dag_form(recipe.layer)
     context = {"targets": recipe.targets, "methods": recipe.methods}
     resolved = resolve_axes(dag, context)
@@ -235,7 +235,7 @@ def execute_recipe(recipe: L0Recipe) -> L0Manifest:
         derived_study_scope=resolved["derived_study_scope"],
         derived_execution_route=resolved["derived_execution_route"],
     )
-    finished = datetime.now(UTC)
+    finished = datetime.now(timezone.utc)
     record = L0LayerExecutionRecord(
         layer_id="l0",
         started_at=started,
