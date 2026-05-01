@@ -29,7 +29,16 @@ from .manifest import (
     replicate,
 )
 from .recipe import Recipe
-from .runtime import RuntimeResult, execute_l1_l2, materialize_l1, materialize_l2
+from .runtime import (
+    RuntimeResult,
+    execute_l1_l2,
+    execute_minimal_forecast,
+    materialize_l1,
+    materialize_l2,
+    materialize_l3_minimal,
+    materialize_l4_minimal,
+    materialize_l5_minimal,
+)
 from .selectors import SourceContext, resolve_source_selector
 from .sweep import (
     Cell,
@@ -157,6 +166,7 @@ __all__ = [
     "compare_environments",
     "ensure_cache_layout",
     "execute_l1_l2",
+    "execute_minimal_forecast",
     "execute_node",
     "expand_sweeps",
     "generate_cell_id",
@@ -169,6 +179,9 @@ __all__ = [
     "list_ops",
     "materialize_l1",
     "materialize_l2",
+    "materialize_l3_minimal",
+    "materialize_l4_minimal",
+    "materialize_l5_minimal",
     "node_hash",
     "normalize_to_dag_form",
     "parse_dag_form",
