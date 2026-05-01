@@ -170,13 +170,13 @@ profile-version change, not an undocumented UI change.</p></li>
 <h2>Current Audit Findings<a class="headerlink" href="#current-audit-findings" title="Link to this heading"></a></h2>
 <p>The current codebase still has migration gaps:</p>
 <ul class="simple">
-<li><p>Layer 1 docs/UI expose registry-backed public axes such as
-<code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code>,
-<code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, while <code class="docutils literal notranslate"><span class="pre">macrocast/core/layers/l1.py</span></code> still rejects
-several of them as unknown.</p></li>
-<li><p>Layer 1 uses <code class="docutils literal notranslate"><span class="pre">multi_target</span></code> in docs/UI and registry-backed public examples,
-while <code class="docutils literal notranslate"><span class="pre">macrocast/core/layers/l1.py</span></code> still expects <code class="docutils literal notranslate"><span class="pre">multi_series_target</span></code>.</p></li>
+<li><p>Layer 1 runtime validation now accepts the registry-backed public axes used
+by docs/UI, including <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>,
+<code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, and <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>.</p></li>
+<li><p>Layer 1 uses registry value <code class="docutils literal notranslate"><span class="pre">multi_target</span></code> in docs/UI and public examples.
+Older design notes may say <code class="docutils literal notranslate"><span class="pre">multi_series_target</span></code>; runtime validation accepts
+it as a compatibility alias and normalizes to <code class="docutils literal notranslate"><span class="pre">multi_target</span></code>.</p></li>
 <li><p>Layer 2 docs/UI expose canonical representation axes such as
 <code class="docutils literal notranslate"><span class="pre">horizon_target_construction</span></code>, <code class="docutils literal notranslate"><span class="pre">target_transform</span></code>, <code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code>, and <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>, while
