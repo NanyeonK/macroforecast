@@ -10,6 +10,14 @@ Install macrocast and choose one of three usage paths: Navigator/YAML/CLI, Simpl
 
 [Open Getting Started](getting_started/index.md)
 
+Read the current runtime support matrix before relying on advanced layers in a
+paper workflow. The core layer-contract runtime currently executes the
+custom-panel/linear-model path end to end and materializes lightweight L6/L7/L8
+artifacts; advanced methods remain schema-visible but require specialized
+runtime backends.
+
+[Open Runtime Support Matrix](getting_started/runtime_support.md)
+
 ### 1. Philosophy
 
 Read this when you want the package rules: explicit defaults, layer contracts, reproducible artifacts, and custom researcher methods beside built-ins.

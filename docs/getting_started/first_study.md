@@ -1,170 +1,145 @@
-# Your First Study: Ridge vs Lasso on FRED-MD
+# Your First Study: Ridge With Diagnostics, Tests, Importance, And Export
 
-This walkthrough designs a complete forecasting comparison study from scratch. By the end, you will have:
-- Compared Ridge and Lasso on INDPRO (Industrial Production)
-- Used EM imputation and standard scaling
-- Run a Diebold-Mariano test
-- Computed permutation importance
+This walkthrough builds a complete core layer-contract study. It uses the current supported runtime path: custom panel data, L3 lag features, L4 linear sklearn forecasting, L5 point metrics, optional diagnostic layers, lightweight L6 tests, L7 linear importance, and L8 file export.
 
-## Step 1: Choose your fixed design
+For the exact support boundary, see [Runtime Support Matrix](runtime_support.md).
 
-The **fixed design** defines the comparison environment. Everything here stays constant across models:
+## Study Design
 
-- **Dataset**: `fred_md` (FRED-MD monthly macro panel)
-- **Information set**: `final_revised_data` (latest available data, not real-time vintages)
-- **Framework**: `expanding` (expanding training window)
-- **Benchmark**: `autoregressive_bic` (AR model with BIC-selected lag order)
-- **Horizons**: 1, 3, 6, 12 months ahead
+Fixed design:
 
-These choices go in `0_meta`, `1_data_task`, and the `fixed_axes` of `3_training`.
+- Data: custom monthly panel
+- Target: `y`
+- Horizon: 1 month ahead
+- Features: one lag of all predictors
+- Model: expanding-window ridge regression
+- Evaluation: MSE/RMSE/MAE
+- Output: forecasts, metrics, ranking, tests, importance, diagnostics
 
-## Step 2: Choose your varying design
-
-The **varying design** is your research question — what you want to compare:
-
-- **Model families**: Ridge and Lasso (these go in `sweep_axes`)
-
-## Step 3: Choose preprocessing
-
-For a data-rich panel like FRED-MD, we need to handle missing values and scale predictors:
-
-- `x_missing_policy`: `em_impute` (EM algorithm, train-only fit)
-- `scaling_policy`: `standard` (zero mean, unit variance, train-only fit)
-
-## Step 4: Write the YAML recipe
+## Recipe
 
 ```yaml
-recipe_id: ridge-vs-lasso-indpro
+1_data:
+  fixed_axes:
+    custom_source_policy: custom_panel_only
+    frequency: monthly
+    horizon_set: custom_list
+  leaf_config:
+    target: y
+    target_horizons: [1]
+    custom_panel_inline:
+      date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]
+      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+      x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+      x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
 
-path:
-  0_meta:
-    fixed_axes:
-      study_scope: one_target_one_method
-      study_scope: one_target_compare_methods
+2_preprocessing:
+  fixed_axes:
+    transform_policy: no_transform
+    outlier_policy: none
+    imputation_policy: none_propagate
+    frame_edge_policy: keep_unbalanced
 
-  1_data_task:
-    fixed_axes:
-      dataset: fred_md
-      information_set_type: final_revised_data
-      target_structure: single_target
-      benchmark_family: autoregressive_bic
-      evaluation_scale: raw_level
-    leaf_config:
-      target: INDPRO
-      horizons: [1, 3, 6, 12]
+3_feature_engineering:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
+    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: lag_x, y_final: y_h}
+    l3_metadata_v1: auto
 
-  2_preprocessing:
-    fixed_axes:
-      target_transform_policy: raw_level
-      x_transform_policy: raw_level
-      tcode_policy: extra_preprocess_only
-      target_missing_policy: none
-      x_missing_policy: em_impute
-      target_outlier_policy: none
-      x_outlier_policy: none
-      scaling_policy: standard
-      dimensionality_reduction_policy: none
-      feature_selection_policy: none
-      preprocess_order: extra_only
-      preprocess_fit_scope: train_only
-      inverse_transform_policy: none
-      representation_policy: raw_only
-      tcode_application_scope: none
-      target_transform: level
-      target_normalization: none
-      target_domain: unconstrained
-      scaling_scope: columnwise
-      additional_preprocessing: none
-      x_lag_creation: no_predictor_lags
-      feature_grouping: none
+4_forecasting_model:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]
+    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
+  sinks:
+    l4_forecasts_v1: predict_ridge
+    l4_model_artifacts_v1: fit_ridge
+    l4_training_metadata_v1: auto
 
-  3_training:
-    fixed_axes:
-      framework: expanding
-      feature_builder: raw_feature_panel
-    sweep_axes:
-      model_family: [ridge, lasso]
+5_evaluation:
+  fixed_axes:
+    primary_metric: mse
+    point_metrics: [mse, rmse, mae]
 
-  4_evaluation:
-    fixed_axes:
-      primary_metric: msfe
+1_5_data_summary:
+  enabled: true
+2_5_pre_post_preprocessing:
+  enabled: true
+3_5_feature_diagnostics:
+  enabled: true
+4_5_generator_diagnostics:
+  enabled: true
 
-  6_stat_tests:
-    fixed_axes:
-      equal_predictive: dm
+6_statistical_tests:
+  enabled: true
+  sub_layers:
+    L6_F_direction:
+      enabled: true
+    L6_G_residual:
+      enabled: true
 
-  7_importance:
-    fixed_axes:
-      importance_method: permutation_importance
+7_interpretation:
+  enabled: true
+  nodes:
+    - id: src_model
+      type: source
+      selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: fit_ridge}}
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: linear_imp
+      type: step
+      op: model_native_linear_coef
+      params: {model_family: ridge}
+      inputs: [src_model, src_X]
+  sinks:
+    l7_importance_v1:
+      global: linear_imp
+
+8_output:
+  fixed_axes:
+    saved_objects: [forecasts, metrics, ranking, tests, importance, diagnostics_all]
+  leaf_config:
+    output_directory: ./macrocast_output/first_study/
 ```
 
-Save this as `my_study.yaml`.
-
-## Step 5: Compile and inspect
+## Execute
 
 ```python
-from macrocast.compiler import compile_recipe_yaml
+from macrocast.core import execute_minimal_forecast
 
-result = compile_recipe_yaml("my_study.yaml")
-compiled = result.compiled
-
-print(f"Execution status: {compiled.execution_status}")
-print(f"Warnings: {list(compiled.warnings)}")
-print(f"Tree context route: {compiled.tree_context['route_owner']}")
+result = execute_minimal_forecast(open("my_study.yaml").read())
 ```
 
-If the status is `"executable"`, your study is ready to run. If not, the warnings tell you exactly what is unsupported.
-
-## Step 6: Execute
+## Inspect Results
 
 ```python
-from macrocast.compiler import run_compiled_recipe
-
-execution = run_compiled_recipe(compiled, output_root="runs/")
-print(f"Artifacts saved to: {execution.artifact_dir}")
+print(result.sink("l5_evaluation_v1").metrics_table)
+print(result.sink("l5_evaluation_v1").ranking_table)
+print(result.sink("l6_tests_v1").direction_results)
+print(result.sink("l7_importance_v1").global_importance)
+print(result.sink("l8_artifacts_v1").exported_files)
 ```
 
-## Step 7: Analyze results
+## What You Learned
 
-```python
-import json
-import pandas as pd
+- L1-L4 construct forecasts from a fixed information set.
+- L5 evaluates forecast accuracy.
+- L1.5-L4.5 provide non-blocking diagnostic artifacts.
+- L6 adds lightweight inference artifacts when enabled.
+- L7 adds importance artifacts when enabled.
+- L8 writes a directory that can be inspected without rerunning the study.
 
-art = execution.artifact_dir
+## Next Steps
 
-# Predictions
-pred = pd.read_csv(f"{art}/predictions.csv")
-print(pred.groupby("horizon")[["squared_error", "benchmark_squared_error"]].mean())
-
-# Metrics
-metrics = json.load(open(f"{art}/metrics.json"))
-for h, m in metrics["metrics_by_horizon"].items():
-    print(f"{h}: MSFE={m['msfe']:.4f}, relative MSFE={m['relative_msfe']:.4f}, OOS_R2={m['oos_r2']:.4f}")
-
-# DM test
-dm = json.load(open(f"{art}/stat_test_dm.json"))
-print(f"\nDM test: stat={dm['statistic']:.3f}, p={dm['p_value']:.4f}")
-if dm["p_value"] < 0.05:
-    print("  => Model significantly differs from benchmark at 5% level")
-
-# Importance
-imp = json.load(open(f"{art}/importance_permutation_importance.json"))
-print(f"\nTop 5 important features:")
-for feat in sorted(imp["feature_importances"], key=lambda x: -abs(x["importance"]))[:5]:
-    print(f"  {feat['feature']}: {feat['importance']:.4f}")
-```
-
-## What you learned
-
-- **Fixed axes** define the fair comparison environment (dataset, framework, benchmark)
-- **Sweep axes** define what varies (model_family)
-- **Preprocessing governance** ensures both models see identical preprocessed data
-- **Statistical tests** quantify whether performance differences are significant
-- **Importance methods** explain which variables drive the forecast
-
-## Next steps
-
-- [Understanding Output](understanding_output.md) — every artifact explained
-- [User Guide: Design (Stage 0)](../user_guide/design.md) — six axes that decide study shape.
-- [User Guide: Data (Stage 1)](../user_guide/data/index.md) — source data, forecast-time information, Target (y) Definition, and Predictor (x) Definition.
-- [Stages Reference](stages_reference.md) — cheat sheet with every operational value.
+- [Understanding Output](understanding_output.md) — every current core runtime artifact
+- [Runtime Support Matrix](runtime_support.md) — what is runtime-supported today
