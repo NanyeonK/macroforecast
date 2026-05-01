@@ -46,7 +46,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">0. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Navigator Docs</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tree Navigator</a></li>
@@ -91,178 +91,66 @@
              
   <section id="tree-navigator">
 <h1>Tree Navigator<a class="headerlink" href="#tree-navigator" title="Link to this heading"></a></h1>
-<p>The Tree Navigator turns a recipe into a decision tree view. Each axis is shown with its current selection, all known options, disabled reasons, and the canonical path effect of selecting each option.</p>
-<section id="cli">
-<h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>tree<span class="w"> </span>examples/recipes/model-benchmark.yaml
-</pre></div>
-</div>
-<p>Show only the upstream forecast-construction layers:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>tree<span class="w"> </span>examples/recipes/model-benchmark.yaml<span class="w"> </span>--upstream-only
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">--upstream-only</span></code> shows Layers 0-3:</p>
+<p>The Navigator has two surfaces.</p>
+<section id="canonical-layer-dag-map">
+<h2>1. Canonical Layer/DAG Map<a class="headerlink" href="#canonical-layer-dag-map" title="Link to this heading"></a></h2>
+<p>This is the primary UI. It mirrors the registered runtime architecture:</p>
 <ul class="simple">
-<li><p>Layer 0: study design and execution grammar;</p></li>
-<li><p>Layer 1: data source, target y, and predictor x source frame;</p></li>
-<li><p>Layer 2: representation construction and researcher preprocessing;</p></li>
-<li><p>Layer 3: forecast generation.</p></li>
+<li><p>L0-L8 main flow;</p></li>
+<li><p>L1.5-L4.5 diagnostic side branches;</p></li>
+<li><p>graph mode for L3, L4, and L7;</p></li>
+<li><p>list mode for setup, construction list layers, diagnostics, evaluation, tests, and output;</p></li>
+<li><p>sink handoffs between registered layers.</p></li>
 </ul>
-<p>The default view shows Layers 0-7. Downstream layers are part of the same path contract:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Layer</p></th>
-<th class="head"><p>Tree axes now surfaced</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Layer 4</p></td>
-<td><p>metric families, benchmark comparison scope, aggregation, ranking, reporting style, regimes, decomposition, OOS period</p></td>
-</tr>
-<tr class="row-odd"><td><p>Layer 5</p></td>
-<td><p>export format, saved objects, provenance fields, artifact granularity</p></td>
-</tr>
-<tr class="row-even"><td><p>Layer 6</p></td>
-<td><p>legacy <code class="docutils literal notranslate"><span class="pre">stat_test</span></code>, split test-family axes, test scope, dependence correction, overlap handling</p></td>
-</tr>
-<tr class="row-odd"><td><p>Layer 7</p></td>
-<td><p>importance method, scope, model-native/agnostic families, SHAP, local surrogate, partial dependence, grouped/stability/temporal/gradient outputs</p></td>
-</tr>
-</tbody>
-</table>
-<p>The interactive app shows these as separate layer tabs. Layer 4, Layer 5, Layer 6, and Layer 7 are not collapsed into one downstream view because each layer has its own order and its own contracts.</p>
-</section>
-<section id="layer-order-and-tree-path">
-<h2>Layer Order and Tree Path<a class="headerlink" href="#layer-order-and-tree-path" title="Link to this heading"></a></h2>
-<p>Within a layer, the app follows the canonical axis order from <code class="docutils literal notranslate"><span class="pre">navigator_ui_data.tree_axes</span></code>. The Tree Path panel should be read from top to bottom:</p>
-<ol class="arabic simple">
-<li><p>the step number is the decision order within the selected layer;</p></li>
-<li><p>the title is a human label, not just the registry key;</p></li>
-<li><p>the selected branch is shown with a human label plus the raw <code class="docutils literal notranslate"><span class="pre">axis</span> <span class="pre">=</span> <span class="pre">value</span></code>;</p></li>
-<li><p>contract notes explain when a value is user-selected, derived, or constrained by another layer;</p></li>
-<li><p>disabled or blocked branches stay visible with the reason;</p></li>
-<li><p>the YAML effect shows the exact canonical path field that will change;</p></li>
-<li><p>the detailed-docs link opens the source documentation for that axis.</p></li>
-</ol>
-<p>Layer 0 currently exports the first presentation contract:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Step</p></th>
-<th class="head"><p>Registry axis</p></th>
-<th class="head"><p>Human label</p></th>
-<th class="head"><p>Contract</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></td>
-<td><p>Study Scope</p></td>
-<td><p>Target cardinality and method-comparison scope; derives Layer 1 <code class="docutils literal notranslate"><span class="pre">target_structure</span></code> and keeps downstream paths fixed or sweep-aware.</p></td>
-</tr>
-<tr class="row-odd"><td><p>2</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
-<td><p>Failure Handling</p></td>
-<td><p>Runtime failure behavior for comparison cells and sweeps.</p></td>
-</tr>
-<tr class="row-even"><td><p>3</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
-<td><p>Reproducibility</p></td>
-<td><p>Seed and determinism policy applied before stochastic model code runs.</p></td>
-</tr>
-<tr class="row-odd"><td><p>4</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
-<td><p>Compute layout</p></td>
-<td><p>Serial by default, or local parallel execution over models, horizons, targets, or OOS dates; Study Scope disables incompatible model/target layouts.</p></td>
-</tr>
-</tbody>
-</table>
-<p>The same presentation contract should be extended layer by layer so each choice has a label, question, contract note, detailed-docs route, and value descriptions.</p>
-</section>
-<section id="python">
-<h2>Python<a class="headerlink" href="#python" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.navigator</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_navigation_view</span><span class="p">,</span> <span class="n">load_recipe</span>
-
-<span class="n">recipe</span> <span class="o">=</span> <span class="n">load_recipe</span><span class="p">(</span><span class="s2">&quot;examples/recipes/model-benchmark.yaml&quot;</span><span class="p">)</span>
-<span class="n">view</span> <span class="o">=</span> <span class="n">build_navigation_view</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="interactive-app">
-<h2>Interactive App<a class="headerlink" href="#interactive-app" title="Link to this heading"></a></h2>
-<p>The static Navigator App ships the exported <code class="docutils literal notranslate"><span class="pre">navigator_state_engine_v1</span></code> payload. This lets the browser update the current path without a Python process:</p>
+<p>Click a layer card to inspect:</p>
 <ul class="simple">
-<li><p>clicking an enabled option changes the current axis selection;</p></li>
-<li><p>disabled options remain visible with the reason they are unavailable;</p></li>
-<li><p>the full Tree Path shows Layers 0-7 as vertical blocks, with the active
-layer expanded and other layers summarized;</p></li>
-<li><p>YAML preview is regenerated from the selected path and changed axes;</p></li>
-<li><p>generated YAML can be downloaded and existing recipe YAML can be imported;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">browser_preview</span></code> means the edited path is internally compatible in the browser;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">browser_blocked</span></code> means the current browser path contains a selected value that violates an active rule.</p></li>
+<li><p>role and category;</p></li>
+<li><p>expected upstream sinks;</p></li>
+<li><p>produced sinks;</p></li>
+<li><p>sub-layers;</p></li>
+<li><p>layer globals;</p></li>
+<li><p>axes or output controls.</p></li>
 </ul>
-<p>The browser state engine is an exploration surface. <code class="docutils literal notranslate"><span class="pre">compile_preview</span></code> is still the snapshot from the exported sample recipe, and <code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">resolve</span></code> remains the authoritative compiler check before running a recipe. The static app keeps the resolver, compatibility, and replication explanations in the docs pages rather than as separate in-app panels.</p>
+<p>Graph/DAG layers do not have one flat axis list. Their decisions live in YAML <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>.</p>
 </section>
-<section id="output-shape">
-<h2>Output Shape<a class="headerlink" href="#output-shape" title="Link to this heading"></a></h2>
-<p>The payload has four top-level fields:</p>
+<section id="compatibility-axis-explorer">
+<h2>2. Compatibility Axis Explorer<a class="headerlink" href="#compatibility-axis-explorer" title="Link to this heading"></a></h2>
+<p>The lower explorer is retained for option-level compatibility checks. It shows enabled/disabled choices, disabled reasons, path effects, and YAML preview. It still contains some historical axis-group labels because it is a compatibility surface, not the canonical architecture view.</p>
+<p>Use it after choosing a canonical layer when you need to know why a specific option is blocked.</p>
+</section>
+<section id="reading-the-ui">
+<h2>Reading The UI<a class="headerlink" href="#reading-the-ui" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
+<tr class="row-odd"><th class="head"><p>UI element</p></th>
 <th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">canonical_path</span></code></p></td>
-<td><p>Current Layer 0-7 path split into <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code>, and <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>.</p></td>
+<tr class="row-even"><td><p>Main flow cards</p></td>
+<td><p>Canonical L0-L8 execution order.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tree</span></code></p></td>
-<td><p>One entry per axis with option status and disabled reasons.</p></td>
+<tr class="row-odd"><td><p>Diagnostic side branches</p></td>
+<td><p>Default-off hooks that consume construction sinks and produce diagnostics.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compatibility</span></code></p></td>
-<td><p>Active compatibility rules and recommendations.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DAG</span></code> badge</p></td>
+<td><p>Layer is configured as a graph of source/step/sink nodes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compile_preview</span></code></p></td>
-<td><p>Compiler status, warnings, blocked reasons, tree context, and Layer 3 capability matrix.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">List</span></code> badge</p></td>
+<td><p>Layer is configured by ordered sub-layers and axes.</p></td>
 </tr>
-</tbody>
-</table>
-<p>Every option in <code class="docutils literal notranslate"><span class="pre">tree</span></code> has:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-even"><td><p>Sink handoffs</p></td>
+<td><p>Registry-derived edges from <code class="docutils literal notranslate"><span class="pre">produces</span></code> to <code class="docutils literal notranslate"><span class="pre">expected_inputs</span></code>.</p></td>
 </tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
-<td><p>Candidate value.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
-<td><p>Registry/runtime status such as <code class="docutils literal notranslate"><span class="pre">operational</span></code>, <code class="docutils literal notranslate"><span class="pre">registry_only</span></code>, <code class="docutils literal notranslate"><span class="pre">future</span></code>, or <code class="docutils literal notranslate"><span class="pre">gated_named</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
-<td><p>Whether the current path can select this value.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disabled_reason</span></code></p></td>
-<td><p>Human-readable reason when <code class="docutils literal notranslate"><span class="pre">enabled=false</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">canonical_path_effect</span></code></p></td>
-<td><p>Where the value lands in YAML, for example <code class="docutils literal notranslate"><span class="pre">path.3_training.fixed_axes.model_family</span> <span class="pre">=</span> <span class="pre">'ridge'</span></code>.</p></td>
+<tr class="row-odd"><td><p>Runtime support</p></td>
+<td><p>Current runtime support class for selected options.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="example-use">
-<h2>Example Use<a class="headerlink" href="#example-use" title="Link to this heading"></a></h2>
-<p>Use this page when a researcher asks a path question such as:</p>
-<ul class="simple">
-<li><p>Can I use <code class="docutils literal notranslate"><span class="pre">tree_shap</span></code> with <code class="docutils literal notranslate"><span class="pre">ridge</span></code>?</p></li>
-<li><p>Why is <code class="docutils literal notranslate"><span class="pre">sequence_tensor</span></code> not open?</p></li>
-<li><p>If I choose <code class="docutils literal notranslate"><span class="pre">forecast_object=quantile</span></code>, which model family remains valid?</p></li>
-<li><p>If I choose raw-panel iterated forecasting, which future-X path assumptions are available?</p></li>
-<li><p>Which evaluation, export, statistical-test, and importance branches are named versus executable?</p></li>
-</ul>
-<p>The tree view should be the first diagnostic, not the API reference.</p>
+<section id="boundary-rule">
+<h2>Boundary Rule<a class="headerlink" href="#boundary-rule" title="Link to this heading"></a></h2>
+<p>The layer map is authoritative for architecture. The compatibility explorer is useful for individual option constraints, but old labels in that explorer should not override the canonical layer IDs.</p>
 </section>
 </section>
 

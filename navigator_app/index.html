@@ -9,7 +9,7 @@
   <body>
     <header class="topbar">
       <div>
-        <h1>macrocast Navigator</h1>
+        <h1>macrocast Layer Navigator</h1>
       </div>
       <div class="top-actions">
         <a href="../index.html">Docs</a>
@@ -17,7 +17,7 @@
       </div>
     </header>
 
-    <nav class="layer-rail" aria-label="Layer filter">
+    <nav class="layer-rail axis-explorer-rail" aria-label="Compatibility axis explorer layer filter">
       <button type="button" data-layer="0_meta" class="active">
         <span>L0</span>
         <strong>Study Scope</strong>
@@ -53,7 +53,9 @@
     </nav>
 
     <main class="layout">
-      <section class="panel path-overview" aria-label="Current navigator state">
+      <section id="layer-topology" class="panel layer-topology" aria-label="Layer DAG topology"></section>
+      <section id="layer-detail" class="panel layer-detail" aria-label="Canonical layer detail"></section>
+      <section class="panel path-overview compatibility-explorer" aria-label="Compatibility axis explorer state">
         <div class="path-toolbar">
           <div class="recipe-picker">
             <label for="sample-select">Starting recipe</label>
@@ -129,7 +131,7 @@
       </aside>
     </main>
 
-    <script src="assets/state_engine.js?v=20260501-runtime-support"></script>
-    <script src="assets/app.js?v=20260501-runtime-support"></script>
+    <script src="assets/state_engine.js?v=20260501-canonical-layer-redesign"></script>
+    <script src="assets/app.js?v=20260501-canonical-layer-redesign"></script>
   </body>
 </html>

@@ -883,6 +883,224 @@ input {
   color: var(--danger);
 }
 
+.layer-topology {
+  grid-column: 1 / -1;
+  padding: 16px;
+}
+
+.topology-heading,
+.topology-node-head,
+.topology-secondary,
+.topology-subhead {
+  display: flex;
+  gap: 12px;
+}
+
+.topology-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.topology-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.topology-legend span,
+.topology-mode,
+.topology-layer-id {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.topology-main-flow {
+  display: grid;
+  grid-template-columns: repeat(17, minmax(0, auto));
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.topology-arrow {
+  align-self: center;
+  color: var(--strong-line);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.topology-node {
+  min-width: 170px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.topology-node h3 {
+  margin: 8px 0 6px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.topology-node p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.topology-node code {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.topology-node-head {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topology-mode-graph {
+  border-color: #b7d4ff;
+  background: var(--accent-soft);
+}
+
+.topology-diagnostic {
+  border-color: #f0c269;
+  background: var(--warn-soft);
+}
+
+.topology-output,
+.topology-consumption {
+  background: #fbfcfe;
+}
+
+.topology-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  margin-top: 14px;
+}
+
+.topology-subhead {
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.topology-subhead h3 {
+  font-size: 15px;
+}
+
+.topology-diagnostics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.topology-edges {
+  min-height: 120px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #101828;
+  color: #e6edf6;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.layer-detail {
+  grid-column: 1 / -1;
+  padding: 16px;
+}
+
+.layer-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.layer-detail-badges,
+.detail-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.layer-detail-badges {
+  justify-content: flex-end;
+  align-content: flex-start;
+}
+
+.layer-detail-badges span,
+.detail-chip-grid span,
+.empty-note,
+.topology-card-action {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.layer-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.layer-detail-grid section,
+.layer-axis-detail {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfe;
+}
+
+.layer-detail-grid h3,
+.layer-axis-detail h3 {
+  margin-bottom: 9px;
+  font-size: 14px;
+}
+
+.layer-axis-detail {
+  margin-top: 12px;
+}
+
+.topology-node.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.topology-card-action {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px;
+  color: var(--accent);
+}
+
+.compatibility-explorer .path-record-heading h2::after {
+  content: " (compatibility axis explorer)";
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .runtime-support {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(280px, 2fr);
@@ -1015,8 +1233,18 @@ input {
   }
 
   .path-toolbar,
-  .runtime-support {
+  .runtime-support,
+  .topology-secondary,
+  .layer-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .layer-detail-head {
+    flex-direction: column;
+  }
+
+  .layer-detail-badges {
+    justify-content: flex-start;
   }
 
   .axis-list {
@@ -1063,5 +1291,10 @@ input {
 
   .path-axis-grid {
     grid-template-columns: 1fr;
+  }
+
+  .topology-heading,
+  .topology-subhead {
+    flex-direction: column;
   }
 }
