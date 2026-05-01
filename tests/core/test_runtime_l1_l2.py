@@ -97,12 +97,45 @@ def test_materialize_l1_supports_custom_source_path(tmp_path):
     assert artifact.raw_panel.data.index[0] == pd.Timestamp("2020-01-01")
 
 
-def test_execute_l1_l2_rejects_official_runtime_for_now():
-    yaml_text = """
-    1_data:
-      fixed_axes: {}
-      leaf_config:
-        target: CPIAUCSL
-    """
-    with pytest.raises(NotImplementedError, match="official FRED runtime loading is deferred"):
-        execute_l1_l2(yaml_text)
+def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
+    root = parse_recipe_yaml(
+        f"""
+        1_data:
+          fixed_axes:
+            custom_source_policy: official_only
+            dataset: fred_md
+            frequency: monthly
+          leaf_config:
+            target: INDPRO
+            local_raw_source: tests/fixtures/fred_md_ar_sample.csv
+            cache_root: {tmp_path}
+        """
+    )
+
+    artifact, _, resolved = materialize_l1(root)
+
+    assert resolved["custom_source_policy"] == "official_only"
+    assert artifact.raw_panel.shape[1] == 4
+    assert artifact.raw_panel.column_names == ("INDPRO", "RPI", "UNRATE", "CPIAUCSL")
+    assert artifact.raw_panel.data.index[0] == pd.Timestamp("2000-01-01")
+    assert artifact.raw_panel.metadata.values["source"] == "official"
+    assert artifact.raw_panel.metadata.values["dataset"] == "fred_md"
+    assert artifact.raw_panel.metadata.values["transform_codes"]["INDPRO"] == 5
+
+
+def test_materialize_l1_rejects_unsupported_official_core_dataset(tmp_path):
+    root = parse_recipe_yaml(
+        f"""
+        1_data:
+          fixed_axes:
+            custom_source_policy: official_only
+            dataset: fred_sd
+            frequency: monthly
+          leaf_config:
+            target: CPIAUCSL
+            cache_root: {tmp_path}
+        """
+    )
+
+    with pytest.raises(NotImplementedError, match="not supported by core L1 runtime yet"):
+        materialize_l1(root)

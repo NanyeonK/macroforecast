@@ -12,6 +12,7 @@ from .layers import l4 as l4_layer
 from .layers import l5 as l5_layer
 from .layers import l1 as l1_layer
 from .layers import l2 as l2_layer
+from ..raw import load_fred_md, load_fred_qd
 from .types import (
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
@@ -330,20 +331,49 @@ def materialize_l5_minimal(
 
 
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:
-    if resolved["custom_source_policy"] not in {"custom_panel_only", "official_plus_custom"}:
-        raise NotImplementedError("official FRED runtime loading is deferred; use custom_panel_only for Runtime-1")
-    if "custom_panel_inline" in leaf_config:
-        frame = pd.DataFrame(leaf_config["custom_panel_inline"])
-    elif "custom_panel_records" in leaf_config:
-        frame = pd.DataFrame.from_records(leaf_config["custom_panel_records"])
-    elif "custom_source_path" in leaf_config:
-        frame = _read_custom_panel_path(Path(leaf_config["custom_source_path"]))
+    policy = resolved["custom_source_policy"]
+    if policy == "official_only":
+        raw_result = _load_official_raw_result(resolved, leaf_config)
+        frame = raw_result.data.copy()
+        metadata = {
+            "stage": "l1_raw",
+            "source": "official",
+            "dataset": raw_result.dataset_metadata.dataset,
+            "frequency": raw_result.dataset_metadata.frequency,
+            "vintage": raw_result.dataset_metadata.vintage,
+            "local_path": raw_result.artifact.local_path,
+            "transform_codes": dict(raw_result.transform_codes),
+        }
+    elif policy in {"custom_panel_only", "official_plus_custom"}:
+        if policy == "official_plus_custom":
+            raise NotImplementedError("official_plus_custom core runtime loading is deferred")
+        if "custom_panel_inline" in leaf_config:
+            frame = pd.DataFrame(leaf_config["custom_panel_inline"])
+        elif "custom_panel_records" in leaf_config:
+            frame = pd.DataFrame.from_records(leaf_config["custom_panel_records"])
+        elif "custom_source_path" in leaf_config:
+            frame = _read_custom_panel_path(Path(leaf_config["custom_source_path"]))
+        else:
+            raise ValueError("custom panel runtime requires custom_panel_inline, custom_panel_records, or custom_source_path")
+        metadata = {"stage": "l1_raw", "source": "custom_panel"}
     else:
-        raise ValueError("custom panel runtime requires custom_panel_inline, custom_panel_records, or custom_source_path")
+        raise NotImplementedError(f"custom_source_policy={policy!r} core runtime loading is deferred")
     frame = _normalize_datetime_index(frame, leaf_config)
     frame = _apply_sample_window(frame, resolved, leaf_config)
     _validate_targets_present(frame, leaf_config, resolved)
-    return _panel_from_frame(frame, metadata={"stage": "l1_raw", "source": "custom_panel"})
+    return _panel_from_frame(frame, metadata=metadata)
+
+
+def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, Any]):
+    dataset = resolved.get("dataset")
+    vintage = leaf_config.get("vintage")
+    cache_root = leaf_config.get("cache_root")
+    local_source = leaf_config.get("local_raw_source") or leaf_config.get("official_source_path")
+    if dataset == "fred_md":
+        return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=local_source)
+    if dataset == "fred_qd":
+        return load_fred_qd(vintage=vintage, cache_root=cache_root, local_source=local_source)
+    raise NotImplementedError(f"official dataset {dataset!r} is not supported by core L1 runtime yet")
 
 
 def _read_custom_panel_path(path: Path) -> pd.DataFrame:
