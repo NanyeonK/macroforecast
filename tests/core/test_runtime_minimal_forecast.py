@@ -128,3 +128,48 @@ def test_execute_minimal_forecast_runs_l3_transform_before_lag():
 
     assert l3_features.X_final.shape[1] == 4
     assert "x1_lag0" in l3_features.X_final.column_names
+
+
+def test_execute_minimal_forecast_runs_l3_temporal_feature_ops():
+    yaml_text = MINIMAL_RECIPE.replace(
+        "    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}",
+        """    - {id: season_x, type: step, op: seasonal_lag, params: {seasonal_period: 2, n_seasonal_lags: 1}, inputs: [src_X]}
+    - {id: ma_x, type: step, op: ma_window, params: {window: 2}, inputs: [src_X]}
+    - {id: dummy_x, type: step, op: season_dummy, inputs: [src_X]}
+    - {id: lag_x, type: combine, op: concat, inputs: [season_x, ma_x, dummy_x]}""",
+    )
+    result = execute_minimal_forecast(yaml_text)
+    l3_features = result.sink("l3_features_v1")
+
+    assert "x1_s2_lag1" in l3_features.X_final.column_names
+    assert "month_1" in l3_features.X_final.column_names
+    assert l3_features.X_final.shape[0] == 3
+
+
+def test_execute_minimal_forecast_runs_l3_polynomial_and_interactions():
+    yaml_text = MINIMAL_RECIPE.replace(
+        "    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}",
+        """    - {id: poly_x, type: step, op: polynomial_expansion, params: {degree: 2}, inputs: [src_X]}
+    - {id: inter_x, type: step, op: interaction, inputs: [src_X]}
+    - {id: lag_x, type: combine, op: concat, inputs: [poly_x, inter_x]}""",
+    )
+    result = execute_minimal_forecast(yaml_text)
+    l3_features = result.sink("l3_features_v1")
+
+    assert "x1_pow2" in l3_features.X_final.column_names
+    assert "x1_x_x2" in l3_features.X_final.column_names
+    assert l3_features.X_final.shape[1] == 5
+
+
+def test_execute_minimal_forecast_runs_l3_cumsum_and_ma_increasing_order():
+    yaml_text = MINIMAL_RECIPE.replace(
+        "    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}",
+        """    - {id: cumulative_x, type: step, op: cumsum, inputs: [src_X]}
+    - {id: lag_x, type: step, op: ma_increasing_order, params: {max_order: 3}, inputs: [cumulative_x]}""",
+    )
+    result = execute_minimal_forecast(yaml_text)
+    l3_features = result.sink("l3_features_v1")
+
+    assert "x1_ma2" in l3_features.X_final.column_names
+    assert "x2_ma3" in l3_features.X_final.column_names
+    assert l3_features.X_final.shape == (3, 4)
