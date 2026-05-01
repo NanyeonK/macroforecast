@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from sklearn.linear_model import ElasticNet, Lasso, LinearRegression
 from sklearn.linear_model import Ridge
 
 from .layers import l3 as l3_layer
@@ -224,8 +225,8 @@ def materialize_l4_minimal(
         raise ValueError("minimal L4 runtime requires a fit_model node")
     params = fit_node.get("params", {}) or {}
     family = params.get("family", "ridge")
-    if family != "ridge":
-        raise NotImplementedError("minimal L4 runtime currently supports family=ridge only")
+    if family not in {"ols", "ridge", "lasso", "elastic_net"}:
+        raise NotImplementedError("minimal L4 runtime currently supports linear sklearn families only")
     X = l3_features.X_final.data
     y = l3_features.y_final.metadata.values.get("data")
     if not isinstance(y, pd.Series):
@@ -241,13 +242,13 @@ def materialize_l4_minimal(
         origin = X.index[position]
         train_X = X.iloc[:position]
         train_y = y.iloc[:position]
-        origin_model = Ridge(alpha=alpha)
+        origin_model = _build_l4_linear_model(family, params, alpha=alpha)
         origin_model.fit(train_X, train_y)
         forecast = float(origin_model.predict(X.iloc[[position]])[0])
         forecasts[(model_id, target, horizon, origin)] = forecast
         training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
 
-    model = Ridge(alpha=alpha)
+    model = _build_l4_linear_model(family, params, alpha=alpha)
     model.fit(X, y)
     return (
         L4ForecastsArtifact(
@@ -263,7 +264,7 @@ def materialize_l4_minimal(
             artifacts={
                 model_id: ModelArtifact(
                     model_id=model_id,
-                    family="ridge",
+                    family=family,
                     fitted_object=model,
                     framework="sklearn",
                     fit_metadata={"alpha": alpha, "n_obs": len(X), "min_train_size": min_train_size, "runtime": "expanding_direct"},
@@ -278,6 +279,22 @@ def materialize_l4_minimal(
             training_window_per_origin=training_windows,
         ),
     )
+
+
+def _build_l4_linear_model(family: str, params: dict[str, Any], *, alpha: float):
+    if family == "ols":
+        return LinearRegression()
+    if family == "ridge":
+        return Ridge(alpha=alpha)
+    if family == "lasso":
+        return Lasso(alpha=alpha, max_iter=int(params.get("max_iter", 10000)))
+    if family == "elastic_net":
+        return ElasticNet(
+            alpha=alpha,
+            l1_ratio=float(params.get("l1_ratio", params.get("lambda1_ratio", 0.5))),
+            max_iter=int(params.get("max_iter", 10000)),
+        )
+    raise NotImplementedError(f"minimal L4 runtime does not support family={family!r}")
 
 
 def materialize_l5_minimal(

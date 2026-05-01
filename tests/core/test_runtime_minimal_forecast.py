@@ -89,8 +89,21 @@ def test_execute_minimal_forecast_materializes_l3_l4_l5():
 def test_execute_minimal_forecast_rejects_non_ridge_family():
     yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: xgboost")
 
-    with pytest.raises(NotImplementedError, match="supports family=ridge only"):
+    with pytest.raises(NotImplementedError, match="supports linear sklearn families only"):
         execute_minimal_forecast(yaml_text)
+
+
+@pytest.mark.parametrize("family", ["ols", "lasso", "elastic_net"])
+def test_execute_minimal_forecast_supports_linear_sklearn_families(family):
+    yaml_text = MINIMAL_RECIPE.replace("family: ridge", f"family: {family}")
+
+    result = execute_minimal_forecast(yaml_text)
+    l4_models = result.sink("l4_model_artifacts_v1")
+    l5_eval = result.sink("l5_evaluation_v1")
+
+    assert l4_models.artifacts["fit_ridge"].family == family
+    assert l4_models.artifacts["fit_ridge"].framework == "sklearn"
+    assert l5_eval.metrics_table.iloc[0]["model_id"] == "fit_ridge"
 
 
 def test_execute_minimal_forecast_rejects_exhaustive_min_train_size():
