@@ -73,7 +73,7 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
     l2_artifact, l2_axes = materialize_l2(root, l1_artifact)
     l3_features, l3_metadata = materialize_l3_minimal(root, l1_artifact, l2_artifact)
     l4_forecasts, l4_models, l4_training = materialize_l4_minimal(root, l3_features)
-    l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts)
+    l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts, l4_models)
     return RuntimeResult(
         artifacts={
             "l1_data_definition_v1": l1_artifact,
@@ -220,62 +220,73 @@ def materialize_l4_minimal(
     report = l4_layer.validate_layer(raw, recipe_context={"horizon_set": set(l3_features.horizon_set)})
     if report.has_hard_errors:
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    fit_node = _first_node(raw, op="fit_model")
-    if fit_node is None:
+    fit_nodes = [node for node in raw.get("nodes", ()) or () if isinstance(node, dict) and node.get("op") == "fit_model"]
+    if not fit_nodes:
         raise ValueError("minimal L4 runtime requires a fit_model node")
-    params = fit_node.get("params", {}) or {}
-    family = params.get("family", "ridge")
-    if family not in {"ols", "ridge", "lasso", "elastic_net"}:
-        raise NotImplementedError("minimal L4 runtime currently supports linear sklearn families only")
     X = l3_features.X_final.data
     y = l3_features.y_final.metadata.values.get("data")
     if not isinstance(y, pd.Series):
         raise ValueError("minimal L4 runtime requires L3 y_final series data")
-    alpha = float(params.get("alpha", 1.0))
-    min_train_size = _minimal_train_size(params, n_obs=len(X), n_features=len(X.columns))
-    model_id = fit_node.get("id", "fit_model")
     target = l3_features.y_final.name
     horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
     forecasts: dict[tuple[str, str, int, Any], float] = {}
+    artifacts: dict[str, ModelArtifact] = {}
+    benchmark_flags: dict[str, bool] = {}
+    refit_origins: dict[str, tuple[Any, ...]] = {}
     training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
-    for position in range(min_train_size, len(X)):
-        origin = X.index[position]
-        train_X = X.iloc[:position]
-        train_y = y.iloc[:position]
-        origin_model = _build_l4_linear_model(family, params, alpha=alpha)
-        origin_model.fit(train_X, train_y)
-        forecast = float(origin_model.predict(X.iloc[[position]])[0])
-        forecasts[(model_id, target, horizon, origin)] = forecast
-        training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
+    model_ids: list[str] = []
+    for fit_node in fit_nodes:
+        params = fit_node.get("params", {}) or {}
+        family = params.get("family", "ridge")
+        if family not in {"ols", "ridge", "lasso", "elastic_net"}:
+            raise NotImplementedError("minimal L4 runtime currently supports linear sklearn families only")
+        alpha = float(params.get("alpha", 1.0))
+        min_train_size = _minimal_train_size(params, n_obs=len(X), n_features=len(X.columns))
+        model_id = fit_node.get("id", "fit_model")
+        model_ids.append(model_id)
+        origins = []
+        for position in range(min_train_size, len(X)):
+            origin = X.index[position]
+            train_X = X.iloc[:position]
+            train_y = y.iloc[:position]
+            origin_model = _build_l4_linear_model(family, params, alpha=alpha)
+            origin_model.fit(train_X, train_y)
+            forecast = float(origin_model.predict(X.iloc[[position]])[0])
+            forecasts[(model_id, target, horizon, origin)] = forecast
+            origins.append(origin)
+            training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
 
-    model = _build_l4_linear_model(family, params, alpha=alpha)
-    model.fit(X, y)
+        model = _build_l4_linear_model(family, params, alpha=alpha)
+        model.fit(X, y)
+        artifacts[model_id] = ModelArtifact(
+            model_id=model_id,
+            family=family,
+            fitted_object=model,
+            framework="sklearn",
+            fit_metadata={"alpha": alpha, "n_obs": len(X), "min_train_size": min_train_size, "runtime": "expanding_direct"},
+            feature_names=tuple(X.columns),
+        )
+        benchmark_flags[model_id] = bool(fit_node.get("is_benchmark", False))
+        refit_origins[model_id] = tuple(origins)
+
+    sample_index = pd.DatetimeIndex(sorted({key[3] for key in forecasts}))
     return (
         L4ForecastsArtifact(
             forecasts=forecasts,
             forecast_object="point",
-            sample_index=pd.DatetimeIndex([key[3] for key in forecasts]),
+            sample_index=sample_index,
             targets=(target,),
             horizons=(horizon,),
-            model_ids=(model_id,),
+            model_ids=tuple(model_ids),
             upstream_hashes={},
         ),
         L4ModelArtifactsArtifact(
-            artifacts={
-                model_id: ModelArtifact(
-                    model_id=model_id,
-                    family=family,
-                    fitted_object=model,
-                    framework="sklearn",
-                    fit_metadata={"alpha": alpha, "n_obs": len(X), "min_train_size": min_train_size, "runtime": "expanding_direct"},
-                    feature_names=tuple(X.columns),
-                )
-            },
-            is_benchmark={model_id: bool(fit_node.get("is_benchmark", False))},
+            artifacts=artifacts,
+            is_benchmark=benchmark_flags,
         ),
         L4TrainingMetadataArtifact(
-            forecast_origins=tuple(key[3] for key in forecasts),
-            refit_origins={model_id: tuple(key[3] for key in forecasts)},
+            forecast_origins=tuple(sample_index),
+            refit_origins=refit_origins,
             training_window_per_origin=training_windows,
         ),
     )
@@ -297,19 +308,52 @@ def _build_l4_linear_model(family: str, params: dict[str, Any], *, alpha: float)
     raise NotImplementedError(f"minimal L4 runtime does not support family={family!r}")
 
 
+def _add_l5_relative_metrics(metrics: pd.DataFrame, l4_models: L4ModelArtifactsArtifact | None) -> pd.DataFrame:
+    if l4_models is None:
+        return metrics
+    benchmark_ids = [model_id for model_id, is_benchmark in l4_models.is_benchmark.items() if is_benchmark]
+    if len(benchmark_ids) != 1:
+        return metrics
+    benchmark_id = benchmark_ids[0]
+    benchmark = metrics.loc[metrics["model_id"] == benchmark_id, ["target", "horizon", "mse", "mae"]].rename(
+        columns={"mse": "benchmark_mse", "mae": "benchmark_mae"}
+    )
+    if benchmark.empty:
+        return metrics
+    result = metrics.merge(benchmark, on=["target", "horizon"], how="left")
+    result["relative_mse"] = result["mse"] / result["benchmark_mse"]
+    result["r2_oos"] = 1.0 - result["relative_mse"]
+    result["relative_mae"] = result["mae"] / result["benchmark_mae"]
+    result["mse_reduction"] = result["benchmark_mse"] - result["mse"]
+    return result
+
+
+def _l5_ranking_metric(metrics: pd.DataFrame, resolved_axes: dict[str, Any]) -> str:
+    if resolved_axes.get("ranking") == "by_relative_metric" and "relative_mse" in metrics.columns:
+        return "relative_mse"
+    primary = resolved_axes.get("primary_metric", "mse")
+    return primary if primary in metrics.columns else "mse"
+
+
+def _l5_rank_ascending(metric: str) -> bool:
+    return metric not in {"r2_oos", "mse_reduction"}
+
+
 def materialize_l5_minimal(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
     l3_features: L3FeaturesArtifact,
     l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact | None = None,
 ) -> L5EvaluationArtifact:
     raw = recipe_root.get("5_evaluation", {"fixed_axes": {}}) or {"fixed_axes": {}}
+    has_benchmark = bool(l4_models and any(l4_models.is_benchmark.values()))
     context = {
         "forecast_object": l4_forecasts.forecast_object,
         "target_structure": l1_artifact.target_structure,
         "regime_definition": l1_artifact.regime_definition,
         "has_fred_sd": bool(l1_artifact.dataset and "fred_sd" in l1_artifact.dataset),
-        "has_benchmark": False,
+        "has_benchmark": has_benchmark,
     }
     report = l5_layer.validate_layer(raw, context=context)
     if report.has_hard_errors:
@@ -338,10 +382,13 @@ def materialize_l5_minimal(
         errors = pd.DataFrame(rows)
         metrics = errors.groupby(["model_id", "target", "horizon"], as_index=False).agg(mse=("squared_error", "mean"), mae=("absolute_error", "mean"))
         metrics["rmse"] = metrics["mse"] ** 0.5
+        metrics = _add_l5_relative_metrics(metrics, l4_models)
     if metrics.empty:
         ranking = pd.DataFrame()
     else:
-        ranking = metrics.sort_values("mse").assign(
+        resolved_axes = l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)
+        ranking_metric = _l5_ranking_metric(metrics, resolved_axes)
+        ranking = metrics.sort_values(ranking_metric, ascending=_l5_rank_ascending(ranking_metric)).assign(
             rank_method="by_primary_metric",
             rank_value=lambda frame: range(1, len(frame) + 1),
         )

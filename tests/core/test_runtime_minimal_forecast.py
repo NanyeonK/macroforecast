@@ -86,6 +86,43 @@ def test_execute_minimal_forecast_materializes_l3_l4_l5():
     assert l5_eval.ranking_table.iloc[0]["rank_value"] == 1
 
 
+def test_execute_minimal_forecast_computes_l5_relative_metrics_against_benchmark():
+    yaml_text = MINIMAL_RECIPE.replace(
+        """    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]""",
+        """    - id: fit_ridge
+      type: step
+      op: fit_model
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]
+    - id: fit_ols
+      type: step
+      op: fit_model
+      is_benchmark: true
+      params: {family: ols, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      inputs: [src_X, src_y]""",
+    ).replace("l4_model_artifacts_v1: fit_ridge", "l4_model_artifacts_v1: [fit_ridge, fit_ols]").replace(
+        "primary_metric: mse",
+        "primary_metric: relative_mse\n    relative_metrics: [relative_mse, r2_oos, relative_mae, mse_reduction]",
+    )
+
+    result = execute_minimal_forecast(yaml_text)
+    l4_forecasts = result.sink("l4_forecasts_v1")
+    l4_models = result.sink("l4_model_artifacts_v1")
+    l5_eval = result.sink("l5_evaluation_v1")
+
+    assert set(l4_forecasts.model_ids) == {"fit_ridge", "fit_ols"}
+    assert l4_models.is_benchmark == {"fit_ridge": False, "fit_ols": True}
+    assert {"relative_mse", "r2_oos", "relative_mae", "mse_reduction"} <= set(l5_eval.metrics_table.columns)
+    benchmark_row = l5_eval.metrics_table.loc[l5_eval.metrics_table["model_id"] == "fit_ols"].iloc[0]
+    assert benchmark_row["relative_mse"] == pytest.approx(1.0)
+    assert benchmark_row["r2_oos"] == pytest.approx(0.0)
+    assert l5_eval.ranking_table.iloc[0]["rank_method"] == "by_primary_metric"
+
+
 def test_execute_minimal_forecast_rejects_non_ridge_family():
     yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: xgboost")
 
