@@ -120,6 +120,11 @@ def test_static_navigator_app_exposes_docs_layer_options():
         "json_parquet",
         "provenance_fields",
         "artifact_granularity",
+        "hasFredSdSource",
+        "needsFrequencyChoice",
+        "field-description",
+        "delete leaf.targets",
+        "delete leaf.target",
     }
     missing = sorted(token for token in expected_tokens if token not in source)
     assert missing == []
@@ -132,6 +137,20 @@ def test_static_navigator_app_exposes_docs_layer_options():
     }
     lingering = sorted(token for token in removed_tokens if token in source)
     assert lingering == []
+
+
+def test_static_navigator_app_hides_conditional_layer1_controls():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "docs/_html_extra/navigator_app/app.js").read_text(encoding="utf-8")
+
+    assert 'if (hasFredSdSource())' in source
+    assert 'sectionFromFields("FRED-SD predictor scope"' in source
+    assert 'if (state.layers.l1.fixed_axes.target_structure === "single_target")' in source
+    assert 'targetFields.push(textField("target"' in source
+    assert 'targetFields.push(textAreaField("targets"' in source
+    assert 'if (fixed.target_structure === "single_target")' in source
+    assert "delete leaf.targets" in source
+    assert "delete leaf.target" in source
 
 
 def _js_state_snapshot(tmp_path: Path, recipe: dict, actions: list[tuple[str, str]]) -> dict:
