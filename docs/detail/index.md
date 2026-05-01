@@ -43,6 +43,7 @@ layer8/index
 
 ## Related Reference
 
+- [Contract Source of Truth](contract_source_of_truth.md)
 - [Layer Boundary Contract](layer_boundary_contract.md)
 - [Artifacts and Manifest](artifacts_and_manifest.md)
 - [Recipe Layers](recipe_layers.md)

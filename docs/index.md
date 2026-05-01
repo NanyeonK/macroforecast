@@ -48,6 +48,8 @@ Use Detail docs when you need exact layer control, YAML shape, runtime artifacts
 
 [Open Detail Docs](detail/index.md)
 
+[Contract Source of Truth](detail/contract_source_of_truth.md)
+
 ### FRED Dataset Docs
 
 Use FRED docs when you need FRED-MD, FRED-QD, or FRED-SD column references before writing target or predictor recipes.
