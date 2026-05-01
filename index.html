@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="0. Getting Started" href="getting_started/index.html" /> 
+    <link rel="next" title="Getting Started" href="getting_started/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,7 +45,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">0. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="philosophy.html">1. Philosophy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simple/index.html">Simple Docs</a></li>
@@ -82,55 +82,55 @@
              
   <section id="macrocast">
 <h1>macrocast<a class="headerlink" href="#macrocast" title="Link to this heading"></a></h1>
-<p>macrocast is a research-oriented forecasting package for economists and macro-finance researchers. The docs are organized around decisions first and API signatures last.</p>
-<section id="choose-your-entry-point">
-<h2>Choose Your Entry Point<a class="headerlink" href="#choose-your-entry-point" title="Link to this heading"></a></h2>
-<section id="getting-started">
-<h3>0. Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h3>
-<p>Install macrocast and choose one of three usage paths: Navigator/YAML/CLI, Simple Python code, or full Detail code/YAML.</p>
-<p><a class="reference internal" href="getting_started/index.html"><span class="std std-doc">Open Getting Started</span></a></p>
-<p>Read the current runtime support matrix before relying on advanced layers in a
-paper workflow. The core layer-contract runtime currently executes the
-custom-panel/linear-model path end to end and materializes lightweight L6/L7/L8
-artifacts; advanced methods remain schema-visible but require specialized
-runtime backends.</p>
-<p><a class="reference internal" href="getting_started/runtime_support.html"><span class="std std-doc">Open Runtime Support Matrix</span></a></p>
+<p>macrocast is a research-oriented macro forecasting package organized around explicit layer contracts and reproducible artifacts.</p>
+<section id="canonical-architecture">
+<h2>Canonical Architecture<a class="headerlink" href="#canonical-architecture" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(DAG) -&gt; L4(DAG) -&gt; L5 -&gt; L6 -&gt; L7(DAG) -&gt; L8
+        |      |      |       |
+       L1.5   L2.5   L3.5    L4.5 diagnostics
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">list</span></code> layers expose ordered sub-layers and axes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">graph</span></code> layers expose DAG nodes, inputs, steps, and sinks.</p></li>
+<li><p>diagnostic <code class="docutils literal notranslate"><span class="pre">.5</span></code> layers are default-off side branches.</p></li>
+<li><p>L8 exports the reproducible output directory and manifest.</p></li>
+</ul>
 </section>
-<section id="philosophy">
-<h3>1. Philosophy<a class="headerlink" href="#philosophy" title="Link to this heading"></a></h3>
-<p>Read this when you want the package rules: explicit defaults, layer contracts, reproducible artifacts, and custom researcher methods beside built-ins.</p>
-<p><a class="reference internal" href="philosophy.html"><span class="std std-doc">Read Philosophy</span></a></p>
+<section id="entry-points">
+<h2>Entry Points<a class="headerlink" href="#entry-points" title="Link to this heading"></a></h2>
+<section id="getting-started">
+<h3>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h3>
+<p>Install macrocast and choose between the Navigator, YAML runtime, or simple Python facade.</p>
+<p><a class="reference internal" href="getting_started/index.html"><span class="std std-doc">Open Getting Started</span></a></p>
 </section>
 <section id="navigator">
-<h3>2. Navigator<a class="headerlink" href="#navigator" title="Link to this heading"></a></h3>
-<p>Use the Navigator when you need a constraint-aware decision tree. It shows selectable options, disabled options, disabled reasons, canonical path effects, and YAML generation.</p>
+<h3>Navigator<a class="headerlink" href="#navigator" title="Link to this heading"></a></h3>
+<p>Use the Navigator when you need to see the canonical layer/DAG map, diagnostic hooks, runtime support status, and compatibility rules.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#navigator_app/index.html"><span class="xref myst">Open Navigator App</span></a></p></li>
 <li><p><a class="reference internal" href="navigator/index.html"><span class="std std-doc">Navigator Docs</span></a></p></li>
 </ul>
 </section>
-<section id="simple-code">
-<h3>3. Simple (code)<a class="headerlink" href="#simple-code" title="Link to this heading"></a></h3>
+<section id="runtime-support">
+<h3>Runtime Support<a class="headerlink" href="#runtime-support" title="Link to this heading"></a></h3>
+<p>Read this before relying on advanced layers in a paper workflow. It separates current runtime execution from schema-only surfaces.</p>
+<p><a class="reference internal" href="getting_started/runtime_support.html"><span class="std std-doc">Open Runtime Support Matrix</span></a></p>
+</section>
+<section id="simple-python-api">
+<h3>Simple Python API<a class="headerlink" href="#simple-python-api" title="Link to this heading"></a></h3>
 <p>Use Simple docs when you want forecasting code without reading every layer contract first.</p>
 <p><a class="reference internal" href="simple/index.html"><span class="std std-doc">Open Simple Docs</span></a></p>
 </section>
-<section id="detail-code">
-<h3>4. Detail (code)<a class="headerlink" href="#detail-code" title="Link to this heading"></a></h3>
+<section id="detail-docs">
+<h3>Detail Docs<a class="headerlink" href="#detail-docs" title="Link to this heading"></a></h3>
 <p>Use Detail docs when you need exact layer control, YAML shape, runtime artifacts, or custom method hooks.</p>
 <p><a class="reference internal" href="detail/index.html"><span class="std std-doc">Open Detail Docs</span></a></p>
 </section>
-<section id="fred-dataset">
-<h3>5. FRED-Dataset<a class="headerlink" href="#fred-dataset" title="Link to this heading"></a></h3>
-<p>Use FRED-Dataset docs when you need the current FRED-MD, FRED-QD, or FRED-SD
-column dictionary before writing target y, predictor x, or custom-source
-recipes.</p>
+<section id="fred-dataset-docs">
+<h3>FRED Dataset Docs<a class="headerlink" href="#fred-dataset-docs" title="Link to this heading"></a></h3>
+<p>Use FRED docs when you need FRED-MD, FRED-QD, or FRED-SD column references before writing target or predictor recipes.</p>
 <p><a class="reference internal" href="fred_dataset/index.html"><span class="std std-doc">Open FRED-Dataset Docs</span></a></p>
-</section>
-<section id="foundation-core">
-<h3>Foundation Core<a class="headerlink" href="#foundation-core" title="Link to this heading"></a></h3>
-<p>Use Foundation Core docs when you need the Phase 0 DAG schema, registry
-migration contract, or next-generation layer implementation path.</p>
-<p><a class="reference internal" href="foundation_core.html"><span class="std std-doc">Open Foundation Core</span></a></p>
 </section>
 </section>
 <section id="reference">
@@ -146,7 +146,7 @@ migration contract, or next-generation layer implementation path.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started/index.html" class="btn btn-neutral float-right" title="0. Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="getting_started/index.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

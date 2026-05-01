@@ -6,6 +6,7 @@ const state = {
   activeAxis: null,
   engineState: null,
   loadedSource: null,
+  activeTopologyLayer: "l0",
 };
 
 const els = {
@@ -32,6 +33,7 @@ const els = {
   treePath: document.getElementById("tree-path"),
   runtimeSupport: document.getElementById("runtime-support"),
   layerTopology: document.getElementById("layer-topology"),
+  layerDetail: document.getElementById("layer-detail"),
 };
 
 function escapeHtml(value) {
@@ -231,20 +233,87 @@ function topologyNodeById() {
   return new Map((layerTopologySpec().nodes || []).map((node) => [node.id, node]));
 }
 
+function displayLayerId(id) {
+  return String(id || "").toUpperCase().replace("_", ".");
+}
+
 function topologyNodeCard(node) {
   const modeLabel = node.ui_mode === "graph" ? "DAG" : "List";
-  const sinkList = (node.produces || []).slice(0, 3).join(", ");
-  const extraSinks = (node.produces || []).length > 3 ? ` +${(node.produces || []).length - 3}` : "";
+  const active = node.id === state.activeTopologyLayer ? " active" : "";
   return `
-    <article class="topology-node topology-${escapeHtml(node.group || node.category)} topology-mode-${escapeHtml(node.ui_mode)}" data-topology-layer="${escapeHtml(node.id)}">
-      <div class="topology-node-head">
-        <span class="topology-layer-id">${escapeHtml(node.id.toUpperCase().replace("_", "."))}</span>
-        <span class="topology-mode">${escapeHtml(modeLabel)}</span>
-      </div>
-      <h3>${escapeHtml(node.label || node.name)}</h3>
-      <p>${escapeHtml(humanizeToken(node.category))} · ${escapeHtml(String(node.axis_count || 0))} axes · ${escapeHtml(String(node.sub_layer_count || 0))} sub-layers</p>
-      ${sinkList ? `<code>${escapeHtml(sinkList)}${escapeHtml(extraSinks)}</code>` : ""}
+    <article class="topology-node${active} topology-${escapeHtml(node.group || node.category)} topology-mode-${escapeHtml(node.ui_mode)}" data-topology-layer="${escapeHtml(node.id)}" role="button" tabindex="0">
+      <span class="topology-layer-id">${escapeHtml(displayLayerId(node.id))}</span>
+      <span class="topology-node-main">
+        <strong>${escapeHtml(node.label || node.name)}</strong>
+        <em>${escapeHtml(humanizeToken(node.category))} · ${escapeHtml(modeLabel)}</em>
+      </span>
+      <span class="topology-count">${escapeHtml(String(node.axis_count || 0))}</span>
     </article>
+  `;
+}
+
+function formatList(items, emptyText) {
+  const values = items || [];
+  if (!values.length) return `<p class="empty-note">${escapeHtml(emptyText)}</p>`;
+  return `<div class="detail-chip-grid">${values.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`;
+}
+
+function renderLayerDetail() {
+  if (!els.layerDetail) return;
+  const byId = topologyNodeById();
+  const node = byId.get(state.activeTopologyLayer) || byId.get("l0") || (layerTopologySpec().nodes || [])[0];
+  if (!node) {
+    els.layerDetail.innerHTML = `<p class="muted">No registered layer metadata available.</p>`;
+    return;
+  }
+  const modeText = node.ui_mode === "graph"
+    ? "Graph/DAG layer: users compose source, step, and sink nodes."
+    : "List layer: users resolve ordered axes and sub-layer sections.";
+  const axisPreview = (node.axes || []).slice(0, 18);
+  const axisOverflow = (node.axes || []).length > axisPreview.length ? [`+${(node.axes || []).length - axisPreview.length} more axes`] : [];
+  const inputCount = (node.expected_inputs || []).length;
+  const sinkCount = (node.produces || []).length;
+  els.layerDetail.innerHTML = `
+    <div class="layer-hero">
+      <div class="layer-hero-id">${escapeHtml(displayLayerId(node.id))}</div>
+      <div class="layer-hero-copy">
+        <p class="eyebrow">Canonical layer workbench</p>
+        <h2>${escapeHtml(node.label || node.name)}</h2>
+        <p>${escapeHtml(modeText)}</p>
+      </div>
+      <div class="layer-metrics">
+        <span><strong>${escapeHtml(String(inputCount))}</strong> inputs</span>
+        <span><strong>${escapeHtml(String(sinkCount))}</strong> sinks</span>
+        <span><strong>${escapeHtml(String(node.sub_layer_count || 0))}</strong> sub-layers</span>
+        <span><strong>${escapeHtml(String(node.axis_count || 0))}</strong> axes</span>
+      </div>
+    </div>
+
+    <div class="handoff-grid">
+      <section class="handoff-card">
+        <h3>Inputs</h3>
+        ${formatList(node.expected_inputs, "No upstream sink inputs.")}
+      </section>
+      <section class="handoff-card">
+        <h3>Produces</h3>
+        ${formatList(node.produces, "No produced sinks registered.")}
+      </section>
+    </div>
+
+    <div class="definition-grid">
+      <section>
+        <h3>Sub-layers</h3>
+        ${formatList(node.sub_layers, node.ui_mode === "graph" ? "DAG body defines the steps." : "No explicit sub-layer sections.")}
+      </section>
+      <section>
+        <h3>Layer globals</h3>
+        ${formatList(node.layer_globals, "No layer-global axes.")}
+      </section>
+      <section class="definition-wide">
+        <h3>Axes / output controls</h3>
+        ${formatList([...axisPreview, ...axisOverflow], "This layer is configured by DAG nodes or registry defaults, not a fixed axis list.")}
+      </section>
+    </div>
   `;
 }
 
@@ -255,40 +324,20 @@ function renderLayerTopology() {
   const mainNodes = (topology.main_flow || []).map((id) => byId.get(id)).filter(Boolean);
   const diagnostics = (topology.nodes || []).filter((node) => node.category === "diagnostic");
   const graphLayers = (topology.nodes || []).filter((node) => node.ui_mode === "graph");
-  const edgeText = (topology.edges || [])
-    .slice(0, 10)
-    .map((edge) => `${String(edge.from || "").toUpperCase()} -> ${String(edge.to || "").toUpperCase()} via ${edge.sink}`)
-    .join("\n");
   els.layerTopology.innerHTML = `
-    <div class="topology-heading">
-      <div>
-        <p class="eyebrow">Pipeline architecture</p>
-        <h2>Layer and DAG Map</h2>
-      </div>
-      <div class="topology-legend">
-        <span><strong>${escapeHtml(String(mainNodes.length))}</strong> main layers</span>
-        <span><strong>${escapeHtml(String(diagnostics.length))}</strong> diagnostics</span>
-        <span><strong>${escapeHtml(String(graphLayers.length))}</strong> graph/DAG layers</span>
-      </div>
+    <div class="topology-stats">
+      <span><strong>${escapeHtml(String(mainNodes.length))}</strong> main</span>
+      <span><strong>${escapeHtml(String(diagnostics.length))}</strong> diagnostics</span>
+      <span><strong>${escapeHtml(String(graphLayers.length))}</strong> DAG</span>
     </div>
     <div class="topology-main-flow">
-      ${mainNodes.map(topologyNodeCard).join('<span class="topology-arrow">→</span>')}
+      ${mainNodes.map(topologyNodeCard).join("")}
     </div>
-    <div class="topology-secondary">
-      <section>
-        <div class="topology-subhead">
-          <h3>Diagnostic side branches</h3>
-          <p class="source-note">Default-off layers hook into construction sinks without blocking the main DAG.</p>
-        </div>
-        <div class="topology-diagnostics">${diagnostics.map(topologyNodeCard).join("")}</div>
-      </section>
-      <section>
-        <div class="topology-subhead">
-          <h3>Sink handoffs</h3>
-          <p class="source-note">Edges are inferred from registered expected_inputs and produced sinks.</p>
-        </div>
-        <pre class="topology-edges">${escapeHtml(edgeText || "No registered sink edges.")}</pre>
-      </section>
+    <div class="diagnostic-heading">
+      <p class="eyebrow">Default-off hooks</p>
+    </div>
+    <div class="topology-diagnostics">
+      ${diagnostics.map(topologyNodeCard).join("")}
     </div>
   `;
 }
@@ -639,6 +688,7 @@ function render() {
   setDefaultAxis();
   renderSampleSelect();
   renderLayerTopology();
+  renderLayerDetail();
   renderSummary();
   renderPathHeader();
   renderRuntimeSupport();
@@ -702,6 +752,23 @@ function bindEvents() {
       render();
     });
   });
+
+  if (els.layerTopology) {
+    els.layerTopology.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-topology-layer]");
+      if (!card) return;
+      state.activeTopologyLayer = card.dataset.topologyLayer;
+      render();
+    });
+    els.layerTopology.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const card = event.target.closest("[data-topology-layer]");
+      if (!card) return;
+      event.preventDefault();
+      state.activeTopologyLayer = card.dataset.topologyLayer;
+      render();
+    });
+  }
 
   els.axisList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-axis]");
@@ -794,7 +861,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260501-layer-dag");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260501-canonical-layer-redesign");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();
