@@ -1,4 +1,7 @@
-# Stages Reference (0 and 1)
+# Stages Reference (Legacy Stage 0 and 1)
+
+This page documents the legacy Stage-style data/design reference used by older compiler and execution docs. For the current L0-L8 layer-contract runtime, start with [Runtime Support Matrix](runtime_support.md) and [Quickstart](quickstart.md).
+
 
 A one-page map of every operational value on every axis in the first two
 completed user-facing stages. Use this as a quick cheat sheet: pick a recipe
