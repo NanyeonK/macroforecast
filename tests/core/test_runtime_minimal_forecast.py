@@ -42,7 +42,7 @@ MINIMAL_RECIPE = """
     - id: fit_ridge
       type: step
       op: fit_model
-      params: {family: ridge, alpha: 1.0, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
   sinks:
@@ -62,15 +62,23 @@ def test_execute_minimal_forecast_materializes_l3_l4_l5():
     l3_features = result.sink("l3_features_v1")
     l4_forecasts = result.sink("l4_forecasts_v1")
     l4_models = result.sink("l4_model_artifacts_v1")
+    l4_training = result.sink("l4_training_metadata_v1")
     l5_eval = result.sink("l5_evaluation_v1")
 
     assert l3_features.X_final.shape == (4, 2)
     assert l3_features.X_final.column_names == ("x1_lag1", "x2_lag1")
     assert l3_features.sample_index[0] == pd.Timestamp("2020-02-01")
     assert l4_forecasts.model_ids == ("fit_ridge",)
-    assert len(l4_forecasts.forecasts) == 4
+    assert len(l4_forecasts.forecasts) == 2
+    assert tuple(l4_forecasts.sample_index) == (pd.Timestamp("2020-04-01"), pd.Timestamp("2020-05-01"))
     assert l4_models.artifacts["fit_ridge"].family == "ridge"
     assert l4_models.artifacts["fit_ridge"].framework == "sklearn"
+    assert l4_models.artifacts["fit_ridge"].fit_metadata["runtime"] == "expanding_direct"
+    assert l4_training.forecast_origins == (pd.Timestamp("2020-04-01"), pd.Timestamp("2020-05-01"))
+    assert l4_training.training_window_per_origin[("fit_ridge", pd.Timestamp("2020-04-01"))] == (
+        pd.Timestamp("2020-02-01"),
+        pd.Timestamp("2020-03-01"),
+    )
     assert l5_eval.metrics_table[["model_id", "target", "horizon"]].to_dict("records") == [
         {"model_id": "fit_ridge", "target": "y", "horizon": 1}
     ]
@@ -82,4 +90,11 @@ def test_execute_minimal_forecast_rejects_non_ridge_family():
     yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: xgboost")
 
     with pytest.raises(NotImplementedError, match="supports family=ridge only"):
+        execute_minimal_forecast(yaml_text)
+
+
+def test_execute_minimal_forecast_rejects_exhaustive_min_train_size():
+    yaml_text = MINIMAL_RECIPE.replace("min_train_size: 2", "min_train_size: 4")
+
+    with pytest.raises(ValueError, match="min_train_size < aligned observation count"):
         execute_minimal_forecast(yaml_text)

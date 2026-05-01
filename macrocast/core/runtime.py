@@ -223,18 +223,29 @@ def materialize_l4_minimal(
     if not isinstance(y, pd.Series):
         raise ValueError("minimal L4 runtime requires L3 y_final series data")
     alpha = float(params.get("alpha", 1.0))
-    model = Ridge(alpha=alpha)
-    model.fit(X, y)
-    fitted = pd.Series(model.predict(X), index=X.index, name="forecast")
+    min_train_size = _minimal_train_size(params, n_obs=len(X), n_features=len(X.columns))
     model_id = fit_node.get("id", "fit_model")
     target = l3_features.y_final.name
     horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
-    forecasts = {(model_id, target, horizon, origin): float(value) for origin, value in fitted.items()}
+    forecasts: dict[tuple[str, str, int, Any], float] = {}
+    training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
+    for position in range(min_train_size, len(X)):
+        origin = X.index[position]
+        train_X = X.iloc[:position]
+        train_y = y.iloc[:position]
+        origin_model = Ridge(alpha=alpha)
+        origin_model.fit(train_X, train_y)
+        forecast = float(origin_model.predict(X.iloc[[position]])[0])
+        forecasts[(model_id, target, horizon, origin)] = forecast
+        training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
+
+    model = Ridge(alpha=alpha)
+    model.fit(X, y)
     return (
         L4ForecastsArtifact(
             forecasts=forecasts,
             forecast_object="point",
-            sample_index=pd.DatetimeIndex(X.index),
+            sample_index=pd.DatetimeIndex([key[3] for key in forecasts]),
             targets=(target,),
             horizons=(horizon,),
             model_ids=(model_id,),
@@ -247,13 +258,17 @@ def materialize_l4_minimal(
                     family="ridge",
                     fitted_object=model,
                     framework="sklearn",
-                    fit_metadata={"alpha": alpha, "n_obs": len(X)},
+                    fit_metadata={"alpha": alpha, "n_obs": len(X), "min_train_size": min_train_size, "runtime": "expanding_direct"},
                     feature_names=tuple(X.columns),
                 )
             },
             is_benchmark={model_id: bool(fit_node.get("is_benchmark", False))},
         ),
-        L4TrainingMetadataArtifact(forecast_origins=tuple(X.index), refit_origins={model_id: tuple(X.index)}),
+        L4TrainingMetadataArtifact(
+            forecast_origins=tuple(key[3] for key in forecasts),
+            refit_origins={model_id: tuple(key[3] for key in forecasts)},
+            training_window_per_origin=training_windows,
+        ),
     )
 
 
@@ -527,6 +542,21 @@ def _minimal_l3_params(raw: dict[str, Any]) -> dict[str, Any]:
         "n_lag": lag_params.get("n_lag", 1),
         "horizon": target_params.get("horizon", 1),
     }
+
+
+def _minimal_train_size(params: dict[str, Any], *, n_obs: int, n_features: int) -> int:
+    if n_obs < 3:
+        raise ValueError("minimal L4 runtime requires at least 3 aligned observations")
+    requested = params.get("min_train_size")
+    if requested is not None:
+        min_train_size = int(requested)
+    else:
+        min_train_size = min(n_obs - 1, max(2, min(n_features, n_obs - 1)))
+    if min_train_size < 2:
+        raise ValueError("minimal L4 runtime requires min_train_size >= 2")
+    if min_train_size >= n_obs:
+        raise ValueError("minimal L4 runtime requires min_train_size < aligned observation count")
+    return min_train_size
 
 
 def _lagged_predictors(frame: pd.DataFrame, n_lag: int) -> pd.DataFrame:
