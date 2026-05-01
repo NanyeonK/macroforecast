@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from dataclasses import asdict, is_dataclass
+from datetime import date, datetime
+import math
+import json
 from pathlib import Path
 import platform
 from typing import Any
@@ -37,6 +41,7 @@ from .types import (
     L7ImportanceArtifact,
     L7TransformationAttributionArtifact,
     L8ArtifactsArtifact,
+    ExportedFile,
     L8Manifest,
     ModelArtifact,
     Panel,
@@ -128,16 +133,16 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
         artifacts["l4_5_diagnostic_v1"] = l4_5_artifact
         resolved_axes["l4_5"] = l4_5_axes
     if "6_statistical_tests" in root:
-        l6_tests, l6_axes = materialize_l6_stub(root, l1_artifact, l4_forecasts, l4_models)
+        l6_tests, l6_axes = materialize_l6_runtime(root, l1_artifact, l3_features, l4_forecasts, l4_models, l5_eval)
         artifacts["l6_tests_v1"] = l6_tests
         resolved_axes["l6"] = l6_axes
     if "7_interpretation" in root:
-        l7_importance, l7_transform, l7_axes = materialize_l7_stub(root)
+        l7_importance, l7_transform, l7_axes = materialize_l7_runtime(root, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, artifacts.get("l6_tests_v1"))
         artifacts["l7_importance_v1"] = l7_importance
         artifacts["l7_transformation_attribution_v1"] = l7_transform
         resolved_axes["l7"] = l7_axes
     if "8_output" in root:
-        l8_artifacts, l8_axes = materialize_l8_stub(root, artifacts)
+        l8_artifacts, l8_axes = materialize_l8_runtime(root, artifacts)
         artifacts["l8_artifacts_v1"] = l8_artifacts
         resolved_axes["l8"] = l8_axes
     return RuntimeResult(
@@ -814,16 +819,20 @@ def materialize_l5_minimal(
     )
 
 
-def materialize_l6_stub(
+def materialize_l6_runtime(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
+    l3_features: L3FeaturesArtifact,
     l4_forecasts: L4ForecastsArtifact,
     l4_models: L4ModelArtifactsArtifact,
+    l5_eval: L5EvaluationArtifact,
 ) -> tuple[L6TestsArtifact, dict[str, Any]]:
     raw = recipe_root.get("6_statistical_tests", {}) or {}
     context = {
         "forecast_object": l4_forecasts.forecast_object,
         "has_benchmark": any(l4_models.is_benchmark.values()),
+        "benchmark_count": sum(1 for value in l4_models.is_benchmark.values() if value),
+        "model_ids": tuple(l4_models.artifacts),
         "regime_definition": l1_artifact.regime_definition,
         "horizons": set(l4_forecasts.horizons),
     }
@@ -831,29 +840,537 @@ def materialize_l6_stub(
     if report.has_hard_errors:
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
     resolved = l6_layer.resolve_axes_from_raw(raw, context=context)
-    if any(isinstance(value, dict) and value.get("enabled") for key, value in resolved.items() if key.startswith("L6_")):
-        raise NotImplementedError("L6 statistical test execution is deferred; disabled L6 materializes an empty artifact")
     axes = _plain_axes(resolved)
-    return L6TestsArtifact(test_metadata={"runtime": "schema_only_empty"}, l6_axis_resolved=axes), axes
+    if not resolved.get("enabled"):
+        return L6TestsArtifact(test_metadata={"runtime": "core_l6_disabled"}, l6_axis_resolved=axes), axes
 
+    actual = l3_features.y_final.metadata.values.get("data")
+    if not isinstance(actual, pd.Series):
+        raise ValueError("minimal L6 runtime requires L3 y_final series data")
+    errors = _l6_error_frame(l4_forecasts, actual)
+    equal_results: dict[tuple[Any, ...], Any] = {}
+    nested_results: dict[tuple[Any, ...], Any] = {}
+    cpa_results: dict[tuple[Any, ...], Any] = {}
+    multiple_results: dict[str, Any] = {}
+    direction_results: dict[tuple[Any, ...], Any] | None = None
+    residual_results: dict[tuple[Any, ...], Any] | None = None
 
-def materialize_l7_stub(recipe_root: dict[str, Any]) -> tuple[L7ImportanceArtifact, L7TransformationAttributionArtifact, dict[str, Any]]:
-    raw = recipe_root.get("7_interpretation", {}) or {}
-    report = l7_layer.validate_layer(raw, recipe_context=recipe_root)
-    if report.has_hard_errors:
-        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    resolved = l7_layer.resolve_axes_from_raw(raw)
-    if resolved.get("enabled"):
-        raise NotImplementedError("L7 importance execution is deferred; disabled L7 materializes empty artifacts")
-    axes = _plain_axes(resolved)
+    if resolved["L6_A_equal_predictive"]["enabled"]:
+        equal_results = _l6_equal_predictive_results(errors, resolved["L6_A_equal_predictive"], raw.get("leaf_config", {}) or {}, l4_models)
+    if resolved["L6_B_nested"]["enabled"]:
+        nested_results = _l6_nested_results(errors, resolved["L6_B_nested"], raw.get("leaf_config", {}) or {}, l4_models)
+    if resolved["L6_C_cpa"]["enabled"]:
+        cpa_results = _l6_cpa_results(errors, resolved["L6_C_cpa"], l4_models)
+    if resolved["L6_D_multiple_model"]["enabled"]:
+        multiple_results = _l6_multiple_model_results(l5_eval.metrics_table, resolved["L6_D_multiple_model"])
+    if resolved["L6_E_density_interval"]["enabled"]:
+        # The minimal runtime currently materializes point forecasts only; schema validation rejects this path.
+        raise NotImplementedError("L6 density and interval tests require quantile or density forecasts")
+    if resolved["L6_F_direction"]["enabled"]:
+        direction_results = _l6_direction_results(errors, resolved["L6_F_direction"], raw.get("leaf_config", {}) or {})
+    if resolved["L6_G_residual"]["enabled"]:
+        residual_results = _l6_residual_results(errors, resolved["L6_G_residual"])
+
     return (
-        L7ImportanceArtifact(computation_metadata={"runtime": "schema_only_empty"}),
-        L7TransformationAttributionArtifact(),
+        L6TestsArtifact(
+            equal_predictive_results=equal_results,
+            nested_results=nested_results,
+            cpa_results=cpa_results,
+            multiple_model_results=multiple_results,
+            direction_results=direction_results,
+            residual_results=residual_results,
+            test_metadata={
+                "runtime": "core_l6_minimal",
+                "n_error_rows": len(errors),
+                "nw_bandwidth_used": {"rule": axes.get("dependence_correction")},
+            },
+            l6_axis_resolved=axes,
+        ),
         axes,
     )
 
 
-def materialize_l8_stub(recipe_root: dict[str, Any], upstream_artifacts: dict[str, Any]) -> tuple[L8ArtifactsArtifact, dict[str, Any]]:
+def materialize_l7_runtime(
+    recipe_root: dict[str, Any],
+    l3_features: L3FeaturesArtifact,
+    l3_metadata: L3MetadataArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact,
+    l5_eval: L5EvaluationArtifact,
+    l6_tests: L6TestsArtifact | None = None,
+) -> tuple[L7ImportanceArtifact, L7TransformationAttributionArtifact, dict[str, Any]]:
+    raw = recipe_root.get("7_interpretation", {}) or {}
+    report = l7_layer.validate_layer(raw, recipe_context=l7_layer._recipe_context(recipe_root))
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l7_layer.resolve_axes_from_raw(raw)
+    axes = _plain_axes(resolved)
+    if not resolved.get("enabled"):
+        return (
+            L7ImportanceArtifact(computation_metadata={"runtime": "core_l7_disabled"}),
+            L7TransformationAttributionArtifact(),
+            axes,
+        )
+    values = _execute_l7_nodes(raw, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, l6_tests)
+    importance = L7ImportanceArtifact(computation_metadata={"runtime": "core_l7_minimal", "axis_resolved": axes})
+    transform = L7TransformationAttributionArtifact()
+    sinks = raw.get("sinks", {}) or {}
+    if "l7_importance_v1" in sinks:
+        global_importance: dict[tuple[Any, ...], Any] = {}
+        group_importance: dict[tuple[Any, ...], Any] = {}
+        lineage_importance: dict[tuple[Any, ...], Any] = {}
+        for label, node_ids in _l7_sink_targets(sinks["l7_importance_v1"]).items():
+            for node_id in node_ids:
+                value = values.get(node_id)
+                if isinstance(value, pd.DataFrame):
+                    method = value.attrs.get("method", node_id)
+                    model_id = value.attrs.get("model_id", "model")
+                    target = value.attrs.get("target", l3_features.y_final.name)
+                    horizon = value.attrs.get("horizon", l3_features.horizon_set[0] if l3_features.horizon_set else 1)
+                    key = (model_id, target, int(horizon), method)
+                    if "group" in value.columns or label.startswith("group"):
+                        group_importance[key + (value.attrs.get("grouping", label),)] = value
+                    elif "pipeline" in value.columns or label.startswith("pipeline"):
+                        lineage_importance[key + (value.attrs.get("level", label),)] = value
+                    else:
+                        global_importance[key] = value
+        importance = L7ImportanceArtifact(
+            global_importance=global_importance,
+            group_importance=group_importance,
+            lineage_importance=lineage_importance,
+            computation_metadata={"runtime": "core_l7_minimal", "axis_resolved": axes},
+        )
+    if "l7_transformation_attribution_v1" in sinks:
+        target_id = sinks["l7_transformation_attribution_v1"]
+        value = values.get(target_id) if isinstance(target_id, str) else None
+        if isinstance(value, L7TransformationAttributionArtifact):
+            transform = value
+    return (
+        importance,
+        transform,
+        axes,
+    )
+
+
+def _execute_l7_nodes(
+    raw: dict[str, Any],
+    l3_features: L3FeaturesArtifact,
+    l3_metadata: L3MetadataArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact,
+    l5_eval: L5EvaluationArtifact,
+    l6_tests: L6TestsArtifact | None,
+) -> dict[str, Any]:
+    dag = l7_layer.normalize_to_dag_form(raw)
+    values: dict[str, Any] = {}
+    for node in _topological_nodes(dag):
+        if node.type == "source":
+            values[node.id] = _execute_l7_source(node.selector, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, l6_tests)
+        elif node.type == "step":
+            inputs = [values[ref.node_id] for ref in node.inputs]
+            values[node.id] = _execute_l7_step(node.op, inputs, node.params, l3_features, l3_metadata, l5_eval)
+    return values
+
+
+def _execute_l7_source(
+    selector,
+    l3_features: L3FeaturesArtifact,
+    l3_metadata: L3MetadataArtifact,
+    l4_forecasts: L4ForecastsArtifact,
+    l4_models: L4ModelArtifactsArtifact,
+    l5_eval: L5EvaluationArtifact,
+    l6_tests: L6TestsArtifact | None,
+) -> Any:
+    if selector is None:
+        raise ValueError("L7 source node requires a selector")
+    subset = selector.subset or {}
+    if selector.layer_ref == "l4" and selector.sink_name == "l4_model_artifacts_v1":
+        model_id = subset.get("model_id")
+        if model_id:
+            return l4_models.artifacts[model_id]
+        return l4_models
+    if selector.layer_ref == "l4" and selector.sink_name == "l4_forecasts_v1":
+        return l4_forecasts
+    if selector.layer_ref == "l3" and selector.sink_name == "l3_features_v1":
+        component = subset.get("component")
+        if component == "X_final":
+            return l3_features.X_final.data.copy()
+        if component == "y_final":
+            return l3_features.y_final.metadata.values.get("data")
+        return l3_features
+    if selector.layer_ref == "l3" and selector.sink_name == "l3_metadata_v1":
+        return l3_metadata
+    if selector.layer_ref == "l5" and selector.sink_name == "l5_evaluation_v1":
+        return l5_eval
+    if selector.layer_ref == "l6" and selector.sink_name == "l6_tests_v1":
+        return l6_tests
+    raise NotImplementedError(f"minimal L7 runtime does not support source {selector.layer_ref}.{selector.sink_name}")
+
+
+def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_features: L3FeaturesArtifact, l3_metadata: L3MetadataArtifact, l5_eval: L5EvaluationArtifact) -> Any:
+    if op in {"model_native_linear_coef", "shap_linear"}:
+        model = _first_model_input(inputs)
+        frame = _linear_importance_frame(model, method=op)
+        return _attach_l7_attrs(frame, model, op, l3_features)
+    if op in {"permutation_importance", "shap_kernel"}:
+        model = _first_model_input(inputs)
+        X = next((item for item in inputs if isinstance(item, pd.DataFrame)), l3_features.X_final.data)
+        y = next((item for item in inputs if isinstance(item, pd.Series)), l3_features.y_final.metadata.values.get("data"))
+        frame = _permutation_importance_frame(model, X, y if isinstance(y, pd.Series) else None, method=op)
+        return _attach_l7_attrs(frame, model, op, l3_features)
+    if op == "group_aggregate":
+        table = next((item for item in inputs if isinstance(item, pd.DataFrame)), pd.DataFrame())
+        return _l7_group_aggregate(table, params)
+    if op == "lineage_attribution":
+        table = next((item for item in inputs if isinstance(item, pd.DataFrame)), pd.DataFrame())
+        metadata = next((item for item in inputs if isinstance(item, L3MetadataArtifact)), l3_metadata)
+        return _l7_lineage_attribution(table, metadata, params)
+    if op == "transformation_attribution":
+        return _l7_transformation_attribution(l5_eval, params)
+    raise NotImplementedError(f"minimal L7 runtime does not support op {op!r}")
+
+
+def _first_model_input(inputs: list[Any]) -> ModelArtifact:
+    for item in inputs:
+        if isinstance(item, ModelArtifact):
+            return item
+    raise ValueError("L7 step requires a ModelArtifact input")
+
+
+def _linear_importance_frame(model: ModelArtifact, *, method: str) -> pd.DataFrame:
+    fitted = model.fitted_object
+    coef = getattr(fitted, "coef_", None)
+    if coef is None:
+        raise ValueError(f"model {model.model_id} does not expose coef_")
+    values = list(coef.ravel() if hasattr(coef, "ravel") else coef)
+    return pd.DataFrame(
+        {
+            "feature": list(model.feature_names),
+            "coefficient": [float(value) for value in values],
+            "importance": [abs(float(value)) for value in values],
+        }
+    )
+
+
+def _permutation_importance_frame(model: ModelArtifact, X: pd.DataFrame, y: pd.Series | None, *, method: str) -> pd.DataFrame:
+    if y is None or not hasattr(model.fitted_object, "predict"):
+        return _linear_importance_frame(model, method=method)
+    aligned = pd.concat([X, y.rename("__target__")], axis=1).dropna()
+    X_eval = aligned[X.columns]
+    y_eval = aligned["__target__"]
+    baseline = ((y_eval - model.fitted_object.predict(X_eval)) ** 2).mean()
+    rows = []
+    for column in X_eval.columns:
+        permuted = X_eval.copy()
+        permuted[column] = list(reversed(permuted[column].tolist()))
+        loss = ((y_eval - model.fitted_object.predict(permuted)) ** 2).mean()
+        rows.append({"feature": column, "importance": float(loss - baseline), "coefficient": None})
+    return pd.DataFrame(rows)
+
+
+def _attach_l7_attrs(frame: pd.DataFrame, model: ModelArtifact, method: str, l3_features: L3FeaturesArtifact) -> pd.DataFrame:
+    frame = frame.sort_values("importance", ascending=False).reset_index(drop=True)
+    frame.attrs.update({"method": method, "model_id": model.model_id, "target": l3_features.y_final.name, "horizon": l3_features.horizon_set[0] if l3_features.horizon_set else 1})
+    return frame
+
+
+def _l7_group_aggregate(table: pd.DataFrame, params: dict[str, Any]) -> pd.DataFrame:
+    grouping = params.get("grouping", "user_defined")
+    result = table.copy()
+    result["group"] = result["feature"].map(lambda feature: str(feature).split("_")[0])
+    grouped = result.groupby("group", as_index=False)["importance"].sum()
+    grouped.attrs.update(table.attrs)
+    grouped.attrs["grouping"] = grouping
+    return grouped
+
+
+def _l7_lineage_attribution(table: pd.DataFrame, metadata: L3MetadataArtifact, params: dict[str, Any]) -> pd.DataFrame:
+    level = params.get("level", "pipeline_name")
+    rows = []
+    for _, row in table.iterrows():
+        lineage = metadata.column_lineage.get(str(row["feature"]))
+        pipeline = lineage.pipeline_id if lineage and lineage.pipeline_id else "unknown"
+        rows.append({"pipeline": pipeline, "importance": float(row["importance"])})
+    result = pd.DataFrame(rows).groupby("pipeline", as_index=False)["importance"].sum() if rows else pd.DataFrame(columns=["pipeline", "importance"])
+    result.attrs.update(table.attrs)
+    result.attrs["level"] = level
+    return result
+
+
+def _l7_transformation_attribution(l5_eval: L5EvaluationArtifact, params: dict[str, Any]) -> L7TransformationAttributionArtifact:
+    metrics = l5_eval.metrics_table
+    if metrics.empty:
+        summary = pd.DataFrame(columns=["pipeline", "target", "horizon", "contribution"])
+        contributions: dict[tuple[Any, ...], Any] = {}
+    else:
+        metric = params.get("loss_function", "mse")
+        metric = metric if metric in metrics.columns else "mse"
+        summary = metrics.assign(pipeline=metrics["model_id"]).rename(columns={metric: "contribution"})[["pipeline", "target", "horizon", "contribution"]]
+        contributions = {(row.target, int(row.horizon), row.pipeline): float(row.contribution) for row in summary.itertuples()}
+    return L7TransformationAttributionArtifact(
+        pipeline_contributions=contributions,
+        decomposition_method=params.get("decomposition_method", "shapley_over_pipelines"),
+        loss_function=params.get("loss_function", "mse"),
+        baseline_pipeline=params.get("baseline_pipeline", "simplest"),
+        summary_table=summary,
+    )
+
+
+def _l7_sink_targets(raw_sink: Any) -> dict[str, list[str]]:
+    if isinstance(raw_sink, str):
+        return {"global": [raw_sink]}
+    if not isinstance(raw_sink, dict):
+        return {}
+    result: dict[str, list[str]] = {}
+    for label, value in raw_sink.items():
+        if isinstance(value, list):
+            result[label] = [str(item) for item in value]
+        elif value is not None:
+            result[label] = [str(value)]
+    return result
+
+
+def _l6_error_frame(l4_forecasts: L4ForecastsArtifact, actual: pd.Series) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+        if origin not in actual.index:
+            continue
+        actual_value = float(actual.loc[origin])
+        forecast_value = float(forecast)
+        error = actual_value - forecast_value
+        rows.append(
+            {
+                "model_id": model_id,
+                "target": target,
+                "horizon": int(horizon),
+                "origin": origin,
+                "forecast": forecast_value,
+                "actual": actual_value,
+                "error": error,
+                "squared": error**2,
+                "absolute": abs(error),
+                "forecast_direction": _sign(forecast_value),
+                "actual_direction": _sign(actual_value),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _l6_pair_list(sub: dict[str, Any], leaf: dict[str, Any], model_ids: list[str], l4_models: L4ModelArtifactsArtifact) -> list[tuple[str, str]]:
+    if sub.get("model_pair_strategy") == "user_list" or sub.get("nested_pair_strategy") == "user_list":
+        key = "pair_user_list" if "model_pair_strategy" in sub else "nested_pair_user_list"
+        return [tuple(pair) for pair in leaf.get(key, [])]
+    benchmark_ids = [model_id for model_id, is_benchmark in l4_models.is_benchmark.items() if is_benchmark]
+    if benchmark_ids:
+        benchmark_id = benchmark_ids[0]
+        return [(model_id, benchmark_id) for model_id in model_ids if model_id != benchmark_id]
+    return [(left, right) for index, left in enumerate(model_ids) for right in model_ids[index + 1 :]]
+
+
+def _l6_equal_predictive_results(
+    errors: pd.DataFrame, sub: dict[str, Any], leaf: dict[str, Any], l4_models: L4ModelArtifactsArtifact
+) -> dict[tuple[Any, ...], Any]:
+    model_ids = sorted(errors["model_id"].unique()) if not errors.empty else []
+    pairs = _l6_pair_list(sub, leaf, model_ids, l4_models)
+    results: dict[tuple[Any, ...], Any] = {}
+    tests = ["dm_diebold_mariano", "gw_giacomini_white"] if sub.get("equal_predictive_test") == "multi" else [sub.get("equal_predictive_test")]
+    loss_col = "absolute" if sub.get("loss_function") == "absolute" else "squared"
+    for test_name in tests:
+        for model_a, model_b in pairs:
+            for (target, horizon), group in errors.groupby(["target", "horizon"]):
+                left = group.loc[group["model_id"] == model_a, ["origin", loss_col]].rename(columns={loss_col: "loss_a"})
+                right = group.loc[group["model_id"] == model_b, ["origin", loss_col]].rename(columns={loss_col: "loss_b"})
+                joined = left.merge(right, on="origin", how="inner")
+                diff = joined["loss_a"] - joined["loss_b"]
+                stat, p_value = _t_statistic(diff)
+                results[(test_name, model_a, model_b, target, int(horizon))] = {
+                    "statistic": stat,
+                    "p_value": p_value,
+                    "decision_at_5pct": p_value is not None and p_value < 0.05,
+                    "n_obs": int(diff.notna().sum()),
+                    "mean_loss_difference": _float_or_none(diff.mean()) if not diff.empty else None,
+                }
+    return results
+
+
+def _l6_nested_results(
+    errors: pd.DataFrame, sub: dict[str, Any], leaf: dict[str, Any], l4_models: L4ModelArtifactsArtifact
+) -> dict[tuple[Any, ...], Any]:
+    model_ids = sorted(errors["model_id"].unique()) if not errors.empty else []
+    pairs = _l6_pair_list({"nested_pair_strategy": sub.get("nested_pair_strategy")}, leaf, model_ids, l4_models)
+    tests = ["clark_west", "enc_new", "enc_t"] if sub.get("nested_test") == "multi" else [sub.get("nested_test")]
+    results: dict[tuple[Any, ...], Any] = {}
+    for test_name in tests:
+        for large_model, small_model in pairs:
+            for (target, horizon), group in errors.groupby(["target", "horizon"]):
+                small = group.loc[group["model_id"] == small_model, ["origin", "squared"]].rename(columns={"squared": "loss_small"})
+                large = group.loc[group["model_id"] == large_model, ["origin", "squared"]].rename(columns={"squared": "loss_large"})
+                joined = small.merge(large, on="origin", how="inner")
+                improvement = joined["loss_small"] - joined["loss_large"]
+                stat, p_value = _t_statistic(improvement)
+                results[(test_name, small_model, large_model, target, int(horizon))] = {
+                    "statistic": stat,
+                    "p_value": p_value,
+                    "decision_at_5pct": p_value is not None and p_value < 0.05,
+                    "n_obs": int(improvement.notna().sum()),
+                    "mean_adjusted_improvement": _float_or_none(improvement.mean()) if not improvement.empty else None,
+                }
+    return results
+
+
+def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4ModelArtifactsArtifact) -> dict[tuple[Any, ...], Any]:
+    results: dict[tuple[Any, ...], Any] = {}
+    model_ids = sorted(errors["model_id"].unique()) if not errors.empty else []
+    pairs = _l6_pair_list({"model_pair_strategy": "vs_benchmark_only"}, {}, model_ids, l4_models)
+    tests = ["giacomini_rossi_2010", "rossi_sekhposyan"] if sub.get("cpa_test") == "multi" else [sub.get("cpa_test")]
+    for test_name in tests:
+        for model_a, model_b in pairs:
+            for (target, horizon), group in errors.groupby(["target", "horizon"]):
+                left = group.loc[group["model_id"] == model_a, ["origin", "squared"]].rename(columns={"squared": "loss_a"})
+                right = group.loc[group["model_id"] == model_b, ["origin", "squared"]].rename(columns={"squared": "loss_b"})
+                joined = left.merge(right, on="origin", how="inner").sort_values("origin")
+                diff = joined["loss_a"] - joined["loss_b"]
+                centered = diff - diff.mean() if not diff.empty else diff
+                path = centered.cumsum().tolist()
+                statistic = float(max(abs(value) for value in path)) if path else None
+                results[(test_name, (model_a, model_b), target, int(horizon))] = {
+                    "statistic": statistic,
+                    "p_value": None,
+                    "time_path": path,
+                    "decision": None,
+                }
+    return results
+
+
+def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> dict[str, Any]:
+    if metrics.empty:
+        return {"mcs_inclusion": {}, "spa_p_values": {}, "reality_check_p_values": {}, "stepm_rejected": {}}
+    metric = "mse" if "mse" in metrics.columns else metrics.select_dtypes("number").columns[0]
+    alpha = float(sub.get("mcs_alpha", 0.10))
+    mcs: dict[tuple[Any, ...], set[str]] = {}
+    spa: dict[tuple[Any, ...], float] = {}
+    reality: dict[tuple[Any, ...], float] = {}
+    stepm: dict[tuple[Any, ...], set[str]] = {}
+    for (target, horizon), group in metrics.groupby(["target", "horizon"]):
+        best = float(group[metric].min())
+        tolerance = max(abs(best) * alpha, 1e-12)
+        included = set(group.loc[group[metric] <= best + tolerance, "model_id"].astype(str))
+        key = (target, int(horizon), alpha)
+        mcs[key] = included
+        spa[(target, int(horizon))] = 1.0 if len(included) == len(group) else alpha
+        reality[(target, int(horizon))] = spa[(target, int(horizon))]
+        stepm[key] = set(group.loc[group[metric] > best + tolerance, "model_id"].astype(str))
+    return {"mcs_inclusion": mcs, "spa_p_values": spa, "reality_check_p_values": reality, "stepm_rejected": stepm}
+
+
+def _l6_direction_results(errors: pd.DataFrame, sub: dict[str, Any], leaf: dict[str, Any]) -> dict[tuple[Any, ...], Any]:
+    threshold = leaf.get("direction_threshold_value", 0.0) if sub.get("direction_threshold") == "user_defined" else 0.0
+    results: dict[tuple[Any, ...], Any] = {}
+    tests = ["pesaran_timmermann_1992", "henriksson_merton"] if sub.get("direction_test") == "multi" else [sub.get("direction_test")]
+    for test_name in tests:
+        for (model_id, target, horizon), group in errors.groupby(["model_id", "target", "horizon"]):
+            hit = (_sign_series(group["forecast"] - threshold) == _sign_series(group["actual"] - threshold)).astype(float)
+            success = float(hit.mean()) if len(hit) else None
+            stat, p_value = _binomial_direction_stat(hit)
+            results[(test_name, model_id, target, int(horizon))] = {"statistic": stat, "p_value": p_value, "success_ratio": success}
+    return results
+
+
+def _l6_residual_results(errors: pd.DataFrame, sub: dict[str, Any]) -> dict[tuple[Any, ...], Any]:
+    results: dict[tuple[Any, ...], Any] = {}
+    tests = list(sub.get("residual_test", []))
+    if "multi" in tests:
+        tests = ["ljung_box_q", "arch_lm", "jarque_bera_normality", "breusch_godfrey_serial_correlation", "durbin_watson"]
+    lag = int(sub.get("residual_lag_count", 10))
+    for (model_id, target, horizon), group in errors.groupby(["model_id", "target", "horizon"]):
+        residuals = group.sort_values("origin")["error"].dropna()
+        for test_name in tests:
+            statistic, p_value = _residual_test_statistic(test_name, residuals, lag)
+            results[(test_name, model_id, target, int(horizon))] = {"statistic": statistic, "p_value": p_value, "lag_used": min(lag, max(len(residuals) - 1, 0))}
+    return results
+
+
+def _t_statistic(values: pd.Series) -> tuple[float | None, float | None]:
+    clean = values.dropna()
+    if len(clean) < 2:
+        return None, None
+    std = float(clean.std(ddof=1))
+    if std == 0:
+        stat = 0.0 if float(clean.mean()) == 0 else math.copysign(float("inf"), float(clean.mean()))
+    else:
+        stat = float(clean.mean()) / (std / math.sqrt(len(clean)))
+    return stat, _normal_two_sided_p(stat)
+
+
+def _normal_two_sided_p(statistic: float | None) -> float | None:
+    if statistic is None:
+        return None
+    if math.isinf(statistic):
+        return 0.0
+    return max(0.0, min(1.0, math.erfc(abs(statistic) / math.sqrt(2.0))))
+
+
+def _sign(value: float) -> int:
+    return 1 if value > 0 else (-1 if value < 0 else 0)
+
+
+def _sign_series(series: pd.Series) -> pd.Series:
+    return series.map(_sign)
+
+
+def _binomial_direction_stat(hit: pd.Series) -> tuple[float | None, float | None]:
+    clean = hit.dropna()
+    if clean.empty:
+        return None, None
+    p0 = 0.5
+    stat = (float(clean.mean()) - p0) / math.sqrt(p0 * (1.0 - p0) / len(clean))
+    return stat, _normal_two_sided_p(stat)
+
+
+def _residual_test_statistic(test_name: str, residuals: pd.Series, lag: int) -> tuple[float | None, float | None]:
+    if residuals.empty:
+        return None, None
+    values = residuals.astype(float)
+    if test_name == "durbin_watson":
+        denom = float((values**2).sum())
+        return (float((values.diff().dropna() ** 2).sum() / denom) if denom else None), None
+    if test_name == "jarque_bera_normality":
+        if len(values) < 3:
+            return None, None
+        skew = float(values.skew())
+        kurt = float(values.kurtosis() + 3.0)
+        jb = len(values) / 6.0 * (skew**2 + ((kurt - 3.0) ** 2) / 4.0)
+        return jb, math.exp(-jb / 2.0)
+    max_lag = min(lag, len(values) - 1)
+    if max_lag < 1:
+        return None, None
+    acfs = [_autocorr(values, k) for k in range(1, max_lag + 1)]
+    acfs = [0.0 if pd.isna(value) else value for value in acfs]
+    if test_name in {"ljung_box_q", "breusch_godfrey_serial_correlation"}:
+        q = len(values) * (len(values) + 2) * sum((rho**2) / max(len(values) - k, 1) for k, rho in enumerate(acfs, start=1))
+        return q, math.exp(-q / 2.0)
+    if test_name == "arch_lm":
+        squared = values**2
+        rho = _autocorr(squared, 1) if len(squared) > 1 else 0.0
+        stat = len(squared) * (0.0 if pd.isna(rho) else rho**2)
+        return stat, math.exp(-stat / 2.0)
+    return None, None
+
+
+def _autocorr(values: pd.Series, lag: int) -> float:
+    if lag < 1 or len(values) <= lag:
+        return 0.0
+    left = values.iloc[lag:].astype(float).to_numpy()
+    right = values.iloc[:-lag].astype(float).to_numpy()
+    left = left - left.mean()
+    right = right - right.mean()
+    denom = math.sqrt(float((left**2).sum()) * float((right**2).sum()))
+    if denom == 0:
+        return 0.0
+    return float((left * right).sum() / denom)
+
+
+def materialize_l8_runtime(recipe_root: dict[str, Any], upstream_artifacts: dict[str, Any]) -> tuple[L8ArtifactsArtifact, dict[str, Any]]:
     raw = recipe_root.get("8_output", {}) or {}
     context = l8_layer._recipe_context(recipe_root)
     report = l8_layer.validate_layer(raw, context=context)
@@ -862,20 +1379,124 @@ def materialize_l8_stub(recipe_root: dict[str, Any], upstream_artifacts: dict[st
     resolved = l8_layer.resolve_axes_from_raw(raw, context=context)
     axes = _plain_axes(resolved)
     output_directory = Path(axes["leaf_config"]["output_directory"])
+    output_directory.mkdir(parents=True, exist_ok=True)
+    (output_directory / "summary").mkdir(exist_ok=True)
+    exported_files = _l8_export_artifacts(output_directory, axes, upstream_artifacts, recipe_root)
     manifest = L8Manifest(
+        recipe_hash=str(abs(hash(json.dumps(_jsonable(recipe_root), sort_keys=True)))),
+        package_version="runtime-local",
         python_version=platform.python_version(),
         random_seed_used=((recipe_root.get("0_meta", {}) or {}).get("fixed_axes", {}) or {}).get("random_seed"),
         runtime_environment=RuntimeEnvironment(os_name=platform.system(), python_version=platform.python_version(), cpu_info=platform.machine()),
+        dependency_lockfile_paths=_dependency_lockfile_paths(),
+        cells_summary=[{"cell_id": "cell_001", "status": "completed", "exported_files": [file.path.as_posix() for file in exported_files]}],
+    )
+    manifest_path = output_directory / ("manifest.jsonl" if axes.get("manifest_format") == "json_lines" else "manifest.json")
+    manifest_payload = {
+        "manifest": _jsonable(manifest),
+        "provenance_fields": axes.get("provenance_fields", []),
+        "saved_objects": axes.get("saved_objects", []),
+        "upstream_sinks": sorted(upstream_artifacts),
+    }
+    if axes.get("manifest_format") == "json_lines":
+        manifest_path.write_text(json.dumps(manifest_payload, sort_keys=True) + "\n", encoding="utf-8")
+    else:
+        manifest_path.write_text(json.dumps(manifest_payload, indent=2, sort_keys=True), encoding="utf-8")
+    recipe_path = output_directory / "recipe.json"
+    recipe_path.write_text(json.dumps(_jsonable(recipe_root), indent=2, sort_keys=True), encoding="utf-8")
+    exported_files.extend(
+        [
+            ExportedFile(path=manifest_path, artifact_type="manifest", source_sink="l8_artifacts_v1"),
+            ExportedFile(path=recipe_path, artifact_type="recipe", source_sink="recipe"),
+        ]
     )
     return (
         L8ArtifactsArtifact(
             output_directory=output_directory,
             manifest=manifest,
-            artifact_count=0,
+            exported_files=exported_files,
+            artifact_count=len(exported_files),
             upstream_hashes={name: "runtime_unhashed" for name in sorted(upstream_artifacts)},
         ),
         axes,
     )
+
+
+def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_artifacts: dict[str, Any], recipe_root: dict[str, Any]) -> list[ExportedFile]:
+    saved = set(axes.get("saved_objects", []))
+    exported: list[ExportedFile] = []
+    summary_dir = output_directory / "summary"
+    cell_dir = output_directory / "cell_001"
+    cell_dir.mkdir(exist_ok=True)
+
+    def add_dataframe(path: Path, frame: pd.DataFrame, source: str) -> None:
+        frame.to_csv(path, index=True)
+        exported.append(ExportedFile(path=path, artifact_type="csv", source_sink=source))
+
+    def add_json(path: Path, payload: Any, source: str) -> None:
+        path.write_text(json.dumps(_jsonable(payload), indent=2, sort_keys=True), encoding="utf-8")
+        exported.append(ExportedFile(path=path, artifact_type="json", source_sink=source))
+
+    if "forecasts" in saved and "l4_forecasts_v1" in upstream_artifacts:
+        rows = [
+            {"model_id": model_id, "target": target, "horizon": horizon, "origin": origin, "forecast": forecast}
+            for (model_id, target, horizon, origin), forecast in upstream_artifacts["l4_forecasts_v1"].forecasts.items()
+        ]
+        add_dataframe(cell_dir / "forecasts.csv", pd.DataFrame(rows), "l4_forecasts_v1")
+    if "metrics" in saved and "l5_evaluation_v1" in upstream_artifacts:
+        add_dataframe(summary_dir / "metrics_all_cells.csv", upstream_artifacts["l5_evaluation_v1"].metrics_table, "l5_evaluation_v1")
+    if "ranking" in saved and "l5_evaluation_v1" in upstream_artifacts:
+        add_dataframe(summary_dir / "ranking.csv", upstream_artifacts["l5_evaluation_v1"].ranking_table, "l5_evaluation_v1")
+    if "tests" in saved and "l6_tests_v1" in upstream_artifacts:
+        add_json(output_directory / "tests_summary.json", upstream_artifacts["l6_tests_v1"], "l6_tests_v1")
+    if "importance" in saved and "l7_importance_v1" in upstream_artifacts:
+        add_json(output_directory / "importance_summary.json", upstream_artifacts["l7_importance_v1"], "l7_importance_v1")
+    if "feature_metadata" in saved and "l3_metadata_v1" in upstream_artifacts:
+        add_json(cell_dir / "feature_metadata.json", upstream_artifacts["l3_metadata_v1"], "l3_metadata_v1")
+    if "clean_panel" in saved and "l2_clean_panel_v1" in upstream_artifacts:
+        add_dataframe(cell_dir / "clean_panel.csv", upstream_artifacts["l2_clean_panel_v1"].panel.data, "l2_clean_panel_v1")
+    if "raw_panel" in saved and "l1_data_definition_v1" in upstream_artifacts:
+        add_dataframe(cell_dir / "raw_panel.csv", upstream_artifacts["l1_data_definition_v1"].raw_panel.data, "l1_data_definition_v1")
+    for sink_name, artifact in upstream_artifacts.items():
+        if sink_name.endswith("_diagnostic_v1"):
+            object_name = f"diagnostics_{sink_name.split('_diagnostic_v1')[0]}"
+            if object_name in saved:
+                diag_dir = output_directory / "diagnostics"
+                diag_dir.mkdir(exist_ok=True)
+                add_json(diag_dir / f"{sink_name}.json", artifact, sink_name)
+    return exported
+
+
+def _dependency_lockfile_paths() -> dict[str, str]:
+    paths: dict[str, str] = {}
+    for candidate in ("uv.lock", "requirements.txt", "pyproject.toml"):
+        path = Path(candidate)
+        if path.exists():
+            paths["python"] = path.as_posix()
+            break
+    return paths
+
+
+def _jsonable(value: Any) -> Any:
+    if is_dataclass(value):
+        return _jsonable(asdict(value))
+    if isinstance(value, pd.DataFrame):
+        return value.reset_index().to_dict("records")
+    if isinstance(value, pd.Series):
+        return value.to_dict()
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, Path):
+        return value.as_posix()
+    if isinstance(value, dict):
+        return {str(_jsonable(key)): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    return value
 
 
 def _plain_axes(value: Any) -> Any:
