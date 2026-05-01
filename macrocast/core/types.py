@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Literal
 
 import pandas as pd
@@ -328,6 +329,48 @@ class L7TransformationAttributionArtifact(DataType):
     baseline_pipeline: str = ""
     summary_table: pd.DataFrame = field(default_factory=pd.DataFrame)
     figures: dict[str, str] = field(default_factory=dict)
+    upstream_hashes: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class RuntimeEnvironment(DataType):
+    os_name: str = ""
+    python_version: str = ""
+    cpu_info: str = ""
+    gpu_info: str | None = None
+
+
+@dataclass(frozen=True)
+class L8Manifest(DataType):
+    recipe_hash: str = ""
+    package_version: str = ""
+    python_version: str = ""
+    r_version: str | None = None
+    julia_version: str | None = None
+    dependency_lockfile_paths: dict[str, str] = field(default_factory=dict)
+    git_commit_sha: str | None = None
+    git_branch_name: str | None = None
+    data_revision_tag: str = ""
+    random_seed_used: int | None = None
+    runtime_environment: RuntimeEnvironment = field(default_factory=RuntimeEnvironment)
+    runtime_duration_per_layer: dict[str, float] = field(default_factory=dict)
+    cells_summary: list[Any] = field(default_factory=list)
+    sweep_combination: Any | None = None
+
+
+@dataclass(frozen=True)
+class ExportedFile(DataType):
+    path: Path
+    artifact_type: str = ""
+    source_sink: str = ""
+
+
+@dataclass(frozen=True)
+class L8ArtifactsArtifact(DataType):
+    output_directory: Path = Path("./macrocast_output/default_recipe/timestamp/")
+    manifest: L8Manifest = field(default_factory=L8Manifest)
+    exported_files: list[ExportedFile] = field(default_factory=list)
+    artifact_count: int = 0
     upstream_hashes: dict[str, str] = field(default_factory=dict)
 
 
