@@ -637,6 +637,16 @@ def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_na
         return inputs[0]
     if op == "lag":
         return _lagged_predictors(_as_frame(inputs[0]), n_lag=int(params.get("n_lag", 4)), include_contemporaneous=bool(params.get("include_contemporaneous", False)))
+    if op == "seasonal_lag":
+        return _seasonal_lagged_predictors(
+            _as_frame(inputs[0]),
+            seasonal_period=int(params.get("seasonal_period", 12)),
+            n_seasonal_lags=int(params.get("n_seasonal_lags", 1)),
+        )
+    if op == "ma_window":
+        return _as_frame(inputs[0]).rolling(window=int(params.get("window", 3)), min_periods=int(params.get("window", 3))).mean()
+    if op == "ma_increasing_order":
+        return _ma_increasing_order(_as_frame(inputs[0]), max_order=int(params.get("max_order", 12)))
     if op == "concat":
         return pd.concat([_as_frame(value) for value in inputs], axis=1)
     if op == "scale":
@@ -650,6 +660,17 @@ def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_na
         return _diff_like(logged, periods=int(params.get("n_diff", 1)))
     if op == "pct_change":
         return _pct_change_like(inputs[0], periods=int(params.get("n_periods", 1)))
+    if op == "cumsum":
+        return inputs[0].cumsum()
+    if op == "polynomial_expansion":
+        return _polynomial_expansion(_as_frame(inputs[0]), degree=int(params.get("degree", 2)))
+    if op == "interaction":
+        return _interaction_terms(_as_frame(inputs[0]))
+    if op == "season_dummy":
+        return _season_dummy(_as_frame(inputs[0]))
+    if op == "time_trend":
+        frame = _as_frame(inputs[0])
+        return pd.Series(range(1, len(frame) + 1), index=frame.index, name="time_trend")
     if op == "target_construction":
         horizon = int(params.get("horizon", 1))
         y = _as_series(inputs[0], name=target_name).shift(-horizon).rename(target_name)
@@ -722,6 +743,57 @@ def _lagged_predictors(frame: pd.DataFrame, n_lag: int, *, include_contemporaneo
     for lag in range(first_lag, n_lag + 1):
         lagged.append(frame.shift(lag).add_suffix(f"_lag{lag}"))
     return pd.concat(lagged, axis=1)
+
+
+def _seasonal_lagged_predictors(frame: pd.DataFrame, *, seasonal_period: int, n_seasonal_lags: int) -> pd.DataFrame:
+    if seasonal_period < 2:
+        raise ValueError("minimal L3 runtime requires seasonal_period >= 2")
+    if n_seasonal_lags < 1:
+        raise ValueError("minimal L3 runtime requires n_seasonal_lags >= 1")
+    lagged = []
+    for lag in range(1, n_seasonal_lags + 1):
+        periods = seasonal_period * lag
+        lagged.append(frame.shift(periods).add_suffix(f"_s{seasonal_period}_lag{lag}"))
+    return pd.concat(lagged, axis=1)
+
+
+def _ma_increasing_order(frame: pd.DataFrame, *, max_order: int) -> pd.DataFrame:
+    if max_order < 2:
+        raise ValueError("minimal L3 runtime requires max_order >= 2")
+    windows = []
+    for order in range(2, max_order + 1):
+        windows.append(frame.rolling(window=order, min_periods=order).mean().add_suffix(f"_ma{order}"))
+    return pd.concat(windows, axis=1)
+
+
+def _polynomial_expansion(frame: pd.DataFrame, *, degree: int) -> pd.DataFrame:
+    if degree < 1:
+        raise ValueError("minimal L3 runtime requires degree >= 1")
+    pieces = [frame]
+    for power in range(2, degree + 1):
+        pieces.append(frame.pow(power).add_suffix(f"_pow{power}"))
+    return pd.concat(pieces, axis=1)
+
+
+def _interaction_terms(frame: pd.DataFrame) -> pd.DataFrame:
+    terms: dict[str, pd.Series] = {}
+    columns = list(frame.columns)
+    for index, left in enumerate(columns):
+        for right in columns[index + 1 :]:
+            terms[f"{left}_x_{right}"] = frame[left] * frame[right]
+    return pd.DataFrame(terms, index=frame.index)
+
+
+def _season_dummy(frame: pd.DataFrame) -> pd.DataFrame:
+    if isinstance(frame.index, pd.DatetimeIndex):
+        values = frame.index.month
+        prefix = "month"
+    else:
+        values = pd.Series(range(len(frame)), index=frame.index) % 12 + 1
+        prefix = "season"
+    dummies = pd.get_dummies(values, prefix=prefix, dtype=float)
+    dummies.index = frame.index
+    return dummies
 
 
 def _first_node(raw: dict[str, Any], *, op: str) -> dict[str, Any] | None:
