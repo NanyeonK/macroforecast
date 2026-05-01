@@ -17,6 +17,10 @@ user should not have to choose a fake FRED-MD/FRED-QD route for custom-only data
 derived for FRED-MD, FRED-QD, and composite FRED panels. It is required for
 standalone FRED-SD and custom-only data.
 
+For the current FRED-MD, FRED-QD, and FRED-SD column dictionaries, use
+[5. FRED-Dataset](../../fred_dataset/index.md). This page only defines which
+source route Layer 1 loads.
+
 | Axis | Choices | Default / rule |
 |---|---|---|
 | `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. First source choice: FRED data only, custom data only, or FRED data plus custom data. |

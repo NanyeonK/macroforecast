@@ -1,115 +1,91 @@
-# 4.0 Layer 0: Study Scope
+# 4.0 Layer 0: Study Setup
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Current: Layer 0
 - Next: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
 
-Layer 0 defines the study scope and execution discipline before data or models are chosen. It answers: how many targets are in the study, whether the downstream method path is fixed or compared, how failures behave, how deterministic execution should be, and how work may be parallelized.
+Layer 0 defines recipe-level execution policy before data, features, or
+models are chosen. It is hidden from the navigator main view by default
+and is available through an advanced toggle.
 
-## Simple vs Full
+## Layer Role
 
-Simple exposes only the first Layer 0 decision: `study_scope`. A single-method run maps to `one_target_one_method`; a Simple model comparison maps to `one_target_compare_methods`. The remaining Layer 0 policies use defaults and are still written to manifests for auditability.
+Layer 0 is a setup layer. It receives no upstream sinks and produces
+`l0_meta_v1`, a metadata artifact recorded in every cell manifest. Other
+layers read L0 decisions from the manifest/runtime context, not through a
+scientific data sink.
 
-Full shows all four user-facing Layer 0 decisions. You should review them in order, but you do not need to write every defaulted policy into YAML. If omitted, the compiler/runtime apply the defaults below.
+## Sub-Layer
 
-## How many steps?
+Layer 0 has one sub-layer:
 
-Layer 0 has **four user-facing steps**. Select them in this order:
-
-1. `study_scope` — choose target cardinality and whether the method path is fixed or compared.
-2. `failure_policy` — decide how failed variants or cells are handled; default is `fail_fast`.
-3. `reproducibility_mode` — decide how strictly stochastic components are pinned; default is `seeded_reproducible` with seed `42`.
-4. `compute_mode` — decide how execution work is laid out; default is `serial`.
-
-There is also an internal `axis_type` grammar, but it is not a sixth user step. Users express it by placing choices under `fixed_axes`, `sweep_axes`, or `conditional_axes`.
-
-## Decision order
-
-| Step | Axis | Role |
+| Slot | Name | Gate |
 |---|---|---|
-| 4.0.1 | [Study Scope](study_scope.md) | Target/method cardinality for the study. |
-| 4.0.2 | [Failure Handling](failure_policy.md) | Runtime failure behavior. |
-| 4.0.3 | [Reproducibility](reproducibility_mode.md) | Seed and determinism policy. |
-| 4.0.4 | [Compute Layout](compute_mode.md) | Serial by default, or local parallelism over a supported work unit. |
+| L0.A | Execution policy | always |
 
-## Defaults When Omitted
+L0.B and later slots are not used.
 
-| Axis | Default if omitted | Notes |
-|---|---|---|
-| `study_scope` | Derived when the recipe shape is sufficient; minimal one-cell recipes fall back to `one_target_one_method`. | Full users should normally set this explicitly because it drives Navigator compatibility and runner contracts. |
-| `failure_policy` | `fail_fast` | Defaulted execution policy. |
-| `reproducibility_mode` | `seeded_reproducible` | Defaulted execution policy; omitted seed falls back to `42`. Explicit strict or seeded modes must carry `leaf_config.random_seed`. |
-| `compute_mode` | `serial` | Defaulted execution policy. |
+## Axes
 
-## Selection logic
+Layer 0 has exactly three user-facing axes:
 
-Start with `study_scope`. A one-path forecast is not a separate route; it is the one-cell case of the same `comparison_sweep` execution grammar.
+| Axis | Default | Sweepable | Notes |
+|---|---|---:|---|
+| `failure_policy` | `fail_fast` | no | `continue_on_failure` records failed cells and continues remaining cells. |
+| `reproducibility_mode` | `seeded_reproducible` | no | `random_seed` defaults to `42`; `exploratory` must not set a seed. |
+| `compute_mode` | `serial` | no | `parallel` requires `leaf_config.parallel_unit` and `leaf_config.n_workers`. |
 
-- `one_target_one_method` runs one target through one fixed forecasting method path.
-- `one_target_compare_methods` runs one target across one or more method alternatives.
-- `multiple_targets_one_method` runs several targets through one fixed forecasting method path.
-- `multiple_targets_compare_methods` runs several targets across one or more method alternatives.
+Rejected values remain invalid: there is no `strict` reproducibility mode
+and no `parallel_models` or similar top-level compute mode. Use
+`compute_mode=parallel` plus `leaf_config.parallel_unit`.
 
-Replication Library entries are ordinary YAML recipes with one of these four scopes; replication is not a Study Scope branch.
+## Leaf Config
 
-Then set policies:
+| Key | Rule |
+|---|---|
+| `random_seed` | Optional int; default `42` when `reproducibility_mode=seeded_reproducible`; forbidden in `exploratory`. |
+| `parallel_unit` | Required when `compute_mode=parallel`; one of `models`, `horizons`, `targets`, `oos_dates`. |
+| `n_workers` | Required when `compute_mode=parallel`; positive int or `auto`. |
+| `gpu_deterministic` | Optional bool; default `false`. |
 
-- `failure_policy` is already `fail_fast` by default. Change it only when a sweep or bundle should continue after invalid cells.
-- `reproducibility_mode` is already `seeded_reproducible` with seed `42` by default. Change it only for strict replication or intentionally exploratory work.
-- `compute_mode` is already `serial` by default. Change it only when the selected run has multiple units of the chosen type.
+## Derived Manifest Fields
 
-## Layer contract
+L0 derives and records:
 
-Input:
-- user intent for study scope;
-- target structure and sweep shape from the recipe when the compiler derives the scope.
+| Field | Value |
+|---|---|
+| `study_scope` | Derived from target count and method/sweep shape. |
+| `execution_route` | Always `comparison_sweep`; single-cell runs are 1x1 sweep cases. |
 
-Output:
-- resolved or derived `study_scope`;
-- `execution_route=comparison_sweep` for direct one-cell and sweep-grid work;
-- failure/reproducibility/compute policies recorded in manifest and runner context.
-
-## Canonical names
-
-Layer 0 is canonical-only in generated recipes and Navigator paths. The compiler validates the route, runner, and policy IDs listed in this section; retired IDs are rejected instead of silently rewritten.
-
-## YAML shape
-
-Minimal one-cell Full YAML can specify only Study Scope:
+## Minimal YAML
 
 ```yaml
-path:
-  0_meta:
-    fixed_axes:
-      study_scope: one_target_one_method
+0_meta:
+  fixed_axes: {}
 ```
 
-The fully explicit equivalent records the same defaults directly:
+This resolves to `fail_fast`, `seeded_reproducible` with seed `42`, and
+`serial`.
+
+## Fully Explicit YAML
 
 ```yaml
-path:
-  0_meta:
-    fixed_axes:
-      study_scope: one_target_one_method
-      failure_policy: fail_fast
-      reproducibility_mode: seeded_reproducible
-      compute_mode: serial
-    leaf_config:
-      random_seed: 42
+0_meta:
+  fixed_axes:
+    failure_policy: continue_on_failure
+    reproducibility_mode: seeded_reproducible
+    compute_mode: parallel
+  leaf_config:
+    random_seed: 20260101
+    parallel_unit: oos_dates
+    n_workers: 8
+    gpu_deterministic: true
 ```
-
-## Related reference
-
-- [Layer 0 Meta Audit](../layer0_meta_audit.md)
-- [Layer Boundary Contract](../layer_boundary_contract.md)
-- [Layer Contract Ledger](../layer_contract_ledger.md)
 
 ```{toctree}
 :maxdepth: 1
 
-study_scope
 failure_policy
 reproducibility_mode
 compute_mode
-axis_type
 ```

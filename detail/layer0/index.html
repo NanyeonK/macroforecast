@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4.0 Layer 0: Study Scope &mdash; macrocast</title>
+  <title>4.0 Layer 0: Study Setup &mdash; macrocast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -22,7 +22,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="4.0.1 Study Scope" href="study_scope.html" />
+    <link rel="next" title="4.0.2 Failure Handling" href="failure_policy.html" />
     <link rel="prev" title="4. Detail (code): Full" href="../index.html" /> 
 </head>
 
@@ -51,12 +51,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">4. Detail (code): Full</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">4.0 Layer 0: Study Scope</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="study_scope.html">4.0.1 Study Scope</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">4.0 Layer 0: Study Setup</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="failure_policy.html">4.0.2 Failure Handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reproducibility_mode.html">4.0.3 Reproducibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="compute_mode.html">4.0.4 Compute Layout</a></li>
-<li class="toctree-l3"><a class="reference internal" href="axis_type.html">Layer 0 Appendix: axis_type</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
@@ -68,6 +66,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../layer7/index.html">4.7 Layer 7: Interpretation / Importance</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../foundation_core.html">Foundation Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
 </ul>
@@ -87,7 +87,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">4. Detail (code): Full</a></li>
-      <li class="breadcrumb-item active">4.0 Layer 0: Study Scope</li>
+      <li class="breadcrumb-item active">4.0 Layer 0: Study Setup</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/layer0/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -97,159 +97,146 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="layer-0-study-scope">
-<h1>4.0 Layer 0: Study Scope<a class="headerlink" href="#layer-0-study-scope" title="Link to this heading"></a></h1>
+  <section id="layer-0-study-setup">
+<h1>4.0 Layer 0: Study Setup<a class="headerlink" href="#layer-0-study-setup" title="Link to this heading"></a></h1>
 <ul class="simple">
 <li><p>Parent: <a class="reference internal" href="../index.html"><span class="std std-doc">4. Detail (code): Full</span></a></p></li>
 <li><p>Current: Layer 0</p></li>
 <li><p>Next: <a class="reference internal" href="../layer1/index.html"><span class="std std-doc">4.1 Layer 1: Data Source, Target y, Predictor x</span></a></p></li>
 </ul>
-<p>Layer 0 defines the study scope and execution discipline before data or models are chosen. It answers: how many targets are in the study, whether the downstream method path is fixed or compared, how failures behave, how deterministic execution should be, and how work may be parallelized.</p>
-<section id="simple-vs-full">
-<h2>Simple vs Full<a class="headerlink" href="#simple-vs-full" title="Link to this heading"></a></h2>
-<p>Simple exposes only the first Layer 0 decision: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>. A single-method run maps to <code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code>; a Simple model comparison maps to <code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code>. The remaining Layer 0 policies use defaults and are still written to manifests for auditability.</p>
-<p>Full shows all four user-facing Layer 0 decisions. You should review them in order, but you do not need to write every defaulted policy into YAML. If omitted, the compiler/runtime apply the defaults below.</p>
+<p>Layer 0 defines recipe-level execution policy before data, features, or
+models are chosen. It is hidden from the navigator main view by default
+and is available through an advanced toggle.</p>
+<section id="layer-role">
+<h2>Layer Role<a class="headerlink" href="#layer-role" title="Link to this heading"></a></h2>
+<p>Layer 0 is a setup layer. It receives no upstream sinks and produces
+<code class="docutils literal notranslate"><span class="pre">l0_meta_v1</span></code>, a metadata artifact recorded in every cell manifest. Other
+layers read L0 decisions from the manifest/runtime context, not through a
+scientific data sink.</p>
 </section>
-<section id="how-many-steps">
-<h2>How many steps?<a class="headerlink" href="#how-many-steps" title="Link to this heading"></a></h2>
-<p>Layer 0 has <strong>four user-facing steps</strong>. Select them in this order:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code> — choose target cardinality and whether the method path is fixed or compared.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> — decide how failed variants or cells are handled; default is <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> — decide how strictly stochastic components are pinned; default is <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> — decide how execution work is laid out; default is <code class="docutils literal notranslate"><span class="pre">serial</span></code>.</p></li>
-</ol>
-<p>There is also an internal <code class="docutils literal notranslate"><span class="pre">axis_type</span></code> grammar, but it is not a sixth user step. Users express it by placing choices under <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code>, <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code>, or <code class="docutils literal notranslate"><span class="pre">conditional_axes</span></code>.</p>
-</section>
-<section id="decision-order">
-<h2>Decision order<a class="headerlink" href="#decision-order" title="Link to this heading"></a></h2>
+<section id="sub-layer">
+<h2>Sub-Layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p>Layer 0 has one sub-layer:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Step</p></th>
-<th class="head"><p>Axis</p></th>
-<th class="head"><p>Role</p></th>
+<tr class="row-odd"><th class="head"><p>Slot</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Gate</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>4.0.1</p></td>
-<td><p><a class="reference internal" href="study_scope.html"><span class="std std-doc">Study Scope</span></a></p></td>
-<td><p>Target/method cardinality for the study.</p></td>
-</tr>
-<tr class="row-odd"><td><p>4.0.2</p></td>
-<td><p><a class="reference internal" href="failure_policy.html"><span class="std std-doc">Failure Handling</span></a></p></td>
-<td><p>Runtime failure behavior.</p></td>
-</tr>
-<tr class="row-even"><td><p>4.0.3</p></td>
-<td><p><a class="reference internal" href="reproducibility_mode.html"><span class="std std-doc">Reproducibility</span></a></p></td>
-<td><p>Seed and determinism policy.</p></td>
-</tr>
-<tr class="row-odd"><td><p>4.0.4</p></td>
-<td><p><a class="reference internal" href="compute_mode.html"><span class="std std-doc">Compute Layout</span></a></p></td>
-<td><p>Serial by default, or local parallelism over a supported work unit.</p></td>
+<tr class="row-even"><td><p>L0.A</p></td>
+<td><p>Execution policy</p></td>
+<td><p>always</p></td>
 </tr>
 </tbody>
 </table>
+<p>L0.B and later slots are not used.</p>
 </section>
-<section id="defaults-when-omitted">
-<h2>Defaults When Omitted<a class="headerlink" href="#defaults-when-omitted" title="Link to this heading"></a></h2>
+<section id="axes">
+<h2>Axes<a class="headerlink" href="#axes" title="Link to this heading"></a></h2>
+<p>Layer 0 has exactly three user-facing axes:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Axis</p></th>
-<th class="head"><p>Default if omitted</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head text-right"><p>Sweepable</p></th>
 <th class="head"><p>Notes</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></td>
-<td><p>Derived when the recipe shape is sufficient; minimal one-cell recipes fall back to <code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code>.</p></td>
-<td><p>Full users should normally set this explicitly because it drives Navigator compatibility and runner contracts.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fail_fast</span></code></p></td>
-<td><p>Defaulted execution policy.</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">continue_on_failure</span></code> records failed cells and continues remaining cells.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
-<td><p>Defaulted execution policy; omitted seed falls back to <code class="docutils literal notranslate"><span class="pre">42</span></code>. Explicit strict or seeded modes must carry <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>.</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">42</span></code>; <code class="docutils literal notranslate"><span class="pre">exploratory</span></code> must not set a seed.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">serial</span></code></p></td>
-<td><p>Defaulted execution policy.</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.parallel_unit</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.n_workers</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Rejected values remain invalid: there is no <code class="docutils literal notranslate"><span class="pre">strict</span></code> reproducibility mode
+and no <code class="docutils literal notranslate"><span class="pre">parallel_models</span></code> or similar top-level compute mode. Use
+<code class="docutils literal notranslate"><span class="pre">compute_mode=parallel</span></code> plus <code class="docutils literal notranslate"><span class="pre">leaf_config.parallel_unit</span></code>.</p>
+</section>
+<section id="leaf-config">
+<h2>Leaf Config<a class="headerlink" href="#leaf-config" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td><p>Optional int; default <code class="docutils literal notranslate"><span class="pre">42</span></code> when <code class="docutils literal notranslate"><span class="pre">reproducibility_mode=seeded_reproducible</span></code>; forbidden in <code class="docutils literal notranslate"><span class="pre">exploratory</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parallel_unit</span></code></p></td>
+<td><p>Required when <code class="docutils literal notranslate"><span class="pre">compute_mode=parallel</span></code>; one of <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">horizons</span></code>, <code class="docutils literal notranslate"><span class="pre">targets</span></code>, <code class="docutils literal notranslate"><span class="pre">oos_dates</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
+<td><p>Required when <code class="docutils literal notranslate"><span class="pre">compute_mode=parallel</span></code>; positive int or <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gpu_deterministic</span></code></p></td>
+<td><p>Optional bool; default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="selection-logic">
-<h2>Selection logic<a class="headerlink" href="#selection-logic" title="Link to this heading"></a></h2>
-<p>Start with <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>. A one-path forecast is not a separate route; it is the one-cell case of the same <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code> execution grammar.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code> runs one target through one fixed forecasting method path.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code> runs one target across one or more method alternatives.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code> runs several targets through one fixed forecasting method path.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code> runs several targets across one or more method alternatives.</p></li>
-</ul>
-<p>Replication Library entries are ordinary YAML recipes with one of these four scopes; replication is not a Study Scope branch.</p>
-<p>Then set policies:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> is already <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code> by default. Change it only when a sweep or bundle should continue after invalid cells.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> is already <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code> by default. Change it only for strict replication or intentionally exploratory work.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> is already <code class="docutils literal notranslate"><span class="pre">serial</span></code> by default. Change it only when the selected run has multiple units of the chosen type.</p></li>
-</ul>
+<section id="derived-manifest-fields">
+<h2>Derived Manifest Fields<a class="headerlink" href="#derived-manifest-fields" title="Link to this heading"></a></h2>
+<p>L0 derives and records:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">study_scope</span></code></p></td>
+<td><p>Derived from target count and method/sweep shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">execution_route</span></code></p></td>
+<td><p>Always <code class="docutils literal notranslate"><span class="pre">comparison_sweep</span></code>; single-cell runs are 1x1 sweep cases.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="layer-contract">
-<h2>Layer contract<a class="headerlink" href="#layer-contract" title="Link to this heading"></a></h2>
-<p>Input:</p>
-<ul class="simple">
-<li><p>user intent for study scope;</p></li>
-<li><p>target structure and sweep shape from the recipe when the compiler derives the scope.</p></li>
-</ul>
-<p>Output:</p>
-<ul class="simple">
-<li><p>resolved or derived <code class="docutils literal notranslate"><span class="pre">study_scope</span></code>;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">execution_route=comparison_sweep</span></code> for direct one-cell and sweep-grid work;</p></li>
-<li><p>failure/reproducibility/compute policies recorded in manifest and runner context.</p></li>
-</ul>
-</section>
-<section id="canonical-names">
-<h2>Canonical names<a class="headerlink" href="#canonical-names" title="Link to this heading"></a></h2>
-<p>Layer 0 is canonical-only in generated recipes and Navigator paths. The compiler validates the route, runner, and policy IDs listed in this section; retired IDs are rejected instead of silently rewritten.</p>
-</section>
-<section id="yaml-shape">
-<h2>YAML shape<a class="headerlink" href="#yaml-shape" title="Link to this heading"></a></h2>
-<p>Minimal one-cell Full YAML can specify only Study Scope:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
+<section id="minimal-yaml">
+<h2>Minimal YAML<a class="headerlink" href="#minimal-yaml" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </pre></div>
 </div>
-<p>The fully explicit equivalent records the same defaults directly:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_one_method</span>
-<span class="w">      </span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fail_fast</span>
-<span class="w">      </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
-<span class="w">      </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">serial</span>
-<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<p>This resolves to <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> with seed <code class="docutils literal notranslate"><span class="pre">42</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">serial</span></code>.</p>
+</section>
+<section id="fully-explicit-yaml">
+<h2>Fully Explicit YAML<a class="headerlink" href="#fully-explicit-yaml" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">continue_on_failure</span>
+<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+<span class="w">    </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parallel</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20260101</span>
+<span class="w">    </span><span class="nt">parallel_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oos_dates</span>
+<span class="w">    </span><span class="nt">n_workers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">gpu_deterministic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </pre></div>
 </div>
-</section>
-<section id="related-reference">
-<h2>Related reference<a class="headerlink" href="#related-reference" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../layer0_meta_audit.html"><span class="std std-doc">Layer 0 Meta Audit</span></a></p></li>
-<li><p><a class="reference internal" href="../layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a></p></li>
-<li><p><a class="reference internal" href="../layer_contract_ledger.html"><span class="std std-doc">Layer Contract Ledger</span></a></p></li>
-</ul>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="study_scope.html">4.0.1 Study Scope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="failure_policy.html">4.0.2 Failure Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility_mode.html">4.0.3 Reproducibility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compute_mode.html">4.0.4 Compute Layout</a></li>
-<li class="toctree-l1"><a class="reference internal" href="axis_type.html">Layer 0 Appendix: axis_type</a></li>
 </ul>
 </div>
 </section>
@@ -260,7 +247,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="4. Detail (code): Full" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="study_scope.html" class="btn btn-neutral float-right" title="4.0.1 Study Scope" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="failure_policy.html" class="btn btn-neutral float-right" title="4.0.2 Failure Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

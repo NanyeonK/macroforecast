@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foundation Core &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=19216117"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api/index.html" />
+    <link rel="prev" title="5.3 FRED-SD" href="fred_dataset/fred_sd.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">0. Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detail/index.html">4. Detail (code): Full</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Foundation Core</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/foundation_core.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="foundation-core">
+<h1>Foundation Core<a class="headerlink" href="#foundation-core" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> is the Phase 0 foundation for the next DAG-based execution
+surface. It is intentionally introduced beside the current public runtime.</p>
+<section id="current-authority">
+<h2>Current Authority<a class="headerlink" href="#current-authority" title="Link to this heading"></a></h2>
+<p>The existing public recipe/compiler/runtime stack remains authoritative:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> defines public axes used by Navigator and current YAML
+recipes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/compiler</span></code> compiles current recipes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/execution</span></code> runs current forecasting studies.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> does not replace these modules in this PR.</p>
+</section>
+<section id="new-core-contract">
+<h2>New Core Contract<a class="headerlink" href="#new-core-contract" title="Link to this heading"></a></h2>
+<p>The foundation layer provides:</p>
+<ul class="simple">
+<li><p>universal DAG schema with five node types: <code class="docutils literal notranslate"><span class="pre">source</span></code>, <code class="docutils literal notranslate"><span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">combine</span></code>, <code class="docutils literal notranslate"><span class="pre">sink</span></code>;</p></li>
+<li><p>typed artifacts for cross-layer sink contracts;</p></li>
+<li><p>layer registration for <code class="docutils literal notranslate"><span class="pre">L0</span></code> through <code class="docutils literal notranslate"><span class="pre">L8</span></code> plus diagnostics;</p></li>
+<li><p>operation registration for DAG step libraries;</p></li>
+<li><p>sweep expansion, validation, cache hashing, YAML normalization, recipe, and
+manifest scaffolding.</p></li>
+</ul>
+</section>
+<section id="registry-migration-plan">
+<h2>Registry Migration Plan<a class="headerlink" href="#registry-migration-plan" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> is the source of truth for the new DAG execution system.
+<code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> will be regenerated from <code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> entries once
+L0-L8 coverage lands.</p>
+<p>Until that point, <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> stays frozen for backward compatibility:</p>
+<ul class="simple">
+<li><p>DO NOT add new axes to <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
+<li><p>DO NOT modify existing axes in <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
+<li><p>DO NOT remove existing axes from <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
+</ul>
+<p>Phase 1 layer work adds new axes only to <code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code>. If current public
+recipes need backward-compatible behavior during the transition, implement an
+adapter at the boundary instead of changing legacy registry entries.</p>
+</section>
+<section id="capability-counts">
+<h2>Capability Counts<a class="headerlink" href="#capability-counts" title="Link to this heading"></a></h2>
+<p>README capability counts refer to the legacy registry runtime, not
+<code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code>. Phase 0 Foundation work must not modify headline capability
+counts.</p>
+<p>The Foundation Core should not change runtime capability counts until it is
+wired to execution and a dedicated capability-audit test owns those numbers.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fred_dataset/fred_sd.html" class="btn btn-neutral float-left" title="5.3 FRED-SD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
