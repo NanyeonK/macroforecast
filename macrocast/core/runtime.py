@@ -175,29 +175,31 @@ def materialize_l3_minimal(
     report = l3_layer.validate_layer(raw, recipe_context=_l3_context(l1_artifact))
     if report.has_hard_errors:
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    params = _minimal_l3_params(raw)
+    dag = l3_layer.normalize_to_dag_form(raw)
     df = l2_artifact.panel.data.copy()
     target_name = l1_artifact.target or (l1_artifact.targets[0] if l1_artifact.targets else None)
     if not target_name or target_name not in df.columns:
         raise ValueError("minimal L3 runtime requires target column in L2 clean panel")
-    horizon = int(params.get("horizon", l1_artifact.target_horizons[0] if l1_artifact.target_horizons else 1))
-    n_lag = int(params.get("n_lag", 1))
 
-    predictor_columns = [column for column in df.columns if column != target_name]
-    X = _lagged_predictors(df[predictor_columns], n_lag=n_lag)
-    y = df[target_name].shift(-horizon).rename(target_name)
-    aligned = pd.concat([X, y], axis=1).dropna(axis=0, how="any")
-    X_aligned = aligned[X.columns]
-    y_aligned = aligned[target_name]
+    node_values = _execute_l3_dag(dag, df, target_name)
+    sink_node = dag.nodes.get(dag.sinks.get("l3_features_v1", ""))
+    if sink_node is None or len(sink_node.inputs) < 2:
+        raise ValueError("minimal L3 runtime requires l3_features_v1 sink with X_final and y_final")
+    X = _as_frame(node_values[sink_node.inputs[0].node_id])
+    y = _as_series(node_values[sink_node.inputs[1].node_id], name=target_name)
+    aligned_index = pd.concat([X, y], axis=1).dropna(axis=0, how="any").index
+    X_aligned = X.loc[aligned_index]
+    y_aligned = y.loc[aligned_index]
+    horizon = int((y.attrs or {}).get("horizon", l1_artifact.target_horizons[0] if l1_artifact.target_horizons else 1))
     return (
         L3FeaturesArtifact(
-            X_final=_panel_from_frame(X_aligned, metadata={"stage": "l3_X_final", "n_lag": n_lag}),
+            X_final=_panel_from_frame(X_aligned, metadata={"stage": "l3_X_final", "runtime": "l3_dag"}),
             y_final=Series(
                 shape=y_aligned.shape,
                 name=target_name,
                 metadata=SeriesMetadata(values={"stage": "l3_y_final", "horizon": horizon, "data": y_aligned}),
             ),
-            sample_index=pd.DatetimeIndex(aligned.index),
+            sample_index=pd.DatetimeIndex(aligned_index),
             horizon_set=(horizon,),
         ),
         l3_layer.build_metadata_artifact(raw),
@@ -544,6 +546,121 @@ def _minimal_l3_params(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _execute_l3_dag(dag, frame: pd.DataFrame, target_name: str) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for node in _topological_nodes(dag):
+        if node.type == "source":
+            values[node.id] = _execute_l3_source(node.selector, frame, target_name)
+        elif node.op == "l3_feature_bundle":
+            values[node.id] = tuple(values[ref.node_id] for ref in node.inputs)
+        elif node.op == "l3_metadata_build":
+            values[node.id] = None
+        else:
+            inputs = [values[ref.node_id] for ref in node.inputs]
+            values[node.id] = _execute_l3_op(node.op, inputs, node.params, target_name)
+    return values
+
+
+def _execute_l3_source(selector, frame: pd.DataFrame, target_name: str) -> pd.DataFrame | pd.Series:
+    if selector is None:
+        raise ValueError("L3 source node requires a selector")
+    if selector.layer_ref != "l2" or selector.sink_name != "l2_clean_panel_v1":
+        raise NotImplementedError("minimal L3 runtime currently supports L2 clean panel sources only")
+    subset = selector.subset or {}
+    role = subset.get("role")
+    if role == "target":
+        return frame[target_name].copy()
+    if role == "predictors":
+        return frame[[column for column in frame.columns if column != target_name]].copy()
+    if "variable_list" in subset:
+        return frame[list(subset["variable_list"])].copy()
+    if subset.get("raw") is True:
+        return frame.copy()
+    raise NotImplementedError(f"minimal L3 runtime does not support source subset {subset!r}")
+
+
+def _topological_nodes(dag) -> list[Any]:
+    ordered = []
+    pending = dict(dag.nodes)
+    while pending:
+        progressed = False
+        for node_id, node in list(pending.items()):
+            if all(ref.node_id not in pending for ref in node.inputs):
+                ordered.append(node)
+                pending.pop(node_id)
+                progressed = True
+        if not progressed:
+            raise ValueError(f"{dag.layer_id}: DAG contains unresolved dependencies or a cycle")
+    return ordered
+
+
+def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_name: str) -> pd.DataFrame | pd.Series:
+    if op == "identity" or op == "level":
+        return inputs[0]
+    if op == "lag":
+        return _lagged_predictors(_as_frame(inputs[0]), n_lag=int(params.get("n_lag", 4)), include_contemporaneous=bool(params.get("include_contemporaneous", False)))
+    if op == "concat":
+        return pd.concat([_as_frame(value) for value in inputs], axis=1)
+    if op == "scale":
+        return _scale_frame(_as_frame(inputs[0]), method=params.get("method", "zscore"))
+    if op == "log":
+        return _map_like(inputs[0], lambda value: pd.NA if pd.isna(value) or value <= 0 else __import__("math").log(value))
+    if op == "diff":
+        return _diff_like(inputs[0], periods=int(params.get("n_diff", 1)))
+    if op == "log_diff":
+        logged = _map_like(inputs[0], lambda value: pd.NA if pd.isna(value) or value <= 0 else __import__("math").log(value))
+        return _diff_like(logged, periods=int(params.get("n_diff", 1)))
+    if op == "pct_change":
+        return _pct_change_like(inputs[0], periods=int(params.get("n_periods", 1)))
+    if op == "target_construction":
+        horizon = int(params.get("horizon", 1))
+        y = _as_series(inputs[0], name=target_name).shift(-horizon).rename(target_name)
+        y.attrs["horizon"] = horizon
+        return y
+    raise NotImplementedError(f"minimal L3 runtime does not support op {op!r}")
+
+
+def _as_frame(value: Any) -> pd.DataFrame:
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    if isinstance(value, pd.Series):
+        return value.to_frame()
+    raise TypeError(f"expected pandas DataFrame or Series, got {type(value).__name__}")
+
+
+def _as_series(value: Any, *, name: str) -> pd.Series:
+    if isinstance(value, pd.Series):
+        return value.rename(name)
+    if isinstance(value, pd.DataFrame) and len(value.columns) == 1:
+        return value.iloc[:, 0].rename(name)
+    raise TypeError(f"expected single Series target, got {type(value).__name__}")
+
+
+def _scale_frame(frame: pd.DataFrame, *, method: str) -> pd.DataFrame:
+    if method not in {"zscore", "standard", "standardize"}:
+        raise NotImplementedError(f"minimal L3 runtime does not support scale method {method!r}")
+    mean = frame.mean().to_numpy()
+    std = frame.std(ddof=0).replace(0, pd.NA).to_numpy()
+    scaled = (frame.to_numpy() - mean) / std
+    return pd.DataFrame(scaled, index=frame.index, columns=frame.columns)
+
+
+def _map_like(value: pd.DataFrame | pd.Series, func) -> pd.DataFrame | pd.Series:
+    if isinstance(value, pd.DataFrame):
+        return value.map(func)
+    if isinstance(value, pd.Series):
+        return value.map(func)
+    raise TypeError(f"expected pandas DataFrame or Series, got {type(value).__name__}")
+
+
+def _diff_like(value: pd.DataFrame | pd.Series, *, periods: int) -> pd.DataFrame | pd.Series:
+    return value.diff(periods=periods)
+
+
+def _pct_change_like(value: pd.DataFrame | pd.Series, *, periods: int) -> pd.DataFrame | pd.Series:
+    return value.pct_change(periods=periods)
+
+
 def _minimal_train_size(params: dict[str, Any], *, n_obs: int, n_features: int) -> int:
     if n_obs < 3:
         raise ValueError("minimal L4 runtime requires at least 3 aligned observations")
@@ -559,11 +676,12 @@ def _minimal_train_size(params: dict[str, Any], *, n_obs: int, n_features: int) 
     return min_train_size
 
 
-def _lagged_predictors(frame: pd.DataFrame, n_lag: int) -> pd.DataFrame:
+def _lagged_predictors(frame: pd.DataFrame, n_lag: int, *, include_contemporaneous: bool = False) -> pd.DataFrame:
     if n_lag < 1:
         raise ValueError("minimal L3 runtime requires n_lag >= 1")
     lagged = []
-    for lag in range(1, n_lag + 1):
+    first_lag = 0 if include_contemporaneous else 1
+    for lag in range(first_lag, n_lag + 1):
         lagged.append(frame.shift(lag).add_suffix(f"_lag{lag}"))
     return pd.concat(lagged, axis=1)
 
