@@ -482,6 +482,12 @@ button {
   font-size: 12px;
 }
 
+.field label span {
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -510,6 +516,27 @@ button {
   color: var(--text-muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.field-code {
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+}
+
+.choice-help {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.choice-help span {
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: #0f1217;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  font-size: 10px;
 }
 
 .toggle-line {
@@ -570,6 +597,54 @@ button {
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     #0d1015;
   background-size: 24px 24px;
+}
+
+.dag-help {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  background: rgba(13, 16, 21, 0.92);
+  color: var(--text-secondary);
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+.dag-help strong {
+  color: var(--text-primary);
+}
+
+.dag-palette {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 52px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.palette-button {
+  min-height: 26px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: #121721;
+  color: var(--text-secondary);
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.palette-button:hover {
+  border-color: rgba(124, 140, 255, 0.6);
+  color: var(--text-primary);
 }
 
 .dag-canvas {
@@ -641,6 +716,13 @@ button {
   font-size: 11px;
 }
 
+.node-help {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
 .node-ports {
   display: flex;
   justify-content: space-between;
@@ -660,6 +742,33 @@ button {
 .port-button.connecting {
   border-color: var(--accent-secondary);
   color: var(--accent-secondary);
+}
+
+.edge-list {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.edge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: #0f1217;
+  padding: 6px 7px;
+}
+
+.edge-remove {
+  min-height: 22px;
+  border: 1px solid var(--border-default);
+  border-radius: 5px;
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 11px;
 }
 
 .inspector {
