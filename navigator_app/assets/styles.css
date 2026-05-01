@@ -123,8 +123,11 @@ button:hover,
   gap: 16px;
 }
 
+.recipe-controls-hidden {
+  display: none;
+}
+
 .inspector .panel,
-.legacy-tools,
 .layer-detail {
   padding: 16px;
 }
@@ -310,8 +313,8 @@ input {
 
 .layer-hero {
   display: grid;
-  grid-template-columns: 118px minmax(0, 1fr) minmax(220px, 340px);
-  gap: 18px;
+  grid-template-columns: 86px minmax(0, 1fr) minmax(190px, 280px);
+  gap: 12px;
   align-items: stretch;
 }
 
@@ -319,11 +322,11 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 116px;
+  min-height: 84px;
   border-radius: 10px;
   background: #101828;
   color: #fff;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 900;
 }
 
@@ -332,16 +335,16 @@ input {
 }
 
 .layer-hero-copy h2 {
-  margin-bottom: 8px;
-  font-size: 30px;
+  margin-bottom: 6px;
+  font-size: 24px;
   line-height: 1.08;
 }
 
 .layer-hero-copy p:last-child {
   max-width: 760px;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.42;
 }
 
 .layer-metrics {
@@ -354,14 +357,14 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 54px;
-  padding: 10px;
+  min-height: 38px;
+  padding: 8px;
   border-radius: 9px;
 }
 
 .layer-metrics strong {
   color: var(--text);
-  font-size: 20px;
+  font-size: 17px;
 }
 
 .handoff-grid,
@@ -408,6 +411,211 @@ input {
 .empty-note {
   padding: 5px 8px;
   overflow-wrap: anywhere;
+}
+
+.sublayer-grid,
+.canonical-axis-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.sublayer-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.canonical-axis-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.sublayer-card,
+.canonical-axis {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+
+.sublayer-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 11px;
+}
+
+.sublayer-card span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--panel-subtle);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sublayer-card strong,
+.sublayer-card em,
+.canonical-axis span {
+  overflow-wrap: anywhere;
+}
+
+.sublayer-card em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.sublayer-card.active,
+.canonical-axis.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.sublayer-card.active span {
+  background: var(--accent);
+  color: #fff;
+}
+
+.canonical-axis {
+  padding: 10px 11px;
+}
+
+.canonical-axis span,
+.canonical-axis em {
+  display: block;
+}
+
+.canonical-axis span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.canonical-axis em {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.selected-sublayer {
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.axis-focus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.axis-focus span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.axis-focus strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.axis-option-panel {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.axis-option-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.axis-option-head span,
+.axis-option-head em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.axis-option-head strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.axis-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.axis-choice {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+
+.axis-choice strong,
+.axis-choice span,
+.axis-choice em {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.axis-choice strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.axis-choice span {
+  margin-top: 5px;
+  color: var(--ok);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.axis-choice em {
+  margin-top: 5px;
+  color: var(--danger);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.axis-choice.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.axis-choice.disabled {
+  border-color: #ffd0c8;
+  background: var(--danger-soft);
+  cursor: not-allowed;
 }
 
 .section-heading {
@@ -626,34 +834,6 @@ input {
   line-height: 1.45;
 }
 
-.legacy-tools {
-  box-shadow: none;
-}
-
-.legacy-tools summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-}
-
-.legacy-tools summary span {
-  font-size: 16px;
-  font-weight: 850;
-}
-
-.legacy-tools summary strong {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.legacy-tools[open] summary {
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
-}
-
 .layer-rail {
   display: grid;
   grid-template-columns: repeat(8, minmax(96px, 1fr));
@@ -685,26 +865,6 @@ input {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
-}
-
-.legacy-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-  gap: 14px;
-}
-
-.legacy-step-list,
-.legacy-path,
-.legacy-decision {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
-  background: var(--panel-subtle);
-}
-
-.legacy-decision {
-  margin-top: 14px;
 }
 
 .axis-list {
@@ -1057,7 +1217,6 @@ input {
   }
 
   .layer-hero,
-  .legacy-grid,
   .runtime-support {
     grid-template-columns: 1fr;
   }
@@ -1099,8 +1258,7 @@ input {
     font-size: 24px;
   }
 
-  .section-heading,
-  .legacy-tools summary {
+  .section-heading {
     flex-direction: column;
   }
 }
