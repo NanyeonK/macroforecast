@@ -260,6 +260,8 @@ def layer_topology() -> dict[str, Any]:
         cls = spec.cls
         sub_layers = getattr(cls, "sub_layers", {}) if cls is not None else {}
         layer_globals = getattr(cls, "layer_globals", {}) if cls is not None else {}
+        axes = list(cls.list_axes()) if cls is not None and hasattr(cls, "list_axes") else []
+        global_names = list(layer_globals) if isinstance(layer_globals, dict) else list(layer_globals or ())
         nodes.append(
             {
                 "id": layer_id,
@@ -270,9 +272,12 @@ def layer_topology() -> dict[str, Any]:
                 "ui_mode": spec.ui_mode,
                 "expected_inputs": list(spec.expected_inputs),
                 "produces": list(spec.produces),
+                "sub_layers": list(sub_layers),
+                "layer_globals": global_names,
+                "axes": axes,
                 "sub_layer_count": len(sub_layers),
-                "layer_global_count": len(layer_globals),
-                "axis_count": _layer_axis_count(cls) if cls is not None else 0,
+                "layer_global_count": len(global_names),
+                "axis_count": len(axes),
             }
         )
     dependency_edges = []

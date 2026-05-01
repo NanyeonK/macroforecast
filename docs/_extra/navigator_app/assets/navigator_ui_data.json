@@ -4497,6 +4497,7 @@
     ],
     "nodes": [
       {
+        "axes": [],
         "axis_count": 0,
         "category": "setup",
         "expected_inputs": [],
@@ -4504,14 +4505,17 @@
         "id": "l0",
         "label": "L0 Study Setup",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Study Setup",
         "produces": [
           "l0_meta_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "list"
       },
       {
+        "axes": [],
         "axis_count": 0,
         "category": "construction",
         "expected_inputs": [],
@@ -4519,15 +4523,32 @@
         "id": "l1",
         "label": "L1 Data",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Data",
         "produces": [
           "l1_data_definition_v1",
           "l1_regime_metadata_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "coverage_view",
+          "summary_metrics",
+          "summary_split",
+          "stationarity_test",
+          "stationarity_test_scope",
+          "missing_view",
+          "outlier_view",
+          "correlation_method",
+          "correlation_view",
+          "diagnostic_format",
+          "attach_to_manifest",
+          "figure_dpi",
+          "latex_export"
+        ],
         "axis_count": 13,
         "category": "diagnostic",
         "expected_inputs": [
@@ -4537,14 +4558,38 @@
         "id": "l1_5",
         "label": "L1.5 Data Summary",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Data summary",
         "produces": [
           "l1_5_diagnostic_v1"
         ],
         "sub_layer_count": 6,
+        "sub_layers": [
+          "L1_5_A_sample_coverage",
+          "L1_5_B_univariate_summary",
+          "L1_5_C_stationarity_tests",
+          "L1_5_D_missing_outlier_audit",
+          "L1_5_E_correlation_pre_cleaning",
+          "L1_5_Z_export"
+        ],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "sd_series_frequency_filter",
+          "quarterly_to_monthly_rule",
+          "monthly_to_quarterly_rule",
+          "transform_policy",
+          "transform_scope",
+          "outlier_policy",
+          "outlier_action",
+          "outlier_scope",
+          "imputation_policy",
+          "imputation_temporal_rule",
+          "imputation_scope",
+          "frame_edge_policy",
+          "frame_edge_scope"
+        ],
         "axis_count": 13,
         "category": "construction",
         "expected_inputs": [
@@ -4554,14 +4599,30 @@
         "id": "l2",
         "label": "L2 Preprocessing",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Preprocessing",
         "produces": [
           "l2_clean_panel_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "comparison_pair",
+          "comparison_output_form",
+          "distribution_metric",
+          "distribution_view",
+          "correlation_shift",
+          "correlation_method",
+          "cleaning_summary_view",
+          "t_code_application_log",
+          "diagnostic_format",
+          "attach_to_manifest",
+          "figure_dpi",
+          "latex_export"
+        ],
         "axis_count": 12,
         "category": "diagnostic",
         "expected_inputs": [
@@ -4572,14 +4633,23 @@
         "id": "l2_5",
         "label": "L2.5 Pre/Post",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Pre vs post preprocessing",
         "produces": [
           "l2_5_diagnostic_v1"
         ],
         "sub_layer_count": 5,
+        "sub_layers": [
+          "L2_5_A_comparison_axis",
+          "L2_5_B_distribution_shift",
+          "L2_5_C_correlation_shift",
+          "L2_5_D_cleaning_effect_summary",
+          "L2_5_Z_export"
+        ],
         "ui_mode": "list"
       },
       {
+        "axes": [],
         "axis_count": 0,
         "category": "construction",
         "expected_inputs": [
@@ -4591,15 +4661,34 @@
         "id": "l3",
         "label": "L3 Feature DAG",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Feature engineering",
         "produces": [
           "l3_features_v1",
           "l3_metadata_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "graph"
       },
       {
+        "axes": [
+          "comparison_stages",
+          "comparison_output_form",
+          "factor_view",
+          "dfm_diagnostics",
+          "feature_correlation",
+          "correlation_method",
+          "correlation_view",
+          "lag_view",
+          "marx_view",
+          "selection_view",
+          "stability_metric",
+          "diagnostic_format",
+          "attach_to_manifest",
+          "figure_dpi",
+          "latex_export"
+        ],
         "axis_count": 15,
         "category": "diagnostic",
         "expected_inputs": [
@@ -4612,14 +4701,24 @@
         "id": "l3_5",
         "label": "L3.5 Feature Diagnostics",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Feature diagnostics",
         "produces": [
           "l3_5_diagnostic_v1"
         ],
         "sub_layer_count": 6,
+        "sub_layers": [
+          "L3_5_A_comparison_axis",
+          "L3_5_B_factor_block_inspection",
+          "L3_5_C_feature_correlation",
+          "L3_5_D_lag_block_inspection",
+          "L3_5_E_selected_features_post_selection",
+          "L3_5_Z_export"
+        ],
         "ui_mode": "list"
       },
       {
+        "axes": [],
         "axis_count": 0,
         "category": "construction",
         "expected_inputs": [
@@ -4631,6 +4730,7 @@
         "id": "l4",
         "label": "L4 Forecast DAG",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Forecasting model",
         "produces": [
           "l4_forecasts_v1",
@@ -4638,9 +4738,25 @@
           "l4_training_metadata_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "graph"
       },
       {
+        "axes": [
+          "fit_view",
+          "fit_per_origin",
+          "forecast_scale_view",
+          "back_transform_method",
+          "window_view",
+          "coef_view_models",
+          "tuning_view",
+          "ensemble_view",
+          "weights_over_time_method",
+          "diagnostic_format",
+          "attach_to_manifest",
+          "figure_dpi",
+          "latex_export"
+        ],
         "axis_count": 13,
         "category": "diagnostic",
         "expected_inputs": [
@@ -4653,14 +4769,43 @@
         "id": "l4_5",
         "label": "L4.5 Generator Diagnostics",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Generator diagnostics",
         "produces": [
           "l4_5_diagnostic_v1"
         ],
         "sub_layer_count": 6,
+        "sub_layers": [
+          "L4_5_A_in_sample_fit",
+          "L4_5_B_forecast_scale_view",
+          "L4_5_C_window_stability",
+          "L4_5_D_tuning_history",
+          "L4_5_E_ensemble_diagnostics",
+          "L4_5_Z_export"
+        ],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "primary_metric",
+          "point_metrics",
+          "density_metrics",
+          "direction_metrics",
+          "relative_metrics",
+          "benchmark_window",
+          "benchmark_scope",
+          "agg_time",
+          "agg_horizon",
+          "agg_target",
+          "agg_state",
+          "oos_period",
+          "regime_use",
+          "regime_metrics",
+          "decomposition_target",
+          "decomposition_order",
+          "ranking",
+          "report_style"
+        ],
         "axis_count": 18,
         "category": "consumption",
         "expected_inputs": [
@@ -4674,14 +4819,55 @@
         "id": "l5",
         "label": "L5 Evaluation",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Evaluation",
         "produces": [
           "l5_evaluation_v1"
         ],
         "sub_layer_count": 0,
+        "sub_layers": [],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "enabled",
+          "test_scope",
+          "dependence_correction",
+          "overlap_handling",
+          "equal_predictive_test",
+          "loss_function",
+          "model_pair_strategy",
+          "hln_correction",
+          "nested_test",
+          "nested_pair_strategy",
+          "cw_adjustment",
+          "enc_test_one_sided",
+          "cpa_test",
+          "cpa_window_type",
+          "cpa_conditioning_info",
+          "cpa_critical_value_method",
+          "multiple_model_test",
+          "mcs_alpha",
+          "mmt_loss_function",
+          "bootstrap_method",
+          "bootstrap_n_replications",
+          "bootstrap_block_length",
+          "mcs_t_statistic",
+          "spa_studentization",
+          "stepm_alpha",
+          "density_test",
+          "interval_test",
+          "coverage_levels",
+          "pit_n_bins",
+          "pit_test_horizon_dependence",
+          "direction_test",
+          "direction_threshold",
+          "direction_alpha",
+          "residual_test",
+          "residual_lag_count",
+          "residual_test_scope",
+          "residual_alpha"
+        ],
         "axis_count": 37,
         "category": "consumption",
         "expected_inputs": [
@@ -4695,14 +4881,39 @@
         "id": "l6",
         "label": "L6 Statistical Tests",
         "layer_global_count": 3,
+        "layer_globals": [
+          "test_scope",
+          "dependence_correction",
+          "overlap_handling"
+        ],
         "name": "Statistical tests",
         "produces": [
           "l6_tests_v1"
         ],
         "sub_layer_count": 7,
+        "sub_layers": [
+          "L6_A_equal_predictive",
+          "L6_B_nested",
+          "L6_C_cpa",
+          "L6_D_multiple_model",
+          "L6_E_density_interval",
+          "L6_F_direction",
+          "L6_G_residual"
+        ],
         "ui_mode": "list"
       },
       {
+        "axes": [
+          "enabled",
+          "output_table_format",
+          "figure_type",
+          "top_k_features_to_show",
+          "precision_digits",
+          "figure_dpi",
+          "figure_format",
+          "latex_table_export",
+          "markdown_table_export"
+        ],
         "axis_count": 9,
         "category": "consumption",
         "expected_inputs": [
@@ -4719,15 +4930,30 @@
         "id": "l7",
         "label": "L7 Interpretation DAG",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Interpretation",
         "produces": [
           "l7_importance_v1",
           "l7_transformation_attribution_v1"
         ],
         "sub_layer_count": 2,
+        "sub_layers": [
+          "L7.A",
+          "L7.B"
+        ],
         "ui_mode": "graph"
       },
       {
+        "axes": [
+          "export_format",
+          "compression",
+          "saved_objects",
+          "model_artifacts_format",
+          "provenance_fields",
+          "manifest_format",
+          "artifact_granularity",
+          "naming_convention"
+        ],
         "axis_count": 8,
         "category": "consumption",
         "expected_inputs": [
@@ -4749,11 +4975,18 @@
         "id": "l8",
         "label": "L8 Output",
         "layer_global_count": 0,
+        "layer_globals": [],
         "name": "Output / provenance",
         "produces": [
           "l8_artifacts_v1"
         ],
         "sub_layer_count": 4,
+        "sub_layers": [
+          "L8_A_export_format",
+          "L8_B_saved_objects",
+          "L8_C_provenance",
+          "L8_D_artifact_granularity"
+        ],
         "ui_mode": "list"
       }
     ],
