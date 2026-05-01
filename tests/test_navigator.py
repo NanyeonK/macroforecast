@@ -96,6 +96,44 @@ def _skip_static_navigator_app_if_missing() -> None:
         pytest.skip("static navigator app was removed from docs/_extra")
 
 
+def test_static_navigator_app_exposes_docs_layer_options():
+    root = Path(__file__).resolve().parents[1]
+    app_js = root / "docs/_html_extra/navigator_app/app.js"
+    source = app_js.read_text(encoding="utf-8")
+
+    expected_tokens = {
+        "custom_source_policy",
+        "official_plus_custom",
+        "information_set_type",
+        "pseudo_oos_on_revised_data",
+        "target_structure",
+        "multi_target",
+        "fred_sd_mixed_frequency_representation",
+        "native_frequency_block_payload",
+        "horizon_target_construction",
+        "path_average_growth_1_to_h",
+        "primary_metric",
+        "relative_mse",
+        "equal_predictive_test",
+        "dm_diebold_mariano",
+        "export_format",
+        "json_parquet",
+        "provenance_fields",
+        "artifact_granularity",
+    }
+    missing = sorted(token for token in expected_tokens if token not in source)
+    assert missing == []
+
+    removed_tokens = {
+        "preprocessing_profile",
+        "broad_safe_default",
+        "output_root",
+        "metrics: [\"msfe\"",
+    }
+    lingering = sorted(token for token in removed_tokens if token in source)
+    assert lingering == []
+
+
 def _js_state_snapshot(tmp_path: Path, recipe: dict, actions: list[tuple[str, str]]) -> dict:
     _skip_static_navigator_app_if_missing()
     node = shutil.which("node")

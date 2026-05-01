@@ -14,6 +14,148 @@ const layerDefs = [
   { id: "l8", key: "8_output", name: "Output", mode: "form", role: "saved objects and provenance" }
 ];
 
+const AXIS_OPTIONS = {
+  l1: {
+    custom_source_policy: ["official_only", "custom_panel_only", "official_plus_custom"],
+    dataset: ["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"],
+    frequency: ["monthly", "quarterly"],
+    information_set_type: ["final_revised_data", "pseudo_oos_on_revised_data"],
+    release_lag_rule: ["ignore_release_lag", "fixed_lag_all_series", "series_specific_lag"],
+    contemporaneous_x_rule: ["forbid_same_period_predictors", "allow_same_period_predictors"],
+    target_structure: ["single_target", "multi_target"],
+    variable_universe: ["all_variables", "core_variables", "category_variables", "target_specific_variables", "explicit_variable_list"],
+    fred_sd_frequency_policy: ["report_only", "allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency"],
+    fred_sd_state_group: [
+      "all_states",
+      "contiguous_48_plus_dc",
+      "census_region_northeast",
+      "census_region_midwest",
+      "census_region_south",
+      "census_region_west",
+      "census_division_new_england",
+      "census_division_middle_atlantic",
+      "census_division_east_north_central",
+      "census_division_west_north_central",
+      "census_division_south_atlantic",
+      "census_division_east_south_central",
+      "census_division_west_south_central",
+      "census_division_mountain",
+      "census_division_pacific",
+      "custom_state_group"
+    ],
+    state_selection: ["all_states", "selected_states"],
+    fred_sd_variable_group: [
+      "all_sd_variables",
+      "labor_market_core",
+      "housing_core",
+      "prices_core",
+      "income_spending_core",
+      "banking_credit_core",
+      "tcode_review_required",
+      "custom_sd_variable_group"
+    ],
+    sd_variable_selection: ["all_sd_variables", "selected_sd_variables"],
+    raw_missing_policy: ["preserve_raw_missing", "zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows"],
+    raw_outlier_policy: ["preserve_raw_outliers", "winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing"],
+    official_transform_policy: ["apply_official_tcode", "keep_official_raw_scale"],
+    official_transform_scope: ["target_only", "predictors_only", "target_and_predictors", "none"],
+    missing_availability: ["zero_fill_leading_predictor_gaps", "require_complete_rows", "keep_available_rows", "impute_predictors_only"]
+  },
+  l2: {
+    fred_sd_mixed_frequency_representation: ["calendar_aligned_frame", "drop_unknown_native_frequency", "drop_non_target_native_frequency", "native_frequency_block_payload", "mixed_frequency_model_adapter"],
+    horizon_target_construction: ["future_target_level_t_plus_h", "future_diff", "future_logdiff", "average_growth_1_to_h", "path_average_growth_1_to_h", "average_difference_1_to_h", "path_average_difference_1_to_h", "average_log_growth_1_to_h", "path_average_log_growth_1_to_h"],
+    target_transform: ["level", "difference", "log", "log_difference", "growth_rate"],
+    target_normalization: ["none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"],
+    tcode_policy: ["raw_only", "official_tcode_only", "official_tcode_then_extra_preprocess", "extra_preprocess_only", "extra_preprocess_then_official_tcode", "custom_transform_sequence"],
+    x_missing_policy: ["none", "drop", "em_impute", "mean_impute", "median_impute", "ffill", "interpolate_linear", "drop_rows", "drop_columns", "drop_if_above_threshold", "missing_indicator", "custom"],
+    x_outlier_policy: ["none", "clip", "outlier_to_nan", "winsorize", "trim", "iqr_clip", "mad_clip", "zscore_clip", "outlier_to_missing", "custom"],
+    scaling_policy: ["none", "standard", "robust", "minmax", "demean_only", "unit_variance_only", "rank_scale", "custom"],
+    target_lag_block: ["none", "fixed_target_lags", "ic_selected_target_lags", "horizon_specific_target_lags", "custom_target_lags"],
+    x_lag_feature_block: ["none", "fixed_predictor_lags", "variable_specific_predictor_lags", "category_specific_predictor_lags", "cv_selected_predictor_lags", "custom_predictor_lags"],
+    factor_feature_block: ["none", "pca_static_factors", "pca_factor_lags", "supervised_factors", "custom_factors"],
+    level_feature_block: ["none", "target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"],
+    temporal_feature_block: ["none", "moving_average_features", "rolling_moments", "local_temporal_factors", "volatility_features", "custom_temporal_features"],
+    rotation_feature_block: ["none", "marx_rotation", "maf_rotation", "moving_average_rotation", "custom_rotation"],
+    feature_block_combination: ["replace_with_selected_blocks", "append_to_base_predictors", "append_to_target_lags", "concatenate_named_blocks", "custom_feature_combiner"],
+    feature_selection_policy: ["none", "correlation_filter", "lasso_selection", "mutual_information_screen", "custom"],
+    feature_selection_semantics: ["select_before_factor", "select_after_factor", "select_after_custom_feature_blocks"],
+    evaluation_scale: ["original_scale", "raw_level", "transformed_scale", "both"],
+    feature_builder: ["target_lag_features", "factors_plus_target_lags", "raw_feature_panel", "raw_predictors_only", "pca_factor_features", "sequence_tensor"]
+  },
+  l5: {
+    primary_metric: ["mse", "rmse", "mae", "mape", "medae", "theil_u1", "theil_u2", "relative_mse", "r2_oos", "relative_mae", "mse_reduction", "log_score", "crps"],
+    point_metrics: ["mse", "rmse", "mae", "mape", "medae", "theil_u1", "theil_u2"],
+    density_metrics: ["log_score", "crps", "interval_score", "coverage_rate"],
+    direction_metrics: ["success_ratio", "pesaran_timmermann_metric"],
+    relative_metrics: ["relative_mse", "r2_oos", "relative_mae", "mse_reduction"],
+    benchmark_window: ["full_oos", "rolling", "expanding"],
+    benchmark_scope: ["all_targets_horizons", "per_target_horizon"],
+    agg_time: ["mean", "median", "per_subperiod"],
+    agg_horizon: ["pool_horizons", "per_horizon_separate"],
+    agg_target: ["pool_targets", "per_target_separate"],
+    agg_state: ["pool_states", "per_state_separate"],
+    oos_period: ["full_oos", "fixed_dates", "multiple_subperiods"],
+    regime_use: ["pooled", "per_regime", "both"],
+    decomposition_target: ["none", "by_horizon", "by_target", "by_state", "by_regime"],
+    decomposition_order: ["marginal", "sequential"],
+    ranking: ["by_primary_metric", "by_relative_metric", "by_average_rank", "mcs_inclusion"],
+    report_style: ["single_table", "per_target_horizon_panel", "latex_table"]
+  },
+  l6: {
+    test_scope: ["per_target_horizon", "per_target", "per_horizon", "pooled"],
+    dependence_correction: ["newey_west", "block_bootstrap", "none"],
+    overlap_handling: ["newey_west", "block_bootstrap", "none"],
+    equal_predictive_test: ["dm_diebold_mariano", "none"],
+    model_pair_strategy: ["vs_benchmark_only", "all_pairs", "user_list"]
+  },
+  l8: {
+    export_format: ["json", "csv", "parquet", "json_csv", "json_parquet", "latex_tables", "markdown_report", "html_report", "all"],
+    compression: ["none", "gzip", "zip"],
+    saved_objects: [
+      "forecasts",
+      "forecast_intervals",
+      "metrics",
+      "ranking",
+      "decomposition",
+      "regime_metrics",
+      "state_metrics",
+      "model_artifacts",
+      "combination_weights",
+      "feature_metadata",
+      "clean_panel",
+      "raw_panel",
+      "diagnostics_l1_5",
+      "diagnostics_l2_5",
+      "diagnostics_l3_5",
+      "diagnostics_l4_5",
+      "diagnostics_all",
+      "tests",
+      "importance",
+      "transformation_attribution"
+    ],
+    model_artifacts_format: ["pickle", "joblib", "onnx", "pmml"],
+    provenance_fields: [
+      "recipe_yaml_full",
+      "recipe_hash",
+      "package_version",
+      "python_version",
+      "r_version",
+      "julia_version",
+      "dependency_lockfile",
+      "git_commit_sha",
+      "git_branch_name",
+      "data_revision_tag",
+      "random_seed_used",
+      "runtime_environment",
+      "runtime_duration",
+      "cell_resolved_axes"
+    ],
+    manifest_format: ["json", "yaml", "json_lines"],
+    artifact_granularity: ["per_cell", "per_target", "per_horizon", "per_target_horizon", "flat"],
+    naming_convention: ["cell_id", "descriptive", "recipe_hash", "custom"]
+  }
+};
+
 const state = {
   selectedLayer: "map",
   selectedNode: null,
@@ -26,21 +168,115 @@ const state = {
       leaf_config: { random_seed: 42 }
     },
     l1: {
-      fixed_axes: { dataset: "fred_md", target_structure: "multi_target", variable_universe: "all_variables" },
-      leaf_config: { targets: ["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL", "RPI"], horizons: [1, 3, 6, 12] }
+      fixed_axes: {
+        custom_source_policy: "official_only",
+        dataset: "fred_md",
+        frequency: "monthly",
+        information_set_type: "final_revised_data",
+        release_lag_rule: "ignore_release_lag",
+        contemporaneous_x_rule: "forbid_same_period_predictors",
+        target_structure: "multi_target",
+        variable_universe: "all_variables",
+        fred_sd_frequency_policy: "report_only",
+        fred_sd_state_group: "all_states",
+        state_selection: "all_states",
+        fred_sd_variable_group: "all_sd_variables",
+        sd_variable_selection: "all_sd_variables",
+        raw_missing_policy: "preserve_raw_missing",
+        raw_outlier_policy: "preserve_raw_outliers",
+        official_transform_policy: "apply_official_tcode",
+        official_transform_scope: "target_and_predictors",
+        missing_availability: "zero_fill_leading_predictor_gaps"
+      },
+      leaf_config: {
+        target: "INDPRO",
+        targets: ["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL", "RPI"],
+        horizons: [1, 3, 6, 12],
+        sample_start_date: "1960-01",
+        sample_end_date: "",
+        custom_source_path: "",
+        sd_states: [],
+        sd_variables: []
+      }
     },
     l2: {
-      fixed_axes: { preprocessing_profile: "minimal_official_when_available", scaling_policy: "standard", missing_policy: "broad_safe_default" },
+      fixed_axes: {
+        fred_sd_mixed_frequency_representation: "calendar_aligned_frame",
+        horizon_target_construction: "future_target_level_t_plus_h",
+        target_transform: "level",
+        target_normalization: "none",
+        tcode_policy: "official_tcode_only",
+        x_missing_policy: "em_impute",
+        x_outlier_policy: "iqr_clip",
+        scaling_policy: "standard",
+        target_lag_block: "fixed_target_lags",
+        x_lag_feature_block: "fixed_predictor_lags",
+        factor_feature_block: "pca_static_factors",
+        level_feature_block: "none",
+        temporal_feature_block: "none",
+        rotation_feature_block: "none",
+        feature_block_combination: "append_to_base_predictors",
+        feature_selection_policy: "none",
+        feature_selection_semantics: "select_after_factor",
+        evaluation_scale: "original_scale",
+        feature_builder: "factors_plus_target_lags"
+      },
       leaf_config: {}
     },
     l5: {
-      fixed_axes: { metrics: ["msfe", "rmse", "mae"], ranking: "by_primary_metric", primary_metric: "msfe" },
+      fixed_axes: {
+        primary_metric: "mse",
+        point_metrics: ["mse", "mae"],
+        density_metrics: ["log_score", "crps"],
+        direction_metrics: [],
+        relative_metrics: ["relative_mse", "r2_oos"],
+        benchmark_window: "full_oos",
+        benchmark_scope: "all_targets_horizons",
+        agg_time: "mean",
+        agg_horizon: "per_horizon_separate",
+        agg_target: "per_target_separate",
+        agg_state: "pool_states",
+        oos_period: "full_oos",
+        regime_use: "pooled",
+        regime_metrics: [],
+        decomposition_target: "none",
+        decomposition_order: "marginal",
+        ranking: "by_primary_metric",
+        report_style: "single_table"
+      },
       leaf_config: {}
     },
-    l6: { enabled: false, fixed_axes: { equal_predictive: "none" }, leaf_config: {} },
+    l6: {
+      enabled: false,
+      test_scope: "per_target_horizon",
+      dependence_correction: "newey_west",
+      overlap_handling: "newey_west",
+      sub_layers: {
+        L6_A_equal_predictive: {
+          enabled: false,
+          fixed_axes: {
+            equal_predictive_test: "dm_diebold_mariano",
+            model_pair_strategy: "vs_benchmark_only"
+          }
+        }
+      },
+      leaf_config: {}
+    },
     l8: {
-      fixed_axes: { saved_objects: ["forecasts", "metrics", "ranking", "manifest", "recipe_yaml"], provenance: "full" },
-      leaf_config: { output_root: "macrocast_output" }
+      fixed_axes: {
+        export_format: "json_csv",
+        compression: "none",
+        saved_objects: ["forecasts", "metrics", "ranking"],
+        model_artifacts_format: "pickle",
+        provenance_fields: ["recipe_yaml_full", "recipe_hash", "package_version", "python_version", "git_commit_sha", "random_seed_used", "runtime_environment", "runtime_duration", "cell_resolved_axes"],
+        manifest_format: "json",
+        artifact_granularity: "per_cell",
+        naming_convention: "descriptive"
+      },
+      leaf_config: {
+        output_directory: "./macrocast_output/default_recipe/timestamp/",
+        descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}"
+      }
     }
   },
   diagnostics: {
@@ -204,35 +440,126 @@ function renderFormLayer(layer, body) {
     textField("random_seed", state.layers.l0.leaf_config.random_seed, (v) => state.layers.l0.leaf_config.random_seed = Number(v) || 42)
   ]));
 
-  if (layer.id === "l1") grid.appendChild(sectionFromFields("Broad Multi-Target FRED-MD", [
-    selectField("dataset", state.layers.l1.fixed_axes.dataset, ["fred_md", "fred_qd", "fred_sd"], (v) => state.layers.l1.fixed_axes.dataset = v),
-    selectField("target_structure", state.layers.l1.fixed_axes.target_structure, ["multi_target", "single_target"], (v) => state.layers.l1.fixed_axes.target_structure = v),
-    textAreaField("targets", state.layers.l1.leaf_config.targets.join(", "), (v) => state.layers.l1.leaf_config.targets = splitCsv(v)),
-    textAreaField("horizons", state.layers.l1.leaf_config.horizons.join(", "), (v) => state.layers.l1.leaf_config.horizons = splitCsv(v).map(Number).filter(Boolean))
-  ]));
+  if (layer.id === "l1") {
+    grid.appendChild(sectionFromFields("Data source mode / frequency", [
+      selectAxis("l1", "custom_source_policy"),
+      selectAxis("l1", "dataset"),
+      selectAxis("l1", "frequency"),
+      textField("custom_source_path", state.layers.l1.leaf_config.custom_source_path, (v) => state.layers.l1.leaf_config.custom_source_path = v)
+    ]));
+    grid.appendChild(sectionFromFields("Forecast-time information", [
+      selectAxis("l1", "information_set_type"),
+      selectAxis("l1", "release_lag_rule"),
+      selectAxis("l1", "contemporaneous_x_rule")
+    ]));
+    grid.appendChild(sectionFromFields("Target and predictor definitions", [
+      selectAxis("l1", "target_structure"),
+      textField("target", state.layers.l1.leaf_config.target, (v) => state.layers.l1.leaf_config.target = v),
+      textAreaField("targets", state.layers.l1.leaf_config.targets.join(", "), (v) => state.layers.l1.leaf_config.targets = splitCsv(v)),
+      textAreaField("horizons", state.layers.l1.leaf_config.horizons.join(", "), (v) => state.layers.l1.leaf_config.horizons = splitCsv(v).map(Number).filter(Boolean)),
+      textField("sample_start_date", state.layers.l1.leaf_config.sample_start_date, (v) => state.layers.l1.leaf_config.sample_start_date = v),
+      textField("sample_end_date", state.layers.l1.leaf_config.sample_end_date, (v) => state.layers.l1.leaf_config.sample_end_date = v),
+      selectAxis("l1", "variable_universe")
+    ]));
+    grid.appendChild(sectionFromFields("FRED-SD predictor scope", [
+      selectAxis("l1", "fred_sd_frequency_policy"),
+      selectAxis("l1", "fred_sd_state_group"),
+      selectAxis("l1", "state_selection"),
+      textAreaField("sd_states", state.layers.l1.leaf_config.sd_states.join(", "), (v) => state.layers.l1.leaf_config.sd_states = splitCsv(v)),
+      selectAxis("l1", "fred_sd_variable_group"),
+      selectAxis("l1", "sd_variable_selection"),
+      textAreaField("sd_variables", state.layers.l1.leaf_config.sd_variables.join(", "), (v) => state.layers.l1.leaf_config.sd_variables = splitCsv(v))
+    ]));
+    grid.appendChild(sectionFromFields("Raw source / official transform / availability", [
+      selectAxis("l1", "raw_missing_policy"),
+      selectAxis("l1", "raw_outlier_policy"),
+      selectAxis("l1", "official_transform_policy"),
+      selectAxis("l1", "official_transform_scope"),
+      selectAxis("l1", "missing_availability")
+    ]));
+  }
 
-  if (layer.id === "l2") grid.appendChild(sectionFromFields("Preprocessing defaults", [
-    selectField("profile", state.layers.l2.fixed_axes.preprocessing_profile, ["minimal_official_when_available", "raw_passthrough", "train_only_scaled"], (v) => state.layers.l2.fixed_axes.preprocessing_profile = v),
-    selectField("scaling_policy", state.layers.l2.fixed_axes.scaling_policy, ["standard", "none", "robust"], (v) => state.layers.l2.fixed_axes.scaling_policy = v),
-    selectField("missing_policy", state.layers.l2.fixed_axes.missing_policy, ["broad_safe_default", "keep_available_rows", "require_complete_rows"], (v) => state.layers.l2.fixed_axes.missing_policy = v)
-  ]));
+  if (layer.id === "l2") {
+    grid.appendChild(sectionFromFields("FRED-SD mixed frequency", [
+      selectAxis("l2", "fred_sd_mixed_frequency_representation")
+    ]));
+    grid.appendChild(sectionFromFields("Target construction", [
+      selectAxis("l2", "horizon_target_construction"),
+      selectAxis("l2", "target_transform"),
+      selectAxis("l2", "target_normalization")
+    ]));
+    grid.appendChild(sectionFromFields("Transform and cleaning", [
+      selectAxis("l2", "tcode_policy"),
+      selectAxis("l2", "x_missing_policy"),
+      selectAxis("l2", "x_outlier_policy"),
+      selectAxis("l2", "scaling_policy")
+    ]));
+    grid.appendChild(sectionFromFields("Feature blocks", [
+      selectAxis("l2", "target_lag_block"),
+      selectAxis("l2", "x_lag_feature_block"),
+      selectAxis("l2", "factor_feature_block"),
+      selectAxis("l2", "level_feature_block"),
+      selectAxis("l2", "temporal_feature_block"),
+      selectAxis("l2", "rotation_feature_block")
+    ]));
+    grid.appendChild(sectionFromFields("Composition, selection, handoff", [
+      selectAxis("l2", "feature_block_combination"),
+      selectAxis("l2", "feature_selection_policy"),
+      selectAxis("l2", "feature_selection_semantics"),
+      selectAxis("l2", "evaluation_scale"),
+      selectAxis("l2", "feature_builder")
+    ]));
+  }
 
-  if (layer.id === "l5") grid.appendChild(sectionFromFields("Evaluation", [
-    textAreaField("metrics", state.layers.l5.fixed_axes.metrics.join(", "), (v) => state.layers.l5.fixed_axes.metrics = splitCsv(v)),
-    selectField("primary_metric", state.layers.l5.fixed_axes.primary_metric, ["msfe", "rmse", "mae"], (v) => state.layers.l5.fixed_axes.primary_metric = v),
-    selectField("ranking", state.layers.l5.fixed_axes.ranking, ["by_primary_metric", "by_average_rank"], (v) => state.layers.l5.fixed_axes.ranking = v)
-  ]));
+  if (layer.id === "l5") {
+    grid.appendChild(sectionFromFields("Metric specification", [
+      selectAxis("l5", "primary_metric"),
+      textAreaField("point_metrics", state.layers.l5.fixed_axes.point_metrics.join(", "), (v) => state.layers.l5.fixed_axes.point_metrics = splitCsv(v)),
+      textAreaField("density_metrics", state.layers.l5.fixed_axes.density_metrics.join(", "), (v) => state.layers.l5.fixed_axes.density_metrics = splitCsv(v)),
+      textAreaField("direction_metrics", state.layers.l5.fixed_axes.direction_metrics.join(", "), (v) => state.layers.l5.fixed_axes.direction_metrics = splitCsv(v)),
+      textAreaField("relative_metrics", state.layers.l5.fixed_axes.relative_metrics.join(", "), (v) => state.layers.l5.fixed_axes.relative_metrics = splitCsv(v))
+    ]));
+    grid.appendChild(sectionFromFields("Benchmark and aggregation", [
+      selectAxis("l5", "benchmark_window"),
+      selectAxis("l5", "benchmark_scope"),
+      selectAxis("l5", "agg_time"),
+      selectAxis("l5", "agg_horizon"),
+      selectAxis("l5", "agg_target"),
+      selectAxis("l5", "agg_state")
+    ]));
+    grid.appendChild(sectionFromFields("Slicing, decomposition, ranking", [
+      selectAxis("l5", "oos_period"),
+      selectAxis("l5", "regime_use"),
+      textAreaField("regime_metrics", state.layers.l5.fixed_axes.regime_metrics.join(", "), (v) => state.layers.l5.fixed_axes.regime_metrics = splitCsv(v)),
+      selectAxis("l5", "decomposition_target"),
+      selectAxis("l5", "decomposition_order"),
+      selectAxis("l5", "ranking"),
+      selectAxis("l5", "report_style")
+    ]));
+  }
 
   if (layer.id === "l6") {
     grid.appendChild(toggleSection("Statistical tests", state.layers.l6.enabled, (checked) => state.layers.l6.enabled = checked, [
-      selectField("equal_predictive", state.layers.l6.fixed_axes.equal_predictive, ["none", "dm_hln", "cw"], (v) => state.layers.l6.fixed_axes.equal_predictive = v)
+      selectTopLevelAxis("l6", "test_scope"),
+      selectTopLevelAxis("l6", "dependence_correction"),
+      selectTopLevelAxis("l6", "overlap_handling"),
+      toggleField("L6_A_equal_predictive.enabled", state.layers.l6.sub_layers.L6_A_equal_predictive.enabled, (checked) => state.layers.l6.sub_layers.L6_A_equal_predictive.enabled = checked),
+      selectSubLayerAxis("L6_A_equal_predictive", "equal_predictive_test"),
+      selectSubLayerAxis("L6_A_equal_predictive", "model_pair_strategy")
     ]));
   }
 
   if (layer.id === "l8") grid.appendChild(sectionFromFields("Output", [
+    selectAxis("l8", "export_format"),
+    selectAxis("l8", "compression"),
     textAreaField("saved_objects", state.layers.l8.fixed_axes.saved_objects.join(", "), (v) => state.layers.l8.fixed_axes.saved_objects = splitCsv(v)),
-    selectField("provenance", state.layers.l8.fixed_axes.provenance, ["full", "minimal"], (v) => state.layers.l8.fixed_axes.provenance = v),
-    textField("output_root", state.layers.l8.leaf_config.output_root, (v) => state.layers.l8.leaf_config.output_root = v)
+    selectAxis("l8", "model_artifacts_format"),
+    textAreaField("provenance_fields", state.layers.l8.fixed_axes.provenance_fields.join(", "), (v) => state.layers.l8.fixed_axes.provenance_fields = splitCsv(v)),
+    selectAxis("l8", "manifest_format"),
+    selectAxis("l8", "artifact_granularity"),
+    selectAxis("l8", "naming_convention"),
+    textField("output_directory", state.layers.l8.leaf_config.output_directory, (v) => state.layers.l8.leaf_config.output_directory = v),
+    textField("descriptive_naming_template", state.layers.l8.leaf_config.descriptive_naming_template, (v) => state.layers.l8.leaf_config.descriptive_naming_template = v)
   ]));
 
   body.appendChild(grid);
@@ -484,7 +811,7 @@ function renderBottomPanel() {
   if (state.bottomTab === "yaml") body.innerHTML = `<pre>${escapeHtml(generateYaml())}</pre>`;
   if (state.bottomTab === "validation") body.innerHTML = validationHtml();
   if (state.bottomTab === "contract") body.innerHTML = contractHtml();
-  if (state.bottomTab === "run") body.innerHTML = `<pre>macrocast-navigate resolve recipe.yaml\nmacrocast-navigate run recipe.yaml --output-root ${state.layers.l8.leaf_config.output_root}</pre>`;
+  if (state.bottomTab === "run") body.innerHTML = `<pre>macrocast-navigate resolve recipe.yaml\nmacrocast-navigate run recipe.yaml --output-root ${state.layers.l8.leaf_config.output_directory}</pre>`;
 }
 
 function renderValidationBadge() {
@@ -496,8 +823,22 @@ function renderValidationBadge() {
 
 function validateState() {
   const issues = [];
-  if (!state.layers.l1.leaf_config.targets.length) issues.push({ level: "error", where: "L1", message: "At least one target is required." });
+  if (state.layers.l1.fixed_axes.target_structure === "single_target" && !state.layers.l1.leaf_config.target) {
+    issues.push({ level: "error", where: "L1", message: "target is required for single_target." });
+  }
+  if (state.layers.l1.fixed_axes.target_structure === "multi_target" && state.layers.l1.leaf_config.targets.length < 2) {
+    issues.push({ level: "error", where: "L1", message: "At least two targets are required for multi_target." });
+  }
   if (!state.layers.l1.leaf_config.horizons.length) issues.push({ level: "error", where: "L1", message: "At least one horizon is required." });
+  if (state.layers.l1.fixed_axes.custom_source_policy !== "official_only" && !state.layers.l1.leaf_config.custom_source_path) {
+    issues.push({ level: "error", where: "L1", message: "custom_source_path is required when custom_source_policy is not official_only." });
+  }
+  if (state.layers.l1.fixed_axes.state_selection === "selected_states" && !state.layers.l1.leaf_config.sd_states.length) {
+    issues.push({ level: "error", where: "L1", message: "sd_states is required when state_selection=selected_states." });
+  }
+  if (state.layers.l1.fixed_axes.sd_variable_selection === "selected_sd_variables" && !state.layers.l1.leaf_config.sd_variables.length) {
+    issues.push({ level: "error", where: "L1", message: "sd_variables is required when sd_variable_selection=selected_sd_variables." });
+  }
   for (const layerId of ["l3", "l4"]) {
     const dag = state.dags[layerId];
     const sinks = requiredSinks(layerId);
@@ -621,6 +962,21 @@ function textAreaField(label, value, onChange) {
   });
   field.appendChild(input);
   return field;
+}
+
+function selectAxis(layerId, axisName) {
+  const layer = state.layers[layerId];
+  return selectField(axisName, layer.fixed_axes[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer.fixed_axes[axisName] = v);
+}
+
+function selectTopLevelAxis(layerId, axisName) {
+  const layer = state.layers[layerId];
+  return selectField(axisName, layer[axisName], AXIS_OPTIONS[layerId][axisName], (v) => layer[axisName] = v);
+}
+
+function selectSubLayerAxis(subLayerName, axisName) {
+  const subLayer = state.layers.l6.sub_layers[subLayerName];
+  return selectField(`${subLayerName}.${axisName}`, subLayer.fixed_axes[axisName], AXIS_OPTIONS.l6[axisName], (v) => subLayer.fixed_axes[axisName] = v);
 }
 
 function selectField(label, value, options, onChange) {
