@@ -30,6 +30,8 @@ const els = {
   resetPath: document.getElementById("reset-path"),
   pathSource: document.getElementById("path-source"),
   treePath: document.getElementById("tree-path"),
+  runtimeSupport: document.getElementById("runtime-support"),
+  layerTopology: document.getElementById("layer-topology"),
 };
 
 function escapeHtml(value) {
@@ -135,6 +137,54 @@ function isDefaultSelection(axisName, value) {
   return fallback !== null && String(fallback) === String(value);
 }
 
+function runtimeSupportSpec() {
+  return (state.data && state.data.runtime_support) || {};
+}
+
+function runtimeStatusKey(option) {
+  const status = option && option.status ? option.status : "registry_only";
+  return (runtimeSupportSpec().status_map || {})[status] || "schema_only";
+}
+
+function runtimeStatusMeta(key) {
+  const legend = runtimeSupportSpec().legend || {};
+  return legend[key] || { label: humanizeToken(key), summary: "" };
+}
+
+function runtimeBadge(option) {
+  const key = runtimeStatusKey(option);
+  const meta = runtimeStatusMeta(key);
+  return `<span class="runtime-badge runtime-${escapeHtml(key)}" title="${escapeHtml(meta.summary || meta.label)}">${escapeHtml(meta.label)}</span>`;
+}
+
+function renderRuntimeSupport() {
+  if (!els.runtimeSupport) return;
+  const spec = runtimeSupportSpec();
+  const layerNote = ((spec.layer_notes || {})[state.layerFilter]) || {};
+  const legend = spec.legend || {};
+  const layerAxes = allAxes().filter((axis) => axis.layer === state.layerFilter);
+  const selectedCounts = layerAxes.reduce((acc, axis) => {
+    const selected = axisSelectedOption(axis);
+    const key = runtimeStatusKey(selected);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const chips = Object.entries(legend).map(([key, meta]) => `
+    <span class="support-chip runtime-${escapeHtml(key)}">
+      <strong>${escapeHtml(String(selectedCounts[key] || 0))}</strong>
+      ${escapeHtml(meta.label)}
+    </span>
+  `).join("");
+  els.runtimeSupport.innerHTML = `
+    <div>
+      <p class="eyebrow">Runtime support</p>
+      <h2>${escapeHtml(layerNote.label || "Runtime status")}</h2>
+      <p class="source-note">${escapeHtml(layerNote.summary || "Selected options are classified by current runtime support, separate from schema validity.")}</p>
+    </div>
+    <div class="support-grid">${chips}</div>
+  `;
+}
+
 function axisSelectedOption(axis) {
   return axis.options.find((option) => option.value === axis.selected);
 }
@@ -171,6 +221,76 @@ function layerDescription(layer) {
 function layerNumber(layer) {
   const match = String(layer || "").match(/^(\d+)/);
   return match ? match[1] : "";
+}
+
+function layerTopologySpec() {
+  return (state.data && state.data.layer_topology) || { nodes: [], edges: [], main_flow: [] };
+}
+
+function topologyNodeById() {
+  return new Map((layerTopologySpec().nodes || []).map((node) => [node.id, node]));
+}
+
+function topologyNodeCard(node) {
+  const modeLabel = node.ui_mode === "graph" ? "DAG" : "List";
+  const sinkList = (node.produces || []).slice(0, 3).join(", ");
+  const extraSinks = (node.produces || []).length > 3 ? ` +${(node.produces || []).length - 3}` : "";
+  return `
+    <article class="topology-node topology-${escapeHtml(node.group || node.category)} topology-mode-${escapeHtml(node.ui_mode)}" data-topology-layer="${escapeHtml(node.id)}">
+      <div class="topology-node-head">
+        <span class="topology-layer-id">${escapeHtml(node.id.toUpperCase().replace("_", "."))}</span>
+        <span class="topology-mode">${escapeHtml(modeLabel)}</span>
+      </div>
+      <h3>${escapeHtml(node.label || node.name)}</h3>
+      <p>${escapeHtml(humanizeToken(node.category))} · ${escapeHtml(String(node.axis_count || 0))} axes · ${escapeHtml(String(node.sub_layer_count || 0))} sub-layers</p>
+      ${sinkList ? `<code>${escapeHtml(sinkList)}${escapeHtml(extraSinks)}</code>` : ""}
+    </article>
+  `;
+}
+
+function renderLayerTopology() {
+  if (!els.layerTopology) return;
+  const topology = layerTopologySpec();
+  const byId = topologyNodeById();
+  const mainNodes = (topology.main_flow || []).map((id) => byId.get(id)).filter(Boolean);
+  const diagnostics = (topology.nodes || []).filter((node) => node.category === "diagnostic");
+  const graphLayers = (topology.nodes || []).filter((node) => node.ui_mode === "graph");
+  const edgeText = (topology.edges || [])
+    .slice(0, 10)
+    .map((edge) => `${String(edge.from || "").toUpperCase()} -> ${String(edge.to || "").toUpperCase()} via ${edge.sink}`)
+    .join("\n");
+  els.layerTopology.innerHTML = `
+    <div class="topology-heading">
+      <div>
+        <p class="eyebrow">Pipeline architecture</p>
+        <h2>Layer and DAG Map</h2>
+      </div>
+      <div class="topology-legend">
+        <span><strong>${escapeHtml(String(mainNodes.length))}</strong> main layers</span>
+        <span><strong>${escapeHtml(String(diagnostics.length))}</strong> diagnostics</span>
+        <span><strong>${escapeHtml(String(graphLayers.length))}</strong> graph/DAG layers</span>
+      </div>
+    </div>
+    <div class="topology-main-flow">
+      ${mainNodes.map(topologyNodeCard).join('<span class="topology-arrow">→</span>')}
+    </div>
+    <div class="topology-secondary">
+      <section>
+        <div class="topology-subhead">
+          <h3>Diagnostic side branches</h3>
+          <p class="source-note">Default-off layers hook into construction sinks without blocking the main DAG.</p>
+        </div>
+        <div class="topology-diagnostics">${diagnostics.map(topologyNodeCard).join("")}</div>
+      </section>
+      <section>
+        <div class="topology-subhead">
+          <h3>Sink handoffs</h3>
+          <p class="source-note">Edges are inferred from registered expected_inputs and produced sinks.</p>
+        </div>
+        <pre class="topology-edges">${escapeHtml(edgeText || "No registered sink edges.")}</pre>
+      </section>
+    </div>
+  `;
 }
 
 function orderedLayers() {
@@ -370,6 +490,7 @@ function renderOptions() {
       ${axis.group_label ? `<span><strong>Group:</strong> ${escapeHtml(axis.group_label)}</span>` : ""}
       ${(axis.axis_level || axis.group_level) ? `<span><strong>Level:</strong> ${escapeHtml(hierarchyLevelLabel(axis.axis_level || axis.group_level))}</span>` : ""}
       ${presentation.selection_kind ? `<span><strong>Selection type:</strong> ${escapeHtml(humanizeToken(presentation.selection_kind))}</span>` : ""}
+      <span><strong>Runtime:</strong> ${runtimeBadge(axisSelectedOption(axis))}</span>
     </div>
     ${selectedSummary ? `<p class="decision-selected">${escapeHtml(selectedSummary)}</p>` : ""}
     ${presentation.warning ? `<p class="decision-warning"><strong>Check docs:</strong> ${escapeHtml(presentation.warning)}</p>` : ""}
@@ -390,7 +511,7 @@ function renderOptions() {
         <button type="button" class="option-card ${stateClass}${selected}" data-option="${escapeHtml(option.value)}"${disabledAttr}>
           <div class="option-value">
             <span>${escapeHtml(optionLabel)}</span>
-            <span class="status">${escapeHtml(statusLabel)}</span>
+            <span class="status-stack"><span class="status">${escapeHtml(statusLabel)}</span>${runtimeBadge(option)}</span>
           </div>
           <div class="option-code">YAML value: ${escapeHtml(option.value)}</div>
           ${summary ? `<p class="option-summary">${escapeHtml(summary)}</p>` : ""}
@@ -517,8 +638,10 @@ function renderYaml() {
 function render() {
   setDefaultAxis();
   renderSampleSelect();
+  renderLayerTopology();
   renderSummary();
   renderPathHeader();
+  renderRuntimeSupport();
   renderAxisList();
   renderOptions();
   renderTreePath();
@@ -671,7 +794,7 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
-  const response = await fetch("assets/navigator_ui_data.json?v=20260429-l1-target-x-design");
+  const response = await fetch("assets/navigator_ui_data.json?v=20260501-layer-dag");
   if (!response.ok) throw new Error(`Failed to load navigator data: ${response.status}`);
   state.data = await response.json();
   resetEngineState();

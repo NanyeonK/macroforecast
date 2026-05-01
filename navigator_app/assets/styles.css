@@ -883,6 +883,228 @@ input {
   color: var(--danger);
 }
 
+.layer-topology {
+  grid-column: 1 / -1;
+  padding: 16px;
+}
+
+.topology-heading,
+.topology-node-head,
+.topology-secondary,
+.topology-subhead {
+  display: flex;
+  gap: 12px;
+}
+
+.topology-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.topology-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.topology-legend span,
+.topology-mode,
+.topology-layer-id {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.topology-main-flow {
+  display: grid;
+  grid-template-columns: repeat(17, minmax(0, auto));
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.topology-arrow {
+  align-self: center;
+  color: var(--strong-line);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.topology-node {
+  min-width: 170px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.topology-node h3 {
+  margin: 8px 0 6px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.topology-node p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.topology-node code {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.topology-node-head {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topology-mode-graph {
+  border-color: #b7d4ff;
+  background: var(--accent-soft);
+}
+
+.topology-diagnostic {
+  border-color: #f0c269;
+  background: var(--warn-soft);
+}
+
+.topology-output,
+.topology-consumption {
+  background: #fbfcfe;
+}
+
+.topology-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  margin-top: 14px;
+}
+
+.topology-subhead {
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.topology-subhead h3 {
+  font-size: 15px;
+}
+
+.topology-diagnostics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.topology-edges {
+  min-height: 120px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #101828;
+  color: #e6edf6;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.runtime-support {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(280px, 2fr);
+  gap: 14px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: #fbfcfe;
+}
+
+.runtime-support h2 {
+  margin-bottom: 6px;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.support-chip,
+.runtime-badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.support-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+}
+
+.support-chip strong {
+  color: var(--text);
+}
+
+.runtime-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 7px;
+}
+
+.runtime-runtime_supported {
+  border-color: #b9e6cf;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.runtime-supported_with_contract {
+  border-color: #b7d4ff;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.runtime-schema_only,
+.runtime-plugin_required {
+  border-color: #f0c269;
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.runtime-future {
+  border-color: #ffd0c8;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.status-stack {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
 .rule,
 .replication-card {
   border: 1px solid var(--line);
@@ -930,7 +1152,9 @@ input {
     grid-template-columns: 1fr;
   }
 
-  .path-toolbar {
+  .path-toolbar,
+  .runtime-support,
+  .topology-secondary {
     grid-template-columns: 1fr;
   }
 
@@ -978,5 +1202,10 @@ input {
 
   .path-axis-grid {
     grid-template-columns: 1fr;
+  }
+
+  .topology-heading,
+  .topology-subhead {
+    flex-direction: column;
   }
 }
