@@ -143,7 +143,12 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
     n_outliers = 0
     n_imputed = 0
 
-    df, transform_map = _apply_transform(df, resolved, leaf_config, l1_artifact.leaf_config, cleaning_log)
+    l1_leaf_for_l2 = dict(l1_artifact.leaf_config)
+    official_tcodes = (l1_artifact.raw_panel.metadata.values or {}).get("transform_codes", {})
+    if official_tcodes:
+        l1_leaf_for_l2["official_tcode_map"] = dict(official_tcodes)
+
+    df, transform_map = _apply_transform(df, resolved, leaf_config, l1_leaf_for_l2, cleaning_log)
     df, n_outliers = _apply_outlier_policy(df, resolved, leaf_config, cleaning_log)
     df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
     df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
@@ -432,7 +437,8 @@ def _apply_transform(
     if policy == "no_transform":
         cleaning_log["steps"].append({"transform": "no_transform"})
         return frame, {}
-    tcode_map = dict(l1_leaf.get("custom_tcode_map", {}))
+    tcode_map = dict(l1_leaf.get("official_tcode_map", {}))
+    tcode_map.update(l1_leaf.get("custom_tcode_map", {}))
     tcode_map.update(l2_leaf.get("custom_tcode_map", {}))
     if policy == "apply_official_tcode" and not tcode_map:
         cleaning_log["steps"].append({"transform": "apply_official_tcode", "fallback": "no_tcode_map_available"})
@@ -495,9 +501,11 @@ def _apply_outlier_policy(
         mask = ((numeric - numeric.mean()) / numeric.std(ddof=0).replace(0, pd.NA)).abs() > threshold
     elif policy == "winsorize":
         low, high = leaf_config.get("winsorize_quantiles", [0.01, 0.99])
-        result[numeric.columns] = numeric.clip(numeric.quantile(low), numeric.quantile(high), axis=1)
-        cleaning_log["steps"].append({"outlier": "winsorize", "quantiles": [low, high]})
-        return result, 0
+        clipped = numeric.clip(numeric.quantile(low), numeric.quantile(high), axis=1)
+        changed = int((clipped.ne(numeric) & ~(clipped.isna() & numeric.isna())).sum().sum())
+        result[numeric.columns] = clipped
+        cleaning_log["steps"].append({"outlier": "winsorize", "action": action, "quantiles": [low, high], "capped": changed})
+        return result, changed
     else:
         raise NotImplementedError(f"outlier_policy={policy!r} runtime is not implemented")
     count = int(mask.fillna(False).sum().sum())

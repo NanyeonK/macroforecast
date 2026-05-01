@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pandas as pd
 import pytest
 
@@ -121,6 +123,66 @@ def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
     assert artifact.raw_panel.metadata.values["source"] == "official"
     assert artifact.raw_panel.metadata.values["dataset"] == "fred_md"
     assert artifact.raw_panel.metadata.values["transform_codes"]["INDPRO"] == 5
+
+
+def test_execute_l1_l2_applies_official_fred_md_transform_codes(tmp_path):
+    yaml_text = f"""
+    1_data:
+      fixed_axes:
+        custom_source_policy: official_only
+        dataset: fred_md
+        frequency: monthly
+      leaf_config:
+        target: INDPRO
+        local_raw_source: tests/fixtures/fred_md_ar_sample.csv
+        cache_root: {tmp_path}
+    2_preprocessing:
+      fixed_axes:
+        transform_policy: apply_official_tcode
+        outlier_policy: none
+        imputation_policy: none_propagate
+        frame_edge_policy: keep_unbalanced
+    """
+
+    result = execute_l1_l2(yaml_text)
+    l2_artifact = result.sink("l2_clean_panel_v1")
+
+    assert l2_artifact.transform_map_applied["INDPRO"] == 5
+    assert pd.isna(l2_artifact.panel.data.loc[pd.Timestamp("2000-01-01"), "INDPRO"])
+    assert l2_artifact.panel.data.loc[pd.Timestamp("2000-02-01"), "INDPRO"] == pytest.approx(
+        math.log(101.0) - math.log(100.0)
+    )
+
+
+def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        custom_source_policy: custom_panel_only
+        frequency: monthly
+      leaf_config:
+        target: y
+        custom_panel_inline:
+          date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01]
+          y: [1.0, 1.0, 1.0, 1.0]
+          x1: [1.0, 2.0, 3.0, 100.0]
+    2_preprocessing:
+      fixed_axes:
+        transform_policy: no_transform
+        outlier_policy: winsorize
+        outlier_action: replace_with_cap_value
+        imputation_policy: none_propagate
+        frame_edge_policy: keep_unbalanced
+      leaf_config:
+        winsorize_quantiles: [0.25, 0.75]
+    """
+
+    result = execute_l1_l2(yaml_text)
+    l2_artifact = result.sink("l2_clean_panel_v1")
+
+    assert l2_artifact.n_outliers_flagged == 2
+    assert l2_artifact.panel.data["x1"].max() < 100.0
+    assert l2_artifact.panel.data["x1"].min() > 1.0
 
 
 def test_materialize_l1_rejects_unsupported_official_core_dataset(tmp_path):
