@@ -128,6 +128,10 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     yaml_text = (
         MINIMAL_RECIPE
         + """
+1_5_data_summary:
+  enabled: true
+2_5_pre_post_preprocessing:
+  enabled: true
 6_statistical_tests: {}
 7_interpretation:
   enabled: false
@@ -142,7 +146,11 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     assert result.sink("l6_tests_v1").l6_axis_resolved["enabled"] is False
     assert isinstance(result.sink("l7_importance_v1"), L7ImportanceArtifact)
     assert isinstance(result.sink("l8_artifacts_v1"), L8ArtifactsArtifact)
+    assert result.sink("l1_5_diagnostic_v1").enabled is True
+    assert result.sink("l2_5_diagnostic_v1").enabled is True
     assert result.sink("l8_artifacts_v1").output_directory.as_posix().startswith("macrocast_output/default_recipe/")
+    assert "l1_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
+    assert "l2_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l6_tests_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert result.resolved_axes["l8"]["export_format"] == "json_csv"
 

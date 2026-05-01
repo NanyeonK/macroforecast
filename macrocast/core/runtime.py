@@ -12,6 +12,8 @@ from sklearn.linear_model import Ridge
 from .layers import l6 as l6_layer
 from .layers import l7 as l7_layer
 from .layers import l8 as l8_layer
+from .layers import l1_5 as l1_5_layer
+from .layers import l2_5 as l2_5_layer
 from .layers import l3 as l3_layer
 from .layers import l4 as l4_layer
 from .layers import l5 as l5_layer
@@ -19,6 +21,7 @@ from .layers import l1 as l1_layer
 from .layers import l2 as l2_layer
 from ..raw import load_fred_md, load_fred_qd
 from .types import (
+    DiagnosticArtifact,
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
     L2CleanPanelArtifact,
@@ -65,13 +68,23 @@ def execute_l1_l2(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
     root = parse_recipe_yaml(recipe_yaml_or_root) if isinstance(recipe_yaml_or_root, str) else recipe_yaml_or_root
     l1_artifact, regime_artifact, l1_axes = materialize_l1(root)
     l2_artifact, l2_axes = materialize_l2(root, l1_artifact)
+    artifacts: dict[str, Any] = {
+        "l1_data_definition_v1": l1_artifact,
+        "l1_regime_metadata_v1": regime_artifact,
+        "l2_clean_panel_v1": l2_artifact,
+    }
+    resolved_axes: dict[str, dict[str, Any]] = {"l1": l1_axes, "l2": dict(l2_axes)}
+    if "1_5_data_summary" in root:
+        l1_5_artifact, l1_5_axes = materialize_l1_5_diagnostic(root, l1_artifact)
+        artifacts["l1_5_diagnostic_v1"] = l1_5_artifact
+        resolved_axes["l1_5"] = l1_5_axes
+    if "2_5_pre_post_preprocessing" in root:
+        l2_5_artifact, l2_5_axes = materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact)
+        artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
+        resolved_axes["l2_5"] = l2_5_axes
     return RuntimeResult(
-        artifacts={
-            "l1_data_definition_v1": l1_artifact,
-            "l1_regime_metadata_v1": regime_artifact,
-            "l2_clean_panel_v1": l2_artifact,
-        },
-        resolved_axes={"l1": l1_axes, "l2": dict(l2_axes)},
+        artifacts=artifacts,
+        resolved_axes=resolved_axes,
     )
 
 
@@ -96,6 +109,14 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
         "l5_evaluation_v1": l5_eval,
     }
     resolved_axes: dict[str, dict[str, Any]] = {"l1": l1_axes, "l2": dict(l2_axes), "l5": dict(l5_eval.l5_axis_resolved)}
+    if "1_5_data_summary" in root:
+        l1_5_artifact, l1_5_axes = materialize_l1_5_diagnostic(root, l1_artifact)
+        artifacts["l1_5_diagnostic_v1"] = l1_5_artifact
+        resolved_axes["l1_5"] = l1_5_axes
+    if "2_5_pre_post_preprocessing" in root:
+        l2_5_artifact, l2_5_axes = materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact)
+        artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
+        resolved_axes["l2_5"] = l2_5_axes
     if "6_statistical_tests" in root:
         l6_tests, l6_axes = materialize_l6_stub(root, l1_artifact, l4_forecasts, l4_models)
         artifacts["l6_tests_v1"] = l6_tests
@@ -198,6 +219,168 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
         },
     )
     return artifact, resolved
+
+
+def materialize_l1_5_diagnostic(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact) -> tuple[DiagnosticArtifact, dict[str, Any]]:
+    raw = recipe_root.get("1_5_data_summary", {}) or {}
+    context = {"regime_active": l1_artifact.regime_definition != "none"}
+    report = l1_5_layer.validate_layer(raw, context=context)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l1_5_layer.resolve_axes_from_raw(raw, context=context)
+    axes = _plain_axes(resolved)
+    if not resolved.get("enabled", False):
+        return _disabled_diagnostic("l1", axes), axes
+    frame = l1_artifact.raw_panel.data.copy()
+    metadata = {
+        "runtime": "core_l1_5_diagnostic",
+        "axis_resolved": axes,
+        "sample_coverage": _diagnostic_sample_coverage(frame),
+        "univariate_summary": _diagnostic_univariate_summary(frame, axes.get("summary_metrics", [])),
+        "missing_outlier_audit": _diagnostic_missing_outlier_audit(frame, axes.get("leaf_config", {})),
+    }
+    if axes.get("correlation_view") != "none":
+        metadata["correlation"] = frame.corr(method=axes.get("correlation_method", "pearson"), numeric_only=True)
+    return (
+        DiagnosticArtifact(
+            layer_hooked="l1",
+            artifact_type="json",
+            metadata=metadata,
+            enabled=True,
+        ),
+        axes,
+    )
+
+
+def materialize_l2_5_diagnostic(
+    recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact, l2_artifact: L2CleanPanelArtifact
+) -> tuple[DiagnosticArtifact, dict[str, Any]]:
+    raw = recipe_root.get("2_5_pre_post_preprocessing", {}) or {}
+    report = l2_5_layer.validate_layer(raw)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    resolved = l2_5_layer.resolve_axes_from_raw(raw)
+    axes = _plain_axes(resolved)
+    if not resolved.get("enabled", False):
+        return _disabled_diagnostic("l1+l2", axes), axes
+    raw_frame = l1_artifact.raw_panel.data.copy()
+    clean_frame = l2_artifact.panel.data.copy()
+    metadata = {
+        "runtime": "core_l2_5_diagnostic",
+        "axis_resolved": axes,
+        "comparison": _diagnostic_pre_post_comparison(raw_frame, clean_frame),
+        "distribution_shift": _diagnostic_distribution_shift(raw_frame, clean_frame, axes.get("distribution_metric", [])),
+        "cleaning_effect_summary": {
+            "n_imputed_cells": l2_artifact.n_imputed_cells,
+            "n_outliers_flagged": l2_artifact.n_outliers_flagged,
+            "n_truncated_obs": l2_artifact.n_truncated_obs,
+            "transform_map_applied": dict(l2_artifact.transform_map_applied),
+            "cleaning_log": l2_artifact.cleaning_log,
+        },
+    }
+    if axes.get("correlation_shift") != "none":
+        metadata["correlation_shift"] = clean_frame.corr(numeric_only=True) - raw_frame.corr(numeric_only=True)
+    return (
+        DiagnosticArtifact(
+            layer_hooked="l1+l2",
+            artifact_type="json",
+            metadata=metadata,
+            enabled=True,
+        ),
+        axes,
+    )
+
+
+def _disabled_diagnostic(layer_hooked: str, axes: dict[str, Any]) -> DiagnosticArtifact:
+    return DiagnosticArtifact(
+        layer_hooked=layer_hooked,
+        artifact_type="json",
+        metadata={"runtime": "core_diagnostic_disabled", "axis_resolved": axes},
+        enabled=False,
+    )
+
+
+def _diagnostic_sample_coverage(frame: pd.DataFrame) -> dict[str, Any]:
+    return {
+        "start": {column: _iso_or_none(frame[column].first_valid_index()) for column in frame.columns},
+        "end": {column: _iso_or_none(frame[column].last_valid_index()) for column in frame.columns},
+        "n_obs": frame.notna().sum().astype(int).to_dict(),
+        "n_missing": frame.isna().sum().astype(int).to_dict(),
+        "panel_shape": frame.shape,
+    }
+
+
+def _diagnostic_univariate_summary(frame: pd.DataFrame, metrics: list[str]) -> dict[str, dict[str, float | int | None]]:
+    numeric = frame.select_dtypes("number")
+    summary: dict[str, dict[str, float | int | None]] = {}
+    for column in numeric.columns:
+        series = numeric[column]
+        values: dict[str, float | int | None] = {}
+        for metric in metrics:
+            if metric == "mean":
+                values[metric] = _float_or_none(series.mean())
+            elif metric == "sd":
+                values[metric] = _float_or_none(series.std())
+            elif metric == "min":
+                values[metric] = _float_or_none(series.min())
+            elif metric == "max":
+                values[metric] = _float_or_none(series.max())
+            elif metric == "skew":
+                values[metric] = _float_or_none(series.skew())
+            elif metric == "kurtosis":
+                values[metric] = _float_or_none(series.kurtosis())
+            elif metric == "n_obs":
+                values[metric] = int(series.notna().sum())
+            elif metric == "n_missing":
+                values[metric] = int(series.isna().sum())
+        summary[column] = values
+    return summary
+
+
+def _diagnostic_missing_outlier_audit(frame: pd.DataFrame, leaf_config: dict[str, Any]) -> dict[str, Any]:
+    numeric = frame.select_dtypes("number")
+    threshold = float(leaf_config.get("outlier_threshold_iqr", 10.0))
+    median = numeric.median()
+    iqr = numeric.quantile(0.75) - numeric.quantile(0.25)
+    outlier_mask = (numeric - median).abs() > threshold * iqr.replace(0, pd.NA)
+    return {
+        "missing_count": frame.isna().sum().astype(int).to_dict(),
+        "longest_gap": {column: _longest_missing_gap(frame[column]) for column in frame.columns},
+        "iqr_outlier_count": outlier_mask.fillna(False).sum().astype(int).to_dict(),
+    }
+
+
+def _diagnostic_pre_post_comparison(raw_frame: pd.DataFrame, clean_frame: pd.DataFrame) -> dict[str, Any]:
+    return {
+        "raw_shape": raw_frame.shape,
+        "clean_shape": clean_frame.shape,
+        "raw_missing_total": int(raw_frame.isna().sum().sum()),
+        "clean_missing_total": int(clean_frame.isna().sum().sum()),
+        "common_columns": sorted(set(raw_frame.columns) & set(clean_frame.columns)),
+    }
+
+
+def _diagnostic_distribution_shift(raw_frame: pd.DataFrame, clean_frame: pd.DataFrame, metrics: list[str]) -> dict[str, dict[str, float | None]]:
+    common = [column for column in raw_frame.select_dtypes("number").columns if column in clean_frame.select_dtypes("number").columns]
+    shifts: dict[str, dict[str, float | None]] = {}
+    for column in common:
+        raw = raw_frame[column]
+        clean = clean_frame[column]
+        values: dict[str, float | None] = {}
+        for metric in metrics:
+            if metric == "mean_change":
+                values[metric] = _float_or_none(clean.mean() - raw.mean())
+            elif metric == "sd_change":
+                raw_sd = raw.std()
+                values[metric] = _float_or_none(clean.std() / raw_sd) if raw_sd else None
+            elif metric == "skew_change":
+                values[metric] = _float_or_none(clean.skew() - raw.skew())
+            elif metric == "kurtosis_change":
+                values[metric] = _float_or_none(clean.kurtosis() - raw.kurtosis())
+            elif metric == "ks_statistic":
+                values[metric] = _ks_statistic(raw.dropna(), clean.dropna())
+        shifts[column] = values
+    return shifts
 
 
 def materialize_l3_minimal(
@@ -496,6 +679,42 @@ def _plain_axes(value: Any) -> Any:
     if isinstance(value, tuple):
         return tuple(_plain_axes(item) for item in value)
     return value
+
+
+def _iso_or_none(value: Any) -> str | None:
+    if value is None or pd.isna(value):
+        return None
+    return pd.Timestamp(value).isoformat()
+
+
+def _float_or_none(value: Any) -> float | None:
+    if pd.isna(value):
+        return None
+    return float(value)
+
+
+def _longest_missing_gap(series: pd.Series) -> int:
+    longest = 0
+    current = 0
+    for is_missing in series.isna():
+        if is_missing:
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    return longest
+
+
+def _ks_statistic(left: pd.Series, right: pd.Series) -> float | None:
+    if left.empty or right.empty:
+        return None
+    values = sorted(set(left.tolist()) | set(right.tolist()))
+    max_distance = 0.0
+    for value in values:
+        left_cdf = float((left <= value).mean())
+        right_cdf = float((right <= value).mean())
+        max_distance = max(max_distance, abs(left_cdf - right_cdf))
+    return max_distance
 
 
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:
