@@ -21,13 +21,12 @@ const AXIS_OPTIONS = {
     frequency: ["monthly", "quarterly"],
     information_set_type: ["final_revised_data", "pseudo_oos_on_revised_data"],
     release_lag_rule: ["ignore_release_lag", "fixed_lag_all_series", "series_specific_lag"],
-    contemporaneous_x_rule: ["forbid_same_period_predictors", "allow_same_period_predictors"],
+    contemporaneous_x_rule: ["allow_same_period_predictors", "forbid_same_period_predictors"],
     target_structure: ["single_target", "multi_target"],
     variable_universe: ["all_variables", "core_variables", "category_variables", "target_specific_variables", "explicit_variable_list"],
     fred_sd_frequency_policy: ["report_only", "allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency"],
     fred_sd_state_group: [
       "all_states",
-      "contiguous_48_plus_dc",
       "census_region_northeast",
       "census_region_midwest",
       "census_region_south",
@@ -41,17 +40,22 @@ const AXIS_OPTIONS = {
       "census_division_west_south_central",
       "census_division_mountain",
       "census_division_pacific",
+      "contiguous_48_plus_dc",
       "custom_state_group"
     ],
     state_selection: ["all_states", "selected_states"],
     fred_sd_variable_group: [
       "all_sd_variables",
       "labor_market_core",
-      "housing_core",
-      "prices_core",
-      "income_spending_core",
-      "banking_credit_core",
-      "tcode_review_required",
+      "employment_sector",
+      "gsp_output",
+      "housing",
+      "trade",
+      "income",
+      "direct_analog_high_confidence",
+      "provisional_analog_medium",
+      "semantic_review_outputs",
+      "no_reliable_analog",
       "custom_sd_variable_group"
     ],
     sd_variable_selection: ["all_sd_variables", "selected_sd_variables"],
@@ -59,7 +63,7 @@ const AXIS_OPTIONS = {
     raw_outlier_policy: ["preserve_raw_outliers", "winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing"],
     official_transform_policy: ["apply_official_tcode", "keep_official_raw_scale"],
     official_transform_scope: ["target_only", "predictors_only", "target_and_predictors", "none"],
-    missing_availability: ["zero_fill_leading_predictor_gaps", "require_complete_rows", "keep_available_rows", "impute_predictors_only"]
+    missing_availability: ["require_complete_rows", "keep_available_rows", "impute_predictors_only", "zero_fill_leading_predictor_gaps"]
   },
   l2: {
     fred_sd_mixed_frequency_representation: ["calendar_aligned_frame", "drop_unknown_native_frequency", "drop_non_target_native_frequency", "native_frequency_block_payload", "mixed_frequency_model_adapter"],
@@ -103,9 +107,9 @@ const AXIS_OPTIONS = {
   },
   l6: {
     test_scope: ["per_target_horizon", "per_target", "per_horizon", "pooled"],
-    dependence_correction: ["newey_west", "block_bootstrap", "none"],
-    overlap_handling: ["newey_west", "block_bootstrap", "none"],
-    equal_predictive_test: ["dm_diebold_mariano", "none"],
+    dependence_correction: ["newey_west", "andrews", "parzen_kernel", "none"],
+    overlap_handling: ["nw_with_h_minus_1_lag", "west_1996_adjustment", "none"],
+    equal_predictive_test: ["dm_diebold_mariano", "gw_giacomini_white", "multi", "none"],
     model_pair_strategy: ["vs_benchmark_only", "all_pairs", "user_list"]
   },
   l8: {

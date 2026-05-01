@@ -168,7 +168,7 @@ profile-version change, not an undocumented UI change.</p></li>
 </section>
 <section id="current-audit-findings">
 <h2>Current Audit Findings<a class="headerlink" href="#current-audit-findings" title="Link to this heading"></a></h2>
-<p>The current codebase still has migration gaps:</p>
+<p>Current alignment status:</p>
 <ul class="simple">
 <li><p>Layer 1 runtime validation now accepts the registry-backed public axes used
 by docs/UI, including <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code>, <code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code>,
@@ -177,13 +177,31 @@ by docs/UI, including <code class="docutils literal notranslate"><span class="pr
 <li><p>Layer 1 uses registry value <code class="docutils literal notranslate"><span class="pre">multi_target</span></code> in docs/UI and public examples.
 Older design notes may say <code class="docutils literal notranslate"><span class="pre">multi_series_target</span></code>; runtime validation accepts
 it as a compatibility alias and normalizes to <code class="docutils literal notranslate"><span class="pre">multi_target</span></code>.</p></li>
+<li><p>Navigator UI exposed option lists are tested against the registry. Shared
+UI/registry/core option lists currently have zero value mismatches.</p></li>
+<li><p>L0 public values are <code class="docutils literal notranslate"><span class="pre">compute_mode={serial,</span> <span class="pre">parallel}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">failure_policy={fail_fast,</span> <span class="pre">continue_on_failure}</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">reproducibility_mode={seeded_reproducible,</span> <span class="pre">exploratory}</span></code>. Legacy values such
+as <code class="docutils literal notranslate"><span class="pre">parallel_by_model</span></code>, <code class="docutils literal notranslate"><span class="pre">warn_only</span></code>, and <code class="docutils literal notranslate"><span class="pre">strict_reproducible</span></code> are
+compatibility inputs only.</p></li>
+<li><p>Layer 5, Layer 6, and Layer 8 public registry options have been aligned with
+the Navigator defaults for evaluation metrics, statistical-test controls, and
+output/provenance artifact selections.</p></li>
+<li><p>Legacy recipe values such as <code class="docutils literal notranslate"><span class="pre">msfe</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_msfe</span></code>, <code class="docutils literal notranslate"><span class="pre">oos_r2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">all_oos_data</span></code>, <code class="docutils literal notranslate"><span class="pre">nw_hac</span></code>, and <code class="docutils literal notranslate"><span class="pre">dm_hln</span></code> are canonicalized through
+<code class="docutils literal notranslate"><span class="pre">macrocast/registry/naming.py</span></code>; generated UI and new recipes should use
+<code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">full_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">newey_west</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code>.</p></li>
+</ul>
+<p>Remaining migration gaps:</p>
+<ul class="simple">
 <li><p>Layer 2 docs/UI expose canonical representation axes such as
 <code class="docutils literal notranslate"><span class="pre">horizon_target_construction</span></code>, <code class="docutils literal notranslate"><span class="pre">target_transform</span></code>, <code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code>, and <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>, while
 <code class="docutils literal notranslate"><span class="pre">macrocast/core/layers/l2.py</span></code> still validates an older cleaning-only axis
 set.</p></li>
-<li><p>Layer 5 docs/UI can emit context-inactive axes unless generation prunes them
-against recipe context.</p></li>
+<li><p>Full docs pages do not yet enumerate every registry value automatically, so
+docs coverage remains a separate generation task.</p></li>
 </ul>
 <p>These are implementation gaps. The registry plus current L0-L8 public layer
 contract remains the source of truth.</p>
