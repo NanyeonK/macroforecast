@@ -9,123 +9,118 @@
   <body>
     <header class="topbar">
       <div>
-        <p class="eyebrow">macrocast</p>
-        <h1>Layer Workbench</h1>
+        <h1>macrocast Layer Navigator</h1>
       </div>
-      <nav class="top-actions" aria-label="Documentation links">
+      <div class="top-actions">
         <a href="../index.html">Docs</a>
         <a href="../navigator/index.html">Navigator Guide</a>
-      </nav>
+      </div>
     </header>
 
-    <main class="workbench">
-      <aside class="panel layer-sidebar" aria-label="Canonical pipeline">
-        <div class="sidebar-heading">
-          <p class="eyebrow">Canonical DAG</p>
-          <h2>L0-L8 Pipeline</h2>
-          <p class="source-note">Select a layer to inspect sinks, sub-layers, axes, and UI mode.</p>
-        </div>
-        <section id="layer-topology" class="layer-topology" aria-label="Layer DAG topology"></section>
-      </aside>
+    <nav class="layer-rail axis-explorer-rail" aria-label="Compatibility axis explorer layer filter">
+      <button type="button" data-layer="0_meta" class="active">
+        <span>L0</span>
+        <strong>Study Scope</strong>
+      </button>
+      <button type="button" data-layer="1_data_task">
+        <span>L1</span>
+        <strong>Data + y/x</strong>
+      </button>
+      <button type="button" data-layer="2_preprocessing">
+        <span>L2</span>
+        <strong>Representation</strong>
+      </button>
+      <button type="button" data-layer="3_training">
+        <span>L3</span>
+        <strong>Generator</strong>
+      </button>
+      <button type="button" data-layer="4_evaluation">
+        <span>L4</span>
+        <strong>Evaluation</strong>
+      </button>
+      <button type="button" data-layer="5_output_provenance">
+        <span>L5</span>
+        <strong>Outputs</strong>
+      </button>
+      <button type="button" data-layer="6_stat_tests">
+        <span>L6</span>
+        <strong>Tests</strong>
+      </button>
+      <button type="button" data-layer="7_importance">
+        <span>L7</span>
+        <strong>Interpretation</strong>
+      </button>
+    </nav>
 
-      <section class="workspace" aria-label="Layer workspace">
-        <section id="layer-detail" class="panel layer-detail" aria-label="Canonical layer detail"></section>
-
-        <details class="panel legacy-tools">
-          <summary>
-            <span>Legacy axis explorer</span>
-            <strong>Compatibility tools for old sample recipes</strong>
-          </summary>
-
-          <nav class="layer-rail axis-explorer-rail" aria-label="Compatibility axis explorer layer filter">
-            <button type="button" data-layer="0_meta" class="active"><span>L0</span><strong>Study Scope</strong></button>
-            <button type="button" data-layer="1_data_task"><span>L1</span><strong>Data + y/x</strong></button>
-            <button type="button" data-layer="2_preprocessing"><span>L2</span><strong>Representation</strong></button>
-            <button type="button" data-layer="3_training"><span>L3</span><strong>Generator</strong></button>
-            <button type="button" data-layer="4_evaluation"><span>L4</span><strong>Evaluation</strong></button>
-            <button type="button" data-layer="5_output_provenance"><span>L5</span><strong>Outputs</strong></button>
-            <button type="button" data-layer="6_stat_tests"><span>L6</span><strong>Tests</strong></button>
-            <button type="button" data-layer="7_importance"><span>L7</span><strong>Interpretation</strong></button>
-          </nav>
-
-          <div class="legacy-grid">
-            <section class="legacy-step-list" aria-label="Compatibility layer steps">
-              <div class="section-heading compact">
-                <div>
-                  <p class="eyebrow" id="active-layer-kicker">Active layer</p>
-                  <h2 id="active-layer-title">Layer</h2>
-                  <p id="active-layer-description" class="source-note"></p>
-                </div>
-              </div>
-              <label for="axis-search">Filter layer decisions</label>
-              <input id="axis-search" type="search" placeholder="search within this layer..." />
-              <div id="axis-list" class="axis-list"></div>
-            </section>
-
-            <section class="legacy-path" aria-label="Compatibility path state">
-              <div class="summary-grid">
-                <div>
-                  <span class="metric-label">Status</span>
-                  <strong id="execution-status">-</strong>
-                </div>
-                <div>
-                  <span class="metric-label">Blocked</span>
-                  <strong id="blocked-count">0</strong>
-                </div>
-                <div>
-                  <span class="metric-label">Disabled</span>
-                  <strong id="disabled-count">0</strong>
-                </div>
-              </div>
-              <div id="runtime-support" class="runtime-support" aria-label="Runtime support status"></div>
-              <div class="path-record-heading">
-                <div>
-                  <p class="eyebrow">Path so far</p>
-                  <h2>Selected Decisions</h2>
-                </div>
-              </div>
-              <div id="tree-path" class="tree-path"></div>
-            </section>
-          </div>
-
-          <section class="legacy-decision" aria-label="Compatibility axis options">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow" id="axis-layer">Layer</p>
-                <h2 id="axis-title">Decision</h2>
-              </div>
-              <span id="axis-selected" class="pill">selected: -</span>
+    <main class="layout">
+      <section id="layer-topology" class="panel layer-topology" aria-label="Layer DAG topology"></section>
+      <section id="layer-detail" class="panel layer-detail" aria-label="Canonical layer detail"></section>
+      <section class="panel path-overview compatibility-explorer" aria-label="Compatibility axis explorer state">
+        <div class="path-toolbar">
+          <div class="recipe-picker">
+            <label for="sample-select">Starting recipe</label>
+            <select id="sample-select"></select>
+            <p id="path-source" class="source-note">sample: -</p>
+            <div class="action-row">
+              <button id="reset-path" type="button" class="secondary-action">Reset path</button>
+              <button id="import-yaml" type="button" class="secondary-action">Import YAML</button>
+              <input id="import-yaml-input" type="file" accept=".yaml,.yml,text/yaml,text/plain" hidden />
             </div>
-            <div id="axis-explainer" class="axis-explainer"></div>
-            <div id="option-list" class="option-list"></div>
-          </section>
-        </details>
+          </div>
+          <div class="layer-context">
+            <p class="eyebrow" id="active-layer-kicker">Active layer</p>
+            <h2 id="active-layer-title">Layer</h2>
+            <p id="active-layer-description" class="source-note"></p>
+          </div>
+          <div class="summary-grid">
+            <div>
+              <span class="metric-label">Status</span>
+              <strong id="execution-status">-</strong>
+            </div>
+            <div>
+              <span class="metric-label">Blocked</span>
+              <strong id="blocked-count">0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Disabled</span>
+              <strong id="disabled-count">0</strong>
+            </div>
+          </div>
+        </div>
+        <div id="runtime-support" class="runtime-support" aria-label="Runtime support status"></div>
+        <div class="path-record-heading">
+          <div>
+            <p class="eyebrow">Path so far</p>
+            <h2>Selected Decisions</h2>
+          </div>
+          <p class="source-note">Only completed layers and the current decision step are shown. Later choices stay hidden until that layer or step is active.</p>
+        </div>
+        <div id="tree-path" class="tree-path"></div>
       </section>
 
-      <aside class="inspector" aria-label="Recipe inspector">
-        <section class="panel recipe-panel">
-          <div class="section-heading compact">
-            <div>
-              <p class="eyebrow">Recipe source</p>
-              <h2>Preview Input</h2>
-            </div>
-          </div>
-          <label for="sample-select">Starting recipe</label>
-          <select id="sample-select"></select>
-          <p id="path-source" class="source-note">sample: -</p>
-          <div class="action-row">
-            <button id="reset-path" type="button" class="secondary-action">Reset</button>
-            <button id="import-yaml" type="button" class="secondary-action">Import YAML</button>
-            <input id="import-yaml-input" type="file" accept=".yaml,.yml,text/yaml,text/plain" hidden />
-          </div>
-        </section>
+      <section class="panel controls" aria-label="Navigator controls">
+        <label for="axis-search">Current layer steps</label>
+        <input id="axis-search" type="search" placeholder="search within this layer..." />
 
-        <section class="panel yaml-panel">
+        <div id="axis-list" class="axis-list"></div>
+      </section>
+
+      <section class="panel main-panel" aria-label="Axis options">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" id="axis-layer">Layer</p>
+            <h2 id="axis-title">Axis</h2>
+          </div>
+          <span id="axis-selected" class="pill">selected: -</span>
+        </div>
+        <div id="axis-explainer" class="axis-explainer"></div>
+        <div id="option-list" class="option-list"></div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel">
           <div class="section-heading compact">
-            <div>
-              <p class="eyebrow">Resolved recipe</p>
-              <h2>YAML Preview</h2>
-            </div>
+            <h2>YAML Preview</h2>
             <div class="action-row">
               <button id="copy-yaml" type="button">Copy</button>
               <button id="download-yaml" type="button">Download</button>
@@ -136,7 +131,7 @@
       </aside>
     </main>
 
-    <script src="assets/state_engine.js?v=20260501-workbench-redesign"></script>
-    <script src="assets/app.js?v=20260501-workbench-redesign"></script>
+    <script src="assets/state_engine.js?v=20260501-canonical-layer-redesign"></script>
+    <script src="assets/app.js?v=20260501-canonical-layer-redesign"></script>
   </body>
 </html>
