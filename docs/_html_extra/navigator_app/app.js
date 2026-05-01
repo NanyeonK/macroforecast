@@ -194,6 +194,393 @@ const AXIS_DESCRIPTIONS = {
   provenance_fields: "Manifest fields used for reproducibility."
 };
 
+const AXIS_TITLES = {
+  custom_source_policy: "Data source",
+  dataset: "FRED dataset",
+  frequency: "Analysis frequency",
+  information_set_type: "Vintage setting",
+  release_lag_rule: "Release lag",
+  contemporaneous_x_rule: "Same-period predictors",
+  target_structure: "Target mode",
+  variable_universe: "Predictor universe",
+  fred_sd_frequency_policy: "FRED-SD frequency handling",
+  fred_sd_state_group: "FRED-SD state group",
+  state_selection: "State list",
+  fred_sd_variable_group: "FRED-SD variable group",
+  sd_variable_selection: "FRED-SD variable list",
+  raw_missing_policy: "Raw missing values",
+  raw_outlier_policy: "Raw outliers",
+  official_transform_policy: "Official transforms",
+  official_transform_scope: "Transform scope",
+  missing_availability: "Availability gaps",
+  fred_sd_mixed_frequency_representation: "Mixed-frequency representation",
+  horizon_target_construction: "Forecast target construction",
+  target_transform: "Target transform",
+  target_normalization: "Target normalization",
+  tcode_policy: "Transform-code policy",
+  x_missing_policy: "Predictor missing values",
+  x_outlier_policy: "Predictor outliers",
+  scaling_policy: "Predictor scaling",
+  target_lag_block: "Target lag features",
+  x_lag_feature_block: "Predictor lag features",
+  factor_feature_block: "Factor features",
+  level_feature_block: "Level features",
+  temporal_feature_block: "Temporal features",
+  rotation_feature_block: "Rotations",
+  feature_block_combination: "Feature combination",
+  feature_selection_policy: "Feature selection",
+  feature_selection_semantics: "Selection timing",
+  evaluation_scale: "Evaluation scale",
+  feature_builder: "Feature recipe",
+  primary_metric: "Main score",
+  point_metrics: "Point forecast scores",
+  density_metrics: "Distribution scores",
+  direction_metrics: "Direction scores",
+  relative_metrics: "Benchmark-relative scores",
+  benchmark_window: "Benchmark window",
+  benchmark_scope: "Benchmark scope",
+  agg_time: "Time aggregation",
+  agg_horizon: "Horizon aggregation",
+  agg_target: "Target aggregation",
+  agg_state: "State aggregation",
+  oos_period: "OOS period",
+  regime_use: "Regime split",
+  decomposition_target: "Decomposition dimension",
+  decomposition_order: "Decomposition order",
+  ranking: "Model ranking",
+  report_style: "Report layout",
+  test_scope: "Test scope",
+  dependence_correction: "Serial-correlation correction",
+  overlap_handling: "Overlapping horizons",
+  equal_predictive_test: "Equal-predictive-ability test",
+  model_pair_strategy: "Model pairs",
+  export_format: "Export format",
+  compression: "Compression",
+  saved_objects: "Saved artifacts",
+  model_artifacts_format: "Model artifact format",
+  provenance_fields: "Provenance fields",
+  manifest_format: "Manifest format",
+  artifact_granularity: "Artifact split",
+  naming_convention: "File naming"
+};
+
+const OPTION_LABELS = {
+  official_only: "Use built-in FRED data",
+  custom_panel_only: "Use my own panel only",
+  official_plus_custom: "Combine FRED with my panel",
+  fred_md: "FRED-MD monthly macro panel",
+  fred_qd: "FRED-QD quarterly macro panel",
+  fred_sd: "FRED-SD state-level panel",
+  "fred_md+fred_sd": "FRED-MD plus state data",
+  "fred_qd+fred_sd": "FRED-QD plus state data",
+  monthly: "Monthly",
+  quarterly: "Quarterly",
+  final_revised_data: "Use final revised data",
+  pseudo_oos_on_revised_data: "Pseudo OOS on revised data",
+  ignore_release_lag: "Ignore release lag",
+  fixed_lag_all_series: "Apply one fixed lag",
+  series_specific_lag: "Use series-specific lags",
+  allow_same_period_predictors: "Allow same-period predictors",
+  forbid_same_period_predictors: "Forbid same-period predictors",
+  single_target: "Single target",
+  multi_target: "Multiple targets",
+  all_variables: "All variables",
+  core_variables: "Core variables",
+  category_variables: "One category",
+  target_specific_variables: "Target-specific universe",
+  explicit_variable_list: "Manual variable list",
+  report_only: "Report mixed frequencies only",
+  allow_mixed_frequency: "Allow mixed frequencies",
+  reject_mixed_known_frequency: "Reject mixed known frequencies",
+  require_single_known_frequency: "Require one known frequency",
+  all_states: "All states",
+  selected_states: "Selected states only",
+  all_sd_variables: "All FRED-SD variables",
+  labor_market_core: "Core labor market",
+  employment_sector: "Employment by sector",
+  gsp_output: "State output / GSP",
+  housing: "Housing",
+  trade: "Trade",
+  income: "Income",
+  direct_analog_high_confidence: "High-confidence FRED-MD analogs",
+  provisional_analog_medium: "Medium-confidence analogs",
+  semantic_review_outputs: "Needs semantic review",
+  no_reliable_analog: "No reliable analog",
+  custom_sd_variable_group: "Custom variable group",
+  selected_sd_variables: "Selected FRED-SD variables",
+  preserve_raw_missing: "Keep raw missing values",
+  zero_fill_leading_predictor_missing_before_tcode: "Zero-fill leading predictor gaps",
+  impute_raw_predictors: "Impute raw predictors",
+  drop_raw_missing_rows: "Drop rows with raw missing values",
+  preserve_raw_outliers: "Keep raw outliers",
+  winsorize_raw: "Winsorize raw values",
+  iqr_clip_raw: "IQR-clip raw values",
+  mad_clip_raw: "MAD-clip raw values",
+  zscore_clip_raw: "Z-score clip raw values",
+  set_raw_outliers_to_missing: "Set raw outliers to missing",
+  apply_official_tcode: "Apply official transform codes",
+  keep_official_raw_scale: "Keep raw scale",
+  target_only: "Target only",
+  predictors_only: "Predictors only",
+  target_and_predictors: "Target and predictors",
+  require_complete_rows: "Require complete rows",
+  keep_available_rows: "Keep available rows",
+  impute_predictors_only: "Impute predictors only",
+  zero_fill_leading_predictor_gaps: "Zero-fill leading predictor gaps",
+  calendar_aligned_frame: "Calendar-aligned table",
+  drop_unknown_native_frequency: "Drop unknown-frequency series",
+  drop_non_target_native_frequency: "Keep target frequency only",
+  native_frequency_block_payload: "Keep native-frequency blocks",
+  mixed_frequency_model_adapter: "Use mixed-frequency model adapter",
+  future_target_level_t_plus_h: "Future level at t+h",
+  future_diff: "Future difference",
+  future_logdiff: "Future log difference",
+  average_growth_1_to_h: "Average growth to h",
+  path_average_growth_1_to_h: "Path average growth to h",
+  average_difference_1_to_h: "Average difference to h",
+  path_average_difference_1_to_h: "Path average difference to h",
+  average_log_growth_1_to_h: "Average log growth to h",
+  path_average_log_growth_1_to_h: "Path average log growth to h",
+  level: "Level",
+  difference: "Difference",
+  log: "Log level",
+  log_difference: "Log difference",
+  growth_rate: "Growth rate",
+  none: "None",
+  zscore_train_only: "Train-only z-score",
+  robust_zscore: "Robust z-score",
+  minmax: "Min-max scale",
+  unit_variance: "Unit variance",
+  raw_only: "Raw only",
+  official_tcode_only: "Official t-code only",
+  official_tcode_then_extra_preprocess: "Official t-code, then extra preprocessing",
+  extra_preprocess_only: "Extra preprocessing only",
+  extra_preprocess_then_official_tcode: "Extra preprocessing, then official t-code",
+  custom_transform_sequence: "Custom transform sequence",
+  drop: "Drop missing values",
+  em_impute: "EM imputation",
+  mean_impute: "Mean imputation",
+  median_impute: "Median imputation",
+  ffill: "Forward fill",
+  interpolate_linear: "Linear interpolation",
+  drop_rows: "Drop rows",
+  drop_columns: "Drop columns",
+  drop_if_above_threshold: "Drop above threshold",
+  missing_indicator: "Add missing indicators",
+  custom: "Custom",
+  clip: "Clip",
+  outlier_to_nan: "Outlier to NaN",
+  winsorize: "Winsorize",
+  trim: "Trim tails",
+  iqr_clip: "IQR clip",
+  mad_clip: "MAD clip",
+  zscore_clip: "Z-score clip",
+  outlier_to_missing: "Outlier to missing",
+  standard: "Standard scale",
+  robust: "Robust scale",
+  demean_only: "Demean only",
+  unit_variance_only: "Unit variance only",
+  rank_scale: "Rank scale",
+  fixed_target_lags: "Fixed target lags",
+  ic_selected_target_lags: "IC-selected target lags",
+  horizon_specific_target_lags: "Horizon-specific target lags",
+  custom_target_lags: "Custom target lags",
+  fixed_predictor_lags: "Fixed predictor lags",
+  variable_specific_predictor_lags: "Variable-specific predictor lags",
+  category_specific_predictor_lags: "Category-specific predictor lags",
+  cv_selected_predictor_lags: "CV-selected predictor lags",
+  custom_predictor_lags: "Custom predictor lags",
+  pca_static_factors: "PCA static factors",
+  pca_factor_lags: "PCA factor lags",
+  supervised_factors: "Supervised factors",
+  custom_factors: "Custom factors",
+  target_level_addback: "Add target level",
+  x_level_addback: "Add predictor levels",
+  selected_level_addbacks: "Selected level addbacks",
+  level_growth_pairs: "Level-growth pairs",
+  moving_average_features: "Moving-average features",
+  rolling_moments: "Rolling moments",
+  local_temporal_factors: "Local temporal factors",
+  volatility_features: "Volatility features",
+  custom_temporal_features: "Custom temporal features",
+  marx_rotation: "MARX rotation",
+  maf_rotation: "MAF rotation",
+  moving_average_rotation: "Moving-average rotation",
+  custom_rotation: "Custom rotation",
+  replace_with_selected_blocks: "Use selected blocks only",
+  append_to_base_predictors: "Append to base predictors",
+  append_to_target_lags: "Append to target lags",
+  concatenate_named_blocks: "Concatenate named blocks",
+  custom_feature_combiner: "Custom feature combiner",
+  correlation_filter: "Correlation filter",
+  lasso_selection: "Lasso selection",
+  mutual_information_screen: "Mutual information screen",
+  select_before_factor: "Select before factor extraction",
+  select_after_factor: "Select after factor extraction",
+  select_after_custom_feature_blocks: "Select after custom blocks",
+  original_scale: "Original scale",
+  raw_level: "Raw level",
+  transformed_scale: "Transformed scale",
+  both: "Both",
+  target_lag_features: "Target lags only",
+  factors_plus_target_lags: "Factors plus target lags",
+  raw_feature_panel: "Raw feature panel",
+  raw_predictors_only: "Raw predictors only",
+  pca_factor_features: "PCA factor features",
+  sequence_tensor: "Sequence tensor",
+  mse: "Mean squared error",
+  rmse: "Root mean squared error",
+  mae: "Mean absolute error",
+  mape: "Mean absolute percentage error",
+  medae: "Median absolute error",
+  theil_u1: "Theil U1",
+  theil_u2: "Theil U2",
+  relative_mse: "Relative MSE vs benchmark",
+  r2_oos: "Out-of-sample R2",
+  relative_mae: "Relative MAE vs benchmark",
+  mse_reduction: "MSE reduction",
+  log_score: "Log score",
+  crps: "CRPS",
+  interval_score: "Interval score",
+  coverage_rate: "Coverage rate",
+  success_ratio: "Direction success ratio",
+  pesaran_timmermann_metric: "Pesaran-Timmermann direction test",
+  full_oos: "Full OOS period",
+  rolling: "Rolling",
+  expanding: "Expanding",
+  all_targets_horizons: "All target-horizon cells",
+  per_target_horizon: "Each target-horizon cell",
+  mean: "Mean",
+  median: "Median",
+  per_subperiod: "Separate by subperiod",
+  pool_horizons: "Pool horizons",
+  per_horizon_separate: "Separate horizons",
+  pool_targets: "Pool targets",
+  per_target_separate: "Separate targets",
+  pool_states: "Pool states",
+  per_state_separate: "Separate states",
+  fixed_dates: "Fixed dates",
+  multiple_subperiods: "Multiple subperiods",
+  pooled: "Pooled",
+  per_regime: "Separate by regime",
+  by_horizon: "By horizon",
+  by_target: "By target",
+  by_state: "By state",
+  by_regime: "By regime",
+  marginal: "Marginal contribution",
+  sequential: "Sequential contribution",
+  by_primary_metric: "Rank by main score",
+  by_relative_metric: "Rank by relative score",
+  by_average_rank: "Rank by average rank",
+  mcs_inclusion: "Model confidence set inclusion",
+  single_table: "Single table",
+  per_target_horizon_panel: "Target-horizon panel",
+  latex_table: "LaTeX table",
+  per_target: "Each target",
+  per_horizon: "Each horizon",
+  newey_west: "Newey-West HAC",
+  andrews: "Andrews automatic bandwidth",
+  parzen_kernel: "Parzen kernel HAC",
+  nw_with_h_minus_1_lag: "NW with h-1 lags",
+  west_1996_adjustment: "West 1996 adjustment",
+  dm_diebold_mariano: "Diebold-Mariano",
+  gw_giacomini_white: "Giacomini-White",
+  multi: "Multiple tests",
+  vs_benchmark_only: "Compare models to benchmark only",
+  all_pairs: "Compare all model pairs",
+  user_list: "Use manual pair list",
+  json: "JSON",
+  csv: "CSV",
+  parquet: "Parquet",
+  json_csv: "JSON plus CSV",
+  json_parquet: "JSON plus Parquet",
+  latex_tables: "LaTeX tables",
+  markdown_report: "Markdown report",
+  html_report: "HTML report",
+  all: "All supported outputs",
+  gzip: "Gzip",
+  zip: "Zip",
+  forecasts: "Forecasts",
+  forecast_intervals: "Forecast intervals",
+  metrics: "Metrics",
+  ranking: "Ranking",
+  decomposition: "Decomposition",
+  regime_metrics: "Regime metrics",
+  state_metrics: "State metrics",
+  model_artifacts: "Model artifacts",
+  combination_weights: "Combination weights",
+  feature_metadata: "Feature metadata",
+  clean_panel: "Clean panel",
+  raw_panel: "Raw panel",
+  diagnostics_all: "All diagnostics",
+  tests: "Statistical test results",
+  importance: "Importance scores",
+  transformation_attribution: "Transformation attribution",
+  pickle: "Pickle",
+  joblib: "Joblib",
+  onnx: "ONNX",
+  pmml: "PMML",
+  recipe_yaml_full: "Full recipe YAML",
+  recipe_hash: "Recipe hash",
+  package_version: "Package version",
+  python_version: "Python version",
+  r_version: "R version",
+  julia_version: "Julia version",
+  dependency_lockfile: "Dependency lockfile",
+  git_commit_sha: "Git commit SHA",
+  git_branch_name: "Git branch name",
+  data_revision_tag: "Data revision tag",
+  random_seed_used: "Random seed used",
+  runtime_environment: "Runtime environment",
+  runtime_duration: "Runtime duration",
+  cell_resolved_axes: "Resolved axes per cell",
+  yaml: "YAML",
+  json_lines: "JSON lines",
+  per_cell: "One artifact per forecast cell",
+  flat: "Single flat bundle",
+  cell_id: "Cell ID",
+  descriptive: "Readable descriptive names",
+  recipe_hash: "Recipe hash",
+};
+
+const OPTION_DESCRIPTIONS = {
+  multi_target: "Default. Use when the study should evaluate several macro targets together.",
+  single_target: "Use when the recipe should forecast one target series only.",
+  fred_md: "Default broad monthly macro panel. Good starting point for non-technical users.",
+  fred_sd: "Use when state-level predictors are central to the question.",
+  all_variables: "Default broad universe. Keeps the first setup wide instead of hand-picking predictors.",
+  factors_plus_target_lags: "Default broad feature recipe: summarize predictors with factors and keep target history.",
+  per_target_horizon: "Default. Tests each target and forecast horizon separately.",
+  newey_west: "Default HAC correction for serial correlation in forecast errors.",
+  nw_with_h_minus_1_lag: "Default for overlapping h-step forecast errors.",
+  mse: "Default main score. Penalizes large misses more strongly.",
+  relative_mse: "Shows performance relative to a benchmark; below 1 is better than benchmark.",
+  r2_oos: "Out-of-sample R2; positive values mean improvement over benchmark.",
+  by_primary_metric: "Default. Uses the selected main score for ranking.",
+  json_csv: "Default. JSON preserves structure; CSV is easy to inspect.",
+  per_cell: "Default. Keeps artifacts separated by target, horizon, and model cell."
+};
+
+const DAG_PRESETS = {
+  l3: [
+    { key: "target_horizons", label: "Target Horizons", type: "step", op: "target_construction", params: { horizons: [1, 3, 6, 12] }, help: "Build y(t+h) for each forecast horizon." },
+    { key: "predictor_lags", label: "Predictor Lag Block", type: "step", op: "lag", params: { n_lag: 4 }, help: "Create broad lagged predictors." },
+    { key: "pca_factors", label: "PCA Factors", type: "step", op: "pca_factors", params: { n_factors: 8 }, help: "Compress many predictors into a smaller factor block." },
+    { key: "feature_sink", label: "Feature Sink", type: "sink", op: "sink", params: {}, help: "Final L3 output passed into forecasting models." }
+  ],
+  l4: [
+    { key: "fit_model", label: "Fit Model", type: "step", op: "fit_model", params: { family: "ridge" }, help: "Train one forecast model." },
+    { key: "fit_benchmark", label: "Fit Benchmark", type: "step", op: "fit_model", params: { family: "autoregressive_bic", is_benchmark: true }, help: "Train benchmark used for relative metrics." },
+    { key: "predict", label: "Predict", type: "step", op: "predict", params: {}, help: "Generate forecasts from a fitted model." },
+    { key: "combine", label: "Combine Forecasts", type: "combine", op: "forecast_combination", params: { method: "equal_weight" }, help: "Combine multiple forecast streams." },
+    { key: "forecast_sink", label: "Forecast Sink", type: "sink", op: "sink", params: {}, help: "Final L4 forecast bundle." }
+  ],
+  l7: [
+    { key: "importance", label: "Importance", type: "step", op: "permutation_importance", params: { scope: "global" }, help: "Estimate global predictor importance." },
+    { key: "attribution_sink", label: "Attribution Sink", type: "sink", op: "sink", params: {}, help: "Final L7 interpretation artifact." }
+  ]
+};
+
 const state = {
   selectedLayer: "map",
   mapFocusLayer: "l1",
@@ -718,16 +1105,12 @@ function renderDagWorkspace(layer, body) {
   const dag = state.dags[layer.id];
   const actions = $("#workspaceActions");
   actions.innerHTML = `
-    <button class="icon-button" data-action="add-source">Source</button>
-    <button class="icon-button" data-action="add-step">Step</button>
-    <button class="icon-button" data-action="add-combine">Combine</button>
-    <button class="icon-button" data-action="add-sink">Sink</button>
+    <button class="icon-button" data-action="add-source">+ Source</button>
+    <button class="icon-button" data-action="add-step">+ Blank Step</button>
     <button class="icon-button" data-action="layout">Auto layout</button>
   `;
   actions.querySelector('[data-action="add-source"]').addEventListener("click", () => addNode(layer.id, "source"));
   actions.querySelector('[data-action="add-step"]').addEventListener("click", () => addNode(layer.id, "step"));
-  actions.querySelector('[data-action="add-combine"]').addEventListener("click", () => addNode(layer.id, "combine"));
-  actions.querySelector('[data-action="add-sink"]').addEventListener("click", () => addNode(layer.id, "sink"));
   actions.querySelector('[data-action="layout"]').addEventListener("click", () => autoLayout(layer.id));
 
   if (layer.mode === "dag-toggle" && !dag.enabled) {
@@ -740,10 +1123,27 @@ function renderDagWorkspace(layer, body) {
 
   const shell = document.createElement("div");
   shell.className = "dag-shell";
-  shell.innerHTML = `<svg class="edge-layer"></svg><div class="dag-canvas"></div>`;
+  shell.innerHTML = `
+    <div class="dag-help">
+      <strong>${layer.id.toUpperCase()} ${layer.name}</strong>
+      <span>Drag nodes to arrange. Use Start link on one node, then Link here on another node. Use presets for common blocks.</span>
+    </div>
+    <div class="dag-palette">${dagPresetButtons(layer.id)}</div>
+    <svg class="edge-layer"></svg>
+    <div class="dag-canvas"></div>
+  `;
   body.appendChild(shell);
+  shell.querySelectorAll("[data-preset]").forEach((button) => {
+    button.addEventListener("click", () => addPresetNode(layer.id, button.dataset.preset));
+  });
   drawEdges(shell.querySelector("svg"), dag);
   drawNodes(shell.querySelector(".dag-canvas"), layer.id, dag);
+}
+
+function dagPresetButtons(layerId) {
+  return (DAG_PRESETS[layerId] || []).map((preset) => (
+    `<button class="palette-button" data-preset="${preset.key}" title="${preset.help}">+ ${preset.label}</button>`
+  )).join("");
 }
 
 function drawEdges(svg, dag) {
@@ -779,11 +1179,12 @@ function drawNodes(canvas, layerId, dag) {
       <div class="node-strip"></div>
       <div class="node-content">
         <div class="node-title">${node.label}</div>
-        <div><span class="node-kind">${node.type}</span></div>
-        <div class="node-meta">${node.id} · ${node.op}</div>
+        <div><span class="node-kind">${nodeTypeLabel(node.type)}</span></div>
+        <div class="node-meta">${node.id} · ${optionLabel(node.op)}</div>
+        <div class="node-help">${nodeHelp(layerId, node)}</div>
         <div class="node-ports">
-          <button class="port-button" data-port="out">connect</button>
-          <button class="port-button ${state.connectingFrom === node.id ? "connecting" : ""}" data-port="in">target</button>
+          <button class="port-button ${state.connectingFrom === node.id ? "connecting" : ""}" data-port="out">Start link</button>
+          <button class="port-button" data-port="in">Link here</button>
         </div>
       </div>
     `;
@@ -808,6 +1209,23 @@ function drawNodes(canvas, layerId, dag) {
     });
     canvas.appendChild(el);
   }
+}
+
+function nodeTypeLabel(type) {
+  return {
+    source: "Input",
+    step: "Transform / model step",
+    combine: "Combine",
+    sink: "Output"
+  }[type] || type;
+}
+
+function nodeHelp(layerId, node) {
+  const preset = (DAG_PRESETS[layerId] || []).find((item) => item.op === node.op || item.label === node.label);
+  if (preset) return preset.help;
+  if (node.type === "source") return "Input from an earlier layer.";
+  if (node.type === "sink") return "Named output that later layers can consume.";
+  return "Custom step. Edit op and params in the inspector.";
 }
 
 function startDrag(event, layerId, nodeId) {
@@ -840,6 +1258,25 @@ function addNode(layerId, type) {
   const count = dag.nodes.length + 1;
   const id = `${type}_${count}`;
   dag.nodes.push({ id, type, op: type === "sink" ? "sink" : type, label: `${type} ${count}`, x: 180 + count * 24, y: 120 + count * 18, params: {} });
+  state.selectedNode = id;
+  render();
+}
+
+function addPresetNode(layerId, presetKey) {
+  const preset = (DAG_PRESETS[layerId] || []).find((item) => item.key === presetKey);
+  if (!preset) return;
+  const dag = state.dags[layerId];
+  const count = dag.nodes.filter((node) => node.op === preset.op).length + 1;
+  const id = `${preset.key}_${count}`;
+  dag.nodes.push({
+    id,
+    type: preset.type,
+    op: preset.op,
+    label: preset.label,
+    x: 170 + dag.nodes.length * 34,
+    y: 150 + dag.nodes.length * 22,
+    params: clone(preset.params)
+  });
   state.selectedNode = id;
   render();
 }
@@ -888,6 +1325,7 @@ function renderInspector() {
 
 function nodeInspector(layerId, node) {
   return sectionFromFields(`Node ${node.id}`, [
+    readonlyField("What this node does", nodeHelp(layerId, node)),
     textField("label", node.label, (v) => node.label = v),
     textField("op", node.op, (v) => node.op = v),
     selectField("type", node.type, ["source", "step", "combine", "sink"], (v) => node.type = v),
@@ -916,7 +1354,42 @@ function layerDagInspector(layer) {
   fields.push(readonlyField("required sinks", requiredSinks(layer.id).join(", ")));
   fields.push(readonlyField("nodes", String(dag.nodes.length)));
   fields.push(readonlyField("edges", String(dag.edges.length)));
+  fields.push(readonlyField("how to connect", "Start link on source node, then Link here on target node."));
+  fields.push(edgeListField(layer.id));
   return sectionFromFields(`${layer.id.toUpperCase()} DAG`, fields);
+}
+
+function edgeListField(layerId) {
+  const field = document.createElement("div");
+  field.className = "field edge-list-field";
+  const label = document.createElement("label");
+  label.textContent = "Current links";
+  field.appendChild(label);
+  const list = document.createElement("div");
+  list.className = "edge-list";
+  const dag = state.dags[layerId];
+  if (!dag.edges.length) {
+    list.textContent = "No links yet.";
+  } else {
+    for (const edge of dag.edges) {
+      const from = dag.nodes.find((node) => node.id === edge.from);
+      const to = dag.nodes.find((node) => node.id === edge.to);
+      const row = document.createElement("div");
+      row.className = "edge-row";
+      row.innerHTML = `<span>${from?.label || edge.from} -> ${to?.label || edge.to}</span>`;
+      const remove = document.createElement("button");
+      remove.className = "edge-remove";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () => {
+        dag.edges = dag.edges.filter((item) => item !== edge);
+        render();
+      });
+      row.appendChild(remove);
+      list.appendChild(row);
+    }
+  }
+  field.appendChild(list);
+  return field;
 }
 
 function diagnosticInspector(layer) {
@@ -1220,6 +1693,13 @@ function textAreaField(label, value, onChange) {
     renderAfterEdit();
   });
   field.appendChild(input);
+  const options = axisOptionsByName(label);
+  if (options.length) {
+    const choices = document.createElement("div");
+    choices.className = "choice-help";
+    choices.innerHTML = options.map((option) => `<span title="${option}">${escapeHtml(optionLabel(option))}</span>`).join("");
+    field.appendChild(choices);
+  }
   return field;
 }
 
@@ -1244,7 +1724,7 @@ function selectField(label, value, options, onChange, describe = null) {
   for (const option of options) {
     const el = document.createElement("option");
     el.value = option;
-    el.textContent = option;
+    el.textContent = optionLabel(option);
     if (option === value) el.selected = true;
     select.appendChild(el);
   }
@@ -1257,19 +1737,33 @@ function selectField(label, value, options, onChange, describe = null) {
   description.className = "field-description";
   description.textContent = describe ? describe(value) : defaultOptionDescription(label, value);
   field.appendChild(description);
+  const code = document.createElement("div");
+  code.className = "field-code";
+  code.textContent = `YAML value: ${value}`;
+  field.appendChild(code);
   return field;
 }
 
 function optionDescription(axisName) {
   return (value) => {
-    const axis = AXIS_DESCRIPTIONS[axisName] || axisName.replaceAll("_", " ");
-    return `${axis} Selected: ${value.replaceAll("_", " ")}.`;
+    const axis = AXIS_DESCRIPTIONS[axisName] || axisTitle(axisName);
+    const option = OPTION_DESCRIPTIONS[value] || `Selected option: ${optionLabel(value)}.`;
+    return `${axis} ${option}`;
   };
 }
 
 function defaultOptionDescription(label, value) {
   if (value === undefined || value === null) return "";
-  return `Selected: ${String(value).replaceAll("_", " ")}.`;
+  return `Selected: ${optionLabel(String(value))}.`;
+}
+
+function optionLabel(value) {
+  return OPTION_LABELS[value] || String(value).replaceAll("_", " ");
+}
+
+function axisTitle(value) {
+  const clean = String(value).split(".").pop();
+  return AXIS_TITLES[clean] || clean.replaceAll("_", " ");
 }
 
 function toggleField(label, checked, onChange) {
@@ -1310,7 +1804,8 @@ function baseField(label) {
   const field = document.createElement("div");
   field.className = "field";
   const labelEl = document.createElement("label");
-  labelEl.textContent = label;
+  const title = axisTitle(label);
+  labelEl.innerHTML = `${escapeHtml(title)}${title !== label ? ` <span>${escapeHtml(label)}</span>` : ""}`;
   field.appendChild(labelEl);
   return field;
 }
@@ -1323,6 +1818,13 @@ function renderAfterEdit() {
 
 function splitCsv(value) {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function axisOptionsByName(axisName) {
+  for (const layerOptions of Object.values(AXIS_OPTIONS)) {
+    if (layerOptions[axisName]) return layerOptions[axisName];
+  }
+  return [];
 }
 
 function escapeHtml(value) {
