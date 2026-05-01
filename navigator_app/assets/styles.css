@@ -123,10 +123,6 @@ button:hover,
   gap: 16px;
 }
 
-.recipe-controls-hidden {
-  display: none;
-}
-
 .inspector .panel,
 .layer-detail {
   padding: 16px;
@@ -313,8 +309,8 @@ input {
 
 .layer-hero {
   display: grid;
-  grid-template-columns: 86px minmax(0, 1fr) minmax(190px, 280px);
-  gap: 12px;
+  grid-template-columns: 118px minmax(0, 1fr) minmax(220px, 340px);
+  gap: 18px;
   align-items: stretch;
 }
 
@@ -322,11 +318,11 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 84px;
+  min-height: 116px;
   border-radius: 10px;
   background: #101828;
   color: #fff;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 900;
 }
 
@@ -335,16 +331,16 @@ input {
 }
 
 .layer-hero-copy h2 {
-  margin-bottom: 6px;
-  font-size: 24px;
+  margin-bottom: 8px;
+  font-size: 30px;
   line-height: 1.08;
 }
 
 .layer-hero-copy p:last-child {
   max-width: 760px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.42;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .layer-metrics {
@@ -357,14 +353,14 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 38px;
-  padding: 8px;
+  min-height: 54px;
+  padding: 10px;
   border-radius: 9px;
 }
 
 .layer-metrics strong {
   color: var(--text);
-  font-size: 17px;
+  font-size: 20px;
 }
 
 .handoff-grid,
@@ -486,22 +482,9 @@ input {
   padding: 10px 11px;
 }
 
-.canonical-axis span,
-.canonical-axis em {
-  display: block;
-}
-
 .canonical-axis span {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
-  font-weight: 800;
-}
-
-.canonical-axis em {
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  font-style: normal;
   font-weight: 800;
 }
 
@@ -532,90 +515,6 @@ input {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
   overflow-wrap: anywhere;
-}
-
-.axis-option-panel {
-  margin-top: 12px;
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
-.axis-option-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.axis-option-head span,
-.axis-option-head em {
-  color: var(--muted);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.axis-option-head strong {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.axis-choice-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 8px;
-}
-
-.axis-choice {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 11px;
-  background: #fff;
-  color: var(--text);
-  text-align: left;
-}
-
-.axis-choice strong,
-.axis-choice span,
-.axis-choice em {
-  display: block;
-  overflow-wrap: anywhere;
-}
-
-.axis-choice strong {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-}
-
-.axis-choice span {
-  margin-top: 5px;
-  color: var(--ok);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.axis-choice em {
-  margin-top: 5px;
-  color: var(--danger);
-  font-size: 11px;
-  font-style: normal;
-}
-
-.axis-choice.selected {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.axis-choice.disabled {
-  border-color: #ffd0c8;
-  background: var(--danger-soft);
-  cursor: not-allowed;
 }
 
 .section-heading {
