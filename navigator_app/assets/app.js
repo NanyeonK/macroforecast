@@ -56,6 +56,26 @@ const CANONICAL_SUB_LAYERS = {
 };
 
 const CANONICAL_AXIS_GROUPS = {
+  l0: {
+    "L0.A study scope": ["study_scope"],
+    "L0.B execution policy": ["failure_policy"],
+    "L0.C reproducibility": ["reproducibility_mode"],
+    "L0.D compute mode": ["compute_mode"],
+  },
+  l1: {
+    "L1.A data source": ["custom_source_policy", "dataset", "frequency", "information_set_type", "release_lag_rule", "contemporaneous_x_rule"],
+    "L1.B target and horizons": ["target_structure"],
+    "L1.C predictors": ["variable_universe", "fred_sd_variable_group", "sd_variable_selection"],
+    "L1.D geography": ["fred_sd_state_group", "state_selection"],
+    "L1.G regimes": ["regime_definition"],
+  },
+  l2: {
+    "L2.A target construction": ["horizon_target_construction", "target_transform", "target_normalization"],
+    "L2.B transforms": ["tcode_policy", "transform_policy", "transform_scope", "fred_sd_mixed_frequency_representation"],
+    "L2.C missing and outliers": ["x_missing_policy", "x_outlier_policy", "outlier_policy", "outlier_action", "imputation_policy"],
+    "L2.D scaling": ["scaling_policy"],
+    "L2.E features": ["target_lag_block", "x_lag_feature_block", "factor_feature_block", "level_feature_block"],
+  },
   l5: {
     "L5.A metrics": ["primary_metric", "point_metrics", "density_metrics", "direction_metrics", "relative_metrics"],
     "L5.B benchmark": ["benchmark_window", "benchmark_scope"],
@@ -83,6 +103,179 @@ const CANONICAL_AXIS_GROUPS = {
     "L8_C_provenance": ["provenance_fields", "manifest_format"],
     "L8_D_artifact_granularity": ["artifact_granularity", "naming_convention"],
   },
+};
+
+const TREE_LAYER_ALIASES = {
+  l0: "0_meta",
+  l1: "1_data_task",
+  l2: "2_preprocessing",
+  l5: "4_evaluation",
+  l6: "6_stat_tests",
+  l7: "7_importance",
+  l8: "5_output_provenance",
+};
+
+const GRAPH_LAYER_SECTIONS = {
+  l3: {
+    "L3.A source nodes": {
+      summary: "Feature DAG starts from cleaned panels, targets, and metadata.",
+      columns: [
+        { label: "Sources", items: [
+          { name: "l2_clean_panel_v1", kind: "source", summary: "Clean predictor and target panel from L2." },
+          { name: "l1_data_definition_v1", kind: "source", summary: "Target, horizon, dataset, and calendar metadata." },
+          { name: "l1_regime_metadata_v1", kind: "gated source", summary: "Available only when regime support is active." },
+        ] },
+        { label: "Routing", items: [
+          { name: "source selector", kind: "node", summary: "Select X, y, metadata, or regime inputs for feature steps." },
+        ] },
+        { label: "Feeds", items: [
+          { name: "L3.B feature DAG", kind: "edge", summary: "Source outputs connect into feature transform nodes." },
+        ] },
+      ],
+    },
+    "L3.B feature DAG": {
+      summary: "Users compose source -> transform -> sink nodes. This is not a fixed-axis panel.",
+      columns: [
+        { label: "Transform nodes", items: [
+          { name: "lag / seasonal_lag", kind: "step", summary: "Build target or predictor lag blocks." },
+          { name: "pca / scaled_pca / dfm", kind: "step", summary: "Factor and dimensionality-reduction blocks." },
+          { name: "feature_selection", kind: "step", summary: "Selection node for sparse feature sets." },
+          { name: "ma_increasing_order", kind: "step", summary: "MARX increasing-order moving-average block." },
+        ] },
+        { label: "Composition", items: [
+          { name: "parallel branches", kind: "DAG pattern", summary: "Multiple feature pipelines can feed one final feature sink." },
+          { name: "lineage metadata", kind: "metadata", summary: "Each output column keeps source and pipeline lineage for L5/L7." },
+        ] },
+        { label: "Validation", items: [
+          { name: "acyclic graph", kind: "rule", summary: "Steps form a directed acyclic graph; no layer-level sweep axes." },
+        ] },
+      ],
+    },
+    "L3.C sinks": {
+      summary: "Feature DAG resolves into feature and metadata artifacts consumed by L4 and L7.",
+      columns: [
+        { label: "Sinks", items: [
+          { name: "l3_features_v1", kind: "sink", summary: "Final X/y feature matrices." },
+          { name: "l3_metadata_v1", kind: "sink", summary: "Column lineage, pipeline names, and transform provenance." },
+        ] },
+        { label: "Consumers", items: [
+          { name: "L4 forecast DAG", kind: "downstream", summary: "Model training reads l3_features_v1." },
+          { name: "L7 interpretation", kind: "downstream", summary: "Importance and lineage attribution read both L3 sinks." },
+        ] },
+      ],
+    },
+  },
+  l4: {
+    "L4.A model DAG": {
+      summary: "L4 composes model fit, benchmark, tuning, and ensemble nodes.",
+      columns: [
+        { label: "Sources", items: [
+          { name: "l3_features_v1", kind: "source", summary: "Training and forecast design matrices." },
+          { name: "l3_metadata_v1", kind: "source", summary: "Feature lineage for model artifacts." },
+        ] },
+        { label: "Model nodes", items: [
+          { name: "fit_model", kind: "step", summary: "Family-specific model fitting and optional tuning." },
+          { name: "benchmark_model", kind: "step", summary: "Produces artifacts flagged with is_benchmark." },
+          { name: "combine_forecasts", kind: "step", summary: "Optional ensemble combination over model outputs." },
+        ] },
+        { label: "Rules", items: [
+          { name: "model_id lineage", kind: "metadata", summary: "Every forecast and artifact keeps model_id for L5/L6/L7." },
+        ] },
+      ],
+    },
+    "L4.B forecasts": {
+      summary: "Forecast nodes emit point, quantile, or density forecast objects.",
+      columns: [
+        { label: "Forecast nodes", items: [
+          { name: "predict_direct", kind: "step", summary: "Direct h-step forecasts." },
+          { name: "predict_iterated", kind: "step", summary: "Recursive or iterated forecast path." },
+          { name: "predict_path_average", kind: "step", summary: "Path-average forecast strategy." },
+        ] },
+        { label: "Objects", items: [
+          { name: "point", kind: "forecast_object", summary: "Point forecast table." },
+          { name: "quantile / density", kind: "forecast_object", summary: "Enables L5 density metrics and L6 density tests." },
+        ] },
+      ],
+    },
+    "L4.C model artifacts": {
+      summary: "Artifacts carry fitted models, benchmark flags, and runtime metadata.",
+      columns: [
+        { label: "Artifact fields", items: [
+          { name: "model_artifact", kind: "sink payload", summary: "Fitted model or runtime stub metadata." },
+          { name: "is_benchmark", kind: "flag", summary: "Benchmark detection for L5/L6 uses this flag." },
+        ] },
+        { label: "Sink", items: [
+          { name: "l4_model_artifacts_v1", kind: "sink", summary: "Consumed by L5, L6, and L7." },
+        ] },
+      ],
+    },
+    "L4.D training metadata": {
+      summary: "Training window, tuning, and reproducibility information for diagnostics and provenance.",
+      columns: [
+        { label: "Metadata", items: [
+          { name: "window_plan", kind: "metadata", summary: "Expanding, rolling, or fixed-window training plan." },
+          { name: "tuning_history", kind: "metadata", summary: "Search traces when tuning is active." },
+          { name: "runtime_log", kind: "metadata", summary: "Training duration, warnings, and seeds." },
+        ] },
+        { label: "Sink", items: [
+          { name: "l4_training_metadata_v1", kind: "sink", summary: "Consumed by L4.5 and L8." },
+        ] },
+      ],
+    },
+  },
+  l7: {
+    "L7.A importance DAG": {
+      summary: "Interpretation is a source -> importance step -> aggregation -> sink DAG.",
+      columns: [
+        { label: "Sources", items: [
+          { name: "L4 model artifacts", kind: "source", summary: "Fitted models selected by id, ranking, or MCS inclusion." },
+          { name: "L3 features", kind: "source", summary: "X/y matrices and feature metadata." },
+        ] },
+        { label: "Steps", items: [
+          { name: "shap_tree / permutation", kind: "step", summary: "Feature importance methods." },
+          { name: "group_aggregate", kind: "step", summary: "FRED-MD/QD/state/user block aggregation." },
+          { name: "transformation_attribution", kind: "step", summary: "Cross-cell transformation decomposition." },
+        ] },
+        { label: "Sinks", items: [
+          { name: "l7_importance_v1", kind: "sink", summary: "Main importance results." },
+          { name: "l7_transformation_attribution_v1", kind: "sink", summary: "Coulombe-style transformation attribution." },
+        ] },
+      ],
+    },
+  },
+};
+
+const MULTI_SELECT_AXES = new Set([
+  "point_metrics",
+  "density_metrics",
+  "direction_metrics",
+  "relative_metrics",
+  "coverage_levels",
+  "residual_test",
+  "saved_objects",
+  "provenance_fields",
+]);
+
+const DEFAULT_MULTI_SELECTIONS = {
+  point_metrics: ["mse", "mae"],
+  density_metrics: ["log_score", "crps"],
+  direction_metrics: [],
+  relative_metrics: ["relative_mse", "r2_oos"],
+  coverage_levels: ["0.5", "0.9", "0.95"],
+  residual_test: ["ljung_box_q", "arch_lm", "jarque_bera_normality"],
+  saved_objects: ["forecasts", "metrics", "ranking"],
+  provenance_fields: [
+    "recipe_yaml_full",
+    "recipe_hash",
+    "package_version",
+    "python_version",
+    "dependency_lockfile",
+    "data_revision_tag",
+    "random_seed_used",
+    "runtime_environment",
+    "runtime_duration",
+    "cell_resolved_axes",
+  ],
 };
 
 const CANONICAL_AXIS_OPTIONS = {
@@ -387,14 +580,29 @@ function subLayersForNode(node) {
   return CANONICAL_SUB_LAYERS[node.id] || [];
 }
 
+function treeAxesForNode(node) {
+  const treeLayer = TREE_LAYER_ALIASES[node.id];
+  if (!treeLayer) return [];
+  return allAxes()
+    .filter((axis) => axis.layer === treeLayer)
+    .map((axis) => axis.axis);
+}
+
+function effectiveAxesForNode(node) {
+  const declared = node.axes || [];
+  if (declared.length) return declared;
+  return treeAxesForNode(node);
+}
+
 function normalizeSubLayerName(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function axesForSubLayer(node, subLayer) {
+  if ((GRAPH_LAYER_SECTIONS[node.id] || {})[subLayer]) return [];
   const grouped = CANONICAL_AXIS_GROUPS[node.id] || {};
-  if (grouped[subLayer]) return grouped[subLayer].filter((axis) => (node.axes || []).includes(axis));
-  const axes = node.axes || [];
+  const axes = effectiveAxesForNode(node);
+  if (grouped[subLayer]) return grouped[subLayer].filter((axis) => axes.includes(axis));
   const normalized = normalizeSubLayerName(subLayer);
   const letterMatch = normalized.match(/\bl\d+(?:\s+5)?\s+([a-z])\b/);
   const letter = letterMatch ? letterMatch[1] : "";
@@ -408,6 +616,16 @@ function axesForSubLayer(node, subLayer) {
   const index = Math.max(0, subLayers.indexOf(subLayer));
   const chunkSize = Math.max(1, Math.ceil(axes.length / Math.max(1, subLayers.length)));
   return axes.slice(index * chunkSize, (index + 1) * chunkSize);
+}
+
+function graphSectionForSubLayer(node, subLayer) {
+  return (GRAPH_LAYER_SECTIONS[node.id] || {})[subLayer] || null;
+}
+
+function graphItemCount(node, subLayer) {
+  const section = graphSectionForSubLayer(node, subLayer);
+  if (!section) return 0;
+  return (section.columns || []).reduce((total, column) => total + ((column.items || []).length), 0);
 }
 
 function activeNode() {
@@ -429,12 +647,14 @@ function ensureActiveSubLayer(node) {
 
 function renderSubLayerButton(node, subLayer, idx) {
   const axes = axesForSubLayer(node, subLayer);
+  const graphCount = graphItemCount(node, subLayer);
   const active = subLayer === state.activeSubLayer ? " active" : "";
+  const countLabel = graphCount ? `${graphCount} DAG items` : `${axes.length} axes`;
   return `
     <button type="button" class="sublayer-card${active}" data-sub-layer="${escapeHtml(subLayer)}">
       <span>${escapeHtml(String(idx + 1).padStart(2, "0"))}</span>
       <strong>${escapeHtml(subLayer)}</strong>
-      <em>${escapeHtml(String(axes.length))} axes</em>
+      <em>${escapeHtml(countLabel)}</em>
     </button>
   `;
 }
@@ -474,23 +694,69 @@ function optionRecordsForAxis(axisName) {
   return [];
 }
 
-function selectedCanonicalOption(axisName, records) {
-  if (state.canonicalSelections[axisName]) return state.canonicalSelections[axisName];
-  if (!records.length) return "";
-  const enabled = records.find((record) => record.enabled !== false);
-  return (enabled || records[0]).value;
+function isMultiSelectAxis(axisName) {
+  return MULTI_SELECT_AXES.has(axisName);
 }
 
-function renderCanonicalOption(record, axisName, selectedValue) {
-  const selected = String(record.value) === String(selectedValue) ? " selected" : "";
+function selectedCanonicalValues(axisName, records) {
+  const stored = state.canonicalSelections[axisName];
+  if (Array.isArray(stored)) return stored;
+  if (stored) return [stored];
+  if (!records.length) return "";
+  if (isMultiSelectAxis(axisName)) {
+    const defaults = DEFAULT_MULTI_SELECTIONS[axisName];
+    if (defaults) return defaults.filter((value) => records.some((record) => String(record.value) === String(value)));
+    return records.filter((record) => record.enabled !== false).slice(0, 1).map((record) => record.value);
+  }
+  const enabled = records.find((record) => record.enabled !== false);
+  return [(enabled || records[0]).value];
+}
+
+function selectionSummary(axisName, records) {
+  const values = selectedCanonicalValues(axisName, records);
+  if (!Array.isArray(values)) return "";
+  if (!values.length) return "none";
+  return values.join(", ");
+}
+
+function renderCanonicalOption(record, axisName, selectedValues) {
+  const selected = selectedValues.some((value) => String(record.value) === String(value)) ? " selected" : "";
   const disabled = record.enabled === false ? " disabled" : "";
   const disabledAttr = record.enabled === false ? " disabled" : "";
   return `
     <button type="button" class="axis-choice${selected}${disabled}" data-canonical-option="${escapeHtml(record.value)}"${disabledAttr}>
       <strong>${escapeHtml(record.value)}</strong>
-      <span>${escapeHtml(record.status || "operational")}</span>
+      <span>${escapeHtml(selected ? (isMultiSelectAxis(axisName) ? "selected - click to toggle" : "selected") : (record.status || "operational"))}</span>
       ${record.disabled_reason ? `<em>${escapeHtml(record.disabled_reason)}</em>` : ""}
     </button>
+  `;
+}
+
+function renderGraphSubLayerPanel(node, subLayer) {
+  const section = graphSectionForSubLayer(node, subLayer);
+  if (!section) return "";
+  return `
+    <div class="dag-panel">
+      <div class="axis-option-head">
+        <span>DAG section</span>
+        <strong>${escapeHtml(subLayer)}</strong>
+      </div>
+      <p class="source-note">${escapeHtml(section.summary || "Graph layer section.")}</p>
+      <div class="dag-flow">
+        ${(section.columns || []).map((column) => `
+          <section class="dag-column">
+            <h4>${escapeHtml(column.label)}</h4>
+            ${(column.items || []).map((item) => `
+              <div class="dag-node">
+                <span>${escapeHtml(item.kind || "node")}</span>
+                <strong>${escapeHtml(item.name)}</strong>
+                <p>${escapeHtml(item.summary || "")}</p>
+              </div>
+            `).join("")}
+          </section>
+        `).join("")}
+      </div>
+    </div>
   `;
 }
 
@@ -508,19 +774,36 @@ function renderCanonicalOptionsPanel(axisName) {
       </div>
     `;
   }
-  const selected = selectedCanonicalOption(axisName, records);
+  const selectedValues = selectedCanonicalValues(axisName, records);
+  const multi = isMultiSelectAxis(axisName);
   return `
     <div class="axis-option-panel">
       <div class="axis-option-head">
-        <span>Selected axis</span>
+        <span>${multi ? "Multi-select axis" : "Selected axis"}</span>
         <strong>${escapeHtml(axisName)}</strong>
-        <em>selected: ${escapeHtml(selected)}</em>
+        <em>${multi ? "selected values" : "selected"}: ${escapeHtml(selectionSummary(axisName, records))}</em>
       </div>
       <div class="axis-choice-grid">
-        ${records.map((record) => renderCanonicalOption(record, axisName, selected)).join("")}
+        ${records.map((record) => renderCanonicalOption(record, axisName, selectedValues)).join("")}
       </div>
     </div>
   `;
+}
+
+function applyCanonicalSelection(axisName, value) {
+  if (isMultiSelectAxis(axisName)) {
+    const current = selectedCanonicalValues(axisName, optionRecordsForAxis(axisName));
+    const next = current.some((item) => String(item) === String(value))
+      ? current.filter((item) => String(item) !== String(value))
+      : [...current, value];
+    state.canonicalSelections[axisName] = next;
+    return;
+  }
+  state.canonicalSelections[axisName] = value;
+  const axis = allAxes().find((item) => item.axis === axisName);
+  if (axis) {
+    state.engineState = NavigatorStateEngine.selectOption(state.data, state.engineState, axisName, value);
+  }
 }
 
 function renderLayerDetail() {
@@ -533,12 +816,17 @@ function renderLayerDetail() {
   const subLayers = subLayersForNode(node);
   const activeSubLayer = ensureActiveSubLayer(node);
   const subLayerAxes = activeSubLayer ? axesForSubLayer(node, activeSubLayer) : (node.axes || []);
+  const graphSection = activeSubLayer ? graphSectionForSubLayer(node, activeSubLayer) : null;
   if (!state.activeCanonicalAxis || !subLayerAxes.includes(state.activeCanonicalAxis)) {
     state.activeCanonicalAxis = subLayerAxes[0] || null;
   }
   const modeText = node.ui_mode === "graph"
     ? "Graph/DAG layer: users compose source, step, and sink nodes."
     : "List layer: users resolve ordered axes and sub-layer sections.";
+  const graphSections = GRAPH_LAYER_SECTIONS[node.id] || {};
+  const graphItemTotal = Object.keys(graphSections).reduce((total, subLayer) => total + graphItemCount(node, subLayer), 0);
+  const layerAxes = effectiveAxesForNode(node);
+  const layerControlCount = layerAxes.length || graphItemTotal;
   const inputCount = (node.expected_inputs || []).length;
   const sinkCount = (node.produces || []).length;
   els.layerDetail.innerHTML = `
@@ -553,19 +841,8 @@ function renderLayerDetail() {
         <span><strong>${escapeHtml(String(inputCount))}</strong> inputs</span>
         <span><strong>${escapeHtml(String(sinkCount))}</strong> sinks</span>
         <span><strong>${escapeHtml(String(node.sub_layer_count || 0))}</strong> sub-layers</span>
-        <span><strong>${escapeHtml(String(node.axis_count || 0))}</strong> axes</span>
+        <span><strong>${escapeHtml(String(layerControlCount))}</strong> ${node.ui_mode === "graph" ? "DAG items" : "axes"}</span>
       </div>
-    </div>
-
-    <div class="handoff-grid">
-      <section class="handoff-card">
-        <h3>Inputs</h3>
-        ${formatList(node.expected_inputs, "No upstream sink inputs.")}
-      </section>
-      <section class="handoff-card">
-        <h3>Produces</h3>
-        ${formatList(node.produces, "No produced sinks registered.")}
-      </section>
     </div>
 
     <div class="definition-grid">
@@ -580,12 +857,23 @@ function renderLayerDetail() {
       <section>
         <h3>Selected sub-layer</h3>
         <p class="selected-sublayer">${escapeHtml(activeSubLayer || "Layer-level controls")}</p>
-        <p class="source-note">${escapeHtml(subLayerAxes.length ? `${subLayerAxes.length} axis/control entries available.` : "This sub-layer is configured by DAG nodes or runtime metadata.")}</p>
+        <p class="source-note">${escapeHtml(graphSection ? "This sub-layer is configured as a DAG section." : (subLayerAxes.length ? `${subLayerAxes.length} axis/control entries available.` : "This sub-layer is configured by DAG nodes or runtime metadata."))}</p>
       </section>
       <section class="definition-wide">
-        <h3>Axes / output controls</h3>
-        ${subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`}
-        ${renderCanonicalOptionsPanel(state.activeCanonicalAxis)}
+        <h3>${graphSection ? "DAG nodes / flow" : "Axes / output controls"}</h3>
+        ${graphSection ? renderGraphSubLayerPanel(node, activeSubLayer) : (subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`)}
+        ${graphSection ? "" : renderCanonicalOptionsPanel(state.activeCanonicalAxis)}
+      </section>
+    </div>
+
+    <div class="handoff-grid">
+      <section class="handoff-card">
+        <h3>Inputs</h3>
+        ${formatList(node.expected_inputs, "No upstream sink inputs.")}
+      </section>
+      <section class="handoff-card">
+        <h3>Produces</h3>
+        ${formatList(node.produces, "No produced sinks registered.")}
       </section>
     </div>
   `;
@@ -1064,7 +1352,7 @@ function bindEvents() {
       }
       const optionButton = event.target.closest("[data-canonical-option]");
       if (optionButton && state.activeCanonicalAxis) {
-        state.canonicalSelections[state.activeCanonicalAxis] = optionButton.dataset.canonicalOption;
+        applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
         render();
       }
     });
@@ -1081,7 +1369,7 @@ function bindEvents() {
       } else if (axisButton) {
         state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
       } else if (state.activeCanonicalAxis) {
-        state.canonicalSelections[state.activeCanonicalAxis] = optionButton.dataset.canonicalOption;
+        applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
       }
       render();
     });
