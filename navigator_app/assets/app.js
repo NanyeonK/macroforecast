@@ -299,6 +299,32 @@ const DEFAULT_MULTI_SELECTIONS = {
 
 const DEFAULT_SINGLE_SELECTIONS = {
   enabled: "false",
+  custom_source_policy: "official_only",
+  dataset: "fred_md",
+  frequency: "monthly",
+  vintage_policy: "current_vintage",
+  target_structure: "single_target",
+  variable_universe: "all_variables",
+  target_geography_scope: "all_states",
+  predictor_geography_scope: "match_target",
+  sample_start_rule: "max_balanced",
+  sample_end_rule: "latest_available",
+  horizon_set: "standard_md",
+  regime_definition: "none",
+  regime_estimation_temporal_rule: "expanding_window_per_origin",
+  sd_series_frequency_filter: "both",
+  quarterly_to_monthly_rule: "step_backward",
+  monthly_to_quarterly_rule: "quarterly_average",
+  transform_policy: "apply_official_tcode",
+  transform_scope: "target_and_predictors",
+  outlier_policy: "mccracken_ng_iqr",
+  outlier_action: "flag_as_nan",
+  outlier_scope: "target_and_predictors",
+  imputation_policy: "em_factor",
+  imputation_temporal_rule: "expanding_window_per_origin",
+  imputation_scope: "target_and_predictors",
+  frame_edge_policy: "truncate_to_balanced",
+  frame_edge_scope: "target_and_predictors",
   primary_metric: "mse",
   benchmark_window: "full_oos",
   benchmark_scope: "all_targets_horizons",
@@ -398,6 +424,32 @@ const DEFAULT_SINGLE_SELECTIONS = {
 };
 
 const CANONICAL_AXIS_OPTIONS = {
+  custom_source_policy: ["official_only", "custom_panel_only", "official_plus_custom"],
+  dataset: ["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"],
+  frequency: ["monthly", "quarterly"],
+  vintage_policy: ["current_vintage", "real_time_alfred"],
+  target_structure: ["single_target", "multi_series_target"],
+  variable_universe: ["all_variables", "core_variables", "category_variables", "target_specific_variables", "explicit_variable_list"],
+  target_geography_scope: ["single_state", "all_states", "selected_states"],
+  predictor_geography_scope: ["match_target", "all_states", "selected_states", "national_only"],
+  sample_start_rule: ["earliest_available", "fixed_date", "max_balanced"],
+  sample_end_rule: ["latest_available", "fixed_date"],
+  horizon_set: ["standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"],
+  regime_definition: ["none", "external_nber", "external_user_provided", "estimated_markov_switching", "estimated_threshold", "estimated_structural_break"],
+  regime_estimation_temporal_rule: ["expanding_window_per_origin", "rolling_window_per_origin", "block_recompute"],
+  sd_series_frequency_filter: ["monthly_only", "quarterly_only", "both"],
+  quarterly_to_monthly_rule: ["linear_interpolation", "step_backward", "step_forward", "chow_lin"],
+  monthly_to_quarterly_rule: ["quarterly_average", "quarterly_endpoint", "quarterly_sum"],
+  transform_policy: ["apply_official_tcode", "no_transform", "custom_tcode"],
+  transform_scope: ["target_and_predictors", "predictors_only", "target_only", "not_applicable"],
+  outlier_policy: ["mccracken_ng_iqr", "winsorize", "zscore_threshold", "none"],
+  outlier_action: ["flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator"],
+  outlier_scope: ["target_and_predictors", "predictors_only", "target_only", "not_applicable"],
+  imputation_policy: ["em_factor", "em_multivariate", "mean", "forward_fill", "linear_interpolation", "none_propagate"],
+  imputation_temporal_rule: ["expanding_window_per_origin", "rolling_window_per_origin", "block_recompute"],
+  imputation_scope: ["target_and_predictors", "predictors_only", "target_only", "not_applicable"],
+  frame_edge_policy: ["truncate_to_balanced", "drop_unbalanced_series", "keep_unbalanced", "zero_fill_leading"],
+  frame_edge_scope: ["target_and_predictors", "predictors_only", "target_only", "not_applicable"],
   primary_metric: ["mse", "rmse", "mae", "relative_mse", "r2_oos", "log_score", "crps"],
   point_metrics: ["mse", "rmse", "mae", "mape", "medae", "theil_u1", "theil_u2"],
   density_metrics: ["log_score", "crps", "interval_score", "coverage_rate"],
@@ -505,6 +557,16 @@ const CANONICAL_AXIS_OPTIONS = {
   tuning_view: ["objective_trace", "hyperparameter_path", "cv_score_distribution", "multi"],
   ensemble_view: ["weights_over_time", "weight_concentration", "member_contribution", "multi"],
   weights_over_time_method: ["line_plot", "stacked_area", "heatmap"],
+};
+
+const LAYER_AXIS_OPTIONS = {
+  "l1_5:correlation_method": ["pearson", "spearman", "kendall"],
+  "l1_5:correlation_view": ["none", "full_matrix", "clustered_heatmap", "top_k_per_target"],
+  "l2_5:correlation_method": ["pearson", "spearman"],
+  "l2_5:comparison_output_form": ["side_by_side_summary", "overlay_timeseries", "difference_table", "distribution_shift", "multi"],
+  "l3_5:correlation_method": ["pearson", "spearman"],
+  "l3_5:correlation_view": ["full_matrix", "clustered_heatmap", "top_k"],
+  "l3_5:comparison_output_form": ["side_by_side", "dimension_summary", "distribution_shift", "multi"],
 };
 
 function escapeHtml(value) {
@@ -815,31 +877,49 @@ function renderSubLayerButton(node, subLayer, idx) {
   `;
 }
 
-function renderAxisButton(axisName) {
-  const active = axisName === state.activeCanonicalAxis ? " active" : "";
-  const options = optionRecordsForAxis(axisName);
+function axisSelectionKey(layerId, axisName) {
+  return layerId ? `${layerId}::${axisName}` : axisName;
+}
+
+function axisNameFromSelectionKey(key) {
+  return String(key || "").includes("::") ? String(key).split("::").slice(1).join("::") : key;
+}
+
+function layerIdFromSelectionKey(key) {
+  return String(key || "").includes("::") ? String(key).split("::")[0] : null;
+}
+
+function renderAxisButton(node, axisName) {
+  const selectionKey = axisSelectionKey(node.id, axisName);
+  const active = selectionKey === state.activeCanonicalAxis ? " active" : "";
+  const options = optionRecordsForAxis(axisName, node.id);
   return `
-    <button type="button" class="canonical-axis${active}" data-canonical-axis="${escapeHtml(axisName)}">
+    <button type="button" class="canonical-axis${active}" data-canonical-axis="${escapeHtml(axisName)}" data-canonical-layer="${escapeHtml(node.id)}">
       <span>${escapeHtml(axisName)}</span>
       <em>${escapeHtml(String(options.length))} options</em>
     </button>
   `;
 }
 
-function optionRecordsForAxis(axisName) {
+function recordsFromValues(values) {
+  return values.map((value) => ({
+    value,
+    status: value === "onnx" || value === "pmml" || value === "real_time_alfred" || value === "chow_lin" || value === "keep_with_indicator" ? "future" : "operational",
+    enabled: value !== "onnx" && value !== "pmml" && value !== "real_time_alfred" && value !== "chow_lin" && value !== "keep_with_indicator",
+    disabled_reason: value === "onnx" || value === "pmml" || value === "real_time_alfred" || value === "chow_lin" || value === "keep_with_indicator" ? "future option" : null,
+  }));
+}
+
+function optionRecordsForAxis(axisName, layerId = null) {
+  const scoped = layerId ? LAYER_AXIS_OPTIONS[`${layerId}:${axisName}`] : null;
+  if (scoped) return recordsFromValues(scoped);
   const topologyOptions = (layerTopologySpec().nodes || [])
+    .filter((node) => !layerId || node.id === layerId)
     .map((node) => (node.axis_options || {})[axisName])
     .find((records) => Array.isArray(records) && records.length);
   if (topologyOptions) return topologyOptions;
   const hardcoded = CANONICAL_AXIS_OPTIONS[axisName];
-  if (hardcoded) {
-    return hardcoded.map((value) => ({
-      value,
-      status: value === "onnx" || value === "pmml" ? "future" : "operational",
-      enabled: value !== "onnx" && value !== "pmml",
-      disabled_reason: value === "onnx" || value === "pmml" ? "future option" : null,
-    }));
-  }
+  if (hardcoded) return recordsFromValues(hardcoded);
   const treeAxis = allAxes().find((axis) => axis.axis === axisName);
   if (treeAxis && treeAxis.options) return treeAxis.options;
   const catalog = state.data && state.data.axis_catalog && state.data.axis_catalog[axisName];
@@ -858,8 +938,9 @@ function isMultiSelectAxis(axisName) {
   return MULTI_SELECT_AXES.has(axisName);
 }
 
-function selectedCanonicalValues(axisName, records) {
-  const stored = state.canonicalSelections[axisName];
+function selectedCanonicalValues(axisName, records, layerId = null) {
+  const scopedKey = axisSelectionKey(layerId, axisName);
+  const stored = state.canonicalSelections[scopedKey] ?? state.canonicalSelections[axisName];
   if (Array.isArray(stored)) return stored;
   if (stored) return [stored];
   if (!records.length) return "";
@@ -882,8 +963,8 @@ function selectedCanonicalValues(axisName, records) {
   return [(enabled || records[0]).value];
 }
 
-function selectionSummary(axisName, records) {
-  const values = selectedCanonicalValues(axisName, records);
+function selectionSummary(axisName, records, layerId = null) {
+  const values = selectedCanonicalValues(axisName, records, layerId);
   if (!Array.isArray(values)) return "";
   if (!values.length) return "none";
   return values.join(", ");
@@ -932,9 +1013,11 @@ function renderGraphSubLayerPanel(node, subLayer) {
   `;
 }
 
-function renderCanonicalOptionsPanel(axisName) {
-  if (!axisName) return `<p class="empty-note">Select an axis to see available options.</p>`;
-  const records = optionRecordsForAxis(axisName);
+function renderCanonicalOptionsPanel(selectionKey) {
+  if (!selectionKey) return `<p class="empty-note">Select an axis to see available options.</p>`;
+  const axisName = axisNameFromSelectionKey(selectionKey);
+  const layerId = layerIdFromSelectionKey(selectionKey);
+  const records = optionRecordsForAxis(axisName, layerId);
   if (!records.length) {
     return `
       <div class="axis-option-panel">
@@ -946,14 +1029,14 @@ function renderCanonicalOptionsPanel(axisName) {
       </div>
     `;
   }
-  const selectedValues = selectedCanonicalValues(axisName, records);
+  const selectedValues = selectedCanonicalValues(axisName, records, layerId);
   const multi = isMultiSelectAxis(axisName);
   return `
     <div class="axis-option-panel">
       <div class="axis-option-head">
         <span>${multi ? "Multi-select axis" : "Selected axis"}</span>
         <strong>${escapeHtml(axisName)}</strong>
-        <em>${multi ? "selected values" : "selected"}: ${escapeHtml(selectionSummary(axisName, records))}</em>
+        <em>${multi ? "selected values" : "selected"}: ${escapeHtml(selectionSummary(axisName, records, layerId))}</em>
       </div>
       <div class="axis-choice-grid">
         ${records.map((record) => renderCanonicalOption(record, axisName, selectedValues)).join("")}
@@ -962,16 +1045,17 @@ function renderCanonicalOptionsPanel(axisName) {
   `;
 }
 
-function applyCanonicalSelection(axisName, value) {
+function applyCanonicalSelection(axisName, value, layerId = null) {
+  const storageKey = axisSelectionKey(layerId, axisName);
   if (isMultiSelectAxis(axisName)) {
-    const current = selectedCanonicalValues(axisName, optionRecordsForAxis(axisName));
+    const current = selectedCanonicalValues(axisName, optionRecordsForAxis(axisName, layerId), layerId);
     const next = current.some((item) => String(item) === String(value))
       ? current.filter((item) => String(item) !== String(value))
       : [...current, value];
-    state.canonicalSelections[axisName] = next;
+    state.canonicalSelections[storageKey] = next;
     return;
   }
-  state.canonicalSelections[axisName] = value;
+  state.canonicalSelections[storageKey] = value;
   const axis = allAxes().find((item) => item.axis === axisName);
   if (axis) {
     state.engineState = NavigatorStateEngine.selectOption(state.data, state.engineState, axisName, value);
@@ -1041,7 +1125,7 @@ function renderLayerDetail() {
       </section>
       <section>
         <h3>Layer globals</h3>
-        ${(node.layer_globals || []).length ? `<div class="canonical-axis-grid">${(node.layer_globals || []).map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No layer-global axes.</p>`}
+        ${(node.layer_globals || []).length ? `<div class="canonical-axis-grid">${(node.layer_globals || []).map((axis) => renderAxisButton(node, axis)).join("")}</div>` : `<p class="empty-note">No layer-global axes.</p>`}
       </section>
       <section>
         <h3>Selected sub-layer</h3>
@@ -1050,7 +1134,7 @@ function renderLayerDetail() {
       </section>
       <section class="definition-wide">
         <h3>${graphSection ? "DAG nodes / flow" : "Axes / output controls"}</h3>
-        ${graphSection ? renderGraphSubLayerPanel(node, activeSubLayer) : (subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map(renderAxisButton).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`)}
+        ${graphSection ? renderGraphSubLayerPanel(node, activeSubLayer) : (subLayerAxes.length ? `<div class="canonical-axis-grid">${subLayerAxes.map((axis) => renderAxisButton(node, axis)).join("")}</div>` : `<p class="empty-note">No fixed axes for this sub-layer.</p>`)}
         ${graphSection ? "" : renderCanonicalOptionsPanel(state.activeCanonicalAxis)}
       </section>
     </div>
@@ -1453,9 +1537,9 @@ function coerceYamlScalar(value) {
   return value;
 }
 
-function selectedAxisYamlValue(axisName) {
-  const records = optionRecordsForAxis(axisName);
-  const selected = selectedCanonicalValues(axisName, records);
+function selectedAxisYamlValue(axisName, layerId = null) {
+  const records = optionRecordsForAxis(axisName, layerId);
+  const selected = selectedCanonicalValues(axisName, records, layerId);
   if (Array.isArray(selected)) {
     if (isMultiSelectAxis(axisName)) return selected.map(coerceYamlScalar);
     return coerceYamlScalar(selected[0]);
@@ -1465,26 +1549,67 @@ function selectedAxisYamlValue(axisName) {
 
 function fixedAxesForNode(node, axes) {
   return (axes || []).reduce((acc, axisName) => {
-    const records = optionRecordsForAxis(axisName);
+    const records = optionRecordsForAxis(axisName, node && node.id);
     if (!records.length) return acc;
-    acc[axisName] = selectedAxisYamlValue(axisName);
+    acc[axisName] = selectedAxisYamlValue(axisName, node && node.id);
     return acc;
   }, {});
 }
 
 function selectedDatasetIncludes(token) {
-  const dataset = String(selectedAxisYamlValue("dataset") || "");
+  const dataset = String(selectedAxisYamlValue("dataset", "l1") || "");
   return dataset.split("+").includes(token);
+}
+
+function selectedScalar(layerId, axisName) {
+  const value = state.canonicalSelections[axisSelectionKey(layerId, axisName)] ?? state.canonicalSelections[axisName];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function selectedList(layerId, axisName) {
+  const value = state.canonicalSelections[axisSelectionKey(layerId, axisName)] ?? state.canonicalSelections[axisName];
+  if (Array.isArray(value)) return value.map(String);
+  return value === undefined ? [] : [String(value)];
+}
+
+function recipeWantsRegime() {
+  return selectedScalar("l1_5", "summary_split") === "per_regime"
+    || selectedScalar("l5", "decomposition_target") === "by_regime"
+    || selectedList("l8", "saved_objects").includes("regime_metrics");
+}
+
+function recipeWantsFredSd() {
+  return selectedScalar("l5", "decomposition_target") === "by_state"
+    || selectedList("l8", "saved_objects").includes("state_metrics")
+    || selectedScalar("l2", "sd_series_frequency_filter") !== undefined
+    || selectedScalar("l2", "quarterly_to_monthly_rule") !== undefined
+    || selectedScalar("l2", "monthly_to_quarterly_rule") !== undefined;
+}
+
+function recipeWantsQuarterlyFredSd() {
+  return selectedScalar("l2", "monthly_to_quarterly_rule") !== undefined;
+}
+
+function recipeWantsDensityForecast() {
+  return ["log_score", "crps"].includes(String(selectedScalar("l5", "primary_metric") || ""));
+}
+
+function recipeWantsMcs() {
+  return selectedScalar("l5", "ranking") === "mcs_inclusion";
+}
+
+function recipeWantsEnsemble() {
+  return selectedList("l8", "saved_objects").includes("combination_weights");
 }
 
 function l5FixedAxes(node) {
   const axes = fixedAxesForNode(node, node.axes || []);
-  const regime = selectedAxisYamlValue("regime_definition");
-  const targetStructure = selectedAxisYamlValue("target_structure");
+  const regime = selectedAxisYamlValue("regime_definition", "l1");
+  const targetStructure = selectedAxisYamlValue("target_structure", "l1");
 
-  // The template L4 DAG emits point forecasts. Drop density-only controls
-  // unless a density/quantile forecast DAG is added later.
-  delete axes.density_metrics;
+  if (!recipeWantsDensityForecast()) {
+    delete axes.density_metrics;
+  }
   // Benchmark-relative controls require execution context from L4 artifacts.
   // The navigator emits a portable starter recipe, so leave these to L5
   // defaults or explicit user edits once benchmark artifacts exist.
@@ -1510,12 +1635,192 @@ function l5FixedAxes(node) {
   return axes;
 }
 
-function diagnosticExportAxes() {
+function l1FixedAxes(node) {
+  const axes = fixedAxesForNode(node, node.axes || []);
+  const customPolicy = axes.custom_source_policy;
+  let dataset = axes.dataset;
+  const regime = axes.regime_definition;
+  if (recipeWantsQuarterlyFredSd()) {
+    axes.dataset = "fred_qd+fred_sd";
+    dataset = axes.dataset;
+  } else if (recipeWantsFredSd() && !String(dataset || "").includes("fred_sd")) {
+    axes.dataset = "fred_md+fred_sd";
+    dataset = axes.dataset;
+  }
+  if (axes.frequency === "quarterly" && dataset === "fred_md") {
+    axes.dataset = "fred_qd";
+    dataset = axes.dataset;
+  }
+  if (["fred_qd", "fred_qd+fred_sd"].includes(dataset)) {
+    axes.frequency = "quarterly";
+  }
+  if (["fred_md", "fred_md+fred_sd"].includes(dataset)) {
+    axes.frequency = "monthly";
+  }
+  if (customPolicy === "custom_panel_only") {
+    delete axes.dataset;
+    delete axes.vintage_policy;
+    delete axes.variable_universe;
+  }
+  if (dataset === "fred_sd") {
+    delete axes.variable_universe;
+  }
+  if (recipeWantsRegime() && (!regime || regime === "none")) {
+    axes.regime_definition = "external_nber";
+  }
+  if (!String(axes.regime_definition || "").startsWith("estimated_")) {
+    delete axes.regime_estimation_temporal_rule;
+  }
+  return axes;
+}
+
+function l1LeafConfig() {
+  const axes = l1FixedAxes(topologyNodeById().get("l1"));
+  const leaf = {};
+  if (axes.target_structure === "multi_series_target") {
+    leaf.targets = ["INDPRO", "UNRATE"];
+  } else {
+    leaf.target = "INDPRO";
+  }
+  if (axes.custom_source_policy === "custom_panel_only") {
+    leaf.custom_source_path = "./data/custom_panel.csv";
+  }
+  if (axes.custom_source_policy === "official_plus_custom") {
+    leaf.custom_source_path = "./data/custom_panel.csv";
+    leaf.custom_merge_rule = "left_join_on_date";
+  }
+  if (axes.vintage_policy === "real_time_alfred") {
+    leaf.vintage_date_or_tag = "2024-12-31";
+  }
+  if (axes.variable_universe === "category_variables") {
+    leaf.variable_universe_category_columns = ["INDPRO", "PAYEMS", "UNRATE"];
+    leaf.variable_universe_category = "real_activity";
+  }
+  if (axes.variable_universe === "target_specific_variables") {
+    const targets = leaf.targets || [leaf.target || "INDPRO"];
+    leaf.target_specific_columns = Object.fromEntries(targets.map((target) => [target, ["PAYEMS", "UNRATE"]]));
+  }
+  if (axes.variable_universe === "explicit_variable_list") {
+    leaf.variable_universe_columns = ["INDPRO", "PAYEMS", "UNRATE"];
+  }
+  if (axes.target_geography_scope === "single_state") {
+    leaf.target_state = "CA";
+  }
+  if (axes.target_geography_scope === "selected_states") {
+    leaf.target_states = ["CA", "NY"];
+  }
+  if (axes.predictor_geography_scope === "selected_states") {
+    leaf.predictor_states = ["CA", "NY"];
+  }
+  if (axes.sample_start_rule === "fixed_date") {
+    leaf.sample_start_date = "1960-01-01";
+  }
+  if (axes.sample_end_rule === "fixed_date") {
+    leaf.sample_end_date = "2023-12-31";
+  }
+  if (axes.horizon_set === "single") {
+    leaf.target_horizons = [1];
+  }
+  if (axes.horizon_set === "custom_list") {
+    leaf.target_horizons = [1, 3, 6, 12];
+  }
+  if (axes.horizon_set === "range_up_to_h") {
+    leaf.max_horizon = 12;
+  }
+  if (axes.regime_definition === "external_user_provided") {
+    leaf.regime_dates_list = ["2001-03-01", "2007-12-01", "2020-02-01"];
+  }
+  if (axes.regime_definition === "estimated_markov_switching") {
+    leaf.n_regimes = 2;
+  }
+  if (axes.regime_definition === "estimated_threshold") {
+    leaf.threshold_variable = "UNRATE";
+  }
+  if (axes.regime_definition === "estimated_structural_break") {
+    leaf.max_breaks = 2;
+  }
+  if (axes.regime_estimation_temporal_rule === "rolling_window_per_origin") {
+    leaf.regime_rolling_window_size = 60;
+  }
+  if (axes.regime_estimation_temporal_rule === "block_recompute") {
+    leaf.block_recompute_interval = 12;
+  }
+  return leaf;
+}
+
+function l0LeafConfig(axes) {
+  const leaf = {};
+  if (axes.compute_mode === "parallel") {
+    leaf.parallel_unit = "horizons";
+    leaf.n_workers = "auto";
+  }
+  return leaf;
+}
+
+function l2FixedAxes(node) {
+  const axes = fixedAxesForNode(node, node.axes || []);
+  if (!recipeWantsFredSd()) {
+    delete axes.sd_series_frequency_filter;
+    delete axes.quarterly_to_monthly_rule;
+    delete axes.monthly_to_quarterly_rule;
+  } else {
+    const frequency = recipeWantsQuarterlyFredSd() ? "quarterly" : "monthly";
+    const filterValue = axes.sd_series_frequency_filter || "both";
+    const qToMActive = frequency === "monthly" && ["quarterly_only", "both"].includes(filterValue);
+    const mToQActive = frequency === "quarterly" && ["monthly_only", "both"].includes(filterValue);
+    if (!qToMActive) delete axes.quarterly_to_monthly_rule;
+    if (!mToQActive) delete axes.monthly_to_quarterly_rule;
+  }
+  if (axes.outlier_action === "replace_with_cap_value") {
+    axes.outlier_policy = "winsorize";
+  }
+  return axes;
+}
+
+function l2LeafConfig(axes) {
+  const leaf = {};
+  if (axes.transform_policy === "custom_tcode") {
+    leaf.custom_tcode_map = { INDPRO: 5, PAYEMS: 5, UNRATE: 1 };
+  }
+  return leaf;
+}
+
+function l5LeafConfig(axes) {
+  const leaf = {};
+  if (axes.agg_time === "per_subperiod") {
+    leaf.subperiod_dates = [["1990-01-01", "2007-11-30"], ["2007-12-01", "2023-12-31"]];
+  }
+  if (axes.oos_period === "fixed_dates") {
+    leaf.oos_start_date = "2000-01-01";
+    leaf.oos_end_date = "2023-12-31";
+  }
+  if (axes.oos_period === "multiple_subperiods") {
+    leaf.subperiod_list = [["2000-01-01", "2007-11-30"], ["2007-12-01", "2023-12-31"]];
+  }
+  if (axes.report_style === "latex_table") {
+    leaf.latex_caption = "Forecast evaluation results";
+    leaf.latex_label = "tab:forecast-evaluation";
+  }
+  return leaf;
+}
+
+function l8LeafConfig(axes) {
+  const leaf = {
+    output_directory: "./macrocast_output/navigator-designed/",
+    descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}",
+  };
+  if (axes.naming_convention === "custom") {
+    leaf.custom_naming_function = "macrocast.navigator.naming.default_cell_name";
+  }
+  return leaf;
+}
+
+function diagnosticExportAxes(layerId) {
   return {
-    diagnostic_format: selectedAxisYamlValue("diagnostic_format"),
-    attach_to_manifest: selectedAxisYamlValue("attach_to_manifest"),
-    figure_dpi: selectedAxisYamlValue("figure_dpi"),
-    latex_export: selectedAxisYamlValue("latex_export"),
+    diagnostic_format: selectedAxisYamlValue("diagnostic_format", layerId),
+    attach_to_manifest: selectedAxisYamlValue("attach_to_manifest", layerId),
+    figure_dpi: selectedAxisYamlValue("figure_dpi", layerId),
+    latex_export: selectedAxisYamlValue("latex_export", layerId),
   };
 }
 
@@ -1523,11 +1828,11 @@ function diagnosticFixedAxes(layerId, node) {
   if (layerId === "l3_5") {
     return {
       comparison_stages: selectedAxisYamlValue("comparison_stages"),
-      comparison_output_form: selectedAxisYamlValue("comparison_output_form"),
+      comparison_output_form: selectedAxisYamlValue("comparison_output_form", "l3_5"),
       feature_correlation: selectedAxisYamlValue("feature_correlation"),
-      correlation_method: selectedAxisYamlValue("correlation_method"),
+      correlation_method: selectedAxisYamlValue("correlation_method", "l3_5"),
       correlation_view: "clustered_heatmap",
-      ...diagnosticExportAxes(),
+      ...diagnosticExportAxes(layerId),
     };
   }
   if (layerId === "l4_5") {
@@ -1537,7 +1842,7 @@ function diagnosticFixedAxes(layerId, node) {
       forecast_scale_view: selectedAxisYamlValue("forecast_scale_view"),
       back_transform_method: selectedAxisYamlValue("back_transform_method"),
       window_view: selectedAxisYamlValue("window_view"),
-      ...diagnosticExportAxes(),
+      ...diagnosticExportAxes(layerId),
     };
   }
   return fixedAxesForNode(node, node.axes || []);
@@ -1600,15 +1905,23 @@ function l3DagYaml() {
 }
 
 function l4DagYaml() {
+  const forecastObject = recipeWantsDensityForecast() ? "density" : "point";
+  const nodes = [
+    { id: "src_features", type: "source", selector: { layer_ref: "l3", sink_name: "l3_features_v1" } },
+    { id: "fit_ar_benchmark", type: "step", op: "fit_model", params: { family: "ar_p", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: true },
+    { id: "fit_ridge", type: "step", op: "fit_model", params: { family: "ridge", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: false },
+    { id: "predict_ridge", type: "step", op: "predict", params: { forecast_object: forecastObject }, inputs: ["fit_ridge"] },
+  ];
+  let forecastSink = "predict_ridge";
+  if (recipeWantsEnsemble()) {
+    nodes.push({ id: "combine_forecasts", type: "combine", op: "weighted_average_forecast", params: { weights_method: "equal" }, inputs: ["predict_ridge"] });
+    forecastSink = "combine_forecasts";
+  }
   return {
-    nodes: [
-      { id: "src_features", type: "source", selector: { layer_ref: "l3", sink_name: "l3_features_v1" } },
-      { id: "fit_ar_benchmark", type: "step", op: "fit_model", params: { family: "ar_p", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: true },
-      { id: "fit_ridge", type: "step", op: "fit_model", params: { family: "ridge", forecast_strategy: "direct", training_start_rule: "expanding", search_algorithm: "none" }, inputs: ["src_features"], is_benchmark: false },
-      { id: "predict_ridge", type: "step", op: "predict", params: { forecast_object: "point" }, inputs: ["fit_ridge"] },
-    ],
+    forecast_object: forecastObject,
+    nodes,
     sinks: {
-      l4_forecasts_v1: "predict_ridge",
+      l4_forecasts_v1: forecastSink,
       l4_model_artifacts_v1: ["fit_ar_benchmark", "fit_ridge"],
       l4_training_metadata_v1: "auto",
     },
@@ -1619,7 +1932,7 @@ function l4DagYaml() {
 function l7DagYaml(node) {
   const outputAxes = fixedAxesForNode(node, (node.sub_layer_axes || {})["L7.B Output shape"] || CANONICAL_AXIS_GROUPS.l7["L7.B Output shape"]);
   return {
-    enabled: selectedAxisYamlValue("enabled"),
+    enabled: selectedAxisYamlValue("enabled", "l7"),
     nodes: [
       { id: "src_model", type: "source", selector: { layer_ref: "l4", sink_name: "l4_model_artifacts_v1", subset: { model_id: "fit_ridge" } } },
       { id: "src_X", type: "source", selector: { layer_ref: "l3", sink_name: "l3_features_v1", subset: { component: "X_final" } } },
@@ -1634,7 +1947,7 @@ function l7DagYaml(node) {
 function l6Yaml(node) {
   const subLayerAxes = node.sub_layer_axes || CANONICAL_AXIS_GROUPS.l6 || {};
   const out = {
-    enabled: selectedAxisYamlValue("enabled"),
+    enabled: recipeWantsMcs() ? true : selectedAxisYamlValue("enabled", "l6"),
     test_scope: selectedAxisYamlValue("test_scope"),
     dependence_correction: selectedAxisYamlValue("dependence_correction"),
     overlap_handling: selectedAxisYamlValue("overlap_handling"),
@@ -1643,7 +1956,7 @@ function l6Yaml(node) {
   Object.entries(subLayerAxes).forEach(([subLayer, axes]) => {
     if (subLayer === "L6 globals") return;
     out.sub_layers[subLayer] = {
-      enabled: false,
+      enabled: recipeWantsMcs() && subLayer === "L6_D_multiple_model",
       fixed_axes: fixedAxesForNode(node, axes),
     };
   });
@@ -1655,25 +1968,40 @@ function canonicalRecipeYaml() {
   const recipe = { recipe_id: "macrocast-navigator-designed" };
   ["l0", "l1", "l2"].forEach((layerId) => {
     const node = byId.get(layerId);
-    recipe[LAYER_YAML_KEYS[layerId]] = { fixed_axes: fixedAxesForNode(node, node.axes || []) };
+    const fixedAxes = layerId === "l1" ? l1FixedAxes(node) : layerId === "l2" ? l2FixedAxes(node) : fixedAxesForNode(node, node.axes || []);
+    recipe[LAYER_YAML_KEYS[layerId]] = {
+      fixed_axes: fixedAxes,
+    };
+    if (layerId === "l0") {
+      const leaf = l0LeafConfig(fixedAxes);
+      if (Object.keys(leaf).length) recipe[LAYER_YAML_KEYS[layerId]].leaf_config = leaf;
+    }
     if (layerId === "l1") {
-      recipe[LAYER_YAML_KEYS[layerId]].leaf_config = { target: "INDPRO" };
+      recipe[LAYER_YAML_KEYS[layerId]].leaf_config = l1LeafConfig();
+    }
+    if (layerId === "l2") {
+      const leaf = l2LeafConfig(fixedAxes);
+      if (Object.keys(leaf).length) recipe[LAYER_YAML_KEYS[layerId]].leaf_config = leaf;
     }
   });
   recipe["3_feature_engineering"] = l3DagYaml();
   recipe["4_forecasting_model"] = l4DagYaml();
   const l5 = byId.get("l5");
-  recipe[LAYER_YAML_KEYS.l5] = { fixed_axes: l5FixedAxes(l5) };
+  const l5Axes = l5FixedAxes(l5);
+  recipe[LAYER_YAML_KEYS.l5] = { fixed_axes: l5Axes };
+  const l5Leaf = l5LeafConfig(l5Axes);
+  if (Object.keys(l5Leaf).length) recipe[LAYER_YAML_KEYS.l5].leaf_config = l5Leaf;
   const l6 = byId.get("l6");
   recipe[LAYER_YAML_KEYS.l6] = l6Yaml(l6);
   const l7 = byId.get("l7");
   recipe[LAYER_YAML_KEYS.l7] = l7DagYaml(l7);
   const l8 = byId.get("l8");
-  recipe[LAYER_YAML_KEYS.l8] = { fixed_axes: fixedAxesForNode(l8, l8.axes || []) };
+  const l8Axes = fixedAxesForNode(l8, l8.axes || []);
+  recipe[LAYER_YAML_KEYS.l8] = { fixed_axes: l8Axes, leaf_config: l8LeafConfig(l8Axes) };
   ["l1_5", "l2_5", "l3_5", "l4_5"].forEach((layerId) => {
     const node = byId.get(layerId);
     recipe[LAYER_YAML_KEYS[layerId]] = {
-      enabled: selectedAxisYamlValue("enabled"),
+      enabled: selectedAxisYamlValue("enabled", layerId),
       fixed_axes: diagnosticFixedAxes(layerId, node),
     };
   });
@@ -1784,13 +2112,17 @@ function bindEvents() {
       }
       const axisButton = event.target.closest("[data-canonical-axis]");
       if (axisButton) {
-        state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
+        state.activeCanonicalAxis = axisSelectionKey(axisButton.dataset.canonicalLayer, axisButton.dataset.canonicalAxis);
         render();
         return;
       }
       const optionButton = event.target.closest("[data-canonical-option]");
       if (optionButton && state.activeCanonicalAxis) {
-        applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
+        applyCanonicalSelection(
+          axisNameFromSelectionKey(state.activeCanonicalAxis),
+          optionButton.dataset.canonicalOption,
+          layerIdFromSelectionKey(state.activeCanonicalAxis),
+        );
         render();
         return;
       }
@@ -1812,9 +2144,13 @@ function bindEvents() {
         state.activeSubLayer = subLayerButton.dataset.subLayer;
         state.activeCanonicalAxis = null;
       } else if (axisButton) {
-        state.activeCanonicalAxis = axisButton.dataset.canonicalAxis;
+        state.activeCanonicalAxis = axisSelectionKey(axisButton.dataset.canonicalLayer, axisButton.dataset.canonicalAxis);
       } else if (optionButton && state.activeCanonicalAxis) {
-        applyCanonicalSelection(state.activeCanonicalAxis, optionButton.dataset.canonicalOption);
+        applyCanonicalSelection(
+          axisNameFromSelectionKey(state.activeCanonicalAxis),
+          optionButton.dataset.canonicalOption,
+          layerIdFromSelectionKey(state.activeCanonicalAxis),
+        );
       } else if (dagButton) {
         toggleDagItem(dagButton.dataset.dagLayer, dagButton.dataset.dagSubLayer, dagButton.dataset.dagItem);
       }
