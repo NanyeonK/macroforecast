@@ -30,76 +30,6 @@
 
       <section class="workspace" aria-label="Layer workspace">
         <section id="layer-detail" class="panel layer-detail" aria-label="Canonical layer detail"></section>
-
-        <details class="panel legacy-tools">
-          <summary>
-            <span>Legacy axis explorer</span>
-            <strong>Compatibility tools for old sample recipes</strong>
-          </summary>
-
-          <nav class="layer-rail axis-explorer-rail" aria-label="Compatibility axis explorer layer filter">
-            <button type="button" data-layer="0_meta" class="active"><span>L0</span><strong>Study Scope</strong></button>
-            <button type="button" data-layer="1_data_task"><span>L1</span><strong>Data + y/x</strong></button>
-            <button type="button" data-layer="2_preprocessing"><span>L2</span><strong>Representation</strong></button>
-            <button type="button" data-layer="3_training"><span>L3</span><strong>Generator</strong></button>
-            <button type="button" data-layer="4_evaluation"><span>L4</span><strong>Evaluation</strong></button>
-            <button type="button" data-layer="5_output_provenance"><span>L5</span><strong>Outputs</strong></button>
-            <button type="button" data-layer="6_stat_tests"><span>L6</span><strong>Tests</strong></button>
-            <button type="button" data-layer="7_importance"><span>L7</span><strong>Interpretation</strong></button>
-          </nav>
-
-          <div class="legacy-grid">
-            <section class="legacy-step-list" aria-label="Compatibility layer steps">
-              <div class="section-heading compact">
-                <div>
-                  <p class="eyebrow" id="active-layer-kicker">Active layer</p>
-                  <h2 id="active-layer-title">Layer</h2>
-                  <p id="active-layer-description" class="source-note"></p>
-                </div>
-              </div>
-              <label for="axis-search">Filter layer decisions</label>
-              <input id="axis-search" type="search" placeholder="search within this layer..." />
-              <div id="axis-list" class="axis-list"></div>
-            </section>
-
-            <section class="legacy-path" aria-label="Compatibility path state">
-              <div class="summary-grid">
-                <div>
-                  <span class="metric-label">Status</span>
-                  <strong id="execution-status">-</strong>
-                </div>
-                <div>
-                  <span class="metric-label">Blocked</span>
-                  <strong id="blocked-count">0</strong>
-                </div>
-                <div>
-                  <span class="metric-label">Disabled</span>
-                  <strong id="disabled-count">0</strong>
-                </div>
-              </div>
-              <div id="runtime-support" class="runtime-support" aria-label="Runtime support status"></div>
-              <div class="path-record-heading">
-                <div>
-                  <p class="eyebrow">Path so far</p>
-                  <h2>Selected Decisions</h2>
-                </div>
-              </div>
-              <div id="tree-path" class="tree-path"></div>
-            </section>
-          </div>
-
-          <section class="legacy-decision" aria-label="Compatibility axis options">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow" id="axis-layer">Layer</p>
-                <h2 id="axis-title">Decision</h2>
-              </div>
-              <span id="axis-selected" class="pill">selected: -</span>
-            </div>
-            <div id="axis-explainer" class="axis-explainer"></div>
-            <div id="option-list" class="option-list"></div>
-          </section>
-        </details>
       </section>
 
       <aside class="inspector" aria-label="Recipe inspector">
@@ -136,7 +66,7 @@
       </aside>
     </main>
 
-    <script src="assets/state_engine.js?v=20260501-workbench-redesign"></script>
-    <script src="assets/app.js?v=20260501-workbench-redesign"></script>
+    <script src="assets/state_engine.js?v=20260501-canonical-sublayers"></script>
+    <script src="assets/app.js?v=20260501-canonical-sublayers"></script>
   </body>
 </html>
