@@ -4,7 +4,7 @@ const layerDefs = [
   { id: "l1_5", key: "1_5_data_summary", name: "Data Diagnostics", mode: "diagnostic", parent: "l1", role: "raw data summary" },
   { id: "l2", key: "2_preprocessing", name: "Preprocessing", mode: "form", role: "clean panel construction" },
   { id: "l2_5", key: "2_5_pre_post_preprocessing", name: "Pre/Post Diagnostics", mode: "diagnostic", parent: "l2", role: "pre/post comparison" },
-  { id: "l3", key: "3_feature_engineering", name: "Feature Builder", mode: "dag", role: "ordered feature blocks and target construction" },
+  { id: "l3", key: "3_feature_engineering", name: "Feature Engineering", mode: "form", role: "target construction, feature blocks, and feature order" },
   { id: "l3_5", key: "3_5_feature_diagnostics", name: "Feature Diagnostics", mode: "diagnostic", parent: "l3", role: "feature checks" },
   { id: "l4", key: "4_forecasting_model", name: "Forecast Builder", mode: "dag", role: "model, benchmark, prediction, combination selections" },
   { id: "l4_5", key: "4_5_generator_diagnostics", name: "Generator Diagnostics", mode: "diagnostic", parent: "l4", role: "model-fit diagnostics" },
@@ -67,6 +67,8 @@ const AXIS_OPTIONS = {
   },
   l2: {
     fred_sd_mixed_frequency_representation: ["calendar_aligned_frame", "drop_unknown_native_frequency", "drop_non_target_native_frequency", "native_frequency_block_payload", "mixed_frequency_model_adapter"],
+  },
+  l3: {
     horizon_target_construction: ["future_target_level_t_plus_h", "future_diff", "future_logdiff", "average_growth_1_to_h", "path_average_growth_1_to_h", "average_difference_1_to_h", "path_average_difference_1_to_h", "average_log_growth_1_to_h", "path_average_log_growth_1_to_h"],
     target_transform: ["level", "difference", "log", "log_difference", "growth_rate"],
     target_normalization: ["none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"],
@@ -80,6 +82,7 @@ const AXIS_OPTIONS = {
     level_feature_block: ["none", "target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"],
     temporal_feature_block: ["none", "moving_average_features", "rolling_moments", "local_temporal_factors", "volatility_features", "custom_temporal_features"],
     rotation_feature_block: ["none", "marx_rotation", "maf_rotation", "moving_average_rotation", "custom_rotation"],
+    feature_operation_order: ["lag_then_pca", "pca_then_factor_lag", "pca_then_lagged_factors", "parallel_lag_and_pca", "custom_feature_sequence"],
     feature_block_combination: ["replace_with_selected_blocks", "append_to_base_predictors", "append_to_target_lags", "concatenate_named_blocks", "custom_feature_combiner"],
     feature_selection_policy: ["none", "correlation_filter", "lasso_selection", "mutual_information_screen", "custom"],
     feature_selection_semantics: ["select_before_factor", "select_after_factor", "select_after_custom_feature_blocks"],
@@ -187,6 +190,18 @@ const AXIS_DESCRIPTIONS = {
   x_missing_policy: "Predictor missing-data policy after Layer 1.",
   x_outlier_policy: "Predictor outlier policy after Layer 1.",
   scaling_policy: "Predictor scaling policy.",
+  target_lag_block: "Whether and how target-history features enter the design matrix.",
+  x_lag_feature_block: "Whether and how predictor lags are created before modeling.",
+  factor_feature_block: "Whether and how factor features such as PCA factors are created.",
+  level_feature_block: "Optional level add-back features.",
+  temporal_feature_block: "Optional rolling, moving-average, and volatility features.",
+  rotation_feature_block: "Optional rotations such as MARX or MAF.",
+  feature_operation_order: "Ordering rule when both lag and factor operations are active.",
+  feature_block_combination: "How selected feature blocks are merged into the final feature panel.",
+  feature_selection_policy: "Optional feature screening method.",
+  feature_selection_semantics: "Whether selection happens before or after factor construction.",
+  evaluation_scale: "Scale used when forecast outputs are evaluated.",
+  feature_builder: "High-level feature recipe used as shorthand and runtime bridge.",
   primary_metric: "Main metric used for ranking and summaries.",
   ranking: "How forecast generators are ordered in the evaluation report.",
   export_format: "External artifact format emitted by Layer 8.",
@@ -228,6 +243,7 @@ const AXIS_TITLES = {
   temporal_feature_block: "Temporal features",
   rotation_feature_block: "Rotations",
   feature_block_combination: "Feature combination",
+  feature_operation_order: "Feature operation order",
   feature_selection_policy: "Feature selection",
   feature_selection_semantics: "Selection timing",
   evaluation_scale: "Evaluation scale",
@@ -428,6 +444,11 @@ const OPTION_LABELS = {
   raw_predictors_only: "Raw predictors only",
   pca_factor_features: "PCA factor features",
   sequence_tensor: "Sequence tensor",
+  lag_then_pca: "Lag predictors, then PCA",
+  pca_then_factor_lag: "PCA factors, then lag factors",
+  pca_then_lagged_factors: "PCA, then factor lags",
+  parallel_lag_and_pca: "Lag and PCA in parallel",
+  custom_feature_sequence: "Custom feature sequence",
   mse: "Mean squared error",
   rmse: "Root mean squared error",
   mae: "Mean absolute error",
@@ -550,6 +571,11 @@ const OPTION_DESCRIPTIONS = {
   fred_sd: "Use when state-level predictors are central to the question.",
   all_variables: "Default broad universe. Keeps the first setup wide instead of hand-picking predictors.",
   factors_plus_target_lags: "Default broad feature recipe: summarize predictors with factors and keep target history.",
+  lag_then_pca: "Create predictor lags first, then summarize the expanded lag panel with PCA.",
+  pca_then_factor_lag: "Extract factors from the current predictor panel first, then create lags of those factors.",
+  pca_then_lagged_factors: "Same conceptual route as PCA then factor lags; use when naming should emphasize lagged factor outputs.",
+  parallel_lag_and_pca: "Build predictor lags and PCA factors as separate blocks, then combine them.",
+  custom_feature_sequence: "Use when the ordering needs a hand-written sequence beyond the built-in options.",
   per_target_horizon: "Default. Tests each target and forecast horizon separately.",
   newey_west: "Default HAC correction for serial correlation in forecast errors.",
   nw_with_h_minus_1_lag: "Default for overlapping h-step forecast errors.",
@@ -780,7 +806,12 @@ const state = {
     },
     l2: {
       fixed_axes: {
-        fred_sd_mixed_frequency_representation: "calendar_aligned_frame",
+        fred_sd_mixed_frequency_representation: "calendar_aligned_frame"
+      },
+      leaf_config: {}
+    },
+    l3: {
+      fixed_axes: {
         horizon_target_construction: "future_target_level_t_plus_h",
         target_transform: "level",
         target_normalization: "none",
@@ -794,6 +825,7 @@ const state = {
         level_feature_block: "none",
         temporal_feature_block: "none",
         rotation_feature_block: "none",
+        feature_operation_order: "parallel_lag_and_pca",
         feature_block_combination: "append_to_base_predictors",
         feature_selection_policy: "none",
         feature_selection_semantics: "select_after_factor",
@@ -957,7 +989,8 @@ function renderLayerRail() {
 
 function layerStatus(id) {
   if (state.diagnostics[id]) return state.diagnostics[id].enabled ? "on" : "off";
-  if (state.dags[id]) return state.dags[id].enabled ? "on" : "off";
+  const layer = layerById(id);
+  if (state.dags[id] && layer?.mode.includes("dag")) return state.dags[id].enabled ? "on" : "off";
   if (id === "l6") return state.layers.l6.enabled ? "on" : "off";
   return "on";
 }
@@ -1078,7 +1111,11 @@ function flowLayerFacts(layerId) {
     const targets = fixed.target_structure === "single_target" ? leaf.target : `${leaf.targets.length} targets`;
     return `<div class="flow-facts"><span>${fixed.dataset || "custom"}</span><span>${targets}</span><span>h=${leaf.horizons.join(",")}</span></div>`;
   }
-  if (layerId === "l3" || layerId === "l4" || layerId === "l7") {
+  if (layerId === "l3") {
+    const fixed = state.layers.l3.fixed_axes;
+    return `<div class="flow-facts"><span>${fixed.feature_builder}</span><span>${fixed.feature_operation_order}</span></div>`;
+  }
+  if (layerId === "l4" || layerId === "l7") {
     const dag = state.dags[layerId];
     return `<div class="flow-facts"><span>${dag.nodes.length} nodes</span><span>${dag.edges.length} edges</span><span>${dag.enabled ? "on" : "off"}</span></div>`;
   }
@@ -1169,31 +1206,35 @@ function renderFormLayer(layer, body) {
     grid.appendChild(sectionFromFields("FRED-SD mixed frequency", [
       selectAxis("l2", "fred_sd_mixed_frequency_representation")
     ]));
+  }
+
+  if (layer.id === "l3") {
     grid.appendChild(sectionFromFields("Target construction", [
-      selectAxis("l2", "horizon_target_construction"),
-      selectAxis("l2", "target_transform"),
-      selectAxis("l2", "target_normalization")
+      selectAxis("l3", "horizon_target_construction"),
+      selectAxis("l3", "target_transform"),
+      selectAxis("l3", "target_normalization")
     ]));
     grid.appendChild(sectionFromFields("Transform and cleaning", [
-      selectAxis("l2", "tcode_policy"),
-      selectAxis("l2", "x_missing_policy"),
-      selectAxis("l2", "x_outlier_policy"),
-      selectAxis("l2", "scaling_policy")
+      selectAxis("l3", "tcode_policy"),
+      selectAxis("l3", "x_missing_policy"),
+      selectAxis("l3", "x_outlier_policy"),
+      selectAxis("l3", "scaling_policy")
     ]));
     grid.appendChild(sectionFromFields("Feature blocks", [
-      selectAxis("l2", "target_lag_block"),
-      selectAxis("l2", "x_lag_feature_block"),
-      selectAxis("l2", "factor_feature_block"),
-      selectAxis("l2", "level_feature_block"),
-      selectAxis("l2", "temporal_feature_block"),
-      selectAxis("l2", "rotation_feature_block")
+      selectAxis("l3", "target_lag_block"),
+      selectAxis("l3", "x_lag_feature_block"),
+      selectAxis("l3", "factor_feature_block"),
+      selectAxis("l3", "level_feature_block"),
+      selectAxis("l3", "temporal_feature_block"),
+      selectAxis("l3", "rotation_feature_block")
     ]));
-    grid.appendChild(sectionFromFields("Composition, selection, handoff", [
-      selectAxis("l2", "feature_block_combination"),
-      selectAxis("l2", "feature_selection_policy"),
-      selectAxis("l2", "feature_selection_semantics"),
-      selectAxis("l2", "evaluation_scale"),
-      selectAxis("l2", "feature_builder")
+    grid.appendChild(sectionFromFields("Order, composition, selection", [
+      selectAxis("l3", "feature_operation_order"),
+      selectAxis("l3", "feature_block_combination"),
+      selectAxis("l3", "feature_selection_policy"),
+      selectAxis("l3", "feature_selection_semantics"),
+      selectAxis("l3", "evaluation_scale"),
+      selectAxis("l3", "feature_builder")
     ]));
   }
 
@@ -1611,7 +1652,7 @@ function renderInspector() {
     return;
   }
 
-  if (state.dags[layer.id] && state.selectedNode) {
+  if (state.dags[layer.id] && layer.mode.includes("dag") && state.selectedNode) {
     const dag = state.dags[layer.id];
     const node = dag.nodes.find((item) => item.id === state.selectedNode);
     if (node) {
@@ -1620,7 +1661,7 @@ function renderInspector() {
     }
   }
 
-  if (state.dags[layer.id]) {
+  if (state.dags[layer.id] && layer.mode.includes("dag")) {
     body.appendChild(layerDagInspector(layer));
     return;
   }
@@ -1630,7 +1671,23 @@ function renderInspector() {
     return;
   }
 
-  body.appendChild(contractCard(`${layer.id.toUpperCase()} ${layer.name}`, layer.role));
+  body.appendChild(formLayerInspector(layer));
+}
+
+function formLayerInspector(layer) {
+  const fields = [
+    readonlyField("mode", displayMode(layer)),
+    readonlyField("status", layerStatus(layer.id)),
+    readonlyField("role", layer.role)
+  ];
+  if (layer.id === "l3") {
+    const fixed = state.layers.l3.fixed_axes;
+    fields.unshift(readonlyField("feature recipe", fixed.feature_builder));
+    fields.unshift(readonlyField("operation order", fixed.feature_operation_order));
+    fields.push(readonlyField("lag block", fixed.x_lag_feature_block));
+    fields.push(readonlyField("factor block", fixed.factor_feature_block));
+  }
+  return sectionFromFields(`${layer.id.toUpperCase()} ${layer.name}`, fields);
 }
 
 function nodeInspector(layerId, node) {
@@ -1735,11 +1792,16 @@ function mapFocusInspector() {
     readonlyField("role", layer.role),
     buttonField(`Edit ${layer.id.toUpperCase()}`, () => selectLayer(layer.id))
   ];
-  if (state.dags[layer.id]) {
+  if (state.dags[layer.id] && layer.mode.includes("dag")) {
     const dag = state.dags[layer.id];
     fields.splice(3, 0, readonlyField("nodes", String(dag.nodes.length)));
     fields.splice(4, 0, readonlyField("edges", String(dag.edges.length)));
     fields.splice(5, 0, readonlyField("required sinks", requiredSinks(layer.id).join(", ")));
+  }
+  if (layer.id === "l3") {
+    const fixed = state.layers.l3.fixed_axes;
+    fields.splice(3, 0, readonlyField("feature recipe", fixed.feature_builder));
+    fields.splice(4, 0, readonlyField("operation order", fixed.feature_operation_order));
   }
   if (layer.id === "l1") {
     const fixed = state.layers.l1.fixed_axes;
@@ -1790,7 +1852,7 @@ function validateState() {
   if (state.layers.l1.fixed_axes.sd_variable_selection === "selected_sd_variables" && !state.layers.l1.leaf_config.sd_variables.length) {
     issues.push({ level: "error", where: "L1", message: "sd_variables is required when sd_variable_selection=selected_sd_variables." });
   }
-  for (const layerId of ["l3", "l4"]) {
+  for (const layerId of ["l4"]) {
     const dag = state.dags[layerId];
     const sinks = requiredSinks(layerId);
     for (const sink of sinks) {
@@ -1799,8 +1861,13 @@ function validateState() {
       }
     }
   }
-  const l3Bad = state.dags.l3.nodes.find((node) => /forecast/i.test(node.op) && node.type === "combine");
-  if (l3Bad) issues.push({ level: "error", where: "L3", message: "Forecast combination belongs in L4, not L3." });
+  const l3 = state.layers.l3.fixed_axes;
+  if (l3.feature_operation_order === "pca_then_factor_lag" && l3.factor_feature_block === "none") {
+    issues.push({ level: "warning", where: "L3", message: "PCA then factor lag order is selected, but factor_feature_block is none." });
+  }
+  if (l3.feature_operation_order === "lag_then_pca" && l3.x_lag_feature_block === "none") {
+    issues.push({ level: "warning", where: "L3", message: "Lag then PCA order is selected, but x_lag_feature_block is none." });
+  }
   for (const [id, diagnostic] of Object.entries(state.diagnostics)) {
     if (!diagnostic.enabled) issues.push({ level: "info", where: id.toUpperCase(), message: "Diagnostic off: no nodes, no sink." });
   }
@@ -1827,7 +1894,7 @@ function generateYaml() {
   out[state.layers ? "0_meta" : "0_meta"] = state.layers.l0;
   out["1_data"] = l1Yaml();
   out["2_preprocessing"] = state.layers.l2;
-  out["3_feature_engineering"] = dagYaml("l3");
+  out["3_feature_engineering"] = state.layers.l3;
   out["4_forecasting_model"] = dagYaml("l4");
   out["5_evaluation"] = state.layers.l5;
   if (state.layers.l6.enabled) out["6_statistical_tests"] = state.layers.l6;

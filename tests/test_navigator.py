@@ -239,11 +239,10 @@ eval(code + "\nconsole.log(generateYaml());\n");
     assert generated["1_data"]["leaf_config"]["targets"] == ["INDPRO", "PAYEMS", "UNRATE", "CPIAUCSL", "RPI"]
     assert "fred_sd_frequency_policy" not in generated["1_data"]["fixed_axes"]
     l3 = generated["3_feature_engineering"]
-    assert l3["builder_view"] == "ordered_feature_blocks"
-    assert isinstance(l3["nodes"], dict)
-    assert l3["sequence"][0]["id"] == "x_lag"
-    assert l3["nodes"]["x_lag"]["config"] == {"n_lag": 4}
-    assert l3["nodes"]["x_lag"]["inputs"] == ["src_x"]
+    assert l3["fixed_axes"]["feature_builder"] == "factors_plus_target_lags"
+    assert l3["fixed_axes"]["feature_operation_order"] == "parallel_lag_and_pca"
+    assert l3["fixed_axes"]["x_lag_feature_block"] == "fixed_predictor_lags"
+    assert l3["fixed_axes"]["factor_feature_block"] == "pca_static_factors"
     assert generated["8_output"]["leaf_config"]["descriptive_naming_template"] == (
         "{model_family}_{forecast_strategy}_h{horizon}"
     )
