@@ -1,14 +1,48 @@
-# Legacy Note: `axis_type`
+# Registry Catalog: `axis_type`
 
-`axis_type` is not a user-facing Layer 0 axis in the current layer-contract system.
+- Parent: [Layer 0](index.md)
+- Current: `axis_type`
 
-Current behavior:
+`axis_type` is registry metadata. It is not a user-facing Layer 0 recipe axis
+and should not be set in new recipes.
 
-- list layers expose `fixed_axes` and non-sweepable evaluation/export axes;
-- graph layers expose explicit DAG nodes and sinks;
-- sweep behavior is inferred from recipe structure where supported;
-- L0 axes are not sweepable.
+The catalog exists so registry entries can describe how an axis behaves in the
+larger design system.
 
-Do not set `axis_type` directly in new recipes.
+## Values
 
-See [Layer 0](index.md) and [Layer Contract Design](../../user_guide/design.md).
+| Value | Meaning |
+|---|---|
+| `fixed` | axis is normally fixed within one study path |
+| `sweep` | axis is normally swept across multiple values |
+| `nested_sweep` | axis participates in nested sweep designs |
+| `conditional` | axis is activated only after another choice |
+| `derived` | axis is derived from other recipe state |
+
+## How This Differs From Layer 0 User Axes
+
+| Concept | User Sets It In Recipe? | Purpose |
+|---|---:|---|
+| `study_scope` | yes or compiler-derived | study shape |
+| `failure_policy` | yes | failure behavior |
+| `reproducibility_mode` | yes | seed policy |
+| `compute_mode` | yes | execution scheduling |
+| `axis_type` | no | registry taxonomy |
+
+## Invalid YAML
+
+Do not write:
+
+```yaml
+0_meta:
+  fixed_axes:
+    axis_type: fixed
+```
+
+`axis_type` belongs to registry definitions, not recipe instances.
+
+## Notes
+
+- List layers use `fixed_axes` and, where supported, sweep structures.
+- Graph layers use explicit `nodes` and `sinks`.
+- L0 public axes are fixed setup choices and are not sweepable.
