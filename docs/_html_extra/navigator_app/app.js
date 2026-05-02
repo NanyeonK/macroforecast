@@ -4,13 +4,13 @@ const layerDefs = [
   { id: "l1_5", key: "1_5_data_summary", name: "Data Diagnostics", mode: "diagnostic", parent: "l1", role: "raw data summary" },
   { id: "l2", key: "2_preprocessing", name: "Preprocessing", mode: "form", role: "clean panel construction" },
   { id: "l2_5", key: "2_5_pre_post_preprocessing", name: "Pre/Post Diagnostics", mode: "diagnostic", parent: "l2", role: "pre/post comparison" },
-  { id: "l3", key: "3_feature_engineering", name: "Feature Builder", mode: "dag", role: "ordered feature blocks and target construction" },
+  { id: "l3", key: "3_feature_engineering", name: "Feature DAG", mode: "dag", role: "features and target construction" },
   { id: "l3_5", key: "3_5_feature_diagnostics", name: "Feature Diagnostics", mode: "diagnostic", parent: "l3", role: "feature checks" },
-  { id: "l4", key: "4_forecasting_model", name: "Forecast Builder", mode: "dag", role: "model, benchmark, prediction, combination selections" },
+  { id: "l4", key: "4_forecasting_model", name: "Forecast DAG", mode: "dag", role: "fit, predict, benchmark, combine" },
   { id: "l4_5", key: "4_5_generator_diagnostics", name: "Generator Diagnostics", mode: "diagnostic", parent: "l4", role: "model-fit diagnostics" },
   { id: "l5", key: "5_evaluation", name: "Evaluation", mode: "form", role: "metrics, aggregation, ranking" },
   { id: "l6", key: "6_statistical_tests", name: "Statistical Tests", mode: "form-toggle", role: "inferential tests" },
-  { id: "l7", key: "7_interpretation", name: "Interpretation Builder", mode: "dag-toggle", role: "importance and attribution selections" },
+  { id: "l7", key: "7_interpretation", name: "Interpretation DAG", mode: "dag-toggle", role: "importance and attribution" },
   { id: "l8", key: "8_output", name: "Output", mode: "form", role: "saved objects and provenance" }
 ];
 
@@ -962,12 +962,6 @@ function layerStatus(id) {
   return "on";
 }
 
-function displayMode(layer) {
-  if (layer.mode === "dag") return "builder";
-  if (layer.mode === "dag-toggle") return "builder-toggle";
-  return layer.mode;
-}
-
 function selectLayer(id) {
   state.selectedLayer = id;
   state.selectedNode = null;
@@ -977,7 +971,7 @@ function selectLayer(id) {
 
 function renderWorkspace() {
   const layer = layerById(state.selectedLayer);
-  $("#workspaceEyebrow").textContent = layer ? `${layer.id.toUpperCase()} ${displayMode(layer)}` : "Contract";
+  $("#workspaceEyebrow").textContent = layer ? `${layer.id.toUpperCase()} ${layer.mode}` : "Contract";
   $("#workspaceTitle").textContent = layer ? layer.name : "Layer Map";
   $("#workspaceActions").innerHTML = "";
   const body = $("#workspaceBody");
@@ -1015,7 +1009,7 @@ function renderMap(body) {
   legend.innerHTML = `
     <span><i class="legend-dot configured"></i>configured</span>
     <span><i class="legend-dot optional"></i>optional/off</span>
-    <span><i class="legend-dot dag"></i>Builder layer</span>
+    <span><i class="legend-dot dag"></i>DAG editable</span>
     <span><i class="legend-dot diagnostic"></i>.5 diagnostic</span>
   `;
 
@@ -1046,7 +1040,7 @@ function flowLayerCard(layer) {
   card.innerHTML = `
     <div class="flow-card-head">
       <span class="flow-id">${layer.id.toUpperCase()}</span>
-      <span class="pill">${displayMode(layer)}</span>
+      <span class="pill">${layer.mode}</span>
     </div>
     <div class="flow-title">${layer.name}</div>
     <div class="flow-role">${layer.role}</div>
@@ -1265,9 +1259,11 @@ function renderDagWorkspace(layer, body) {
   const dag = state.dags[layer.id];
   const actions = $("#workspaceActions");
   actions.innerHTML = `
-    <button class="icon-button" data-action="add-step">+ Blank Block</button>
-    <button class="icon-button" data-action="layout">Reset visual order</button>
+    <button class="icon-button" data-action="add-source">+ Source</button>
+    <button class="icon-button" data-action="add-step">+ Blank Step</button>
+    <button class="icon-button" data-action="layout">Auto layout</button>
   `;
+  actions.querySelector('[data-action="add-source"]').addEventListener("click", () => addNode(layer.id, "source"));
   actions.querySelector('[data-action="add-step"]').addEventListener("click", () => addNode(layer.id, "step"));
   actions.querySelector('[data-action="layout"]').addEventListener("click", () => autoLayout(layer.id));
 
@@ -1280,31 +1276,19 @@ function renderDagWorkspace(layer, body) {
   }
 
   const shell = document.createElement("div");
-  shell.className = "builder-shell";
+  shell.className = "dag-shell";
   shell.innerHTML = `
-    <section class="builder-guide">
+    <div class="dag-guide-panel">
       ${dagGuideHtml(layer.id)}
-    </section>
-    <section class="builder-section">
-      <div class="builder-section-head">
-        <div>
-          <div class="eyebrow">${layer.id.toUpperCase()} Builder</div>
-          <h2>${layer.id === "l3" ? "Ordered Feature Blocks" : "Selected Components"}</h2>
-          <p>${layer.id === "l3" ? "Order matters here: earlier feature blocks feed later composition choices." : "Order is shown for readability; dependencies are inferred from the selected component type."}</p>
-        </div>
-        <div class="builder-template-bar">${dagTemplateButtons(layer.id)}</div>
-      </div>
-      <div class="builder-columns">
-        <div>
-          <h3>Available blocks</h3>
-          <div class="builder-palette">${dagPresetButtons(layer.id)}</div>
-        </div>
-        <div>
-          <h3>Current selection</h3>
-          <div class="ordered-block-list">${orderedBlockList(layer.id)}</div>
-        </div>
-      </div>
-    </section>
+    </div>
+    <div class="dag-help">
+      <strong>${layer.id.toUpperCase()} ${layer.name}</strong>
+      <span>Drag nodes to arrange. Use Start link on one node, then Link here on another node. Use presets for common blocks.</span>
+    </div>
+    <div class="dag-template-bar">${dagTemplateButtons(layer.id)}</div>
+    <div class="dag-palette">${dagPresetButtons(layer.id)}</div>
+    <svg class="edge-layer"></svg>
+    <div class="dag-canvas"></div>
   `;
   body.appendChild(shell);
   shell.querySelectorAll("[data-template]").forEach((button) => {
@@ -1313,23 +1297,13 @@ function renderDagWorkspace(layer, body) {
   shell.querySelectorAll("[data-preset]").forEach((button) => {
     button.addEventListener("click", () => addPresetNode(layer.id, button.dataset.preset));
   });
-  shell.querySelectorAll("[data-move]").forEach((button) => {
-    button.addEventListener("click", () => moveDagNode(layer.id, button.dataset.node, Number(button.dataset.move)));
-  });
-  shell.querySelectorAll("[data-remove-node]").forEach((button) => {
-    button.addEventListener("click", () => removeDagNode(layer.id, button.dataset.removeNode));
-  });
-  shell.querySelectorAll("[data-select-node]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.selectedNode = button.dataset.selectNode;
-      render();
-    });
-  });
+  drawEdges(shell.querySelector("svg"), dag);
+  drawNodes(shell.querySelector(".dag-canvas"), layer.id, dag);
 }
 
 function dagPresetButtons(layerId) {
   return (DAG_PRESETS[layerId] || []).map((preset) => (
-    `<button class="builder-palette-button" data-preset="${preset.key}" title="${preset.help}"><strong>${preset.label}</strong><span>${preset.help}</span></button>`
+    `<button class="palette-button" data-preset="${preset.key}" title="${preset.help}">+ ${preset.label}</button>`
   )).join("");
 }
 
@@ -1346,7 +1320,7 @@ function dagGuideHtml(layerId) {
   const template = DAG_TEMPLATES[layerId]?.[guide.defaultTemplate];
   return `
     <div class="dag-guide-main">
-      <div class="eyebrow">How to build this layer</div>
+      <div class="eyebrow">How to build this DAG</div>
       <h2>${layerId.toUpperCase()} recommended structure</h2>
       <p>${guide.purpose}</p>
       ${template ? `<p class="dag-guide-default">Recommended start: ${template.label}. ${template.description}</p>` : ""}
@@ -1366,59 +1340,6 @@ function dagGuideList(title, items) {
       <ol>${items.map((item) => `<li>${item}</li>`).join("")}</ol>
     </div>
   `;
-}
-
-function orderedBlockList(layerId) {
-  const blocks = orderedDagBlocks(layerId);
-  if (!blocks.length) return `<div class="empty-state">No blocks selected.</div>`;
-  return blocks.map((node, index) => blockRowHtml(layerId, node, index, blocks.length)).join("");
-}
-
-function orderedDagBlocks(layerId) {
-  return state.dags[layerId].nodes
-    .filter((node) => !["source", "sink"].includes(node.type))
-    .sort((a, b) => a.x - b.x || a.y - b.y);
-}
-
-function blockRowHtml(layerId, node, index, count) {
-  const inputs = incomingLabels(layerId, node.id);
-  const outputs = outgoingLabels(layerId, node.id);
-  const orderControls = layerId === "l3"
-    ? `<button class="mini-button" data-node="${node.id}" data-move="-1" ${index === 0 ? "disabled" : ""}>Up</button><button class="mini-button" data-node="${node.id}" data-move="1" ${index === count - 1 ? "disabled" : ""}>Down</button>`
-    : "";
-  return `
-    <article class="ordered-block ${state.selectedNode === node.id ? "selected" : ""}">
-      <div class="ordered-block-index">${index + 1}</div>
-      <div class="ordered-block-main">
-        <div class="ordered-block-title">${node.label}</div>
-        <div class="ordered-block-meta">${nodeTypeLabel(node.type)} · ${optionLabel(node.op)} · YAML key: ${node.id}</div>
-        <p>${nodeHelp(layerId, node)}</p>
-        <div class="io-line"><span>Inputs</span>${inputs || "auto / none"}</div>
-        <div class="io-line"><span>Outputs</span>${outputs || "auto / final sink"}</div>
-      </div>
-      <div class="ordered-block-actions">
-        ${orderControls}
-        <button class="mini-button" data-select-node="${node.id}">Edit</button>
-        <button class="mini-button danger" data-remove-node="${node.id}">Remove</button>
-      </div>
-    </article>
-  `;
-}
-
-function incomingLabels(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  return dag.edges
-    .filter((edge) => edge.to === nodeId)
-    .map((edge) => dag.nodes.find((node) => node.id === edge.from)?.label || edge.from)
-    .join(", ");
-}
-
-function outgoingLabels(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  return dag.edges
-    .filter((edge) => edge.from === nodeId)
-    .map((edge) => dag.nodes.find((node) => node.id === edge.to)?.label || edge.to)
-    .join(", ");
 }
 
 function drawEdges(svg, dag) {
@@ -1543,39 +1464,16 @@ function addPresetNode(layerId, presetKey) {
   const dag = state.dags[layerId];
   const count = dag.nodes.filter((node) => node.op === preset.op).length + 1;
   const id = `${preset.key}_${count}`;
-  const order = orderedDagBlocks(layerId).length;
   dag.nodes.push({
     id,
     type: preset.type,
     op: preset.op,
     label: preset.label,
-    x: 300 + order * 40,
-    y: 200 + order * 20,
+    x: 170 + dag.nodes.length * 34,
+    y: 150 + dag.nodes.length * 22,
     params: clone(preset.params)
   });
   state.selectedNode = id;
-  render();
-}
-
-function moveDagNode(layerId, nodeId, delta) {
-  const blocks = orderedDagBlocks(layerId);
-  const index = blocks.findIndex((node) => node.id === nodeId);
-  const target = index + delta;
-  if (index < 0 || target < 0 || target >= blocks.length) return;
-  const current = blocks[index];
-  const other = blocks[target];
-  [current.x, other.x] = [other.x, current.x];
-  [current.y, other.y] = [other.y, current.y];
-  render();
-}
-
-function removeDagNode(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  const node = dag.nodes.find((item) => item.id === nodeId);
-  if (!node || ["source", "sink"].includes(node.type)) return;
-  dag.nodes = dag.nodes.filter((item) => item.id !== nodeId);
-  dag.edges = dag.edges.filter((edge) => edge.from !== nodeId && edge.to !== nodeId);
-  if (state.selectedNode === nodeId) state.selectedNode = null;
   render();
 }
 
@@ -1671,7 +1569,7 @@ function layerDagInspector(layer) {
   fields.push(readonlyField("edges", String(dag.edges.length)));
   fields.push(readonlyField("how to connect", "Start link on source node, then Link here on target node."));
   fields.push(edgeListField(layer.id));
-  return sectionFromFields(`${layer.id.toUpperCase()} Builder`, fields);
+  return sectionFromFields(`${layer.id.toUpperCase()} DAG`, fields);
 }
 
 function edgeListField(layerId) {
@@ -1730,7 +1628,7 @@ function mapFocusInspector() {
   const layer = layerById(state.mapFocusLayer) || layerById("l1");
   const fields = [
     readonlyField("layer", `${layer.id.toUpperCase()} ${layer.name}`),
-    readonlyField("mode", displayMode(layer)),
+    readonlyField("mode", layer.mode),
     readonlyField("status", layerStatus(layer.id)),
     readonlyField("role", layer.role),
     buttonField(`Edit ${layer.id.toUpperCase()}`, () => selectLayer(layer.id))
@@ -1816,7 +1714,7 @@ function validationHtml() {
 function contractHtml() {
   return `
     <div class="form-grid">
-      ${layerDefs.map((layer) => `<div class="contract-card form-section"><h2>${layer.id.toUpperCase()} ${layer.name}</h2><p>${layer.role}</p><p class="field-hint">Mode: ${displayMode(layer)} · YAML: ${layer.key}</p></div>`).join("")}
+      ${layerDefs.map((layer) => `<div class="contract-card form-section"><h2>${layer.id.toUpperCase()} ${layer.name}</h2><p>${layer.role}</p><p class="field-hint">Mode: ${layer.mode} · YAML: ${layer.key}</p></div>`).join("")}
     </div>
   `;
 }
@@ -1881,33 +1779,11 @@ function l1Yaml() {
 
 function dagYaml(layerId) {
   const dag = state.dags[layerId];
-  const nodesById = Object.fromEntries(dag.nodes.map((node) => [node.id, {
-    enabled: true,
-    name: node.label,
-    type: node.type,
-    operation: node.op,
-    config: node.params,
-    inputs: dag.edges.filter((edge) => edge.to === node.id).map((edge) => edge.from),
-    outputs: dag.edges.filter((edge) => edge.from === node.id).map((edge) => edge.to)
-  }]));
-  const blocks = orderedDagBlocks(layerId).map((node) => ({
-    id: node.id,
-    block: node.op,
-    enabled: true,
-    config: node.params
-  }));
-  const contract = {
-    builder_view: layerId === "l3" ? "ordered_feature_blocks" : "selected_components",
-    nodes: nodesById,
+  return {
+    nodes: dag.nodes.map((node) => ({ id: node.id, type: node.type, op: node.op, params: node.params })),
     edges: dag.edges,
     sinks: Object.fromEntries(dag.nodes.filter((node) => node.type === "sink").map((node) => [node.label, node.id]))
   };
-  if (layerId === "l3") {
-    contract.sequence = blocks;
-  } else {
-    contract.selected = blocks;
-  }
-  return contract;
 }
 
 function toYaml(value, indent = 0) {
