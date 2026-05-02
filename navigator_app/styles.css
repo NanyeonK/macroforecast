@@ -599,6 +599,164 @@ button {
   background-size: 24px 24px;
 }
 
+.builder-shell {
+  display: grid;
+  gap: 12px;
+  min-height: 100%;
+}
+
+.builder-guide,
+.builder-section {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: rgba(17, 19, 24, 0.86);
+  padding: 12px;
+}
+
+.builder-guide .dag-guide-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.builder-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.builder-section-head h2,
+.builder-section h3 {
+  margin: 2px 0 6px;
+}
+
+.builder-section-head p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.builder-template-bar,
+.builder-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.builder-columns {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.7fr) minmax(420px, 1.3fr);
+  gap: 12px;
+}
+
+.builder-palette {
+  flex-direction: column;
+}
+
+.builder-palette-button {
+  display: grid;
+  gap: 4px;
+  min-height: 52px;
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  background: #121721;
+  color: var(--text-secondary);
+  padding: 8px;
+  text-align: left;
+}
+
+.builder-palette-button strong {
+  color: var(--text-primary);
+}
+
+.builder-palette-button span {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.ordered-block-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ordered-block {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  background: #11151c;
+  padding: 9px;
+}
+
+.ordered-block.selected {
+  border-color: var(--accent-primary);
+}
+
+.ordered-block-index {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #0f1217;
+  color: var(--accent-secondary);
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+.ordered-block-title {
+  font-weight: 700;
+}
+
+.ordered-block-meta,
+.io-line {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.ordered-block-main p {
+  margin: 6px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.io-line span {
+  display: inline-block;
+  min-width: 52px;
+  color: var(--text-secondary);
+}
+
+.ordered-block-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mini-button {
+  min-height: 24px;
+  border: 1px solid var(--border-default);
+  border-radius: 5px;
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.mini-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mini-button.danger {
+  color: var(--error);
+}
+
 .dag-help {
   position: absolute;
   left: 12px;
