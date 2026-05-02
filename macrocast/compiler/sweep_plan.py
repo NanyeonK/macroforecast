@@ -33,7 +33,6 @@ _LAYER2_REPRESENTATION_SWEEP_AXES = {
     "level_feature_block",
     "temporal_feature_block",
     "rotation_feature_block",
-    "feature_operation_order",
     "feature_block_combination",
     "feature_block_set",
 }

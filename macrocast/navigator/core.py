@@ -72,7 +72,6 @@ _TREE_AXES = {
         "level_feature_block",
         "temporal_feature_block",
         "rotation_feature_block",
-        "feature_operation_order",
         "feature_block_combination",
         "feature_selection_policy",
         "feature_selection_semantics",
