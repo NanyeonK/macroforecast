@@ -581,6 +581,159 @@ const DAG_PRESETS = {
   ]
 };
 
+const DAG_GUIDES = {
+  l3: {
+    purpose: "L3 turns the cleaned panel from L2 into modeling inputs. It should end with a feature sink that L4 can consume.",
+    defaultTemplate: "broad_features",
+    steps: [
+      "Start from L2 predictors and L2 target.",
+      "Build target horizons from the target input.",
+      "Build predictor features from the predictor input: lags, factors, or both.",
+      "Send both feature and target streams into the L3 feature sink.",
+      "Do not add forecast models here. Forecasting belongs in L4."
+    ],
+    required: ["At least one source node", "At least one feature-building step", "A sink named l3_features_v1"],
+    avoid: ["Forecast combination", "Model fitting", "Evaluation metrics"]
+  },
+  l4: {
+    purpose: "L4 trains forecast generators and writes forecast outputs. It consumes L3 features and produces forecast sinks for evaluation.",
+    defaultTemplate: "ridge_vs_benchmark",
+    steps: [
+      "Start from X_final and y_final from L3.",
+      "Fit at least one candidate model.",
+      "Fit or select a benchmark model if relative metrics are used.",
+      "Connect fitted models to prediction nodes.",
+      "Send forecast nodes into l4_forecasts_v1."
+    ],
+    required: ["Feature source from L3", "Target source from L3", "At least one fit_model step", "At least one predict step", "A sink named l4_forecasts_v1"],
+    avoid: ["Raw data cleaning", "Target construction", "Metric selection"]
+  },
+  l7: {
+    purpose: "L7 is optional. It reads model or forecast artifacts and emits interpretation artifacts such as importance or attribution.",
+    defaultTemplate: "importance",
+    steps: [
+      "Enable L7 only if interpretation artifacts are needed.",
+      "Start from L4 model artifacts or forecast outputs.",
+      "Add an importance or attribution method.",
+      "Send outputs into l7_importance_v1."
+    ],
+    required: ["L4 artifact source", "One interpretation step", "A sink named l7_importance_v1"],
+    avoid: ["Changing forecasts", "Changing evaluation scores"]
+  }
+};
+
+const DAG_TEMPLATES = {
+  l3: {
+    broad_features: {
+      label: "Apply Broad Feature Template",
+      description: "L2 predictors -> lags and PCA factors; L2 target -> horizons; both feed l3_features_v1.",
+      nodes: [
+        { id: "src_x", type: "source", op: "source", label: "L2 predictors", x: 90, y: 180, params: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", role: "predictors" } },
+        { id: "src_y", type: "source", op: "source", label: "L2 target", x: 90, y: 360, params: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", role: "target" } },
+        { id: "x_lag", type: "step", op: "lag", label: "Predictor lags", x: 350, y: 150, params: { n_lag: 4 } },
+        { id: "x_factor", type: "step", op: "pca_factors", label: "PCA factor block", x: 350, y: 270, params: { n_factors: 8 } },
+        { id: "y_h", type: "step", op: "target_construction", label: "Target horizons", x: 350, y: 410, params: { horizons: [1, 3, 6, 12] } },
+        { id: "features", type: "sink", op: "sink", label: "l3_features_v1", x: 660, y: 280, params: { X_final: ["x_lag", "x_factor"], y_final: "y_h" } }
+      ],
+      edges: [
+        { from: "src_x", to: "x_lag" },
+        { from: "src_x", to: "x_factor" },
+        { from: "src_y", to: "y_h" },
+        { from: "x_lag", to: "features" },
+        { from: "x_factor", to: "features" },
+        { from: "y_h", to: "features" }
+      ]
+    },
+    simple_lags: {
+      label: "Apply Simple Lag Template",
+      description: "Minimal L3: predictor lags plus target horizons feeding one feature sink.",
+      nodes: [
+        { id: "src_x", type: "source", op: "source", label: "L2 predictors", x: 90, y: 210, params: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", role: "predictors" } },
+        { id: "src_y", type: "source", op: "source", label: "L2 target", x: 90, y: 350, params: { layer_ref: "l2", sink_name: "l2_clean_panel_v1", role: "target" } },
+        { id: "x_lag", type: "step", op: "lag", label: "Predictor lags", x: 360, y: 210, params: { n_lag: 4 } },
+        { id: "y_h", type: "step", op: "target_construction", label: "Target horizons", x: 360, y: 350, params: { horizons: [1, 3, 6, 12] } },
+        { id: "features", type: "sink", op: "sink", label: "l3_features_v1", x: 650, y: 280, params: { X_final: "x_lag", y_final: "y_h" } }
+      ],
+      edges: [
+        { from: "src_x", to: "x_lag" },
+        { from: "src_y", to: "y_h" },
+        { from: "x_lag", to: "features" },
+        { from: "y_h", to: "features" }
+      ]
+    }
+  },
+  l4: {
+    ridge_vs_benchmark: {
+      label: "Apply Ridge vs Benchmark Template",
+      description: "L3 features feed Ridge and AR-BIC benchmark; both predict into l4_forecasts_v1.",
+      nodes: [
+        { id: "src_X", type: "source", op: "source", label: "X_final", x: 80, y: 170, params: { layer_ref: "l3", sink_name: "l3_features_v1", component: "X_final" } },
+        { id: "src_y", type: "source", op: "source", label: "y_final", x: 80, y: 350, params: { layer_ref: "l3", sink_name: "l3_features_v1", component: "y_final" } },
+        { id: "fit_ridge", type: "step", op: "fit_model", label: "Fit ridge", x: 330, y: 150, params: { family: "ridge" } },
+        { id: "fit_benchmark", type: "step", op: "fit_model", label: "Fit AR-BIC benchmark", x: 330, y: 330, params: { family: "autoregressive_bic", is_benchmark: true } },
+        { id: "predict_ridge", type: "step", op: "predict", label: "Predict ridge", x: 590, y: 150, params: {} },
+        { id: "predict_benchmark", type: "step", op: "predict", label: "Predict benchmark", x: 590, y: 330, params: {} },
+        { id: "forecasts", type: "sink", op: "sink", label: "l4_forecasts_v1", x: 850, y: 240, params: { forecasts: ["predict_ridge", "predict_benchmark"] } }
+      ],
+      edges: [
+        { from: "src_X", to: "fit_ridge" },
+        { from: "src_y", to: "fit_ridge" },
+        { from: "src_y", to: "fit_benchmark" },
+        { from: "fit_ridge", to: "predict_ridge" },
+        { from: "src_X", to: "predict_ridge" },
+        { from: "fit_benchmark", to: "predict_benchmark" },
+        { from: "predict_ridge", to: "forecasts" },
+        { from: "predict_benchmark", to: "forecasts" }
+      ]
+    },
+    model_ensemble: {
+      label: "Apply Ensemble Template",
+      description: "Two candidate models plus benchmark, with candidate forecasts combined before the forecast sink.",
+      nodes: [
+        { id: "src_X", type: "source", op: "source", label: "X_final", x: 70, y: 190, params: { layer_ref: "l3", sink_name: "l3_features_v1", component: "X_final" } },
+        { id: "src_y", type: "source", op: "source", label: "y_final", x: 70, y: 390, params: { layer_ref: "l3", sink_name: "l3_features_v1", component: "y_final" } },
+        { id: "fit_ridge", type: "step", op: "fit_model", label: "Fit ridge", x: 310, y: 130, params: { family: "ridge" } },
+        { id: "fit_lasso", type: "step", op: "fit_model", label: "Fit lasso", x: 310, y: 260, params: { family: "lasso" } },
+        { id: "fit_benchmark", type: "step", op: "fit_model", label: "Fit benchmark", x: 310, y: 410, params: { family: "autoregressive_bic", is_benchmark: true } },
+        { id: "predict_ridge", type: "step", op: "predict", label: "Predict ridge", x: 560, y: 130, params: {} },
+        { id: "predict_lasso", type: "step", op: "predict", label: "Predict lasso", x: 560, y: 260, params: {} },
+        { id: "predict_benchmark", type: "step", op: "predict", label: "Predict benchmark", x: 560, y: 410, params: {} },
+        { id: "combine_candidates", type: "combine", op: "forecast_combination", label: "Combine candidates", x: 800, y: 200, params: { method: "equal_weight" } },
+        { id: "forecasts", type: "sink", op: "sink", label: "l4_forecasts_v1", x: 1040, y: 300, params: { forecasts: ["combine_candidates", "predict_benchmark"] } }
+      ],
+      edges: [
+        { from: "src_X", to: "fit_ridge" },
+        { from: "src_y", to: "fit_ridge" },
+        { from: "src_X", to: "fit_lasso" },
+        { from: "src_y", to: "fit_lasso" },
+        { from: "src_y", to: "fit_benchmark" },
+        { from: "fit_ridge", to: "predict_ridge" },
+        { from: "fit_lasso", to: "predict_lasso" },
+        { from: "fit_benchmark", to: "predict_benchmark" },
+        { from: "predict_ridge", to: "combine_candidates" },
+        { from: "predict_lasso", to: "combine_candidates" },
+        { from: "combine_candidates", to: "forecasts" },
+        { from: "predict_benchmark", to: "forecasts" }
+      ]
+    }
+  },
+  l7: {
+    importance: {
+      label: "Apply Importance Template",
+      description: "L4 model artifacts feed permutation importance and produce l7_importance_v1.",
+      nodes: [
+        { id: "src_model", type: "source", op: "source", label: "L4 model artifacts", x: 120, y: 230, params: { layer_ref: "l4", sink_name: "l4_model_artifacts_v1" } },
+        { id: "importance", type: "step", op: "permutation_importance", label: "Permutation importance", x: 390, y: 230, params: { scope: "global" } },
+        { id: "importance_sink", type: "sink", op: "sink", label: "l7_importance_v1", x: 680, y: 230, params: {} }
+      ],
+      edges: [
+        { from: "src_model", to: "importance" },
+        { from: "importance", to: "importance_sink" }
+      ]
+    }
+  }
+};
+
 const state = {
   selectedLayer: "map",
   mapFocusLayer: "l1",
@@ -768,6 +921,7 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const layerById = (id) => layerDefs.find((layer) => layer.id === id);
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const DAG_CANVAS_TOP = 292;
 
 function resetState() {
   window.location.reload();
@@ -1124,15 +1278,22 @@ function renderDagWorkspace(layer, body) {
   const shell = document.createElement("div");
   shell.className = "dag-shell";
   shell.innerHTML = `
+    <div class="dag-guide-panel">
+      ${dagGuideHtml(layer.id)}
+    </div>
     <div class="dag-help">
       <strong>${layer.id.toUpperCase()} ${layer.name}</strong>
       <span>Drag nodes to arrange. Use Start link on one node, then Link here on another node. Use presets for common blocks.</span>
     </div>
+    <div class="dag-template-bar">${dagTemplateButtons(layer.id)}</div>
     <div class="dag-palette">${dagPresetButtons(layer.id)}</div>
     <svg class="edge-layer"></svg>
     <div class="dag-canvas"></div>
   `;
   body.appendChild(shell);
+  shell.querySelectorAll("[data-template]").forEach((button) => {
+    button.addEventListener("click", () => applyDagTemplate(layer.id, button.dataset.template));
+  });
   shell.querySelectorAll("[data-preset]").forEach((button) => {
     button.addEventListener("click", () => addPresetNode(layer.id, button.dataset.preset));
   });
@@ -1146,6 +1307,41 @@ function dagPresetButtons(layerId) {
   )).join("");
 }
 
+function dagTemplateButtons(layerId) {
+  const templates = DAG_TEMPLATES[layerId] || {};
+  return Object.entries(templates).map(([key, template]) => (
+    `<button class="template-button" data-template="${key}" title="${template.description}">${template.label}</button>`
+  )).join("");
+}
+
+function dagGuideHtml(layerId) {
+  const guide = DAG_GUIDES[layerId];
+  if (!guide) return "";
+  const template = DAG_TEMPLATES[layerId]?.[guide.defaultTemplate];
+  return `
+    <div class="dag-guide-main">
+      <div class="eyebrow">How to build this DAG</div>
+      <h2>${layerId.toUpperCase()} recommended structure</h2>
+      <p>${guide.purpose}</p>
+      ${template ? `<p class="dag-guide-default">Recommended start: ${template.label}. ${template.description}</p>` : ""}
+    </div>
+    <div class="dag-guide-columns">
+      ${dagGuideList("Build order", guide.steps)}
+      ${dagGuideList("Must include", guide.required)}
+      ${dagGuideList("Do not put here", guide.avoid)}
+    </div>
+  `;
+}
+
+function dagGuideList(title, items) {
+  return `
+    <div class="dag-guide-list">
+      <h3>${title}</h3>
+      <ol>${items.map((item) => `<li>${item}</li>`).join("")}</ol>
+    </div>
+  `;
+}
+
 function drawEdges(svg, dag) {
   svg.setAttribute("width", "100%");
   svg.setAttribute("height", "100%");
@@ -1156,9 +1352,9 @@ function drawEdges(svg, dag) {
     if (!from || !to) continue;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
     const x1 = from.x + 190;
-    const y1 = from.y + 37;
+    const y1 = from.y + DAG_CANVAS_TOP + 37;
     const x2 = to.x;
-    const y2 = to.y + 37;
+    const y2 = to.y + DAG_CANVAS_TOP + 37;
     const mid = Math.max(40, (x2 - x1) / 2);
     line.setAttribute("d", `M ${x1} ${y1} C ${x1 + mid} ${y1}, ${x2 - mid} ${y2}, ${x2} ${y2}`);
     line.setAttribute("stroke", "#4a5260");
@@ -1174,7 +1370,7 @@ function drawNodes(canvas, layerId, dag) {
     const el = document.createElement("div");
     el.className = `dag-node ${node.type} ${state.selectedNode === node.id ? "selected" : ""}`;
     el.style.left = `${node.x}px`;
-    el.style.top = `${node.y}px`;
+    el.style.top = `${node.y + DAG_CANVAS_TOP}px`;
     el.innerHTML = `
       <div class="node-strip"></div>
       <div class="node-content">
@@ -1281,6 +1477,18 @@ function addPresetNode(layerId, presetKey) {
   render();
 }
 
+function applyDagTemplate(layerId, templateKey) {
+  const template = DAG_TEMPLATES[layerId]?.[templateKey];
+  if (!template) return;
+  const dag = state.dags[layerId];
+  dag.nodes = clone(template.nodes);
+  dag.edges = clone(template.edges);
+  dag.enabled = true;
+  state.selectedNode = null;
+  state.connectingFrom = null;
+  render();
+}
+
 function autoLayout(layerId) {
   const dag = state.dags[layerId];
   dag.nodes.forEach((node, index) => {
@@ -1350,6 +1558,11 @@ function layerDagInspector(layer) {
   const fields = [];
   if (layer.mode === "dag-toggle") {
     fields.push(toggleField("enabled", dag.enabled, (checked) => dag.enabled = checked));
+  }
+  const guide = DAG_GUIDES[layer.id];
+  if (guide) {
+    fields.push(readonlyField("recommended structure", guide.steps.join(" -> ")));
+    fields.push(readonlyField("must include", guide.required.join(", ")));
   }
   fields.push(readonlyField("required sinks", requiredSinks(layer.id).join(", ")));
   fields.push(readonlyField("nodes", String(dag.nodes.length)));
