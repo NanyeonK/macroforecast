@@ -382,7 +382,7 @@ L7_LAYER_SPEC = _LayerImplSpec(
         "l4_model_artifacts_v1",
     ),
     produces=("l7_importance_v1", "l7_transformation_attribution_v1"),
-    ui_mode="list",
+    ui_mode="graph",
     layer_globals=("enabled",),
     sub_layers=_L7_SUBLAYERS,
     axes={
