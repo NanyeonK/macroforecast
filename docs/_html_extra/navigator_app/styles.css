@@ -603,7 +603,7 @@ button {
   position: absolute;
   left: 12px;
   right: 12px;
-  top: 10px;
+  top: 176px;
   z-index: 3;
   display: flex;
   align-items: center;
@@ -625,11 +625,101 @@ button {
   position: absolute;
   left: 12px;
   right: 12px;
-  top: 52px;
+  top: 246px;
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.dag-guide-panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.6fr);
+  gap: 12px;
+  max-height: 150px;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  background: rgba(13, 16, 21, 0.95);
+  padding: 10px;
+}
+
+.dag-guide-main h2 {
+  margin: 3px 0 6px;
+  font-size: 14px;
+}
+
+.dag-guide-main p,
+.dag-guide-list li {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.dag-guide-default {
+  margin-top: 7px !important;
+  color: var(--accent-secondary) !important;
+}
+
+.dag-guide-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dag-guide-list {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: #0f1217;
+  padding: 7px;
+}
+
+.dag-guide-list h3 {
+  margin: 0 0 5px;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.dag-guide-list ol {
+  margin: 0;
+  padding-left: 16px;
+}
+
+@media (max-width: 1280px) {
+  .dag-guide-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .dag-guide-columns {
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+  }
+}
+
+.dag-template-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 214px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.template-button {
+  min-height: 26px;
+  border: 1px solid rgba(124, 140, 255, 0.5);
+  border-radius: 6px;
+  background: rgba(41, 50, 125, 0.6);
+  color: #eef1ff;
+  padding: 0 8px;
+  font-size: 11px;
 }
 
 .palette-button {
