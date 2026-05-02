@@ -5,7 +5,7 @@ from macrocast.registry.base import AxisDefinition, BaseRegistryEntry, EnumRegis
 from macrocast.registry.types import AxisRegistryEntry
 
 
-EXPECTED_AXIS_COUNT = 155
+EXPECTED_AXIS_COUNT = 154
 
 
 def test_registry_loader_discovers_existing_axes() -> None:
@@ -31,7 +31,6 @@ def test_registry_loader_discovers_existing_axes() -> None:
         "regime_definition",
         "custom_preprocessor",
         "target_transformer",
-        "feature_operation_order",
         "feature_selection_semantics",
     }.issubset(registry)
     assert "task" not in registry
