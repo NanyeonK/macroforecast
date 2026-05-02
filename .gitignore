@@ -64,3 +64,9 @@ runs/
 # Sphinx build output
 docs/_build/
 .venv-docs/
+
+# CatBoost training artifacts
+catboost_info/
+
+# macrocast runtime output
+macrocast_output/
