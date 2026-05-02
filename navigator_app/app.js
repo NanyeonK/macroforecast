@@ -4,13 +4,13 @@ const layerDefs = [
   { id: "l1_5", key: "1_5_data_summary", name: "Data Diagnostics", mode: "diagnostic", parent: "l1", role: "raw data summary" },
   { id: "l2", key: "2_preprocessing", name: "Preprocessing", mode: "form", role: "clean panel construction" },
   { id: "l2_5", key: "2_5_pre_post_preprocessing", name: "Pre/Post Diagnostics", mode: "diagnostic", parent: "l2", role: "pre/post comparison" },
-  { id: "l3", key: "3_feature_engineering", name: "Feature Engineering", mode: "form", role: "target construction, feature blocks, and feature order" },
+  { id: "l3", key: "3_feature_engineering", name: "Feature DAG", mode: "dag", role: "features and target construction" },
   { id: "l3_5", key: "3_5_feature_diagnostics", name: "Feature Diagnostics", mode: "diagnostic", parent: "l3", role: "feature checks" },
-  { id: "l4", key: "4_forecasting_model", name: "Forecast Builder", mode: "dag", role: "model, benchmark, prediction, combination selections" },
+  { id: "l4", key: "4_forecasting_model", name: "Forecast DAG", mode: "dag", role: "fit, predict, benchmark, combine" },
   { id: "l4_5", key: "4_5_generator_diagnostics", name: "Generator Diagnostics", mode: "diagnostic", parent: "l4", role: "model-fit diagnostics" },
   { id: "l5", key: "5_evaluation", name: "Evaluation", mode: "form", role: "metrics, aggregation, ranking" },
   { id: "l6", key: "6_statistical_tests", name: "Statistical Tests", mode: "form-toggle", role: "inferential tests" },
-  { id: "l7", key: "7_interpretation", name: "Interpretation Builder", mode: "dag-toggle", role: "importance and attribution selections" },
+  { id: "l7", key: "7_interpretation", name: "Interpretation DAG", mode: "dag-toggle", role: "importance and attribution" },
   { id: "l8", key: "8_output", name: "Output", mode: "form", role: "saved objects and provenance" }
 ];
 
@@ -67,8 +67,6 @@ const AXIS_OPTIONS = {
   },
   l2: {
     fred_sd_mixed_frequency_representation: ["calendar_aligned_frame", "drop_unknown_native_frequency", "drop_non_target_native_frequency", "native_frequency_block_payload", "mixed_frequency_model_adapter"],
-  },
-  l3: {
     horizon_target_construction: ["future_target_level_t_plus_h", "future_diff", "future_logdiff", "average_growth_1_to_h", "path_average_growth_1_to_h", "average_difference_1_to_h", "path_average_difference_1_to_h", "average_log_growth_1_to_h", "path_average_log_growth_1_to_h"],
     target_transform: ["level", "difference", "log", "log_difference", "growth_rate"],
     target_normalization: ["none", "zscore_train_only", "robust_zscore", "minmax", "unit_variance"],
@@ -82,7 +80,6 @@ const AXIS_OPTIONS = {
     level_feature_block: ["none", "target_level_addback", "x_level_addback", "selected_level_addbacks", "level_growth_pairs"],
     temporal_feature_block: ["none", "moving_average_features", "rolling_moments", "local_temporal_factors", "volatility_features", "custom_temporal_features"],
     rotation_feature_block: ["none", "marx_rotation", "maf_rotation", "moving_average_rotation", "custom_rotation"],
-    feature_operation_order: ["lag_then_pca", "pca_then_factor_lag", "pca_then_lagged_factors", "parallel_lag_and_pca", "custom_feature_sequence"],
     feature_block_combination: ["replace_with_selected_blocks", "append_to_base_predictors", "append_to_target_lags", "concatenate_named_blocks", "custom_feature_combiner"],
     feature_selection_policy: ["none", "correlation_filter", "lasso_selection", "mutual_information_screen", "custom"],
     feature_selection_semantics: ["select_before_factor", "select_after_factor", "select_after_custom_feature_blocks"],
@@ -190,18 +187,6 @@ const AXIS_DESCRIPTIONS = {
   x_missing_policy: "Predictor missing-data policy after Layer 1.",
   x_outlier_policy: "Predictor outlier policy after Layer 1.",
   scaling_policy: "Predictor scaling policy.",
-  target_lag_block: "Whether and how target-history features enter the design matrix.",
-  x_lag_feature_block: "Whether and how predictor lags are created before modeling.",
-  factor_feature_block: "Whether and how factor features such as PCA factors are created.",
-  level_feature_block: "Optional level add-back features.",
-  temporal_feature_block: "Optional rolling, moving-average, and volatility features.",
-  rotation_feature_block: "Optional rotations such as MARX or MAF.",
-  feature_operation_order: "Ordering rule when both lag and factor operations are active.",
-  feature_block_combination: "How selected feature blocks are merged into the final feature panel.",
-  feature_selection_policy: "Optional feature screening method.",
-  feature_selection_semantics: "Whether selection happens before or after factor construction.",
-  evaluation_scale: "Scale used when forecast outputs are evaluated.",
-  feature_builder: "High-level feature recipe used as shorthand and runtime bridge.",
   primary_metric: "Main metric used for ranking and summaries.",
   ranking: "How forecast generators are ordered in the evaluation report.",
   export_format: "External artifact format emitted by Layer 8.",
@@ -243,7 +228,6 @@ const AXIS_TITLES = {
   temporal_feature_block: "Temporal features",
   rotation_feature_block: "Rotations",
   feature_block_combination: "Feature combination",
-  feature_operation_order: "Feature operation order",
   feature_selection_policy: "Feature selection",
   feature_selection_semantics: "Selection timing",
   evaluation_scale: "Evaluation scale",
@@ -444,11 +428,6 @@ const OPTION_LABELS = {
   raw_predictors_only: "Raw predictors only",
   pca_factor_features: "PCA factor features",
   sequence_tensor: "Sequence tensor",
-  lag_then_pca: "Lag predictors, then PCA",
-  pca_then_factor_lag: "PCA factors, then lag factors",
-  pca_then_lagged_factors: "PCA, then factor lags",
-  parallel_lag_and_pca: "Lag and PCA in parallel",
-  custom_feature_sequence: "Custom feature sequence",
   mse: "Mean squared error",
   rmse: "Root mean squared error",
   mae: "Mean absolute error",
@@ -571,11 +550,6 @@ const OPTION_DESCRIPTIONS = {
   fred_sd: "Use when state-level predictors are central to the question.",
   all_variables: "Default broad universe. Keeps the first setup wide instead of hand-picking predictors.",
   factors_plus_target_lags: "Default broad feature recipe: summarize predictors with factors and keep target history.",
-  lag_then_pca: "Create predictor lags first, then summarize the expanded lag panel with PCA.",
-  pca_then_factor_lag: "Extract factors from the current predictor panel first, then create lags of those factors.",
-  pca_then_lagged_factors: "Same conceptual route as PCA then factor lags; use when naming should emphasize lagged factor outputs.",
-  parallel_lag_and_pca: "Build predictor lags and PCA factors as separate blocks, then combine them.",
-  custom_feature_sequence: "Use when the ordering needs a hand-written sequence beyond the built-in options.",
   per_target_horizon: "Default. Tests each target and forecast horizon separately.",
   newey_west: "Default HAC correction for serial correlation in forecast errors.",
   nw_with_h_minus_1_lag: "Default for overlapping h-step forecast errors.",
@@ -806,12 +780,7 @@ const state = {
     },
     l2: {
       fixed_axes: {
-        fred_sd_mixed_frequency_representation: "calendar_aligned_frame"
-      },
-      leaf_config: {}
-    },
-    l3: {
-      fixed_axes: {
+        fred_sd_mixed_frequency_representation: "calendar_aligned_frame",
         horizon_target_construction: "future_target_level_t_plus_h",
         target_transform: "level",
         target_normalization: "none",
@@ -825,7 +794,6 @@ const state = {
         level_feature_block: "none",
         temporal_feature_block: "none",
         rotation_feature_block: "none",
-        feature_operation_order: "parallel_lag_and_pca",
         feature_block_combination: "append_to_base_predictors",
         feature_selection_policy: "none",
         feature_selection_semantics: "select_after_factor",
@@ -989,16 +957,9 @@ function renderLayerRail() {
 
 function layerStatus(id) {
   if (state.diagnostics[id]) return state.diagnostics[id].enabled ? "on" : "off";
-  const layer = layerById(id);
-  if (state.dags[id] && layer?.mode.includes("dag")) return state.dags[id].enabled ? "on" : "off";
+  if (state.dags[id]) return state.dags[id].enabled ? "on" : "off";
   if (id === "l6") return state.layers.l6.enabled ? "on" : "off";
   return "on";
-}
-
-function displayMode(layer) {
-  if (layer.mode === "dag") return "builder";
-  if (layer.mode === "dag-toggle") return "builder-toggle";
-  return layer.mode;
 }
 
 function selectLayer(id) {
@@ -1010,7 +971,7 @@ function selectLayer(id) {
 
 function renderWorkspace() {
   const layer = layerById(state.selectedLayer);
-  $("#workspaceEyebrow").textContent = layer ? `${layer.id.toUpperCase()} ${displayMode(layer)}` : "Contract";
+  $("#workspaceEyebrow").textContent = layer ? `${layer.id.toUpperCase()} ${layer.mode}` : "Contract";
   $("#workspaceTitle").textContent = layer ? layer.name : "Layer Map";
   $("#workspaceActions").innerHTML = "";
   const body = $("#workspaceBody");
@@ -1048,7 +1009,7 @@ function renderMap(body) {
   legend.innerHTML = `
     <span><i class="legend-dot configured"></i>configured</span>
     <span><i class="legend-dot optional"></i>optional/off</span>
-    <span><i class="legend-dot dag"></i>Builder layer</span>
+    <span><i class="legend-dot dag"></i>DAG editable</span>
     <span><i class="legend-dot diagnostic"></i>.5 diagnostic</span>
   `;
 
@@ -1079,7 +1040,7 @@ function flowLayerCard(layer) {
   card.innerHTML = `
     <div class="flow-card-head">
       <span class="flow-id">${layer.id.toUpperCase()}</span>
-      <span class="pill">${displayMode(layer)}</span>
+      <span class="pill">${layer.mode}</span>
     </div>
     <div class="flow-title">${layer.name}</div>
     <div class="flow-role">${layer.role}</div>
@@ -1111,11 +1072,7 @@ function flowLayerFacts(layerId) {
     const targets = fixed.target_structure === "single_target" ? leaf.target : `${leaf.targets.length} targets`;
     return `<div class="flow-facts"><span>${fixed.dataset || "custom"}</span><span>${targets}</span><span>h=${leaf.horizons.join(",")}</span></div>`;
   }
-  if (layerId === "l3") {
-    const fixed = state.layers.l3.fixed_axes;
-    return `<div class="flow-facts"><span>${fixed.feature_builder}</span><span>${fixed.feature_operation_order}</span></div>`;
-  }
-  if (layerId === "l4" || layerId === "l7") {
+  if (layerId === "l3" || layerId === "l4" || layerId === "l7") {
     const dag = state.dags[layerId];
     return `<div class="flow-facts"><span>${dag.nodes.length} nodes</span><span>${dag.edges.length} edges</span><span>${dag.enabled ? "on" : "off"}</span></div>`;
   }
@@ -1206,35 +1163,31 @@ function renderFormLayer(layer, body) {
     grid.appendChild(sectionFromFields("FRED-SD mixed frequency", [
       selectAxis("l2", "fred_sd_mixed_frequency_representation")
     ]));
-  }
-
-  if (layer.id === "l3") {
     grid.appendChild(sectionFromFields("Target construction", [
-      selectAxis("l3", "horizon_target_construction"),
-      selectAxis("l3", "target_transform"),
-      selectAxis("l3", "target_normalization")
+      selectAxis("l2", "horizon_target_construction"),
+      selectAxis("l2", "target_transform"),
+      selectAxis("l2", "target_normalization")
     ]));
     grid.appendChild(sectionFromFields("Transform and cleaning", [
-      selectAxis("l3", "tcode_policy"),
-      selectAxis("l3", "x_missing_policy"),
-      selectAxis("l3", "x_outlier_policy"),
-      selectAxis("l3", "scaling_policy")
+      selectAxis("l2", "tcode_policy"),
+      selectAxis("l2", "x_missing_policy"),
+      selectAxis("l2", "x_outlier_policy"),
+      selectAxis("l2", "scaling_policy")
     ]));
     grid.appendChild(sectionFromFields("Feature blocks", [
-      selectAxis("l3", "target_lag_block"),
-      selectAxis("l3", "x_lag_feature_block"),
-      selectAxis("l3", "factor_feature_block"),
-      selectAxis("l3", "level_feature_block"),
-      selectAxis("l3", "temporal_feature_block"),
-      selectAxis("l3", "rotation_feature_block")
+      selectAxis("l2", "target_lag_block"),
+      selectAxis("l2", "x_lag_feature_block"),
+      selectAxis("l2", "factor_feature_block"),
+      selectAxis("l2", "level_feature_block"),
+      selectAxis("l2", "temporal_feature_block"),
+      selectAxis("l2", "rotation_feature_block")
     ]));
-    grid.appendChild(sectionFromFields("Order, composition, selection", [
-      selectAxis("l3", "feature_operation_order"),
-      selectAxis("l3", "feature_block_combination"),
-      selectAxis("l3", "feature_selection_policy"),
-      selectAxis("l3", "feature_selection_semantics"),
-      selectAxis("l3", "evaluation_scale"),
-      selectAxis("l3", "feature_builder")
+    grid.appendChild(sectionFromFields("Composition, selection, handoff", [
+      selectAxis("l2", "feature_block_combination"),
+      selectAxis("l2", "feature_selection_policy"),
+      selectAxis("l2", "feature_selection_semantics"),
+      selectAxis("l2", "evaluation_scale"),
+      selectAxis("l2", "feature_builder")
     ]));
   }
 
@@ -1306,9 +1259,11 @@ function renderDagWorkspace(layer, body) {
   const dag = state.dags[layer.id];
   const actions = $("#workspaceActions");
   actions.innerHTML = `
-    <button class="icon-button" data-action="add-step">+ Blank Block</button>
-    <button class="icon-button" data-action="layout">Reset visual order</button>
+    <button class="icon-button" data-action="add-source">+ Source</button>
+    <button class="icon-button" data-action="add-step">+ Blank Step</button>
+    <button class="icon-button" data-action="layout">Auto layout</button>
   `;
+  actions.querySelector('[data-action="add-source"]').addEventListener("click", () => addNode(layer.id, "source"));
   actions.querySelector('[data-action="add-step"]').addEventListener("click", () => addNode(layer.id, "step"));
   actions.querySelector('[data-action="layout"]').addEventListener("click", () => autoLayout(layer.id));
 
@@ -1321,31 +1276,19 @@ function renderDagWorkspace(layer, body) {
   }
 
   const shell = document.createElement("div");
-  shell.className = "builder-shell";
+  shell.className = "dag-shell";
   shell.innerHTML = `
-    <section class="builder-guide">
+    <div class="dag-guide-panel">
       ${dagGuideHtml(layer.id)}
-    </section>
-    <section class="builder-section">
-      <div class="builder-section-head">
-        <div>
-          <div class="eyebrow">${layer.id.toUpperCase()} Builder</div>
-          <h2>${layer.id === "l3" ? "Ordered Feature Blocks" : "Selected Components"}</h2>
-          <p>${layer.id === "l3" ? "Order matters here: earlier feature blocks feed later composition choices." : "Order is shown for readability; dependencies are inferred from the selected component type."}</p>
-        </div>
-        <div class="builder-template-bar">${dagTemplateButtons(layer.id)}</div>
-      </div>
-      <div class="builder-columns">
-        <div>
-          <h3>Available blocks</h3>
-          <div class="builder-palette">${dagPresetButtons(layer.id)}</div>
-        </div>
-        <div>
-          <h3>Current selection</h3>
-          <div class="ordered-block-list">${orderedBlockList(layer.id)}</div>
-        </div>
-      </div>
-    </section>
+    </div>
+    <div class="dag-help">
+      <strong>${layer.id.toUpperCase()} ${layer.name}</strong>
+      <span>Drag nodes to arrange. Use Start link on one node, then Link here on another node. Use presets for common blocks.</span>
+    </div>
+    <div class="dag-template-bar">${dagTemplateButtons(layer.id)}</div>
+    <div class="dag-palette">${dagPresetButtons(layer.id)}</div>
+    <svg class="edge-layer"></svg>
+    <div class="dag-canvas"></div>
   `;
   body.appendChild(shell);
   shell.querySelectorAll("[data-template]").forEach((button) => {
@@ -1354,23 +1297,13 @@ function renderDagWorkspace(layer, body) {
   shell.querySelectorAll("[data-preset]").forEach((button) => {
     button.addEventListener("click", () => addPresetNode(layer.id, button.dataset.preset));
   });
-  shell.querySelectorAll("[data-move]").forEach((button) => {
-    button.addEventListener("click", () => moveDagNode(layer.id, button.dataset.node, Number(button.dataset.move)));
-  });
-  shell.querySelectorAll("[data-remove-node]").forEach((button) => {
-    button.addEventListener("click", () => removeDagNode(layer.id, button.dataset.removeNode));
-  });
-  shell.querySelectorAll("[data-select-node]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.selectedNode = button.dataset.selectNode;
-      render();
-    });
-  });
+  drawEdges(shell.querySelector("svg"), dag);
+  drawNodes(shell.querySelector(".dag-canvas"), layer.id, dag);
 }
 
 function dagPresetButtons(layerId) {
   return (DAG_PRESETS[layerId] || []).map((preset) => (
-    `<button class="builder-palette-button" data-preset="${preset.key}" title="${preset.help}"><strong>${preset.label}</strong><span>${preset.help}</span></button>`
+    `<button class="palette-button" data-preset="${preset.key}" title="${preset.help}">+ ${preset.label}</button>`
   )).join("");
 }
 
@@ -1387,7 +1320,7 @@ function dagGuideHtml(layerId) {
   const template = DAG_TEMPLATES[layerId]?.[guide.defaultTemplate];
   return `
     <div class="dag-guide-main">
-      <div class="eyebrow">How to build this layer</div>
+      <div class="eyebrow">How to build this DAG</div>
       <h2>${layerId.toUpperCase()} recommended structure</h2>
       <p>${guide.purpose}</p>
       ${template ? `<p class="dag-guide-default">Recommended start: ${template.label}. ${template.description}</p>` : ""}
@@ -1407,59 +1340,6 @@ function dagGuideList(title, items) {
       <ol>${items.map((item) => `<li>${item}</li>`).join("")}</ol>
     </div>
   `;
-}
-
-function orderedBlockList(layerId) {
-  const blocks = orderedDagBlocks(layerId);
-  if (!blocks.length) return `<div class="empty-state">No blocks selected.</div>`;
-  return blocks.map((node, index) => blockRowHtml(layerId, node, index, blocks.length)).join("");
-}
-
-function orderedDagBlocks(layerId) {
-  return state.dags[layerId].nodes
-    .filter((node) => !["source", "sink"].includes(node.type))
-    .sort((a, b) => a.x - b.x || a.y - b.y);
-}
-
-function blockRowHtml(layerId, node, index, count) {
-  const inputs = incomingLabels(layerId, node.id);
-  const outputs = outgoingLabels(layerId, node.id);
-  const orderControls = layerId === "l3"
-    ? `<button class="mini-button" data-node="${node.id}" data-move="-1" ${index === 0 ? "disabled" : ""}>Up</button><button class="mini-button" data-node="${node.id}" data-move="1" ${index === count - 1 ? "disabled" : ""}>Down</button>`
-    : "";
-  return `
-    <article class="ordered-block ${state.selectedNode === node.id ? "selected" : ""}">
-      <div class="ordered-block-index">${index + 1}</div>
-      <div class="ordered-block-main">
-        <div class="ordered-block-title">${node.label}</div>
-        <div class="ordered-block-meta">${nodeTypeLabel(node.type)} · ${optionLabel(node.op)} · YAML key: ${node.id}</div>
-        <p>${nodeHelp(layerId, node)}</p>
-        <div class="io-line"><span>Inputs</span>${inputs || "auto / none"}</div>
-        <div class="io-line"><span>Outputs</span>${outputs || "auto / final sink"}</div>
-      </div>
-      <div class="ordered-block-actions">
-        ${orderControls}
-        <button class="mini-button" data-select-node="${node.id}">Edit</button>
-        <button class="mini-button danger" data-remove-node="${node.id}">Remove</button>
-      </div>
-    </article>
-  `;
-}
-
-function incomingLabels(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  return dag.edges
-    .filter((edge) => edge.to === nodeId)
-    .map((edge) => dag.nodes.find((node) => node.id === edge.from)?.label || edge.from)
-    .join(", ");
-}
-
-function outgoingLabels(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  return dag.edges
-    .filter((edge) => edge.from === nodeId)
-    .map((edge) => dag.nodes.find((node) => node.id === edge.to)?.label || edge.to)
-    .join(", ");
 }
 
 function drawEdges(svg, dag) {
@@ -1584,39 +1464,16 @@ function addPresetNode(layerId, presetKey) {
   const dag = state.dags[layerId];
   const count = dag.nodes.filter((node) => node.op === preset.op).length + 1;
   const id = `${preset.key}_${count}`;
-  const order = orderedDagBlocks(layerId).length;
   dag.nodes.push({
     id,
     type: preset.type,
     op: preset.op,
     label: preset.label,
-    x: 300 + order * 40,
-    y: 200 + order * 20,
+    x: 170 + dag.nodes.length * 34,
+    y: 150 + dag.nodes.length * 22,
     params: clone(preset.params)
   });
   state.selectedNode = id;
-  render();
-}
-
-function moveDagNode(layerId, nodeId, delta) {
-  const blocks = orderedDagBlocks(layerId);
-  const index = blocks.findIndex((node) => node.id === nodeId);
-  const target = index + delta;
-  if (index < 0 || target < 0 || target >= blocks.length) return;
-  const current = blocks[index];
-  const other = blocks[target];
-  [current.x, other.x] = [other.x, current.x];
-  [current.y, other.y] = [other.y, current.y];
-  render();
-}
-
-function removeDagNode(layerId, nodeId) {
-  const dag = state.dags[layerId];
-  const node = dag.nodes.find((item) => item.id === nodeId);
-  if (!node || ["source", "sink"].includes(node.type)) return;
-  dag.nodes = dag.nodes.filter((item) => item.id !== nodeId);
-  dag.edges = dag.edges.filter((edge) => edge.from !== nodeId && edge.to !== nodeId);
-  if (state.selectedNode === nodeId) state.selectedNode = null;
   render();
 }
 
@@ -1652,7 +1509,7 @@ function renderInspector() {
     return;
   }
 
-  if (state.dags[layer.id] && layer.mode.includes("dag") && state.selectedNode) {
+  if (state.dags[layer.id] && state.selectedNode) {
     const dag = state.dags[layer.id];
     const node = dag.nodes.find((item) => item.id === state.selectedNode);
     if (node) {
@@ -1661,7 +1518,7 @@ function renderInspector() {
     }
   }
 
-  if (state.dags[layer.id] && layer.mode.includes("dag")) {
+  if (state.dags[layer.id]) {
     body.appendChild(layerDagInspector(layer));
     return;
   }
@@ -1671,23 +1528,7 @@ function renderInspector() {
     return;
   }
 
-  body.appendChild(formLayerInspector(layer));
-}
-
-function formLayerInspector(layer) {
-  const fields = [
-    readonlyField("mode", displayMode(layer)),
-    readonlyField("status", layerStatus(layer.id)),
-    readonlyField("role", layer.role)
-  ];
-  if (layer.id === "l3") {
-    const fixed = state.layers.l3.fixed_axes;
-    fields.unshift(readonlyField("feature recipe", fixed.feature_builder));
-    fields.unshift(readonlyField("operation order", fixed.feature_operation_order));
-    fields.push(readonlyField("lag block", fixed.x_lag_feature_block));
-    fields.push(readonlyField("factor block", fixed.factor_feature_block));
-  }
-  return sectionFromFields(`${layer.id.toUpperCase()} ${layer.name}`, fields);
+  body.appendChild(contractCard(`${layer.id.toUpperCase()} ${layer.name}`, layer.role));
 }
 
 function nodeInspector(layerId, node) {
@@ -1728,7 +1569,7 @@ function layerDagInspector(layer) {
   fields.push(readonlyField("edges", String(dag.edges.length)));
   fields.push(readonlyField("how to connect", "Start link on source node, then Link here on target node."));
   fields.push(edgeListField(layer.id));
-  return sectionFromFields(`${layer.id.toUpperCase()} Builder`, fields);
+  return sectionFromFields(`${layer.id.toUpperCase()} DAG`, fields);
 }
 
 function edgeListField(layerId) {
@@ -1787,21 +1628,16 @@ function mapFocusInspector() {
   const layer = layerById(state.mapFocusLayer) || layerById("l1");
   const fields = [
     readonlyField("layer", `${layer.id.toUpperCase()} ${layer.name}`),
-    readonlyField("mode", displayMode(layer)),
+    readonlyField("mode", layer.mode),
     readonlyField("status", layerStatus(layer.id)),
     readonlyField("role", layer.role),
     buttonField(`Edit ${layer.id.toUpperCase()}`, () => selectLayer(layer.id))
   ];
-  if (state.dags[layer.id] && layer.mode.includes("dag")) {
+  if (state.dags[layer.id]) {
     const dag = state.dags[layer.id];
     fields.splice(3, 0, readonlyField("nodes", String(dag.nodes.length)));
     fields.splice(4, 0, readonlyField("edges", String(dag.edges.length)));
     fields.splice(5, 0, readonlyField("required sinks", requiredSinks(layer.id).join(", ")));
-  }
-  if (layer.id === "l3") {
-    const fixed = state.layers.l3.fixed_axes;
-    fields.splice(3, 0, readonlyField("feature recipe", fixed.feature_builder));
-    fields.splice(4, 0, readonlyField("operation order", fixed.feature_operation_order));
   }
   if (layer.id === "l1") {
     const fixed = state.layers.l1.fixed_axes;
@@ -1852,7 +1688,7 @@ function validateState() {
   if (state.layers.l1.fixed_axes.sd_variable_selection === "selected_sd_variables" && !state.layers.l1.leaf_config.sd_variables.length) {
     issues.push({ level: "error", where: "L1", message: "sd_variables is required when sd_variable_selection=selected_sd_variables." });
   }
-  for (const layerId of ["l4"]) {
+  for (const layerId of ["l3", "l4"]) {
     const dag = state.dags[layerId];
     const sinks = requiredSinks(layerId);
     for (const sink of sinks) {
@@ -1861,13 +1697,8 @@ function validateState() {
       }
     }
   }
-  const l3 = state.layers.l3.fixed_axes;
-  if (l3.feature_operation_order === "pca_then_factor_lag" && l3.factor_feature_block === "none") {
-    issues.push({ level: "warning", where: "L3", message: "PCA then factor lag order is selected, but factor_feature_block is none." });
-  }
-  if (l3.feature_operation_order === "lag_then_pca" && l3.x_lag_feature_block === "none") {
-    issues.push({ level: "warning", where: "L3", message: "Lag then PCA order is selected, but x_lag_feature_block is none." });
-  }
+  const l3Bad = state.dags.l3.nodes.find((node) => /forecast/i.test(node.op) && node.type === "combine");
+  if (l3Bad) issues.push({ level: "error", where: "L3", message: "Forecast combination belongs in L4, not L3." });
   for (const [id, diagnostic] of Object.entries(state.diagnostics)) {
     if (!diagnostic.enabled) issues.push({ level: "info", where: id.toUpperCase(), message: "Diagnostic off: no nodes, no sink." });
   }
@@ -1883,7 +1714,7 @@ function validationHtml() {
 function contractHtml() {
   return `
     <div class="form-grid">
-      ${layerDefs.map((layer) => `<div class="contract-card form-section"><h2>${layer.id.toUpperCase()} ${layer.name}</h2><p>${layer.role}</p><p class="field-hint">Mode: ${displayMode(layer)} · YAML: ${layer.key}</p></div>`).join("")}
+      ${layerDefs.map((layer) => `<div class="contract-card form-section"><h2>${layer.id.toUpperCase()} ${layer.name}</h2><p>${layer.role}</p><p class="field-hint">Mode: ${layer.mode} · YAML: ${layer.key}</p></div>`).join("")}
     </div>
   `;
 }
@@ -1894,7 +1725,7 @@ function generateYaml() {
   out[state.layers ? "0_meta" : "0_meta"] = state.layers.l0;
   out["1_data"] = l1Yaml();
   out["2_preprocessing"] = state.layers.l2;
-  out["3_feature_engineering"] = state.layers.l3;
+  out["3_feature_engineering"] = dagYaml("l3");
   out["4_forecasting_model"] = dagYaml("l4");
   out["5_evaluation"] = state.layers.l5;
   if (state.layers.l6.enabled) out["6_statistical_tests"] = state.layers.l6;
@@ -1948,33 +1779,11 @@ function l1Yaml() {
 
 function dagYaml(layerId) {
   const dag = state.dags[layerId];
-  const nodesById = Object.fromEntries(dag.nodes.map((node) => [node.id, {
-    enabled: true,
-    name: node.label,
-    type: node.type,
-    operation: node.op,
-    config: node.params,
-    inputs: dag.edges.filter((edge) => edge.to === node.id).map((edge) => edge.from),
-    outputs: dag.edges.filter((edge) => edge.from === node.id).map((edge) => edge.to)
-  }]));
-  const blocks = orderedDagBlocks(layerId).map((node) => ({
-    id: node.id,
-    block: node.op,
-    enabled: true,
-    config: node.params
-  }));
-  const contract = {
-    builder_view: layerId === "l3" ? "ordered_feature_blocks" : "selected_components",
-    nodes: nodesById,
+  return {
+    nodes: dag.nodes.map((node) => ({ id: node.id, type: node.type, op: node.op, params: node.params })),
     edges: dag.edges,
     sinks: Object.fromEntries(dag.nodes.filter((node) => node.type === "sink").map((node) => [node.label, node.id]))
   };
-  if (layerId === "l3") {
-    contract.sequence = blocks;
-  } else {
-    contract.selected = blocks;
-  }
-  return contract;
 }
 
 function toYaml(value, indent = 0) {
