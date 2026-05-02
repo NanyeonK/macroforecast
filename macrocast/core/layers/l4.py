@@ -393,3 +393,39 @@ def _issue(location: str, message: str) -> Issue:
     from ..validator import Issue, Severity
 
     return Issue("l4_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+# L4 runs in graph (DAG) mode: axes live on individual op nodes inside the DAG,
+# not on the sub-layer envelope. Sub-layers below are DAG-section labels per
+# design (Part 2). LAYER_SPEC declares structure only.
+_L4_SUBLAYERS = (
+    _CanonicalSubLayerSpec(id="L4_A_model_selection", name="Model selection", axes=()),
+    _CanonicalSubLayerSpec(id="L4_B_forecast_strategy", name="Forecast strategy", axes=()),
+    _CanonicalSubLayerSpec(id="L4_C_training_window", name="Training window", axes=()),
+    _CanonicalSubLayerSpec(id="L4_D_tuning", name="Tuning", axes=()),
+)
+
+
+L4_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l4",
+    name="Forecasting model",
+    category="construction",
+    expected_inputs=("l3_features_v1", "l3_metadata_v1", "l1_data_definition_v1"),
+    produces=("l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1"),
+    ui_mode="graph",
+    layer_globals=(),
+    sub_layers=_L4_SUBLAYERS,
+    axes={sl.id: {} for sl in _L4_SUBLAYERS},
+)

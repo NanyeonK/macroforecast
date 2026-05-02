@@ -479,3 +479,39 @@ def _issue(location: str, message: str) -> Issue:
     from ..validator import Issue, Severity
 
     return Issue("l3_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+# L3 runs in graph (DAG) mode: axes live on individual op nodes inside the DAG,
+# not on the sub-layer envelope. Sub-layers below are DAG-section labels per
+# design (Part 2). LAYER_SPEC declares structure only.
+_L3_SUBLAYERS = (
+    _CanonicalSubLayerSpec(id="L3_A_target_construction", name="Target construction", axes=()),
+    _CanonicalSubLayerSpec(id="L3_B_feature_pipelines", name="Feature pipelines", axes=()),
+    _CanonicalSubLayerSpec(id="L3_C_pipeline_combine", name="Pipeline combine", axes=()),
+    _CanonicalSubLayerSpec(id="L3_D_feature_selection", name="Feature selection", axes=()),
+)
+
+
+L3_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l3",
+    name="Feature engineering",
+    category="construction",
+    expected_inputs=("l2_clean_panel_v1", "l1_data_definition_v1"),
+    produces=("l3_features_v1", "l3_metadata_v1"),
+    ui_mode="graph",
+    layer_globals=(),
+    sub_layers=_L3_SUBLAYERS,
+    axes={sl.id: {} for sl in _L3_SUBLAYERS},
+)

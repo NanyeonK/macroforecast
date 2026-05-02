@@ -348,3 +348,82 @@ def _issue(location: str, message: str):
     from ..validator import Issue, Severity
 
     return Issue("l8_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+_AXIS_OPTION_SETS = {
+    "export_format": EXPORT_FORMATS,
+    "compression": COMPRESSION,
+    "model_artifacts_format": MODEL_ARTIFACTS_FORMATS,
+    "manifest_format": MANIFEST_FORMATS,
+    "artifact_granularity": GRANULARITY,
+    "naming_convention": NAMING,
+    "saved_objects": SAVED_OBJECTS,
+    "provenance_fields": set(PROVENANCE_FIELDS),
+}
+
+
+def _build_axis(name: str) -> _AxisSpec:
+    opts = tuple(_opt(v) for v in sorted(_AXIS_OPTION_SETS.get(name, ())))
+    return _AxisSpec(
+        name=name,
+        options=opts,
+        default=DEFAULT_AXES.get(name),
+        sweepable=False,
+    )
+
+
+_SUBLAYER_NAMES = {
+    "L8_A_export_format": "Export format",
+    "L8_B_saved_objects": "Saved objects",
+    "L8_C_provenance": "Provenance",
+    "L8_D_artifact_granularity": "Artifact granularity",
+}
+
+
+L8_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l8",
+    name="Output / provenance",
+    category="consumption",
+    expected_inputs=(
+        "l0_meta_v1",
+        "l1_data_definition_v1",
+        "l2_clean_panel_v1",
+        "l3_features_v1",
+        "l3_metadata_v1",
+        "l4_forecasts_v1",
+        "l4_model_artifacts_v1",
+        "l4_training_metadata_v1",
+        "l5_evaluation_v1",
+        "l6_tests_v1",
+        "l7_importance_v1",
+        "l7_transformation_attribution_v1",
+    ),
+    produces=("l8_artifacts_v1",),
+    ui_mode="list",
+    layer_globals=(),
+    sub_layers=tuple(
+        _CanonicalSubLayerSpec(id=sl_id, name=_SUBLAYER_NAMES[sl_id], axes=spec.axes)
+        for sl_id, spec in L8Output.sub_layers.items()
+    ),
+    axes={
+        sl_id: {axis: _build_axis(axis) for axis in spec.axes}
+        for sl_id, spec in L8Output.sub_layers.items()
+    },
+)

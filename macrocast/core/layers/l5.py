@@ -322,3 +322,74 @@ def _issue(location: str, message: str):
     from ..validator import Issue, Severity
 
     return Issue("l5_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+_AXIS_OPTION_SETS = {
+    "primary_metric": POINT_METRICS | RELATIVE_METRICS | {"log_score", "crps"},
+    "point_metrics": POINT_METRICS,
+    "density_metrics": DENSITY_METRICS,
+    "direction_metrics": DIRECTION_METRICS,
+    "relative_metrics": RELATIVE_METRICS,
+}
+
+
+def _build_axis(name: str) -> _AxisSpec:
+    opts = tuple(_opt(v) for v in sorted(_AXIS_OPTION_SETS.get(name, ())))
+    return _AxisSpec(
+        name=name,
+        options=opts,
+        default=DEFAULT_AXES.get(name),
+        sweepable=False,
+    )
+
+
+# L5 sub-layers map to the 5 pipeline steps in _step_axes()
+_L5_SUBLAYERS = (
+    ("L5_A_metric_specification", "Metric specification", "metric_compute"),
+    ("L5_B_benchmark_comparison", "Benchmark comparison", "benchmark_relative"),
+    ("L5_C_aggregation", "Aggregation", "aggregate"),
+    ("L5_D_sample_slicing_decomposition", "Sample slicing & decomposition", "slice_and_decompose"),
+    ("L5_E_ranking_reporting", "Ranking & reporting", "rank_and_report"),
+)
+
+
+L5_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l5",
+    name="Evaluation",
+    category="consumption",
+    expected_inputs=(
+        "l4_forecasts_v1",
+        "l4_model_artifacts_v1",
+        "l1_data_definition_v1",
+        "l1_regime_metadata_v1",
+        "l3_metadata_v1",
+    ),
+    produces=("l5_evaluation_v1",),
+    ui_mode="list",
+    layer_globals=(),
+    sub_layers=tuple(
+        _CanonicalSubLayerSpec(id=sl_id, name=name, axes=_step_axes(step))
+        for sl_id, name, step in _L5_SUBLAYERS
+    ),
+    axes={
+        sl_id: {axis: _build_axis(axis) for axis in _step_axes(step)}
+        for sl_id, _name, step in _L5_SUBLAYERS
+    },
+)

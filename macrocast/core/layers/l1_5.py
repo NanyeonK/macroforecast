@@ -234,3 +234,71 @@ def _issue(path: str, message: str) -> Any:
     from ..validator import Issue, Severity
 
     return Issue("l1_5_contract", Severity.HARD, "layer", path, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    """Lightweight Option factory: label = value (titlecased), description blank."""
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+def _build_axis(name: str) -> _AxisSpec:
+    """Build canonical AxisSpec from DEFAULT_AXES + OPTIONS (and SUMMARY_METRICS for list axis)."""
+    if name == "summary_metrics":
+        # multi-select list axis
+        opts = tuple(_opt(v) for v in sorted(SUMMARY_METRICS))
+    elif name == "attach_to_manifest":
+        opts = (_Option("true", "True", ""), _Option("false", "False", ""))
+    elif name in ("figure_dpi",):
+        opts = ()  # numeric, no enum
+    elif name == "latex_export":
+        opts = (_Option("true", "True", ""), _Option("false", "False", ""))
+    else:
+        opts = tuple(_opt(v) for v in sorted(OPTIONS.get(name, ()))) if name in OPTIONS else ()
+    return _AxisSpec(
+        name=name,
+        options=opts,
+        default=DEFAULT_AXES.get(name),
+        sweepable=False,  # all diagnostic axes are non-sweepable (design Part 4)
+    )
+
+
+_SUBLAYER_NAMES = {
+    "L1_5_A_sample_coverage": "Sample coverage",
+    "L1_5_B_univariate_summary": "Univariate summary",
+    "L1_5_C_stationarity_tests": "Stationarity tests",
+    "L1_5_D_missing_outlier_audit": "Missing & outlier audit",
+    "L1_5_E_correlation_pre_cleaning": "Correlation pre-cleaning",
+    "L1_5_Z_export": "Diagnostic export",
+}
+
+
+L1_5_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l1_5",
+    name="Data summary",
+    category="diagnostic",
+    expected_inputs=("l1_data_definition_v1",),
+    produces=("l1_5_diagnostic_v1",),
+    ui_mode="list",
+    layer_globals=("enabled",),
+    sub_layers=tuple(
+        _CanonicalSubLayerSpec(id=sl_id, name=_SUBLAYER_NAMES[sl_id], axes=spec.axes)
+        for sl_id, spec in L1_5DataSummary.sub_layers.items()
+    ),
+    axes={
+        sl_id: {axis: _build_axis(axis) for axis in spec.axes}
+        for sl_id, spec in L1_5DataSummary.sub_layers.items()
+    },
+)

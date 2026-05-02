@@ -322,3 +322,71 @@ def _issue(location: str, message: str):
     from ..validator import Issue, Severity
 
     return Issue("l7_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+_AXIS_OPTION_SETS = {
+    "output_table_format": {"long", "wide"},
+    "figure_type": {"auto", "bar", "boxplot", "heatmap", "scatter", "lineplot"},
+    "figure_format": {"png", "pdf", "svg"},
+}
+
+
+def _build_axis(name: str) -> _AxisSpec:
+    if name in ("latex_table_export", "markdown_table_export"):
+        opts = (_Option("true", "True", ""), _Option("false", "False", ""))
+    elif name in ("top_k_features_to_show", "precision_digits", "figure_dpi"):
+        opts = ()
+    else:
+        opts = tuple(_opt(v) for v in sorted(_AXIS_OPTION_SETS.get(name, ())))
+    return _AxisSpec(
+        name=name,
+        options=opts,
+        default=DEFAULT_AXES.get(name),
+        sweepable=False,
+    )
+
+
+# L7.A is the importance/attribution DAG body (axes belong to per-op node configs);
+# L7.B carries the 8 output/export axes.
+_L7_SUBLAYERS = (
+    _CanonicalSubLayerSpec(id="L7_A_importance_dag_body", name="Importance DAG body", axes=()),
+    _CanonicalSubLayerSpec(id="L7_B_output_shape_export", name="Output shape & export", axes=L7_OUTPUT_AXES),
+)
+
+
+L7_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l7",
+    name="Interpretation / importance",
+    category="consumption",
+    expected_inputs=(
+        "l3_features_v1",
+        "l3_metadata_v1",
+        "l4_forecasts_v1",
+        "l4_model_artifacts_v1",
+    ),
+    produces=("l7_importance_v1", "l7_transformation_attribution_v1"),
+    ui_mode="list",
+    layer_globals=("enabled",),
+    sub_layers=_L7_SUBLAYERS,
+    axes={
+        "L7_A_importance_dag_body": {},
+        "L7_B_output_shape_export": {axis: _build_axis(axis) for axis in L7_OUTPUT_AXES},
+    },
+)

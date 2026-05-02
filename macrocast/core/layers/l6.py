@@ -433,3 +433,61 @@ def _issue(location: str, message: str):
     from ..validator import Issue, Severity
 
     return Issue("l6_contract", Severity.HARD, "layer", location, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+def _build_sub_axis(sub_name: str, axis: str) -> _AxisSpec:
+    """Build AxisSpec for an L6 sub-layer axis from SUB_LAYER_DEFAULTS."""
+    default = SUB_LAYER_DEFAULTS.get(sub_name, {}).get(axis)
+    return _AxisSpec(
+        name=axis,
+        options=(),
+        default=default,
+        sweepable=False,
+    )
+
+
+_SUBLAYER_NAMES = {
+    "L6_A_equal_predictive": "Equal predictive",
+    "L6_B_nested": "Nested",
+    "L6_C_cpa": "CPA",
+    "L6_D_multiple_model": "Multiple model",
+    "L6_E_density_interval": "Density / interval",
+    "L6_F_direction": "Direction",
+    "L6_G_residual": "Residual",
+}
+
+
+L6_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l6",
+    name="Statistical tests",
+    category="consumption",
+    expected_inputs=("l4_forecasts_v1", "l4_model_artifacts_v1", "l5_evaluation_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
+    produces=("l6_tests_v1",),
+    ui_mode="list",
+    layer_globals=("enabled", "test_scope", "dependence_correction", "overlap_handling"),
+    sub_layers=tuple(
+        _CanonicalSubLayerSpec(id=sl_id, name=_SUBLAYER_NAMES[sl_id], axes=spec.axes)
+        for sl_id, spec in L6StatisticalTests.sub_layers.items()
+    ),
+    axes={
+        sl_id: {axis: _build_sub_axis(sl_id, axis) for axis in spec.axes}
+        for sl_id, spec in L6StatisticalTests.sub_layers.items()
+    },
+)

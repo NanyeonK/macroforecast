@@ -282,3 +282,66 @@ def _issue(path: str, message: str) -> Any:
     from ..validator import Issue, Severity
 
     return Issue("l3_5_contract", Severity.HARD, "layer", path, message)
+
+
+# ---------------------------------------------------------------------------
+# Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
+# ---------------------------------------------------------------------------
+
+from ..layer_specs import (  # noqa: E402
+    AxisSpec as _AxisSpec,
+    LayerImplementationSpec as _LayerImplSpec,
+    Option as _Option,
+    SubLayerSpec as _CanonicalSubLayerSpec,
+)
+
+
+def _opt(value: str) -> _Option:
+    label = value.replace("_", " ").title()
+    return _Option(value=value, label=label, description="")
+
+
+def _build_axis(name: str) -> _AxisSpec:
+    if name == "attach_to_manifest":
+        opts = (_Option("true", "True", ""), _Option("false", "False", ""))
+    elif name in ("figure_dpi",):
+        opts = ()
+    elif name == "latex_export":
+        opts = (_Option("true", "True", ""), _Option("false", "False", ""))
+    else:
+        opts = tuple(_opt(v) for v in sorted(OPTIONS.get(name, ()))) if name in OPTIONS else ()
+    return _AxisSpec(
+        name=name,
+        options=opts,
+        default=DEFAULT_AXES.get(name),
+        sweepable=False,  # all diagnostic axes are non-sweepable (design Part 4)
+    )
+
+
+_SUBLAYER_NAMES = {
+    "L3_5_A_comparison_axis": "Comparison axis",
+    "L3_5_B_factor_block_inspection": "Factor block inspection",
+    "L3_5_C_feature_correlation": "Feature correlation",
+    "L3_5_D_lag_block_inspection": "Lag block inspection",
+    "L3_5_E_selected_features_post_selection": "Selected features post-selection",
+    "L3_5_Z_export": "Diagnostic export",
+}
+
+
+L3_5_LAYER_SPEC = _LayerImplSpec(
+    layer_id="l3_5",
+    name="Feature diagnostics",
+    category="diagnostic",
+    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1"),
+    produces=("l3_5_diagnostic_v1",),
+    ui_mode="list",
+    layer_globals=("enabled",),
+    sub_layers=tuple(
+        _CanonicalSubLayerSpec(id=sl_id, name=_SUBLAYER_NAMES[sl_id], axes=spec.axes)
+        for sl_id, spec in L3_5FeatureDiagnostics.sub_layers.items()
+    ),
+    axes={
+        sl_id: {axis: _build_axis(axis) for axis in spec.axes}
+        for sl_id, spec in L3_5FeatureDiagnostics.sub_layers.items()
+    },
+)
