@@ -164,11 +164,12 @@ def test_l7_boruta_selection_rejected_as_future():
     assert validate_layer(parse_layer_yaml(make_l7_yaml(op="boruta_selection"), "l7")).has_hard_errors
 
 
-def test_l7_mrf_gtvp_schema_valid_runtime_stub():
+def test_l7_mrf_gtvp_schema_validates():
+    # v0.1: mrf_gtvp delegates to RandomForestRegressor feature_importances_
+    # via _MRFWrapper. End-to-end execution is exercised in v01_dimensions
+    # tests; here we only assert the schema validates.
     layer = parse_layer_yaml(make_l7_yaml(op="mrf_gtvp", model_family="macroeconomic_random_forest"), "l7")
     assert validate_layer(layer).has_hard_errors is False
-    with pytest.raises(NotImplementedError):
-        execute_layer(layer)
 
 
 def test_l7_default_figure_mapping_for_shap_tree():

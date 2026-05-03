@@ -262,7 +262,10 @@ def test_execute_l1_l2_materializes_disabled_diagnostic_artifact():
     assert diagnostic.metadata["runtime"] == "core_diagnostic_disabled"
 
 
-def test_materialize_l1_rejects_unsupported_official_core_dataset(tmp_path):
+def test_materialize_l1_loads_fred_sd_from_local_fixture(tmp_path):
+    from pathlib import Path
+
+    fixtures = Path(__file__).resolve().parent.parent / "fixtures"
     root = parse_recipe_yaml(
         f"""
         1_data:
@@ -271,10 +274,13 @@ def test_materialize_l1_rejects_unsupported_official_core_dataset(tmp_path):
             dataset: fred_sd
             frequency: monthly
           leaf_config:
-            target: CPIAUCSL
+            target: UR_CA
             cache_root: {tmp_path}
+            local_raw_source: {fixtures / 'fred_sd_sample.csv'}
         """
     )
 
-    with pytest.raises(NotImplementedError, match="not supported by core L1 runtime yet"):
-        materialize_l1(root)
+    artifact, regime, resolved = materialize_l1(root)
+    assert artifact.dataset == "fred_sd"
+    assert "UR_CA" in artifact.raw_panel.column_names
+    assert artifact.raw_panel.shape[0] > 0

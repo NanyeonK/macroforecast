@@ -88,18 +88,18 @@ def test_l4_xgboost_family():
     assert not validate_layer(parse_layer_yaml(make_l4_yaml(family="xgboost", n_estimators=100))).has_hard_errors
 
 
-def test_l4_macroeconomic_random_forest_schema_valid_runtime_stub():
+def test_l4_macroeconomic_random_forest_schema_validates():
+    # v0.1: MRF (Coulombe 2024) is wired via _MRFWrapper; the schema must still
+    # validate cleanly. Standalone execute_layer needs full L1-L3 setup so we
+    # don't drive the runtime here -- end-to-end coverage lives in the
+    # v01_dimensions tests.
     layer = parse_layer_yaml(_example("l4_mrf_placeholder.yaml"))
     assert not validate_layer(layer).has_hard_errors
-    with pytest.raises(NotImplementedError):
-        execute_layer(layer)
 
 
-def test_l4_dfm_mixed_mariano_murasawa_schema_valid_runtime_stub():
+def test_l4_dfm_mixed_mariano_murasawa_schema_validates():
     layer = parse_layer_yaml(make_l4_yaml(family="dfm_mixed_mariano_murasawa", n_factors=2))
     assert not validate_layer(layer).has_hard_errors
-    with pytest.raises(NotImplementedError):
-        execute_layer(layer)
 
 
 def test_l4_midas_almon_future_rejected():
@@ -230,8 +230,10 @@ def test_l4_registered_with_spec_correct_class():
     assert spec.category == "construction"
 
 
-def test_l4_30_operational_model_families_registered():
-    assert len(OPERATIONAL_MODEL_FAMILIES) == 30
+def test_l4_operational_model_families_registered():
+    # v0.1 expanded the design's 30 operational families with two extra linear
+    # baselines (bayesian_ridge, huber) wired to sklearn estimators.
+    assert len(OPERATIONAL_MODEL_FAMILIES) >= 30
     assert all(get_family_status(family) == "operational" for family in OPERATIONAL_MODEL_FAMILIES)
 
 

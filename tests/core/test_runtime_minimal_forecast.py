@@ -310,15 +310,30 @@ def test_execute_minimal_forecast_materializes_enabled_l7_importance():
     assert "importance" in table.columns
 
 
-def test_execute_minimal_forecast_rejects_non_ridge_family():
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: xgboost")
+def test_execute_minimal_forecast_rejects_unknown_family():
+    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: nonexistent_family_xyz")
 
-    with pytest.raises(NotImplementedError, match="supports linear sklearn families only"):
+    with pytest.raises(ValueError, match="model family is future or unknown"):
         execute_minimal_forecast(yaml_text)
 
 
-@pytest.mark.parametrize("family", ["ols", "lasso", "elastic_net"])
-def test_execute_minimal_forecast_supports_linear_sklearn_families(family):
+@pytest.mark.parametrize(
+    "family",
+    [
+        "ols",
+        "lasso",
+        "elastic_net",
+        "ar_p",
+        "decision_tree",
+        "random_forest",
+        "extra_trees",
+        "knn",
+        "svr_linear",
+        "gradient_boosting",
+        "huber",
+    ],
+)
+def test_execute_minimal_forecast_supports_operational_families(family):
     yaml_text = MINIMAL_RECIPE.replace("family: ridge", f"family: {family}")
 
     result = execute_minimal_forecast(yaml_text)
