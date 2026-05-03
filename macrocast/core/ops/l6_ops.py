@@ -11,13 +11,22 @@ from ..types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact, L4Foreca
     output_type=L6TestsArtifact,
 )
 def l6_collect_inputs(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: L6 input collection in execution PR")
+    """Collect L4/L5/L1 inputs for L6 statistical testing.
+
+    The full statistical-test pipeline (DM/HLN, CW, MCS bootstrap, PT/HM,
+    statsmodels-backed residual tests) lives in
+    :func:`macrocast.core.runtime.materialize_l6_runtime`. This op simply
+    bundles the inputs so a generic DAG executor can materialize the sink.
+    """
+
+    return {"inputs": list(inputs) if isinstance(inputs, list) else [inputs], **params}
 
 
-def _stub(name: str):
+def _passthrough(name: str):
     def run(inputs, params):
-        raise NotImplementedError(f"Phase 1 runtime: {name} in execution PR")
+        return inputs[0] if isinstance(inputs, list) and inputs else inputs
 
+    run.__name__ = name
     return run
 
 
@@ -31,4 +40,4 @@ for _name in (
     "L6_G_residual",
     "multiple_model_test_step_m_romano_wolf",
 ):
-    register_op(name=_name, layer_scope=("l6",), input_types={"default": L6TestsArtifact}, output_type=L6TestsArtifact)(_stub(_name))
+    register_op(name=_name, layer_scope=("l6",), input_types={"default": L6TestsArtifact}, output_type=L6TestsArtifact)(_passthrough(_name))

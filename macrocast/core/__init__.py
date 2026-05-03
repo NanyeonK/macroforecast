@@ -29,6 +29,13 @@ from .manifest import (
     replicate,
 )
 from .recipe import Recipe
+from .execution import (
+    CellExecutionResult,
+    ManifestExecutionResult,
+    ReplicationResult as RecipeReplicationResult,
+    execute_recipe,
+    replicate_recipe,
+)
 from .runtime import (
     RuntimeResult,
     execute_l1_l2,
@@ -98,6 +105,7 @@ __all__ = [
     "DiagnosticArtifact",
     "Edge",
     "AxisSpec",
+    "CellExecutionResult",
     "CellSummary",
     "CpuInfo",
     "CustomPackage",
@@ -123,6 +131,7 @@ __all__ = [
     "LayerId",
     "MANIFEST_SCHEMA_VERSION",
     "Manifest",
+    "ManifestExecutionResult",
     "MaskedPanel",
     "MappingArtifact",
     "MetricTable",
@@ -138,6 +147,7 @@ __all__ = [
     "Panel",
     "Recipe",
     "RecipeMetadata",
+    "RecipeReplicationResult",
     "ReplicationResult",
     "ResolvedAxis",
     "Rule",
@@ -168,6 +178,7 @@ __all__ = [
     "execute_l1_l2",
     "execute_minimal_forecast",
     "execute_node",
+    "execute_recipe",
     "expand_sweeps",
     "generate_cell_id",
     "get_layer",
@@ -190,6 +201,7 @@ __all__ = [
     "register_layer",
     "register_op",
     "replicate",
+    "replicate_recipe",
     "resolve_source_selector",
     "validate_dag",
     "validate_recipe",

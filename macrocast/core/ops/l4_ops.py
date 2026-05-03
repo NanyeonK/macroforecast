@@ -11,7 +11,9 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "lasso",
     "elastic_net",
     "lasso_path",
+    "bayesian_ridge",
     "glmboost",
+    "huber",
     "var",
     "factor_augmented_ar",
     "factor_augmented_var",
@@ -89,7 +91,19 @@ def _valid_strategy(dag, nref) -> bool:
     ),
 )
 def fit_model(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: fit_model implementation in execution PR")
+    """Estimator-builder used by the cache-driven DAG executor.
+
+    Returns the fitted estimator instance directly. The full forecast loop
+    (origins, refit policy, training-window slicing) is handled by
+    :func:`macrocast.core.runtime.materialize_l4_minimal` which calls
+    :func:`macrocast.core.runtime._build_l4_model` per origin. This op
+    therefore returns a freshly built estimator so that
+    :func:`predict` can fit-then-predict in a single DAG pass.
+    """
+
+    from ..runtime import _build_l4_model
+
+    return _build_l4_model(params.get("family", "ridge"), dict(params))
 
 
 @register_op(
@@ -99,7 +113,14 @@ def fit_model(inputs, params):
     output_type=L4ForecastsArtifact,
 )
 def predict(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: predict implementation in execution PR")
+    """Pass-through used by cache-driven DAG executors.
+
+    The minimal-runtime forecast tensor materialization happens in
+    :func:`macrocast.core.runtime.materialize_l4_minimal`. This op simply
+    returns its first input so that explicit DAG edges remain valid.
+    """
+
+    return inputs[0] if isinstance(inputs, list) and inputs else inputs
 
 
 @register_op(
@@ -109,7 +130,20 @@ def predict(inputs, params):
     output_type=L4ModelArtifactsArtifact,
 )
 def l4_model_artifacts_collect(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: model artifact collection in execution PR")
+    """Aggregate one or more :class:`L4ModelArtifactsArtifact` payloads."""
+
+    if not inputs:
+        return None
+    if len(inputs) == 1:
+        return inputs[0]
+    artifacts = {}
+    bench = {}
+    for item in inputs:
+        if hasattr(item, "artifacts"):
+            artifacts.update(item.artifacts)
+        if hasattr(item, "is_benchmark"):
+            bench.update(item.is_benchmark)
+    return L4ModelArtifactsArtifact(artifacts=artifacts, is_benchmark=bench)
 
 
 @register_op(
@@ -119,4 +153,6 @@ def l4_model_artifacts_collect(inputs, params):
     output_type=L4TrainingMetadataArtifact,
 )
 def l4_training_metadata_build(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: training metadata build in execution PR")
+    """Return the first incoming training-metadata artifact (no-op aggregator)."""
+
+    return inputs[0] if isinstance(inputs, list) and inputs else inputs

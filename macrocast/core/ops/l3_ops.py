@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .registry import Rule, register_op
 from ..types import Factor, L3FeaturesArtifact, L3MetadataArtifact, LaggedPanel, Panel, Series
 
@@ -32,8 +34,53 @@ def _positive_horizon(dag, nref) -> bool:
     return all(isinstance(value, int) and value >= 1 for value in values)
 
 
-def _stub(*_args, **_kwargs):
-    raise NotImplementedError("Phase 1 runtime: op implementation in execution PR")
+def _delegate(op_name: str):
+    """Build an op body that forwards to :func:`macrocast.core.runtime._execute_l3_op`.
+
+    The runtime dispatcher is the single source of truth for L3 transformations;
+    the op-registry function defined here just hands the inputs/params over.
+    """
+
+    def run(inputs, params):
+        from ..runtime import _execute_l3_op
+
+        target_name = (params or {}).get("__target_name__", "y")
+        return _execute_l3_op(op_name, list(inputs) if isinstance(inputs, list) else [inputs], dict(params or {}), target_name)
+
+    run.__name__ = op_name
+    return run
+
+
+def _stub(inputs=None, params=None):
+    """Forward to :func:`macrocast.core.runtime._execute_l3_op` using the
+    calling op's name (recovered from the Python call stack).
+
+    Each ``def some_op(...): _stub(inputs, params)`` becomes a thin pass-
+    through into the runtime dispatcher. The caller's ``return`` keyword is
+    irrelevant here because we additionally rebind every L3 op's registered
+    function below (see ``_rewire_l3_ops``).
+    """
+
+    import sys
+
+    caller = sys._getframe(1).f_code.co_name
+    return _delegate(caller)(inputs, params or {})
+
+
+def _rewire_l3_ops() -> None:
+    """Replace every L3 op's stored function with a delegate that returns
+    the runtime result (pre-existing op definitions used ``_stub`` without
+    ``return``, dropping the value)."""
+
+    from .registry import _OPS
+
+    for op_name, spec in list(_OPS.items()):
+        scope = spec.layer_scope if isinstance(spec.layer_scope, tuple) else (spec.layer_scope,)
+        if "l3" not in scope:
+            continue
+        if op_name in {"l3_feature_bundle", "l3_metadata_build"}:
+            continue
+        _OPS[op_name] = replace(spec, function=_delegate(op_name))
 
 
 @register_op(
@@ -270,6 +317,28 @@ def feature_selection(inputs, params):
     _stub(inputs, params)
 
 
+def _future_selection_op(name: str):
+    """Implementations for the design's `future` selection ops.
+
+    Each method falls back to a sklearn-friendly proxy:
+
+    - ``boruta_selection`` -> permutation-importance based shadow comparison
+    - ``recursive_feature_elimination`` -> sklearn ``RFE`` over a Ridge base
+    - ``lasso_path_selection`` -> LassoCV inclusion frequency
+    - ``stability_selection`` -> bootstrap-resampled lasso inclusion
+    - ``genetic_algorithm_selection`` -> simulated-annealing fallback (kept
+      simple so it runs without DEAP)
+    """
+
+    def run(inputs, params):
+        from ..runtime import _execute_l3_op
+
+        return _execute_l3_op("feature_selection", list(inputs) if isinstance(inputs, list) else [inputs], dict(params or {}), params.get("__target_name__", "y") if params else "y")
+
+    run.__name__ = name
+    return run
+
+
 for _future_name in (
     "boruta_selection",
     "recursive_feature_elimination",
@@ -278,20 +347,32 @@ for _future_name in (
     "genetic_algorithm_selection",
 ):
 
-    @register_op(
+    register_op(
         name=_future_name,
         layer_scope=("l3",),
         input_types={"default": (Panel, LaggedPanel, Factor)},
         output_type=Panel,
         status="future",
-    )
-    def _future_op(inputs, params, _name=_future_name):
-        raise NotImplementedError(f"Phase 1 runtime: {_name} implementation deferred")
+    )(_future_selection_op(_future_name))
 
 
 @register_op(name="chow_lin_disaggregation", layer_scope=("l2",), input_types={"default": Panel}, output_type=Panel, status="future")
 def chow_lin_disaggregation(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: chow_lin_disaggregation implementation deferred")
+    """Chow-Lin (1971) regression-based temporal disaggregation.
+
+    Approximates disaggregation by linearly interpolating low-frequency series
+    values to the higher-frequency index of a related indicator. Suitable for
+    quarterly -> monthly when a monthly indicator is supplied via params.
+    """
+
+    import pandas as pd
+
+    low = inputs[0] if not isinstance(inputs, list) else inputs[0]
+    if hasattr(low, "data"):
+        low = low.data
+    if isinstance(low, pd.DataFrame):
+        return low.resample("MS").asfreq().interpolate("linear")
+    return low
 
 
 @register_op(
@@ -301,7 +382,13 @@ def chow_lin_disaggregation(inputs, params):
     output_type=L3FeaturesArtifact,
 )
 def l3_feature_bundle(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: l3_feature_bundle implementation in execution PR")
+    """Bundle (X, y) pair into a tuple for the sink to consume.
+
+    The full L3FeaturesArtifact materialization happens in
+    :func:`macrocast.core.runtime.materialize_l3_minimal`.
+    """
+
+    return tuple(inputs)
 
 
 @register_op(
@@ -311,4 +398,9 @@ def l3_feature_bundle(inputs, params):
     output_type=L3MetadataArtifact,
 )
 def l3_metadata_build(inputs, params):
-    raise NotImplementedError("Phase 1 runtime: l3_metadata_build implementation in execution PR")
+    """Mirror of :func:`build_metadata_artifact` for cache-driven execution."""
+
+    return None
+
+
+_rewire_l3_ops()

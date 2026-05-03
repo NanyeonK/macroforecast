@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "macrocast"
-version = "0.0.0"
+version = "0.1.0"
 description = "Fair, reproducible macro forecasting benchmarking package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +16,7 @@ dependencies = [
     "statsmodels>=0.14",
     "PyYAML>=6.0",
     "scipy>=1.11",
+    "matplotlib>=3.7",
 ]
 
 [project.optional-dependencies]
@@ -36,9 +37,6 @@ docs = [
 ]
 all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet,deep]"]
 dev = ["pytest>=8.0", "macrocast[all]"]
-
-[project.scripts]
-macrocast-navigate = "macrocast.navigator.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["macrocast*"]

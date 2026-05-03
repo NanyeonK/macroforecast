@@ -2,18 +2,19 @@
 
 Horse race research benchmarking package for macro forecasting.
 
-Public surface: this is version 0.0.0. The user-facing Experiment API
-that previously lived on the legacy stack has been removed. The 12-layer
-core/ implementation (see plans/design/) is the new foundation; a public
-API re-wired on top of it will land in a subsequent commit.
+Public surface (v0.1):
+- ``macrocast.run(recipe)`` -- execute a recipe end-to-end (L1->L8) and
+  return a :class:`ManifestExecutionResult`. Iterates every sweep cell.
+- ``macrocast.replicate(manifest_path)`` -- re-execute a stored manifest
+  and verify per-cell sink hashes match bit-for-bit.
 
-For now, importable surface is limited to:
-- macrocast.custom      - user-defined model / preprocessor / feature registration
-- macrocast.defaults    - default profile dict template
-- macrocast.preprocessing - preprocessing contract helpers
-- macrocast.raw         - FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
-- macrocast.core        - 12-layer DAG runtime (foundation, layers, ops, runtime)
-- macrocast.tuning      - hyperparameter search engines
+Importable submodule surface:
+- ``macrocast.custom``        - user-defined model / preprocessor / feature registration
+- ``macrocast.defaults``      - default profile dict template
+- ``macrocast.preprocessing`` - preprocessing contract helpers
+- ``macrocast.raw``           - FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
+- ``macrocast.core``          - 12-layer DAG runtime (foundation, layers, ops, runtime, execution)
+- ``macrocast.tuning``        - hyperparameter search engines
 """
 
 from __future__ import annotations
@@ -21,9 +22,14 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.0.0+local"
+__version__ = "0.1.0"
 
 _LAZY_EXPORTS = {
+    # public top-level API
+    "run": ".api",
+    "replicate": ".api",
+    "ManifestExecutionResult": ".api",
+    "ReplicationResult": ".api",
     # defaults
     "DEFAULT_PROFILE": ".defaults",
     "DEFAULT_PROFILE_NAME": ".defaults",

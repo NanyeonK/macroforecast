@@ -4,10 +4,24 @@ from .registry import register_op
 from ..types import DiagnosticArtifact
 
 
-def _stub(name: str):
-    def run(inputs, params):
-        raise NotImplementedError(f"Phase 1 runtime: {name} implementation in execution PR")
+def _passthrough(name: str):
+    """Diagnostic ops collect upstream payloads into a DiagnosticArtifact.
 
+    The actual diagnostic computations live in
+    :mod:`macrocast.core.runtime` (e.g. ``materialize_l1_5_diagnostic``); this
+    op is the no-op DAG entry that records inputs + params so the cache can
+    materialize the sink without raising.
+    """
+
+    def run(inputs, params):
+        return DiagnosticArtifact(
+            layer_hooked=name,
+            artifact_type="json",
+            metadata={"inputs": list(inputs) if isinstance(inputs, list) else [inputs], "params": dict(params)},
+            enabled=True,
+        )
+
+    run.__name__ = name
     return run
 
 
@@ -40,4 +54,4 @@ for _name, _scope in (
     ("l4_5_ensemble_diagnostics", ("l4_5",)),
     ("l4_5_diagnostic_export", ("l4_5",)),
 ):
-    register_op(name=_name, layer_scope=_scope, input_types={"default": object}, output_type=DiagnosticArtifact)(_stub(_name))
+    register_op(name=_name, layer_scope=_scope, input_types={"default": object}, output_type=DiagnosticArtifact)(_passthrough(_name))

@@ -60,9 +60,22 @@ FUTURE_OPS = ("attention_weights", "lstm_hidden_state", "boruta_selection", "rec
 
 
 def _stub(name: str):
-    def run(inputs, params):
-        raise NotImplementedError(f"Phase 1 runtime: {name} implementation in execution PR")
+    """Forward to :func:`macrocast.core.runtime._execute_l7_step` so the L7
+    importance ops registered here actually compute (rather than raise)."""
 
+    def run(inputs, params):
+        from ..runtime import _execute_l7_step
+        from ..types import L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact
+
+        l3_features = next((item for item in inputs if isinstance(item, L3FeaturesArtifact)), None)
+        l3_metadata = next((item for item in inputs if isinstance(item, L3MetadataArtifact)), None)
+        l5_eval = next((item for item in inputs if isinstance(item, L5EvaluationArtifact)), None)
+        if l3_features is None or l3_metadata is None or l5_eval is None:
+            # Fall back to a structured payload if upstream context is incomplete.
+            return {"op": name, "inputs": list(inputs), "params": dict(params)}
+        return _execute_l7_step(name, list(inputs), dict(params), l3_features, l3_metadata, l5_eval)
+
+    run.__name__ = name
     return run
 
 

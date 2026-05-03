@@ -144,11 +144,27 @@ def validate_recipe(recipe_yaml: dict[str, Any] | str) -> ValidationReport:
 
 
 def execute_layer(layer: dict[str, Any] | str):
-    raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
-    families = [node.get("params", {}).get("family") for node in raw.get("nodes", ()) if node.get("op") == "fit_model"]
-    if any(family in {"macroeconomic_random_forest", "dfm_mixed_mariano_murasawa"} for family in families):
-        raise NotImplementedError("Phase 1 runtime: selected L4 model family execution is deferred")
-    raise NotImplementedError("Phase 1 runtime: L4 execution is deferred")
+    """Standalone L4 layer execution.
+
+    Wraps :func:`macrocast.core.runtime.materialize_l4_minimal` for callers
+    that want to drive L4 alone. The full pipeline still requires L1-L3
+    artifacts to be passed in via ``recipe_root``.
+    """
+
+    from ..runtime import materialize_l4_minimal, materialize_l1, materialize_l2, materialize_l3_minimal
+
+    if isinstance(layer, str):
+        from ..yaml import parse_recipe_yaml
+
+        root = parse_recipe_yaml(layer)
+    elif isinstance(layer, dict) and "4_forecasting_model" in layer:
+        root = layer
+    else:
+        root = {"4_forecasting_model": layer}
+    l1_artifact, _, _ = materialize_l1(root)
+    l2_artifact, _ = materialize_l2(root, l1_artifact)
+    l3_features, _ = materialize_l3_minimal(root, l1_artifact, l2_artifact)
+    return materialize_l4_minimal(root, l3_features)
 
 
 def resolve_combine_node(layer: dict[str, Any] | str) -> dict[str, Any]:

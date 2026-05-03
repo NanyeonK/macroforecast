@@ -168,10 +168,35 @@ def validate_recipe(recipe: L7Recipe | dict[str, Any] | str):
 
 
 def execute_layer(layer: dict[str, Any] | str):
-    raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
-    if any(node.get("op") == "mrf_gtvp" for node in raw.get("nodes", ()) if isinstance(node, dict)):
-        raise NotImplementedError("Phase 1 runtime: mrf_gtvp implementation in execution PR")
-    raise NotImplementedError("Phase 1 runtime: L7 execution is deferred")
+    """Standalone L7 layer execution; requires the full upstream artifact set.
+
+    Forwards to :func:`macrocast.core.runtime.materialize_l7_runtime` which
+    runs the importance ops registered in this layer.
+    """
+
+    from ..runtime import (
+        materialize_l1,
+        materialize_l2,
+        materialize_l3_minimal,
+        materialize_l4_minimal,
+        materialize_l5_minimal,
+        materialize_l7_runtime,
+    )
+
+    if isinstance(layer, str):
+        from ..yaml import parse_recipe_yaml
+
+        root = parse_recipe_yaml(layer)
+    elif isinstance(layer, dict) and "7_interpretation" in layer:
+        root = layer
+    else:
+        root = {"7_interpretation": layer}
+    l1_artifact, _, _ = materialize_l1(root)
+    l2_artifact, _ = materialize_l2(root, l1_artifact)
+    l3_features, l3_metadata = materialize_l3_minimal(root, l1_artifact, l2_artifact)
+    l4_forecasts, l4_models, _ = materialize_l4_minimal(root, l3_features)
+    l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts, l4_models)
+    return materialize_l7_runtime(root, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, None)
 
 
 def make_l7_yaml(op: str = "shap_tree", model_family: str = "xgboost") -> str:
