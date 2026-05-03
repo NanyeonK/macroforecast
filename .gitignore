@@ -70,3 +70,7 @@ catboost_info/
 
 # macrocast runtime output
 macrocast_output/
+
+# Local transport artifacts (git format-patch / git bundle output)
+*.patch
+*.bundle
