@@ -18,7 +18,7 @@ from macrocast.scaffold.option_docs import OPTION_DOCS
 # v1.0 release flips every value to True. Layer-by-layer content PRs
 # update this map as their docs land.
 _V1_REQUIRED_LAYERS: dict[str, bool] = {
-    "l0": False,
+    "l0": True,   # PR-A1: 6 entries
     "l1": False,
     "l1_5": False,
     "l2": False,
