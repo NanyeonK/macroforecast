@@ -305,6 +305,16 @@ def materialize_l1_5_diagnostic(recipe_root: dict[str, Any], l1_artifact: L1Data
     }
     if axes.get("correlation_view") != "none":
         metadata["correlation"] = frame.corr(method=axes.get("correlation_method", "pearson"), numeric_only=True)
+    stationarity_test = axes.get("stationarity_test", "none")
+    if stationarity_test != "none":
+        metadata["stationarity_tests"] = _diagnostic_stationarity_tests(
+            frame=frame,
+            test=stationarity_test,
+            scope=axes.get("stationarity_test_scope", "target_and_predictors"),
+            target=l1_artifact.target,
+            targets=l1_artifact.targets,
+            alpha=float((axes.get("leaf_config") or {}).get("stationarity_alpha", 0.05)),
+        )
     return (
         DiagnosticArtifact(
             layer_hooked="l1",
@@ -314,6 +324,77 @@ def materialize_l1_5_diagnostic(recipe_root: dict[str, Any], l1_artifact: L1Data
         ),
         axes,
     )
+
+
+def _diagnostic_stationarity_tests(
+    frame: pd.DataFrame,
+    test: str,
+    scope: str,
+    target: str | None,
+    targets: tuple[str, ...],
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Run ADF / Phillips-Perron / KPSS on each in-scope series.
+
+    ``test``: ``"adf" | "pp" | "kpss" | "multi"``. ``"multi"`` runs all
+    three. Phillips-Perron is dispatched via ``arch.unitroot.PhillipsPerron``
+    when available, otherwise it is reported as ``unavailable`` (the design
+    table notes the dependency)."""
+
+    target_names = set(filter(None, list(targets) + ([target] if target else [])))
+    if scope == "target_only":
+        cols = [c for c in frame.columns if c in target_names]
+    elif scope == "predictors_only":
+        cols = [c for c in frame.columns if c not in target_names]
+    else:
+        cols = list(frame.columns)
+
+    tests = ("adf", "pp", "kpss") if test == "multi" else (test,)
+    results: dict[str, dict[str, Any]] = {}
+    for col in cols:
+        series = pd.to_numeric(frame[col], errors="coerce").dropna()
+        if series.size < 12 or series.std(ddof=0) == 0:
+            results[col] = {"status": "insufficient_data", "n_obs": int(series.size)}
+            continue
+        col_result: dict[str, Any] = {"n_obs": int(series.size)}
+        for name in tests:
+            try:
+                col_result[name] = _run_stationarity(name, series, alpha)
+            except Exception as exc:  # pragma: no cover - defensive
+                col_result[name] = {"status": "error", "error": str(exc)}
+        results[col] = col_result
+    return {
+        "test": test,
+        "scope": scope,
+        "alpha": alpha,
+        "n_series": len(cols),
+        "by_series": results,
+    }
+
+
+def _run_stationarity(name: str, series: pd.Series, alpha: float) -> dict[str, Any]:
+    if name == "adf":
+        from statsmodels.tsa.stattools import adfuller
+
+        stat, pvalue, *_ = adfuller(series.values, autolag="AIC")
+        return {"statistic": float(stat), "p_value": float(pvalue), "reject_unit_root": bool(pvalue < alpha)}
+    if name == "kpss":
+        from statsmodels.tsa.stattools import kpss as _kpss
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            stat, pvalue, *_ = _kpss(series.values, regression="c", nlags="auto")
+        # KPSS null = stationarity; "reject_stationarity" when p < alpha.
+        return {"statistic": float(stat), "p_value": float(pvalue), "reject_stationarity": bool(pvalue < alpha)}
+    if name == "pp":
+        try:
+            from arch.unitroot import PhillipsPerron  # type: ignore
+        except ImportError:
+            return {"status": "unavailable", "reason": "install arch (`pip install arch`) for Phillips-Perron"}
+        pp = PhillipsPerron(series.values, trend="c")
+        return {"statistic": float(pp.stat), "p_value": float(pp.pvalue), "reject_unit_root": bool(pp.pvalue < alpha)}
+    return {"status": "unknown_test", "test": name}
 
 
 def materialize_l2_5_diagnostic(
