@@ -238,11 +238,13 @@ def test_l7_operational_ops_registered_after_honesty_pass():
     assert len(operational) >= 18
 
 
-def test_l7_future_ops_includes_honesty_demotions():
-    # 6 design-future + 4 remaining PR-C demotions (gradient methods only)
-    # = 10 future ops after #189-#193 promotions.
+def test_l7_future_ops_includes_design_remainder():
+    # Every honesty-pass demotion is re-promoted in v0.2; only the 6
+    # design-future ops (attention_weights / lstm_hidden_state /
+    # boruta_selection / RFE / lasso_path_selection / stability_selection)
+    # remain.
     future_ops = [op for op in list_ops().values() if "l7" in op.layer_scope and op.status == "future"]
-    assert len(future_ops) >= 10
+    assert len(future_ops) >= 6
 
 
 def test_l7_18_figure_types():

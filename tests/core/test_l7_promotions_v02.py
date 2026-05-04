@@ -148,10 +148,8 @@ def test_var_impulse_frame_status_falls_back_for_non_var_model():
 # Promotion pin
 # ---------------------------------------------------------------------------
 
-def test_only_gradient_l7_ops_remain_demoted():
-    assert set(HONESTY_DEMOTED_L7_OPS) == {
-        "gradient_shap",
-        "integrated_gradients",
-        "saliency_map",
-        "deep_lift",
-    }
+def test_no_l7_ops_remain_in_honesty_demoted_bucket():
+    """After #194 lands the gradient family the bucket is empty -- every
+    L7 honesty-pass demotion has a real runtime."""
+
+    assert HONESTY_DEMOTED_L7_OPS == ()

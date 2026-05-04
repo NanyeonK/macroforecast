@@ -81,16 +81,17 @@ DEFAULT_FIGURE_MAPPING = {
 # - gradient_shap / integrated_gradients / saliency_map / deep_lift:
 #   gradient-based attributions. v0.1 falls back to a SHAP proxy --
 #   different attribution method, not the gradient-based one named.
-HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = (
-    # v0.2 promoted: fevd / historical_decomposition / generalized_irf (#189),
-    # mrf_gtvp (#190), lasso_inclusion_frequency (#191),
-    # accumulated_local_effect (#192), friedman_h_interaction (#193).
-    # The remaining 4 are the gradient-based attributions tracked by #194.
-    "gradient_shap",
-    "integrated_gradients",
-    "saliency_map",
-    "deep_lift",
-)
+HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = ()
+# Every honesty-pass-demoted L7 op has been re-promoted in v0.2:
+# - #189: fevd / historical_decomposition / generalized_irf
+# - #190: mrf_gtvp
+# - #191: lasso_inclusion_frequency
+# - #192: accumulated_local_effect
+# - #193: friedman_h_interaction
+# - #194: gradient_shap / integrated_gradients / saliency_map / deep_lift
+#         (operational when ``[deep]`` extra installed; runtime raises
+#         NotImplementedError otherwise -- mirrors lstm/gru/transformer
+#         torch-missing pattern).
 
 OPERATIONAL_OPS = tuple(name for name in DEFAULT_FIGURE_MAPPING if name not in HONESTY_DEMOTED_L7_OPS)
 FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
