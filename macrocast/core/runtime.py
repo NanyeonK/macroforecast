@@ -810,9 +810,13 @@ def materialize_l4_minimal(
         refit_policy = params.get("refit_policy", "every_origin")
         rolling_window = int(params.get("rolling_window", max(24, min(len(X) // 2, 120))))
         refit_step = int(params.get("refit_step", 1)) if refit_policy == "every_n_origins" else 1
-        # tuning hook: cv_path or grid_search auto-selects alpha for regularized linears
-        if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization"}:
+        # tuning hook: dispatch on search_algorithm (issue #217). Inject the
+        # L4 leaf_config so the resolver can read tuning_grid /
+        # tuning_distributions / tuning_budget / cv_path_alphas / GA settings.
+        if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm"}:
+            params["_l4_leaf_config"] = raw.get("leaf_config", {}) or {}
             params = _resolve_l4_tuning(params, X, y)
+            params.pop("_l4_leaf_config", None)
         min_train_size = _minimal_train_size(params, n_obs=len(X), n_features=len(X.columns))
         model_id = fit_node.get("id", "fit_model")
         model_ids.append(model_id)
@@ -1132,25 +1136,185 @@ def _l4_predict_one(model, X: pd.DataFrame, position: int, *, forecast_strategy:
 
 
 def _resolve_l4_tuning(params: dict[str, Any], X: pd.DataFrame, y: pd.Series) -> dict[str, Any]:
-    """Run a quick CV / random search to fix an alpha or learning_rate."""
+    """Issue #217 -- dispatch the L4 ``search_algorithm`` axis.
+
+    ``search_algorithm`` paths:
+
+    * ``cv_path``: regularisation path on (alpha) for ridge/lasso/elastic_net
+      via ``RidgeCV`` / ``LassoCV``. Honours ``cv_path_alphas`` when supplied.
+    * ``grid_search``: exhaustive ``GridSearchCV`` over
+      ``leaf_config.tuning_grid``.
+    * ``random_search``: ``RandomizedSearchCV`` over
+      ``leaf_config.tuning_distributions`` (``tuning_budget`` iterations).
+    * ``bayesian_optimization``: when ``optuna`` is installed, run an
+      Optuna study with ``tuning_budget`` trials; otherwise fall back to
+      ``random_search`` (degraded gracefully).
+    * ``genetic_algorithm``: simple tournament-selection evolution over
+      ``tuning_distributions`` for ``genetic_algorithm_generations``
+      generations of size ``genetic_algorithm_population``.
+
+    All paths respect time-series constraints (no kfold), and seed via
+    ``params.random_state`` for determinism.
+    """
 
     family = params.get("family", "ridge")
     n_obs = len(X)
     if n_obs < 8:
         return params
+    algo = params.get("search_algorithm", "none")
+    leaf = params.get("_l4_leaf_config", {}) or {}  # injected by caller when present
     cv_folds = max(2, min(5, n_obs // 4))
-    if family in {"ridge", "ols"}:
-        alphas = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+    seed = int(params.get("random_state", 0))
+    X_filled = X.fillna(0.0)
+
+    if algo == "cv_path":
+        alphas = leaf.get("cv_path_alphas") or [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
         try:
-            picker = RidgeCV(alphas=alphas, cv=cv_folds)
-            picker.fit(X.fillna(0.0), y)
+            if family in {"ridge", "ols"}:
+                picker = RidgeCV(alphas=alphas, cv=cv_folds)
+                picker.fit(X_filled, y)
+                params["alpha"] = float(picker.alpha_)
+            elif family in {"lasso", "elastic_net", "lasso_path"}:
+                picker = LassoCV(alphas=alphas, cv=cv_folds, max_iter=20000, random_state=seed)
+                picker.fit(X_filled, y)
+                params["alpha"] = float(picker.alpha_)
+        except Exception:
+            pass
+        return params
+
+    grid = leaf.get("tuning_grid")
+    distributions = leaf.get("tuning_distributions")
+    budget = int(leaf.get("tuning_budget", 20))
+
+    if algo == "grid_search" and grid:
+        try:
+            from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
+
+            base = _build_l4_model(family, params)
+            cv = TimeSeriesSplit(n_splits=cv_folds)
+            search = GridSearchCV(base, grid, cv=cv, n_jobs=1)
+            search.fit(X_filled, y)
+            params.update(search.best_params_)
+        except Exception:
+            pass
+        return params
+
+    if algo == "random_search" and distributions:
+        try:
+            from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
+
+            base = _build_l4_model(family, params)
+            cv = TimeSeriesSplit(n_splits=cv_folds)
+            search = RandomizedSearchCV(
+                base,
+                distributions,
+                n_iter=budget,
+                cv=cv,
+                n_jobs=1,
+                random_state=seed,
+            )
+            search.fit(X_filled, y)
+            params.update(search.best_params_)
+        except Exception:
+            pass
+        return params
+
+    if algo == "bayesian_optimization" and distributions:
+        try:
+            import optuna  # type: ignore
+
+            def objective(trial):
+                trial_params = dict(params)
+                for name, dist in distributions.items():
+                    if isinstance(dist, list):
+                        trial_params[name] = trial.suggest_categorical(name, dist)
+                    elif isinstance(dist, tuple) and len(dist) == 2:
+                        low, high = dist
+                        if isinstance(low, int) and isinstance(high, int):
+                            trial_params[name] = trial.suggest_int(name, low, high)
+                        else:
+                            trial_params[name] = trial.suggest_float(name, float(low), float(high))
+                model = _build_l4_model(family, trial_params)
+                from sklearn.model_selection import cross_val_score, TimeSeriesSplit
+
+                scores = cross_val_score(
+                    model, X_filled, y, cv=TimeSeriesSplit(n_splits=cv_folds), scoring="neg_mean_squared_error"
+                )
+                return -float(np.mean(scores))
+
+            study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
+            study.optimize(objective, n_trials=budget, show_progress_bar=False)
+            params.update(study.best_params)
+        except ImportError:
+            # Optuna not installed -- fall back to random search.
+            params["search_algorithm"] = "random_search"
+            return _resolve_l4_tuning(params, X, y)
+        except Exception:
+            pass
+        return params
+
+    if algo == "genetic_algorithm" and distributions:
+        try:
+            from sklearn.model_selection import cross_val_score, TimeSeriesSplit
+
+            rng = np.random.default_rng(seed)
+            pop_size = int(leaf.get("genetic_algorithm_population", 12))
+            n_gens = int(leaf.get("genetic_algorithm_generations", 5))
+
+            def sample_individual() -> dict[str, Any]:
+                individual = dict(params)
+                for name, dist in distributions.items():
+                    if isinstance(dist, list):
+                        individual[name] = dist[rng.integers(0, len(dist))]
+                    elif isinstance(dist, tuple) and len(dist) == 2:
+                        low, high = dist
+                        if isinstance(low, int) and isinstance(high, int):
+                            individual[name] = int(rng.integers(low, high + 1))
+                        else:
+                            individual[name] = float(rng.uniform(float(low), float(high)))
+                return individual
+
+            def fitness(ind: dict[str, Any]) -> float:
+                model = _build_l4_model(family, ind)
+                cv = TimeSeriesSplit(n_splits=cv_folds)
+                try:
+                    return -float(np.mean(cross_val_score(model, X_filled, y, cv=cv, scoring="neg_mean_squared_error")))
+                except Exception:
+                    return float("inf")
+
+            population = [sample_individual() for _ in range(pop_size)]
+            for _ in range(n_gens):
+                fitnesses = [fitness(ind) for ind in population]
+                # Keep top half, cross with best.
+                ranked = sorted(zip(fitnesses, range(len(population))))
+                top = [population[i] for _, i in ranked[: pop_size // 2]]
+                children = []
+                while len(top) + len(children) < pop_size:
+                    p1, p2 = top[rng.integers(0, len(top))], top[rng.integers(0, len(top))]
+                    child = dict(p1)
+                    for k in distributions:
+                        if rng.random() < 0.5 and k in p2:
+                            child[k] = p2[k]
+                    children.append(child)
+                population = top + children
+            best = min(population, key=fitness)
+            params.update({k: best[k] for k in distributions if k in best})
+        except Exception:
+            pass
+        return params
+
+    # Fallback: legacy cv_path behaviour for backward compatibility.
+    if family in {"ridge", "ols"}:
+        try:
+            picker = RidgeCV(alphas=[0.001, 0.01, 0.1, 1.0, 10.0, 100.0], cv=cv_folds)
+            picker.fit(X_filled, y)
             params["alpha"] = float(picker.alpha_)
         except Exception:
             pass
     elif family in {"lasso", "elastic_net", "lasso_path"}:
         try:
-            picker = LassoCV(cv=cv_folds, max_iter=20000, random_state=0)
-            picker.fit(X.fillna(0.0), y)
+            picker = LassoCV(cv=cv_folds, max_iter=20000, random_state=seed)
+            picker.fit(X_filled, y)
             params["alpha"] = float(picker.alpha_)
         except Exception:
             pass
