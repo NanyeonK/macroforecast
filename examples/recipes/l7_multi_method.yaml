@@ -7,11 +7,15 @@
     - {id: shap, type: step, op: shap_tree, params: {model_family: xgboost, check_additivity: true}, inputs: [src_xgb, src_X]}
     - {id: perm, type: step, op: permutation_importance, params: {model_family: xgboost, n_repeats: 10, loss_function: squared}, inputs: [src_xgb, src_X, src_y]}
     - {id: pdp, type: step, op: partial_dependence, params: {model_family: xgboost, grid_resolution: 50, kind: average}, inputs: [src_xgb, src_X]}
-    - {id: ale, type: step, op: accumulated_local_effect, params: {model_family: xgboost, n_bins: 20, centered: true}, inputs: [src_xgb, src_X]}
+    # Note: ``accumulated_local_effect`` was demoted to ``future`` in
+    # the v0.1 honesty pass (PR-C). Use ``bootstrap_jackknife`` for a
+    # second importance estimate until the real Apley-Zhu (2020) ALE
+    # implementation lands; track via the v0.2 issue.
+    - {id: bjk, type: step, op: bootstrap_jackknife, params: {model_family: xgboost, n_replications: 50}, inputs: [src_xgb, src_X, src_y]}
   sinks:
     l7_importance_v1:
       global: [shap, perm]
-      marginal: [pdp, ale]
+      marginal: [pdp, bjk]
   fixed_axes:
     output_table_format: multi
     figure_type: auto
