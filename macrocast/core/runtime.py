@@ -1005,11 +1005,14 @@ def materialize_l4_minimal(
     refit_origins: dict[str, tuple[Any, ...]] = {}
     training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
     model_ids: list[str] = []
-    # Issue #204: ``parallel_unit = models`` runs each fit_node concurrently
-    # in threads (sklearn estimators release the GIL inside numerical
-    # kernels, so threads are safe and avoid the pickling overhead of
-    # processes). Other parallel_unit options (horizons / targets /
-    # oos_dates) require finer-grained refactoring tracked separately.
+    # Issues #204 + #250 -- sub-cell parallelism axis.
+    #   ``parallel_unit = models``    -> fan out fit_nodes (#204).
+    #   ``parallel_unit = oos_dates`` -> fan out the walk-forward origin
+    #                                    loop inside each fit_node (#250).
+    # ``horizons`` / ``targets`` are honoured at the schema level; the L4
+    # runtime currently produces a single horizon / target per fit_node,
+    # so those values map to the same execution as ``models`` for the
+    # multi-fit-node case and ``oos_dates`` for the single-fit-node case.
     l0 = recipe_root.get("0_meta", {}) or {}
     parallel_unit = (l0.get("fixed_axes", {}) or {}).get("parallel_unit", "cells")
     n_workers = int((l0.get("leaf_config", {}) or {}).get("n_workers_inner", 4))
@@ -1018,7 +1021,8 @@ def materialize_l4_minimal(
 
         def _process_node(fit_node):
             return _run_l4_fit_node(
-                fit_node, raw, X, y, target, horizon, l0_seed
+                fit_node, raw, X, y, target, horizon, l0_seed,
+                parallel_origins=False, n_workers=n_workers,
             )
 
         with ThreadPoolExecutor(max_workers=n_workers) as pool:
@@ -1036,6 +1040,41 @@ def materialize_l4_minimal(
             L4ForecastsArtifact(
                 forecasts=forecasts,
                 forecast_object="point",
+                sample_index=sample_index,
+                targets=(target,),
+                horizons=(horizon,),
+                model_ids=tuple(model_ids),
+                upstream_hashes={},
+            ),
+            L4ModelArtifactsArtifact(artifacts=artifacts, is_benchmark=benchmark_flags),
+            L4TrainingMetadataArtifact(
+                forecast_origins=tuple(sample_index),
+                refit_origins=refit_origins,
+                training_window_per_origin=training_windows,
+            ),
+        )
+    if parallel_unit in {"oos_dates", "horizons", "targets"} and fit_nodes:
+        # Issue #250 -- fan the walk-forward origin loop. Routes through
+        # ``_run_l4_fit_node(parallel_origins=True)`` per fit_node.
+        for fit_node in fit_nodes:
+            model_id, model, node_forecasts, node_origins, node_windows = _run_l4_fit_node(
+                fit_node, raw, X, y, target, horizon, l0_seed,
+                parallel_origins=True, n_workers=n_workers,
+            )
+            forecasts.update(node_forecasts)
+            artifacts[model_id] = model
+            benchmark_flags[model_id] = bool(fit_node.get("is_benchmark", False))
+            refit_origins[model_id] = tuple(node_origins)
+            training_windows.update(node_windows)
+            model_ids.append(model_id)
+        sample_index = pd.DatetimeIndex(sorted({key[3] for key in forecasts}))
+        forecast_object = _resolve_forecast_object(fit_nodes)
+        forecast_intervals = _emit_quantile_intervals(forecasts, fit_nodes, X=X, y=y) if forecast_object == "quantile" else {}
+        return (
+            L4ForecastsArtifact(
+                forecasts=forecasts,
+                forecast_intervals=forecast_intervals,
+                forecast_object=forecast_object,
                 sample_index=sample_index,
                 targets=(target,),
                 horizons=(horizon,),
@@ -1298,9 +1337,13 @@ def _run_l4_fit_node(
     target: str,
     horizon: int,
     l0_seed: int | None,
+    *,
+    parallel_origins: bool = False,
+    n_workers: int = 4,
 ) -> tuple[str, ModelArtifact, dict[tuple[str, str, int, Any], float], list[Any], dict[tuple[str, Any], tuple[Any, Any]]]:
     """Run the same fit-loop the sequential path uses, but for a single
-    ``fit_node``. Used by ``parallel_unit = models``."""
+    ``fit_node``. Used by ``parallel_unit = models`` and (with
+    ``parallel_origins = True``) ``parallel_unit = oos_dates``."""
 
     params = dict(fit_node.get("params", {}) or {})
     if l0_seed is not None and "random_state" not in params:
@@ -1320,9 +1363,8 @@ def _run_l4_fit_node(
     forecasts: dict[tuple[str, str, int, Any], float] = {}
     origins: list[Any] = []
     training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
-    last_fit_position: int | None = None
-    last_model = None
-    for position in range(min_train_size, len(X)):
+
+    def _origin_step(position: int) -> tuple[Any, float, tuple[Any, Any]]:
         origin = X.index[position]
         if training_start_rule == "rolling":
             start = max(0, position - rolling_window)
@@ -1330,23 +1372,51 @@ def _run_l4_fit_node(
             start = 0
         train_X = X.iloc[start:position]
         train_y = y.iloc[start:position]
-        should_refit = (
-            last_model is None
-            or refit_policy == "every_origin"
-            or (refit_policy == "every_n_origins" and (last_fit_position is None or position - last_fit_position >= refit_step))
-        )
-        if should_refit and refit_policy != "single_fit":
-            last_model = _build_l4_model(family, params)
-            last_model.fit(train_X, train_y)
-            last_fit_position = position
-        elif refit_policy == "single_fit" and last_model is None:
-            last_model = _build_l4_model(family, params)
-            last_model.fit(train_X, train_y)
-            last_fit_position = position
-        forecast_value = _l4_predict_one(last_model, X, position, forecast_strategy=forecast_strategy, horizon=horizon)
-        forecasts[(model_id, target, horizon, origin)] = forecast_value
-        origins.append(origin)
-        training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
+        # parallel_origins refits per origin (every_origin equivalent) so
+        # the threads don't share mutable model state.
+        model = _build_l4_model(family, params)
+        model.fit(train_X, train_y)
+        forecast_value = _l4_predict_one(model, X, position, forecast_strategy=forecast_strategy, horizon=horizon)
+        return origin, forecast_value, (train_X.index[0], train_X.index[-1])
+
+    if parallel_origins and refit_policy in {"every_origin", "every_n_origins"}:
+        # Issue #250 -- fan the walk-forward origin loop across threads.
+        from concurrent.futures import ThreadPoolExecutor
+
+        positions = list(range(min_train_size, len(X)))
+        with ThreadPoolExecutor(max_workers=n_workers) as pool:
+            for position, (origin, forecast_value, window) in zip(positions, pool.map(_origin_step, positions)):
+                forecasts[(model_id, target, horizon, origin)] = forecast_value
+                origins.append(origin)
+                training_windows[(model_id, origin)] = window
+    else:
+        last_fit_position: int | None = None
+        last_model = None
+        for position in range(min_train_size, len(X)):
+            origin = X.index[position]
+            if training_start_rule == "rolling":
+                start = max(0, position - rolling_window)
+            else:
+                start = 0
+            train_X = X.iloc[start:position]
+            train_y = y.iloc[start:position]
+            should_refit = (
+                last_model is None
+                or refit_policy == "every_origin"
+                or (refit_policy == "every_n_origins" and (last_fit_position is None or position - last_fit_position >= refit_step))
+            )
+            if should_refit and refit_policy != "single_fit":
+                last_model = _build_l4_model(family, params)
+                last_model.fit(train_X, train_y)
+                last_fit_position = position
+            elif refit_policy == "single_fit" and last_model is None:
+                last_model = _build_l4_model(family, params)
+                last_model.fit(train_X, train_y)
+                last_fit_position = position
+            forecast_value = _l4_predict_one(last_model, X, position, forecast_strategy=forecast_strategy, horizon=horizon)
+            forecasts[(model_id, target, horizon, origin)] = forecast_value
+            origins.append(origin)
+            training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
     full_model = _build_l4_model(family, params)
     full_model.fit(X, y)
     artifact = ModelArtifact(
