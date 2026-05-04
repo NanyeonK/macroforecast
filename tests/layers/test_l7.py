@@ -164,14 +164,13 @@ def test_l7_boruta_selection_rejected_as_future():
     assert validate_layer(parse_layer_yaml(make_l7_yaml(op="boruta_selection"), "l7")).has_hard_errors
 
 
-def test_l7_mrf_gtvp_rejected_as_future():
-    # PR-C of the v0.1 honesty pass: ``mrf_gtvp`` returned a static
-    # RandomForest feature_importances_ ranking instead of the design's
-    # promised Coulombe (2024) GTVP coefficient time series. Demoted
-    # to ``future``; the validator now rejects.
+def test_l7_mrf_gtvp_operational_after_coefficient_path_landing():
+    # Issue #190 lands the time-varying coefficient series via per-leaf
+    # local linear regressions; the validator must accept the op when
+    # paired with the MRF model family.
     layer = parse_layer_yaml(make_l7_yaml(op="mrf_gtvp", model_family="macroeconomic_random_forest"), "l7")
     report = validate_layer(layer)
-    assert report.has_hard_errors
+    assert not report.has_hard_errors
 
 
 def test_l7_default_figure_mapping_for_shap_tree():
@@ -240,10 +239,10 @@ def test_l7_operational_ops_registered_after_honesty_pass():
 
 
 def test_l7_future_ops_includes_honesty_demotions():
-    # 6 design-future + 10 remaining PR-C demotions (#192 promoted ALE
-    # back) = 16 future ops.
+    # 6 design-future + 4 remaining PR-C demotions (gradient methods only)
+    # = 10 future ops after #189-#193 promotions.
     future_ops = [op for op in list_ops().values() if "l7" in op.layer_scope and op.status == "future"]
-    assert len(future_ops) >= 16
+    assert len(future_ops) >= 10
 
 
 def test_l7_18_figure_types():
