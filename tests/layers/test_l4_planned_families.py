@@ -40,13 +40,10 @@ from macrocast.core.ops.l4_ops import (
 from macrocast.core.status import FUTURE, OPERATIONAL
 
 
-# v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart re-promoted
-# (#185 / #186), factor_augmented_var re-promoted (#184),
-# macroeconomic_random_forest re-promoted (#187). Remaining honesty-pass
-# demotion stays future until #188 lands.
-_HONESTY_DEMOTED = (
-    "dfm_mixed_mariano_murasawa",
-)
+# v0.2 follow-up: every L4 honesty-pass demotion is now re-promoted
+# (#184 / #185 / #186 / #187 / #188). Empty tuple keeps the meta-test
+# parametrisation in place even when there are no L4 demotions left.
+_HONESTY_DEMOTED: tuple[str, ...] = ()
 
 
 def test_planned_bucket_is_empty_after_v0_1_honesty_pass():

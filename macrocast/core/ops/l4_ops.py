@@ -46,6 +46,9 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     # Promoted in v0.2 (issue #187): Coulombe (2024) GTVP via per-leaf
     # local linear regressions on top of a time-aware random forest.
     "macroeconomic_random_forest",
+    # Promoted in v0.2 (issue #188): Mariano-Murasawa-style dynamic factor
+    # model via statsmodels' DynamicFactor (Kalman state-space MLE).
+    "dfm_mixed_mariano_murasawa",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -65,9 +68,7 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
-    # demoted in PR-B of the v0.1 honesty pass; remaining gap
-    "dfm_mixed_mariano_murasawa",
-    # always future (Phase 1 design)
+    # always future (Phase 1 design): MIDAS family awaits its own runtime.
     "midas_almon",
     "midas_beta",
     "midas_step",

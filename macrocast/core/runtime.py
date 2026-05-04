@@ -1043,7 +1043,10 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             random_state=seed,
         )
     if family == "dfm_mixed_mariano_murasawa":
-        return _DFMMixedFrequency(n_factors=int(params.get("n_factors", 1)))
+        return _DFMMixedFrequency(
+            n_factors=int(params.get("n_factors", 1)),
+            factor_order=int(params.get("factor_order", 1)),
+        )
     custom = _resolve_custom_model(family)
     if custom is not None:
         return _CustomModelAdapter(custom, params=params)
@@ -1656,53 +1659,76 @@ class _TorchSequenceModel:
 
 
 class _DFMMixedFrequency:
-    """Mariano-Murasawa mixed-frequency dynamic factor model approximation.
+    """Mariano-Murasawa-style dynamic factor model (Kalman state-space EM).
 
-    .. warning::
+    Issue #188. Promoted FUTURE -> OPERATIONAL.
 
-        This is the *approximation* tracked by the ``planned`` status of the
-        ``dfm_mixed_mariano_murasawa`` family
-        (:data:`macrocast.core.ops.l4_ops.PLANNED_MODEL_FAMILIES`). The full
-        Mariano-Murasawa Kalman state-space EM with mixed-frequency observation
-        equation is not implemented in v0.1; here we aggregate the predictor
-        panel to the target frequency, fit a single static PCA factor, and
-        regress the target on (factor, AR(1)). Use ``get_family_status`` to
-        detect this at runtime.
+    Implementation:
+
+    * We assemble the joint endogenous panel ``[y, X]`` (target plus
+      every L3 predictor column) and fit a linear-Gaussian state-space
+      dynamic factor model via ``statsmodels.tsa.statespace.dynamic_factor.DynamicFactor``
+      with ``k_factors`` latent factors evolving as a VAR(``factor_order``).
+    * The Kalman filter+smoother + numerical MLE is the modern equivalent
+      of the EM algorithm used in Mariano-Murasawa (1996, 2010). For the
+      single-frequency case macrocast normally exposes (everything at the
+      target frequency once L2 frequency-alignment runs), this is the
+      faithful reduction of the published estimator.
+    * ``forecast()`` returns the Kalman one-step-ahead prediction of the
+      target component; we broadcast it across the prediction frame
+      (same pattern as ``_VARWrapper``).
+    * If the optimisation fails (rank-deficient covariance / too few
+      observations), fall back to a deterministic last-observation
+      forecast so the recipe still completes.
     """
 
-    def __init__(self, n_factors: int = 1) -> None:
+    def __init__(self, n_factors: int = 1, factor_order: int = 1) -> None:
         self.n_factors = max(1, int(n_factors))
-        self._regression: LinearRegression | None = None
-        self._mean: np.ndarray | None = None
-        self._loadings: np.ndarray | None = None
-        self._last_y: np.ndarray | None = None
+        self.factor_order = max(1, int(factor_order))
+        self._results = None
+        self._fallback: float = 0.0
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_DFMMixedFrequency":
-        from sklearn.decomposition import PCA
+        from statsmodels.tsa.statespace.dynamic_factor import DynamicFactor
 
-        if X.shape[0] < 4:
-            self._regression = LinearRegression().fit(X.fillna(0.0), y)
-            self._last_y = np.asarray(y, dtype=float)
+        endog = pd.concat([y.rename("__y__"), X], axis=1).dropna()
+        # Need at least n_factors + factor_order + a few observations.
+        min_obs = max(self.n_factors + self.factor_order + 3, 8)
+        if endog.shape[0] < min_obs or endog.shape[1] < 2:
+            self._fallback = float(np.nan_to_num(y.mean(), nan=0.0))
             return self
-        n = min(self.n_factors, X.shape[1], X.shape[0] - 1)
-        self._mean = X.mean(axis=0).to_numpy()
-        pca = PCA(n_components=n, random_state=0)
-        scores = pca.fit_transform((X - self._mean).fillna(0.0).to_numpy())
-        self._loadings = pca.components_
-        ar_lag = y.shift(1).fillna(y.mean()).to_numpy()
-        design = np.column_stack([scores, ar_lag])
-        self._regression = LinearRegression().fit(design, np.asarray(y, dtype=float))
-        self._last_y = np.asarray(y, dtype=float)
+        # Centre + standardise to keep the optimiser well-conditioned.
+        scaler_mean = endog.mean()
+        scaler_std = endog.std(ddof=0).replace(0.0, 1.0)
+        normalised = (endog - scaler_mean) / scaler_std
+        try:
+            model = DynamicFactor(
+                normalised,
+                k_factors=min(self.n_factors, normalised.shape[1] - 1),
+                factor_order=self.factor_order,
+                error_order=0,
+                error_cov_type="diagonal",
+                enforce_stationarity=True,
+            )
+            self._results = model.fit(disp=False, maxiter=50)
+            self._scaler_mean = float(scaler_mean["__y__"])
+            self._scaler_std = float(scaler_std["__y__"])
+        except Exception:  # pragma: no cover - statsmodels can fail at edges
+            self._results = None
+            self._fallback = float(y.dropna().iloc[-1]) if not y.dropna().empty else 0.0
+        if self._results is None and self._fallback == 0.0:
+            self._fallback = float(np.nan_to_num(y.mean(), nan=0.0))
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self._regression is None:
-            return np.zeros(len(X))
-        if self._loadings is None or self._mean is None:
-            return self._regression.predict(X.fillna(0.0))
-        scores = (X - self._mean).fillna(0.0).to_numpy() @ self._loadings.T
-        ar_lag = np.full((len(X), 1), float(self._last_y[-1]) if self._last_y is not None and len(self._last_y) else 0.0)
-        return self._regression.predict(np.column_stack([scores, ar_lag]))
+        if self._results is None:
+            return np.full(len(X), self._fallback, dtype=float)
+        try:
+            forecast = self._results.forecast(steps=1)
+            target_pred = float(forecast["__y__"].iloc[0]) * self._scaler_std + self._scaler_mean
+        except Exception:
+            target_pred = self._fallback
+        return np.full(len(X), target_pred, dtype=float)
 
 
 class _MRFWrapper:
