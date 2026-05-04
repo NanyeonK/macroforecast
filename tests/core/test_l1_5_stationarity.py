@@ -97,3 +97,23 @@ def test_insufficient_data_does_not_crash():
         frame=short, test="adf", scope="target_and_predictors", target=None, targets=()
     )
     assert results["by_series"]["x"]["status"] == "insufficient_data"
+
+
+def test_phillips_perron_native_runs_without_arch():
+    """Issue #252 -- PP must produce a statistic + p-value even when
+    ``arch`` is not installed. Native implementation runs the OLS regression
+    + Newey-West HAC adjustment.
+    """
+
+    from macrocast.core.runtime import _phillips_perron_native
+
+    rng = np.random.default_rng(0)
+    # White noise -> stationary -> reject unit root.
+    y_stationary = rng.normal(size=200)
+    res = _phillips_perron_native(y_stationary, alpha=0.05)
+    assert "statistic" in res and "p_value" in res
+    assert res["p_value"] < 0.05
+    # Random walk -> unit root -> do not reject.
+    y_rw = np.cumsum(rng.normal(size=200))
+    res_rw = _phillips_perron_native(y_rw, alpha=0.05)
+    assert res_rw["p_value"] > 0.05
