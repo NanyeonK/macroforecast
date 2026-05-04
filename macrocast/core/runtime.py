@@ -1425,6 +1425,14 @@ def _native_quantile_engine(family: str):
     that have a native quantile-regression form. Returns ``None`` for
     families without one (caller falls back to Gaussian quantile)."""
 
+    if family == "quantile_regression_forest":
+        # Issue #280 -- QRF uses one fit and emits all quantiles at predict
+        # time; expose a shim factory that ignores ``q`` and lets the caller
+        # call ``predict_quantiles`` directly.
+        def _factory(q: float):
+            return _QuantileRegressionForest(quantile_levels=(float(q),))
+
+        return _factory
     if family in {"ridge", "ols", "lasso", "elastic_net", "ar_p"}:
         try:
             from sklearn.linear_model import QuantileRegressor
@@ -1747,6 +1755,23 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             factor_order=int(params.get("factor_order", 1)),
             mixed_frequency=bool(params.get("mixed_frequency", False)),
             column_frequencies=params.get("column_frequencies"),
+        )
+    if family == "quantile_regression_forest":
+        # Issue #280 -- Meinshausen (2006).
+        return _QuantileRegressionForest(
+            n_estimators=int(params.get("n_estimators", 200)),
+            max_depth=params.get("max_depth"),
+            random_state=seed,
+            quantile_levels=tuple(params.get("quantile_levels", (0.05, 0.5, 0.95))),
+        )
+    if family == "bagging":
+        # Issue #282 -- generic bootstrap-aggregating meta-estimator.
+        return _BaggingWrapper(
+            base_family=str(params.get("base_family", "ridge")),
+            n_estimators=int(params.get("n_estimators", 50)),
+            max_samples=float(params.get("max_samples", 0.8)),
+            random_state=seed,
+            base_params={k: v for k, v in params.items() if k not in {"family", "base_family", "n_estimators", "max_samples"}},
         )
     custom = _resolve_custom_model(family)
     if custom is not None:
@@ -2653,6 +2678,130 @@ class _DFMMixedFrequency:
         return np.full(len(X), target_pred, dtype=float)
 
 
+class _QuantileRegressionForest:
+    """Issue #280 -- Meinshausen (2006) Quantile Regression Forest.
+
+    Train a RandomForest, then for each leaf record the *empirical
+    distribution* of training y values that landed in that leaf. At
+    predict time, route a new sample to its leaf in every tree and
+    average the per-leaf empirical CDFs to get the predictive CDF, then
+    invert at each requested quantile level.
+    """
+
+    def __init__(
+        self,
+        n_estimators: int = 200,
+        max_depth: Any = None,
+        random_state: int = 0,
+        quantile_levels: tuple[float, ...] = (0.05, 0.5, 0.95),
+    ) -> None:
+        self.n_estimators = int(n_estimators)
+        self.max_depth = max_depth
+        self.random_state = int(random_state)
+        self.quantile_levels = tuple(float(q) for q in quantile_levels)
+        self._forest: RandomForestRegressor | None = None
+        self._leaf_targets: list[dict[int, np.ndarray]] = []
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_QuantileRegressionForest":
+        from sklearn.ensemble import RandomForestRegressor as _RF
+
+        self._forest = _RF(
+            n_estimators=self.n_estimators,
+            max_depth=self.max_depth,
+            random_state=self.random_state,
+            n_jobs=1,
+        )
+        X_filled = X.fillna(0.0)
+        target = np.asarray(y, dtype=float)
+        self._forest.fit(X_filled, target)
+        leaves = self._forest.apply(X_filled)
+        self._leaf_targets = []
+        for tree_idx in range(leaves.shape[1]):
+            tree_leaves = leaves[:, tree_idx]
+            leaf_dict: dict[int, np.ndarray] = {}
+            for leaf_id in np.unique(tree_leaves):
+                leaf_dict[int(leaf_id)] = target[tree_leaves == leaf_id]
+            self._leaf_targets.append(leaf_dict)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._forest is None:
+            return np.zeros(len(X))
+        X_filled = X.fillna(0.0)
+        return self._forest.predict(X_filled)
+
+    def predict_quantiles(self, X: pd.DataFrame) -> dict[float, np.ndarray]:
+        if self._forest is None or not self._leaf_targets:
+            return {q: np.zeros(len(X)) for q in self.quantile_levels}
+        X_filled = X.fillna(0.0)
+        leaves = self._forest.apply(X_filled)
+        n_pred = len(X_filled)
+        out: dict[float, np.ndarray] = {q: np.empty(n_pred) for q in self.quantile_levels}
+        for i in range(n_pred):
+            samples: list[float] = []
+            for tree_idx in range(leaves.shape[1]):
+                leaf_id = int(leaves[i, tree_idx])
+                target_arr = self._leaf_targets[tree_idx].get(leaf_id, np.array([]))
+                if target_arr.size:
+                    samples.extend(target_arr.tolist())
+            arr = np.asarray(samples, dtype=float) if samples else np.zeros(1)
+            for q in self.quantile_levels:
+                out[q][i] = float(np.quantile(arr, q))
+        return out
+
+
+class _BaggingWrapper:
+    """Issue #282 -- bootstrap-aggregating meta-estimator over a base
+    L4 family. Fits ``n_estimators`` models on bootstrap resamples of
+    (X, y), averages their point predictions, and surfaces empirical
+    quantile bands across the bag for ``predict_quantiles``."""
+
+    def __init__(
+        self,
+        base_family: str = "ridge",
+        n_estimators: int = 50,
+        max_samples: float = 0.8,
+        random_state: int = 0,
+        base_params: dict[str, Any] | None = None,
+    ) -> None:
+        self.base_family = str(base_family)
+        self.n_estimators = int(n_estimators)
+        self.max_samples = float(max_samples)
+        self.random_state = int(random_state)
+        self.base_params = dict(base_params or {})
+        self._models: list[Any] = []
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_BaggingWrapper":
+        rng = np.random.default_rng(self.random_state)
+        n = len(X)
+        sample_size = max(2, int(round(self.max_samples * n)))
+        for i in range(self.n_estimators):
+            idx = rng.choice(n, size=sample_size, replace=True)
+            sub_X = X.iloc[idx]
+            sub_y = y.iloc[idx]
+            params = dict(self.base_params)
+            params["random_state"] = (self.random_state + i) % (2 ** 31 - 1)
+            model = _build_l4_model(self.base_family, params)
+            try:
+                model.fit(sub_X, sub_y)
+                self._models.append(model)
+            except Exception:  # pragma: no cover - skip flaky bag members
+                continue
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if not self._models:
+            return np.zeros(len(X))
+        preds = np.column_stack([m.predict(X) for m in self._models])
+        return preds.mean(axis=1)
+
+    def predict_quantiles(self, X: pd.DataFrame, levels: tuple[float, ...] = (0.05, 0.5, 0.95)) -> dict[float, np.ndarray]:
+        if not self._models:
+            return {q: np.zeros(len(X)) for q in levels}
+        preds = np.column_stack([m.predict(X) for m in self._models])
+        return {q: np.quantile(preds, q, axis=1) for q in levels}
+
+
 class _MRFWrapper:
     """Macroeconomic random forest (Coulombe 2024) -- generalised time-varying
     parameter (GTVP) estimator.
@@ -3248,6 +3397,16 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
         model = _first_model_input(inputs)
         X, y = _l7_xy(inputs, l3_features)
         frame = _permutation_importance_frame(model, X, y, method=op)
+        return _attach_l7_attrs(frame, model, op, l3_features)
+    if op == "permutation_importance_strobl":
+        # Issue #281 -- conditional permutation per Strobl (2008): permute
+        # within stratified bins of the *other* features so the marginal
+        # distribution of the permuted feature stays roughly the same as
+        # under the original conditional distribution. Removes the
+        # correlated-features bias of vanilla permutation.
+        model = _first_model_input(inputs)
+        X, y = _l7_xy(inputs, l3_features)
+        frame = _strobl_permutation_importance_frame(model, X, y)
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "model_native_tree_importance":
         model = _first_model_input(inputs)
@@ -4014,6 +4173,59 @@ def _permutation_importance_frame(model: ModelArtifact, X: pd.DataFrame, y: pd.S
     return pd.DataFrame(rows)
 
 
+def _strobl_permutation_importance_frame(
+    model: ModelArtifact,
+    X: pd.DataFrame,
+    y: pd.Series | None,
+    *,
+    n_bins: int = 5,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """Issue #281 -- Strobl (2008) conditional permutation importance.
+
+    Procedure: for each feature ``j``, partition the rows into bins by
+    the *other* features (we use rank quantiles of the most correlated
+    other feature); permute ``X[j]`` *within* each bin; compute the
+    loss increase. The bin-restricted permutation preserves the
+    conditional distribution of ``X[j] | X[-j]`` and removes the bias
+    that vanilla permutation introduces under correlated predictors.
+    """
+
+    if y is None or not hasattr(model.fitted_object, "predict"):
+        return _linear_importance_frame(model, method="permutation_importance_strobl")
+    aligned = pd.concat([X, y.rename("__target__")], axis=1).dropna()
+    X_eval = aligned[X.columns]
+    y_eval = aligned["__target__"]
+    baseline = float(((y_eval - model.fitted_object.predict(X_eval)) ** 2).mean())
+    rng = np.random.default_rng(int(seed))
+    rows = []
+    for column in X_eval.columns:
+        # Pick the most correlated other feature as the conditioning variable.
+        other_cols = [c for c in X_eval.columns if c != column]
+        if other_cols:
+            corrs = X_eval[other_cols].corrwith(X_eval[column]).abs().fillna(0.0)
+            cond_col = corrs.idxmax()
+        else:
+            cond_col = None
+        permuted = X_eval.copy()
+        if cond_col is None:
+            permuted[column] = rng.permutation(permuted[column].values)
+        else:
+            try:
+                bins = pd.qcut(X_eval[cond_col], q=n_bins, labels=False, duplicates="drop")
+            except Exception:
+                bins = pd.Series(np.zeros(len(X_eval), dtype=int), index=X_eval.index)
+            for bin_id in bins.dropna().unique():
+                mask = (bins == bin_id).values
+                if mask.sum() <= 1:
+                    continue
+                values = permuted.loc[mask, column].values
+                permuted.loc[mask, column] = rng.permutation(values)
+        loss = float(((y_eval - model.fitted_object.predict(permuted)) ** 2).mean())
+        rows.append({"feature": column, "importance": float(loss - baseline), "coefficient": None, "method": "strobl_conditional"})
+    return pd.DataFrame(rows)
+
+
 def _attach_l7_attrs(frame: pd.DataFrame, model: ModelArtifact, method: str, l3_features: L3FeaturesArtifact) -> pd.DataFrame:
     frame = frame.sort_values("importance", ascending=False).reset_index(drop=True)
     frame.attrs.update({"method": method, "model_id": model.model_id, "target": l3_features.y_final.name, "horizon": l3_features.horizon_set[0] if l3_features.horizon_set else 1})
@@ -4211,6 +4423,13 @@ def _l6_equal_predictive_results(
     pairs = _l6_pair_list(sub, leaf, model_ids, l4_models)
     results: dict[tuple[Any, ...], Any] = {}
     tests = ["dm_diebold_mariano", "gw_giacomini_white"] if sub.get("equal_predictive_test") == "multi" else [sub.get("equal_predictive_test")]
+    # Issue #283 -- when the recipe asks for the Diebold-Mariano-Pesaran
+    # joint multi-horizon test, run it once per (model_a, model_b) pair
+    # before the per-horizon DM loop and stash the results.
+    dmp_results: dict[tuple[str, str, str], dict[str, Any]] = {}
+    if "dmp_multi_horizon" in tests or sub.get("equal_predictive_test") == "dmp_multi_horizon":
+        dmp_results = _l6_dmp_multi_horizon(errors, pairs, leaf.get("dependence_correction", "newey_west"))
+        tests = [t for t in tests if t != "dmp_multi_horizon"]
     loss_col = "absolute" if sub.get("loss_function") == "absolute" else "squared"
     # Issue #259 -- HAC kernel from L6 globals (newey_west / andrews / parzen).
     hac_kernel = leaf.get("dependence_correction", "newey_west")
@@ -4231,7 +4450,57 @@ def _l6_equal_predictive_results(
                     "mean_loss_difference": _float_or_none(diff.mean()) if not diff.empty else None,
                     "hln_correction": apply_hln,
                 }
+    # Stash the DMP joint-test results next to the DM per-horizon entries.
+    for key, payload in dmp_results.items():
+        results[key] = payload
     return results
+
+
+def _l6_dmp_multi_horizon(
+    errors: pd.DataFrame, pairs: list[tuple[str, str]], hac_kernel: str
+) -> dict[tuple[str, str, str], dict[str, Any]]:
+    """Issue #283 -- Diebold-Mariano-Pesaran multi-horizon joint test.
+
+    For each (model_a, model_b, target) triplet, stack the per-horizon
+    loss differentials end-to-end and compute a HAC-adjusted t-statistic
+    on the stacked mean. The joint-null is "equal predictive ability
+    across all horizons"; rejection at 5% indicates at least one horizon
+    favours model_b.
+    """
+
+    out: dict[tuple[str, str, str], dict[str, Any]] = {}
+    if errors.empty:
+        return out
+    for model_a, model_b in pairs:
+        for target in errors["target"].unique():
+            sub_errors = errors[errors["target"] == target]
+            stacked = []
+            for horizon, group in sub_errors.groupby("horizon"):
+                left = group.loc[group["model_id"] == model_a, ["origin", "squared"]].rename(columns={"squared": "loss_a"})
+                right = group.loc[group["model_id"] == model_b, ["origin", "squared"]].rename(columns={"squared": "loss_b"})
+                joined = left.merge(right, on="origin", how="inner")
+                if not joined.empty:
+                    stacked.extend((joined["loss_a"] - joined["loss_b"]).tolist())
+            if not stacked:
+                continue
+            arr = np.asarray(stacked, dtype=float)
+            n = arr.size
+            mean_diff = float(arr.mean())
+            lr_var = _long_run_variance(arr - mean_diff, kernel=hac_kernel)
+            se = float(np.sqrt(max(lr_var / n, 1e-12)))
+            stat = mean_diff / se if se > 0 else 0.0
+            from scipy import stats as _stats
+
+            p_value = float(2 * (1 - _stats.norm.cdf(abs(stat))))
+            out[("dmp_multi_horizon", model_a, model_b, target)] = {
+                "statistic": stat,
+                "p_value": p_value,
+                "decision_at_5pct": bool(p_value < 0.05),
+                "n_obs_stacked": n,
+                "mean_loss_difference": mean_diff,
+                "hac_kernel": hac_kernel,
+            }
+    return out
 
 
 def _l6_nested_results(
