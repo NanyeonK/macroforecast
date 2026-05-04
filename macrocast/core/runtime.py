@@ -2285,30 +2285,74 @@ def _partial_dependence_table(model: ModelArtifact, X: pd.DataFrame, *, n_grid: 
 
 
 def _ale_table(model: ModelArtifact, X: pd.DataFrame, *, n_quantiles: int) -> pd.DataFrame:
+    """Apley & Zhu (2020) Accumulated Local Effects.
+
+    For each feature j, partition its range into ``n_quantiles`` bins.
+    Within each bin, compute the local effect as the average over training
+    points in that bin of ``f(x with x_j = upper_edge) - f(x with x_j =
+    lower_edge)``. Center the local effects (subtract mean) and cumulate
+    to obtain the ALE function. The ``importance`` column reports the L1
+    norm of the centred ALE function -- a calibration-invariant feature
+    importance derived from the same procedure.
+
+    Issue #192. The v0.1 implementation summed *uncentered* local-effect
+    bin endpoints; the centred-cumsum form here matches the published
+    procedure.
+    """
+
     fitted = model.fitted_object
-    rows = []
+    rows: list[dict[str, Any]] = []
     for column in X.columns:
         series = X[column].dropna()
         if len(series) < 4:
-            rows.append({"feature": column, "importance": 0.0, "coefficient": None})
+            rows.append({"feature": column, "importance": 0.0, "coefficient": None, "ale_function": []})
             continue
         quantiles = np.quantile(series, np.linspace(0, 1, max(3, int(n_quantiles) + 1)))
         bin_edges = np.unique(quantiles)
         if len(bin_edges) < 3:
-            rows.append({"feature": column, "importance": 0.0, "coefficient": None})
+            rows.append({"feature": column, "importance": 0.0, "coefficient": None, "ale_function": []})
             continue
-        local_effects = []
+        local_effects: list[float] = []
+        bin_centers: list[float] = []
+        # Apley local effect: condition on rows whose feature falls inside
+        # the bin; predict at the bin endpoints with the rest of the row
+        # held at its training values.
+        feature_values = X[column].to_numpy()
         for low, high in zip(bin_edges[:-1], bin_edges[1:]):
-            edited_low = X.fillna(0.0).copy()
+            mask = (feature_values >= low) & (feature_values <= high)
+            if mask.sum() == 0:
+                local_effects.append(0.0)
+                bin_centers.append(0.5 * (low + high))
+                continue
+            slab = X[mask].fillna(0.0)
+            edited_low = slab.copy()
             edited_low[column] = low
-            edited_high = X.fillna(0.0).copy()
+            edited_high = slab.copy()
             edited_high[column] = high
             try:
                 effect = float(np.mean(fitted.predict(edited_high) - fitted.predict(edited_low)))
             except Exception:
                 effect = 0.0
             local_effects.append(effect)
-        rows.append({"feature": column, "importance": float(np.sum(np.abs(local_effects))), "coefficient": None})
+            bin_centers.append(0.5 * (low + high))
+        local_arr = np.asarray(local_effects, dtype=float)
+        # Centre and cumulate -- Apley & Zhu Eq. (10).
+        centred = local_arr - local_arr.mean()
+        ale_function = np.cumsum(centred)
+        # Importance: L1 norm of the centred ALE function divided by the
+        # number of bins (mean absolute effect across the support).
+        importance = float(np.mean(np.abs(ale_function))) if ale_function.size else 0.0
+        rows.append(
+            {
+                "feature": column,
+                "importance": importance,
+                "coefficient": None,
+                "ale_function": [
+                    {"bin_center": float(c), "ale": float(v)}
+                    for c, v in zip(bin_centers, ale_function)
+                ],
+            }
+        )
     return pd.DataFrame(rows)
 
 
