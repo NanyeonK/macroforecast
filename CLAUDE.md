@@ -1,12 +1,12 @@
 # macrocast
 
 > Fair, reproducible macro forecasting benchmarking package.
-> Version 0.1.0 (12-layer canonical design — see `plans/design/part1-4`).
+> Version 0.2.0 (12-layer canonical design — see `plans/design/part1-4`).
 
 ## Quick start
 
 ```bash
-python3 -m pytest tests/ -x -q                     # ~470 tests, <10s on a laptop
+python3 -m pytest tests/ -x -q                     # ~710 tests, <30s on a laptop
 python3 -c "import macrocast; print(macrocast.__version__)"
 python3 -c "import macrocast; macrocast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
@@ -149,26 +149,53 @@ assert is_runnable("planned")  # legacy alias collapses to operational? no:
 assert not is_runnable("planned")  # legacy `planned` -> future, not runnable
 ```
 
-### v0.1 honesty-pass demotions
+### v0.1 honesty-pass demotions (all closed in v0.2)
 
-The codex review on PR #163 flagged eight families / ops whose v0.1
+The codex review on PR #163 flagged 19 families / ops whose v0.1
 runtime did not match the published procedure named in the design. They
-were demoted from `operational` to `future` so the validator rejects
-them; real implementations land per item via the v0.2 issue tracker.
+were demoted from `operational` to `future`; **every demotion was
+re-promoted in v0.2** with a real implementation. The 35 issues tracked
+in milestones `v0.2 honesty-pass` and `v0.2 design coverage` are now
+all closed.
 
-| Layer | Item | Why demoted |
-|------|------|-------------|
-| L1.G | `estimated_markov_switching` | runtime returned a year-parity placeholder, not Hamilton (1989) MS |
-| L1.G | `estimated_threshold` | placeholder, not Tong (1990) SETAR |
-| L1.G | `estimated_structural_break` | placeholder, not Bai-Perron break detection |
-| L4 | `factor_augmented_var` | no runtime wrapper; silent NotImplementedError |
-| L4 | `bvar_minnesota` / `bvar_normal_inverse_wishart` | wrapper delegated to plain VAR; no Minnesota / NIW shrinkage |
-| L4 | `macroeconomic_random_forest` | RandomForest + time_trend, not the Coulombe (2024) GTVP local-linear forest |
-| L4 | `dfm_mixed_mariano_murasawa` | PCA + AR(1), not Mariano-Murasawa Kalman state-space EM |
-| L7 | `fevd` / `historical_decomposition` / `generalized_irf` | returned coefficient mean (or tree importance fallback), not orthogonalised IRFs |
-| L7 | `mrf_gtvp` | tree feature_importances_, not Coulombe (2024) GTVP coefficient series |
-| L7 | `lasso_inclusion_frequency` | binary single-fit inclusion, not resampling-based frequency |
-| L7 | `accumulated_local_effect` | bin endpoint spread, not Apley & Zhu (2020) ALE |
-| L7 | `friedman_h_interaction` | variance-ratio surrogate, not Friedman & Popescu (2008) H |
-| L7 | `gradient_shap` / `integrated_gradients` / `saliency_map` / `deep_lift` | silently fell back to a SHAP proxy; not gradient-based |
-| L4 (deep NN) | `lstm` / `gru` / `transformer` without torch | now raise `NotImplementedError("install macrocast[deep]")` instead of silently falling back to `MLPRegressor` |
+| Layer | Item | v0.2 implementation | Issue |
+|------|------|---------------------|-------|
+| L1.G | `estimated_markov_switching` | statsmodels `MarkovRegression` (Hamilton 1989) | #195 |
+| L1.G | `estimated_threshold` | Tong (1990) SETAR quantile-split estimator | #196 |
+| L1.G | `estimated_structural_break` | Bai-Perron (1998) global LSE greedy break detection | #197 |
+| L4 | `factor_augmented_var` | Bernanke-Boivin-Eliasz (2005) FAVAR (PCA factors + VAR) | #184 |
+| L4 | `bvar_minnesota` / `bvar_normal_inverse_wishart` | closed-form Litterman (1986) Minnesota / NIW posterior mean | #185, #186 |
+| L4 | `macroeconomic_random_forest` | Coulombe (2024) GTVP -- per-leaf local linear regressions | #187 |
+| L4 | `dfm_mixed_mariano_murasawa` | statsmodels `DynamicFactor` (Kalman state-space MLE) | #188 |
+| L7 | `fevd` / `historical_decomposition` / `generalized_irf` | statsmodels VAR `fevd` / `irf` builders | #189 |
+| L7 | `mrf_gtvp` | per-leaf coefficient series from `_MRFWrapper` | #190 |
+| L7 | `lasso_inclusion_frequency` | bootstrap inclusion frequency in `[0, 1]` | #191 |
+| L7 | `accumulated_local_effect` | Apley & Zhu (2020) centred-cumulative-effect | #192 |
+| L7 | `friedman_h_interaction` | Friedman & Popescu (2008) H² statistic | #193 |
+| L7 | `gradient_shap` / `integrated_gradients` / `saliency_map` / `deep_lift` | captum-backed gradient attributions (operational with `[deep]` extra) | #194 |
+| L4 (deep NN) | `lstm` / `gru` / `transformer` without torch | `NotImplementedError("install macrocast[deep]")` -- explicit, no silent MLP fallback | #198 |
+
+### v0.2 design-coverage additions
+
+Beyond the honesty-pass promotions, v0.2 added the following capabilities
+on top of v0.1:
+
+| Capability | Issue |
+|------------|-------|
+| L0 `random_seed` -> L4 estimator `random_state` automatic propagation | #215 |
+| L8 manifest carries every design-listed provenance field (14 fields) | #208 |
+| L8 export `compression: gzip / zip` | #206 |
+| L8 `artifact_granularity = per_target / per_horizon / per_target_horizon / flat` | #207 |
+| L8 `manifest_format = yaml`, `export_format = html_report` | #209 |
+| L1.5 ADF / Phillips-Perron / KPSS stationarity tests | #210 |
+| `macrocast.custom.register_model` callables dispatched in L4 runtime | #216 |
+| L4 `search_algorithm = grid / random / bayesian / genetic / cv_path` dispatch | #217 |
+| L6.C Giacomini-Rossi (2010) rolling-window fluctuation test | #199 |
+| L6.E density / interval test battery (PIT-Berkowitz / KS / Kupiec / Christoffersen) | #200 |
+| L4 `forecast_object = quantile / density` path | #201 |
+| L2.A FRED-SD frequency alignment rules | #202 |
+| `sweep_groups` (NodeGroupSweep) into `execute_recipe` | #203 |
+| `parallel_unit = models` sub-cell parallelism | #204 |
+| 14 additional L7 figure types (SHAP / ALE / lasso / decomp / lineage families) | #205 |
+| L1.5 / L2.5 / L3.5 / L4.5 diagnostic visualisations + multi-format export | #211, #212, #213, #214 |
+| Real Shapley-over-pipelines `transformation_attribution` | #218 |
