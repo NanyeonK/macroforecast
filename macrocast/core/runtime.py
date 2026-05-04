@@ -6121,48 +6121,120 @@ def _estimate_threshold_regime(
     n_regimes: int,
     leaf_config: dict[str, Any],
 ) -> tuple[pd.Series, dict[str, Any]]:
-    """Tong (1990) SETAR: classify each observation by which side of a
-    threshold its lagged value (or another threshold variable) falls on.
+    """Issue #243 -- full Tong (1990) SETAR with grid-search threshold
+    estimation + AR(p) per regime.
 
-    Implementation: take ``threshold_variable`` series from
-    ``leaf_config['regime_target_values']`` (or, if absent, fall back to a
-    quantile split on the index). Estimate ``n_regimes - 1`` thresholds
-    by quantile of the threshold series (a pragmatic choice for v0.2;
-    full SETAR threshold-search via grid + AIC is a follow-up).
+    For each candidate threshold ``r`` on the threshold variable's
+    empirical grid, fit AR(``threshold_ar_p``) on the rows below ``r``
+    and on the rows at-or-above ``r`` separately, then sum the residual
+    SSR. The selected threshold minimises the joint SSR (equivalent to
+    AIC under Gaussian residuals + identical regime sizes). For
+    ``n_regimes > 2`` the procedure recurses on each partition.
+
+    Falls back to the v0.2 quantile-split when the threshold series is
+    absent or too short.
     """
 
     series_data = leaf_config.get("regime_target_values")
-    if series_data is None:
-        # Fallback: quantile split on a synthetic time index.
-        idx_values = np.arange(len(sample_index), dtype=float)
+    n = len(sample_index)
+    if series_data is None or len(series_data) < max(20, n_regimes * 8):
+        # Fallback path -- documented to keep recipes runnable.
+        idx_values = np.arange(n, dtype=float)
         cut_points = np.quantile(idx_values, np.linspace(0, 1, n_regimes + 1))
-    else:
-        series = pd.Series(series_data, index=sample_index).dropna()
-        if series.empty:
-            labels = pd.Series(["regime_0"] * len(sample_index), index=sample_index)
-            return labels, {"method": "fallback_no_threshold_series"}
-        idx_values = series.values.astype(float)
-        cut_points = np.quantile(idx_values, np.linspace(0, 1, n_regimes + 1))
-    thresholds = list(cut_points[1:-1])
-    full_values = (
-        np.asarray(leaf_config.get("regime_target_values", np.arange(len(sample_index), dtype=float)), dtype=float)
-        if leaf_config.get("regime_target_values") is not None
-        else np.arange(len(sample_index), dtype=float)
-    )
-    full_values = full_values[: len(sample_index)]
-    if len(full_values) < len(sample_index):
-        full_values = np.concatenate([full_values, np.full(len(sample_index) - len(full_values), np.nan)])
+        thresholds = list(cut_points[1:-1])
+        labels = [
+            f"regime_{min(int(np.searchsorted(thresholds, v, side='right')), n_regimes - 1)}"
+            for v in idx_values
+        ]
+        return pd.Series(labels, index=sample_index), {
+            "method": "fallback_quantile_split",
+            "reason": "threshold series unavailable or too short",
+            "thresholds": [float(t) for t in thresholds],
+            "n_regimes": n_regimes,
+        }
+
+    threshold_values = np.asarray(series_data, dtype=float)[:n]
+    valid_mask = ~np.isnan(threshold_values)
+    valid_values = threshold_values[valid_mask]
+    ar_p = int(leaf_config.get("threshold_ar_p", 1))
+
+    def _ar_ssr(values: np.ndarray, p: int) -> float:
+        """OLS AR(p) residual SSR on the supplied series."""
+
+        if values.size <= p + 2:
+            return float("inf")
+        y = values[p:]
+        X = np.column_stack(
+            [np.ones(len(y))] + [values[p - lag : -lag] if lag else values[p:] for lag in range(1, p + 1)]
+        )
+        try:
+            coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
+        except np.linalg.LinAlgError:
+            return float("inf")
+        resid = y - X @ coef
+        return float(np.dot(resid, resid))
+
+    def _split_partition(values: np.ndarray) -> tuple[float, float] | None:
+        """Find the threshold ``r`` that minimises SSR(below) + SSR(at-or-above).
+        Returns ``(threshold, ssr_total)`` or ``None`` if no valid split."""
+
+        if values.size < 2 * (ar_p + 3):
+            return None
+        # Grid: trim 10% / 90% quantiles to keep regime sizes balanced.
+        grid = np.quantile(values, np.linspace(0.1, 0.9, 50))
+        best: tuple[float, float] | None = None
+        for r in grid:
+            below = values[values < r]
+            above = values[values >= r]
+            if below.size < ar_p + 3 or above.size < ar_p + 3:
+                continue
+            ssr = _ar_ssr(below, ar_p) + _ar_ssr(above, ar_p)
+            if best is None or ssr < best[1]:
+                best = (float(r), float(ssr))
+        return best
+
+    selected_thresholds: list[float] = []
+    if n_regimes >= 2:
+        # Recursive partitioning -- find thresholds one at a time.
+        partitions = [valid_values]
+        for _ in range(n_regimes - 1):
+            best_partition_idx: int | None = None
+            best_split: tuple[float, float] | None = None
+            for idx, part in enumerate(partitions):
+                split = _split_partition(part)
+                if split is None:
+                    continue
+                if best_split is None or split[1] < best_split[1]:
+                    best_partition_idx = idx
+                    best_split = split
+            if best_partition_idx is None or best_split is None:
+                break
+            r, _ = best_split
+            selected_thresholds.append(r)
+            old = partitions.pop(best_partition_idx)
+            partitions.extend([old[old < r], old[old >= r]])
+        selected_thresholds = sorted(selected_thresholds)
+
+    if not selected_thresholds:
+        return _estimate_threshold_regime(
+            sample_index,
+            n_regimes,
+            {**leaf_config, "regime_target_values": None},
+        )
+
     labels: list[str] = []
-    for v in full_values:
+    for v in threshold_values:
         if np.isnan(v):
             labels.append("regime_0")
             continue
-        regime_idx = int(np.searchsorted(thresholds, v, side="right"))
+        regime_idx = int(np.searchsorted(selected_thresholds, v, side="right"))
         labels.append(f"regime_{min(regime_idx, n_regimes - 1)}")
     return pd.Series(labels, index=sample_index), {
-        "method": "tong_1990_setar_quantile_split",
-        "thresholds": [float(t) for t in thresholds],
+        "method": "tong_1990_setar_full_grid",
+        "thresholds": [float(t) for t in selected_thresholds],
         "n_regimes": n_regimes,
+        "threshold_ar_p": ar_p,
+        "criterion": "min_joint_ssr",
     }
 
 
@@ -6211,10 +6283,18 @@ def _estimate_structural_break_regime(
             "n_obs": int(n_valid),
         }
 
+    # Issue #244 -- Bai (1997) dynamic-programming exact break search.
+    #
+    # Pre-compute the segment-SSR table ``S[i, j]`` = SSR(y[i:j]) for every
+    # valid segment, then solve the recursion
+    #
+    #     SSR_k(j) = min_{m} { SSR_{k-1}(m) + S[m, j] }
+    #
+    # where ``SSR_k(j)`` is the minimum total SSR for a partition of the
+    # first ``j`` observations into exactly ``k`` segments. Backtracking
+    # recovers the optimal break dates per ``k``. The optimal ``k`` is then
+    # picked by BIC across ``k = 1, ..., max_breaks + 1``.
     min_len = max(3, n_valid // (max_breaks * 2 + 4))
-    best_break_set: list[int] = []
-    best_bic = np.inf
-    best_k = 0
     cumsum = np.concatenate(([0.0], np.cumsum(y_valid)))
     cumsq = np.concatenate(([0.0], np.cumsum(y_valid ** 2)))
 
@@ -6226,45 +6306,66 @@ def _estimate_structural_break_regime(
         sq = cumsq[end] - cumsq[start]
         return float(sq - (s * s) / length)
 
-    # Greedy sequential break search (Bai 1997 dynamic programming would be
-    # exact; the greedy version is fast and matches the published intent).
-    selected: list[int] = []
-    for _ in range(max_breaks):
-        boundaries = sorted([0] + selected + [n_valid])
-        candidate_best: tuple[float, int, int] | None = None
-        for seg_idx in range(len(boundaries) - 1):
-            seg_start, seg_end = boundaries[seg_idx], boundaries[seg_idx + 1]
-            for cut in range(seg_start + min_len, seg_end - min_len + 1):
-                ssr_split = segment_ssr(seg_start, cut) + segment_ssr(cut, seg_end)
-                if candidate_best is None or ssr_split < candidate_best[0]:
-                    candidate_best = (ssr_split, cut, seg_idx)
-        if candidate_best is None:
-            break
-        ssr_total, cut, _ = candidate_best
-        selected.append(cut)
-        # BIC-style criterion: log(SSR/n) + k*(log n)/n.
-        boundaries_now = sorted([0] + selected + [n_valid])
-        ssr = sum(segment_ssr(boundaries_now[i], boundaries_now[i + 1]) for i in range(len(boundaries_now) - 1))
-        k = len(selected)
+    INF = float("inf")
+    K_max = max_breaks + 1  # number of segments
+    # ssr_k_j[k, j] = min total SSR splitting the first j obs into k segments.
+    ssr_k_j = np.full((K_max + 1, n_valid + 1), INF)
+    prev = np.full((K_max + 1, n_valid + 1), -1, dtype=int)
+    # Base case: k=1 segment from 0 to j.
+    for j in range(min_len, n_valid + 1):
+        ssr_k_j[1, j] = segment_ssr(0, j)
+        prev[1, j] = 0
+    for k in range(2, K_max + 1):
+        for j in range(k * min_len, n_valid + 1):
+            best = INF
+            best_m = -1
+            for m in range((k - 1) * min_len, j - min_len + 1):
+                if ssr_k_j[k - 1, m] >= INF:
+                    continue
+                ssr_total = ssr_k_j[k - 1, m] + segment_ssr(m, j)
+                if ssr_total < best:
+                    best = ssr_total
+                    best_m = m
+            if best_m >= 0:
+                ssr_k_j[k, j] = best
+                prev[k, j] = best_m
+
+    # BIC-select the optimal number of segments.
+    best_k = 1
+    best_bic = INF
+    for k in range(1, K_max + 1):
+        ssr = ssr_k_j[k, n_valid]
+        if ssr >= INF:
+            continue
         bic = n_valid * np.log(max(ssr / n_valid, 1e-9)) + k * np.log(n_valid)
         if bic < best_bic:
             best_bic = bic
-            best_break_set = list(selected)
             best_k = k
 
-    boundaries = sorted([0] + best_break_set + [n_valid])
-    # Map valid indices back into the full sample_index.
+    # Backtrack the optimal break points for best_k segments.
+    breakpoints: list[int] = []
+    j = n_valid
+    for k in range(best_k, 0, -1):
+        m = int(prev[k, j])
+        if m == 0:
+            break
+        breakpoints.append(m)
+        j = m
+    breakpoints = sorted(breakpoints)
+
+    boundaries = sorted([0] + breakpoints + [n_valid])
     valid_indices = np.where(valid)[0]
     labels = pd.Series(index=sample_index, dtype=object)
     for r in range(len(boundaries) - 1):
         valid_slice = valid_indices[boundaries[r] : boundaries[r + 1]]
         labels.iloc[valid_slice] = f"regime_{r}"
-    labels = labels.fillna(f"regime_{best_k}")
+    labels = labels.fillna(f"regime_{best_k - 1}")
     metadata = {
-        "method": "bai_perron_global_lse_greedy",
-        "n_breaks_selected": int(best_k),
-        "break_indices": [int(b) for b in best_break_set],
+        "method": "bai_perron_global_lse_dp",
+        "n_breaks_selected": int(best_k - 1),
+        "break_indices": [int(b) for b in breakpoints],
         "bic": float(best_bic),
+        "min_segment_length": int(min_len),
     }
     return labels, metadata
 
