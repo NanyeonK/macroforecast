@@ -46,7 +46,10 @@ def test_giacomini_rossi_returns_supremum_statistic_and_critical_value():
     assert key in result, list(result.keys())
     payload = result[key]
     assert payload["statistic"] is not None
-    assert payload["critical_value"] == 2.7727
+    # v0.25 (#248) replaces the constant ``k_alpha = 2.7727`` with a
+    # simulated supremum-of-Brownian-bridge quantile per (m/T, alpha).
+    # The simulated value is in the published [2.5, 3.5] range for 5%.
+    assert 2.5 < payload["critical_value"] < 3.5
     assert payload["window_size"] >= 4
     assert payload["decision"] is False  # essentially equal -> should not reject
 
@@ -68,6 +71,36 @@ def test_giacomini_rossi_rejects_when_one_model_dominates_in_a_window():
     payload = result[("giacomini_rossi_2010", ("b", "a"), "y", 1)]
     assert payload["statistic"] > payload["critical_value"]
     assert payload["decision"] is True
+
+
+def test_gr_critical_value_varies_with_window_ratio():
+    """Issue #248 -- critical values come from a Monte Carlo simulation
+    keyed on (window_ratio, alpha). Different ratios produce different
+    quantiles in the published [2, 4] band; alpha tightens the quantile.
+    """
+
+    from macrocast.core.runtime import _gr_critical_value
+
+    cv_005_at_25 = _gr_critical_value(0.25, 0.05)
+    cv_010_at_25 = _gr_critical_value(0.25, 0.10)
+    cv_005_at_10 = _gr_critical_value(0.10, 0.05)
+    # 10% rejection threshold must be lower than 5% at the same ratio.
+    assert cv_010_at_25 < cv_005_at_25
+    # Different ratios -> different critical values.
+    assert cv_005_at_25 != cv_005_at_10
+    # All values lie in the published [2, 4.5] band for typical alpha.
+    for cv in (cv_005_at_25, cv_010_at_25, cv_005_at_10):
+        assert 2.0 < cv < 4.5
+
+
+def test_gr_critical_value_cached_returns_same_value():
+    """Cache hit returns identical (no random redraw)."""
+
+    from macrocast.core.runtime import _gr_critical_value
+
+    a = _gr_critical_value(0.25, 0.05)
+    b = _gr_critical_value(0.25, 0.05)
+    assert a == b
 
 
 def test_rossi_sekhposyan_recursive_variant_runs():
