@@ -928,6 +928,8 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         return _LinearARModel(p=int(params.get("n_lag", params.get("p", 1))))
     if family == "factor_augmented_ar":
         return _FactorAugmentedAR(p=int(params.get("n_lag", 1)), n_factors=int(params.get("n_factors", 3)))
+    if family == "factor_augmented_var":
+        return _FactorAugmentedVAR(p=int(params.get("n_lag", 2)), n_factors=int(params.get("n_factors", 3)))
     if family == "principal_component_regression":
         return _PrincipalComponentRegression(n_components=int(params.get("n_components", 4)))
     if family == "decision_tree":
@@ -1284,6 +1286,64 @@ class _PrincipalComponentRegression:
             return np.zeros(len(X))
         scores = (X - self._mean).fillna(0.0).to_numpy() @ self._loadings.T
         return self._regression.predict(scores)
+
+
+class _FactorAugmentedVAR:
+    """Bernanke-Boivin-Eliasz (2005) FAVAR.
+
+    Two-stage estimator: extract ``n_factors`` principal components from
+    a wide predictor panel, then fit a VAR(p) on the joint stack
+    ``[factors, target]``. The coupling between factor dynamics and
+    target dynamics is what distinguishes FAVAR from the simpler
+    ``factor_augmented_ar`` (which only conditions on contemporaneous
+    factors plus AR(p) on y).
+
+    Issue #184. Promoted FUTURE -> OPERATIONAL in v0.2.
+    """
+
+    def __init__(self, p: int = 2, n_factors: int = 3) -> None:
+        self.p = max(1, int(p))
+        self.n_factors = max(1, int(n_factors))
+        self._mean: np.ndarray | None = None
+        self._loadings: np.ndarray | None = None
+        self._var = _VARWrapper(p=self.p)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FactorAugmentedVAR":
+        from sklearn.decomposition import PCA
+
+        X_filled = X.fillna(0.0)
+        if X_filled.shape[0] < max(self.p + 2, self.n_factors + 1):
+            # Fallback to a plain linear fit when data is too short for both
+            # PCA and a VAR.
+            self._var = _VARWrapper(p=self.p)
+            self._var.fit(X_filled, y)
+            return self
+        n = min(self.n_factors, X_filled.shape[1])
+        self._mean = X_filled.mean(axis=0).to_numpy()
+        pca = PCA(n_components=n, random_state=0)
+        factors = pca.fit_transform(X_filled.to_numpy() - self._mean)
+        self._loadings = pca.components_
+        factor_frame = pd.DataFrame(
+            factors,
+            index=X_filled.index,
+            columns=[f"factor_{i}" for i in range(n)],
+        )
+        # Fit a VAR on (factors, target). _VARWrapper internally appends y as
+        # __y__ so the target's lagged dynamics couple to the factor lags.
+        self._var = _VARWrapper(p=self.p)
+        self._var.fit(factor_frame, y)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._loadings is None or self._mean is None:
+            return self._var.predict(X.fillna(0.0))
+        factors = (X.fillna(0.0).to_numpy() - self._mean) @ self._loadings.T
+        factor_frame = pd.DataFrame(
+            factors,
+            index=X.index,
+            columns=[f"factor_{i}" for i in range(self._loadings.shape[0])],
+        )
+        return self._var.predict(factor_frame)
 
 
 class _VARWrapper:

@@ -34,9 +34,8 @@ from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 # ``HONESTY_DEMOTED_*`` exports in the corresponding module.
 #
 # v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart re-promoted
-# in the PR closing #185 / #186 (real Minnesota / NIW posterior estimator).
+# (#185 / #186) and factor_augmented_var re-promoted (#184).
 _DEMOTED_L4_FAMILIES = (
-    "factor_augmented_var",
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
 )
@@ -193,11 +192,11 @@ def test_count_of_demotions_matches_documentation():
     re-promoted (#185 / #186), so the L4 demotion count drops from 5 to 3.
     """
 
-    # 3 L4 families remaining future after v0.2 BVAR promotion
-    assert len(_DEMOTED_L4_FAMILIES) == 3
+    # 2 L4 families remaining future after v0.2 BVAR + FAVAR promotions
+    assert len(_DEMOTED_L4_FAMILIES) == 2
     # 11 L7 ops
     assert len(HONESTY_DEMOTED_L7_OPS) == 11
     # 3 L1 estimated regimes
     assert len(_DEMOTED_L1_REGIMES) == 3
-    # Combined honest count after BVAR re-promotion: 17 items.
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 17
+    # Combined honest count after BVAR + FAVAR re-promotion: 16 items.
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 16

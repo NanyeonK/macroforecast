@@ -250,15 +250,14 @@ def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
     # PR-B demotions remain future until their tracking issue lands.
     expected_future = {
         "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
-        "factor_augmented_var",
         "macroeconomic_random_forest",
         "dfm_mixed_mariano_murasawa",
     }
     assert expected_future <= set(FUTURE_MODEL_FAMILIES)
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
-    # The two BVAR families must NOT be in FUTURE anymore.
-    assert "bvar_minnesota" not in FUTURE_MODEL_FAMILIES
-    assert "bvar_normal_inverse_wishart" not in FUTURE_MODEL_FAMILIES
+    # BVAR + FAVAR must NOT be in FUTURE anymore (re-promoted in v0.2).
+    for promoted in ("bvar_minnesota", "bvar_normal_inverse_wishart", "factor_augmented_var"):
+        assert promoted not in FUTURE_MODEL_FAMILIES
 
 
 def test_l4_5_forecast_combine_ops_registered():
