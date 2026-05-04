@@ -1273,9 +1273,16 @@ class _TorchSequenceModel:
 class _DFMMixedFrequency:
     """Mariano-Murasawa mixed-frequency dynamic factor model approximation.
 
-    Implements a simplified version: aggregate the predictor panel to the
-    target frequency, fit a single static factor via PCA, then regress the
-    target on the factor + AR(1) lag.
+    .. warning::
+
+        This is the *approximation* tracked by the ``planned`` status of the
+        ``dfm_mixed_mariano_murasawa`` family
+        (:data:`macrocast.core.ops.l4_ops.PLANNED_MODEL_FAMILIES`). The full
+        Mariano-Murasawa Kalman state-space EM with mixed-frequency observation
+        equation is not implemented in v0.1; here we aggregate the predictor
+        panel to the target frequency, fit a single static PCA factor, and
+        regress the target on (factor, AR(1)). Use ``get_family_status`` to
+        detect this at runtime.
     """
 
     def __init__(self, n_factors: int = 1) -> None:
@@ -1314,9 +1321,20 @@ class _DFMMixedFrequency:
 
 
 class _MRFWrapper:
-    """Macroeconomic random forest (Coulombe 2024) approximation: random forest over
-    (X, time_trend) features. Captures regime-conditional non-linearities without
-    the full local-linear refinement of the original implementation."""
+    """Macroeconomic random forest (Coulombe 2024) approximation: random forest
+    over (X, time_trend) features. Captures regime-conditional non-linearities
+    without the full local-linear refinement of the original implementation.
+
+    .. warning::
+
+        This is the *approximation* tracked by the ``planned`` status of the
+        ``macroeconomic_random_forest`` family
+        (:data:`macrocast.core.ops.l4_ops.PLANNED_MODEL_FAMILIES`). The full
+        Coulombe (2024) MRF -- generalized time-varying parameters (GTVP) via
+        a local random forest with asymmetric loss, plus per-leaf linear
+        smoothing -- is not implemented in v0.1. Use ``get_family_status`` to
+        detect this at runtime.
+    """
 
     def __init__(self, n_estimators: int = 200, max_depth: Any = None, random_state: int = 0) -> None:
         self.n_estimators = n_estimators

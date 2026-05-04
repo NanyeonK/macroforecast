@@ -33,9 +33,18 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "gru",
     "transformer",
     "knn",
-    "macroeconomic_random_forest",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
+)
+
+# ``planned`` families have a runtime wrapper that *runs* but is an
+# acknowledged approximation of the published method (see the wrapper's
+# docstring and ``plans/design/part2_l2_l3_l4.md`` for the gap). They are
+# accepted by the L4 validator like operational families so existing recipes
+# do not break, but downstream consumers may flag them via
+# ``get_family_status(family) == "planned"``.
+PLANNED_MODEL_FAMILIES: tuple[str, ...] = (
+    "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
 )
 
@@ -48,6 +57,7 @@ FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
 
 MODEL_FAMILY_STATUS = {
     **{family: "operational" for family in OPERATIONAL_MODEL_FAMILIES},
+    **{family: "planned" for family in PLANNED_MODEL_FAMILIES},
     **{family: "future" for family in FUTURE_MODEL_FAMILIES},
 }
 
@@ -63,8 +73,13 @@ def get_family_status(family: str) -> str:
 
 
 def _family_operational(dag, nref) -> bool:
+    """Allow ``operational`` and ``planned`` families through the L4 validator;
+    ``future`` (and unknown) families are rejected. ``planned`` families run
+    via approximation wrappers -- callers can detect this via
+    ``get_family_status(family) == 'planned'``."""
+
     family = dag.node(nref.node_id).params.get("family")
-    return MODEL_FAMILY_STATUS.get(family) == "operational"
+    return MODEL_FAMILY_STATUS.get(family) in ("operational", "planned")
 
 
 def _valid_strategy(dag, nref) -> bool:
