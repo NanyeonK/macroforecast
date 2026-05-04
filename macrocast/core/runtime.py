@@ -2761,11 +2761,15 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
     saved = set(axes.get("saved_objects", []))
     export_format = axes.get("export_format", "json_csv")
     formats = _l8_resolve_formats(export_format)
+    granularity = axes.get("artifact_granularity", "per_cell")
     exported: list[ExportedFile] = []
     summary_dir = output_directory / "summary"
     summary_dir.mkdir(exist_ok=True)
-    cell_dir = output_directory / "cell_001"
-    cell_dir.mkdir(exist_ok=True)
+    if granularity == "flat":
+        cell_dir = output_directory
+    else:
+        cell_dir = output_directory / "cell_001"
+    cell_dir.mkdir(exist_ok=True, parents=True)
     figures_dir = cell_dir / "figures"
 
     def add_dataframe(path: Path, frame: pd.DataFrame, source: str) -> None:
@@ -2798,7 +2802,15 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
             {"model_id": model_id, "target": target, "horizon": horizon, "origin": origin, "forecast": forecast}
             for (model_id, target, horizon, origin), forecast in upstream_artifacts["l4_forecasts_v1"].forecasts.items()
         ]
-        add_dataframe(cell_dir / "forecasts", pd.DataFrame(rows), "l4_forecasts_v1")
+        forecasts_frame = pd.DataFrame(rows)
+        if granularity in {"per_target", "per_horizon", "per_target_horizon"} and not forecasts_frame.empty:
+            for sub_dir, sub_frame in _l8_split_by_granularity(
+                forecasts_frame, granularity, cell_dir
+            ):
+                sub_dir.mkdir(parents=True, exist_ok=True)
+                add_dataframe(sub_dir / "forecasts", sub_frame.reset_index(drop=True), "l4_forecasts_v1")
+        else:
+            add_dataframe(cell_dir / "forecasts", forecasts_frame, "l4_forecasts_v1")
     if "metrics" in saved and "l5_evaluation_v1" in upstream_artifacts:
         add_dataframe(summary_dir / "metrics_all_cells", upstream_artifacts["l5_evaluation_v1"].metrics_table, "l5_evaluation_v1")
     if "ranking" in saved and "l5_evaluation_v1" in upstream_artifacts:
@@ -2857,6 +2869,37 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
         else:  # zip
             exported = _l8_apply_zip(exported, output_directory, level)
     return exported
+
+
+def _l8_split_by_granularity(
+    frame: pd.DataFrame, granularity: str, cell_dir: Path
+) -> list[tuple[Path, pd.DataFrame]]:
+    """Yield ``(sub_directory, group_frame)`` pairs for an artifact split by
+    L8.D ``artifact_granularity`` (``per_target`` / ``per_horizon`` /
+    ``per_target_horizon``). Frame must carry ``target`` and/or ``horizon``
+    columns; missing values are coerced to a ``"_missing_"`` bucket."""
+
+    pairs: list[tuple[Path, pd.DataFrame]] = []
+    if granularity == "per_target":
+        keys = ["target"]
+    elif granularity == "per_horizon":
+        keys = ["horizon"]
+    else:
+        keys = ["target", "horizon"]
+    if not all(k in frame.columns for k in keys):
+        return [(cell_dir, frame)]
+    for keyvals, group in frame.groupby(keys, dropna=False):
+        if not isinstance(keyvals, tuple):
+            keyvals = (keyvals,)
+        parts: list[str] = []
+        for key, val in zip(keys, keyvals):
+            safe = "_missing_" if pd.isna(val) else str(val).replace("/", "_").replace(" ", "_")
+            parts.append(f"{key}={safe}")
+        sub_dir = cell_dir
+        for part in parts:
+            sub_dir = sub_dir / part
+        pairs.append((sub_dir, group))
+    return pairs
 
 
 def _l8_apply_gzip(exported: list[ExportedFile], level: int) -> list[ExportedFile]:
