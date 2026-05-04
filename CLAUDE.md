@@ -1,12 +1,12 @@
 # macrocast
 
 > Fair, reproducible macro forecasting benchmarking package.
-> Version 0.2.0 (12-layer canonical design — see `plans/design/part1-4`).
+> Version 0.2.5 (12-layer canonical design — see `plans/design/part1-4`).
 
 ## Quick start
 
 ```bash
-python3 -m pytest tests/ -x -q                     # ~710 tests, <30s on a laptop
+python3 -m pytest tests/ -x -q                     # ~770 tests, <40s on a laptop
 python3 -c "import macrocast; print(macrocast.__version__)"
 python3 -c "import macrocast; macrocast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
@@ -199,3 +199,31 @@ on top of v0.1:
 | 14 additional L7 figure types (SHAP / ALE / lasso / decomp / lineage families) | #205 |
 | L1.5 / L2.5 / L3.5 / L4.5 diagnostic visualisations + multi-format export | #211, #212, #213, #214 |
 | Real Shapley-over-pipelines `transformation_attribution` | #218 |
+
+### v0.25 second honesty pass (all closed)
+
+After v0.2 the audit flagged 19 items that were operational but shipped
+as minimum-viable proxies relative to the published design. v0.25
+promotes every one of them to the procedure named in the literature.
+
+| Item | v0.25 implementation | Issue |
+|------|---------------------|-------|
+| Phillips-Perron native | OLS + Newey-West HAC, no `arch` dependency | #252 |
+| Lasso inclusion rolling-window mode | `sampling = bootstrap | rolling | both` | #253 |
+| Sampling Shapley for n > 8 pipelines | Castro-Gomez-Tejada (2009) permutation Shapley | #254 |
+| McCracken-Ng / FRED-SD canonical block memberships | 8-group MD + 14-group QD + 50-state grid | #260 |
+| L8 derived `saved_objects` defaults | per-active-layer auto-include | #261 |
+| Tong (1990) SETAR full grid-search | joint-SSR objective with AR(p) per regime | #243 |
+| Bai (1997) DP exact break search | global LSE recursion with BIC | #244 |
+| L3 cascade β + pipeline_id propagation | `cascade_max_depth` enforced; pipeline_id inherited | #257 |
+| L6 HAC kernels (Newey-West / Andrews / Parzen) | `_long_run_variance(kernel)` helper | #259 |
+| L5 decomposition / oos_period / aggregation matrix | per_subperiod / by_predictor_block / per_horizon_then_mean / top_k_worst | #258 |
+| L2 preprocessor + L3 feature_block / combiner dispatch | end-to-end runtime hook | #251 |
+| Mariano-Murasawa mixed-frequency Kalman | `DynamicFactorMQ` route when `mixed_frequency=True` | #245 |
+| Per-family quantile estimators | QuantileRegressor / GBR-quantile / xgb / lgbm | #246 |
+| Density tests strict mode | requires real `forecast_intervals` | #247 |
+| Giacomini-Rossi simulated CVs | per (m/T, alpha) Monte Carlo | #248 |
+| Real Chow-Lin (1971) disaggregation | regression-based with monthly indicator | #255 |
+| L4.5 residual ACF + QQ views | `fit_view = residual_acf | residual_qq | multi` | #256 |
+| 9 L7 figure renderers replaced (force / dependence / IRF / decomp / etc.) | distinct layouts matching the design table | #249 |
+| Sub-cell parallelism (`oos_dates` / `horizons` / `targets`) | walk-forward origin loop fan-out | #250 |
