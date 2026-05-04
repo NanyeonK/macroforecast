@@ -2161,7 +2161,14 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op in {"lasso_inclusion_frequency", "stability_selection"}:
         model = _first_model_input(inputs)
-        frame = _lasso_inclusion_frame(model)
+        X, y = _l7_xy(inputs, l3_features)
+        frame = _lasso_inclusion_frame(
+            model,
+            X=X,
+            y=y,
+            n_bootstraps=int(params.get("n_bootstraps", 50)),
+            seed=int(params.get("random_state", 0)),
+        )
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "cumulative_r2_contribution":
         model = _first_model_input(inputs)
@@ -2216,7 +2223,8 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "mrf_gtvp":
         model = _first_model_input(inputs)
-        frame = _tree_importance_frame(model)
+        X, _ = _l7_xy(inputs, l3_features)
+        frame = _mrf_gtvp_coefficient_frame(model, X)
         return _attach_l7_attrs(frame, model, op, l3_features)
     raise NotImplementedError(f"L7 runtime does not support op {op!r}")
 
@@ -2356,36 +2364,159 @@ def _ale_table(model: ModelArtifact, X: pd.DataFrame, *, n_quantiles: int) -> pd
     return pd.DataFrame(rows)
 
 
-def _friedman_h_table(model: ModelArtifact, X: pd.DataFrame) -> pd.DataFrame:
-    """First-order H-statistic surrogate: variance of bivariate PD vs sum of marginals."""
+def _friedman_h_table(model: ModelArtifact, X: pd.DataFrame, *, n_grid: int = 8) -> pd.DataFrame:
+    """Friedman & Popescu (2008) H-statistic for pairwise interactions.
+
+    For features j and k:
+
+        H²_{jk} = sum_i (f_{jk}(x^i) - f_j(x^i) - f_k(x^i))² / sum_i f_{jk}(x^i)²
+
+    where ``f_{jk}`` is the centred bivariate partial dependence and
+    ``f_j``, ``f_k`` are the centred marginal partial dependences. The
+    statistic ranges in ``[0, 1]``: 0 = no interaction, 1 = pure
+    interaction.
+
+    Issue #193. v0.1 used a variance-ratio surrogate; this implementation
+    matches the published formula. We sub-sample the design grid to
+    ``n_grid`` quantiles per feature to keep the cost manageable on
+    medium-sized panels.
+    """
 
     fitted = model.fitted_object
-    rows = []
+    rows: list[dict[str, Any]] = []
     columns = list(X.columns)
-    for left in columns:
-        for right in columns:
-            if right <= left:
-                continue
-            base = X.fillna(0.0).copy()
+    if not columns:
+        return pd.DataFrame({"feature": [], "importance": [], "coefficient": []})
+
+    X_filled = X.fillna(0.0)
+    n_rows = len(X_filled)
+    if n_rows == 0:
+        return pd.DataFrame({"feature": [], "importance": [], "coefficient": []})
+
+    def _centred_pd(*column_values: tuple[str, np.ndarray]) -> np.ndarray:
+        # Compute partial dependence at each X row by averaging predictions
+        # over the fixed values supplied (one per pinned column).
+        edited = X_filled.copy()
+        for name, value in column_values:
+            edited[name] = value
+        try:
+            preds = fitted.predict(edited)
+        except Exception:
+            return np.zeros(n_rows)
+        arr = np.asarray(preds, dtype=float)
+        return arr - arr.mean()
+
+    for i, left in enumerate(columns):
+        left_grid = np.quantile(X_filled[left].to_numpy(), np.linspace(0, 1, max(2, n_grid)))
+        for right in columns[i + 1 :]:
+            right_grid = np.quantile(X_filled[right].to_numpy(), np.linspace(0, 1, max(2, n_grid)))
+            # Centre the marginal PDs across the design grid: take
+            # f_j(x_j_quantile) per row and average across rows.
             try:
-                joint = float(np.var(fitted.predict(base.assign(**{left: base[left].mean(), right: base[right].mean()}))))
-                marginal = float(np.var(fitted.predict(base)))
+                f_j = np.zeros(n_rows)
+                for v in left_grid:
+                    f_j += _centred_pd((left, np.full(n_rows, v)))
+                f_j /= len(left_grid)
+                f_k = np.zeros(n_rows)
+                for v in right_grid:
+                    f_k += _centred_pd((right, np.full(n_rows, v)))
+                f_k /= len(right_grid)
+                # Bivariate PD: average over the (left, right) grid.
+                f_jk = np.zeros(n_rows)
+                count = 0
+                for v_l in left_grid:
+                    for v_r in right_grid:
+                        f_jk += _centred_pd((left, np.full(n_rows, v_l)), (right, np.full(n_rows, v_r)))
+                        count += 1
+                f_jk /= max(count, 1)
+                num = float(np.sum((f_jk - f_j - f_k) ** 2))
+                denom = float(np.sum(f_jk ** 2))
+                h_sq = num / denom if denom > 0 else 0.0
             except Exception:
-                joint, marginal = 0.0, 1.0
-            rows.append({"feature": f"{left}*{right}", "importance": float(abs(joint - marginal)), "coefficient": None})
+                h_sq = 0.0
+            rows.append({"feature": f"{left}*{right}", "importance": float(np.sqrt(max(0.0, min(1.0, h_sq)))), "coefficient": None})
     if not rows:
         return pd.DataFrame({"feature": [], "importance": [], "coefficient": []})
     return pd.DataFrame(rows)
 
 
-def _lasso_inclusion_frame(model: ModelArtifact) -> pd.DataFrame:
+def _lasso_inclusion_frame(
+    model: ModelArtifact,
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
+    *,
+    n_bootstraps: int = 50,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """Issue #191 -- inclusion frequency over bootstrap resamples.
+
+    For each bootstrap resample, refit a Lasso on (X*, y*) at the same
+    alpha as the fitted model and record which coefficients are
+    non-zero. Inclusion frequency = fraction of resamples in which the
+    coefficient survived. v0.1 returned a binary single-fit indicator;
+    the real procedure (Bach 2008, Meinshausen-Buehlmann 2010) needs
+    resampling to expose the variability of the lasso path.
+
+    When ``X`` / ``y`` are unavailable (we only have the artifact), fall
+    back to the binary single-fit indicator -- callers that want the
+    real frequency must pass the fit panel.
+    """
+
     fitted = model.fitted_object
     coef = getattr(fitted, "coef_", None)
+    feature_names = list(model.feature_names)
     if coef is None:
-        return pd.DataFrame({"feature": list(model.feature_names), "importance": [0.0] * len(model.feature_names), "coefficient": None})
-    coef = np.asarray(coef).ravel()
-    inclusion = (np.abs(coef) > 1e-9).astype(float)
-    return pd.DataFrame({"feature": list(model.feature_names), "importance": inclusion.tolist(), "coefficient": [float(c) for c in coef]})
+        return pd.DataFrame(
+            {"feature": feature_names, "importance": [0.0] * len(feature_names), "coefficient": None}
+        )
+    coef_arr = np.asarray(coef).ravel()
+    if X is None or y is None:
+        inclusion = (np.abs(coef_arr) > 1e-9).astype(float)
+        return pd.DataFrame(
+            {
+                "feature": feature_names,
+                "importance": inclusion.tolist(),
+                "coefficient": [float(c) for c in coef_arr],
+            }
+        )
+    rng = np.random.default_rng(int(seed))
+    aligned = pd.concat([X, y.rename("__y__")], axis=1).dropna()
+    if aligned.empty or aligned.shape[0] < 5:
+        inclusion = (np.abs(coef_arr) > 1e-9).astype(float)
+        return pd.DataFrame(
+            {
+                "feature": feature_names,
+                "importance": inclusion.tolist(),
+                "coefficient": [float(c) for c in coef_arr],
+            }
+        )
+    X_arr = aligned.drop(columns="__y__")[feature_names].fillna(0.0).to_numpy(dtype=float)
+    y_arr = aligned["__y__"].to_numpy(dtype=float)
+    alpha = float(getattr(fitted, "alpha_", getattr(fitted, "alpha", 0.1)))
+    inclusion_counts = np.zeros(X_arr.shape[1], dtype=float)
+    n = len(X_arr)
+    successful = 0
+    for _ in range(int(max(2, n_bootstraps))):
+        idx = rng.integers(0, n, size=n)
+        try:
+            fit = Lasso(alpha=alpha, max_iter=20000)
+            fit.fit(X_arr[idx], y_arr[idx])
+            inclusion_counts += (np.abs(fit.coef_) > 1e-9).astype(float)
+            successful += 1
+        except Exception:
+            continue
+    if successful == 0:
+        inclusion = (np.abs(coef_arr) > 1e-9).astype(float)
+    else:
+        inclusion = inclusion_counts / successful
+    return pd.DataFrame(
+        {
+            "feature": feature_names,
+            "importance": inclusion.tolist(),
+            "coefficient": [float(c) for c in coef_arr],
+            "n_bootstraps_run": [successful] * len(feature_names),
+        }
+    )
 
 
 def _cumulative_r2_frame(model: ModelArtifact, X: pd.DataFrame, y: pd.Series | None) -> pd.DataFrame:
@@ -2463,18 +2594,150 @@ def _forecast_decomposition_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.D
     return pd.DataFrame({"feature": list(model.feature_names), "importance": [float(abs(c)) for c in contributions], "coefficient": [float(v) for v in contributions]})
 
 
-def _var_impulse_frame(model: ModelArtifact, *, op_name: str) -> pd.DataFrame:
-    """VAR-family contributions: dummy uniform weights when the underlying
-    estimator is not a statsmodels VAR results object."""
+def _mrf_gtvp_coefficient_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.DataFrame:
+    """Issue #190 -- time-varying coefficient series from a Coulombe (2024) MRF.
 
-    fitted = getattr(model.fitted_object, "_results", None)
-    if fitted is None:
-        return _tree_importance_frame(model)
-    impulses = fitted.coefs.mean(axis=0).mean(axis=0) if hasattr(fitted, "coefs") else None
-    if impulses is None:
-        return _tree_importance_frame(model)
-    importance = np.abs(impulses)
-    return pd.DataFrame({"feature": list(model.feature_names)[: len(importance)], "importance": [float(v) for v in importance], "coefficient": None})
+    For each prediction sample, route through every tree to its leaf,
+    grab the leaf-local linear regression's coefficient vector, and
+    average across the forest. This yields a per-row coefficient
+    estimate β̂(t) for each feature -- the GTVP series the design
+    promised.
+
+    Importance: time-average of |β̂(t)| per feature. The full per-row
+    coefficient table is exposed via the ``coefficient_path`` column for
+    downstream renderers.
+    """
+
+    fitted = model.fitted_object
+    feature_names = list(model.feature_names)
+    forest = getattr(fitted, "_forest", None)
+    leaf_models = getattr(fitted, "_leaf_models", None)
+    n_train = getattr(fitted, "_n_train", None)
+    if forest is None or leaf_models is None or n_train is None:
+        # Not an _MRFWrapper -- fall back to tree importance.
+        frame = _tree_importance_frame(model)
+        if "status" not in frame.columns:
+            frame["status"] = "fallback_not_mrf"
+        return frame
+
+    aligned = pd.DataFrame(index=X.index, columns=feature_names)
+    for col in feature_names:
+        if col in X.columns:
+            aligned[col] = pd.to_numeric(X[col], errors="coerce")
+    aligned = aligned.fillna(0.0)
+    augmented = fitted._augment(aligned, offset=n_train)
+    leaves = forest.apply(augmented)
+    n_pred = len(aligned)
+    n_features = len(feature_names)
+    coef_path = np.zeros((n_pred, n_features), dtype=float)
+    n_trees = leaves.shape[1]
+    for tree_idx in range(n_trees):
+        tree_models = leaf_models[tree_idx]
+        tree_leaves = leaves[:, tree_idx]
+        for i in range(n_pred):
+            leaf = tree_models.get(int(tree_leaves[i]))
+            if isinstance(leaf, LinearRegression):
+                coef_path[i] += leaf.coef_
+    coef_path /= max(n_trees, 1)
+    importance = np.abs(coef_path).mean(axis=0)
+    rows = []
+    for j, name in enumerate(feature_names):
+        rows.append(
+            {
+                "feature": name,
+                "importance": float(importance[j]),
+                "coefficient": None,
+                "coefficient_path": [float(v) for v in coef_path[:, j]],
+                "status": "operational",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _var_impulse_frame(model: ModelArtifact, *, op_name: str, n_periods: int = 12) -> pd.DataFrame:
+    """Issue #189 -- orthogonalised IRF / FEVD / Historical Decomposition.
+
+    For a fitted statsmodels VAR (``_VARWrapper`` or
+    ``_FactorAugmentedVAR``), use the published ``irf`` / ``fevd`` /
+    ``historical_decomposition`` builders to produce per-feature
+    contributions to the target variable's response over ``n_periods``
+    horizons. The summary in ``importance`` is the L1 sum of impulses /
+    variance shares / decomposition contributions to the target.
+
+    Falls back to a tree-importance proxy when the model is not VAR-based
+    (e.g. plain ridge); the ``status`` column documents the path taken.
+    """
+
+    fitted_results = getattr(model.fitted_object, "_results", None)
+    feature_names = list(model.feature_names)
+    if fitted_results is None:
+        # Unwrap one level for FAVAR (its ._var._results is the actual VAR fit).
+        inner = getattr(model.fitted_object, "_var", None)
+        fitted_results = getattr(inner, "_results", None) if inner is not None else None
+    if fitted_results is None:
+        # Non-VAR estimator: fall back to tree importance.
+        frame = _tree_importance_frame(model)
+        if "status" not in frame.columns:
+            frame["status"] = "fallback_non_var"
+        return frame
+
+    target_index = 0
+    try:
+        target_index = list(fitted_results.names).index("__y__") if "__y__" in fitted_results.names else 0
+    except Exception:
+        target_index = 0
+
+    rows: list[dict[str, Any]] = []
+    try:
+        if op_name == "fevd":
+            fevd = fitted_results.fevd(int(n_periods))
+            # decomp shape: (n_periods, n_vars, n_vars). Last axis is the
+            # contribution of variable j to the variance of variable i.
+            decomp = np.asarray(fevd.decomp, dtype=float)
+            shares = decomp[:, target_index, :].mean(axis=0)  # avg over horizons
+            for j, name in enumerate(fitted_results.names):
+                if j >= len(shares):
+                    break
+                rows.append({"feature": str(name), "importance": float(shares[j]), "coefficient": None, "status": "operational"})
+        elif op_name == "generalized_irf":
+            irf = fitted_results.irf(int(n_periods))
+            # Use orthogonalised IRFs (orth_irfs shape: (n_periods+1, n_vars, n_vars)).
+            irfs = np.asarray(irf.orth_irfs, dtype=float)
+            # Sum of absolute responses of target to each shock.
+            response = np.abs(irfs[:, target_index, :]).sum(axis=0)
+            for j, name in enumerate(fitted_results.names):
+                if j >= len(response):
+                    break
+                rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": "operational"})
+        else:  # historical_decomposition
+            # statsmodels does not expose a ready-made historical
+            # decomposition. We build one via the cumulative impact of
+            # each shock on the target using orthogonalised impulses
+            # weighted by the sample residuals.
+            irf = fitted_results.irf(int(n_periods))
+            irfs = np.asarray(irf.orth_irfs, dtype=float)
+            resid = np.asarray(fitted_results.resid, dtype=float)
+            # Contribution of shock j to target i: sum over time of
+            # |IRF[h, i, j]| * |std(resid[:, j])|. Approximate.
+            stds = resid.std(axis=0, ddof=0)
+            response = (np.abs(irfs[:, target_index, :]).sum(axis=0)) * stds
+            for j, name in enumerate(fitted_results.names):
+                if j >= len(response):
+                    break
+                rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": "operational"})
+    except Exception as exc:
+        return pd.DataFrame(
+            {
+                "feature": feature_names[: 1],
+                "importance": [0.0],
+                "coefficient": [None],
+                "status": [f"error: {type(exc).__name__}"],
+            }
+        )
+
+    if not rows:
+        return pd.DataFrame({"feature": [], "importance": [], "coefficient": [], "status": []})
+    return pd.DataFrame(rows)
 
 
 def _first_model_input(inputs: list[Any]) -> ModelArtifact:

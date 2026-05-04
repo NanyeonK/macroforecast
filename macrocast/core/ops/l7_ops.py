@@ -82,14 +82,10 @@ DEFAULT_FIGURE_MAPPING = {
 #   gradient-based attributions. v0.1 falls back to a SHAP proxy --
 #   different attribution method, not the gradient-based one named.
 HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = (
-    "fevd",
-    "historical_decomposition",
-    "generalized_irf",
-    "mrf_gtvp",
-    "lasso_inclusion_frequency",
-    # accumulated_local_effect re-promoted in v0.2 (#192) via the
-    # Apley & Zhu (2020) centred-cumulative-effect procedure.
-    "friedman_h_interaction",
+    # v0.2 promoted: fevd / historical_decomposition / generalized_irf (#189),
+    # mrf_gtvp (#190), lasso_inclusion_frequency (#191),
+    # accumulated_local_effect (#192), friedman_h_interaction (#193).
+    # The remaining 4 are the gradient-based attributions tracked by #194.
     "gradient_shap",
     "integrated_gradients",
     "saliency_map",

@@ -193,7 +193,7 @@ def test_count_of_demotions_matches_documentation():
     # 0 L4 families and 0 L1 regimes remain future after v0.2 promotions.
     assert len(_DEMOTED_L4_FAMILIES) == 0
     assert len(_DEMOTED_L1_REGIMES) == 0
-    # 10 L7 ops remaining future after #192 (ALE) promotion.
-    assert len(HONESTY_DEMOTED_L7_OPS) == 10
-    # Only the L7 demotions remain.
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 10
+    # 4 L7 ops remaining future after #189-#193 promotions (gradient-based
+    # attributions = #194 still pending).
+    assert len(HONESTY_DEMOTED_L7_OPS) == 4
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 4
