@@ -3587,6 +3587,8 @@ def _l6_equal_predictive_results(
     results: dict[tuple[Any, ...], Any] = {}
     tests = ["dm_diebold_mariano", "gw_giacomini_white"] if sub.get("equal_predictive_test") == "multi" else [sub.get("equal_predictive_test")]
     loss_col = "absolute" if sub.get("loss_function") == "absolute" else "squared"
+    # Issue #259 -- HAC kernel from L6 globals (newey_west / andrews / parzen).
+    hac_kernel = leaf.get("dependence_correction", "newey_west")
     apply_hln = bool(sub.get("hln_correction", True))
     for test_name in tests:
         for model_a, model_b in pairs:
@@ -3595,7 +3597,7 @@ def _l6_equal_predictive_results(
                 right = group.loc[group["model_id"] == model_b, ["origin", loss_col]].rename(columns={loss_col: "loss_b"})
                 joined = left.merge(right, on="origin", how="inner")
                 diff = joined["loss_a"] - joined["loss_b"]
-                stat, p_value = _diebold_mariano_test(diff, horizon=int(horizon), hln=apply_hln)
+                stat, p_value = _diebold_mariano_test(diff, horizon=int(horizon), hln=apply_hln, kernel=hac_kernel)
                 results[(test_name, model_a, model_b, target, int(horizon))] = {
                     "statistic": stat,
                     "p_value": p_value,
@@ -3627,7 +3629,7 @@ def _l6_nested_results(
                     f_value = improvement + adjustment
                 else:
                     f_value = improvement
-                stat, p_value = _diebold_mariano_test(f_value, horizon=int(horizon), hln=False)
+                stat, p_value = _diebold_mariano_test(f_value, horizon=int(horizon), hln=False, kernel=hac_kernel)
                 # CW is a one-sided test (H_a: large model improves on small)
                 p_value = (p_value / 2.0) if (p_value is not None and stat is not None and stat > 0) else p_value
                 results[(test_name, small_model, large_model, target, int(horizon))] = {
@@ -4279,11 +4281,18 @@ def _residual_test_statistic(test_name: str, residuals: pd.Series, lag: int) -> 
     return None, None
 
 
-def _diebold_mariano_test(diff: pd.Series, *, horizon: int, hln: bool = True) -> tuple[float | None, float | None]:
-    """Diebold-Mariano test with Newey-West HAC standard error.
+def _diebold_mariano_test(
+    diff: pd.Series,
+    *,
+    horizon: int,
+    hln: bool = True,
+    kernel: str = "newey_west",
+) -> tuple[float | None, float | None]:
+    """Diebold-Mariano test with HAC standard error.
 
-    When ``hln=True`` (default) applies the Harvey-Leybourne-Newbold (1997)
-    small-sample correction.
+    Issue #259 -- ``kernel`` selects newey_west / andrews / parzen
+    (default: newey_west). When ``hln=True`` (default) applies the
+    Harvey-Leybourne-Newbold (1997) small-sample correction.
     """
 
     clean = diff.dropna()
@@ -4292,7 +4301,7 @@ def _diebold_mariano_test(diff: pd.Series, *, horizon: int, hln: bool = True) ->
         return None, None
     mean = float(clean.mean())
     nw_lag = max(0, int(horizon) - 1)
-    variance = _newey_west_variance(clean.to_numpy() - mean, lag=nw_lag)
+    variance = _long_run_variance(clean.to_numpy() - mean, kernel=kernel, lag=nw_lag)
     if variance <= 0:
         return None, None
     statistic = mean / math.sqrt(variance / n)
@@ -4313,6 +4322,60 @@ def _newey_west_variance(values: np.ndarray, *, lag: int) -> float:
         gamma_k = float(np.dot(values[:-k], values[k:]) / n)
         variance += 2.0 * weight * gamma_k
     return variance
+
+
+def _long_run_variance(values: np.ndarray, *, kernel: str = "newey_west", lag: int | None = None) -> float:
+    """Issue #259 -- HAC long-run variance with three published kernels.
+
+    * ``newey_west`` (Newey-West 1987): Bartlett triangular kernel,
+      ``w_k = 1 - k / (L + 1)``.
+    * ``andrews``: Andrews (1991) data-driven Bartlett bandwidth from an
+      AR(1) pre-whitening of the residuals; ``L = 1.1447 * (alpha * n)^(1/3)``.
+    * ``parzen``: Parzen (1957) quartic-spectral kernel,
+      ``w_k = 1 - 6(k/L)^2 + 6(k/L)^3`` for ``k <= L/2``, then
+      ``2(1 - k/L)^3``.
+    """
+
+    n = len(values)
+    if n == 0:
+        return 0.0
+    centered = values - values.mean() if abs(values.mean()) > 1e-12 else values
+    gamma_0 = float(np.dot(centered, centered) / n)
+    if kernel == "andrews":
+        # AR(1) pre-whiten -> alpha = autocorrelation -> bandwidth.
+        if n > 2:
+            num = float(np.sum(centered[:-1] * centered[1:]))
+            den = float(np.sum(centered[:-1] ** 2))
+            alpha1 = num / den if den > 0 else 0.0
+            alpha = (4 * alpha1 ** 2) / (max(1 - alpha1 ** 2, 1e-12) ** 2)
+            L = max(1, int(np.floor(1.1447 * (alpha * n) ** (1 / 3))))
+        else:
+            L = 1
+        kernel = "newey_west"  # Andrews uses the Bartlett kernel with the data-driven L.
+        lag = L
+    if lag is None:
+        lag = max(1, int(np.floor(4 * (n / 100.0) ** (2.0 / 9.0))))
+    L = max(0, int(lag))
+    variance = gamma_0
+    if kernel == "newey_west":
+        for k in range(1, L + 1):
+            weight = 1.0 - k / (L + 1)
+            if n > k:
+                gamma_k = float(np.dot(centered[:-k], centered[k:]) / n)
+                variance += 2.0 * weight * gamma_k
+        return float(variance)
+    if kernel == "parzen":
+        for k in range(1, L + 1):
+            x = k / L
+            if x <= 0.5:
+                weight = 1 - 6 * x ** 2 + 6 * x ** 3
+            else:
+                weight = 2 * (1 - x) ** 3
+            if n > k:
+                gamma_k = float(np.dot(centered[:-k], centered[k:]) / n)
+                variance += 2.0 * weight * gamma_k
+        return float(variance)
+    raise ValueError(f"unknown HAC kernel {kernel!r}")
 
 
 def _autocorr(values: pd.Series, lag: int) -> float:
@@ -5430,8 +5493,54 @@ def _minimal_l3_params(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def _execute_l3_dag(dag, frame: pd.DataFrame, target_name: str) -> dict[str, Any]:
+    """Issue #257 -- enforce ``cascade_max_depth`` and propagate
+    ``pipeline_id`` through the executed step nodes.
+
+    Cascade depth is the longest chain of ``step`` nodes from any source.
+    The default cap is 10; override via the recipe's L3
+    ``leaf_config.cascade_max_depth``. ``pipeline_id`` is sourced from
+    each step's params (or inherited from its deepest input) so L7
+    lineage / transformation_attribution can group steps without
+    re-parsing the recipe.
+    """
+
+    cascade_max_depth = int(getattr(dag, "leaf_config", {}).get("cascade_max_depth", 10)) if hasattr(dag, "leaf_config") else 10
+
     values: dict[str, Any] = {}
+    depth_by_node: dict[str, int] = {}
+    pipeline_by_node: dict[str, str] = {}
+
     for node in _topological_nodes(dag):
+        # Cascade depth is one more than the deepest input's depth.
+        input_depths = [depth_by_node.get(ref.node_id, 0) for ref in node.inputs]
+        node_depth = (max(input_depths) + 1) if (node.type == "step" and input_depths) else 0
+        depth_by_node[node.id] = node_depth
+        if node_depth > cascade_max_depth:
+            offending_chain = [node.id]
+            cursor = node
+            while cursor.inputs:
+                deepest = max(cursor.inputs, key=lambda ref: depth_by_node.get(ref.node_id, 0))
+                offending_chain.append(deepest.node_id)
+                cursor = dag.nodes[deepest.node_id]
+                if cursor.type != "step":
+                    break
+            raise ValueError(
+                f"L3 cascade depth ({node_depth}) exceeds cascade_max_depth ({cascade_max_depth}); "
+                f"offending chain: {' -> '.join(reversed(offending_chain))}"
+            )
+        # Resolve pipeline_id: explicit params.pipeline_id wins, otherwise
+        # inherit from the deepest input.
+        explicit_pipeline = (node.params or {}).get("pipeline_id") if node.type == "step" else None
+        if explicit_pipeline:
+            pipeline_by_node[node.id] = str(explicit_pipeline)
+        elif node.inputs:
+            inherited = next(
+                (pipeline_by_node[ref.node_id] for ref in node.inputs if ref.node_id in pipeline_by_node),
+                "",
+            )
+            if inherited:
+                pipeline_by_node[node.id] = inherited
+
         if node.type == "source":
             values[node.id] = _execute_l3_source(node.selector, frame, target_name)
         elif node.op == "l3_feature_bundle":
@@ -5441,6 +5550,13 @@ def _execute_l3_dag(dag, frame: pd.DataFrame, target_name: str) -> dict[str, Any
         else:
             inputs = [values[ref.node_id] for ref in node.inputs]
             values[node.id] = _execute_l3_op(node.op, inputs, node.params, target_name)
+
+    # Stash the pipeline-id breadcrumb on the dag for L3 metadata builders.
+    try:
+        dag.runtime_pipeline_by_node = dict(pipeline_by_node)
+        dag.runtime_depth_by_node = dict(depth_by_node)
+    except Exception:
+        pass
     return values
 
 
