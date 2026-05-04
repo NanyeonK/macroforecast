@@ -269,6 +269,19 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
     df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
     df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
 
+    # Issue #251 -- post-pipeline custom L2 preprocessor hook.
+    # ``leaf_config.custom_postprocessor`` accepts a name registered via
+    # ``macrocast.custom.register_preprocessor``. Runs *after* the
+    # builtin pipeline so its output is the L2 clean panel.
+    custom_name = leaf_config.get("custom_postprocessor")
+    if custom_name:
+        post_result = _try_custom_l2_preprocessor(str(custom_name), df, leaf_config)
+        if post_result is not None:
+            df = post_result
+            cleaning_log["steps"].append(
+                {"custom_postprocessor": str(custom_name), "applied": True}
+            )
+
     panel = _panel_from_frame(df, metadata={"stage": "l2_clean", "source": "l1_raw_panel"})
     artifact = L2CleanPanelArtifact(
         panel=panel,
@@ -5457,6 +5470,33 @@ def _safe_log(series: pd.Series) -> pd.Series:
     return positive.map(lambda value: pd.NA if pd.isna(value) else __import__("math").log(value))
 
 
+def _try_custom_l2_preprocessor(name: str, frame: pd.DataFrame, leaf_config: dict[str, Any]) -> pd.DataFrame | None:
+    """Issue #251 -- dispatch to a user-registered preprocessor when ``name``
+    matches a registered entry. Returns ``None`` to indicate fall-through
+    to built-in policies."""
+
+    try:
+        from .. import custom as _custom_mod
+    except ImportError:  # pragma: no cover
+        return None
+    if not _custom_mod.is_custom_preprocessor(str(name)):
+        return None
+    spec = _custom_mod.get_custom_preprocessor(str(name))
+    try:
+        # Documented contract: ``fn(X_train, y_train, X_test, context) ->
+        # (X_train, X_test)``. For the runtime hook we substitute ``X_train
+        # = X_test = frame`` so the callable can do a single-pass clean.
+        result = spec.function(frame, None, frame, dict(leaf_config))
+        if isinstance(result, tuple) and result:
+            cleaned = result[0]
+            return cleaned if isinstance(cleaned, pd.DataFrame) else None
+        if isinstance(result, pd.DataFrame):
+            return result
+    except Exception:  # pragma: no cover
+        return None
+    return None
+
+
 def _apply_outlier_policy(
     frame: pd.DataFrame, resolved: l2_layer.L2ResolvedAxes, leaf_config: dict[str, Any], cleaning_log: dict[str, Any]
 ) -> tuple[pd.DataFrame, int]:
@@ -5714,7 +5754,53 @@ def _topological_nodes(dag) -> list[Any]:
     return ordered
 
 
+def _try_custom_l3_dispatch(op: str, inputs: list[Any], params: dict[str, Any]) -> pd.DataFrame | pd.Series | None:
+    """Issue #251 -- best-effort dispatch to a user-registered feature
+    block / combiner. Returns ``None`` if no registered op matches,
+    indicating the caller should fall through to the built-in branches.
+    """
+
+    try:
+        from .. import custom as _custom_mod
+    except ImportError:  # pragma: no cover
+        return None
+    spec = None
+    is_combiner = False
+    block_kind = params.get("block_kind") if isinstance(params, dict) else None
+    if _custom_mod.is_custom_feature_combiner(op):
+        spec = _custom_mod.get_custom_feature_combiner(op)
+        is_combiner = True
+    elif block_kind and _custom_mod.is_custom_feature_block(op, block_kind=block_kind):
+        spec = _custom_mod.get_custom_feature_block(op, block_kind=block_kind)
+    elif _custom_mod.is_custom_feature_block(op):
+        for kind in ("temporal", "rotation", "factor"):
+            if _custom_mod.is_custom_feature_block(op, block_kind=kind):
+                spec = _custom_mod.get_custom_feature_block(op, block_kind=kind)
+                break
+    if spec is None:
+        return None
+    fn = spec.function
+    try:
+        if is_combiner:
+            # Combiners receive the input list (multi-frame merge contract).
+            return fn(inputs, dict(params))
+        return fn(inputs[0] if inputs else None, dict(params))
+    except Exception:  # pragma: no cover - fall through to built-in
+        return None
+
+
 def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_name: str) -> pd.DataFrame | pd.Series:
+    # Issue #251 -- if a user-registered feature_block / combiner matches
+    # this op name, dispatch to it before the built-in handlers. The
+    # contract is the v0.1 ``CustomFeatureBlock`` callable: receives a
+    # context object and returns a ``FeatureBlockCallableResult``. For
+    # a thin promotion we accept both that protocol and the simpler
+    # callable-on-frame signature ``fn(frame, params) -> frame`` so
+    # registered ops are usable in unit tests without the full L2
+    # context plumbing.
+    custom_result = _try_custom_l3_dispatch(op, inputs, params)
+    if custom_result is not None:
+        return custom_result
     if op == "identity" or op == "level":
         return inputs[0]
     if op == "lag":
