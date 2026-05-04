@@ -392,7 +392,19 @@ Temporal:             [model, X, y] → rolling_recompute → sink
 Transformation attr:  [all_l4_cells, l5_metrics] → transformation_attribution → sink
 ```
 
-### Step library (29 operational + 6 future)
+### Step library (~18 operational + 17 future)
+
+> v0.1 honesty pass (PR-A..G) demoted 11 design-time-operational ops to
+> `future` because their runtime did not match the named procedure:
+> `fevd`, `historical_decomposition`, `generalized_irf`, `mrf_gtvp`,
+> `lasso_inclusion_frequency`, `accumulated_local_effect`,
+> `friedman_h_interaction`, `gradient_shap`, `integrated_gradients`,
+> `saliency_map`, `deep_lift`. Each is tracked for v0.2 implementation
+> in the GitHub issue tracker. `HONESTY_DEMOTED_L7_OPS` in
+> `core/ops/l7_ops.py` enumerates them. The 6 always-future ops
+> (`attention_weights`, `lstm_hidden_state`, `boruta_selection`,
+> `recursive_feature_elimination`, `lasso_path_selection`,
+> `stability_selection`) remain.
 
 | 카테고리 | 개수 | 대표 op |
 |---|---|---|
@@ -515,7 +527,7 @@ User-defined block은 leaf_config.user_groups로.
 - Pre-defined block과 user-defined block 둘 다 가능. 같은 grouping axis로 표현.
 - L7.B output axes는 *output decision*. Sweep 안 됨.
 - Forecast combination ops는 L7에 없음. L4 전용.
-- mrf_gtvp는 operational schema + runtime stub (L4 MRF와 동시 구현 예정).
+- mrf_gtvp는 v0.1 honesty pass 후 **future** status (L4 MRF 와 동시 구현 예정 — v0.2 GitHub issue tracker).
 
 ### Sample
 

@@ -121,8 +121,54 @@ examples/recipes/         # YAML recipe examples per layer
 
 ## Status levels
 
-`operational` (runtime executes) > `planned` (next milestone) > `future`
-(schema-only, runtime raises). v0.1 collapsed `planned` and `registry_only`
-into `operational` for the design's main axes; only deep-NN families and the
-DFM-MM mixed-frequency model fall back to lighter implementations when the
-optional extras (`torch`, `xgboost`, etc.) are not installed.
+The package uses a **two-value vocabulary** (defined in
+`macrocast.core.status`):
+
+- **`operational`** -- runtime executes the full design-spec procedure.
+  The output matches the published method named in the design.
+- **`future`** -- schema-only. The validator hard-rejects use at recipe
+  time; the runtime raises `NotImplementedError`. Tracked for v0.2+
+  implementation in the GitHub issue tracker.
+
+Earlier releases experimented with intermediate values (`planned`,
+`approximation`, `simplified`, `registry_only`); these are kept as
+deprecated aliases (`normalize_status` collapses every legacy alias to
+`future`) but new code should write `operational` or `future` only. The
+honesty pass that introduced this 2-value vocabulary is documented in
+PR-A (#177) through PR-G of the v0.1.1 series.
+
+Helpers live on `macrocast.core` for typed comparison:
+
+```python
+from macrocast.core import OPERATIONAL, FUTURE, ItemStatus, is_runnable, is_future, normalize_status
+from macrocast.core.ops.l4_ops import get_family_status
+
+assert get_family_status("ridge") == OPERATIONAL
+assert get_family_status("macroeconomic_random_forest") == FUTURE
+assert is_runnable("planned")  # legacy alias collapses to operational? no:
+assert not is_runnable("planned")  # legacy `planned` -> future, not runnable
+```
+
+### v0.1 honesty-pass demotions
+
+The codex review on PR #163 flagged eight families / ops whose v0.1
+runtime did not match the published procedure named in the design. They
+were demoted from `operational` to `future` so the validator rejects
+them; real implementations land per item via the v0.2 issue tracker.
+
+| Layer | Item | Why demoted |
+|------|------|-------------|
+| L1.G | `estimated_markov_switching` | runtime returned a year-parity placeholder, not Hamilton (1989) MS |
+| L1.G | `estimated_threshold` | placeholder, not Tong (1990) SETAR |
+| L1.G | `estimated_structural_break` | placeholder, not Bai-Perron break detection |
+| L4 | `factor_augmented_var` | no runtime wrapper; silent NotImplementedError |
+| L4 | `bvar_minnesota` / `bvar_normal_inverse_wishart` | wrapper delegated to plain VAR; no Minnesota / NIW shrinkage |
+| L4 | `macroeconomic_random_forest` | RandomForest + time_trend, not the Coulombe (2024) GTVP local-linear forest |
+| L4 | `dfm_mixed_mariano_murasawa` | PCA + AR(1), not Mariano-Murasawa Kalman state-space EM |
+| L7 | `fevd` / `historical_decomposition` / `generalized_irf` | returned coefficient mean (or tree importance fallback), not orthogonalised IRFs |
+| L7 | `mrf_gtvp` | tree feature_importances_, not Coulombe (2024) GTVP coefficient series |
+| L7 | `lasso_inclusion_frequency` | binary single-fit inclusion, not resampling-based frequency |
+| L7 | `accumulated_local_effect` | bin endpoint spread, not Apley & Zhu (2020) ALE |
+| L7 | `friedman_h_interaction` | variance-ratio surrogate, not Friedman & Popescu (2008) H |
+| L7 | `gradient_shap` / `integrated_gradients` / `saliency_map` / `deep_lift` | silently fell back to a SHAP proxy; not gradient-based |
+| L4 (deep NN) | `lstm` / `gru` / `transformer` without torch | now raise `NotImplementedError("install macrocast[deep]")` instead of silently falling back to `MLPRegressor` |

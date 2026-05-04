@@ -374,11 +374,11 @@ Ensemble:
 | SVM | 3 | svr_linear, svr_rbf, svr_poly |
 | Neural net | 4 | mlp, lstm, gru, transformer |
 | Neighbors | 1 | knn |
-| Macro-specific | 1 (planned, v0.1) | macroeconomic_random_forest (Coulombe 2024) |
+| Macro-specific | 1 (future, v0.1) | macroeconomic_random_forest (Coulombe 2024) |
 | Bayesian | 2 | bvar_minnesota, bvar_normal_inverse_wishart |
-| Mixed-frequency | 1 planned + 4 future | dfm_mixed_mariano_murasawa (planned, v0.1) / midas_almon, midas_beta, midas_step, dfm_unrestricted_midas (future) |
+| Mixed-frequency | 5 future | dfm_mixed_mariano_murasawa / midas_almon / midas_beta / midas_step / dfm_unrestricted_midas (all future, v0.1) |
 
-`macroeconomic_random_forest`와 `dfm_mixed_mariano_murasawa`는 v0.1에서 **planned** status로 분류 (`PLANNED_MODEL_FAMILIES`). Schema는 operational families와 동일하게 통과, runtime wrapper도 동작하나, 본 wrapper는 *acknowledged approximation* — Coulombe 2024 MRF의 GTVP local-linear refinement + asymmetric loss, 그리고 Mariano-Murasawa Kalman state-space EM은 별도 PR (v1.x)에서 진짜 구현 예정. `get_family_status(family) == "planned"` 로 런타임 detect.
+v0.1 honesty-pass (PR-A..G) 후 `macroeconomic_random_forest`, `dfm_mixed_mariano_murasawa`, `factor_augmented_var`, `bvar_minnesota`, `bvar_normal_inverse_wishart` 5개 family 는 `FUTURE_MODEL_FAMILIES` 로 demote — L4 validator 가 hard-reject. v0.1 의 wrapper 는 published procedure 와 다른 결과를 산출했기 때문 (RandomForest + time_trend ≠ Coulombe 2024 GTVP, plain VAR ≠ Minnesota / NIW BVAR, etc.). 진짜 구현은 GitHub issue tracker 의 v0.2 milestone 에 계획. `get_family_status(family) == FUTURE` 로 런타임 detect, `is_runnable(...)` helper 도 사용 가능.
 
 ### Forecast combine ops (5)
 
@@ -473,7 +473,7 @@ walk-forward 우선. kfold는 시계열 데이터에서 hard error (n_splits > 2
 - Benchmark는 axis가 아니다. fit_model node의 `is_benchmark: true` flag.
 - Forecast combination은 L4 안에 있음. L3 combine과 다른 type (forecast vs panel).
 - `inverse_msfe`는 `dmsfe`의 alias (theta=1.0). 이름은 paper-standard 유지.
-- MRF, dfm_mixed_mariano_murasawa는 v0.1 기준 **planned** status. Schema 통과 + runtime wrapper 동작 (RandomForest + time_trend / PCA + AR(1) approximation). 진짜 Coulombe / Mariano-Murasawa 구현은 v1.x로 deferred. `get_family_status` 로 detect.
+- v0.1 honesty-pass 결과 MRF, DFM-MM, FAVAR, BVAR x2 모두 **future** status. Validator hard-reject. Schema 만 노출, runtime 부재. 진짜 구현은 GitHub issue tracker (v0.2 milestone) 참조.
 - search_algorithm = none이면 tuning_objective, validation_method 비활성.
 
 ### Sample
