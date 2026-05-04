@@ -21,6 +21,7 @@ from __future__ import annotations
 from . import introspect, option_docs
 from .builder import RecipeBuilder
 from .option_docs import OPTION_DOCS, CodeExample, OptionDoc, Reference
+from .wizard import run_wizard
 
 __all__ = [
     "CodeExample",
@@ -30,4 +31,5 @@ __all__ = [
     "Reference",
     "introspect",
     "option_docs",
+    "run_wizard",
 ]
