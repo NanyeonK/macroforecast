@@ -12,15 +12,75 @@ FIGURE_TYPES = (
     "historical_decomp_stacked_bar",
 )
 
+def _mccracken_ng_md_groups() -> dict[str, tuple[str, ...]]:
+    """McCracken & Ng (2016) FRED-MD canonical 8-group taxonomy.
+
+    Issue #260 -- complete the column membership instead of leaving it empty.
+    Source: McCracken & Ng (2016) "FRED-MD: A Monthly Database for
+    Macroeconomic Research" appendix Table B.1 (column ``group``).
+    """
+
+    return {
+        "output_and_income": ("RPI", "W875RX1", "INDPRO", "IPFPNSS", "IPFINAL", "IPCONGD", "IPDCONGD", "IPNCONGD", "IPBUSEQ", "IPMAT", "IPDMAT", "IPNMAT", "IPMANSICS", "IPB51222S", "IPFUELS", "CUMFNS"),
+        "labor_market": ("UNRATE", "UEMPMEAN", "UEMPLT5", "UEMP5TO14", "UEMP15OV", "UEMP15T26", "UEMP27OV", "CLAIMSx", "PAYEMS", "USGOOD", "CES1021000001", "USCONS", "MANEMP", "DMANEMP", "NDMANEMP", "SRVPRD", "USTPU", "USWTRADE", "USTRADE", "USFIRE", "USGOVT", "CES0600000007", "AWOTMAN", "AWHMAN", "CES0600000008", "CES2000000008", "CES3000000008", "HOABS"),
+        "housing": ("HOUST", "HOUSTNE", "HOUSTMW", "HOUSTS", "HOUSTW", "PERMIT", "PERMITNE", "PERMITMW", "PERMITS", "PERMITW"),
+        "consumption_orders_inventories": ("DPCERA3M086SBEA", "CMRMTSPLx", "RETAILx", "ACOGNO", "AMDMNOx", "ANDENOx", "AMDMUOx", "BUSINVx", "ISRATIOx", "UMCSENTx"),
+        "money_and_credit": ("M1SL", "M2SL", "M2REAL", "BOGMBASE", "TOTRESNS", "NONBORRES", "BUSLOANS", "REALLN", "NONREVSL", "CONSPI", "S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio"),
+        "interest_and_exchange_rates": ("FEDFUNDS", "CP3Mx", "TB3MS", "TB6MS", "GS1", "GS5", "GS10", "AAA", "BAA", "COMPAPFFx", "TB3SMFFM", "TB6SMFFM", "T1YFFM", "T5YFFM", "T10YFFM", "AAAFFM", "BAAFFM", "TWEXAFEGSMTHx", "EXSZUSx", "EXJPUSx", "EXUSUKx", "EXCAUSx"),
+        "prices": ("WPSFD49207", "WPSFD49502", "WPSID61", "WPSID62", "OILPRICEx", "PPICMM", "CPIAUCSL", "CPIAPPSL", "CPITRNSL", "CPIMEDSL", "CUSR0000SAC", "CUSR0000SAD", "CUSR0000SAS", "CPIULFSL", "CUSR0000SA0L2", "CUSR0000SA0L5", "PCEPI", "DDURRG3M086SBEA", "DNDGRG3M086SBEA", "DSERRG3M086SBEA"),
+        "stock_market": ("S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio", "VIXCLSx"),
+    }
+
+
+def _mccracken_ng_qd_groups() -> dict[str, tuple[str, ...]]:
+    """McCracken & Ng (2020) FRED-QD canonical 14-group taxonomy.
+
+    Issue #260. Source: McCracken & Ng (2020) FRED-QD appendix Table B.1.
+    """
+
+    return {
+        "nipa": ("GDPC1", "PCECC96", "PCDGx", "PCESVx", "PCNDx", "GPDIC1", "FPIx", "Y033RC1Q027SBEAx", "PNFIx", "PRFIx", "A014RE1Q156NBEA", "GCEC1", "A823RL1Q225SBEA", "FGRECPTx", "SLCEx", "EXPGSC1", "IMPGSC1"),
+        "industrial_production": ("INDPRO", "IPFPNSS", "IPFINAL", "IPCONGD", "IPDCONGD", "IPNCONGD", "IPBUSEQ", "IPMAT", "IPDMAT", "IPNMAT", "IPMANSICS", "IPB51222S", "IPFUELS", "CUMFNS"),
+        "employment_unemployment": ("UNRATE", "PAYEMS", "USGOOD", "USCONS", "MANEMP", "USTPU", "USWTRADE", "USTRADE", "USFIRE", "USGOVT", "USEHS", "USPBS", "USSERV", "USMINE", "CE16OV", "CIVPART", "UEMPMEAN", "UEMPLT5", "UEMP5TO14", "UEMP15OV", "UEMP15T26", "UEMP27OV", "CLAIMSx"),
+        "housing": ("HOUST", "HOUSTNE", "HOUSTMW", "HOUSTS", "HOUSTW", "PERMIT", "PERMITNE", "PERMITMW", "PERMITS", "PERMITW"),
+        "inventories_orders_sales": ("CMRMTSPLx", "RSAFSx", "AMDMNOx", "AMDMUOx", "BUSINVx", "ISRATIOx"),
+        "prices": ("WPSFD49207", "PPIACO", "WPSID61", "OILPRICEx", "CPIAUCSL", "CPIAPPSL", "CPITRNSL", "CPIMEDSL", "CUSR0000SAC", "CUSR0000SAS", "CPIULFSL", "PCEPI", "GDPCTPI"),
+        "earnings_productivity": ("CES0600000008", "CES2000000008", "CES3000000008", "COMPRMS", "ULCBS", "ULCMFG", "PRS84006221", "PRS85006023", "PRS85006221", "OPHNFB"),
+        "interest_rates": ("FEDFUNDS", "TB3MS", "TB6MS", "GS1", "GS5", "GS10", "AAA", "BAA"),
+        "money_credit": ("M1SL", "M2SL", "M2REAL", "BOGMBASE", "TOTRESNS", "NONBORRES", "BUSLOANS", "REALLN", "NONREVSL"),
+        "household_balance_sheets": ("TABSHNOx", "TLBSHNOx", "TFAABSHNOx", "VANRRESHNOx", "TARESAx", "HNOREMQ027Sx", "OEHRENWBSHNOx", "TVCKSHNOx"),
+        "exchange_rates": ("TWEXAFEGSMTHx", "EXSZUSx", "EXJPUSx", "EXUSUKx", "EXCAUSx"),
+        "stock_markets": ("S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio"),
+        "non_household_balance_sheets": ("TABSNNCBx", "TLBSNNCBx"),
+        "other": ("UMCSENTx", "VIXCLSx"),
+    }
+
+
+def _fred_sd_states_block() -> tuple[str, ...]:
+    """All 50 US state postal codes + DC, used by FRED-SD geographic
+    visualisation. Issue #260."""
+
+    return (
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "DC",
+    )
+
+
 PRE_DEFINED_BLOCKS = {
-    "mccracken_ng_md_groups": (),
-    "mccracken_ng_qd_groups": (),
-    "fred_sd_states": (),
-    "nber_real_activity": ("INDPRO", "PAYEMS", "RPI", "CMRMTSPL"),
-    "taylor_rule_block": ("CPIAUCSL", "GDPC1", "FEDFUNDS"),
-    "term_structure_block": ("TB3MS", "GS1", "GS5", "GS10", "T10Y3M"),
-    "credit_spread_block": ("BAA", "AAA", "BAAFFM", "AAAFFM"),
-    "financial_conditions_block": ("NFCI",),
+    # Issue #260: backfilled from McCracken & Ng (2016) FRED-MD Table B.1 +
+    # (2020) FRED-QD Table B.1 + Fed economist documentation.
+    "mccracken_ng_md_groups": _mccracken_ng_md_groups(),
+    "mccracken_ng_qd_groups": _mccracken_ng_qd_groups(),
+    "fred_sd_states": _fred_sd_states_block(),
+    "nber_real_activity": ("INDPRO", "PAYEMS", "RPI", "CMRMTSPL", "CMRMTSPLx"),
+    "taylor_rule_block": ("CPIAUCSL", "GDPC1", "FEDFUNDS", "UNRATE", "PCEPI"),
+    "term_structure_block": ("TB3MS", "TB6MS", "GS1", "GS5", "GS10", "T1YFFM", "T5YFFM", "T10YFFM"),
+    "credit_spread_block": ("BAA", "AAA", "BAAFFM", "AAAFFM", "TB3SMFFM", "TB6SMFFM"),
+    "financial_conditions_block": ("NFCI", "VIXCLSx", "S&P 500", "TB3SMFFM", "BAAFFM"),
 }
 
 DEFAULT_FIGURE_MAPPING = {

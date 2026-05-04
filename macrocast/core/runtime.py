@@ -2657,6 +2657,8 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
             y=y,
             n_bootstraps=int(params.get("n_bootstraps", 50)),
             seed=int(params.get("random_state", 0)),
+            sampling=str(params.get("inclusion_sampling", "bootstrap")),
+            rolling_window=params.get("rolling_window"),
         )
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "cumulative_r2_contribution":
@@ -2940,19 +2942,19 @@ def _lasso_inclusion_frame(
     *,
     n_bootstraps: int = 50,
     seed: int = 0,
+    sampling: str = "bootstrap",
+    rolling_window: int | None = None,
 ) -> pd.DataFrame:
-    """Issue #191 -- inclusion frequency over bootstrap resamples.
+    """Issues #191 + #253 -- inclusion frequency over bootstrap *or* rolling
+    windows.
 
-    For each bootstrap resample, refit a Lasso on (X*, y*) at the same
-    alpha as the fitted model and record which coefficients are
-    non-zero. Inclusion frequency = fraction of resamples in which the
-    coefficient survived. v0.1 returned a binary single-fit indicator;
-    the real procedure (Bach 2008, Meinshausen-Buehlmann 2010) needs
-    resampling to expose the variability of the lasso path.
-
-    When ``X`` / ``y`` are unavailable (we only have the artifact), fall
-    back to the binary single-fit indicator -- callers that want the
-    real frequency must pass the fit panel.
+    * ``sampling = bootstrap`` (default): i.i.d. resample with replacement.
+    * ``sampling = rolling``: refit on overlapping rolling windows of size
+      ``rolling_window`` (defaults to ``max(20, n // 4)``); inclusion
+      frequency = fraction of windows where the coefficient survived. Detects
+      time-varying coefficient paths that bootstrap masks.
+    * ``sampling = both``: returns both columns
+      (``importance`` = bootstrap, ``rolling_inclusion`` = rolling).
     """
 
     fitted = model.fitted_object
@@ -2972,7 +2974,6 @@ def _lasso_inclusion_frame(
                 "coefficient": [float(c) for c in coef_arr],
             }
         )
-    rng = np.random.default_rng(int(seed))
     aligned = pd.concat([X, y.rename("__y__")], axis=1).dropna()
     if aligned.empty or aligned.shape[0] < 5:
         inclusion = (np.abs(coef_arr) > 1e-9).astype(float)
@@ -2986,28 +2987,72 @@ def _lasso_inclusion_frame(
     X_arr = aligned.drop(columns="__y__")[feature_names].fillna(0.0).to_numpy(dtype=float)
     y_arr = aligned["__y__"].to_numpy(dtype=float)
     alpha = float(getattr(fitted, "alpha_", getattr(fitted, "alpha", 0.1)))
-    inclusion_counts = np.zeros(X_arr.shape[1], dtype=float)
     n = len(X_arr)
-    successful = 0
-    for _ in range(int(max(2, n_bootstraps))):
-        idx = rng.integers(0, n, size=n)
-        try:
-            fit = Lasso(alpha=alpha, max_iter=20000)
-            fit.fit(X_arr[idx], y_arr[idx])
-            inclusion_counts += (np.abs(fit.coef_) > 1e-9).astype(float)
-            successful += 1
-        except Exception:
-            continue
+
+    def _bootstrap_inclusion() -> tuple[np.ndarray, int]:
+        rng = np.random.default_rng(int(seed))
+        counts = np.zeros(X_arr.shape[1], dtype=float)
+        ok = 0
+        for _ in range(int(max(2, n_bootstraps))):
+            idx = rng.integers(0, n, size=n)
+            try:
+                fit = Lasso(alpha=alpha, max_iter=20000)
+                fit.fit(X_arr[idx], y_arr[idx])
+                counts += (np.abs(fit.coef_) > 1e-9).astype(float)
+                ok += 1
+            except Exception:
+                continue
+        return counts, ok
+
+    def _rolling_inclusion(window: int) -> tuple[np.ndarray, int]:
+        counts = np.zeros(X_arr.shape[1], dtype=float)
+        ok = 0
+        for start in range(0, max(1, n - window + 1)):
+            end = min(start + window, n)
+            if end - start < 4:
+                continue
+            try:
+                fit = Lasso(alpha=alpha, max_iter=20000)
+                fit.fit(X_arr[start:end], y_arr[start:end])
+                counts += (np.abs(fit.coef_) > 1e-9).astype(float)
+                ok += 1
+            except Exception:
+                continue
+        return counts, ok
+
+    rolling_w = int(rolling_window) if rolling_window is not None else max(20, n // 4)
+
+    if sampling == "rolling":
+        counts, successful = _rolling_inclusion(rolling_w)
+    elif sampling == "both":
+        boot_counts, boot_ok = _bootstrap_inclusion()
+        roll_counts, roll_ok = _rolling_inclusion(rolling_w)
+        boot_freq = boot_counts / boot_ok if boot_ok else (np.abs(coef_arr) > 1e-9).astype(float)
+        roll_freq = roll_counts / roll_ok if roll_ok else (np.abs(coef_arr) > 1e-9).astype(float)
+        return pd.DataFrame(
+            {
+                "feature": feature_names,
+                "importance": boot_freq.tolist(),
+                "rolling_inclusion": roll_freq.tolist(),
+                "coefficient": [float(c) for c in coef_arr],
+                "n_bootstraps_run": [boot_ok] * len(feature_names),
+                "n_rolling_windows_run": [roll_ok] * len(feature_names),
+                "rolling_window_size": [rolling_w] * len(feature_names),
+            }
+        )
+    else:  # bootstrap (default)
+        counts, successful = _bootstrap_inclusion()
     if successful == 0:
         inclusion = (np.abs(coef_arr) > 1e-9).astype(float)
     else:
-        inclusion = inclusion_counts / successful
+        inclusion = counts / successful
+    sampling_meta_key = "n_rolling_windows_run" if sampling == "rolling" else "n_bootstraps_run"
     return pd.DataFrame(
         {
             "feature": feature_names,
             "importance": inclusion.tolist(),
             "coefficient": [float(c) for c in coef_arr],
-            "n_bootstraps_run": [successful] * len(feature_names),
+            sampling_meta_key: [successful] * len(feature_names),
         }
     )
 
@@ -3417,7 +3462,7 @@ def _l7_transformation_attribution(l5_eval: L5EvaluationArtifact, params: dict[s
             continue
         # Coalition value: payoff is the *negative* mean loss of the
         # coalition (so a lower-loss subset has a higher value).
-        if method == "shapley_over_pipelines" and n <= 8:
+        if method in {"shapley_over_pipelines", "shapley_over_pipelines_sampled"} and n <= 8 and method != "shapley_over_pipelines_sampled":
             shapley = np.zeros(n)
             indices = list(range(n))
             for size in range(n):
@@ -3433,6 +3478,31 @@ def _l7_transformation_attribution(l5_eval: L5EvaluationArtifact, params: dict[s
                         # Marginal contribution: improvement (loss reduction).
                         shapley[i] += weight * (coalition_loss - new_loss) if subset else weight * (-new_loss)
             values = shapley
+        elif method in {"shapley_over_pipelines", "shapley_over_pipelines_sampled"}:
+            # Issue #254 -- Castro-Gomez-Tejada (2009) sampling-based
+            # Shapley. For n > 8 the exhaustive enumeration is 2^n; we
+            # approximate via random permutations.
+            n_perm = int(params.get("shapley_n_permutations", 1000))
+            seed = int(params.get("random_state", 0))
+            rng = np.random.default_rng(seed)
+            shapley = np.zeros(n)
+            indices = np.arange(n)
+            for _ in range(n_perm):
+                perm = rng.permutation(indices)
+                running_subset: list[int] = []
+                running_loss = 0.0
+                for k, i in enumerate(perm):
+                    if running_subset:
+                        prev_loss = float(np.mean([losses[j] for j in running_subset]))
+                    else:
+                        prev_loss = 0.0
+                    running_subset.append(int(i))
+                    new_loss = float(np.mean([losses[j] for j in running_subset]))
+                    if k == 0:
+                        shapley[i] += -new_loss
+                    else:
+                        shapley[i] += prev_loss - new_loss
+            values = shapley / max(n_perm, 1)
         elif method == "leave_one_out_pipeline":
             full_loss = float(np.mean(losses)) if n else 0.0
             values = np.zeros(n)
@@ -4344,8 +4414,49 @@ def materialize_l8_runtime(
     )
 
 
+def _derive_saved_objects(recipe_root: dict[str, Any], upstream_artifacts: dict[str, Any]) -> set[str]:
+    """Issue #261 -- design rule: each active layer auto-adds its canonical
+    saved-objects entries unless the user opts out via
+    ``saved_objects_mode = explicit_only``."""
+
+    derived: set[str] = set()
+    if "1_data" in recipe_root:
+        derived.update({"forecasts", "raw_panel"})
+    l1 = recipe_root.get("1_data", {}) or {}
+    fixed = l1.get("fixed_axes", {}) or {}
+    if fixed.get("regime_definition", "none") != "none":
+        derived.update({"regime_metrics", "regime_metadata"})
+    if "2_preprocessing" in recipe_root:
+        derived.update({"clean_panel", "cleaning_log"})
+    if "3_feature_engineering" in recipe_root:
+        derived.add("feature_metadata")
+    if "4_forecasting_model" in recipe_root:
+        derived.update({"model_artifacts", "training_metadata"})
+    if "5_evaluation" in recipe_root:
+        derived.update({"metrics", "ranking"})
+    if "6_statistical_tests" in recipe_root:
+        derived.add("tests")
+    if "7_interpretation" in recipe_root:
+        derived.update({"importance", "figures"})
+    for diag_layer, suffix in (
+        ("1_5_data_summary", "diagnostics_l1_5"),
+        ("2_5_pre_post_preprocessing", "diagnostics_l2_5"),
+        ("3_5_feature_diagnostics", "diagnostics_l3_5"),
+        ("4_5_generator_diagnostics", "diagnostics_l4_5"),
+    ):
+        if diag_layer in recipe_root:
+            derived.add(suffix)
+    return derived
+
+
 def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_artifacts: dict[str, Any], recipe_root: dict[str, Any]) -> list[ExportedFile]:
     saved = set(axes.get("saved_objects", []))
+    # Issue #261 -- derive default saved_objects from active layers when
+    # the recipe omits them. ``saved_objects_mode = explicit_only`` opts
+    # out of the auto-derivation.
+    leaf = axes.get("leaf_config", {}) or {}
+    if leaf.get("saved_objects_mode", "auto") != "explicit_only":
+        saved = saved | _derive_saved_objects(recipe_root, upstream_artifacts)
     export_format = axes.get("export_format", "json_csv")
     formats = _l8_resolve_formats(export_format)
     granularity = axes.get("artifact_granularity", "per_cell")
