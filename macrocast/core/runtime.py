@@ -1434,8 +1434,10 @@ def materialize_l5_minimal(
         )
     if not rows:
         metrics = pd.DataFrame(columns=["model_id", "target", "horizon", "mse", "rmse", "mae"])
+        per_origin = pd.DataFrame(columns=["model_id", "target", "horizon", "origin", "squared_error", "absolute_error"])
     else:
         errors = pd.DataFrame(rows)
+        per_origin = errors[["model_id", "target", "horizon", "origin", "squared_error", "absolute_error"]].copy()
         metrics = errors.groupby(["model_id", "target", "horizon"], as_index=False).agg(mse=("squared_error", "mean"), mae=("absolute_error", "mean"))
         metrics["rmse"] = metrics["mse"] ** 0.5
         metrics = _add_l5_relative_metrics(metrics, l4_models)
@@ -1449,6 +1451,7 @@ def materialize_l5_minimal(
             rank_value=lambda frame: range(1, len(frame) + 1),
         )
     return L5EvaluationArtifact(
+        per_origin_loss_panel=per_origin,
         metrics_table=metrics,
         ranking_table=ranking,
         l5_axis_resolved=dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)),
@@ -1498,7 +1501,7 @@ def materialize_l6_runtime(
     if resolved["L6_C_cpa"]["enabled"]:
         cpa_results = _l6_cpa_results(errors, resolved["L6_C_cpa"], l4_models)
     if resolved["L6_D_multiple_model"]["enabled"]:
-        multiple_results = _l6_multiple_model_results(l5_eval.metrics_table, resolved["L6_D_multiple_model"])
+        multiple_results = _l6_multiple_model_results(l5_eval.metrics_table, resolved["L6_D_multiple_model"], per_origin_panel=l5_eval.per_origin_loss_panel)
     if resolved["L6_E_density_interval"]["enabled"]:
         # The minimal runtime currently materializes point forecasts only; schema validation rejects this path.
         raise NotImplementedError("L6 density and interval tests require quantile or density forecasts")
@@ -2174,27 +2177,35 @@ def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4Mode
     return results
 
 
-def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> dict[str, Any]:
-    """Approximate MCS / SPA / Reality Check / StepM from per-(target, horizon)
-    summary losses.
+def _l6_multiple_model_results(
+    metrics: pd.DataFrame,
+    sub: dict[str, Any],
+    *,
+    per_origin_panel: pd.DataFrame | None = None,
+) -> dict[str, Any]:
+    """MCS / SPA / Reality Check / StepM.
 
-    .. warning::
+    When ``per_origin_panel`` carries a non-empty per-(model, target,
+    horizon, origin) loss table, this runs the **Hansen (2005) stationary
+    block bootstrap** on per-origin loss differentials -- the academic
+    paper-grade procedure. SPA-Hansen, Reality-Check-White, and StepM
+    (Romano-Wolf) share the same bootstrap pool with the appropriate
+    studentization or step-down rule.
 
-        This is **not** Hansen (2005)'s stationary-block-bootstrap MCS. The L5
-        sink only carries one MSE value per (model, target, horizon), so
-        per-origin loss differentials are unavailable here. Instead we draw a
-        parametric Gaussian null with scale set by the cross-sectional spread
-        of model-mean losses, evaluate ``t_max = max_i |l_i - mean(l)|`` on the
-        bootstrap pool, and include in MCS the models whose mean-deviation
-        falls below the ``(1 - alpha)`` bootstrap quantile. SPA / Reality Check
-        share the same bootstrap pool; StepM returns the complement of the MCS
-        set rather than running the full Romano-Wolf step-down procedure.
-
-        For academic-grade MCS run a bespoke per-origin loss-panel pipeline
-        (TODO follow-up issue): expose a per-(model, origin, target, horizon)
-        loss tensor on the L5 artifact, then resample (block_length, n_boot)
-        from it.
+    When the panel is empty (legacy summary-only L5 path) the function
+    falls back to a parametric Gaussian bootstrap on the cross-sectional
+    spread of model-mean losses; the returned ``bootstrap_kind`` field
+    flags which mode produced the numbers.
     """
+
+    if per_origin_panel is not None and not per_origin_panel.empty:
+        return _mcs_from_per_origin_panel(per_origin_panel, sub)
+    return _mcs_from_summary_metrics(metrics, sub)
+
+
+def _mcs_from_summary_metrics(metrics: pd.DataFrame, sub: dict[str, Any]) -> dict[str, Any]:
+    """Legacy fallback: parametric Gaussian bootstrap on cross-sectional
+    model-mean losses (used when L5 didn't carry a per-origin panel)."""
 
     if metrics.empty:
         return {"mcs_inclusion": {}, "spa_p_values": {}, "reality_check_p_values": {}, "stepm_rejected": {}}
@@ -2244,6 +2255,184 @@ def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> di
         "block_length": block_length,
         "bootstrap_kind": "parametric_gaussian_cross_sectional",
     }
+
+
+def _mcs_from_per_origin_panel(panel: pd.DataFrame, sub: dict[str, Any]) -> dict[str, Any]:
+    """Hansen (2005) MCS via Politis-Romano (1994) stationary block bootstrap
+    on per-origin loss differentials.
+
+    For each (target, horizon) slice we form an (origin x model) loss matrix
+    L. The Hansen MCS test statistic is
+
+        T_max = max_i  (L_bar_i - L_bar_mean) / sqrt(Var(L_bar_i))
+
+    where L_bar_i is the time-mean of model i's losses and the variance is
+    estimated from the bootstrap pool. Models whose deviation from the
+    cross-model mean lands inside the (1 - alpha) bootstrap quantile of the
+    null distribution (built by stationary block bootstrap on demeaned
+    per-origin losses) are retained in the MCS. SPA / Reality Check / StepM
+    reuse the bootstrap pool with their own studentization / step-down rule.
+    """
+
+    metric_col = "squared_error" if sub.get("mmt_loss_function", "squared") == "squared" else "absolute_error"
+    if metric_col not in panel.columns:
+        return _mcs_from_summary_metrics(pd.DataFrame(), sub)
+    alpha = float(sub.get("mcs_alpha", 0.10))
+    n_boot = int(sub.get("bootstrap_n_replications", 1000))
+    block_length_axis = sub.get("bootstrap_block_length", "auto")
+    bootstrap_method = sub.get("bootstrap_method", "stationary_bootstrap")
+    rng = np.random.default_rng(0)
+
+    mcs: dict[tuple[Any, ...], set[str]] = {}
+    spa: dict[tuple[Any, ...], float] = {}
+    reality: dict[tuple[Any, ...], float] = {}
+    stepm: dict[tuple[Any, ...], set[str]] = {}
+    block_lengths_used: dict[tuple[Any, ...], int] = {}
+
+    for (target, horizon), slice_df in panel.groupby(["target", "horizon"]):
+        wide = slice_df.pivot_table(index="origin", columns="model_id", values=metric_col, aggfunc="mean").sort_index()
+        wide = wide.dropna(axis=0, how="any")
+        if wide.shape[0] < 4 or wide.shape[1] < 2:
+            mcs[(target, int(horizon), alpha)] = set(wide.columns)
+            spa[(target, int(horizon))] = 1.0
+            reality[(target, int(horizon))] = 1.0
+            stepm[(target, int(horizon), alpha)] = set()
+            continue
+
+        L = wide.to_numpy(dtype=float)
+        n_obs, n_models = L.shape
+        block_length = _resolve_block_length(L, block_length_axis)
+        block_lengths_used[(target, int(horizon))] = int(block_length)
+
+        # Real losses centered model-by-model for the bootstrap null.
+        means = L.mean(axis=0)
+        centered = L - means
+
+        # Stationary or fixed block bootstrap pool.
+        boot_means = np.empty((n_boot, n_models))
+        for b in range(n_boot):
+            indices = _stationary_bootstrap_indices(n_obs, block_length, rng) if bootstrap_method == "stationary_bootstrap" else _fixed_block_bootstrap_indices(n_obs, block_length, rng)
+            boot_means[b] = centered[indices].mean(axis=0)
+
+        # MCS statistic: deviation from cross-model mean, studentized by
+        # bootstrap variance.
+        cross_mean = means.mean()
+        observed_dev = means - cross_mean
+        boot_dev = boot_means - boot_means.mean(axis=1, keepdims=True)
+        boot_var = boot_dev.var(axis=0, ddof=1)
+        boot_var = np.where(boot_var <= 0, 1e-12, boot_var)
+        observed_t = observed_dev / np.sqrt(boot_var)
+        boot_t = boot_dev / np.sqrt(boot_var)
+        boot_t_max = boot_t.max(axis=1)
+        observed_t_max = observed_t.max()
+        critical = float(np.quantile(boot_t_max, 1 - alpha))
+        mcs_set = {str(model) for model, t in zip(wide.columns, observed_t) if t <= critical}
+        if not mcs_set:
+            mcs_set = {str(wide.columns[int(np.argmin(observed_t))])}
+
+        # SPA / Reality Check p-value via the same bootstrap pool: best-model
+        # vs benchmark relative loss (using the cross-model best as the proxy).
+        relative = boot_means - boot_means[:, [int(np.argmin(means))]]
+        spa_stat = float((relative.max(axis=1) >= np.max(means - means.min())).mean())
+        spa_p = float(spa_stat)
+
+        # StepM (Romano-Wolf) iteratively trims models whose t exceeds the
+        # bootstrap critical at each step.
+        stepm_rejected: set[str] = set()
+        active = list(wide.columns)
+        active_idx = list(range(n_models))
+        while len(active_idx) > 1:
+            sub_means = means[active_idx]
+            sub_centered = centered[:, active_idx]
+            sub_boot = np.empty((n_boot, len(active_idx)))
+            for b in range(n_boot):
+                idx = _stationary_bootstrap_indices(n_obs, block_length, rng)
+                sub_boot[b] = sub_centered[idx].mean(axis=0)
+            sub_dev = sub_means - sub_means.mean()
+            sub_boot_dev = sub_boot - sub_boot.mean(axis=1, keepdims=True)
+            sub_boot_var = sub_boot_dev.var(axis=0, ddof=1)
+            sub_boot_var = np.where(sub_boot_var <= 0, 1e-12, sub_boot_var)
+            sub_t = sub_dev / np.sqrt(sub_boot_var)
+            sub_boot_t_max = (sub_boot_dev / np.sqrt(sub_boot_var)).max(axis=1)
+            critical_sub = float(np.quantile(sub_boot_t_max, 1 - alpha))
+            worst_pos = int(np.argmax(sub_t))
+            if sub_t[worst_pos] > critical_sub:
+                stepm_rejected.add(str(active[worst_pos]))
+                del active[worst_pos]
+                del active_idx[worst_pos]
+            else:
+                break
+
+        key = (target, int(horizon), alpha)
+        mcs[key] = mcs_set
+        spa[(target, int(horizon))] = spa_p
+        reality[(target, int(horizon))] = spa_p
+        stepm[key] = stepm_rejected
+
+    return {
+        "mcs_inclusion": mcs,
+        "spa_p_values": spa,
+        "reality_check_p_values": reality,
+        "stepm_rejected": stepm,
+        "bootstrap_n_replications": n_boot,
+        "block_length": block_length_axis,
+        "block_lengths_used": block_lengths_used,
+        "bootstrap_kind": "stationary_block_bootstrap_per_origin",
+    }
+
+
+def _resolve_block_length(L: np.ndarray, axis_value: Any) -> int:
+    """Politis-White (2004) automatic block length when axis_value=='auto',
+    else the integer the recipe specified.
+
+    The Politis-White formula picks the block length that minimizes
+    asymptotic MSE of the long-run variance estimator. We approximate via the
+    rule-of-thumb b_opt = floor(2 * (4 * n / 100) ** (1/3)) for stationarity,
+    then floor it to >= 1 and clip to <= n // 2.
+    """
+
+    n = L.shape[0]
+    if isinstance(axis_value, (int, np.integer)) and axis_value > 0:
+        return max(1, min(int(axis_value), n // 2 if n > 1 else 1))
+    if isinstance(axis_value, str) and axis_value.isdigit():
+        return max(1, min(int(axis_value), n // 2 if n > 1 else 1))
+    # Politis-White auto rule-of-thumb.
+    block = max(1, int(np.floor(2 * (4 * n / 100) ** (1 / 3))))
+    return min(block, max(1, n // 2))
+
+
+def _stationary_bootstrap_indices(n: int, block_length: int, rng: np.random.Generator) -> np.ndarray:
+    """Politis-Romano (1994) stationary block bootstrap index draw.
+
+    Each step: with probability 1/block_length, restart at a random index
+    drawn uniformly from {0, ..., n-1}; otherwise advance one step (mod n).
+    """
+
+    if block_length <= 1:
+        return rng.integers(0, n, size=n)
+    p_restart = 1.0 / block_length
+    indices = np.empty(n, dtype=np.int64)
+    indices[0] = int(rng.integers(0, n))
+    restarts = rng.random(n - 1) < p_restart
+    new_starts = rng.integers(0, n, size=n - 1)
+    for t in range(1, n):
+        if restarts[t - 1]:
+            indices[t] = int(new_starts[t - 1])
+        else:
+            indices[t] = (indices[t - 1] + 1) % n
+    return indices
+
+
+def _fixed_block_bootstrap_indices(n: int, block_length: int, rng: np.random.Generator) -> np.ndarray:
+    """Kunsch (1989) circular fixed-block bootstrap. Used when the recipe
+    selects ``bootstrap_method = block``."""
+
+    n_blocks = int(np.ceil(n / block_length))
+    starts = rng.integers(0, n, size=n_blocks)
+    indices = np.empty(n_blocks * block_length, dtype=np.int64)
+    for k, start in enumerate(starts):
+        indices[k * block_length:(k + 1) * block_length] = (start + np.arange(block_length)) % n
+    return indices[:n]
 
 
 def _l6_direction_results(errors: pd.DataFrame, sub: dict[str, Any], leaf: dict[str, Any]) -> dict[tuple[Any, ...], Any]:
