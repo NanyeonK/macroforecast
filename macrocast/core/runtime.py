@@ -651,6 +651,20 @@ def materialize_l3_minimal(
     )
 
 
+def _resolve_l0_seed(recipe_root: dict[str, Any]) -> int | None:
+    """Mirror ``execution._resolve_seed`` so L4 estimator construction can
+    inherit the L0 ``random_seed`` when a fit_model node does not pin its
+    own ``params.random_state`` (issue #215)."""
+
+    l0 = recipe_root.get("0_meta", {}) or {}
+    leaf = l0.get("leaf_config", {}) or {}
+    fixed = l0.get("fixed_axes", {}) or {}
+    if "random_seed" in leaf:
+        return int(leaf["random_seed"])
+    repro = fixed.get("reproducibility_mode", "seeded_reproducible")
+    return 0 if repro == "seeded_reproducible" else None
+
+
 def materialize_l4_minimal(
     recipe_root: dict[str, Any], l3_features: L3FeaturesArtifact
 ) -> tuple[L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact]:
@@ -667,6 +681,7 @@ def materialize_l4_minimal(
         raise ValueError("L4 runtime requires L3 y_final series data")
     target = l3_features.y_final.name
     horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
+    l0_seed = _resolve_l0_seed(recipe_root)
     forecasts: dict[tuple[str, str, int, Any], float] = {}
     artifacts: dict[str, ModelArtifact] = {}
     benchmark_flags: dict[str, bool] = {}
@@ -675,6 +690,8 @@ def materialize_l4_minimal(
     model_ids: list[str] = []
     for fit_node in fit_nodes:
         params = dict(fit_node.get("params", {}) or {})
+        if l0_seed is not None and "random_state" not in params:
+            params["random_state"] = l0_seed
         family = params.get("family", "ridge")
         forecast_strategy = params.get("forecast_strategy", "direct")
         training_start_rule = params.get("training_start_rule", "expanding")

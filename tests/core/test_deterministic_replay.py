@@ -140,10 +140,10 @@ def test_replicate_recipe_succeeds_after_independent_re_run(tmp_path):
 
 
 def test_distinct_random_state_sweep_produces_distinct_l4_artifacts(tmp_path):
-    """L0 random_seed currently does not auto-propagate to L4 estimators
-    (each fit_model node uses its own ``params.random_state``, default 0).
-    Verify the per-node random_state sweep still differentiates artifacts;
-    full L0 -> L4 propagation is tracked in a separate follow-up issue.
+    """L0 random_seed now auto-propagates to L4 estimators when no per-fit
+    ``params.random_state`` is set (issue #215, see
+    ``tests/core/test_seed_policy.py::test_l0_random_seed_propagates_into_l4_random_state``).
+    This test still pins the original same-seed determinism guarantee.
     """
 
     out_a = tmp_path / "rs_a"
