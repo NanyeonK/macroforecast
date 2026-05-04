@@ -386,10 +386,19 @@ def execute_recipe(
 ) -> ManifestExecutionResult:
     """Execute every sweep cell defined by ``recipe`` and return a manifest result.
 
-    ``recipe`` may be a YAML string, an already-parsed recipe-root dict, or a
-    :class:`pathlib.Path` to a YAML file. Honors L0 ``failure_policy`` so that
-    a single failing cell does not abort the rest of the sweep when the policy
-    is ``continue_on_failure``.
+    Accepted ``recipe`` shapes:
+
+    * ``dict`` -- already-parsed recipe-root mapping (deep-copied internally).
+    * :class:`pathlib.Path` -- YAML file to read and parse.
+    * ``str`` -- inline YAML text. **As of v0.1 the str-as-path heuristic is
+      deprecated**: a string that does not contain a newline and that names
+      an existing file still loads from disk for back-compat, but a
+      ``DeprecationWarning`` is raised. Pass a :class:`pathlib.Path` (or call
+      :func:`execute_recipe_file`) for the file path; pass plain ``str`` for
+      inline YAML.
+
+    Honors L0 ``failure_policy`` so that a single failing cell does not abort
+    the rest of the sweep when the policy is ``continue_on_failure``.
 
     Parameters
     ----------
@@ -430,6 +439,15 @@ def execute_recipe(
         recipe_root = parse_recipe_yaml(recipe.read_text(encoding="utf-8"))
     elif isinstance(recipe, str):
         if "\n" not in recipe and Path(recipe).exists():
+            import warnings
+
+            warnings.warn(
+                "execute_recipe: passing a file path as `str` is deprecated -- "
+                "pass `Path(...)` (or call `execute_recipe_file`) for files; "
+                "plain `str` is reserved for inline YAML in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             recipe_root = parse_recipe_yaml(Path(recipe).read_text(encoding="utf-8"))
         else:
             recipe_root = parse_recipe_yaml(recipe)
@@ -590,6 +608,23 @@ def _extract_sweep_values(
     return sweep_values
 
 
+def execute_recipe_file(
+    path: str | Path,
+    *,
+    output_directory: str | Path | None = None,
+) -> ManifestExecutionResult:
+    """Read a YAML recipe from disk and run it through :func:`execute_recipe`.
+
+    Equivalent to ``execute_recipe(Path(path), output_directory=...)`` but
+    spelled out so callers cannot accidentally trigger the deprecated
+    str-path heuristic. Prefer this over passing a path string to
+    ``execute_recipe`` -- a future release will remove that heuristic and a
+    plain ``str`` will be interpreted as inline YAML only.
+    """
+
+    return execute_recipe(Path(path), output_directory=output_directory)
+
+
 def replicate_recipe(manifest_path: str | Path) -> ReplicationResult:
     """Re-execute the recipe stored in ``manifest_path`` and verify hashes match.
 
@@ -635,5 +670,6 @@ __all__ = [
     "ManifestExecutionResult",
     "ReplicationResult",
     "execute_recipe",
+    "execute_recipe_file",
     "replicate_recipe",
 ]
