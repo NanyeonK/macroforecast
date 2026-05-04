@@ -87,7 +87,8 @@ HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = (
     "generalized_irf",
     "mrf_gtvp",
     "lasso_inclusion_frequency",
-    "accumulated_local_effect",
+    # accumulated_local_effect re-promoted in v0.2 (#192) via the
+    # Apley & Zhu (2020) centred-cumulative-effect procedure.
     "friedman_h_interaction",
     "gradient_shap",
     "integrated_gradients",

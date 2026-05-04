@@ -240,9 +240,10 @@ def test_l7_operational_ops_registered_after_honesty_pass():
 
 
 def test_l7_future_ops_includes_honesty_demotions():
-    # 6 design-future + 11 PR-C demotions = 17 future ops.
+    # 6 design-future + 10 remaining PR-C demotions (#192 promoted ALE
+    # back) = 16 future ops.
     future_ops = [op for op in list_ops().values() if "l7" in op.layer_scope and op.status == "future"]
-    assert len(future_ops) >= 17
+    assert len(future_ops) >= 16
 
 
 def test_l7_18_figure_types():
