@@ -295,18 +295,80 @@ def render_beeswarm(table: pd.DataFrame, *, output_path: Path, title: str | None
 
 
 def render_force_plot(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
-    """L7 #205 -- Single-prediction SHAP force plot (proxy: horizontal bar
-    of contributions)."""
+    """L7 #249 -- single-prediction SHAP force plot. Bidirectional bar
+    chart: positive contributions push the prediction up (right, blue),
+    negative contributions push it down (left, red). Sorted by absolute
+    contribution.
+    """
 
-    return render_bar_global(table, output_path=output_path, title=title)
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "feature" not in table.columns:
+        return render_bar_global(table, output_path=output_path, title=title)
+    contrib_col = "contribution" if "contribution" in table.columns else "importance"
+    sub = table.copy()
+    sub["__contrib__"] = sub[contrib_col].astype(float)
+    sub["__abs__"] = sub["__contrib__"].abs()
+    sub = sub.sort_values("__abs__", ascending=True).tail(20)
+    fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(sub) + 1.0)))
+    colors = ["#3b82f6" if v >= 0 else "#ef4444" for v in sub["__contrib__"]]
+    ax.barh(sub["feature"], sub["__contrib__"], color=colors)
+    ax.axvline(0, color="black", linewidth=0.8)
+    ax.set_xlabel("contribution")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_shap_dependence_scatter(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- scatter of feature value vs SHAP value (proxy: bar)."""
+    """L7 #249 -- SHAP dependence scatter: x = feature value, y = SHAP
+    value (or importance). One subplot per feature when ``feature_value``
+    column is present; otherwise a stripe chart per feature.
+    """
 
-    return render_pdp_line(table, output_path=output_path, title=title)
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "feature_value" in table.columns and "feature" in table.columns:
+        unique_features = sorted(table["feature"].unique())[:6]
+        n = len(unique_features)
+        fig, axes = plt.subplots(1, max(1, n), figsize=(4 * max(1, n), 4), squeeze=False)
+        for ax, feat in zip(axes[0], unique_features):
+            sub = table[table["feature"] == feat]
+            y_col = "shap_value" if "shap_value" in sub.columns else "importance"
+            ax.scatter(sub["feature_value"], sub[y_col], alpha=0.5, s=15, color="#3b82f6")
+            ax.set_xlabel(str(feat))
+            ax.set_ylabel("SHAP value")
+            ax.axhline(0, color="black", linewidth=0.5)
+        if title:
+            fig.suptitle(title)
+        fig.tight_layout()
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
+        return output_path
+    # Without explicit (feature, feature_value) pairs we plot importance per
+    # feature as a strip chart -- distinct from the bar_global default.
+    sub = table.sort_values("importance" if "importance" in table.columns else table.columns[1])
+    fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(sub) + 1.0)))
+    rng = np.random.default_rng(0)
+    for i, (_, row) in enumerate(sub.iterrows()):
+        jitter = rng.normal(scale=0.04, size=10)
+        ax.scatter(np.full(10, row.get("importance", 0.0)) + jitter, np.full(10, i), alpha=0.4, s=12, color="#10b981")
+    ax.set_yticks(range(len(sub)))
+    ax.set_yticklabels(sub["feature"])
+    ax.set_xlabel("importance")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_ale_line(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
@@ -338,25 +400,121 @@ def render_ale_line(table: pd.DataFrame, *, output_path: Path, title: str | None
 
 
 def render_attribution_heatmap(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
-    """L7 #205 -- gradient attribution heatmap (proxy: heatmap of methods × features)."""
-    return render_heatmap(table, output_path=output_path, title=title)
+    """L7 #249 -- gradient attribution heatmap. Diverging RdBu colormap
+    centred at 0 (positive vs negative attributions). When the input is
+    a feature-indexed (method × feature) frame, transpose so rows are
+    features and columns are methods.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    matrix = table.copy()
+    if "feature" in matrix.columns:
+        matrix = matrix.set_index("feature")
+    fig, ax = plt.subplots(figsize=(max(4.0, 0.4 * len(matrix.columns) + 2), max(2.0, 0.3 * len(matrix) + 1)))
+    arr = matrix.to_numpy(dtype=float)
+    vmax = float(np.abs(arr).max()) if arr.size else 1.0
+    im = ax.imshow(arr, cmap="RdBu_r", aspect="auto", vmin=-vmax, vmax=vmax)
+    ax.set_xticks(range(len(matrix.columns)))
+    ax.set_xticklabels(matrix.columns, rotation=45, ha="right")
+    ax.set_yticks(range(len(matrix.index)))
+    ax.set_yticklabels(matrix.index)
+    fig.colorbar(im, ax=ax, label="attribution")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_inclusion_heatmap(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
-    """L7 #205 -- lasso inclusion heatmap."""
-    return render_heatmap(table, output_path=output_path, title=title)
+    """L7 #249 -- (lambda × feature) lasso inclusion heatmap. Greens
+    palette with a 0/1 colorbar (inclusion frequency in [0, 1])."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    matrix = table.copy()
+    if "feature" in matrix.columns:
+        matrix = matrix.set_index("feature")
+    fig, ax = plt.subplots(figsize=(max(4.0, 0.4 * len(matrix.columns) + 2), max(2.0, 0.3 * len(matrix) + 1)))
+    im = ax.imshow(matrix.to_numpy(dtype=float), cmap="Greens", aspect="auto", vmin=0.0, vmax=1.0)
+    ax.set_xticks(range(len(matrix.columns)))
+    ax.set_xticklabels(matrix.columns, rotation=45, ha="right")
+    ax.set_yticks(range(len(matrix.index)))
+    ax.set_yticklabels(matrix.index)
+    fig.colorbar(im, ax=ax, label="inclusion freq")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_lasso_path_inclusion_order(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- lasso path inclusion order (proxy: bar by importance)."""
-    return render_bar_global(table, output_path=output_path, title=title)
+    """L7 #249 -- features ordered by their inclusion order along the
+    lasso path (lower lambda first). Step-line per feature shows the
+    coefficient evolution; without that data we draw a coloured bar
+    sorted by inclusion order.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "lambda" in table.columns:
+        # Path data: pivot to (lambda × feature) and plot one line per feat.
+        pivot = table.pivot(index="lambda", columns="feature", values="coefficient").fillna(0.0)
+        fig, ax = plt.subplots(figsize=(8, 5))
+        for col in pivot.columns:
+            ax.plot(pivot.index, pivot[col], label=str(col), drawstyle="steps-post")
+        ax.set_xlabel("lambda")
+        ax.set_ylabel("coefficient")
+        ax.set_xscale("log")
+        if len(pivot.columns) <= 12:
+            ax.legend(loc="best", fontsize=8)
+    else:
+        sub = table.copy()
+        sort_col = "importance" if "importance" in sub.columns else sub.columns[-1]
+        sub = sub.sort_values(sort_col, ascending=False)
+        fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(sub) + 1.0)))
+        ax.barh(sub["feature"][::-1], sub[sort_col][::-1], color="#10b981")
+        ax.set_xlabel("inclusion frequency / coefficient")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_pip_bar(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
-    """L7 #205 -- BVAR posterior inclusion probability (proxy: bar)."""
-    return render_bar_global(table, output_path=output_path, title=title)
+    """L7 #249 -- BVAR posterior inclusion probability bar with HDI bars
+    when ``hdi_low`` / ``hdi_high`` columns are present.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    sub = table.sort_values("importance", ascending=True).tail(25)
+    fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(sub) + 1.0)))
+    ax.barh(sub["feature"], sub["importance"], color="#8b5cf6", alpha=0.8)
+    if {"hdi_low", "hdi_high"}.issubset(sub.columns):
+        for i, (_, row) in enumerate(sub.iterrows()):
+            ax.plot([row["hdi_low"], row["hdi_high"]], [i, i], color="black", linewidth=1.2)
+    ax.axvline(0.5, color="black", linewidth=0.5, linestyle="--")
+    ax.set_xlabel("posterior inclusion probability")
+    ax.set_xlim(0, 1)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_shapley_waterfall(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
@@ -414,30 +572,152 @@ def render_feature_heatmap_over_time(
 def render_historical_decomp_stacked_bar(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- historical decomposition stacked bar."""
-    return render_bar_global(table, output_path=output_path, title=title)
+    """L7 #249 -- historical decomposition: stacked bar over (period, shock)
+    where ``period`` is on x-axis and each shock contribution stacks
+    vertically. Falls back to a single-bar layout when the input frame
+    only has the (feature, importance) shape.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "period" in table.columns and "shock" in table.columns and "contribution" in table.columns:
+        pivot = table.pivot(index="period", columns="shock", values="contribution").fillna(0.0)
+        fig, ax = plt.subplots(figsize=(10, 5))
+        bottom_pos = np.zeros(len(pivot))
+        bottom_neg = np.zeros(len(pivot))
+        cmap = plt.get_cmap("tab10")
+        for j, shock in enumerate(pivot.columns):
+            values = pivot[shock].values
+            pos_mask = values >= 0
+            neg_mask = ~pos_mask
+            ax.bar(pivot.index, np.where(pos_mask, values, 0.0), bottom=bottom_pos, color=cmap(j % 10), label=str(shock))
+            ax.bar(pivot.index, np.where(neg_mask, values, 0.0), bottom=bottom_neg, color=cmap(j % 10))
+            bottom_pos = bottom_pos + np.where(pos_mask, values, 0.0)
+            bottom_neg = bottom_neg + np.where(neg_mask, values, 0.0)
+        ax.axhline(0, color="black", linewidth=0.6)
+        ax.set_xlabel("period")
+        ax.set_ylabel("contribution")
+        ax.legend(loc="best", fontsize=8, ncol=2)
+    else:
+        return render_bar_global(table, output_path=output_path, title=title)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_irf_with_confidence_band(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- impulse response function with confidence band (proxy:
-    line over the importance series)."""
-    return render_pdp_line(table, output_path=output_path, title=title)
+    """L7 #249 -- impulse response with confidence band. Expects columns
+    ``horizon`` / ``response`` / ``ci_low`` / ``ci_high`` (or per-shock
+    multi-curve form). Falls back to a per-feature line plot of the
+    importance series when those columns aren't present.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if {"horizon", "response"}.issubset(table.columns):
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        if "shock" in table.columns:
+            cmap = plt.get_cmap("tab10")
+            for j, (shock, group) in enumerate(table.groupby("shock")):
+                ax.plot(group["horizon"], group["response"], label=str(shock), color=cmap(j % 10))
+                if {"ci_low", "ci_high"}.issubset(group.columns):
+                    ax.fill_between(
+                        group["horizon"], group["ci_low"], group["ci_high"],
+                        color=cmap(j % 10), alpha=0.2,
+                    )
+            ax.legend(loc="best", fontsize=8)
+        else:
+            ax.plot(table["horizon"], table["response"], color="#3b82f6")
+            if {"ci_low", "ci_high"}.issubset(table.columns):
+                ax.fill_between(
+                    table["horizon"], table["ci_low"], table["ci_high"], alpha=0.25, color="#3b82f6"
+                )
+        ax.axhline(0, color="black", linewidth=0.5)
+        ax.set_xlabel("horizon")
+        ax.set_ylabel("response")
+    else:
+        return render_pdp_line(table, output_path=output_path, title=title)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_bar_grouped_by_pipeline(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- bar grouped by pipeline."""
-    return render_bar_global(table, output_path=output_path, title=title)
+    """L7 #249 -- grouped bar with one cluster per pipeline. Expects
+    ``feature`` × ``pipeline`` × ``importance``.
+    """
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "pipeline" in table.columns and "feature" in table.columns:
+        pivot = table.pivot(index="feature", columns="pipeline", values="importance").fillna(0.0)
+        n_features = len(pivot.index)
+        n_pipelines = len(pivot.columns)
+        fig, ax = plt.subplots(figsize=(max(6, 1.5 * n_pipelines), max(3, 0.4 * n_features + 2)))
+        x = np.arange(n_features)
+        width = 0.8 / max(n_pipelines, 1)
+        cmap = plt.get_cmap("tab10")
+        for j, pipeline in enumerate(pivot.columns):
+            ax.bar(x + j * width, pivot[pipeline], width=width, label=str(pipeline), color=cmap(j % 10))
+        ax.set_xticks(x + width * (n_pipelines - 1) / 2)
+        ax.set_xticklabels(pivot.index, rotation=45, ha="right")
+        ax.set_ylabel("importance")
+        ax.legend(loc="best", fontsize=8)
+    else:
+        return render_bar_global(table, output_path=output_path, title=title)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 def render_importance_by_horizon_bar(
     table: pd.DataFrame, *, output_path: Path, title: str | None = None
 ) -> Path:
-    """L7 #205 -- importance by horizon bar."""
-    return render_bar_global(table, output_path=output_path, title=title)
+    """L7 #249 -- grouped bar with horizons on the x-axis (one cluster
+    per horizon, colour per feature)."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "horizon" in table.columns and "feature" in table.columns:
+        pivot = table.pivot(index="horizon", columns="feature", values="importance").fillna(0.0)
+        n_horizons = len(pivot.index)
+        n_features = len(pivot.columns)
+        fig, ax = plt.subplots(figsize=(max(6, 1.5 * n_horizons), 4))
+        x = np.arange(n_horizons)
+        width = 0.8 / max(n_features, 1)
+        cmap = plt.get_cmap("tab10")
+        for j, feat in enumerate(pivot.columns):
+            ax.bar(x + j * width, pivot[feat], width=width, label=str(feat), color=cmap(j % 10))
+        ax.set_xticks(x + width * (n_features - 1) / 2)
+        ax.set_xticklabels(pivot.index)
+        ax.set_xlabel("horizon")
+        ax.set_ylabel("importance")
+        ax.legend(loc="best", fontsize=8)
+    else:
+        return render_bar_global(table, output_path=output_path, title=title)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
 
 
 __all__ = [
