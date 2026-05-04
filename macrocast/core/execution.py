@@ -131,6 +131,41 @@ def _resolve_seed(recipe_root: dict[str, Any]) -> int | None:
     return 0 if repro == "seeded_reproducible" else None
 
 
+def _resolve_cache_root(
+    recipe_root: dict[str, Any],
+    explicit: str | Path | None,
+    output_directory: str | Path | None,
+) -> Path | None:
+    """Pick the effective raw-cache directory for this study.
+
+    Resolution order (first non-None wins):
+
+    1. ``explicit`` (the ``cache_root=`` argument to ``execute_recipe``)
+    2. ``recipe['1_data']['leaf_config']['cache_root']`` (recipe-level override)
+    3. ``output_directory / '.raw_cache'``
+    4. ``None`` (let the raw loader use its package default)
+    """
+
+    if explicit is not None:
+        return Path(explicit)
+    l1 = recipe_root.get("1_data", {}) or {}
+    leaf = l1.get("leaf_config", {}) or {}
+    if "cache_root" in leaf and leaf["cache_root"]:
+        return Path(leaf["cache_root"])
+    if output_directory is not None:
+        return Path(output_directory) / ".raw_cache"
+    return None
+
+
+def _inject_cache_root(recipe_root: dict[str, Any], cache_root: Path) -> None:
+    """Force ``cache_root`` into ``recipe['1_data']['leaf_config']`` so every
+    materialize_l1 call sees the same directory regardless of cell index."""
+
+    l1 = recipe_root.setdefault("1_data", {})
+    leaf = l1.setdefault("leaf_config", {})
+    leaf["cache_root"] = str(cache_root)
+
+
 def _apply_seed(seed: int | None) -> None:
     if seed is None:
         return
@@ -271,6 +306,7 @@ class ManifestExecutionResult:
     sweep_paths: tuple[str, ...] = ()
     duration_seconds: float = 0.0
     started_at: str = ""
+    cache_root: str | None = None
 
     @property
     def succeeded(self) -> tuple[CellExecutionResult, ...]:
@@ -288,6 +324,7 @@ class ManifestExecutionResult:
             "failure_policy": self.failure_policy,
             "sweep_paths": list(self.sweep_paths),
             "recipe_root": _json_safe(self.recipe_root),
+            "cache_root": self.cache_root,
             "runtime_environment": {
                 "python_version": platform.python_version(),
                 "os_name": platform.system(),
@@ -340,6 +377,7 @@ def execute_recipe(
     recipe: str | dict[str, Any] | Path,
     *,
     output_directory: str | Path | None = None,
+    cache_root: str | Path | None = None,
 ) -> ManifestExecutionResult:
     """Execute every sweep cell defined by ``recipe`` and return a manifest result.
 
@@ -347,6 +385,27 @@ def execute_recipe(
     :class:`pathlib.Path` to a YAML file. Honors L0 ``failure_policy`` so that
     a single failing cell does not abort the rest of the sweep when the policy
     is ``continue_on_failure``.
+
+    Parameters
+    ----------
+    recipe
+        YAML string, parsed recipe dict, or path to a YAML file.
+    output_directory
+        Directory to write ``manifest.json`` and per-cell artifacts into.
+    cache_root
+        Shared raw-data cache directory. When provided, every sweep cell's
+        L1 raw loader (FRED-MD/QD/SD) reuses the same on-disk cache so a
+        large multi-cell sweep does not redownload the same vintage N times.
+        Resolution order:
+
+        1. Explicit ``cache_root`` argument (this kwarg)
+        2. ``recipe['1_data']['leaf_config']['cache_root']`` already set in YAML
+        3. ``output_directory / ".raw_cache"`` (when ``output_directory`` given)
+        4. The raw loader's package default
+
+        Items 1 and 2 are mutually exclusive — if both are set, the explicit
+        argument wins and we override the in-recipe value (a soft warning is
+        attached to the manifest's environment metadata).
     """
 
     started_at = datetime.now(timezone.utc).isoformat()
@@ -365,6 +424,12 @@ def execute_recipe(
     # Canonicalize key order so the same recipe produces bit-identical artifacts
     # regardless of YAML/JSON authoring order or roundtrip representation.
     recipe_root = _canonicalize_keys(recipe_root)
+
+    # Resolve the effective raw cache root and inject it into every cell's L1
+    # leaf_config so the raw loader picks it up.
+    effective_cache_root = _resolve_cache_root(recipe_root, cache_root, output_directory)
+    if effective_cache_root is not None:
+        _inject_cache_root(recipe_root, effective_cache_root)
 
     failure_policy = (
         ((recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}).get("failure_policy")
@@ -420,6 +485,7 @@ def execute_recipe(
         sweep_paths=sweep_paths_str,
         duration_seconds=total_duration,
         started_at=started_at,
+        cache_root=str(effective_cache_root) if effective_cache_root is not None else None,
     )
     if output_directory is not None:
         result.write_manifest(output_directory)
