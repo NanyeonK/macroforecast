@@ -69,6 +69,16 @@ VALIDATION_METHODS = ("expanding_walk_forward", "rolling_walk_forward", "kfold",
 
 
 def get_family_status(family: str) -> str:
+    """Return the recorded family status string.
+
+    The literal value may still be a legacy ``planned`` -- callers that
+    care only about runnability should use
+    :func:`macrocast.core.status.is_runnable` (which normalises legacy
+    aliases) or compare against the constants exported from
+    :mod:`macrocast.core.status`. PR-B will collapse ``planned`` into
+    the 2-value vocabulary.
+    """
+
     return MODEL_FAMILY_STATUS[family]
 
 
@@ -76,7 +86,11 @@ def _family_operational(dag, nref) -> bool:
     """Allow ``operational`` and ``planned`` families through the L4 validator;
     ``future`` (and unknown) families are rejected. ``planned`` families run
     via approximation wrappers -- callers can detect this via
-    ``get_family_status(family) == 'planned'``."""
+    ``get_family_status(family) == 'planned'``.
+
+    Behaviour change in PR-B: ``planned`` is collapsed to ``future`` and
+    these families will no longer pass the validator.
+    """
 
     family = dag.node(nref.node_id).params.get("family")
     return MODEL_FAMILY_STATUS.get(family) in ("operational", "planned")

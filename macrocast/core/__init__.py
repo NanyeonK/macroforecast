@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .dag import DAG, Edge, GatePredicate, LayerCategory, LayerId, Node, NodeRef, SourceSelector
 from .layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
+from .status import FUTURE, OPERATIONAL, ItemStatus, KNOWN_STATUSES, is_future, is_runnable, normalize_status
 from .layers import LAYER_GLOBALS, LAYER_SINKS, get_layer, list_layers, register_layer
 from .ops import OpSpec, Rule as OpRule, get_op, list_ops, register_op
 from .cache import canonical_dict, canonical_serialize, ensure_cache_layout, execute_node, layer_hash, node_hash, recipe_hash
@@ -118,9 +119,12 @@ __all__ = [
     "FeatureBundle",
     "ForecastArtifact",
     "GatePredicate",
+    "FUTURE",
     "GpuInfo",
     "ImportanceResult",
     "ImportanceResultSet",
+    "ItemStatus",
+    "KNOWN_STATUSES",
     "LAYER_GLOBALS",
     "LAYER_SINKS",
     "LAYER_YAML_KEYS",
@@ -140,6 +144,7 @@ __all__ = [
     "Node",
     "NodeGroupSweep",
     "NodeRef",
+    "OPERATIONAL",
     "OpSpec",
     "OpRule",
     "Option",
@@ -186,6 +191,8 @@ __all__ = [
     "layer_hash",
     "layer_record_from_exception",
     "install_dependencies",
+    "is_future",
+    "is_runnable",
     "list_layers",
     "list_ops",
     "materialize_l1",
@@ -194,6 +201,7 @@ __all__ = [
     "materialize_l4_minimal",
     "materialize_l5_minimal",
     "node_hash",
+    "normalize_status",
     "normalize_to_dag_form",
     "parse_dag_form",
     "parse_recipe_yaml",

@@ -4,10 +4,13 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
 from ..dag import DAG, LayerId, Node, NodeRef
+from ..status import ItemStatus, normalize_status
 from ..types import DataType
 
 RuleSeverity = Literal["hard", "soft"]
-OpStatus = Literal["operational", "future", "registry_only"]
+# Alias to the unified package-wide vocabulary; legacy callers writing
+# ``status="registry_only"`` etc. are normalised by ``register_op``.
+OpStatus = ItemStatus
 LayerScope = Literal["universal"] | tuple[LayerId, ...]
 TypeSpec = type[DataType] | tuple[type[DataType], ...]
 
@@ -68,7 +71,9 @@ def register_op(
             hard_rules=hard_rules,
             soft_rules=soft_rules,
             default_figure_type=default_figure_type,
-            status=status,
+            # Legacy ``planned`` / ``registry_only`` / etc. collapse to the
+            # 2-value vocabulary at registration time.
+            status=normalize_status(status),
             function=func,
         )
         return func

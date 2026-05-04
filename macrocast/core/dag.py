@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from .status import ItemStatus
+
 
 LayerId = Literal[
     "l0",
@@ -22,7 +24,10 @@ LayerId = Literal[
 
 LayerCategory = Literal["setup", "construction", "diagnostic", "consumption"]
 NodeType = Literal["source", "axis", "step", "combine", "sink"]
-NodeStatus = Literal["operational", "future", "registry_only"]
+# Alias to the package-wide unified vocabulary so any legacy "registry_only"
+# / "planned" / "approximation" string still type-checks (the runtime
+# normalises via ``macrocast.core.status.normalize_status``).
+NodeStatus = ItemStatus
 GateKind = Literal[
     "axis_equals",
     "axis_not_equals",
