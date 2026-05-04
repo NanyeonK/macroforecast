@@ -893,6 +893,8 @@ def materialize_l4_minimal(
 def _l4_framework(family: str) -> str:
     if family in {"xgboost", "lightgbm", "catboost"}:
         return family
+    if _resolve_custom_model(family) is not None:
+        return "custom"
     return "sklearn"
 
 
@@ -1034,7 +1036,69 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         )
     if family == "dfm_mixed_mariano_murasawa":
         return _DFMMixedFrequency(n_factors=int(params.get("n_factors", 1)))
+    custom = _resolve_custom_model(family)
+    if custom is not None:
+        return _CustomModelAdapter(custom, params=params)
     raise NotImplementedError(f"L4 runtime does not support family={family!r}")
+
+
+def _resolve_custom_model(family: str):
+    """Look up ``macrocast.custom`` for a user-registered model factory; the
+    runtime then wraps it in a sklearn-compatible adapter (issue #216)."""
+
+    try:
+        from .. import custom as _custom_mod
+    except ImportError:  # pragma: no cover
+        return None
+    if not _custom_mod.is_custom_model(family):
+        return None
+    return _custom_mod.get_custom_model(family)
+
+
+class _CustomModelAdapter:
+    """Wrap a ``register_model`` callable in the sklearn fit/predict API.
+
+    The user contract is::
+
+        fn(X_train, y_train, X_test, context) -> scalar | one-element array
+
+    For ``predict(X)`` we iterate row-by-row to mirror the documented
+    1-row ``X_test`` contract; this matches the ``_l4_predict_one`` flow
+    and keeps every recipe path working unchanged."""
+
+    def __init__(self, spec, params: dict[str, Any]) -> None:
+        self.spec = spec
+        self.params = dict(params or {})
+        self._train_X: pd.DataFrame | None = None
+        self._train_y: pd.Series | None = None
+
+    def fit(self, X, y):
+        self._train_X = X.copy() if isinstance(X, pd.DataFrame) else pd.DataFrame(X)
+        self._train_y = y.copy() if isinstance(y, pd.Series) else pd.Series(y)
+        return self
+
+    def predict(self, X):
+        if self._train_X is None or self._train_y is None:
+            raise RuntimeError(f"custom model {self.spec.name!r} predict() called before fit()")
+        if isinstance(X, pd.DataFrame):
+            test = X
+        else:
+            test = pd.DataFrame(X)
+        context = {
+            "contract_version": "custom_model_v1",
+            "model_name": self.spec.name,
+            "feature_names": tuple(self._train_X.columns),
+            "params": dict(self.params),
+        }
+        preds: list[float] = []
+        for _, row in test.iterrows():
+            row_frame = pd.DataFrame([row], columns=test.columns)
+            value = self.spec.function(self._train_X, self._train_y, row_frame, context)
+            if hasattr(value, "__len__") and not isinstance(value, str):
+                preds.append(float(list(value)[0]))
+            else:
+                preds.append(float(value))
+        return np.asarray(preds, dtype=float)
 
 
 def _l4_predict_one(model, X: pd.DataFrame, position: int, *, forecast_strategy: str, horizon: int) -> float:

@@ -223,7 +223,7 @@ class ModelArtifact(DataType):
     model_id: str
     family: str
     fitted_object: Any
-    framework: Literal["sklearn", "xgboost", "lightgbm", "statsmodels", "torch", "tf", "custom_r"]
+    framework: Literal["sklearn", "xgboost", "lightgbm", "statsmodels", "torch", "tf", "custom_r", "custom"]
     fit_metadata: dict[str, Any] = field(default_factory=dict)
     feature_names: tuple[str, ...] = ()
 
