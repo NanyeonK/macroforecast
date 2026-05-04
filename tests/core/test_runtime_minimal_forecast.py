@@ -322,10 +322,13 @@ def test_execute_minimal_forecast_rejects_unknown_family():
 
 
 def test_execute_minimal_forecast_rejects_demoted_future_family():
-    # PR-B of the v0.1 honesty pass: macroeconomic_random_forest /
-    # bvar_minnesota / etc. are now ``future`` -- the validator must
-    # hard-reject before the runtime tries to build the estimator.
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: macroeconomic_random_forest")
+    # PR-B of the v0.1 honesty pass: families whose runtime did not match
+    # the design's named procedure were demoted to ``future``. v0.2
+    # re-promoted bvar_minnesota / bvar_normal_inverse_wishart /
+    # factor_augmented_var / macroeconomic_random_forest as proper
+    # implementations landed; ``dfm_mixed_mariano_murasawa`` is the last
+    # remaining honesty-pass demotion that the validator hard-rejects.
+    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: dfm_mixed_mariano_murasawa")
     with pytest.raises(ValueError, match=r"future or unknown"):
         execute_minimal_forecast(yaml_text)
 
