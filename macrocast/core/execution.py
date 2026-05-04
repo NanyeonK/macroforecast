@@ -398,20 +398,41 @@ class ManifestExecutionResult:
             ],
         }
 
-    def write_manifest(self, output_directory: str | Path, json_lines: bool = False) -> Path:
+    def write_manifest(self, output_directory: str | Path, json_lines: bool | None = None) -> Path:
         directory = Path(output_directory)
         directory.mkdir(parents=True, exist_ok=True)
-        target = directory / ("manifest.jsonl" if json_lines else "manifest.json")
+        manifest_format = self._resolve_manifest_format()
+        if json_lines is True:
+            manifest_format = "json_lines"
         payload = _json_safe(self.to_manifest_dict())
-        if json_lines:
+        if manifest_format == "json_lines":
+            target = directory / "manifest.jsonl"
             with target.open("w", encoding="utf-8") as fh:
                 base = {key: value for key, value in payload.items() if key != "cells"}
                 fh.write(json.dumps(base, sort_keys=True) + "\n")
                 for cell in payload["cells"]:
                     fh.write(json.dumps(cell, sort_keys=True) + "\n")
-        else:
+        elif manifest_format == "yaml":
+            try:
+                import yaml as _yaml  # type: ignore
+            except ImportError:
+                target = directory / "manifest.json"
+                target.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+            else:
+                target = directory / "manifest.yaml"
+                target.write_text(_yaml.safe_dump(payload, sort_keys=True), encoding="utf-8")
+        else:  # default json
+            target = directory / "manifest.json"
             target.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return target
+
+    def _resolve_manifest_format(self) -> str:
+        l8 = (self.recipe_root.get("8_output") or {})
+        for source in ("fixed_axes", "leaf_config"):
+            block = l8.get(source) or {}
+            if "manifest_format" in block:
+                return str(block["manifest_format"])
+        return "json"
 
 
 @dataclass(frozen=True)
