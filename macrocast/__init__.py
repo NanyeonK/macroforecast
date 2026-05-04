@@ -22,7 +22,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.2.5"
+__version__ = "0.3.0"
 
 _LAZY_EXPORTS = {
     # public top-level API
