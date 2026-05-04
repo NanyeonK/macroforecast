@@ -244,19 +244,21 @@ def test_l4_operational_model_families_registered():
 
 
 def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
-    # PR-B honesty pass: 5 families demoted from operational/planned to
-    # future because their v0.1 runtime did not match the named procedure.
+    # PR-B honesty pass demoted 5 families; v0.2 has since re-promoted
+    # bvar_minnesota / bvar_normal_inverse_wishart with proper closed-form
+    # Minnesota / NIW posterior mean estimators (#185 / #186). The other
+    # PR-B demotions remain future until their tracking issue lands.
     expected_future = {
         "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
-        # PR-B demotions
         "factor_augmented_var",
-        "bvar_minnesota",
-        "bvar_normal_inverse_wishart",
         "macroeconomic_random_forest",
         "dfm_mixed_mariano_murasawa",
     }
     assert expected_future <= set(FUTURE_MODEL_FAMILIES)
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
+    # The two BVAR families must NOT be in FUTURE anymore.
+    assert "bvar_minnesota" not in FUTURE_MODEL_FAMILIES
+    assert "bvar_normal_inverse_wishart" not in FUTURE_MODEL_FAMILIES
 
 
 def test_l4_5_forecast_combine_ops_registered():

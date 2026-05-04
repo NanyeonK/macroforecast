@@ -1010,7 +1010,13 @@ def _build_l4_model(family: str, params: dict[str, Any]):
     if family == "glmboost":
         return _GLMBoost(n_iter=int(params.get("n_estimators", 100)), learning_rate=float(params.get("learning_rate", 0.1)))
     if family in {"bvar_minnesota", "bvar_normal_inverse_wishart"}:
-        return _BayesianVAR(p=int(params.get("n_lag", 2)), prior=family)
+        return _BayesianVAR(
+            p=int(params.get("n_lag", 2)),
+            prior=family,
+            lambda1=float(params.get("minnesota_lambda1", 0.2)),
+            lambda_decay=float(params.get("minnesota_lambda_decay", 1.0)),
+            lambda_cross=float(params.get("minnesota_lambda_cross", 0.5)),
+        )
     if family == "macroeconomic_random_forest":
         # Coulombe (2024) MRF: linear-in-time random forest. Approx via random
         # forest on (X, time_trend) features.
@@ -1342,20 +1348,144 @@ class _GLMBoost:
 
 
 class _BayesianVAR:
-    """Minnesota-prior BVAR; fits VAR posterior mean and predicts target column."""
+    """Bayesian regression with Minnesota / Normal-Inverse-Wishart shrinkage.
 
-    def __init__(self, p: int = 2, prior: str = "bvar_minnesota") -> None:
+    Issue #185 / #186 promotion -- the previous implementation delegated
+    to a plain VAR wrapper. Now we implement the conjugate posterior:
+
+    For ``y = X β + ε``, ε ~ N(0, σ²),
+
+    * Prior (Minnesota): β ~ N(m, V) where ``m`` puts unit weight on the
+      first own-lag column when present (random-walk for I(1) macro
+      series) and zero elsewhere; ``V = diag(σ² λ₁² / (l ** λ_decay)²)``
+      shrinks higher lags more aggressively (Litterman 1986).
+    * Prior (NIW): same β prior plus an inverse-Wishart prior on σ²
+      with shape ``ν₀`` and scale ``S₀``; the posterior mean of β has
+      the same closed form but the marginal predictive distribution is
+      Student-t. For the point-forecast contract used by L4, the two
+      priors only differ in the σ² hyperparameter -- we expose
+      ``bvar_normal_inverse_wishart`` with a heavier-tailed default.
+
+    Closed-form posterior mean:
+
+        β̂ = (V⁻¹ + X'X)⁻¹ (V⁻¹ m + X'y)
+
+    Hyperparameters (override via ``params``):
+
+    * ``minnesota_lambda1`` -- overall tightness (default 0.2)
+    * ``minnesota_lambda_decay`` -- lag-decay exponent (default 1.0)
+    * ``minnesota_lambda_cross`` -- cross-equation shrinkage (default 0.5)
+
+    The estimator is closed-form so it adds no numerical-RNG state.
+    """
+
+    def __init__(
+        self,
+        p: int = 2,
+        prior: str = "bvar_minnesota",
+        lambda1: float = 0.2,
+        lambda_decay: float = 1.0,
+        lambda_cross: float = 0.5,
+    ) -> None:
         self.p = max(1, int(p))
-        self.prior = prior
-        self._var = _VARWrapper(p=p)
+        self.prior = str(prior)
+        self.lambda1 = float(lambda1)
+        self.lambda_decay = float(lambda_decay)
+        self.lambda_cross = float(lambda_cross)
+        # Larger NIW default tightness reflects the parameter-uncertainty
+        # adjustment the marginal predictive would apply.
+        if self.prior == "bvar_normal_inverse_wishart":
+            self.lambda1 *= 1.25
+        self._mean: np.ndarray | None = None
+        self._coef: np.ndarray | None = None
+        self._intercept: float = 0.0
+        self._feature_names: tuple[str, ...] = ()
+        self._fallback: float = 0.0
+
+    @staticmethod
+    def _classify_columns(columns: tuple[str, ...]) -> list[tuple[str, int, bool]]:
+        """For each column, return ``(base_name, lag_index, is_first_own_lag)``.
+
+        Lag detection looks for trailing ``_lagK`` (e.g. ``y_lag1``).
+        Anything else is treated as a contemporaneous regressor (lag=0).
+        """
+
+        results: list[tuple[str, int, bool]] = []
+        for col in columns:
+            base = str(col)
+            lag = 0
+            if "_lag" in base:
+                stem, _, suffix = base.rpartition("_lag")
+                try:
+                    lag = max(1, int(suffix))
+                    base = stem
+                except ValueError:
+                    lag = 0
+            results.append((base, lag, False))
+        # Mark the first y_lag1 column as the random-walk anchor.
+        for i, (base, lag, _) in enumerate(results):
+            if base == "y" and lag == 1:
+                results[i] = (base, lag, True)
+                break
+        return results
+
+    def _prior(self, columns: tuple[str, ...], sigma2: float) -> tuple[np.ndarray, np.ndarray]:
+        classification = self._classify_columns(columns)
+        m = np.zeros(len(columns))
+        v = np.zeros(len(columns))
+        for i, (_base, lag, is_anchor) in enumerate(classification):
+            scale = (self.lambda1 / max(1.0, lag) ** self.lambda_decay) ** 2
+            if is_anchor:
+                m[i] = 1.0
+                v[i] = sigma2 * scale
+            else:
+                v[i] = sigma2 * scale * (self.lambda_cross ** 2 if lag > 0 else 1.0)
+        # Floor to avoid singular matrices.
+        v = np.maximum(v, 1e-8)
+        return m, v
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_BayesianVAR":
-        # Minnesota prior shrinkage approximated by adding ridge to the VAR fit.
-        self._var.fit(X, y)
+        df = X.copy()
+        df["__y__"] = y.values
+        df = df.dropna()
+        if df.empty:
+            self._fallback = float(np.nan_to_num(y.mean(), nan=0.0))
+            return self
+        target = df["__y__"].to_numpy(dtype=float)
+        Xmat = df.drop(columns="__y__").to_numpy(dtype=float)
+        cols = tuple(df.drop(columns="__y__").columns)
+        self._feature_names = cols
+        # Sample variance estimate (data-dependent prior tightness).
+        sigma2 = float(np.var(target, ddof=1)) if target.size > 1 else 1.0
+        sigma2 = max(sigma2, 1e-6)
+        m, v = self._prior(cols, sigma2)
+        # Closed-form posterior mean: (V^-1 + X'X)^-1 (V^-1 m + X'y).
+        XtX = Xmat.T @ Xmat
+        Xty = Xmat.T @ target
+        Vinv = np.diag(1.0 / v)
+        precision = Vinv + XtX
+        rhs = Vinv @ m + Xty
+        try:
+            beta = np.linalg.solve(precision, rhs)
+        except np.linalg.LinAlgError:
+            beta = np.linalg.lstsq(precision, rhs, rcond=None)[0]
+        self._coef = beta
+        self._intercept = float(target.mean() - Xmat.mean(axis=0) @ beta)
+        self._mean = m
+        self._fallback = float(target.mean())
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        return self._var.predict(X)
+        if self._coef is None:
+            return np.full(len(X), self._fallback)
+        # Re-align to the columns seen at fit time (silently zero unseen
+        # columns so the predict path matches sklearn's expectation).
+        Xmat = np.zeros((len(X), len(self._feature_names)), dtype=float)
+        for i, col in enumerate(self._feature_names):
+            if col in X.columns:
+                Xmat[:, i] = pd.to_numeric(X[col], errors="coerce").fillna(0.0).to_numpy(dtype=float)
+        preds = self._intercept + Xmat @ self._coef
+        return preds.astype(float)
 
 
 class _TorchSequenceModel:

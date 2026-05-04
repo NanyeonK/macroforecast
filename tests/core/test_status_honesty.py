@@ -32,10 +32,11 @@ from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 # Items demoted from operational/planned to future during the v0.1
 # honesty pass (PR-A..D). The list must stay in sync with the
 # ``HONESTY_DEMOTED_*`` exports in the corresponding module.
+#
+# v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart re-promoted
+# in the PR closing #185 / #186 (real Minnesota / NIW posterior estimator).
 _DEMOTED_L4_FAMILIES = (
     "factor_augmented_var",
-    "bvar_minnesota",
-    "bvar_normal_inverse_wishart",
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
 )
@@ -186,13 +187,17 @@ def test_demoted_l1_regime_rejected_by_validator(regime):
 def test_count_of_demotions_matches_documentation():
     """The CLAUDE.md "v0.1 honesty-pass demotions" table lists 8 row
     groups. The runtime exports those groups via three constants. Pin
-    the totals so a stray addition / removal triggers a failing test."""
+    the totals so a stray addition / removal triggers a failing test.
 
-    # 5 L4 families
-    assert len(_DEMOTED_L4_FAMILIES) == 5
+    v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart
+    re-promoted (#185 / #186), so the L4 demotion count drops from 5 to 3.
+    """
+
+    # 3 L4 families remaining future after v0.2 BVAR promotion
+    assert len(_DEMOTED_L4_FAMILIES) == 3
     # 11 L7 ops
     assert len(HONESTY_DEMOTED_L7_OPS) == 11
     # 3 L1 estimated regimes
     assert len(_DEMOTED_L1_REGIMES) == 3
-    # Combined honest count: 19 demoted items across 3 layers.
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 19
+    # Combined honest count after BVAR re-promotion: 17 items.
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 17

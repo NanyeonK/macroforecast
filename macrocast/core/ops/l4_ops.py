@@ -36,6 +36,10 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "gru",
     "transformer",
     "knn",
+    # Promoted in v0.2 (issue #185 / #186): closed-form Minnesota /
+    # Normal-Inverse-Wishart posterior mean estimator.
+    "bvar_minnesota",
+    "bvar_normal_inverse_wishart",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -55,10 +59,8 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
-    # demoted in PR-B of the v0.1 honesty pass
+    # demoted in PR-B of the v0.1 honesty pass; remaining gaps
     "factor_augmented_var",
-    "bvar_minnesota",
-    "bvar_normal_inverse_wishart",
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
     # always future (Phase 1 design)
