@@ -1084,7 +1084,7 @@ def materialize_l4_minimal(
     forecast_object = _resolve_forecast_object(fit_nodes)
     forecast_intervals: dict[tuple[str, str, int, Any, float], float] = {}
     if forecast_object == "quantile":
-        forecast_intervals = _emit_quantile_intervals(forecasts, fit_nodes)
+        forecast_intervals = _emit_quantile_intervals(forecasts, fit_nodes, X=X, y=y)
     return (
         L4ForecastsArtifact(
             forecasts=forecasts,
@@ -1120,31 +1120,134 @@ def _resolve_forecast_object(fit_nodes: list[dict[str, Any]]) -> Literal["point"
 def _emit_quantile_intervals(
     forecasts: dict[tuple[str, str, int, Any], float],
     fit_nodes: list[dict[str, Any]],
+    *,
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
 ) -> dict[tuple[str, str, int, Any, float], float]:
-    """Issue #201 -- when ``forecast_object = quantile`` is selected,
-    synthesize quantile forecasts around each point forecast using a
-    parametric Gaussian assumption with ``forecast_residual_std`` as the
-    spread (default 1.0). Recipes that want true quantile-regression
-    estimators per quantile level are tracked separately; this minimal
-    emitter unblocks the L6.E density-test path (issue #200)."""
+    """Issue #246 -- emit quantile forecasts.
 
-    levels = []
-    sigma = 1.0
+    When ``X`` / ``y`` are supplied and the family supports a native
+    quantile estimator (``QuantileRegressor`` for linear,
+    ``GradientBoostingRegressor(loss='quantile')`` for tree, native
+    quantile loss for xgboost / lightgbm), fit one estimator per
+    requested quantile level ``q`` and produce per-(origin, q) forecasts.
+    Otherwise fall back to a Gaussian quantile expansion around the
+    point forecast with the in-sample residual std (replaces the v0.2
+    shortcut that used a leaf-config sigma).
+    """
+
+    levels: list[float] = []
+    family = "ridge"
+    quantile_capable = False
     for node in fit_nodes:
         params = node.get("params", {}) or {}
         if params.get("forecast_object") in {"quantile", "density"}:
             levels = list(params.get("quantile_levels", [0.05, 0.25, 0.5, 0.75, 0.95]))
-            sigma = float(params.get("forecast_residual_std", 1.0))
+            family = str(params.get("family", "ridge"))
+            quantile_capable = bool(params.get("forecast_object") == "quantile")
             break
     if not levels:
         return {}
     from scipy import stats as _stats  # type: ignore
 
     out: dict[tuple[str, str, int, Any, float], float] = {}
+    quantile_engine = _native_quantile_engine(family) if quantile_capable else None
+    if quantile_engine is not None and isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
+        try:
+            X_filled = X.fillna(0.0)
+            for q in levels:
+                fitted = quantile_engine(q)
+                fitted.fit(X_filled, y)
+                preds = fitted.predict(X_filled)
+                index = list(X_filled.index)
+                for (model_id, target, horizon, origin), _point in forecasts.items():
+                    if origin in index:
+                        i = index.index(origin)
+                        out[(model_id, target, horizon, origin, float(q))] = float(preds[i])
+            if out:
+                return out
+        except Exception:  # pragma: no cover - fall through to Gaussian shortcut
+            pass
+
+    # Gaussian-residual fallback. Use in-sample residual std rather than
+    # the v0.2 leaf_config sigma when X / y are supplied.
+    if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
+        try:
+            from sklearn.linear_model import LinearRegression
+
+            base = LinearRegression().fit(X.fillna(0.0), y)
+            resid = y.values - base.predict(X.fillna(0.0))
+            sigma = float(np.std(resid, ddof=1)) or 1.0
+        except Exception:
+            sigma = 1.0
+    else:
+        sigma = 1.0
+        for node in fit_nodes:
+            params = node.get("params", {}) or {}
+            if params.get("forecast_object") in {"quantile", "density"}:
+                sigma = float(params.get("forecast_residual_std", 1.0))
+                break
     for (model_id, target, horizon, origin), point in forecasts.items():
         for q in levels:
             out[(model_id, target, horizon, origin, float(q))] = float(point + sigma * _stats.norm.ppf(q))
     return out
+
+
+def _native_quantile_engine(family: str):
+    """Return a callable ``q -> sklearn-compatible estimator`` for families
+    that have a native quantile-regression form. Returns ``None`` for
+    families without one (caller falls back to Gaussian quantile)."""
+
+    if family in {"ridge", "ols", "lasso", "elastic_net", "ar_p"}:
+        try:
+            from sklearn.linear_model import QuantileRegressor
+
+            def _factory(q: float):
+                return QuantileRegressor(quantile=float(q), alpha=0.0, solver="highs")
+
+            return _factory
+        except ImportError:  # pragma: no cover - sklearn ships this
+            return None
+    if family in {"gradient_boosting", "decision_tree", "random_forest", "extra_trees"}:
+        try:
+            from sklearn.ensemble import GradientBoostingRegressor
+
+            def _factory(q: float):
+                return GradientBoostingRegressor(loss="quantile", alpha=float(q), n_estimators=100)
+
+            return _factory
+        except ImportError:  # pragma: no cover
+            return None
+    if family == "xgboost":
+        try:
+            import xgboost as xgb  # type: ignore
+
+            def _factory(q: float):
+                return xgb.XGBRegressor(
+                    objective="reg:quantileerror",
+                    quantile_alpha=float(q),
+                    n_estimators=200,
+                    tree_method="hist",
+                )
+
+            return _factory
+        except ImportError:
+            return None
+    if family == "lightgbm":
+        try:
+            import lightgbm as lgb  # type: ignore
+
+            def _factory(q: float):
+                return lgb.LGBMRegressor(
+                    objective="quantile",
+                    alpha=float(q),
+                    n_estimators=200,
+                )
+
+            return _factory
+        except ImportError:
+            return None
+    return None
 
 
 def _run_l4_fit_node(
@@ -3838,19 +3941,27 @@ def _l6_density_interval_results(
     l3_features: L3FeaturesArtifact,
     sub: dict[str, Any],
 ) -> dict[tuple[Any, ...], Any]:
-    """Issue #200 -- PIT-Berkowitz / KS / Christoffersen / Kupiec.
+    """Issue #200 + #247 -- PIT-Berkowitz / KS / Christoffersen / Kupiec.
 
-    When the L4 forecasts carry quantile intervals (issue #201), use them
-    directly to compute the PIT series. When only point forecasts are
-    available, synthesize a residual-based normal density on the actual
-    series so the tests still produce something rather than crashing.
+    Strict mode (default): require ``forecast_intervals`` from a
+    quantile / density forecast. ``leaf_config.allow_residual_synth``
+    opts back into the v0.2 residual-Gaussian synth path for legacy
+    callers, but the published density tests are designed for real
+    quantile / density forecasts.
     """
 
     actual = l3_features.y_final.metadata.values.get("data")
     if not isinstance(actual, pd.Series) or actual.dropna().empty:
         return {"status": "no_actuals", "tests": {}}
 
+    allow_synth = bool(sub.get("allow_residual_synth", False))
     intervals = getattr(l4_forecasts, "forecast_intervals", {}) or {}
+    if not intervals and not allow_synth:
+        return {
+            "status": "requires_quantile_or_density_forecast",
+            "remediation": "set ``forecast_object: quantile`` on the fit_model node, or pass ``L6.E.allow_residual_synth: true`` to opt into the residual-Gaussian fallback (not the published procedure)",
+            "tests": {},
+        }
     by_model: dict[str, list[tuple[Any, float, float]]] = {}
     if intervals:
         # quantile mode -- compute PIT from per-(model, target, horizon, origin, q)
