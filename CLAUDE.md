@@ -1,12 +1,12 @@
 # macrocast
 
 > Fair, reproducible macro forecasting benchmarking package.
-> Version 0.2.5 (12-layer canonical design — see `plans/design/part1-4`).
+> Version 0.3.0 (12-layer canonical design — see `plans/design/part1-4`).
 
 ## Quick start
 
 ```bash
-python3 -m pytest tests/ -x -q                     # ~770 tests, <40s on a laptop
+python3 -m pytest tests/ -x -q                     # ~785 tests, <30s on a laptop
 python3 -c "import macrocast; print(macrocast.__version__)"
 python3 -c "import macrocast; macrocast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
@@ -227,3 +227,31 @@ promotes every one of them to the procedure named in the literature.
 | L4.5 residual ACF + QQ views | `fit_view = residual_acf | residual_qq | multi` | #256 |
 | 9 L7 figure renderers replaced (force / dependence / IRF / decomp / etc.) | distinct layouts matching the design table | #249 |
 | Sub-cell parallelism (`oos_dates` / `horizons` / `targets`) | walk-forward origin loop fan-out | #250 |
+
+### v0.3 third honesty pass + new features (all closed)
+
+| Item | v0.3 implementation | Issue |
+|------|---------------------|-------|
+| PP MacKinnon (2010) p-value | finite-sample table interpolation | #273 |
+| DFM-MQ idiosyncratic_ar1=True | Mariano-Murasawa Eq. (4) | #274 |
+| L5 by_predictor_block refit-per-subset | true Shapley share via per-coalition OLS | #275 |
+| L6.E Engle-Manganelli DQ test | hit regression + chi-square | #276 |
+| `register_target_transformer` runtime dispatch | fit -> transform -> inverse at L5 boundary | #277 |
+| L4.5 fitted_vs_actual + residual_time | sub-views per model | #278 |
+| Sub-cell parallel deterministic seed | `base + position` per-origin RNG | #279 |
+| **Quantile Regression Forest** (Meinshausen 2006) | leaf-conditional empirical CDF | #280 |
+| **Strobl (2008) conditional PFI** | bin-restricted permutation | #281 |
+| **Bagging meta-estimator** | bootstrap-aggregated wrapper + quantile bands | #282 |
+| **Diebold-Mariano-Pesaran joint multi-horizon** | HAC-adjusted stacked-DM | #283 |
+| README rewrite + recipe gallery + replication script + sphinx skeleton | release polish | #284-#287 |
+
+### Status snapshot
+
+* L4 operational families: **35+** (linear, tree, boosting, SVM, kNN,
+  MLP, deep NN, AR_p, BVAR Minnesota / NIW, FAVAR, MRF GTVP,
+  Mariano-Murasawa DFM, QRF, bagging).
+* L7 operational ops: **~30** (no honesty-pass demotions remain).
+* L1.G regimes: 6 (none / NBER / user / Hamilton MS / Tong SETAR / Bai-Perron).
+* L6 tests: DM (HLN + HAC kernels), CW, GR (simulated CVs), MCS / SPA / RC / StepM,
+  PT/HM, residual battery, density tests with DQ, DMP joint multi-horizon.
+* Sub-cell parallelism: cells / models / oos_dates / horizons / targets.
