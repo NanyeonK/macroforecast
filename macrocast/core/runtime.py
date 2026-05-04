@@ -1380,6 +1380,8 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         return _DFMMixedFrequency(
             n_factors=int(params.get("n_factors", 1)),
             factor_order=int(params.get("factor_order", 1)),
+            mixed_frequency=bool(params.get("mixed_frequency", False)),
+            column_frequencies=params.get("column_frequencies"),
         )
     custom = _resolve_custom_model(family)
     if custom is not None:
@@ -2153,45 +2155,94 @@ class _TorchSequenceModel:
 
 
 class _DFMMixedFrequency:
-    """Mariano-Murasawa-style dynamic factor model (Kalman state-space EM).
+    """Mariano-Murasawa-style dynamic factor model.
 
-    Issue #188. Promoted FUTURE -> OPERATIONAL.
+    Issues #188 + #245. ``mixed_frequency=True`` (or ``factor_order_mq``
+    kwargs supplied) routes to ``statsmodels.tsa.statespace.dynamic_factor_mq.DynamicFactorMQ``,
+    which implements the published Mariano-Murasawa (1996, 2010) monthly
+    aggregator equation. Otherwise (single-frequency case) we use
+    ``DynamicFactor`` -- the linear-Gaussian state-space MLE form.
 
-    Implementation:
-
-    * We assemble the joint endogenous panel ``[y, X]`` (target plus
-      every L3 predictor column) and fit a linear-Gaussian state-space
-      dynamic factor model via ``statsmodels.tsa.statespace.dynamic_factor.DynamicFactor``
-      with ``k_factors`` latent factors evolving as a VAR(``factor_order``).
-    * The Kalman filter+smoother + numerical MLE is the modern equivalent
-      of the EM algorithm used in Mariano-Murasawa (1996, 2010). For the
-      single-frequency case macrocast normally exposes (everything at the
-      target frequency once L2 frequency-alignment runs), this is the
-      faithful reduction of the published estimator.
-    * ``forecast()`` returns the Kalman one-step-ahead prediction of the
-      target component; we broadcast it across the prediction frame
-      (same pattern as ``_VARWrapper``).
-    * If the optimisation fails (rank-deficient covariance / too few
-      observations), fall back to a deterministic last-observation
-      forecast so the recipe still completes.
+    Mixed-frequency mode requires per-column frequency labels supplied
+    via ``column_frequencies = {col: 'monthly' | 'quarterly'}``. The
+    target series is treated as quarterly when its column appears in
+    that map with the value ``'quarterly'``. Without the map we default
+    to single-frequency (back-compat with v0.2 behaviour).
     """
 
-    def __init__(self, n_factors: int = 1, factor_order: int = 1) -> None:
+    def __init__(
+        self,
+        n_factors: int = 1,
+        factor_order: int = 1,
+        mixed_frequency: bool = False,
+        column_frequencies: dict[str, str] | None = None,
+    ) -> None:
         self.n_factors = max(1, int(n_factors))
         self.factor_order = max(1, int(factor_order))
+        self.mixed_frequency = bool(mixed_frequency) or bool(column_frequencies)
+        self.column_frequencies = dict(column_frequencies or {})
         self._results = None
         self._fallback: float = 0.0
+        self._mode: str = "single_frequency"
+        self._scaler_mean = 0.0
+        self._scaler_std = 1.0
+
+    def _fit_mixed_frequency(self, X: pd.DataFrame, y: pd.Series) -> bool:
+        """Issue #245 -- DynamicFactorMQ with monthly aggregator. Returns
+        True when the MQ fit succeeded; False when the caller should fall
+        back to the single-frequency path."""
+
+        try:
+            from statsmodels.tsa.statespace.dynamic_factor_mq import DynamicFactorMQ
+        except ImportError:
+            return False
+        endog = pd.concat([y.rename("__y__"), X], axis=1).dropna(how="all")
+        if endog.shape[0] < 12 or endog.shape[1] < 2:
+            return False
+        # Build the M / Q split per documented column_frequencies; default
+        # to monthly when unspecified.
+        monthly = []
+        quarterly = []
+        for col in endog.columns:
+            if col == "__y__":
+                # Honour the target's declared frequency.
+                tag = self.column_frequencies.get(str(col)) or self.column_frequencies.get("target", "monthly")
+            else:
+                tag = self.column_frequencies.get(str(col), "monthly")
+            (quarterly if str(tag).lower() == "quarterly" else monthly).append(col)
+        if not monthly:  # MQ requires at least one monthly variable
+            return False
+        scaler_mean = endog.mean()
+        scaler_std = endog.std(ddof=0).replace(0.0, 1.0)
+        normalised = (endog - scaler_mean) / scaler_std
+        try:
+            model = DynamicFactorMQ(
+                normalised[monthly],
+                endog_quarterly=normalised[quarterly] if quarterly else None,
+                k_endog_monthly=len(monthly),
+                factors=self.n_factors,
+                factor_orders=self.factor_order,
+                idiosyncratic_ar1=False,
+                standardize=False,
+            )
+            self._results = model.fit(disp=False, maxiter=20)
+        except Exception:  # pragma: no cover - DFMQ is fragile on small data
+            return False
+        self._scaler_mean = float(scaler_mean["__y__"])
+        self._scaler_std = float(scaler_std["__y__"])
+        self._mode = "mixed_frequency_mq"
+        return True
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_DFMMixedFrequency":
+        if self.mixed_frequency and self._fit_mixed_frequency(X, y):
+            return self
         from statsmodels.tsa.statespace.dynamic_factor import DynamicFactor
 
         endog = pd.concat([y.rename("__y__"), X], axis=1).dropna()
-        # Need at least n_factors + factor_order + a few observations.
         min_obs = max(self.n_factors + self.factor_order + 3, 8)
         if endog.shape[0] < min_obs or endog.shape[1] < 2:
             self._fallback = float(np.nan_to_num(y.mean(), nan=0.0))
             return self
-        # Centre + standardise to keep the optimiser well-conditioned.
         scaler_mean = endog.mean()
         scaler_std = endog.std(ddof=0).replace(0.0, 1.0)
         normalised = (endog - scaler_mean) / scaler_std
@@ -2219,7 +2270,11 @@ class _DFMMixedFrequency:
             return np.full(len(X), self._fallback, dtype=float)
         try:
             forecast = self._results.forecast(steps=1)
-            target_pred = float(forecast["__y__"].iloc[0]) * self._scaler_std + self._scaler_mean
+            if isinstance(forecast, pd.DataFrame) and "__y__" in forecast.columns:
+                target_pred = float(forecast["__y__"].iloc[0]) * self._scaler_std + self._scaler_mean
+            else:
+                # MQ returns a Series-like; pull the first value directly.
+                target_pred = float(np.asarray(forecast).ravel()[0]) * self._scaler_std + self._scaler_mean
         except Exception:
             target_pred = self._fallback
         return np.full(len(X), target_pred, dtype=float)
