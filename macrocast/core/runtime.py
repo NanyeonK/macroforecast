@@ -3674,7 +3674,12 @@ _NBER_RECESSIONS: tuple[tuple[str, str], ...] = (
 def _build_nber_regime_series(index: pd.DatetimeIndex) -> pd.Series:
     in_recession = pd.Series(False, index=index)
     for start, end in _NBER_RECESSIONS:
-        mask = (index >= pd.Timestamp(start)) & (index <= pd.Timestamp(end + "-28"))
+        # Use the actual month-end so daily indices like 2009-06-30 stay inside
+        # a recession that ends in 2009-06 (was: hard-coded "-28" which dropped
+        # the last 1-3 days of 31/30-day months).
+        start_ts = pd.Timestamp(start)
+        end_ts = pd.Timestamp(end) + pd.offsets.MonthEnd(0)
+        mask = (index >= start_ts) & (index <= end_ts)
         in_recession |= mask
     labels = in_recession.map({True: "recession", False: "expansion"}).astype(str)
     labels.index = index
