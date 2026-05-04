@@ -1,45 +1,51 @@
 # API Reference
 
-Auto-generated reference for every public package surface. Links point to the
-corresponding user-guide chapter for conceptual background.
+Auto-generated reference for the public surface of macrocast v0.1.
 
-## Package surfaces
+## Top-level API
 
-| Module | User-guide companion |
-|--------|---------------------|
-| [`macrocast.design`](design.md) | [Layer Contract Design](../user_guide/design.md) |
-| [`macrocast.raw`](raw.md) | [Raw Data](../user_guide/raw.md) |
-| [`macrocast.recipes`](recipes.md) | [Recipes](../user_guide/recipes.md) |
-| [`macrocast.preprocessing`](preprocessing.md) | [Preprocessing](../user_guide/preprocessing.md) |
-| [`macrocast.registry`](registry.md) | [Registry](../user_guide/registry.md) |
-| [`macrocast.compiler`](compiler.md) | [Compiler](../user_guide/compiler.md) |
-| [`macrocast.execution`](execution.md) | [Execution](../user_guide/execution.md) |
-| [`macrocast.tuning`](../user_guide/tuning.md) | [Tuning](../user_guide/tuning.md) |
-| [`macrocast.start`](start.md) | [Getting Started: Quickstart](../getting_started/quickstart.md) |
+| Symbol | Description |
+|--------|-------------|
+| `macrocast.run(recipe, output_directory=...)` | Execute a recipe end-to-end (L1->L8). Iterates every `{sweep: [...]}` cell, applies L0 failure_policy + seed, returns a `ManifestExecutionResult`. |
+| `macrocast.replicate(manifest_path)` | Re-execute a stored recipe and verify per-cell sink hashes match bit-for-bit. |
+| `macrocast.ManifestExecutionResult` | Per-cell `RuntimeResult` + `sink_hashes`; serializes to `manifest.json`. |
+| `macrocast.ReplicationResult` | `recipe_match`, `sink_hashes_match`, `per_cell_match`. |
 
-## Current operational subset summary
+## Submodule surfaces
 
-- **Models (27)**: ar, ols, ridge, lasso, elasticnet, bayesian_ridge, huber, adaptive_lasso, svr_linear, svr_rbf, componentwise_boosting, boosting_ridge, boosting_lasso, pcr, pls, factor_augmented_linear, quantile_linear, random_forest, extra_trees, gradient_boosting, xgboost, lightgbm, catboost, mlp, lstm, gru, tcn
-- **Feature builders (5)**: target_lag_features, raw_feature_panel, raw_predictors_only, factors_plus_target_lags, pca_factor_features
-- **Benchmarks (4)**: historical_mean, zero_change, autoregressive_bic, custom_benchmark
-- **Statistical tests (20)**: dm, dm_hln, dm_modified, cw, mcs, enc_new, mse_f, mse_t, cpa, rossi, rolling_dm, reality_check, spa, mincer_zarnowitz, ljung_box, arch_lm, bias_test, pesaran_timmermann, binomial_hit, full_residual_diagnostics
-- **Importance methods (12)**: minimal_importance, tree_shap, kernel_shap, linear_shap, permutation_importance, lime, feature_ablation, pdp, ice, ale, grouped_permutation, importance_stability
-- **Tuning algorithms (4)**: grid_search, random_search, bayesian_optimization, genetic_algorithm
-- **Export formats (5)**: json, csv, parquet, json_csv, all
+| Module | Purpose |
+|--------|---------|
+| `macrocast.core` | 12-layer DAG runtime (foundation, layers, ops, runtime, execution, figures) |
+| `macrocast.raw` | FRED-MD/QD/SD adapters, vintage manager, manifest |
+| `macrocast.preprocessing` | Preprocessing contract helpers |
+| `macrocast.tuning` | Hyperparameter search engines |
+| `macrocast.custom` | User-defined model/preprocessor/feature registration |
+| `macrocast.defaults` | Default profile dict template |
 
-```{toctree}
-:hidden:
-:maxdepth: 1
+## Layer modules
 
-design
-raw
-recipes
-preprocessing
-registry
-compiler
-execution
-start
-sweep_runner
-models/deep
-decomposition
-```
+`macrocast.core.layers.l{0..8}` (plus `l{1,2,3,4}_5` diagnostics) hold the
+canonical schema (`LayerImplementationSpec`) for each layer. Runtime
+materialization helpers live in `macrocast.core.runtime`:
+
+- `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`,
+  `materialize_l4_minimal`, `materialize_l5_minimal`,
+  `materialize_l6_runtime`, `materialize_l7_runtime`,
+  `materialize_l8_runtime`
+- `materialize_l1_5_diagnostic` ... `materialize_l4_5_diagnostic`
+- `execute_minimal_forecast(recipe)` -- single-cell convenience wrapper
+
+Sweep loop + bit-exact replicate are in `macrocast.core.execution`:
+`execute_recipe`, `replicate_recipe`, `CellExecutionResult`,
+`ManifestExecutionResult`, `ReplicationResult`.
+
+Figure rendering (matplotlib + stylized US state choropleth) is in
+`macrocast.core.figures`: `render_bar_global`, `render_heatmap`,
+`render_pdp_line`, `render_us_state_choropleth`,
+`render_default_for_op`.
+
+## Operational coverage
+
+See [`CLAUDE.md`](../../CLAUDE.md) at the repo root for the operational
+matrix: 30+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance
+ops, FRED-SD US state choropleth, parquet/latex/markdown export.

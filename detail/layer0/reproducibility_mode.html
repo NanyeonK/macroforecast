@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=19216117"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,9 +52,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Detail: Layer Contracts</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">4.0 Layer 0: Study Setup</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="study_scope.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="failure_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="compute_mode.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
@@ -105,7 +107,8 @@
 <li><p>Parent: <a class="reference internal" href="index.html"><span class="std std-doc">Layer 0</span></a></p></li>
 <li><p>Current: <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> controls seed policy for the run.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> controls seed policy for the run. It determines whether
+the execution layer resets stochastic state before fitting and forecasting.</p>
 <section id="values">
 <h2>Values<a class="headerlink" href="#values" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
@@ -118,55 +121,129 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
 <td><p>operational, default</p></td>
-<td><p>use a fixed seed</p></td>
+<td><p>apply a fixed base seed</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p></td>
 <td><p>operational</p></td>
-<td><p>do not fix stochastic seeds</p></td>
+<td><p>do not reset global RNG state</p></td>
 </tr>
 </tbody>
 </table>
-<p>This axis is not sweepable.</p>
+<p>This axis is not sweepable. Reproducibility policy is part of study setup, not a
+model alternative.</p>
 </section>
 <section id="leaf-config">
 <h2>Leaf Config<a class="headerlink" href="#leaf-config" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Applies When</p></th>
 <th class="head"><p>Rule</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p>required by explicit <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> recipes when the caller wants a non-default seed; default is <code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+<td><p>optional int; default <code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gpu_deterministic</span></code></p></td>
-<td><p>optional bool; separate from this axis</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p></td>
+<td><p>forbidden</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gpu_deterministic</span></code></p></td>
+<td><p>any mode</p></td>
+<td><p>optional bool; default <code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code> rejects <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">gpu_deterministic</span></code> is separate because hardware/library deterministic behavior
+is not the same as seed policy.</p>
+</section>
+<section id="runtime-semantics">
+<h2>Runtime Semantics<a class="headerlink" href="#runtime-semantics" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Runtime Behavior</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+<td><p>sets Python, NumPy, and torch seeds where available</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p></td>
+<td><p>leaves existing global RNG state alone and records that reproducibility was waived</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> is intended for reproducible empirical work. It does not
+guarantee bit-identical results across different hardware, BLAS libraries,
+torch/cuda versions, or nondeterministic algorithms unless the relevant runtime
+stack also supports deterministic execution.</p>
 </section>
 <section id="yaml">
 <h2>YAML<a class="headerlink" href="#yaml" title="Link to this heading"></a></h2>
+<p>Default seeded run:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+</pre></div>
+</div>
+<p>Seeded run with explicit seed:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20260101</span>
 </pre></div>
 </div>
+<p>Exploratory run:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exploratory</span>
 </pre></div>
 </div>
+<p>GPU deterministic request:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">    </span><span class="nt">gpu_deterministic</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</section>
+<section id="invalid-patterns">
+<h2>Invalid Patterns<a class="headerlink" href="#invalid-patterns" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Invalid Pattern</p></th>
+<th class="head"><p>Use Instead</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode:</span> <span class="pre">strict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> plus deterministic leaf config where supported</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode:</span> <span class="pre">strict_reproducible</span></code> in new recipes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code> with <code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td><p>remove <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> or use <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>sweeping seed policy</p></td>
+<td><p>keep fixed; sweep scientific axes only</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">strict</span></code> is not a current value. GPU determinism is a leaf-config decision.</p></li>
-<li><p>The current contract keeps seed policy on the axis and hardware determinism in leaf config.</p></li>
+<li><p>Default seed is <code class="docutils literal notranslate"><span class="pre">42</span></code>.</p></li>
+<li><p>Set a project-specific seed when results must be replayed exactly within the
+same environment.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">exploratory</span></code> only when reproducibility is intentionally waived.</p></li>
 </ul>
 </section>
 </section>
