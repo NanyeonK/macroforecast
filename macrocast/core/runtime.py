@@ -2857,6 +2857,11 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
                 diag_dir.mkdir(exist_ok=True)
                 add_json(diag_dir / f"{sink_name}.json", artifact, sink_name)
 
+    if export_format == "html_report":
+        html_path = _l8_render_html_report(output_directory, axes, upstream_artifacts, recipe_root)
+        if html_path is not None:
+            exported.append(ExportedFile(path=html_path, artifact_type="html_report", source_sink="l8_artifacts_v1"))
+
     compression = axes.get("compression", "none")
     if compression in {"gzip", "zip"}:
         leaf = axes.get("leaf_config", {}) or {}
@@ -2869,6 +2874,75 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
         else:  # zip
             exported = _l8_apply_zip(exported, output_directory, level)
     return exported
+
+
+def _l8_render_html_report(
+    output_directory: Path,
+    axes: dict[str, Any],
+    upstream_artifacts: dict[str, Any],
+    recipe_root: dict[str, Any],
+) -> Path | None:
+    """Render a minimal self-contained HTML report summarising the run.
+
+    Layout: study title, recipe digest, per-cell metrics table, embedded
+    figure list. Uses pandas ``to_html`` for tables; no jinja dependency
+    so we don't drag in an extra package for a small renderer.
+    """
+
+    from html import escape as _esc
+
+    lines: list[str] = []
+    lines.append("<!DOCTYPE html><html><head><meta charset='utf-8'>")
+    lines.append("<title>macrocast study report</title>")
+    lines.append(
+        "<style>body{font-family:system-ui,sans-serif;margin:2rem;max-width:90rem}"
+        "h1,h2{border-bottom:1px solid #ccc;padding-bottom:.3rem}"
+        "table{border-collapse:collapse;margin:1rem 0}"
+        "td,th{border:1px solid #ddd;padding:.4rem .8rem}"
+        "tr:nth-child(even){background:#f7f7f7}"
+        "code{background:#f0f0f0;padding:.1rem .3rem;border-radius:.2rem}"
+        "</style></head><body>"
+    )
+    lines.append("<h1>macrocast study report</h1>")
+
+    # Recipe digest -----------------------------------------------------
+    target = ((recipe_root.get("1_data", {}) or {}).get("leaf_config", {}) or {}).get("target")
+    if target:
+        lines.append(f"<p><b>Target</b>: <code>{_esc(str(target))}</code></p>")
+    family = None
+    for node in (recipe_root.get("4_forecasting_model", {}) or {}).get("nodes", []) or []:
+        if isinstance(node, dict) and node.get("op") == "fit_model":
+            family = (node.get("params") or {}).get("family")
+            break
+    if family:
+        lines.append(f"<p><b>Model family</b>: <code>{_esc(str(family))}</code></p>")
+
+    # Metrics -----------------------------------------------------------
+    if "l5_evaluation_v1" in upstream_artifacts:
+        eval_artifact = upstream_artifacts["l5_evaluation_v1"]
+        metrics = getattr(eval_artifact, "metrics_table", None)
+        if isinstance(metrics, pd.DataFrame) and not metrics.empty:
+            lines.append("<h2>Metrics</h2>")
+            try:
+                lines.append(metrics.to_html(index=True, border=0))
+            except Exception:
+                lines.append("<p><i>(metrics table unavailable)</i></p>")
+
+    # Figures (link to PDFs / PNGs in cell_001/figures) -----------------
+    figures_dir = output_directory / "cell_001" / "figures"
+    if figures_dir.exists():
+        figures = sorted(p for p in figures_dir.iterdir() if p.is_file())
+        if figures:
+            lines.append("<h2>Figures</h2><ul>")
+            for fig in figures:
+                rel = fig.relative_to(output_directory).as_posix()
+                lines.append(f"<li><a href='{_esc(rel)}'>{_esc(fig.name)}</a></li>")
+            lines.append("</ul>")
+
+    lines.append("</body></html>")
+    html_path = output_directory / "report.html"
+    html_path.write_text("\n".join(lines), encoding="utf-8")
+    return html_path
 
 
 def _l8_split_by_granularity(
