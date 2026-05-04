@@ -10,6 +10,7 @@ from .core.execution import (
     ManifestExecutionResult,
     ReplicationResult,
     execute_recipe as run,
+    execute_recipe_file as run_file,
     replicate_recipe as replicate,
 )
 
@@ -18,4 +19,5 @@ __all__ = [
     "ReplicationResult",
     "replicate",
     "run",
+    "run_file",
 ]

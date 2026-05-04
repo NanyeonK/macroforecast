@@ -45,4 +45,5 @@ include = ["macrocast*"]
 testpaths = ["tests"]
 markers = [
     "deep: tests that require torch (skipped unless [deep] extra is installed)",
+    "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
 ]

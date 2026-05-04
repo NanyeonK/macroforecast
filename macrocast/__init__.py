@@ -27,6 +27,7 @@ __version__ = "0.1.0"
 _LAZY_EXPORTS = {
     # public top-level API
     "run": ".api",
+    "run_file": ".api",
     "replicate": ".api",
     "ManifestExecutionResult": ".api",
     "ReplicationResult": ".api",
