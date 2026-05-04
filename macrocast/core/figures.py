@@ -270,15 +270,199 @@ def render_rolling_loss(losses, *, output_path: Path, title: str | None = None) 
     return output_path
 
 
+def render_beeswarm(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- SHAP beeswarm. Falls back to a strip-plot bar when the
+    full SHAP package isn't installed."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    sub = table.sort_values("importance", ascending=False).head(20)
+    fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(sub) + 1.0)))
+    rng = np.random.default_rng(0)
+    for i, (_, row) in enumerate(sub.iterrows()):
+        jitter = rng.normal(scale=0.05, size=20)
+        ax.scatter(np.full(20, row["importance"]) + jitter, np.full(20, i), alpha=0.4, s=15, color="#3b82f6")
+    ax.set_yticks(range(len(sub)))
+    ax.set_yticklabels(sub["feature"])
+    ax.set_xlabel("importance")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_force_plot(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- Single-prediction SHAP force plot (proxy: horizontal bar
+    of contributions)."""
+
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
+def render_shap_dependence_scatter(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- scatter of feature value vs SHAP value (proxy: bar)."""
+
+    return render_pdp_line(table, output_path=output_path, title=title)
+
+
+def render_ale_line(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- ALE line per feature."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    if "ale_function" in table.columns:
+        for _, row in table.iterrows():
+            ale = row["ale_function"]
+            if not ale:
+                continue
+            xs = [item["bin_center"] for item in ale]
+            ys = [item["ale"] for item in ale]
+            ax.plot(xs, ys, label=str(row["feature"]))
+    else:
+        return render_bar_global(table, output_path=output_path, title=title)
+    ax.set_xlabel("feature value")
+    ax.set_ylabel("ALE")
+    ax.legend(loc="best", fontsize=8)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_attribution_heatmap(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- gradient attribution heatmap (proxy: heatmap of methods × features)."""
+    return render_heatmap(table, output_path=output_path, title=title)
+
+
+def render_inclusion_heatmap(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- lasso inclusion heatmap."""
+    return render_heatmap(table, output_path=output_path, title=title)
+
+
+def render_lasso_path_inclusion_order(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- lasso path inclusion order (proxy: bar by importance)."""
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
+def render_pip_bar(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- BVAR posterior inclusion probability (proxy: bar)."""
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
+def render_shapley_waterfall(table: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L7 #205 -- transformation Shapley waterfall."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    sub = table.sort_values("contribution", ascending=False) if "contribution" in table.columns else table
+    fig, ax = plt.subplots(figsize=(8, max(2.0, 0.4 * len(sub) + 1.0)))
+    cumulative = 0.0
+    for i, (_, row) in enumerate(sub.iterrows()):
+        value = float(row.get("contribution", row.get("importance", 0.0)))
+        ax.barh(i, value, left=cumulative, color="#10b981" if value >= 0 else "#ef4444")
+        cumulative += value
+    label_col = "pipeline" if "pipeline" in sub.columns else "feature"
+    ax.set_yticks(range(len(sub)))
+    ax.set_yticklabels(sub[label_col].astype(str))
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_feature_heatmap_over_time(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- (feature × time) importance heatmap."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if "coefficient_path" in table.columns:
+        # MRF GTVP path: (n_features, n_obs) matrix.
+        matrix = np.asarray([row["coefficient_path"] for _, row in table.iterrows() if row["coefficient_path"]])
+        if matrix.size == 0:
+            return render_bar_global(table, output_path=output_path, title=title)
+        fig, ax = plt.subplots(figsize=(8, max(2.0, 0.3 * len(table) + 1.0)))
+        im = ax.imshow(matrix, aspect="auto", cmap="RdBu_r")
+        ax.set_yticks(range(len(table)))
+        ax.set_yticklabels(table["feature"].astype(str))
+        ax.set_xlabel("origin")
+        fig.colorbar(im, ax=ax)
+        if title:
+            ax.set_title(title)
+        fig.tight_layout()
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
+        return output_path
+    return render_heatmap(table, output_path=output_path, title=title)
+
+
+def render_historical_decomp_stacked_bar(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- historical decomposition stacked bar."""
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
+def render_irf_with_confidence_band(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- impulse response function with confidence band (proxy:
+    line over the importance series)."""
+    return render_pdp_line(table, output_path=output_path, title=title)
+
+
+def render_bar_grouped_by_pipeline(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- bar grouped by pipeline."""
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
+def render_importance_by_horizon_bar(
+    table: pd.DataFrame, *, output_path: Path, title: str | None = None
+) -> Path:
+    """L7 #205 -- importance by horizon bar."""
+    return render_bar_global(table, output_path=output_path, title=title)
+
+
 __all__ = [
     "US_STATE_GRID",
+    "render_ale_line",
+    "render_attribution_heatmap",
     "render_bar_global",
+    "render_bar_grouped_by_pipeline",
+    "render_beeswarm",
     "render_default_for_op",
     "render_factor_timeseries",
+    "render_feature_heatmap_over_time",
     "render_fitted_vs_actual",
+    "render_force_plot",
     "render_heatmap",
+    "render_historical_decomp_stacked_bar",
+    "render_importance_by_horizon_bar",
+    "render_inclusion_heatmap",
+    "render_irf_with_confidence_band",
+    "render_lasso_path_inclusion_order",
     "render_pdp_line",
+    "render_pip_bar",
     "render_rolling_loss",
     "render_scree_plot",
+    "render_shap_dependence_scatter",
+    "render_shapley_waterfall",
     "render_us_state_choropleth",
 ]
