@@ -2208,10 +2208,14 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
     if op == "transformation_attribution":
         return _l7_transformation_attribution(l5_eval, params)
     if op in {"integrated_gradients", "saliency_map", "deep_lift", "gradient_shap"}:
-        # Gradient-based attributions require torch; fall back to SHAP-tree proxy.
+        # Gradient-based attributions (issue #194). Use captum when
+        # available + the model exposes torch tensors; otherwise raise a
+        # NotImplementedError pointing at the [deep] extra. The previous
+        # silent SHAP-tree fallback masked the absence of the gradient
+        # method named in the recipe.
         model = _first_model_input(inputs)
         X, _ = _l7_xy(inputs, l3_features)
-        frame = _shap_importance_frame(model, X, kind=op)
+        frame = _gradient_attribution_frame(model, X, kind=op)
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "fevd" or op == "historical_decomposition" or op == "generalized_irf":
         model = _first_model_input(inputs)
@@ -2592,6 +2596,79 @@ def _forecast_decomposition_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.D
     last = X.iloc[[-1]].fillna(0.0).to_numpy().ravel()
     contributions = np.asarray(coef).ravel() * last
     return pd.DataFrame({"feature": list(model.feature_names), "importance": [float(abs(c)) for c in contributions], "coefficient": [float(v) for v in contributions]})
+
+
+def _gradient_attribution_frame(model: ModelArtifact, X: pd.DataFrame, *, kind: str) -> pd.DataFrame:
+    """Issue #194 -- gradient-based attribution methods.
+
+    For sequence models fitted via ``_TorchSequenceModel``, route through
+    ``captum`` (when installed) for the requested method:
+
+    * ``saliency_map`` -- ``captum.attr.Saliency``
+    * ``integrated_gradients`` -- ``captum.attr.IntegratedGradients``
+    * ``deep_lift`` -- ``captum.attr.DeepLift``
+    * ``gradient_shap`` -- ``captum.attr.GradientShap``
+
+    For non-sequence sklearn models, gradient methods are not well-defined
+    on a fitted forest / linear regressor; the runtime raises
+    ``NotImplementedError`` instead of silently substituting a SHAP-tree
+    proxy. Recipes that opt into gradient attributions intentionally want
+    the gradient-of-output trace; we do not pretend to provide it from a
+    method that cannot.
+    """
+
+    fitted = model.fitted_object
+    if model.framework != "torch" and not hasattr(fitted, "_model"):
+        raise NotImplementedError(
+            f"L7 op {kind!r} requires a torch-backed model (lstm/gru/transformer). "
+            "Install macrocast[deep] and refit the recipe with a torch family, "
+            "or pick shap_kernel/permutation_importance for non-torch estimators."
+        )
+
+    try:
+        import torch  # type: ignore
+        from captum import attr as _captum  # type: ignore
+    except ImportError as exc:
+        raise NotImplementedError(
+            f"L7 op {kind!r} requires the [deep] extra (torch + captum). "
+            "Install with `pip install macrocast[deep]`."
+        ) from exc
+
+    torch_model = fitted._model
+    if torch_model is None:
+        raise NotImplementedError(
+            f"L7 op {kind!r}: the underlying torch model is not fitted yet."
+        )
+
+    x_arr = X.fillna(0.0).to_numpy(dtype="float32")
+    seq = x_arr.reshape(x_arr.shape[0], 1, x_arr.shape[1])
+    inputs = torch.from_numpy(seq).requires_grad_(True)
+
+    method_factories = {
+        "saliency_map": _captum.Saliency,
+        "integrated_gradients": _captum.IntegratedGradients,
+        "deep_lift": _captum.DeepLift,
+        "gradient_shap": _captum.GradientShap,
+    }
+    method_cls = method_factories.get(kind)
+    if method_cls is None:
+        raise NotImplementedError(f"L7 op {kind!r} is not a known gradient method")
+    method = method_cls(torch_model)
+    if kind == "gradient_shap":
+        baselines = torch.zeros_like(inputs)
+        attributions = method.attribute(inputs, baselines=baselines)
+    else:
+        attributions = method.attribute(inputs)
+    attribs = attributions.detach().cpu().numpy().reshape(x_arr.shape[0], x_arr.shape[1])
+    importance = np.abs(attribs).mean(axis=0)
+    return pd.DataFrame(
+        {
+            "feature": list(X.columns),
+            "importance": [float(v) for v in importance],
+            "coefficient": [None] * len(X.columns),
+            "method": [kind] * len(X.columns),
+        }
+    )
 
 
 def _mrf_gtvp_coefficient_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.DataFrame:

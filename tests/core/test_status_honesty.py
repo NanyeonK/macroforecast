@@ -190,10 +190,9 @@ def test_count_of_demotions_matches_documentation():
     re-promoted (#185 / #186), so the L4 demotion count drops from 5 to 3.
     """
 
-    # 0 L4 families and 0 L1 regimes remain future after v0.2 promotions.
+    # All honesty-pass demotions are now empty after the v0.2 follow-ups
+    # (#184-#188 / #189-#194 / #195-#197 all closed).
     assert len(_DEMOTED_L4_FAMILIES) == 0
     assert len(_DEMOTED_L1_REGIMES) == 0
-    # 4 L7 ops remaining future after #189-#193 promotions (gradient-based
-    # attributions = #194 still pending).
-    assert len(HONESTY_DEMOTED_L7_OPS) == 4
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 4
+    assert len(HONESTY_DEMOTED_L7_OPS) == 0
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 0
