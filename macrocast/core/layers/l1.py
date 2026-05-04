@@ -790,6 +790,20 @@ def _validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> l
     if regime in {None, "none"}:
         return []
     issues = []
+    # PR-D of the v0.1 honesty pass: the three ``estimated_*`` regime
+    # options were operational at the schema level but the runtime
+    # ``_estimate_simple_regime`` returned a deterministic year-parity
+    # placeholder (odd vs even years), not Hamilton (1989) MS, Tong (1990)
+    # SETAR, or Bai-Perron break detection. Demoted to ``future`` so the
+    # validator hard-rejects them; tracked in v0.2 issues.
+    if regime in REGIME_ESTIMATED_OPTIONS:
+        return [
+            _issue(
+                f"l1.regime_definition",
+                f"regime_definition={regime!r} is future -- the v0.1 runtime returned a year-parity "
+                "placeholder, not the named procedure. See the v0.2 implementation tracker on GitHub.",
+            )
+        ]
     if regime == "external_user_provided":
         has_path = "regime_indicator_path" in leaf_config
         has_dates = "regime_dates_list" in leaf_config
