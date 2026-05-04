@@ -1306,15 +1306,18 @@ class _TorchSequenceModel:
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self._model is not None:
-            import torch
+        if self._model is None:
+            raise NotImplementedError(
+                f"family={self.kind!r} predict() called before fit() succeeded; "
+                "install macrocast[deep] (torch) and re-run the recipe."
+            )
+        import torch
 
-            x_arr = X.fillna(0.0).to_numpy(dtype="float32")
-            seq = x_arr.reshape(x_arr.shape[0], 1, x_arr.shape[1])
-            with torch.no_grad():
-                preds = self._model(torch.from_numpy(seq)).numpy()
-            return preds
-        return np.zeros(len(X))
+        x_arr = X.fillna(0.0).to_numpy(dtype="float32")
+        seq = x_arr.reshape(x_arr.shape[0], 1, x_arr.shape[1])
+        with torch.no_grad():
+            preds = self._model(torch.from_numpy(seq)).numpy()
+        return preds
 
 
 class _DFMMixedFrequency:
