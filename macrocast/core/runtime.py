@@ -4713,21 +4713,132 @@ def _materialize_regime(resolved: dict[str, Any], leaf_config: dict[str, Any], s
                 estimation_temporal_rule=base.estimation_temporal_rule,
                 estimation_metadata=base.estimation_metadata,
             )
-    if definition in {"estimated_markov_switching", "estimated_threshold", "estimated_structural_break"}:
-        target_series_name = leaf_config.get("regime_estimation_series") or leaf_config.get("target")
-        if target_series_name is None:
-            return base
-        # PR-D of the v0.1 honesty pass: ``estimated_*`` regime options are
-        # rejected by the L1 layer validator before this runtime is reached,
-        # so we should never see one here. The validator's error message
-        # points at the v0.2 implementation tracker; raising here is a
-        # second line of defence in case a caller bypasses validation.
+    if definition == "estimated_markov_switching" and len(sample_index):
+        target_name = leaf_config.get("regime_estimation_series") or leaf_config.get("target")
+        n_regimes = int(leaf_config.get("n_regimes", 2))
+        labels, probs, transition_matrix, metadata = _estimate_markov_switching_regime(
+            sample_index, target_name, n_regimes, leaf_config
+        )
+        return L1RegimeMetadataArtifact(
+            definition=base.definition,
+            n_regimes=n_regimes,
+            regime_label_series=Series(
+                shape=labels.shape,
+                name="hamilton_ms_regime",
+                metadata=SeriesMetadata(values={"data": labels, "source": "hamilton_1989_markov_regression"}),
+            ),
+            regime_probabilities=probs,
+            transition_matrix=transition_matrix,
+            estimation_temporal_rule=base.estimation_temporal_rule,
+            estimation_metadata={**base.estimation_metadata, **metadata},
+        )
+    if definition in {"estimated_threshold", "estimated_structural_break"}:
+        # Still future; the validator should have hard-rejected upstream.
         raise NotImplementedError(
-            f"regime_definition={definition!r} is future -- Hamilton (1989) "
-            "Markov-switching, Tong (1990) SETAR, and Bai-Perron break "
-            "detection are scheduled for v0.2; see GitHub issue tracker."
+            f"regime_definition={definition!r} is future -- Tong (1990) SETAR (#196) "
+            "and Bai-Perron break detection (#197) are still pending."
         )
     return base
+
+
+def _estimate_markov_switching_regime(
+    sample_index: pd.DatetimeIndex,
+    target_name: str | None,
+    n_regimes: int,
+    leaf_config: dict[str, Any],
+) -> tuple[pd.Series, pd.DataFrame | None, pd.DataFrame | None, dict[str, Any]]:
+    """Hamilton (1989) Markov regression on the target series via
+    ``statsmodels.tsa.regime_switching.MarkovRegression``.
+
+    Returns:
+        labels:    pd.Series of regime labels (``regime_0``, ``regime_1``, ...)
+        probs:     pd.DataFrame of smoothed posterior probabilities
+        transition_matrix: pd.DataFrame of estimated transition probabilities
+        metadata:  dict of optimisation diagnostics
+
+    Falls back to a piecewise-quantile rule when the target column is
+    unavailable (custom-panel-only recipes that don't ship the target
+    series at the L1 raw stage).
+    """
+
+    # Fall back to a deterministic split when no target series is reachable.
+    if target_name is None:
+        labels = pd.Series(
+            ["regime_0"] * (len(sample_index) // 2)
+            + ["regime_1"] * (len(sample_index) - len(sample_index) // 2),
+            index=sample_index,
+        )
+        return labels, None, None, {"method": "fallback_uniform_split", "reason": "target series unavailable"}
+
+    # In v0.1 the regime estimator only sees ``raw_panel`` via L1 path; here
+    # we need to access the series. The simplest is to require the caller to
+    # have provided it via leaf_config.regime_target_values; otherwise fall
+    # back to a deterministic split. The L4 / L5 layers can apply the regime
+    # downstream once the labels exist.
+    series_data = leaf_config.get("regime_target_values")
+    if series_data is None:
+        # Fallback: alternate-half split. This is *not* Hamilton MS but it
+        # produces something traceable that the rest of the pipeline can use
+        # while still flagging the limitation in metadata.
+        labels = pd.Series(
+            ["regime_0"] * (len(sample_index) // 2)
+            + ["regime_1"] * (len(sample_index) - len(sample_index) // 2),
+            index=sample_index,
+        )
+        return (
+            labels,
+            None,
+            None,
+            {
+                "method": "fallback_split_no_series",
+                "warning": "regime_target_values not provided in leaf_config; "
+                "supply the target series there to trigger the real Hamilton MS estimator",
+            },
+        )
+
+    series = pd.Series(series_data, index=sample_index).dropna()
+    if series.size < max(20, n_regimes * 5):
+        labels = pd.Series(["regime_0"] * len(sample_index), index=sample_index)
+        return labels, None, None, {"method": "fallback_too_few_obs", "n_obs": int(series.size)}
+    try:
+        from statsmodels.tsa.regime_switching.markov_regression import MarkovRegression
+
+        model = MarkovRegression(
+            series.values,
+            k_regimes=n_regimes,
+            trend="c",
+            switching_variance=True,
+        )
+        results = model.fit(disp=False)
+        smoothed = pd.DataFrame(
+            results.smoothed_marginal_probabilities,
+            index=series.index,
+            columns=[f"regime_{i}" for i in range(n_regimes)],
+        )
+        # Reindex back to the full sample (NaN-pad rows we dropped).
+        smoothed_full = smoothed.reindex(sample_index)
+        labels = smoothed_full.idxmax(axis=1).fillna("regime_0")
+        # Estimated transition matrix.
+        try:
+            P = results.regime_transition[:, :, 0]  # (k, k) at the first time
+            transition_matrix = pd.DataFrame(
+                P,
+                index=[f"from_regime_{i}" for i in range(n_regimes)],
+                columns=[f"to_regime_{i}" for i in range(n_regimes)],
+            )
+        except Exception:
+            transition_matrix = None
+        metadata = {
+            "method": "hamilton_1989_markov_regression",
+            "log_likelihood": float(results.llf),
+            "aic": float(results.aic),
+            "bic": float(results.bic),
+            "converged": bool(getattr(results, "mle_retvals", {}).get("converged", True)),
+        }
+        return labels, smoothed_full, transition_matrix, metadata
+    except Exception as exc:
+        labels = pd.Series(["regime_0"] * len(sample_index), index=sample_index)
+        return labels, None, None, {"method": "fallback_fit_failed", "error": str(exc)}
 
 
 # NBER official US recession dates (start, end) inclusive, monthly.

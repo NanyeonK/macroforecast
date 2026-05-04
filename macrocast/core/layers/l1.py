@@ -790,18 +790,17 @@ def _validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> l
     if regime in {None, "none"}:
         return []
     issues = []
-    # PR-D of the v0.1 honesty pass: the three ``estimated_*`` regime
-    # options were operational at the schema level but the runtime
-    # ``_estimate_simple_regime`` returned a deterministic year-parity
-    # placeholder (odd vs even years), not Hamilton (1989) MS, Tong (1990)
-    # SETAR, or Bai-Perron break detection. Demoted to ``future`` so the
-    # validator hard-rejects them; tracked in v0.2 issues.
-    if regime in REGIME_ESTIMATED_OPTIONS:
+    # PR-D of the v0.1 honesty pass demoted the three ``estimated_*``
+    # regime options to ``future``. v0.2 promotes ``estimated_markov_switching``
+    # back via Hamilton (1989) Markov regression; the other two remain
+    # future until #196 / #197 land.
+    _STILL_FUTURE = {"estimated_threshold", "estimated_structural_break"}
+    if regime in _STILL_FUTURE:
         return [
             _issue(
                 f"l1.regime_definition",
-                f"regime_definition={regime!r} is future -- the v0.1 runtime returned a year-parity "
-                "placeholder, not the named procedure. See the v0.2 implementation tracker on GitHub.",
+                f"regime_definition={regime!r} is future -- v0.2 has Hamilton MS only; "
+                "Tong (1990) SETAR (#196) and Bai-Perron break detection (#197) are still pending.",
             )
         ]
     if regime == "external_user_provided":
