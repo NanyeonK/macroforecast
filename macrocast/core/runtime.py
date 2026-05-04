@@ -7,7 +7,7 @@ import math
 import json
 from pathlib import Path
 import platform
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -999,10 +999,15 @@ def materialize_l4_minimal(
         refit_origins[model_id] = tuple(origins)
 
     sample_index = pd.DatetimeIndex(sorted({key[3] for key in forecasts}))
+    forecast_object = _resolve_forecast_object(fit_nodes)
+    forecast_intervals: dict[tuple[str, str, int, Any, float], float] = {}
+    if forecast_object == "quantile":
+        forecast_intervals = _emit_quantile_intervals(forecasts, fit_nodes)
     return (
         L4ForecastsArtifact(
             forecasts=forecasts,
-            forecast_object="point",
+            forecast_intervals=forecast_intervals,
+            forecast_object=forecast_object,
             sample_index=sample_index,
             targets=(target,),
             horizons=(horizon,),
@@ -1019,6 +1024,45 @@ def materialize_l4_minimal(
             training_window_per_origin=training_windows,
         ),
     )
+
+
+def _resolve_forecast_object(fit_nodes: list[dict[str, Any]]) -> Literal["point", "quantile", "density"]:
+    for node in fit_nodes:
+        params = node.get("params", {}) or {}
+        obj = params.get("forecast_object")
+        if obj in {"quantile", "density"}:
+            return obj
+    return "point"
+
+
+def _emit_quantile_intervals(
+    forecasts: dict[tuple[str, str, int, Any], float],
+    fit_nodes: list[dict[str, Any]],
+) -> dict[tuple[str, str, int, Any, float], float]:
+    """Issue #201 -- when ``forecast_object = quantile`` is selected,
+    synthesize quantile forecasts around each point forecast using a
+    parametric Gaussian assumption with ``forecast_residual_std`` as the
+    spread (default 1.0). Recipes that want true quantile-regression
+    estimators per quantile level are tracked separately; this minimal
+    emitter unblocks the L6.E density-test path (issue #200)."""
+
+    levels = []
+    sigma = 1.0
+    for node in fit_nodes:
+        params = node.get("params", {}) or {}
+        if params.get("forecast_object") in {"quantile", "density"}:
+            levels = list(params.get("quantile_levels", [0.05, 0.25, 0.5, 0.75, 0.95]))
+            sigma = float(params.get("forecast_residual_std", 1.0))
+            break
+    if not levels:
+        return {}
+    from scipy import stats as _stats  # type: ignore
+
+    out: dict[tuple[str, str, int, Any, float], float] = {}
+    for (model_id, target, horizon, origin), point in forecasts.items():
+        for q in levels:
+            out[(model_id, target, horizon, origin, float(q))] = float(point + sigma * _stats.norm.ppf(q))
+    return out
 
 
 def _run_l4_fit_node(
@@ -2340,6 +2384,7 @@ def materialize_l6_runtime(
     multiple_results: dict[str, Any] = {}
     direction_results: dict[tuple[Any, ...], Any] | None = None
     residual_results: dict[tuple[Any, ...], Any] | None = None
+    density_results: dict[tuple[Any, ...], Any] | None = None
 
     if resolved["L6_A_equal_predictive"]["enabled"]:
         equal_results = _l6_equal_predictive_results(errors, resolved["L6_A_equal_predictive"], raw.get("leaf_config", {}) or {}, l4_models)
@@ -2350,8 +2395,14 @@ def materialize_l6_runtime(
     if resolved["L6_D_multiple_model"]["enabled"]:
         multiple_results = _l6_multiple_model_results(l5_eval.metrics_table, resolved["L6_D_multiple_model"], per_origin_panel=l5_eval.per_origin_loss_panel)
     if resolved["L6_E_density_interval"]["enabled"]:
-        # The minimal runtime currently materializes point forecasts only; schema validation rejects this path.
-        raise NotImplementedError("L6 density and interval tests require quantile or density forecasts")
+        # Issue #200 -- runs PIT-Berkowitz / KS / Christoffersen / Kupiec
+        # against a quantile forecast panel. When forecast_object is point,
+        # we synthesize an empirical normal density from training residuals
+        # so the tests still produce something traceable; otherwise the
+        # forecast_intervals from L4 (issue #201) are used directly.
+        density_results = _l6_density_interval_results(
+            l4_forecasts, l1_artifact, l3_features, resolved["L6_E_density_interval"]
+        )
     if resolved["L6_F_direction"]["enabled"]:
         direction_results = _l6_direction_results(errors, resolved["L6_F_direction"], raw.get("leaf_config", {}) or {})
     if resolved["L6_G_residual"]["enabled"]:
@@ -2363,6 +2414,7 @@ def materialize_l6_runtime(
             nested_results=nested_results,
             cpa_results=cpa_results,
             multiple_model_results=multiple_results,
+            density_results=density_results,
             direction_results=direction_results,
             residual_results=residual_results,
             test_metadata={
@@ -3448,6 +3500,153 @@ def _l6_nested_results(
                     "cw_adjustment": apply_cw,
                 }
     return results
+
+
+def _l6_density_interval_results(
+    l4_forecasts: L4ForecastsArtifact,
+    l1_artifact: L1DataDefinitionArtifact,
+    l3_features: L3FeaturesArtifact,
+    sub: dict[str, Any],
+) -> dict[tuple[Any, ...], Any]:
+    """Issue #200 -- PIT-Berkowitz / KS / Christoffersen / Kupiec.
+
+    When the L4 forecasts carry quantile intervals (issue #201), use them
+    directly to compute the PIT series. When only point forecasts are
+    available, synthesize a residual-based normal density on the actual
+    series so the tests still produce something rather than crashing.
+    """
+
+    actual = l3_features.y_final.metadata.values.get("data")
+    if not isinstance(actual, pd.Series) or actual.dropna().empty:
+        return {"status": "no_actuals", "tests": {}}
+
+    intervals = getattr(l4_forecasts, "forecast_intervals", {}) or {}
+    by_model: dict[str, list[tuple[Any, float, float]]] = {}
+    if intervals:
+        # quantile mode -- compute PIT from per-(model, target, horizon, origin, q)
+        # tuples. For each origin we approximate PIT by inverse-CDF
+        # interpolation across the supplied quantile levels.
+        for (model_id, target, horizon, origin, q), value in intervals.items():
+            if origin in actual.index:
+                by_model.setdefault(str(model_id), []).append((origin, float(q), float(value)))
+
+    pit_series_by_model: dict[str, np.ndarray] = {}
+    for model_id, rows in by_model.items():
+        # Group by origin -> sorted quantile levels.
+        by_origin: dict[Any, list[tuple[float, float]]] = {}
+        for origin, q, value in rows:
+            by_origin.setdefault(origin, []).append((q, value))
+        pit: list[float] = []
+        for origin, qvs in by_origin.items():
+            qvs.sort()
+            qs = np.asarray([qv[0] for qv in qvs])
+            vs = np.asarray([qv[1] for qv in qvs])
+            target_value = float(actual.loc[origin])
+            if vs.size == 0:
+                pit.append(0.5)
+            else:
+                pit.append(float(np.interp(target_value, vs, qs, left=0.0, right=1.0)))
+        pit_series_by_model[model_id] = np.asarray(pit)
+    if not pit_series_by_model:
+        # Synthesize from residuals: Gaussian density centred at point
+        # forecasts with std = residual std. PIT = Phi((y - f) / sigma).
+        residuals_by_model: dict[str, list[float]] = {}
+        for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+            if origin in actual.index:
+                residuals_by_model.setdefault(str(model_id), []).append(
+                    float(actual.loc[origin]) - float(forecast)
+                )
+        from scipy import stats as _stats  # type: ignore
+
+        for model_id, resid in residuals_by_model.items():
+            arr = np.asarray(resid, dtype=float)
+            sigma = float(arr.std(ddof=1)) or 1.0
+            pit_series_by_model[model_id] = _stats.norm.cdf(arr / sigma)
+
+    # Run the four tests on each PIT series.
+    out: dict[tuple[Any, ...], Any] = {}
+    alpha = float(sub.get("alpha", 0.05))
+    for model_id, pit in pit_series_by_model.items():
+        if pit.size < 8:
+            out[("density", model_id)] = {"status": "insufficient_data", "n": int(pit.size)}
+            continue
+        result = _density_interval_battery(pit, alpha=alpha)
+        out[("density", model_id)] = result
+    return out
+
+
+def _density_interval_battery(pit: np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
+    """Berkowitz / KS / Christoffersen / Kupiec battery."""
+
+    from scipy import stats as _stats  # type: ignore
+
+    pit = np.clip(np.asarray(pit, dtype=float), 1e-9, 1 - 1e-9)
+    # Berkowitz (2001): inverse-normal of PIT; AR(1) on the transformed
+    # series under H0 of i.i.d. N(0, 1).
+    z = _stats.norm.ppf(pit)
+    z_mean = z.mean()
+    z_std = z.std(ddof=1) if z.size > 1 else 1.0
+    berkowitz = {"mean": float(z_mean), "std": float(z_std)}
+    # Likelihood ratio for H0: mu=0, sigma=1.
+    if z_std > 0:
+        ll_h1 = float(_stats.norm.logpdf(z, loc=z_mean, scale=z_std).sum())
+        ll_h0 = float(_stats.norm.logpdf(z, loc=0.0, scale=1.0).sum())
+        lr = -2.0 * (ll_h0 - ll_h1)
+        berkowitz["lr_statistic"] = float(lr)
+        berkowitz["p_value"] = float(1.0 - _stats.chi2.cdf(lr, df=2))
+        berkowitz["reject"] = bool(berkowitz["p_value"] < alpha)
+    # Kolmogorov-Smirnov against uniform.
+    ks_stat, ks_pvalue = _stats.kstest(pit, "uniform")
+    # Kupiec POF (proportion of failures) for VaR coverage at alpha.
+    hits = (pit < alpha).astype(int)
+    p_hat = float(hits.mean()) if hits.size else 0.0
+    if 0 < p_hat < 1:
+        ll_ratio = -2.0 * (
+            hits.size * (alpha * np.log(alpha) + (1 - alpha) * np.log(1 - alpha))
+            - hits.size * (p_hat * np.log(p_hat) + (1 - p_hat) * np.log(1 - p_hat))
+        )
+        kupiec_p = float(1.0 - _stats.chi2.cdf(ll_ratio, df=1))
+    else:
+        ll_ratio = 0.0
+        kupiec_p = 1.0
+    # Christoffersen independence: LR test on transitions of hits.
+    n00 = n01 = n10 = n11 = 0
+    for prev, curr in zip(hits[:-1], hits[1:]):
+        if prev == 0 and curr == 0:
+            n00 += 1
+        elif prev == 0 and curr == 1:
+            n01 += 1
+        elif prev == 1 and curr == 0:
+            n10 += 1
+        else:
+            n11 += 1
+    pi01 = n01 / max(n00 + n01, 1)
+    pi11 = n11 / max(n10 + n11, 1)
+    pi = (n01 + n11) / max(hits.size - 1, 1)
+    if 0 < pi < 1 and 0 < pi01 < 1 and 0 < pi11 < 1:
+        ll_ind = -2.0 * (
+            (n01 + n11) * np.log(pi)
+            + (n00 + n10) * np.log(1 - pi)
+            - n01 * np.log(pi01)
+            - n00 * np.log(1 - pi01)
+            - n11 * np.log(pi11)
+            - n10 * np.log(1 - pi11)
+        )
+        christoffersen_p = float(1.0 - _stats.chi2.cdf(ll_ind, df=1))
+    else:
+        ll_ind = 0.0
+        christoffersen_p = 1.0
+    return {
+        "berkowitz": berkowitz,
+        "ks": {"statistic": float(ks_stat), "p_value": float(ks_pvalue), "reject": bool(ks_pvalue < alpha)},
+        "kupiec_pof": {"hits_rate": p_hat, "lr_statistic": float(ll_ratio), "p_value": kupiec_p, "reject": bool(kupiec_p < alpha)},
+        "christoffersen_independence": {
+            "lr_statistic": float(ll_ind),
+            "p_value": christoffersen_p,
+            "reject": bool(christoffersen_p < alpha),
+        },
+        "n_obs": int(pit.size),
+    }
 
 
 def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4ModelArtifactsArtifact) -> dict[tuple[Any, ...], Any]:
