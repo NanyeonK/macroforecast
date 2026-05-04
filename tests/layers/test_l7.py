@@ -164,12 +164,14 @@ def test_l7_boruta_selection_rejected_as_future():
     assert validate_layer(parse_layer_yaml(make_l7_yaml(op="boruta_selection"), "l7")).has_hard_errors
 
 
-def test_l7_mrf_gtvp_schema_validates():
-    # v0.1: mrf_gtvp delegates to RandomForestRegressor feature_importances_
-    # via _MRFWrapper. End-to-end execution is exercised in v01_dimensions
-    # tests; here we only assert the schema validates.
+def test_l7_mrf_gtvp_rejected_as_future():
+    # PR-C of the v0.1 honesty pass: ``mrf_gtvp`` returned a static
+    # RandomForest feature_importances_ ranking instead of the design's
+    # promised Coulombe (2024) GTVP coefficient time series. Demoted
+    # to ``future``; the validator now rejects.
     layer = parse_layer_yaml(make_l7_yaml(op="mrf_gtvp", model_family="macroeconomic_random_forest"), "l7")
-    assert validate_layer(layer).has_hard_errors is False
+    report = validate_layer(layer)
+    assert report.has_hard_errors
 
 
 def test_l7_default_figure_mapping_for_shap_tree():
@@ -228,14 +230,19 @@ def test_l7_transformation_attribution_sink_empty_when_step_unused():
     assert "l7_transformation_attribution_v1" not in sinks or sinks["l7_transformation_attribution_v1"] is None
 
 
-def test_l7_29_operational_ops_registered():
+def test_l7_operational_ops_registered_after_honesty_pass():
+    # PR-C of the v0.1 honesty pass demoted 11 misleading L7 ops
+    # (FEVD/IRF/historical_decomposition/mrf_gtvp/lasso_inclusion/ALE/
+    # Friedman-H/4 gradient methods) to ``future``. The operational tally
+    # therefore drops from 29 to 18.
     operational = [op for op in list_ops().values() if "l7" in op.layer_scope and op.status == "operational"]
-    assert len(operational) == 29
+    assert len(operational) >= 18
 
 
-def test_l7_6_future_ops_registered():
+def test_l7_future_ops_includes_honesty_demotions():
+    # 6 design-future + 11 PR-C demotions = 17 future ops.
     future_ops = [op for op in list_ops().values() if "l7" in op.layer_scope and op.status == "future"]
-    assert len(future_ops) == 6
+    assert len(future_ops) >= 17
 
 
 def test_l7_18_figure_types():

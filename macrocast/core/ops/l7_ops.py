@@ -55,8 +55,55 @@ DEFAULT_FIGURE_MAPPING = {
     "transformation_attribution": "shapley_waterfall",
 }
 
-OPERATIONAL_OPS = tuple(DEFAULT_FIGURE_MAPPING)
-FUTURE_OPS = ("attention_weights", "lstm_hidden_state", "boruta_selection", "recursive_feature_elimination", "lasso_path_selection", "stability_selection")
+# Ops whose v0.1 runtime did not faithfully implement the design's named
+# procedure. Demoted to ``future`` by PR-C of the v0.1 honesty pass; the
+# OpSpec status causes the L7 layer validator (and the universal op-status
+# rule in :func:`macrocast.core.validator`) to hard-reject these at recipe
+# validation time. Real implementations land per-op via the v0.2 issue
+# tracker; see ``plans/design/part3_l5_l6_l7_l8.md`` for the gap.
+#
+# - fevd / historical_decomposition / generalized_irf: returned a flat
+#   coefficient mean (for VAR fits) or fell back to ``tree_importance``
+#   for non-VAR models. Real Cholesky / generalized-Pesaran-Shin
+#   orthogonalised IRF + variance-decomposition output is missing.
+# - mrf_gtvp: returned ``RandomForestRegressor.feature_importances_``
+#   (a single static ranking) instead of a Coulombe (2024) GTVP
+#   coefficient time series.
+# - lasso_inclusion_frequency: returned ``(|coef| > 1e-9).astype(float)``
+#   from a single fit. Real frequency requires resampling (rolling /
+#   bootstrap / sub-sample lasso path).
+# - accumulated_local_effect: bin endpoint prediction-difference sum.
+#   Real ALE per Apley & Zhu (2020) needs centred local effects via
+#   derivative integration.
+# - friedman_h_interaction: variance-ratio surrogate. Real Friedman &
+#   Popescu (2008) H statistic uses bivariate vs marginal partial
+#   dependence ratios.
+# - gradient_shap / integrated_gradients / saliency_map / deep_lift:
+#   gradient-based attributions. v0.1 falls back to a SHAP proxy --
+#   different attribution method, not the gradient-based one named.
+HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = (
+    "fevd",
+    "historical_decomposition",
+    "generalized_irf",
+    "mrf_gtvp",
+    "lasso_inclusion_frequency",
+    "accumulated_local_effect",
+    "friedman_h_interaction",
+    "gradient_shap",
+    "integrated_gradients",
+    "saliency_map",
+    "deep_lift",
+)
+
+OPERATIONAL_OPS = tuple(name for name in DEFAULT_FIGURE_MAPPING if name not in HONESTY_DEMOTED_L7_OPS)
+FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
+    "attention_weights",
+    "lstm_hidden_state",
+    "boruta_selection",
+    "recursive_feature_elimination",
+    "lasso_path_selection",
+    "stability_selection",
+)
 
 
 def _stub(name: str):
@@ -102,7 +149,24 @@ for _name in OPERATIONAL_OPS:
         default_figure_type=DEFAULT_FIGURE_MAPPING[_name],
     )(_stub(_name))
 
+# v0.1 honesty pass: register the 11 demoted ops with the same input/output
+# contract as the operational ops so existing recipes pretty-print, but
+# carry ``status="future"`` so the validator hard-rejects them.
+for _name in HONESTY_DEMOTED_L7_OPS:
+    register_op(
+        name=_name,
+        layer_scope=("l7",),
+        input_types={"default": (L4ModelArtifactsArtifact, L4ForecastsArtifact, L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact, L6TestsArtifact, L7ImportanceArtifact)},
+        output_type=L7ImportanceArtifact,
+        params_schema=_schema(_name),
+        default_figure_type=DEFAULT_FIGURE_MAPPING[_name],
+        status="future",
+    )(_stub(_name))
+
+# Tail: design-future ops that were never operational.
 for _name in FUTURE_OPS:
+    if _name in HONESTY_DEMOTED_L7_OPS:
+        continue  # already registered above
     if _name in _OPS:
         spec = _OPS[_name]
         scope = spec.layer_scope if isinstance(spec.layer_scope, tuple) else ()
