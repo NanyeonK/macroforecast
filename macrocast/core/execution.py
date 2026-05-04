@@ -264,8 +264,11 @@ def _canonicalize_keys(value: Any) -> Any:
 
 
 def _json_safe(value: Any) -> Any:
+    from dataclasses import asdict as _asdict, is_dataclass as _is_dataclass
     from datetime import date, datetime as _dt
 
+    if _is_dataclass(value) and not isinstance(value, type):
+        return _json_safe(_asdict(value))
     if isinstance(value, (date, _dt, pd.Timestamp)):
         return value.isoformat()
     if isinstance(value, (np.generic,)):
@@ -281,6 +284,24 @@ def _json_safe(value: Any) -> Any:
     if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
         return None
     return value
+
+
+# ---------------------------------------------------------------------------
+# Per-cell provenance helpers (used by ManifestExecutionResult.to_manifest_dict)
+# ---------------------------------------------------------------------------
+
+def _per_layer_durations(cell: "CellExecutionResult") -> dict[str, float]:
+    rt = cell.runtime_result
+    if rt is None:
+        return {}
+    return dict(getattr(rt, "runtime_durations", {}) or {})
+
+
+def _per_cell_resolved_axes(cell: "CellExecutionResult") -> dict[str, Any]:
+    rt = cell.runtime_result
+    if rt is None:
+        return {}
+    return _json_safe(dict(getattr(rt, "resolved_axes", {}) or {}))
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +343,31 @@ class ManifestExecutionResult:
         return tuple(cell for cell in self.cells if not cell.succeeded)
 
     def to_manifest_dict(self) -> dict[str, Any]:
+        from .runtime import (
+            _capture_data_revision_tag,
+            _capture_dependency_lockfile_content,
+            _capture_full_runtime_environment,
+            _capture_git_state,
+            _capture_package_version,
+            _capture_random_seed_used,
+            _command_version_safe,
+            _dependency_lockfile_paths,
+        )
+
+        git_sha, git_branch = _capture_git_state()
+        provenance = {
+            "package_version": _capture_package_version(),
+            "python_version": platform.python_version(),
+            "r_version": _command_version_safe(("R", "--version")),
+            "julia_version": _command_version_safe(("julia", "--version")),
+            "git_commit_sha": git_sha,
+            "git_branch_name": git_branch,
+            "data_revision_tag": _capture_data_revision_tag(self.recipe_root),
+            "random_seed_used": _capture_random_seed_used(self.recipe_root),
+            "dependency_lockfile_paths": _dependency_lockfile_paths(),
+            "dependency_lockfile_content": _capture_dependency_lockfile_content(),
+            "runtime_environment": _json_safe(_capture_full_runtime_environment()),
+        }
         return {
             "schema_version": "0.1.0",
             "started_at": self.started_at,
@@ -335,6 +381,7 @@ class ManifestExecutionResult:
                 "os_name": platform.system(),
                 "machine": platform.machine(),
             },
+            "provenance": provenance,
             "cells": [
                 {
                     "cell_id": cell.cell_id,
@@ -344,6 +391,8 @@ class ManifestExecutionResult:
                     "succeeded": cell.succeeded,
                     "sink_hashes": dict(cell.sink_hashes),
                     "error": cell.error,
+                    "runtime_duration_per_layer": _per_layer_durations(cell),
+                    "cell_resolved_axes": _per_cell_resolved_axes(cell),
                 }
                 for cell in self.cells
             ],

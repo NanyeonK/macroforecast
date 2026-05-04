@@ -76,6 +76,7 @@ class RuntimeResult:
 
     artifacts: dict[str, Any] = field(default_factory=dict)
     resolved_axes: dict[str, dict[str, Any]] = field(default_factory=dict)
+    runtime_durations: dict[str, float] = field(default_factory=dict)
 
     def sink(self, name: str) -> Any:
         return self.artifacts[name]
@@ -115,12 +116,22 @@ def execute_l1_l2(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
 def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
     """Run the minimal L1-L5 runtime path for custom-panel ridge forecasts."""
 
+    import time as _time
+
     root = parse_recipe_yaml(recipe_yaml_or_root) if isinstance(recipe_yaml_or_root, str) else recipe_yaml_or_root
-    l1_artifact, regime_artifact, l1_axes = materialize_l1(root)
-    l2_artifact, l2_axes = materialize_l2(root, l1_artifact)
-    l3_features, l3_metadata = materialize_l3_minimal(root, l1_artifact, l2_artifact)
-    l4_forecasts, l4_models, l4_training = materialize_l4_minimal(root, l3_features)
-    l5_eval = materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts, l4_models)
+    durations: dict[str, float] = {}
+
+    def _timed(label: str, fn):
+        clock = _time.perf_counter()
+        result = fn()
+        durations[label] = _time.perf_counter() - clock
+        return result
+
+    l1_artifact, regime_artifact, l1_axes = _timed("l1", lambda: materialize_l1(root))
+    l2_artifact, l2_axes = _timed("l2", lambda: materialize_l2(root, l1_artifact))
+    l3_features, l3_metadata = _timed("l3", lambda: materialize_l3_minimal(root, l1_artifact, l2_artifact))
+    l4_forecasts, l4_models, l4_training = _timed("l4", lambda: materialize_l4_minimal(root, l3_features))
+    l5_eval = _timed("l5", lambda: materialize_l5_minimal(root, l1_artifact, l3_features, l4_forecasts, l4_models))
     artifacts: dict[str, Any] = {
         "l1_data_definition_v1": l1_artifact,
         "l1_regime_metadata_v1": regime_artifact,
@@ -134,37 +145,57 @@ def execute_minimal_forecast(recipe_yaml_or_root: str | dict[str, Any]) -> Runti
     }
     resolved_axes: dict[str, dict[str, Any]] = {"l1": l1_axes, "l2": dict(l2_axes), "l5": dict(l5_eval.l5_axis_resolved)}
     if "1_5_data_summary" in root:
-        l1_5_artifact, l1_5_axes = materialize_l1_5_diagnostic(root, l1_artifact)
+        l1_5_artifact, l1_5_axes = _timed("l1_5", lambda: materialize_l1_5_diagnostic(root, l1_artifact))
         artifacts["l1_5_diagnostic_v1"] = l1_5_artifact
         resolved_axes["l1_5"] = l1_5_axes
     if "2_5_pre_post_preprocessing" in root:
-        l2_5_artifact, l2_5_axes = materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact)
+        l2_5_artifact, l2_5_axes = _timed("l2_5", lambda: materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact))
         artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
         resolved_axes["l2_5"] = l2_5_axes
     if "3_5_feature_diagnostics" in root:
-        l3_5_artifact, l3_5_axes = materialize_l3_5_diagnostic(root, l1_artifact, l2_artifact, l3_features, l3_metadata)
+        l3_5_artifact, l3_5_axes = _timed(
+            "l3_5", lambda: materialize_l3_5_diagnostic(root, l1_artifact, l2_artifact, l3_features, l3_metadata)
+        )
         artifacts["l3_5_diagnostic_v1"] = l3_5_artifact
         resolved_axes["l3_5"] = l3_5_axes
     if "4_5_generator_diagnostics" in root:
-        l4_5_artifact, l4_5_axes = materialize_l4_5_diagnostic(root, l3_features, l4_forecasts, l4_models, l4_training)
+        l4_5_artifact, l4_5_axes = _timed(
+            "l4_5", lambda: materialize_l4_5_diagnostic(root, l3_features, l4_forecasts, l4_models, l4_training)
+        )
         artifacts["l4_5_diagnostic_v1"] = l4_5_artifact
         resolved_axes["l4_5"] = l4_5_axes
     if "6_statistical_tests" in root:
-        l6_tests, l6_axes = materialize_l6_runtime(root, l1_artifact, l3_features, l4_forecasts, l4_models, l5_eval)
+        l6_tests, l6_axes = _timed(
+            "l6", lambda: materialize_l6_runtime(root, l1_artifact, l3_features, l4_forecasts, l4_models, l5_eval)
+        )
         artifacts["l6_tests_v1"] = l6_tests
         resolved_axes["l6"] = l6_axes
     if "7_interpretation" in root:
-        l7_importance, l7_transform, l7_axes = materialize_l7_runtime(root, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, artifacts.get("l6_tests_v1"))
+        l7_importance, l7_transform, l7_axes = _timed(
+            "l7",
+            lambda: materialize_l7_runtime(
+                root, l3_features, l3_metadata, l4_forecasts, l4_models, l5_eval, artifacts.get("l6_tests_v1")
+            ),
+        )
         artifacts["l7_importance_v1"] = l7_importance
         artifacts["l7_transformation_attribution_v1"] = l7_transform
         resolved_axes["l7"] = l7_axes
     if "8_output" in root:
-        l8_artifacts, l8_axes = materialize_l8_runtime(root, artifacts)
+        l8_artifacts, l8_axes = _timed(
+            "l8",
+            lambda: materialize_l8_runtime(
+                root,
+                artifacts,
+                runtime_durations=durations,
+                cell_resolved_axes=resolved_axes,
+            ),
+        )
         artifacts["l8_artifacts_v1"] = l8_artifacts
         resolved_axes["l8"] = l8_axes
     return RuntimeResult(
         artifacts=artifacts,
         resolved_axes=resolved_axes,
+        runtime_durations=durations,
     )
 
 
@@ -2640,7 +2671,13 @@ def _autocorr(values: pd.Series, lag: int) -> float:
     return float((left * right).sum() / denom)
 
 
-def materialize_l8_runtime(recipe_root: dict[str, Any], upstream_artifacts: dict[str, Any]) -> tuple[L8ArtifactsArtifact, dict[str, Any]]:
+def materialize_l8_runtime(
+    recipe_root: dict[str, Any],
+    upstream_artifacts: dict[str, Any],
+    *,
+    runtime_durations: dict[str, float] | None = None,
+    cell_resolved_axes: dict[str, dict[str, Any]] | None = None,
+) -> tuple[L8ArtifactsArtifact, dict[str, Any]]:
     raw = recipe_root.get("8_output", {}) or {}
     context = l8_layer._recipe_context(recipe_root)
     report = l8_layer.validate_layer(raw, context=context)
@@ -2652,14 +2689,29 @@ def materialize_l8_runtime(recipe_root: dict[str, Any], upstream_artifacts: dict
     output_directory.mkdir(parents=True, exist_ok=True)
     (output_directory / "summary").mkdir(exist_ok=True)
     exported_files = _l8_export_artifacts(output_directory, axes, upstream_artifacts, recipe_root)
+    git_sha, git_branch = _capture_git_state()
+    package_version = _capture_package_version()
+    runtime_env = _capture_full_runtime_environment()
+    lockfile_content = _capture_dependency_lockfile_content()
+    data_revision = _capture_data_revision_tag(recipe_root)
+    seed_used = _capture_random_seed_used(recipe_root)
+    # ``runtime_duration_per_layer`` and ``cells_summary[*].exported_files``
+    # are non-deterministic across runs (wall-clock + tmp paths). Keep them
+    # out of the hashed L8Manifest dataclass so bit-exact replicate still
+    # passes; they are written to the on-disk JSON payload below.
     manifest = L8Manifest(
         recipe_hash=str(abs(hash(json.dumps(_jsonable(recipe_root), sort_keys=True)))),
-        package_version="runtime-local",
+        package_version=package_version,
         python_version=platform.python_version(),
-        random_seed_used=((recipe_root.get("0_meta", {}) or {}).get("fixed_axes", {}) or {}).get("random_seed"),
-        runtime_environment=RuntimeEnvironment(os_name=platform.system(), python_version=platform.python_version(), cpu_info=platform.machine()),
+        r_version=_command_version_safe(("R", "--version")),
+        julia_version=_command_version_safe(("julia", "--version")),
         dependency_lockfile_paths=_dependency_lockfile_paths(),
-        cells_summary=[{"cell_id": "cell_001", "status": "completed", "exported_files": [file.path.as_posix() for file in exported_files]}],
+        git_commit_sha=git_sha,
+        git_branch_name=git_branch,
+        data_revision_tag=data_revision,
+        random_seed_used=seed_used,
+        runtime_environment=runtime_env,
+        cells_summary=[{"cell_id": "cell_001", "status": "completed", "n_exported_files": len(exported_files)}],
     )
     manifest_path = output_directory / ("manifest.jsonl" if axes.get("manifest_format") == "json_lines" else "manifest.json")
     manifest_payload = {
@@ -2667,9 +2719,22 @@ def materialize_l8_runtime(recipe_root: dict[str, Any], upstream_artifacts: dict
         "provenance_fields": axes.get("provenance_fields", []),
         "saved_objects": axes.get("saved_objects", []),
         "upstream_sinks": sorted(upstream_artifacts),
+        "recipe_yaml_full": _stringify_recipe_root(recipe_root),
+        "cell_resolved_axes": _jsonable(cell_resolved_axes or {}),
+        "dependency_lockfile_content": lockfile_content,
+        "runtime_duration_per_layer": dict(runtime_durations or {}),
+        "exported_files": [file.path.as_posix() for file in exported_files],
     }
     if axes.get("manifest_format") == "json_lines":
         manifest_path.write_text(json.dumps(manifest_payload, sort_keys=True) + "\n", encoding="utf-8")
+    elif axes.get("manifest_format") == "yaml":
+        try:
+            import yaml as _yaml  # type: ignore
+        except ImportError:
+            manifest_path.write_text(json.dumps(manifest_payload, indent=2, sort_keys=True), encoding="utf-8")
+        else:
+            manifest_path = manifest_path.with_suffix(".yaml")
+            manifest_path.write_text(_yaml.safe_dump(manifest_payload, sort_keys=True), encoding="utf-8")
     else:
         manifest_path.write_text(json.dumps(manifest_payload, indent=2, sort_keys=True), encoding="utf-8")
     recipe_path = output_directory / "recipe.json"
@@ -2808,6 +2873,156 @@ def _dependency_lockfile_paths() -> dict[str, str]:
             paths["python"] = path.as_posix()
             break
     return paths
+
+
+def _capture_dependency_lockfile_content() -> dict[str, str]:
+    """Read the first available python lockfile content (truncated). Mirrors
+    ``_dependency_lockfile_paths`` but returns the file body so the manifest
+    is self-contained for replication."""
+
+    for candidate in ("uv.lock", "requirements.txt", "pyproject.toml"):
+        path = Path(candidate)
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if len(text) > 64_000:
+            text = text[:64_000] + "\n# (truncated)\n"
+        return {"python": text, "python_path": path.as_posix()}
+    return {}
+
+
+def _capture_git_state(start: Path | None = None) -> tuple[str | None, str | None]:
+    """Best-effort ``(commit_sha, branch_name)``; both ``None`` outside a
+    git checkout or when git is missing. Tolerant of detached HEAD."""
+
+    import subprocess
+
+    cwd = start or Path.cwd()
+    try:
+        sha = subprocess.run(
+            ("git", "rev-parse", "HEAD"), cwd=cwd, capture_output=True, text=True, check=True, timeout=5
+        ).stdout.strip()
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
+        return None, None
+    try:
+        branch = subprocess.run(
+            ("git", "rev-parse", "--abbrev-ref", "HEAD"),
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        ).stdout.strip()
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
+        branch = None
+    if branch == "HEAD":
+        branch = None
+    return sha or None, branch
+
+
+def _command_version_safe(cmd: tuple[str, ...]) -> str | None:
+    """Shell out to ``cmd`` and return the first stdout/stderr line, or
+    ``None`` if the binary isn't present."""
+
+    import subprocess
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
+        return None
+    output = (proc.stdout or proc.stderr or "").strip().splitlines()
+    return output[0] if output else None
+
+
+def _capture_package_version() -> str:
+    try:
+        from .. import __version__
+    except ImportError:  # pragma: no cover - defensive
+        return "runtime-local"
+    return str(__version__) if __version__ else "runtime-local"
+
+
+def _capture_full_runtime_environment() -> RuntimeEnvironment:
+    """Populate every available field on ``RuntimeEnvironment``. The
+    ``manifest.capture_runtime_environment`` helper produces a richer record
+    type that we can't reuse here without an import cycle, but we mirror the
+    intent."""
+
+    import socket
+
+    return RuntimeEnvironment(
+        os_name=f"{platform.system()} {platform.release()}",
+        python_version=platform.python_version(),
+        cpu_info=f"{platform.machine()} ({platform.processor() or 'unknown'})",
+        gpu_info=_detect_gpu(),
+    )
+
+
+def _detect_gpu() -> str | None:
+    """Best-effort GPU descriptor: torch.cuda first, then nvidia-smi."""
+
+    try:
+        import torch  # type: ignore
+    except ImportError:
+        torch = None  # type: ignore
+    if torch is not None:
+        try:
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                count = torch.cuda.device_count()
+                names = [torch.cuda.get_device_name(i) for i in range(count)]
+                return f"cuda x{count}: {', '.join(names)}"
+        except Exception:  # pragma: no cover - defensive
+            pass
+    descriptor = _command_version_safe(("nvidia-smi", "--query-gpu=name", "--format=csv,noheader"))
+    return descriptor
+
+
+def _capture_data_revision_tag(recipe_root: dict[str, Any]) -> str:
+    """Mirror the FRED vintage tag (or generic data revision marker) for the
+    L1 sub-graph so a replicate is locked to the source revision."""
+
+    l1 = recipe_root.get("1_data", {}) or {}
+    leaf = l1.get("leaf_config", {}) or {}
+    tag = leaf.get("vintage_date_or_tag") or leaf.get("data_revision_tag")
+    if tag:
+        return str(tag)
+    fixed = l1.get("fixed_axes", {}) or {}
+    if fixed.get("vintage_policy"):
+        return str(fixed["vintage_policy"])
+    return ""
+
+
+def _capture_random_seed_used(recipe_root: dict[str, Any]) -> int | None:
+    l0 = recipe_root.get("0_meta", {}) or {}
+    leaf = l0.get("leaf_config", {}) or {}
+    fixed = l0.get("fixed_axes", {}) or {}
+    if "random_seed" in leaf:
+        try:
+            return int(leaf["random_seed"])
+        except (TypeError, ValueError):
+            return None
+    if "random_seed" in fixed:
+        try:
+            return int(fixed["random_seed"])
+        except (TypeError, ValueError):
+            return None
+    repro = fixed.get("reproducibility_mode", "seeded_reproducible")
+    return 0 if repro == "seeded_reproducible" else None
+
+
+def _stringify_recipe_root(recipe_root: dict[str, Any]) -> str:
+    """Canonical JSON form of the recipe root (full text) so the manifest
+    carries the spec needed for replicate, even when the user passed a dict."""
+
+    try:
+        import yaml as _yaml  # type: ignore
+
+        return _yaml.safe_dump(_jsonable(recipe_root), sort_keys=True)
+    except ImportError:
+        return json.dumps(_jsonable(recipe_root), indent=2, sort_keys=True)
 
 
 def _jsonable(value: Any) -> Any:
