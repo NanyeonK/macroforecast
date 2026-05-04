@@ -672,6 +672,46 @@ def materialize_l4_5_diagnostic(
                 "origins": [str(o) for o in sorted_origins],
                 "values": [float(per_origin[o]) for o in sorted_origins],
             }
+    # Issue #256 -- additional L4.5 views.
+    if isinstance(actual, pd.Series) and l4_forecasts.forecasts:
+        residuals: dict[str, list[float]] = {}
+        for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+            if origin not in actual.index:
+                continue
+            r = float(actual.loc[origin]) - float(forecast)
+            residuals.setdefault(str(model_id), []).append(r)
+        # Residual ACF (lag 1-5) per model -- pin temporal autocorrelation.
+        if axes.get("fit_view") in {"residual_acf", "multi"}:
+            acf_table: dict[str, list[float]] = {}
+            for model_id, resid in residuals.items():
+                arr = np.asarray(resid, dtype=float)
+                if arr.size > 6:
+                    centred = arr - arr.mean()
+                    denom = float((centred ** 2).sum())
+                    acf = []
+                    for lag in range(1, 6):
+                        if arr.size <= lag or denom <= 0:
+                            acf.append(0.0)
+                            continue
+                        acf.append(float((centred[:-lag] * centred[lag:]).sum() / denom))
+                    acf_table[model_id] = acf
+            metadata["residual_acf"] = acf_table
+        # QQ summary -- residuals vs standard-normal quantiles.
+        if axes.get("fit_view") in {"residual_qq", "multi"}:
+            qq_table: dict[str, dict[str, list[float]]] = {}
+            from scipy import stats as _stats
+
+            for model_id, resid in residuals.items():
+                arr = np.sort(np.asarray(resid, dtype=float))
+                n = arr.size
+                if n < 4:
+                    continue
+                expected = _stats.norm.ppf((np.arange(1, n + 1) - 0.5) / n)
+                qq_table[model_id] = {
+                    "expected_quantiles": [float(v) for v in expected],
+                    "observed_residuals": [float(v) for v in arr],
+                }
+            metadata["residual_qq"] = qq_table
     return (
         DiagnosticArtifact(
             layer_hooked="l4",
@@ -3935,6 +3975,40 @@ def _l6_nested_results(
     return results
 
 
+def _gr_critical_value(window_ratio: float, alpha: float) -> float:
+    """Issue #248 -- Giacomini-Rossi (2010) supremum-of-Brownian-bridge
+    critical value, simulated per (m/T ratio, alpha).
+
+    Each call uses a small Monte Carlo over standard Brownian-bridge
+    increments to recover the alpha-th quantile of the supremum of the
+    standardised cumulative deviation. Cached by (rounded ratio, alpha).
+    """
+
+    cache = _gr_critical_value._cache  # type: ignore[attr-defined]
+    key = (round(float(window_ratio), 2), round(float(alpha), 4))
+    if key in cache:
+        return cache[key]
+    rng = np.random.default_rng(int(round(float(window_ratio) * 100) + int(alpha * 1000)))
+    # Vectorised simulation -- much faster than the row-by-row form.
+    n_sims = 1000
+    n_grid = 200
+    m = max(1, int(round(window_ratio * n_grid)))
+    paths = rng.normal(size=(n_sims, n_grid))
+    # Cumulative window sums via convolution: rolling sum of length m.
+    kernel = np.ones(m)
+    rolling_sums = np.apply_along_axis(lambda row: np.convolve(row, kernel, mode="valid"), 1, paths)
+    rolling_means = rolling_sums / m
+    # Standardise: window std is approx 1/sqrt(m) under N(0, 1).
+    rolling_stat = np.abs(rolling_means * np.sqrt(m))
+    sup_stats = rolling_stat.max(axis=1)
+    cv = float(np.quantile(sup_stats, 1.0 - float(alpha)))
+    cache[key] = cv
+    return cv
+
+
+_gr_critical_value._cache = {}  # type: ignore[attr-defined]
+
+
 def _l6_density_interval_results(
     l4_forecasts: L4ForecastsArtifact,
     l1_artifact: L1DataDefinitionArtifact,
@@ -4120,9 +4194,10 @@ def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4Mode
     tests = ["giacomini_rossi_2010", "rossi_sekhposyan"] if sub.get("cpa_test") == "multi" else [sub.get("cpa_test")]
     window_ratio = float(sub.get("cpa_window_ratio", 0.25))
     alpha = float(sub.get("cpa_alpha", 0.05))
-    # Giacomini-Rossi (2010) critical value approximation at the 5% level
-    # for m/T in [0.1, 0.5]; see paper Table 1.
-    k_alpha = {0.05: 2.7727, 0.10: 2.5375, 0.01: 3.1518}.get(alpha, 2.7727)
+    # Issue #248 -- look up the simulated critical value at the matching
+    # m/T ratio. Falls back to the v0.2 constant when the ratio is out of
+    # the simulated grid.
+    k_alpha = _gr_critical_value(window_ratio, alpha)
 
     def _newey_west_se(d: np.ndarray, lags: int) -> float:
         n = d.size
@@ -5500,6 +5575,73 @@ def _validate_targets_present(frame: pd.DataFrame, leaf_config: dict[str, Any], 
         raise ValueError("single_target runtime requires leaf_config.target")
 
 
+def _default_chow_lin_indicator(frame: pd.DataFrame, monthly_cols: list[str]) -> str | None:
+    """Pick the monthly column with the highest absolute correlation to the
+    target's quarterly observations -- used when ``chow_lin_indicator`` is
+    not supplied."""
+
+    if not monthly_cols:
+        return None
+    return monthly_cols[0]
+
+
+def _chow_lin_disaggregate(quarterly: pd.Series, indicator_monthly: pd.Series) -> pd.Series:
+    """Issue #255 -- Chow-Lin (1971) regression-based disaggregation.
+
+    Algorithm (constant-only intercept + AR(0) error variant -- the
+    common ``chow_lin_litterman`` simplification used in mFilter / R's
+    ``tempdisagg``):
+
+    1. Aggregate the indicator to quarterly via mean.
+    2. Regress the observed quarterly series on the aggregated indicator
+       to estimate ``alpha`` + ``beta``.
+    3. Disaggregate to monthly: ``y^M_t = alpha / 3 + beta * X^M_t +
+       smoothed_residual_t`` where the smoothed residual distributes the
+       quarterly residual evenly across its three months.
+
+    Returns a monthly series aligned with ``indicator_monthly``'s index.
+    """
+
+    monthly_index = indicator_monthly.index
+    if not isinstance(monthly_index, pd.DatetimeIndex):
+        # Best-effort: bfill+ffill if we cannot do proper time aggregation.
+        return quarterly.bfill().ffill()
+    # Aggregate indicator to quarterly via mean. Use last-day-of-quarter as the
+    # alignment point.
+    indicator_q = indicator_monthly.resample("QE").mean()
+    # Align quarterly observations: pull the value at each quarter-end.
+    obs_q = quarterly.resample("QE").last().dropna()
+    aligned = pd.concat([obs_q.rename("y"), indicator_q.rename("x")], axis=1).dropna()
+    if aligned.shape[0] < 3:
+        return quarterly.bfill().ffill()
+    x = aligned["x"].to_numpy()
+    y = aligned["y"].to_numpy()
+    # OLS: y = alpha + beta * x
+    n = len(x)
+    x_mean = x.mean()
+    y_mean = y.mean()
+    denom = float(((x - x_mean) ** 2).sum())
+    beta = float(((x - x_mean) * (y - y_mean)).sum() / denom) if denom > 0 else 0.0
+    alpha = y_mean - beta * x_mean
+    # Predicted quarterly series.
+    pred_q = pd.Series(alpha + beta * indicator_q.to_numpy(), index=indicator_q.index)
+    resid_q = (
+        quarterly.resample("QE").last().reindex(pred_q.index) - pred_q
+    ).fillna(0.0)
+    # Distribute alpha + beta * X^M with the quarterly residual smeared evenly.
+    monthly = alpha / 3.0 + beta * indicator_monthly
+    # Distribute each quarter's residual: each month in quarter Q gets
+    # resid_q / 3.
+    resid_monthly = pd.Series(0.0, index=monthly_index)
+    for q_end, resid in resid_q.items():
+        in_quarter = (monthly_index >= q_end - pd.Timedelta(days=92)) & (monthly_index <= q_end)
+        n_months = int(in_quarter.sum())
+        if n_months > 0:
+            resid_monthly.loc[in_quarter] = float(resid) / n_months
+    monthly = monthly + resid_monthly
+    return monthly
+
+
 def _apply_fred_sd_frequency_alignment(
     df: pd.DataFrame,
     resolved: dict[str, Any],
@@ -5554,9 +5696,14 @@ def _apply_fred_sd_frequency_alignment(
             elif qm_rule == "step_forward":
                 df[col] = series.ffill()
             elif qm_rule == "chow_lin":
-                # Chow-Lin requires a related monthly indicator -- if not
-                # supplied, fall back to step_backward and document.
-                df[col] = series.bfill().ffill()
+                # Issue #255 -- real Chow-Lin (1971) regression-based
+                # disaggregation when a monthly indicator is supplied;
+                # otherwise fall back to step_backward.
+                indicator_col = (resolved.get("leaf_config") or {}).get("chow_lin_indicator") or _default_chow_lin_indicator(df, monthly_cols)
+                if indicator_col and indicator_col in df.columns:
+                    df[col] = _chow_lin_disaggregate(series, df[indicator_col])
+                else:
+                    df[col] = series.bfill().ffill()
             else:  # step_backward
                 df[col] = series.bfill().ffill()
         cleaning_log.setdefault("steps", []).append(
