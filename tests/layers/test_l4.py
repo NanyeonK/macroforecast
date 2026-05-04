@@ -88,18 +88,22 @@ def test_l4_xgboost_family():
     assert not validate_layer(parse_layer_yaml(make_l4_yaml(family="xgboost", n_estimators=100))).has_hard_errors
 
 
-def test_l4_macroeconomic_random_forest_schema_validates():
-    # v0.1: MRF (Coulombe 2024) is wired via _MRFWrapper; the schema must still
-    # validate cleanly. Standalone execute_layer needs full L1-L3 setup so we
-    # don't drive the runtime here -- end-to-end coverage lives in the
-    # v01_dimensions tests.
+def test_l4_macroeconomic_random_forest_rejected_as_future():
+    # PR-B (v0.1 honesty pass): MRF was promoted to operational in v0.1 even
+    # though the runtime wrapper is a plain RandomForest + time_trend (not
+    # the Coulombe 2024 GTVP local-linear forest). Demoted to ``future`` so
+    # the validator hard-rejects until the real implementation lands.
     layer = parse_layer_yaml(_example("l4_mrf_placeholder.yaml"))
-    assert not validate_layer(layer).has_hard_errors
+    report = validate_layer(layer)
+    assert report.has_hard_errors
+    assert any("future or unknown" in issue.message.lower() for issue in report.hard_errors)
 
 
-def test_l4_dfm_mixed_mariano_murasawa_schema_validates():
+def test_l4_dfm_mixed_mariano_murasawa_rejected_as_future():
     layer = parse_layer_yaml(make_l4_yaml(family="dfm_mixed_mariano_murasawa", n_factors=2))
-    assert not validate_layer(layer).has_hard_errors
+    report = validate_layer(layer)
+    assert report.has_hard_errors
+    assert any("future or unknown" in issue.message.lower() for issue in report.hard_errors)
 
 
 def test_l4_midas_almon_future_rejected():
@@ -232,13 +236,26 @@ def test_l4_registered_with_spec_correct_class():
 
 def test_l4_operational_model_families_registered():
     # v0.1 expanded the design's 30 operational families with two extra linear
-    # baselines (bayesian_ridge, huber) wired to sklearn estimators.
-    assert len(OPERATIONAL_MODEL_FAMILIES) >= 30
+    # baselines (bayesian_ridge, huber). The PR-B honesty pass then demoted
+    # 5 misleading-implementation families (factor_augmented_var, BVAR x2,
+    # MRF, DFM-MM) so the operational tuple is now ~27.
+    assert len(OPERATIONAL_MODEL_FAMILIES) >= 25
     assert all(get_family_status(family) == "operational" for family in OPERATIONAL_MODEL_FAMILIES)
 
 
-def test_l4_4_future_model_families_registered():
-    assert set(FUTURE_MODEL_FAMILIES) == {"midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas"}
+def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
+    # PR-B honesty pass: 5 families demoted from operational/planned to
+    # future because their v0.1 runtime did not match the named procedure.
+    expected_future = {
+        "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
+        # PR-B demotions
+        "factor_augmented_var",
+        "bvar_minnesota",
+        "bvar_normal_inverse_wishart",
+        "macroeconomic_random_forest",
+        "dfm_mixed_mariano_murasawa",
+    }
+    assert expected_future <= set(FUTURE_MODEL_FAMILIES)
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
 
 
