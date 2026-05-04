@@ -134,9 +134,19 @@ def _resolve_seed(recipe_root: dict[str, Any]) -> int | None:
 def _apply_seed(seed: int | None) -> None:
     if seed is None:
         return
-    random.seed(int(seed))
-    np.random.seed(int(seed) % (2**32))
-    os.environ.setdefault("PYTHONHASHSEED", str(int(seed)))
+    seed_int = int(seed)
+    random.seed(seed_int)
+    np.random.seed(seed_int % (2**32))
+    os.environ.setdefault("PYTHONHASHSEED", str(seed_int))
+    # Propagate to torch when available so lstm/gru/transformer recipes are
+    # bit-exact replicable. Best-effort: torch is an optional dependency.
+    try:
+        import torch  # type: ignore
+    except ImportError:
+        return
+    torch.manual_seed(seed_int)
+    if hasattr(torch, "cuda") and torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed_int)
 
 
 # ---------------------------------------------------------------------------
