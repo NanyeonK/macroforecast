@@ -313,7 +313,20 @@ def test_execute_minimal_forecast_materializes_enabled_l7_importance():
 def test_execute_minimal_forecast_rejects_unknown_family():
     yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: nonexistent_family_xyz")
 
-    with pytest.raises(ValueError, match="model family is future or unknown"):
+    # The L4 schema rejects via the params_schema options check first
+    # ("unknown model family 'X'") and the validator hard rule second
+    # ("model family is future or unknown ..."). Either is fine; both mean
+    # the recipe was rejected before ever reaching ``_build_l4_model``.
+    with pytest.raises(ValueError, match=r"(unknown model family|model family is future)"):
+        execute_minimal_forecast(yaml_text)
+
+
+def test_execute_minimal_forecast_rejects_demoted_future_family():
+    # PR-B of the v0.1 honesty pass: macroeconomic_random_forest /
+    # bvar_minnesota / etc. are now ``future`` -- the validator must
+    # hard-reject before the runtime tries to build the estimator.
+    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: macroeconomic_random_forest")
+    with pytest.raises(ValueError, match=r"future or unknown"):
         execute_minimal_forecast(yaml_text)
 
 

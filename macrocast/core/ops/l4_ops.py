@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from .registry import Rule, register_op
+from ..status import FUTURE, OPERATIONAL, ItemStatus, is_runnable
 from ..types import L1RegimeMetadataArtifact, L3FeaturesArtifact, L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact
 
 
+# Families whose runtime fully matches the published procedure named in
+# the design (see ``plans/design/part2_l2_l3_l4.md`` § L4 Model family
+# library). Schema-validates and runs end-to-end.
 OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "ar_p",
     "ols",
@@ -16,7 +20,6 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "huber",
     "var",
     "factor_augmented_ar",
-    "factor_augmented_var",
     "principal_component_regression",
     "decision_tree",
     "random_forest",
@@ -33,33 +36,52 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "gru",
     "transformer",
     "knn",
+)
+
+# Families whose v0.1 runtime did *not* faithfully implement the design's
+# named procedure (see PR #163 codex review). Validator hard-rejects these
+# so users do not silently receive numbers from the wrong algorithm.
+# Each item has a tracking issue for v0.2 implementation; see
+# ``plans/design/part2_l2_l3_l4.md`` § L4 for the gap description.
+#
+# - factor_augmented_var: no runtime wrapper at all (was a silent
+#   ``NotImplementedError`` at fit time).
+# - bvar_minnesota / bvar_normal_inverse_wishart: ``_BayesianVAR`` wrapper
+#   delegates to plain ``_VARWrapper`` and does *not* apply Minnesota /
+#   normal-inverse-Wishart prior shrinkage.
+# - macroeconomic_random_forest: ``_MRFWrapper`` is a plain
+#   ``RandomForestRegressor`` augmented with a time_trend column, not the
+#   Coulombe (2024) GTVP local-linear forest with asymmetric loss.
+# - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
+#   approximation, not the Mariano-Murasawa Kalman state-space EM.
+FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
+    # demoted in PR-B of the v0.1 honesty pass
+    "factor_augmented_var",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
-)
-
-# ``planned`` families have a runtime wrapper that *runs* but is an
-# acknowledged approximation of the published method (see the wrapper's
-# docstring and ``plans/design/part2_l2_l3_l4.md`` for the gap). They are
-# accepted by the L4 validator like operational families so existing recipes
-# do not break, but downstream consumers may flag them via
-# ``get_family_status(family) == "planned"``.
-PLANNED_MODEL_FAMILIES: tuple[str, ...] = (
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
-)
-
-FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
+    # always future (Phase 1 design)
     "midas_almon",
     "midas_beta",
     "midas_step",
     "dfm_unrestricted_midas",
 )
 
-MODEL_FAMILY_STATUS = {
-    **{family: "operational" for family in OPERATIONAL_MODEL_FAMILIES},
-    **{family: "planned" for family in PLANNED_MODEL_FAMILIES},
-    **{family: "future" for family in FUTURE_MODEL_FAMILIES},
+
+# Back-compat shim: previous releases exposed ``PLANNED_MODEL_FAMILIES``
+# as the bucket for "operational schema + approximation runtime". The
+# v0.1 honesty pass collapses planned -> future. The empty tuple is kept
+# so external imports do not crash; new code should use
+# ``FUTURE_MODEL_FAMILIES`` and check :func:`get_family_status`.
+PLANNED_MODEL_FAMILIES: tuple[str, ...] = ()
+
+
+MODEL_FAMILY_STATUS: dict[str, ItemStatus] = {
+    **{family: OPERATIONAL for family in OPERATIONAL_MODEL_FAMILIES},
+    **{family: FUTURE for family in FUTURE_MODEL_FAMILIES},
 }
+
 
 SEARCH_ALGORITHMS = ("none", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm", "cv_path")
 FORECAST_STRATEGIES = ("direct", "iterated", "path_average")
@@ -68,32 +90,27 @@ REFIT_POLICIES = ("every_origin", "every_n_origins", "single_fit")
 VALIDATION_METHODS = ("expanding_walk_forward", "rolling_walk_forward", "kfold", "time_series_split")
 
 
-def get_family_status(family: str) -> str:
-    """Return the recorded family status string.
+def get_family_status(family: str) -> ItemStatus:
+    """Return the canonical 2-value :class:`ItemStatus` for ``family``.
 
-    The literal value may still be a legacy ``planned`` -- callers that
-    care only about runnability should use
-    :func:`macrocast.core.status.is_runnable` (which normalises legacy
-    aliases) or compare against the constants exported from
-    :mod:`macrocast.core.status`. PR-B will collapse ``planned`` into
-    the 2-value vocabulary.
+    Compare against :data:`macrocast.core.status.OPERATIONAL` /
+    :data:`macrocast.core.status.FUTURE` rather than string literals.
     """
 
-    return MODEL_FAMILY_STATUS[family]
+    return MODEL_FAMILY_STATUS.get(family, OPERATIONAL)
 
 
 def _family_operational(dag, nref) -> bool:
-    """Allow ``operational`` and ``planned`` families through the L4 validator;
-    ``future`` (and unknown) families are rejected. ``planned`` families run
-    via approximation wrappers -- callers can detect this via
-    ``get_family_status(family) == 'planned'``.
+    """Validator predicate: only ``operational`` families pass.
 
-    Behaviour change in PR-B: ``planned`` is collapsed to ``future`` and
-    these families will no longer pass the validator.
+    Future families (incl. the v0.1-honesty demotions: factor_augmented_var,
+    BVAR Minnesota / NIW, macroeconomic_random_forest,
+    dfm_mixed_mariano_murasawa) are hard-rejected at recipe validation time
+    with a pointer at the v0.2 implementation issue.
     """
 
     family = dag.node(nref.node_id).params.get("family")
-    return MODEL_FAMILY_STATUS.get(family) in ("operational", "planned")
+    return is_runnable(MODEL_FAMILY_STATUS.get(family))
 
 
 def _valid_strategy(dag, nref) -> bool:
@@ -115,7 +132,7 @@ def _valid_strategy(dag, nref) -> bool:
         "validation_method": {"type": str, "default": "expanding_walk_forward", "sweepable": True, "options": VALIDATION_METHODS},
     },
     hard_rules=(
-        Rule("hard", _family_operational, "model family is future or unknown"),
+        Rule("hard", _family_operational, "model family is future or unknown -- see v0.2 implementation tracker on GitHub"),
         Rule("hard", _valid_strategy, "forecast_strategy must be one of direct, iterated, path_average"),
     ),
 )

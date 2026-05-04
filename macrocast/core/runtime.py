@@ -1179,7 +1179,8 @@ class _TorchSequenceModel:
         self.n_epochs = max(1, int(n_epochs))
         self.random_state = int(random_state)
         self._model = None
-        self._fallback = None
+        # Note: no silent MLP fallback. fit() raises NotImplementedError if
+        # torch is unavailable so the user picks family='mlp' deliberately.
 
     def _build_torch_model(self, n_features: int):
         import torch
@@ -1245,15 +1246,15 @@ class _TorchSequenceModel:
                 loss.backward()
                 optim.step()
             self._model = model
-        except ImportError:
-            from sklearn.neural_network import MLPRegressor
-
-            self._fallback = MLPRegressor(
-                hidden_layer_sizes=(self.hidden_size,),
-                max_iter=int(self.n_epochs * 4),
-                random_state=self.random_state,
-            )
-            self._fallback.fit(X.fillna(0.0), y)
+        except ImportError as exc:
+            # No silent MLP fallback: a sequence-model recipe asked for
+            # ``lstm/gru/transformer`` because it wants the actual sequence
+            # cell, not a feed-forward network. Raise a clear actionable
+            # error so the user can install the [deep] extra (or pick mlp).
+            raise NotImplementedError(
+                f"family={self.kind!r} requires torch; install with `pip install 'macrocast[deep]'` "
+                f"or pick family='mlp' for a feed-forward network."
+            ) from exc
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -1265,8 +1266,6 @@ class _TorchSequenceModel:
             with torch.no_grad():
                 preds = self._model(torch.from_numpy(seq)).numpy()
             return preds
-        if self._fallback is not None:
-            return self._fallback.predict(X.fillna(0.0))
         return np.zeros(len(X))
 
 
