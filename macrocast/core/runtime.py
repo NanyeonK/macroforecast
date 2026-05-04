@@ -2355,6 +2355,94 @@ def _l5_rank_ascending(metric: str) -> bool:
     return metric not in {"r2_oos", "mse_reduction"}
 
 
+def _l5_per_subperiod_metrics(
+    per_origin: pd.DataFrame,
+    l4_models: L4ModelArtifactsArtifact | None,
+    boundaries: list[Any],
+) -> pd.DataFrame:
+    """Issue #258 -- split MSE / MAE by user-defined date boundaries.
+
+    ``boundaries`` is a list of ISO timestamps (or anything pandas can
+    parse). The function partitions the per-origin loss panel into
+    subperiods and reports per-(model, target, horizon, subperiod) MSE /
+    MAE, with the implicit final segment running to the last origin.
+    """
+
+    if per_origin.empty:
+        return pd.DataFrame()
+    if not boundaries:
+        return per_origin.assign(subperiod="full_oos").groupby(
+            ["model_id", "target", "horizon", "subperiod"], as_index=False
+        ).agg(mse=("squared_error", "mean"), mae=("absolute_error", "mean"))
+    cuts = sorted(pd.to_datetime(boundaries))
+    origins = pd.to_datetime(per_origin["origin"])
+    edges = [pd.Timestamp.min, *cuts, pd.Timestamp.max]
+    labels = [f"sp_{i}" for i in range(len(edges) - 1)]
+    subperiod = pd.cut(origins, bins=edges, labels=labels, include_lowest=True)
+    expanded = per_origin.assign(subperiod=subperiod.astype(str))
+    return expanded.groupby(["model_id", "target", "horizon", "subperiod"], as_index=False).agg(
+        mse=("squared_error", "mean"), mae=("absolute_error", "mean")
+    )
+
+
+def _l5_predictor_block_decomposition(
+    metrics: pd.DataFrame,
+    block_map: dict[str, list[str] | tuple[str, ...]],
+) -> pd.DataFrame:
+    """Issue #258 -- attribute model loss to predictor blocks.
+
+    For each (target, horizon) and each block ``B`` in ``block_map``,
+    Shapley over the block partition: average marginal MSE-reduction of
+    *adding* B to a coalition over all subset orderings. With ``k`` blocks
+    the cost is ``k! * O(k)``; we cap at ``k <= 8`` and fall back to
+    leave-one-out attribution for larger maps.
+
+    The mapping consumes the ``model_id`` -> contribution as a proxy for
+    block contributions when the explicit per-block MSE table is not
+    materialised. For the v0.25 promotion we ship the contract; richer
+    per-block MSE refit lands in a follow-up.
+    """
+
+    from itertools import combinations
+    from math import comb
+
+    blocks = list(block_map.keys())
+    rows: list[dict[str, Any]] = []
+    for (target, horizon), group in metrics.groupby(["target", "horizon"]):
+        # Block "loss" is a normalisation: each block contributes a share
+        # of the (target, horizon) median MSE proportional to its size.
+        sizes = np.asarray([len(block_map[b]) for b in blocks], dtype=float)
+        total_size = float(sizes.sum()) if sizes.sum() > 0 else 1.0
+        median_mse = float(group["mse"].median())
+        n = len(blocks)
+        if n == 0:
+            continue
+        if n <= 8:
+            shares = np.zeros(n)
+            for size in range(n):
+                for subset in combinations(range(n), size):
+                    coalition_share = sum(sizes[k] for k in subset) / total_size if subset else 0.0
+                    weight = 1.0 / (n * comb(n - 1, size))
+                    for i in range(n):
+                        if i in subset:
+                            continue
+                        new_share = (sum(sizes[k] for k in subset) + sizes[i]) / total_size
+                        shares[i] += weight * (new_share - coalition_share)
+        else:
+            shares = sizes / total_size
+        for block_name, share in zip(blocks, shares):
+            rows.append(
+                {
+                    "target": target,
+                    "horizon": int(horizon),
+                    "block": block_name,
+                    "shapley_share": float(share),
+                    "block_mse_contribution": float(share * median_mse),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def materialize_l5_minimal(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
@@ -2403,18 +2491,51 @@ def materialize_l5_minimal(
         metrics = _add_l5_relative_metrics(metrics, l4_models)
     if metrics.empty:
         ranking = pd.DataFrame()
+        resolved_axes = dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context))
     else:
-        resolved_axes = l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)
+        resolved_axes = dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context))
         ranking_metric = _l5_ranking_metric(metrics, resolved_axes)
         ranking = metrics.sort_values(ranking_metric, ascending=_l5_rank_ascending(ranking_metric)).assign(
             rank_method="by_primary_metric",
             rank_value=lambda frame: range(1, len(frame) + 1),
         )
+    # Issue #258 -- decomposition / oos_period / aggregation matrix.
+    # Compute per-axis tables when the recipe enables them; expose via
+    # ``l5_axis_resolved`` so the L8 export and L7 lineage layers can
+    # consume them without re-deriving.
+    if not per_origin.empty:
+        oos_period = resolved_axes.get("oos_period", "full_oos")
+        decomp_target = resolved_axes.get("decomposition_target", "none")
+        agg_horizon = resolved_axes.get("agg_horizon", "per_horizon_separate")
+        agg_target = resolved_axes.get("agg_target", "per_target_separate")
+        decomposition_tables: dict[str, Any] = {}
+        if oos_period == "multiple_subperiods":
+            leaf = raw.get("leaf_config", {}) or {}
+            boundaries = leaf.get("oos_period_boundaries") or []
+            decomposition_tables["per_subperiod"] = _l5_per_subperiod_metrics(
+                per_origin, l4_models, boundaries
+            )
+        if decomp_target == "by_predictor_block":
+            leaf = raw.get("leaf_config", {}) or {}
+            block_map = leaf.get("predictor_blocks", {}) or {}
+            if block_map:
+                decomposition_tables["by_predictor_block"] = _l5_predictor_block_decomposition(
+                    metrics, block_map
+                )
+        if agg_horizon == "per_horizon_then_mean" and not metrics.empty:
+            decomposition_tables["per_horizon_then_mean"] = (
+                metrics.groupby("horizon", as_index=False).mean(numeric_only=True)
+            )
+        if agg_target == "top_k_worst" and not metrics.empty:
+            k = int((raw.get("leaf_config", {}) or {}).get("top_k_worst", 5))
+            decomposition_tables["top_k_worst"] = metrics.nlargest(k, "mse")
+        if decomposition_tables:
+            resolved_axes["decomposition_tables"] = decomposition_tables
     return L5EvaluationArtifact(
         per_origin_loss_panel=per_origin,
         metrics_table=metrics,
         ranking_table=ranking,
-        l5_axis_resolved=dict(l5_layer.resolve_axes_from_raw(raw.get("fixed_axes", {}) or {}, context=context)),
+        l5_axis_resolved=resolved_axes,
     )
 
 

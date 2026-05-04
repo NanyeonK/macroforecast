@@ -317,6 +317,10 @@ def _json_safe(value: Any) -> Any:
         return value.item()
     if isinstance(value, np.ndarray):
         return [_json_safe(item) for item in value.tolist()]
+    if isinstance(value, pd.DataFrame):
+        return value.reset_index().to_dict("records")
+    if isinstance(value, pd.Series):
+        return value.to_dict()
     if isinstance(value, dict):
         return {str(_json_safe(k)) if not isinstance(k, str) else k: _json_safe(v) for k, v in value.items()}
     if isinstance(value, (list, tuple, set)):
