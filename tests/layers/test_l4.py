@@ -98,11 +98,12 @@ def test_l4_macroeconomic_random_forest_operational_after_gtvp_landing():
     assert not report.has_hard_errors
 
 
-def test_l4_dfm_mixed_mariano_murasawa_rejected_as_future():
+def test_l4_dfm_mixed_mariano_murasawa_operational_after_kalman_landing():
+    # Issue #188 lands a real Kalman state-space MLE (statsmodels
+    # DynamicFactor) for the DFM-MM family; the validator must accept it.
     layer = parse_layer_yaml(make_l4_yaml(family="dfm_mixed_mariano_murasawa", n_factors=2))
     report = validate_layer(layer)
-    assert report.has_hard_errors
-    assert any("future or unknown" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
 
 
 def test_l4_midas_almon_future_rejected():
@@ -249,16 +250,16 @@ def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
     # PR-B demotions remain future until their tracking issue lands.
     expected_future = {
         "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
-        "dfm_mixed_mariano_murasawa",
     }
     assert expected_future <= set(FUTURE_MODEL_FAMILIES)
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
-    # BVAR + FAVAR + MRF must NOT be in FUTURE (re-promoted in v0.2).
+    # Every honesty-pass demotion must be promoted by v0.2 follow-ups.
     for promoted in (
         "bvar_minnesota",
         "bvar_normal_inverse_wishart",
         "factor_augmented_var",
         "macroeconomic_random_forest",
+        "dfm_mixed_mariano_murasawa",
     ):
         assert promoted not in FUTURE_MODEL_FAMILIES
 
