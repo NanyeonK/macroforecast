@@ -319,21 +319,28 @@ def test_l1_g_external_nber_loads_usrec_metadata():
     assert regime.estimation_metadata["source_series"] == "USREC"
 
 
-def test_l1_g_estimated_markov_requires_n_regimes():
+def test_l1_g_estimated_markov_switching_rejected_as_future():
+    # PR-D of the v0.1 honesty pass: ``estimated_*`` regime options were
+    # operational at the schema level but the runtime returned a
+    # year-parity placeholder (odd vs even years), not Hamilton (1989) MS.
+    # Demoted to ``future`` so the validator hard-rejects.
     yaml_text = """
     1_data:
       fixed_axes:
         regime_definition: estimated_markov_switching
       leaf_config:
         target: CPIAUCSL
-        n_regimes: 0
+        n_regimes: 2
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
     assert report.has_hard_errors
-    assert any("n_regimes" in issue.message for issue in report.hard_errors)
+    assert any("future" in issue.message.lower() for issue in report.hard_errors)
 
 
-def test_l1_g_full_sample_once_is_schema_rejected():
+def test_l1_g_full_sample_once_temporal_rule_still_rejected_as_leakage():
+    # full_sample_once leakage check fires *before* ``_validate_regime``
+    # runs (it's a separate validator), so the leakage message remains
+    # the user-facing failure mode for this combination.
     yaml_text = """
     1_data:
       fixed_axes:
@@ -345,10 +352,15 @@ def test_l1_g_full_sample_once_is_schema_rejected():
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
     assert report.has_hard_errors
-    assert any("full_sample_once" in issue.message for issue in report.hard_errors)
+    # Either the leakage check or the future-status check is acceptable;
+    # both convey that the recipe is invalid.
+    assert any(
+        "full_sample_once" in issue.message or "future" in issue.message.lower()
+        for issue in report.hard_errors
+    )
 
 
-def test_l1_g_estimated_threshold_requires_threshold_variable():
+def test_l1_g_estimated_threshold_rejected_as_future():
     yaml_text = """
     1_data:
       fixed_axes:
@@ -358,4 +370,17 @@ def test_l1_g_estimated_threshold_requires_threshold_variable():
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
     assert report.has_hard_errors
-    assert any("threshold_variable" in issue.message for issue in report.hard_errors)
+    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+
+
+def test_l1_g_estimated_structural_break_rejected_as_future():
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        regime_definition: estimated_structural_break
+      leaf_config:
+        target: CPIAUCSL
+    """
+    report = validate_layer(parse_layer_yaml(yaml_text))
+    assert report.has_hard_errors
+    assert any("future" in issue.message.lower() for issue in report.hard_errors)

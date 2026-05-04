@@ -3864,36 +3864,17 @@ def _materialize_regime(resolved: dict[str, Any], leaf_config: dict[str, Any], s
         target_series_name = leaf_config.get("regime_estimation_series") or leaf_config.get("target")
         if target_series_name is None:
             return base
-        # The raw panel column will be available after L2; for L1 we cannot
-        # estimate, so we leave a deterministic 2-regime split based on rolling
-        # variance as a stable seed for downstream tests.
-        return _estimate_simple_regime(definition, sample_index, base)
+        # PR-D of the v0.1 honesty pass: ``estimated_*`` regime options are
+        # rejected by the L1 layer validator before this runtime is reached,
+        # so we should never see one here. The validator's error message
+        # points at the v0.2 implementation tracker; raising here is a
+        # second line of defence in case a caller bypasses validation.
+        raise NotImplementedError(
+            f"regime_definition={definition!r} is future -- Hamilton (1989) "
+            "Markov-switching, Tong (1990) SETAR, and Bai-Perron break "
+            "detection are scheduled for v0.2; see GitHub issue tracker."
+        )
     return base
-
-
-def _estimate_simple_regime(definition: str, sample_index: pd.DatetimeIndex, base: L1RegimeMetadataArtifact) -> L1RegimeMetadataArtifact:
-    """Deterministic 2-regime split used when an estimated regime is requested
-    but the underlying series isn't available at L1 time. Produces high/low
-    labels alternating by year so downstream code paths exercise correctly."""
-
-    labels = pd.Series(np.where(sample_index.year % 2 == 0, "regime_a", "regime_b"), index=sample_index)
-    return L1RegimeMetadataArtifact(
-        definition=base.definition,
-        n_regimes=2,
-        regime_label_series=Series(
-            shape=labels.shape,
-            name=f"estimated_{definition}",
-            metadata=SeriesMetadata(values={"data": labels, "estimator": "deterministic_year_parity_seed"}),
-        ),
-        regime_probabilities=None,
-        transition_matrix=None,
-        estimation_temporal_rule=base.estimation_temporal_rule,
-        estimation_metadata={
-            **base.estimation_metadata,
-            "estimator_status": "deterministic_seed",
-            "note": "Replace with statsmodels MarkovRegression/threshold model in a custom L1 hook.",
-        },
-    )
 
 
 # NBER official US recession dates (start, end) inclusive, monthly.
