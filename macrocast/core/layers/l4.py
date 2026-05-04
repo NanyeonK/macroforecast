@@ -281,6 +281,17 @@ def _validate_benchmark(raw: dict[str, Any]) -> list[Issue]:
     return []
 
 
+def _is_user_registered_family(family: str) -> bool:
+    """Allow ``macrocast.custom.register_model`` registered names through
+    the L4 validator (issue #216)."""
+
+    try:
+        from ...custom import is_custom_model
+    except ImportError:  # pragma: no cover - macrocast.custom is package-local
+        return False
+    return bool(is_custom_model(family))
+
+
 def _validate_fit_nodes(raw: dict[str, Any]) -> list[Issue]:
     issues = []
     leaf = raw.get("leaf_config", {}) or {}
@@ -291,7 +302,7 @@ def _validate_fit_nodes(raw: dict[str, Any]) -> list[Issue]:
         family = params.get("family", "ridge")
         if MODEL_FAMILY_STATUS.get(family) == "future":
             issues.append(_issue(f"l4.{node['id']}", f"model family {family} is future and not executable"))
-        elif family not in MODEL_FAMILY_STATUS:
+        elif family not in MODEL_FAMILY_STATUS and not _is_user_registered_family(family):
             issues.append(_issue(f"l4.{node['id']}", f"unknown model family {family!r}"))
         strategy = params.get("forecast_strategy", "direct")
         if strategy not in {"direct", "iterated", "path_average"}:
