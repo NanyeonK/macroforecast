@@ -2157,12 +2157,25 @@ def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4Mode
 
 
 def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> dict[str, Any]:
-    """MCS / SPA / Reality Check / StepM via stationary block bootstrap.
+    """Approximate MCS / SPA / Reality Check / StepM from per-(target, horizon)
+    summary losses.
 
-    The implementation follows Hansen (2005) MCS using the t_max statistic
-    over pairwise loss differentials, with bootstrap resampling for the null
-    distribution. SPA / Reality Check / StepM share the same bootstrap pool
-    and differ only in studentization and inclusion criteria.
+    .. warning::
+
+        This is **not** Hansen (2005)'s stationary-block-bootstrap MCS. The L5
+        sink only carries one MSE value per (model, target, horizon), so
+        per-origin loss differentials are unavailable here. Instead we draw a
+        parametric Gaussian null with scale set by the cross-sectional spread
+        of model-mean losses, evaluate ``t_max = max_i |l_i - mean(l)|`` on the
+        bootstrap pool, and include in MCS the models whose mean-deviation
+        falls below the ``(1 - alpha)`` bootstrap quantile. SPA / Reality Check
+        share the same bootstrap pool; StepM returns the complement of the MCS
+        set rather than running the full Romano-Wolf step-down procedure.
+
+        For academic-grade MCS run a bespoke per-origin loss-panel pipeline
+        (TODO follow-up issue): expose a per-(model, origin, target, horizon)
+        loss tensor on the L5 artifact, then resample (block_length, n_boot)
+        from it.
     """
 
     if metrics.empty:
@@ -2185,10 +2198,9 @@ def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> di
             reality[(target, int(horizon))] = 1.0
             stepm[(target, int(horizon), alpha)] = set()
             continue
-        # MCS bootstrap on pairwise differentials. We don't have the per-origin
-        # loss panel here (only summary metrics), so fall back to a parametric
-        # bootstrap drawing each model's loss with Gaussian noise scaled by the
-        # cross-sectional spread. Real per-origin MCS lives in `_mcs_from_errors`.
+        # Parametric Gaussian bootstrap over the cross-sectional spread of
+        # model-mean losses (see warning in docstring -- this is *not* a
+        # block bootstrap on per-origin loss differentials).
         diffs = loss.values - loss.values.mean()
         scale = float(np.std(diffs)) if np.std(diffs) > 0 else 1e-6
         boot_max = np.empty(n_boot)
@@ -2205,7 +2217,15 @@ def _l6_multiple_model_results(metrics: pd.DataFrame, sub: dict[str, Any]) -> di
         spa[(target, int(horizon))] = float(p_value)
         reality[(target, int(horizon))] = float(p_value)
         stepm[key] = set(models) - included
-    return {"mcs_inclusion": mcs, "spa_p_values": spa, "reality_check_p_values": reality, "stepm_rejected": stepm, "bootstrap_n_replications": n_boot, "block_length": block_length}
+    return {
+        "mcs_inclusion": mcs,
+        "spa_p_values": spa,
+        "reality_check_p_values": reality,
+        "stepm_rejected": stepm,
+        "bootstrap_n_replications": n_boot,
+        "block_length": block_length,
+        "bootstrap_kind": "parametric_gaussian_cross_sectional",
+    }
 
 
 def _l6_direction_results(errors: pd.DataFrame, sub: dict[str, Any], leaf: dict[str, Any]) -> dict[tuple[Any, ...], Any]:
@@ -2382,7 +2402,6 @@ def _newey_west_variance(values: np.ndarray, *, lag: int) -> float:
         gamma_k = float(np.dot(values[:-k], values[k:]) / n)
         variance += 2.0 * weight * gamma_k
     return variance
-    return None, None
 
 
 def _autocorr(values: pd.Series, lag: int) -> float:
