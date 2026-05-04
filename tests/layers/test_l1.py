@@ -319,22 +319,22 @@ def test_l1_g_external_nber_loads_usrec_metadata():
     assert regime.estimation_metadata["source_series"] == "USREC"
 
 
-def test_l1_g_estimated_markov_switching_rejected_as_future():
-    # PR-D of the v0.1 honesty pass: ``estimated_*`` regime options were
-    # operational at the schema level but the runtime returned a
-    # year-parity placeholder (odd vs even years), not Hamilton (1989) MS.
-    # Demoted to ``future`` so the validator hard-rejects.
+def test_l1_g_estimated_markov_switching_operational_after_hamilton_landing():
+    # Issue #195 lands the real Hamilton (1989) Markov regression via
+    # ``statsmodels.tsa.regime_switching.MarkovRegression``; the validator
+    # should accept the family. Note ``regime_estimation_temporal_rule``
+    # must be one of the leakage-safe options.
     yaml_text = """
     1_data:
       fixed_axes:
         regime_definition: estimated_markov_switching
+        regime_estimation_temporal_rule: expanding_window_per_origin
       leaf_config:
         target: CPIAUCSL
         n_regimes: 2
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
-    assert report.has_hard_errors
-    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
 
 
 def test_l1_g_full_sample_once_temporal_rule_still_rejected_as_leakage():

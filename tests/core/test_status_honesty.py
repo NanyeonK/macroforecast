@@ -39,7 +39,8 @@ from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 _DEMOTED_L4_FAMILIES: tuple[str, ...] = ()
 
 _DEMOTED_L1_REGIMES = (
-    "estimated_markov_switching",
+    # estimated_markov_switching re-promoted in v0.2 (#195) via the real
+    # Hamilton (1989) Markov regression.
     "estimated_threshold",
     "estimated_structural_break",
 )
@@ -195,7 +196,7 @@ def test_count_of_demotions_matches_documentation():
     assert len(_DEMOTED_L4_FAMILIES) == 0
     # 11 L7 ops
     assert len(HONESTY_DEMOTED_L7_OPS) == 11
-    # 3 L1 estimated regimes
-    assert len(_DEMOTED_L1_REGIMES) == 3
-    # Combined honest count after every L4 promotion: 14 items.
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 14
+    # 2 L1 estimated regimes after #195 (Hamilton MS) promotion
+    assert len(_DEMOTED_L1_REGIMES) == 2
+    # Combined honest count after L4 + Hamilton MS promotions: 13 items.
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 13
