@@ -3683,11 +3683,40 @@ def _as_series(value: Any, *, name: str) -> pd.Series:
 
 
 def _scale_frame(frame: pd.DataFrame, *, method: str) -> pd.DataFrame:
-    if method not in {"zscore", "standard", "standardize"}:
-        raise NotImplementedError(f"minimal L3 runtime does not support scale method {method!r}")
-    mean = frame.mean().to_numpy()
-    std = frame.std(ddof=0).replace(0, pd.NA).to_numpy()
-    scaled = (frame.to_numpy() - mean) / std
+    """Standardise a Panel using one of the design-listed scale methods.
+
+    Three operational methods (matches the L3 design table in
+    ``plans/design/part2_l2_l3_l4.md`` § L3 Step library / ``scale``):
+
+    * ``zscore`` / ``standard`` / ``standardize`` -- ``(x - mean) / std``
+      (population std, ddof=0; matches sklearn ``StandardScaler``).
+    * ``robust`` -- ``(x - median) / IQR`` where IQR is the 75th - 25th
+      percentile gap (matches sklearn ``RobustScaler`` with default
+      ``quantile_range=(25.0, 75.0)``).
+    * ``minmax`` -- ``(x - min) / (max - min)`` over the column
+      (matches sklearn ``MinMaxScaler`` with default ``feature_range=(0, 1)``).
+
+    PR-E of the v0.1 honesty pass: ``robust`` and ``minmax`` were listed
+    in the design as operational but only ``zscore`` was implemented;
+    selecting either of the other two raised ``NotImplementedError``.
+    """
+
+    arr = frame.to_numpy(dtype=float)
+    if method in {"zscore", "standard", "standardize"}:
+        mean = frame.mean().to_numpy()
+        std = frame.std(ddof=0).replace(0, pd.NA).to_numpy()
+        scaled = (arr - mean) / std
+    elif method == "robust":
+        median = frame.median().to_numpy()
+        iqr = (frame.quantile(0.75) - frame.quantile(0.25)).replace(0, pd.NA).to_numpy()
+        scaled = (arr - median) / iqr
+    elif method == "minmax":
+        col_min = frame.min().to_numpy()
+        col_max = frame.max().to_numpy()
+        col_range = pd.Series(col_max - col_min, index=frame.columns).replace(0, pd.NA).to_numpy()
+        scaled = (arr - col_min) / col_range
+    else:
+        raise NotImplementedError(f"L3 runtime does not support scale method {method!r}")
     return pd.DataFrame(scaled, index=frame.index, columns=frame.columns)
 
 
