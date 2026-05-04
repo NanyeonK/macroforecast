@@ -19,12 +19,14 @@ Subsequent infrastructure PRs add:
 from __future__ import annotations
 
 from . import introspect, option_docs
+from .builder import RecipeBuilder
 from .option_docs import OPTION_DOCS, CodeExample, OptionDoc, Reference
 
 __all__ = [
     "CodeExample",
     "OPTION_DOCS",
     "OptionDoc",
+    "RecipeBuilder",
     "Reference",
     "introspect",
     "option_docs",
