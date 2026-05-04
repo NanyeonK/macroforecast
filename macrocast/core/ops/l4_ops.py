@@ -40,6 +40,9 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     # Normal-Inverse-Wishart posterior mean estimator.
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
+    # Promoted in v0.2 (issue #184): two-stage Bernanke-Boivin-Eliasz
+    # FAVAR (PCA factors + VAR(p) on (factors, target)).
+    "factor_augmented_var",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -60,7 +63,6 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
     # demoted in PR-B of the v0.1 honesty pass; remaining gaps
-    "factor_augmented_var",
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
     # always future (Phase 1 design)

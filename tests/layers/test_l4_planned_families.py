@@ -41,11 +41,9 @@ from macrocast.core.status import FUTURE, OPERATIONAL
 
 
 # v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart re-promoted
-# in PR for issues #185 / #186 (closed-form Minnesota / NIW posterior mean).
-# The remaining honesty-pass demotions stay future until their tracking
-# issue lands.
+# (#185 / #186) and factor_augmented_var re-promoted (#184). Remaining
+# honesty-pass demotions stay future until their tracking issue lands.
 _HONESTY_DEMOTED = (
-    "factor_augmented_var",
     "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
 )
