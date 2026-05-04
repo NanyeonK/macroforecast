@@ -2885,19 +2885,85 @@ def _l7_lineage_attribution(table: pd.DataFrame, metadata: L3MetadataArtifact, p
 
 
 def _l7_transformation_attribution(l5_eval: L5EvaluationArtifact, params: dict[str, Any]) -> L7TransformationAttributionArtifact:
+    """Issue #218 -- Shapley value over (cell × pipeline) tuples.
+
+    The L5 ``metrics_table`` carries one row per (pipeline = ``model_id``,
+    target, horizon). For each (target, horizon) group we treat each
+    pipeline as a player in a coalitional game whose value is the
+    *negative loss* of the average forecast within the coalition (the
+    standard ensemble-as-mean payoff). The Shapley value of pipeline ``i``
+    is its average marginal contribution over all subset orderings.
+
+    Three ``decomposition_method`` paths:
+
+    * ``shapley_over_pipelines`` (default): exhaustive Shapley over
+      coalitions; tractable for ≤ 8 pipelines per (target, horizon).
+    * ``marginal_addition``: ``loss_baseline - loss_with_i`` against the
+      worst-pipeline baseline.
+    * ``leave_one_out_pipeline``: ``loss_without_i - loss_full_ensemble``.
+    """
+
+    from itertools import combinations
+    from math import comb
+
     metrics = l5_eval.metrics_table
-    if metrics.empty:
-        summary = pd.DataFrame(columns=["pipeline", "target", "horizon", "contribution"])
-        contributions: dict[tuple[Any, ...], Any] = {}
-    else:
-        metric = params.get("loss_function", "mse")
-        metric = metric if metric in metrics.columns else "mse"
-        summary = metrics.assign(pipeline=metrics["model_id"]).rename(columns={metric: "contribution"})[["pipeline", "target", "horizon", "contribution"]]
-        contributions = {(row.target, int(row.horizon), row.pipeline): float(row.contribution) for row in summary.itertuples()}
+    method = params.get("decomposition_method", "shapley_over_pipelines")
+    metric = params.get("loss_function", "mse")
+    if metrics.empty or metric not in metrics.columns:
+        return L7TransformationAttributionArtifact(
+            pipeline_contributions={},
+            decomposition_method=method,
+            loss_function=metric,
+            baseline_pipeline=params.get("baseline_pipeline", "simplest"),
+            summary_table=pd.DataFrame(columns=["pipeline", "target", "horizon", "contribution"]),
+        )
+
+    rows: list[dict[str, Any]] = []
+    contributions: dict[tuple[Any, ...], float] = {}
+    for (target, horizon), group in metrics.groupby(["target", "horizon"]):
+        pipelines = group["model_id"].astype(str).tolist()
+        losses = group[metric].astype(float).to_numpy()
+        n = len(pipelines)
+        if n == 0:
+            continue
+        # Coalition value: payoff is the *negative* mean loss of the
+        # coalition (so a lower-loss subset has a higher value).
+        if method == "shapley_over_pipelines" and n <= 8:
+            shapley = np.zeros(n)
+            indices = list(range(n))
+            for size in range(n):
+                for subset in combinations(indices, size):
+                    subset_set = set(subset)
+                    coalition_loss = float(np.mean([losses[k] for k in subset])) if subset else 0.0
+                    weight = 1.0 / (n * comb(n - 1, size))
+                    for i in indices:
+                        if i in subset_set:
+                            continue
+                        new_subset = list(subset) + [i]
+                        new_loss = float(np.mean([losses[k] for k in new_subset]))
+                        # Marginal contribution: improvement (loss reduction).
+                        shapley[i] += weight * (coalition_loss - new_loss) if subset else weight * (-new_loss)
+            values = shapley
+        elif method == "leave_one_out_pipeline":
+            full_loss = float(np.mean(losses)) if n else 0.0
+            values = np.zeros(n)
+            for i in range(n):
+                without = [losses[j] for j in range(n) if j != i]
+                without_loss = float(np.mean(without)) if without else 0.0
+                values[i] = without_loss - full_loss
+        else:  # marginal_addition (worst-baseline)
+            baseline = float(losses.max())
+            values = baseline - losses
+        for pipeline, value in zip(pipelines, values):
+            rows.append(
+                {"pipeline": pipeline, "target": target, "horizon": int(horizon), "contribution": float(value)}
+            )
+            contributions[(target, int(horizon), pipeline)] = float(value)
+    summary = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["pipeline", "target", "horizon", "contribution"])
     return L7TransformationAttributionArtifact(
         pipeline_contributions=contributions,
-        decomposition_method=params.get("decomposition_method", "shapley_over_pipelines"),
-        loss_function=params.get("loss_function", "mse"),
+        decomposition_method=method,
+        loss_function=metric,
         baseline_pipeline=params.get("baseline_pipeline", "simplest"),
         summary_table=summary,
     )
