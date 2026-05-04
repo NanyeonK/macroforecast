@@ -43,6 +43,9 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     # Promoted in v0.2 (issue #184): two-stage Bernanke-Boivin-Eliasz
     # FAVAR (PCA factors + VAR(p) on (factors, target)).
     "factor_augmented_var",
+    # Promoted in v0.2 (issue #187): Coulombe (2024) GTVP via per-leaf
+    # local linear regressions on top of a time-aware random forest.
+    "macroeconomic_random_forest",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -62,8 +65,7 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
-    # demoted in PR-B of the v0.1 honesty pass; remaining gaps
-    "macroeconomic_random_forest",
+    # demoted in PR-B of the v0.1 honesty pass; remaining gap
     "dfm_mixed_mariano_murasawa",
     # always future (Phase 1 design)
     "midas_almon",

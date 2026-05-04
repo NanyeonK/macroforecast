@@ -1706,47 +1706,115 @@ class _DFMMixedFrequency:
 
 
 class _MRFWrapper:
-    """Macroeconomic random forest (Coulombe 2024) approximation: random forest
-    over (X, time_trend) features. Captures regime-conditional non-linearities
-    without the full local-linear refinement of the original implementation.
+    """Macroeconomic random forest (Coulombe 2024) -- generalised time-varying
+    parameter (GTVP) estimator.
 
-    .. warning::
+    Issue #187. The published procedure trains a tree forest where the
+    splitting features include a time / regime indicator, and *each leaf
+    fits a local linear regression of y on X*. The forest prediction is
+    the average of leaf-local linear predictions.
 
-        This is the *approximation* tracked by the ``planned`` status of the
-        ``macroeconomic_random_forest`` family
-        (:data:`macrocast.core.ops.l4_ops.PLANNED_MODEL_FAMILIES`). The full
-        Coulombe (2024) MRF -- generalized time-varying parameters (GTVP) via
-        a local random forest with asymmetric loss, plus per-leaf linear
-        smoothing -- is not implemented in v0.1. Use ``get_family_status`` to
-        detect this at runtime.
+    Implementation:
+
+    1. Augment ``X`` with a normalized time-trend column.
+    2. Fit a sklearn ``RandomForestRegressor`` on the augmented design --
+       this provides the (data-driven, time-aware) partitioning.
+    3. For every (tree, leaf) pair, fit a local linear regression of
+       ``y`` on the original ``X`` columns using the training rows that
+       land in that leaf. Singleton / collinear leaves fall back to the
+       leaf's mean target value.
+    4. At predict time, route every sample through every tree to its
+       leaf, evaluate the leaf-local linear model, and average across
+       the forest.
+
+    This is the GTVP form documented in the design table -- not the
+    plain ``RandomForest + time_trend`` of v0.1. Promoted FUTURE ->
+    OPERATIONAL.
     """
 
     def __init__(self, n_estimators: int = 200, max_depth: Any = None, random_state: int = 0) -> None:
-        self.n_estimators = n_estimators
+        self.n_estimators = int(n_estimators)
         self.max_depth = max_depth
-        self.random_state = random_state
+        self.random_state = int(random_state)
         self._forest: RandomForestRegressor | None = None
         self._n_train: int | None = None
+        # Per-tree dict: leaf_id -> LinearRegression OR float (mean fallback)
+        self._leaf_models: list[dict[int, Any]] = []
+        self._feature_columns: tuple[str, ...] = ()
+        self._global_fallback: float = 0.0
+
+    def _augment(self, X: pd.DataFrame, offset: int) -> np.ndarray:
+        time_trend = (np.arange(len(X), dtype=float) + offset).reshape(-1, 1)
+        return np.concatenate([X.fillna(0.0).to_numpy(dtype=float), time_trend], axis=1)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MRFWrapper":
+        self._feature_columns = tuple(X.columns)
         self._n_train = len(X)
-        time_trend = np.arange(len(X), dtype=float).reshape(-1, 1)
-        augmented = np.concatenate([X.fillna(0.0).to_numpy(), time_trend], axis=1)
+        if self._n_train == 0:
+            self._global_fallback = float(np.nan_to_num(y.mean(), nan=0.0))
+            return self
+        augmented = self._augment(X, offset=0)
         self._forest = RandomForestRegressor(
             n_estimators=self.n_estimators,
             max_depth=self.max_depth,
             random_state=self.random_state,
             n_jobs=1,
         )
-        self._forest.fit(augmented, y.values)
+        target = np.asarray(y, dtype=float)
+        self._forest.fit(augmented, target)
+        self._global_fallback = float(target.mean())
+
+        # Per (tree, leaf) local linear fit.
+        train_leaves = self._forest.apply(augmented)
+        self._leaf_models = []
+        X_arr = X.fillna(0.0).to_numpy(dtype=float)
+        for tree_idx in range(train_leaves.shape[1]):
+            tree_leaves = train_leaves[:, tree_idx]
+            leaf_dict: dict[int, Any] = {}
+            for leaf_id in np.unique(tree_leaves):
+                mask = tree_leaves == leaf_id
+                count = int(mask.sum())
+                # Need n_features + 1 rows for a stable linear fit; otherwise
+                # store the leaf-mean so prediction stays well-defined.
+                if count > X_arr.shape[1] + 1:
+                    try:
+                        lr = LinearRegression()
+                        lr.fit(X_arr[mask], target[mask])
+                        leaf_dict[int(leaf_id)] = lr
+                    except Exception:
+                        leaf_dict[int(leaf_id)] = float(target[mask].mean())
+                else:
+                    leaf_dict[int(leaf_id)] = float(target[mask].mean()) if count else self._global_fallback
+            self._leaf_models.append(leaf_dict)
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self._forest is None or self._n_train is None:
-            return np.zeros(len(X))
-        time_trend = (np.arange(len(X)) + self._n_train).astype(float).reshape(-1, 1)
-        augmented = np.concatenate([X.fillna(0.0).to_numpy(), time_trend], axis=1)
-        return self._forest.predict(augmented)
+            return np.full(len(X), self._global_fallback)
+        # Re-align prediction matrix to the columns seen at fit time.
+        aligned = pd.DataFrame(index=X.index, columns=self._feature_columns)
+        for col in self._feature_columns:
+            if col in X.columns:
+                aligned[col] = pd.to_numeric(X[col], errors="coerce")
+        aligned = aligned.fillna(0.0)
+        augmented = self._augment(aligned, offset=self._n_train)
+        leaves = self._forest.apply(augmented)
+        n_pred = len(aligned)
+        n_trees = leaves.shape[1]
+        preds = np.zeros(n_pred, dtype=float)
+        X_arr = aligned.to_numpy(dtype=float)
+        for tree_idx in range(n_trees):
+            leaf_models = self._leaf_models[tree_idx]
+            tree_leaves = leaves[:, tree_idx]
+            for i in range(n_pred):
+                model = leaf_models.get(int(tree_leaves[i]))
+                if isinstance(model, LinearRegression):
+                    preds[i] += float(model.predict(X_arr[i : i + 1])[0])
+                elif model is not None:
+                    preds[i] += float(model)
+                else:
+                    preds[i] += self._global_fallback
+        return preds / max(n_trees, 1)
 
 
 def _add_l5_relative_metrics(metrics: pd.DataFrame, l4_models: L4ModelArtifactsArtifact | None) -> pd.DataFrame:

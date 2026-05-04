@@ -88,15 +88,14 @@ def test_l4_xgboost_family():
     assert not validate_layer(parse_layer_yaml(make_l4_yaml(family="xgboost", n_estimators=100))).has_hard_errors
 
 
-def test_l4_macroeconomic_random_forest_rejected_as_future():
-    # PR-B (v0.1 honesty pass): MRF was promoted to operational in v0.1 even
-    # though the runtime wrapper is a plain RandomForest + time_trend (not
-    # the Coulombe 2024 GTVP local-linear forest). Demoted to ``future`` so
-    # the validator hard-rejects until the real implementation lands.
+def test_l4_macroeconomic_random_forest_operational_after_gtvp_landing():
+    # PR-B (v0.1 honesty pass) demoted MRF to ``future`` because the v0.1
+    # wrapper was a plain RandomForest + time_trend. Issue #187 lands the
+    # Coulombe (2024) GTVP local-linear forest (per-leaf linear regressions);
+    # the validator must accept the family again.
     layer = parse_layer_yaml(_example("l4_mrf_placeholder.yaml"))
     report = validate_layer(layer)
-    assert report.has_hard_errors
-    assert any("future or unknown" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
 
 
 def test_l4_dfm_mixed_mariano_murasawa_rejected_as_future():
@@ -250,13 +249,17 @@ def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
     # PR-B demotions remain future until their tracking issue lands.
     expected_future = {
         "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
-        "macroeconomic_random_forest",
         "dfm_mixed_mariano_murasawa",
     }
     assert expected_future <= set(FUTURE_MODEL_FAMILIES)
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
-    # BVAR + FAVAR must NOT be in FUTURE anymore (re-promoted in v0.2).
-    for promoted in ("bvar_minnesota", "bvar_normal_inverse_wishart", "factor_augmented_var"):
+    # BVAR + FAVAR + MRF must NOT be in FUTURE (re-promoted in v0.2).
+    for promoted in (
+        "bvar_minnesota",
+        "bvar_normal_inverse_wishart",
+        "factor_augmented_var",
+        "macroeconomic_random_forest",
+    ):
         assert promoted not in FUTURE_MODEL_FAMILIES
 
 

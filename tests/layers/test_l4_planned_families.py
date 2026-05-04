@@ -41,10 +41,10 @@ from macrocast.core.status import FUTURE, OPERATIONAL
 
 
 # v0.2 follow-up: bvar_minnesota / bvar_normal_inverse_wishart re-promoted
-# (#185 / #186) and factor_augmented_var re-promoted (#184). Remaining
-# honesty-pass demotions stay future until their tracking issue lands.
+# (#185 / #186), factor_augmented_var re-promoted (#184),
+# macroeconomic_random_forest re-promoted (#187). Remaining honesty-pass
+# demotion stays future until #188 lands.
 _HONESTY_DEMOTED = (
-    "macroeconomic_random_forest",
     "dfm_mixed_mariano_murasawa",
 )
 
