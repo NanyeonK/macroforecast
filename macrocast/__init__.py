@@ -116,10 +116,17 @@ _LAZY_EXPORTS = {
     "EvaluationScale": ".preprocessing",
 }
 
-__all__ = sorted(_LAZY_EXPORTS)
+_LAZY_MODULES: tuple[str, ...] = ("scaffold",)
+"""Submodules exposed as ``macrocast.<name>`` via lazy import."""
+
+__all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
 
 
 def __getattr__(name: str) -> Any:
+    if name in _LAZY_MODULES:
+        module = import_module(f".{name}", __name__)
+        globals()[name] = module
+        return module
     module_name = _LAZY_EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -130,4 +137,4 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
-    return sorted(set(globals()) | set(_LAZY_EXPORTS))
+    return sorted(set(globals()) | set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
