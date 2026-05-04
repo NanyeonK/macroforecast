@@ -49,6 +49,14 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     # Promoted in v0.2 (issue #188): Mariano-Murasawa-style dynamic factor
     # model via statsmodels' DynamicFactor (Kalman state-space MLE).
     "dfm_mixed_mariano_murasawa",
+    # New in v0.3:
+    # - quantile_regression_forest: Meinshausen (2006) -- record per-leaf
+    #   training-target distributions and forecast arbitrary quantiles.
+    # - bagging: bootstrap-aggregated wrapper around any base family for
+    #   variance reduction; per-bag predictions surface as quantile
+    #   intervals.
+    "quantile_regression_forest",
+    "bagging",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's

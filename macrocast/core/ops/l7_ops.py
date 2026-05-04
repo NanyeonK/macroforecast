@@ -85,6 +85,9 @@ PRE_DEFINED_BLOCKS = {
 
 DEFAULT_FIGURE_MAPPING = {
     "permutation_importance": "bar_global",
+    # Issue #281 -- Strobl (2008) conditional permutation importance,
+    # corrects the bias from correlated predictors.
+    "permutation_importance_strobl": "bar_global",
     "lofo": "bar_global",
     "model_native_linear_coef": "bar_global",
     "model_native_tree_importance": "bar_global",
