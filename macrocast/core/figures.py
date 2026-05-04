@@ -182,11 +182,103 @@ def render_default_for_op(
     return None
 
 
+def render_scree_plot(eigenvalues, *, output_path: Path, title: str | None = None) -> Path:
+    """L3.5 -- factor scree plot (eigenvalue per component)."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    arr = np.asarray(list(eigenvalues), dtype=float)
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.bar(np.arange(1, arr.size + 1), arr, color="#10b981")
+    ax.set_xlabel("component")
+    ax.set_ylabel("eigenvalue")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_factor_timeseries(factors: pd.DataFrame, *, output_path: Path, title: str | None = None) -> Path:
+    """L3.5 -- factor scores over time."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    for col in factors.columns:
+        ax.plot(factors.index, factors[col], label=str(col))
+    ax.set_xlabel("date")
+    ax.set_ylabel("factor score")
+    if len(factors.columns) <= 8:
+        ax.legend(loc="best", fontsize=8)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_fitted_vs_actual(fitted, actual, *, output_path: Path, title: str | None = None) -> Path:
+    """L4.5 -- fitted vs actual scatter."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fitted_arr = np.asarray(list(fitted), dtype=float)
+    actual_arr = np.asarray(list(actual), dtype=float)
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.scatter(actual_arr, fitted_arr, color="#3b82f6", alpha=0.6, s=20)
+    if fitted_arr.size and actual_arr.size:
+        lo = float(min(actual_arr.min(), fitted_arr.min()))
+        hi = float(max(actual_arr.max(), fitted_arr.max()))
+        ax.plot([lo, hi], [lo, hi], color="#ef4444", linestyle="--", linewidth=1)
+    ax.set_xlabel("actual")
+    ax.set_ylabel("fitted")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
+def render_rolling_loss(losses, *, output_path: Path, title: str | None = None) -> Path:
+    """L4.5 -- rolling training loss curve."""
+
+    plt = _ensure_matplotlib()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(losses, pd.Series):
+        x = losses.index
+        y = losses.values
+    else:
+        y = np.asarray(list(losses), dtype=float)
+        x = np.arange(y.size)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(x, y, color="#3b82f6")
+    ax.set_xlabel("origin")
+    ax.set_ylabel("loss")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
 __all__ = [
     "US_STATE_GRID",
     "render_bar_global",
     "render_default_for_op",
+    "render_factor_timeseries",
+    "render_fitted_vs_actual",
     "render_heatmap",
     "render_pdp_line",
+    "render_rolling_loss",
+    "render_scree_plot",
     "render_us_state_choropleth",
 ]

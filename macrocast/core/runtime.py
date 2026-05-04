@@ -425,6 +425,26 @@ def materialize_l2_5_diagnostic(
     }
     if axes.get("correlation_shift") != "none":
         metadata["correlation_shift"] = clean_frame.corr(numeric_only=True) - raw_frame.corr(numeric_only=True)
+    # Issue #213: ``correlation_shift = delta_matrix`` -- explicit
+    # post-minus-pre matrix exposed as a separate field for downstream
+    # consumers.
+    if axes.get("correlation_shift") == "delta_matrix":
+        try:
+            metadata["delta_matrix"] = (
+                clean_frame.corr(numeric_only=True) - raw_frame.corr(numeric_only=True)
+            ).fillna(0.0)
+        except Exception:
+            pass
+    # ``summary_split = per_decade`` -- per-decade summary statistics on
+    # both the raw and cleaned panel, useful for visual comparison.
+    if axes.get("summary_split") == "per_decade":
+        metadata["per_decade_summary"] = _diagnostic_per_decade_summary(raw_frame, clean_frame)
+    # ``t_code_application_log = per_series_detail`` -- per-series record
+    # of which transform code was applied (from L2 transform_map).
+    if axes.get("t_code_application_log") == "per_series_detail":
+        metadata["t_code_log_per_series"] = {
+            str(series): int(code) for series, code in l2_artifact.transform_map_applied.items()
+        }
     return (
         DiagnosticArtifact(
             layer_hooked="l1+l2",
@@ -434,6 +454,28 @@ def materialize_l2_5_diagnostic(
         ),
         axes,
     )
+
+
+def _diagnostic_per_decade_summary(raw: pd.DataFrame, clean: pd.DataFrame) -> dict[str, Any]:
+    """Group rows by decade (when the index is datetime) and return per-decade
+    mean / std for raw vs cleaned panels."""
+
+    out: dict[str, Any] = {}
+    for label, frame in (("raw", raw), ("clean", clean)):
+        if not isinstance(frame.index, pd.DatetimeIndex) or frame.empty:
+            out[label] = {}
+            continue
+        decade = (frame.index.year // 10) * 10
+        grouped = frame.assign(__decade=decade).groupby("__decade")
+        out[label] = {
+            int(decade_value): {
+                "mean": float(group.drop(columns="__decade").select_dtypes("number").mean(numeric_only=True).mean()),
+                "std": float(group.drop(columns="__decade").select_dtypes("number").std(ddof=0, numeric_only=True).mean()),
+                "n_obs": int(len(group)),
+            }
+            for decade_value, group in grouped
+        }
+    return out
 
 
 def materialize_l3_5_diagnostic(
@@ -468,6 +510,26 @@ def materialize_l3_5_diagnostic(
     }
     if axes.get("feature_correlation") != "none":
         metadata["feature_correlation"] = feature_frame.corr(method=axes.get("correlation_method", "pearson"), numeric_only=True)
+    # Issue #211: factor diagnostics. When the L3 panel has at least
+    # ``n_factors_to_show`` columns, run a quick PCA so the diagnostic sink
+    # carries the eigenvalue scree, loadings, and factor time series.
+    n_factors_to_show = int((axes.get("leaf_config", {}) or {}).get("n_factors_to_show", 4))
+    if feature_frame.shape[0] >= 4 and feature_frame.shape[1] >= 2:
+        try:
+            from sklearn.decomposition import PCA as _PCA
+
+            n_comp = min(n_factors_to_show, feature_frame.shape[0] - 1, feature_frame.shape[1])
+            pca = _PCA(n_components=n_comp)
+            scores = pca.fit_transform(feature_frame.fillna(0.0).to_numpy())
+            metadata["factor_diagnostics"] = {
+                "explained_variance_ratio": [float(v) for v in pca.explained_variance_ratio_],
+                "eigenvalues": [float(v) for v in pca.explained_variance_],
+                "cumulative_variance": [float(v) for v in np.cumsum(pca.explained_variance_ratio_)],
+                "loadings": pca.components_.tolist(),
+                "factor_scores_shape": [scores.shape[0], scores.shape[1]],
+            }
+        except Exception:
+            pass
     return (
         DiagnosticArtifact(
             layer_hooked="l1+l2+l3",
@@ -507,6 +569,22 @@ def materialize_l4_5_diagnostic(
     }
     if axes.get("window_view") != "none":
         metadata["window_stability"] = _diagnostic_l4_window_summary(l4_training)
+    # Issue #212: window stability + per-origin loss series for the rolling
+    # training-loss curve diagnostic figure.
+    if isinstance(actual, pd.Series) and l4_forecasts.forecasts:
+        per_origin: dict[Any, float] = {}
+        for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+            if origin not in actual.index:
+                continue
+            per_origin[origin] = (
+                per_origin.get(origin, 0.0) + (float(actual.loc[origin]) - float(forecast)) ** 2
+            )
+        if per_origin:
+            sorted_origins = sorted(per_origin)
+            metadata["per_origin_squared_error"] = {
+                "origins": [str(o) for o in sorted_origins],
+                "values": [float(per_origin[o]) for o in sorted_origins],
+            }
     return (
         DiagnosticArtifact(
             layer_hooked="l4",
