@@ -411,6 +411,16 @@ def execute_recipe(
         Items 1 and 2 are mutually exclusive — if both are set, the explicit
         argument wins and we override the in-recipe value (a soft warning is
         attached to the manifest's environment metadata).
+
+    Cell loop concurrency is controlled by L0 ``compute_mode``:
+
+    * ``serial`` (default) -- iterate cells in-process.
+    * ``parallel`` -- dispatch cells to a ``ProcessPoolExecutor`` of size
+      ``leaf_config.n_workers`` (default = ``min(8, os.cpu_count() - 1)``).
+      Each worker re-applies ``base_seed + cell_index`` so determinism is
+      preserved. ``parallel_unit`` is accepted at the schema level but
+      currently always interpreted as cell-level (sub-cell parallelism is
+      tracked as a follow-up).
     """
 
     started_at = datetime.now(timezone.utc).isoformat()
@@ -436,51 +446,29 @@ def execute_recipe(
     if effective_cache_root is not None:
         _inject_cache_root(recipe_root, effective_cache_root)
 
-    failure_policy = (
-        ((recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}).get("failure_policy")
-    ) or "fail_fast"
+    fixed_axes = (recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}
+    leaf = (recipe_root.get(L0_KEY, {}) or {}).get("leaf_config", {}) or {}
+    failure_policy = fixed_axes.get("failure_policy") or "fail_fast"
+    compute_mode = fixed_axes.get("compute_mode") or "serial"
+    n_workers = int(leaf.get("n_workers", _default_n_workers()))
     base_seed = _resolve_seed(recipe_root)
 
     concrete_roots, sweep_paths = _expand_cells(recipe_root)
     sweep_paths_str = tuple(_path_label(path) for path, _ in sweep_paths)
 
-    cells: list[CellExecutionResult] = []
+    parallel_active = compute_mode == "parallel" and n_workers > 1 and len(concrete_roots) > 1
+
+    cell_jobs: list[tuple[int, dict[str, Any], dict[str, Any], str, int | None]] = []
     for index, concrete in enumerate(concrete_roots, start=1):
         sweep_values = _extract_sweep_values(concrete, recipe_root, sweep_paths)
         cell_id = _generate_cell_id(index, sweep_values)
         seed_for_cell = base_seed if base_seed is None else int(base_seed) + (index - 1)
-        _apply_seed(seed_for_cell)
-        clock = time.perf_counter()
-        try:
-            runtime_result = execute_minimal_forecast(concrete)
-        except Exception as exc:  # noqa: BLE001 - we re-raise for fail_fast below
-            duration = time.perf_counter() - clock
-            tb = traceback_module.format_exc()
-            cells.append(
-                CellExecutionResult(
-                    cell_id=cell_id,
-                    index=index,
-                    sweep_values=sweep_values,
-                    duration_seconds=duration,
-                    error=str(exc),
-                    traceback=tb,
-                )
-            )
-            if failure_policy == "fail_fast":
-                raise
-            continue
-        duration = time.perf_counter() - clock
-        sink_hashes = {name: _hash_sink(value) for name, value in runtime_result.artifacts.items()}
-        cells.append(
-            CellExecutionResult(
-                cell_id=cell_id,
-                index=index,
-                sweep_values=sweep_values,
-                duration_seconds=duration,
-                runtime_result=runtime_result,
-                sink_hashes=sink_hashes,
-            )
-        )
+        cell_jobs.append((index, concrete, sweep_values, cell_id, seed_for_cell))
+
+    if parallel_active:
+        cells = _run_cells_parallel(cell_jobs, failure_policy=failure_policy, n_workers=n_workers)
+    else:
+        cells = _run_cells_serial(cell_jobs, failure_policy=failure_policy)
 
     total_duration = time.perf_counter() - started_clock
     result = ManifestExecutionResult(
@@ -495,6 +483,95 @@ def execute_recipe(
     if output_directory is not None:
         result.write_manifest(output_directory)
     return result
+
+
+def _default_n_workers() -> int:
+    cpu = os.cpu_count() or 2
+    return max(1, min(8, cpu - 1))
+
+
+def _run_single_cell(
+    index: int,
+    concrete_root: dict[str, Any],
+    sweep_values: dict[str, Any],
+    cell_id: str,
+    seed: int | None,
+) -> CellExecutionResult:
+    """Execute one cell and return its CellExecutionResult.
+
+    Lives at module scope so it is picklable for ProcessPoolExecutor.
+    """
+
+    _apply_seed(seed)
+    clock = time.perf_counter()
+    try:
+        runtime_result = execute_minimal_forecast(concrete_root)
+    except Exception as exc:  # noqa: BLE001
+        duration = time.perf_counter() - clock
+        return CellExecutionResult(
+            cell_id=cell_id,
+            index=index,
+            sweep_values=sweep_values,
+            duration_seconds=duration,
+            error=str(exc),
+            traceback=traceback_module.format_exc(),
+        )
+    duration = time.perf_counter() - clock
+    sink_hashes = {name: _hash_sink(value) for name, value in runtime_result.artifacts.items()}
+    return CellExecutionResult(
+        cell_id=cell_id,
+        index=index,
+        sweep_values=sweep_values,
+        duration_seconds=duration,
+        runtime_result=runtime_result,
+        sink_hashes=sink_hashes,
+    )
+
+
+def _run_cells_serial(jobs, *, failure_policy: str) -> list[CellExecutionResult]:
+    cells: list[CellExecutionResult] = []
+    for index, concrete, sweep_values, cell_id, seed in jobs:
+        result = _run_single_cell(index, concrete, sweep_values, cell_id, seed)
+        cells.append(result)
+        if not result.succeeded and failure_policy == "fail_fast":
+            raise RuntimeError(f"cell {cell_id} failed: {result.error}")
+    return cells
+
+
+def _run_cells_parallel(jobs, *, failure_policy: str, n_workers: int) -> list[CellExecutionResult]:
+    """Dispatch cells via ProcessPoolExecutor; preserves cell-index order in
+    the returned list."""
+
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    pending: dict = {}
+    cells_by_index: dict[int, CellExecutionResult] = {}
+    with ProcessPoolExecutor(max_workers=n_workers) as pool:
+        for index, concrete, sweep_values, cell_id, seed in jobs:
+            future = pool.submit(_run_single_cell, index, concrete, sweep_values, cell_id, seed)
+            pending[future] = (index, cell_id)
+        for future in as_completed(pending):
+            index, cell_id = pending[future]
+            try:
+                result = future.result()
+            except Exception as exc:  # noqa: BLE001
+                result = CellExecutionResult(
+                    cell_id=cell_id,
+                    index=index,
+                    sweep_values={},
+                    duration_seconds=0.0,
+                    error=str(exc),
+                    traceback=traceback_module.format_exc(),
+                )
+            cells_by_index[index] = result
+            if not result.succeeded and failure_policy == "fail_fast":
+                # Cancel remaining futures and stop. Any worker already
+                # running will finish but we discard its result.
+                for other in pending:
+                    if other is not future:
+                        other.cancel()
+                raise RuntimeError(f"cell {cell_id} failed in parallel mode: {result.error}")
+    return [cells_by_index[i] for i in sorted(cells_by_index)]
 
 
 def _extract_sweep_values(
