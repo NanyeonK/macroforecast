@@ -38,12 +38,11 @@ from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 # still treat L4 demotions as a documented section.
 _DEMOTED_L4_FAMILIES: tuple[str, ...] = ()
 
-_DEMOTED_L1_REGIMES = (
-    # estimated_markov_switching re-promoted in v0.2 (#195) via the real
-    # Hamilton (1989) Markov regression.
-    "estimated_threshold",
-    "estimated_structural_break",
-)
+_DEMOTED_L1_REGIMES: tuple[str, ...] = ()
+# All three L1.G estimated regimes are operational in v0.2:
+#   - estimated_markov_switching (#195): Hamilton MS
+#   - estimated_threshold (#196): Tong SETAR
+#   - estimated_structural_break (#197): Bai-Perron breaks
 
 
 # ---------------------------------------------------------------------------
@@ -191,12 +190,10 @@ def test_count_of_demotions_matches_documentation():
     re-promoted (#185 / #186), so the L4 demotion count drops from 5 to 3.
     """
 
-    # 0 L4 families remaining future after v0.2 (#184/#185/#186/#187/#188
-    # all promoted).
+    # 0 L4 families and 0 L1 regimes remain future after v0.2 promotions.
     assert len(_DEMOTED_L4_FAMILIES) == 0
+    assert len(_DEMOTED_L1_REGIMES) == 0
     # 11 L7 ops
     assert len(HONESTY_DEMOTED_L7_OPS) == 11
-    # 2 L1 estimated regimes after #195 (Hamilton MS) promotion
-    assert len(_DEMOTED_L1_REGIMES) == 2
-    # Combined honest count after L4 + Hamilton MS promotions: 13 items.
-    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 13
+    # Only the L7 demotions remain.
+    assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 11

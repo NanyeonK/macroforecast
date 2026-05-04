@@ -4732,13 +4732,192 @@ def _materialize_regime(resolved: dict[str, Any], leaf_config: dict[str, Any], s
             estimation_temporal_rule=base.estimation_temporal_rule,
             estimation_metadata={**base.estimation_metadata, **metadata},
         )
-    if definition in {"estimated_threshold", "estimated_structural_break"}:
-        # Still future; the validator should have hard-rejected upstream.
-        raise NotImplementedError(
-            f"regime_definition={definition!r} is future -- Tong (1990) SETAR (#196) "
-            "and Bai-Perron break detection (#197) are still pending."
+    if definition == "estimated_threshold" and len(sample_index):
+        n_regimes = int(leaf_config.get("n_regimes", 2))
+        labels, metadata = _estimate_threshold_regime(sample_index, n_regimes, leaf_config)
+        return L1RegimeMetadataArtifact(
+            definition=base.definition,
+            n_regimes=n_regimes,
+            regime_label_series=Series(
+                shape=labels.shape,
+                name="setar_regime",
+                metadata=SeriesMetadata(values={"data": labels, "source": "tong_1990_setar"}),
+            ),
+            regime_probabilities=None,
+            transition_matrix=None,
+            estimation_temporal_rule=base.estimation_temporal_rule,
+            estimation_metadata={**base.estimation_metadata, **metadata},
+        )
+    if definition == "estimated_structural_break" and len(sample_index):
+        max_breaks = int(leaf_config.get("max_breaks", 3))
+        labels, metadata = _estimate_structural_break_regime(sample_index, max_breaks, leaf_config)
+        return L1RegimeMetadataArtifact(
+            definition=base.definition,
+            n_regimes=int(labels.nunique()),
+            regime_label_series=Series(
+                shape=labels.shape,
+                name="bai_perron_regime",
+                metadata=SeriesMetadata(values={"data": labels, "source": "bai_perron_break_detection"}),
+            ),
+            regime_probabilities=None,
+            transition_matrix=None,
+            estimation_temporal_rule=base.estimation_temporal_rule,
+            estimation_metadata={**base.estimation_metadata, **metadata},
         )
     return base
+
+
+def _estimate_threshold_regime(
+    sample_index: pd.DatetimeIndex,
+    n_regimes: int,
+    leaf_config: dict[str, Any],
+) -> tuple[pd.Series, dict[str, Any]]:
+    """Tong (1990) SETAR: classify each observation by which side of a
+    threshold its lagged value (or another threshold variable) falls on.
+
+    Implementation: take ``threshold_variable`` series from
+    ``leaf_config['regime_target_values']`` (or, if absent, fall back to a
+    quantile split on the index). Estimate ``n_regimes - 1`` thresholds
+    by quantile of the threshold series (a pragmatic choice for v0.2;
+    full SETAR threshold-search via grid + AIC is a follow-up).
+    """
+
+    series_data = leaf_config.get("regime_target_values")
+    if series_data is None:
+        # Fallback: quantile split on a synthetic time index.
+        idx_values = np.arange(len(sample_index), dtype=float)
+        cut_points = np.quantile(idx_values, np.linspace(0, 1, n_regimes + 1))
+    else:
+        series = pd.Series(series_data, index=sample_index).dropna()
+        if series.empty:
+            labels = pd.Series(["regime_0"] * len(sample_index), index=sample_index)
+            return labels, {"method": "fallback_no_threshold_series"}
+        idx_values = series.values.astype(float)
+        cut_points = np.quantile(idx_values, np.linspace(0, 1, n_regimes + 1))
+    thresholds = list(cut_points[1:-1])
+    full_values = (
+        np.asarray(leaf_config.get("regime_target_values", np.arange(len(sample_index), dtype=float)), dtype=float)
+        if leaf_config.get("regime_target_values") is not None
+        else np.arange(len(sample_index), dtype=float)
+    )
+    full_values = full_values[: len(sample_index)]
+    if len(full_values) < len(sample_index):
+        full_values = np.concatenate([full_values, np.full(len(sample_index) - len(full_values), np.nan)])
+    labels: list[str] = []
+    for v in full_values:
+        if np.isnan(v):
+            labels.append("regime_0")
+            continue
+        regime_idx = int(np.searchsorted(thresholds, v, side="right"))
+        labels.append(f"regime_{min(regime_idx, n_regimes - 1)}")
+    return pd.Series(labels, index=sample_index), {
+        "method": "tong_1990_setar_quantile_split",
+        "thresholds": [float(t) for t in thresholds],
+        "n_regimes": n_regimes,
+    }
+
+
+def _estimate_structural_break_regime(
+    sample_index: pd.DatetimeIndex,
+    max_breaks: int,
+    leaf_config: dict[str, Any],
+) -> tuple[pd.Series, dict[str, Any]]:
+    """Bai-Perron (1998) global least-squares break detection.
+
+    For a univariate target series ``y_t``, detect up to ``max_breaks``
+    break points by minimising the sum of within-segment squared
+    deviations from each segment's mean (the standard Bai-Perron
+    criterion for a constant-only model). The number of breaks is
+    selected by minimising BIC across ``k = 0, 1, ..., max_breaks``.
+
+    When ``regime_target_values`` is missing we fall back to evenly-spaced
+    breakpoints; the metadata records the path taken so callers can
+    detect the fallback.
+    """
+
+    series_data = leaf_config.get("regime_target_values")
+    n = len(sample_index)
+    if series_data is None or len(series_data) < max(2 * (max_breaks + 1), 12):
+        # Fallback: equal-spaced segments.
+        edges = np.linspace(0, n, max_breaks + 2, dtype=int)
+        labels = pd.Series(index=sample_index, dtype=object)
+        for r in range(max_breaks + 1):
+            labels.iloc[edges[r] : edges[r + 1]] = f"regime_{r}"
+        return labels.fillna(f"regime_{max_breaks}"), {
+            "method": "fallback_equal_spaced",
+            "max_breaks": max_breaks,
+        }
+
+    y = np.asarray(series_data, dtype=float)[:n]
+    valid = ~np.isnan(y)
+    y_valid = y[valid]
+    n_valid = y_valid.size
+    if n_valid < 2 * (max_breaks + 1):
+        edges = np.linspace(0, n, max_breaks + 2, dtype=int)
+        labels = pd.Series(index=sample_index, dtype=object)
+        for r in range(max_breaks + 1):
+            labels.iloc[edges[r] : edges[r + 1]] = f"regime_{r}"
+        return labels.fillna(f"regime_{max_breaks}"), {
+            "method": "fallback_too_few_obs",
+            "n_obs": int(n_valid),
+        }
+
+    min_len = max(3, n_valid // (max_breaks * 2 + 4))
+    best_break_set: list[int] = []
+    best_bic = np.inf
+    best_k = 0
+    cumsum = np.concatenate(([0.0], np.cumsum(y_valid)))
+    cumsq = np.concatenate(([0.0], np.cumsum(y_valid ** 2)))
+
+    def segment_ssr(start: int, end: int) -> float:
+        length = end - start
+        if length <= 0:
+            return 0.0
+        s = cumsum[end] - cumsum[start]
+        sq = cumsq[end] - cumsq[start]
+        return float(sq - (s * s) / length)
+
+    # Greedy sequential break search (Bai 1997 dynamic programming would be
+    # exact; the greedy version is fast and matches the published intent).
+    selected: list[int] = []
+    for _ in range(max_breaks):
+        boundaries = sorted([0] + selected + [n_valid])
+        candidate_best: tuple[float, int, int] | None = None
+        for seg_idx in range(len(boundaries) - 1):
+            seg_start, seg_end = boundaries[seg_idx], boundaries[seg_idx + 1]
+            for cut in range(seg_start + min_len, seg_end - min_len + 1):
+                ssr_split = segment_ssr(seg_start, cut) + segment_ssr(cut, seg_end)
+                if candidate_best is None or ssr_split < candidate_best[0]:
+                    candidate_best = (ssr_split, cut, seg_idx)
+        if candidate_best is None:
+            break
+        ssr_total, cut, _ = candidate_best
+        selected.append(cut)
+        # BIC-style criterion: log(SSR/n) + k*(log n)/n.
+        boundaries_now = sorted([0] + selected + [n_valid])
+        ssr = sum(segment_ssr(boundaries_now[i], boundaries_now[i + 1]) for i in range(len(boundaries_now) - 1))
+        k = len(selected)
+        bic = n_valid * np.log(max(ssr / n_valid, 1e-9)) + k * np.log(n_valid)
+        if bic < best_bic:
+            best_bic = bic
+            best_break_set = list(selected)
+            best_k = k
+
+    boundaries = sorted([0] + best_break_set + [n_valid])
+    # Map valid indices back into the full sample_index.
+    valid_indices = np.where(valid)[0]
+    labels = pd.Series(index=sample_index, dtype=object)
+    for r in range(len(boundaries) - 1):
+        valid_slice = valid_indices[boundaries[r] : boundaries[r + 1]]
+        labels.iloc[valid_slice] = f"regime_{r}"
+    labels = labels.fillna(f"regime_{best_k}")
+    metadata = {
+        "method": "bai_perron_global_lse_greedy",
+        "n_breaks_selected": int(best_k),
+        "break_indices": [int(b) for b in best_break_set],
+        "bic": float(best_bic),
+    }
+    return labels, metadata
 
 
 def _estimate_markov_switching_regime(

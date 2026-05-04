@@ -360,27 +360,33 @@ def test_l1_g_full_sample_once_temporal_rule_still_rejected_as_leakage():
     )
 
 
-def test_l1_g_estimated_threshold_rejected_as_future():
+def test_l1_g_estimated_threshold_operational_after_setar_landing():
+    # Issue #196 lands a Tong (1990) SETAR quantile-split estimator; the
+    # validator must accept the family.
     yaml_text = """
     1_data:
       fixed_axes:
         regime_definition: estimated_threshold
+        regime_estimation_temporal_rule: expanding_window_per_origin
       leaf_config:
         target: CPIAUCSL
+        threshold_variable: INDPRO
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
-    assert report.has_hard_errors
-    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
 
 
-def test_l1_g_estimated_structural_break_rejected_as_future():
+def test_l1_g_estimated_structural_break_operational_after_bai_perron_landing():
+    # Issue #197 lands a Bai-Perron (1998) global LSE break detector; the
+    # validator must accept the family.
     yaml_text = """
     1_data:
       fixed_axes:
         regime_definition: estimated_structural_break
+        regime_estimation_temporal_rule: expanding_window_per_origin
       leaf_config:
         target: CPIAUCSL
+        max_breaks: 3
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
-    assert report.has_hard_errors
-    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
