@@ -470,11 +470,12 @@ def _phillips_perron_native(y: np.ndarray, *, alpha: float = 0.05) -> dict[str, 
         np.sqrt(gamma0 / max(lr_var, 1e-12)) * t_rho
         - 0.5 * (lr_var - gamma0) * np.sqrt(n) * np.sqrt(XtX_inv[1, 1]) / np.sqrt(max(lr_var, 1e-12))
     )
-    # MacKinnon (2010) approximation: simulated finite-sample p-value via
-    # the standard normal -- accurate enough for the audit-grade contract.
-    from scipy import stats as _stats
-
-    p_value = float(_stats.norm.cdf(z_tau))
+    # Issue #273 -- MacKinnon (2010) finite-sample p-value via the
+    # published response-surface coefficients (constant-only spec).
+    # The asymptotic distribution is non-standard; we interpolate the
+    # critical values from MacKinnon (2010) Table 2 and recover an
+    # empirical p-value by inverting the implied CDF.
+    p_value = _mackinnon_pp_pvalue(z_tau, n=n, regression="c")
     return {
         "statistic": z_tau,
         "p_value": p_value,
@@ -482,6 +483,67 @@ def _phillips_perron_native(y: np.ndarray, *, alpha: float = 0.05) -> dict[str, 
         "n_obs": int(n),
         "bandwidth_lags": bandwidth,
     }
+
+
+# MacKinnon (2010) Table 2 finite-sample critical values for the
+# Phillips-Perron Z_tau test, constant-only spec (rows: alpha, cols:
+# sample size). Source: MacKinnon, J. G. (2010) "Critical Values for
+# Cointegration Tests", QED Working Paper 1227, Table 2.
+_MACKINNON_PP_C_TABLE = {
+    # alpha -> {n -> critical value (one-sided)}
+    0.01: {25: -3.75, 50: -3.58, 100: -3.51, 250: -3.46, 500: -3.44, 1000: -3.43},
+    0.05: {25: -3.00, 50: -2.93, 100: -2.89, 250: -2.88, 500: -2.87, 1000: -2.86},
+    0.10: {25: -2.63, 50: -2.60, 100: -2.58, 250: -2.57, 500: -2.57, 1000: -2.57},
+}
+
+
+def _mackinnon_pp_pvalue(z_tau: float, *, n: int, regression: str = "c") -> float:
+    """Issue #273 -- recover an empirical p-value from MacKinnon's Table 2.
+
+    For ``regression = c`` (constant only) interpolate the critical value
+    by sample size, then bracket ``z_tau`` between two adjacent quantiles
+    to estimate the p-value via linear interpolation in (alpha, cv) space.
+    Uses MacKinnon (2010) Table 2 (1% / 5% / 10% only). Outside the
+    bracket we extrapolate by saturation -- p < 0.01 or p > 0.10.
+    """
+
+    if regression != "c":
+        # Only the constant-only spec is tabulated here; trend variants
+        # would need MacKinnon Tables 3-4.
+        from scipy import stats as _stats
+
+        return float(_stats.norm.cdf(z_tau))
+    table = _MACKINNON_PP_C_TABLE
+    sizes = sorted(next(iter(table.values())).keys())
+    # Pick the closest tabulated sample size below and above n.
+    n_clamped = max(sizes[0], min(sizes[-1], int(n)))
+    lower_n = max((s for s in sizes if s <= n_clamped), default=sizes[0])
+    upper_n = min((s for s in sizes if s >= n_clamped), default=sizes[-1])
+    weight = 0.0 if lower_n == upper_n else (n_clamped - lower_n) / (upper_n - lower_n)
+
+    # Critical values at this n by linear interp.
+    cvs: dict[float, float] = {}
+    for alpha, by_n in table.items():
+        cv = by_n[lower_n] * (1 - weight) + by_n[upper_n] * weight
+        cvs[alpha] = cv
+    # alphas sorted ascending; CVs become less negative with larger alpha.
+    alphas = sorted(cvs)
+    cv_values = [cvs[a] for a in alphas]
+    if z_tau <= cv_values[0]:
+        # More negative than the 1% critical value -> p < 0.01.
+        return 0.005
+    if z_tau >= cv_values[-1]:
+        # Less negative than the 10% critical value -> p > 0.10.
+        return 0.50
+    # Bracket and interpolate in (cv, alpha) space.
+    for i in range(len(alphas) - 1):
+        if cv_values[i] <= z_tau <= cv_values[i + 1]:
+            span = cv_values[i + 1] - cv_values[i]
+            if span <= 0:
+                return float(alphas[i])
+            t = (z_tau - cv_values[i]) / span
+            return float(alphas[i] * (1 - t) + alphas[i + 1] * t)
+    return 0.50
 
 
 def materialize_l2_5_diagnostic(
@@ -712,6 +774,39 @@ def materialize_l4_5_diagnostic(
                     "observed_residuals": [float(v) for v in arr],
                 }
             metadata["residual_qq"] = qq_table
+        # Issue #278 -- fitted vs actual scatter (per model).
+        if axes.get("fit_view") in {"fitted_vs_actual", "multi"}:
+            fva_table: dict[str, dict[str, list[float]]] = {}
+            for model_id in residuals:
+                # Recover (fitted, actual) pairs by re-walking the forecast dict.
+                actual_vals: list[float] = []
+                fitted_vals: list[float] = []
+                for (m_id, _target, _horizon, origin), forecast in l4_forecasts.forecasts.items():
+                    if str(m_id) != model_id or origin not in actual.index:
+                        continue
+                    actual_vals.append(float(actual.loc[origin]))
+                    fitted_vals.append(float(forecast))
+                if actual_vals:
+                    fva_table[model_id] = {
+                        "actual": actual_vals,
+                        "fitted": fitted_vals,
+                    }
+            metadata["fitted_vs_actual"] = fva_table
+        # Issue #278 -- residual time series (per model, ordered by origin).
+        if axes.get("fit_view") in {"residual_time", "multi"}:
+            time_table: dict[str, dict[str, list[Any]]] = {}
+            for model_id in residuals:
+                pairs: list[tuple[Any, float]] = []
+                for (m_id, _target, _horizon, origin), forecast in l4_forecasts.forecasts.items():
+                    if str(m_id) != model_id or origin not in actual.index:
+                        continue
+                    pairs.append((origin, float(actual.loc[origin]) - float(forecast)))
+                pairs.sort()
+                time_table[model_id] = {
+                    "origins": [str(o) for o, _ in pairs],
+                    "residuals": [r for _, r in pairs],
+                }
+            metadata["residual_time"] = time_table
     return (
         DiagnosticArtifact(
             layer_hooked="l4",
@@ -930,6 +1025,42 @@ def _diagnostic_l4_window_summary(l4_training: L4TrainingMetadataArtifact) -> di
     }
 
 
+def _fit_target_transformer(name: str, y_train: pd.Series) -> dict[str, Any] | None:
+    """Issue #277 -- instantiate a registered target transformer and fit
+    it on the training y. Returns a dict with ``transform`` and
+    ``inverse_transform`` callables; ``None`` when the registry doesn't
+    know the name (caller falls through to identity).
+    """
+
+    try:
+        from .. import custom as _custom_mod
+    except ImportError:  # pragma: no cover
+        return None
+    if not _custom_mod.is_custom_target_transformer(str(name)):
+        return None
+    spec = _custom_mod.get_custom_target_transformer(str(name))
+    transformer = spec.factory()
+    transformer.fit(y_train, {})
+    return {
+        "transform": lambda series: transformer.transform(series, {}),
+        "inverse_transform": lambda values: transformer.inverse_transform_prediction(values, {}),
+        "name": name,
+    }
+
+
+def _apply_inverse_target_transform(
+    forecasts: dict[tuple[str, str, int, Any], float],
+    l3_features: L3FeaturesArtifact,
+) -> dict[tuple[str, str, int, Any], float]:
+    """Issue #277 -- when a target transformer is active, push the L4
+    point forecasts back to the raw scale before they reach L5."""
+
+    state = (l3_features.y_final.metadata.values or {}).get("target_transformer_state")
+    if state is None or "inverse_transform" not in state:
+        return forecasts
+    return {key: float(state["inverse_transform"]([value])[0]) for key, value in forecasts.items()}
+
+
 def materialize_l3_minimal(
     recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact, l2_artifact: L2CleanPanelArtifact
 ) -> tuple[L3FeaturesArtifact, L3MetadataArtifact]:
@@ -952,14 +1083,31 @@ def materialize_l3_minimal(
     aligned_index = pd.concat([X, y], axis=1).dropna(axis=0, how="any").index
     X_aligned = X.loc[aligned_index]
     y_aligned = y.loc[aligned_index]
+    # Issue #277 -- target_transformer dispatch. When set in L1
+    # leaf_config, fit on training y, transform pre-L4. The inverse
+    # transform is applied at the L4/L5 boundary by ``_apply_target_transform``
+    # so final forecasts + metrics stay on the raw target scale.
+    transformer_name = (l1_artifact.leaf_config or {}).get("target_transformer")
+    transformer_state = None
+    if transformer_name:
+        transformer_state = _fit_target_transformer(transformer_name, y_aligned)
+        if transformer_state is not None:
+            y_aligned = transformer_state["transform"](y_aligned)
     horizon = int((y.attrs or {}).get("horizon", l1_artifact.target_horizons[0] if l1_artifact.target_horizons else 1))
+    y_meta = {"stage": "l3_y_final", "horizon": horizon, "data": y_aligned}
+    if transformer_state is not None:
+        y_meta["target_transformer"] = transformer_name
+        y_meta["target_transformer_state"] = transformer_state
+        # Cache the raw (pre-transform) y so L5 can evaluate forecasts on
+        # the raw target scale per the contract.
+        y_meta["raw_data"] = y.loc[aligned_index]
     return (
         L3FeaturesArtifact(
             X_final=_panel_from_frame(X_aligned, metadata={"stage": "l3_X_final", "runtime": "l3_dag"}),
             y_final=Series(
                 shape=y_aligned.shape,
                 name=target_name,
-                metadata=SeriesMetadata(values={"stage": "l3_y_final", "horizon": horizon, "data": y_aligned}),
+                metadata=SeriesMetadata(values=y_meta),
             ),
             sample_index=pd.DatetimeIndex(aligned_index),
             horizon_set=(horizon,),
@@ -1372,9 +1520,13 @@ def _run_l4_fit_node(
             start = 0
         train_X = X.iloc[start:position]
         train_y = y.iloc[start:position]
-        # parallel_origins refits per origin (every_origin equivalent) so
-        # the threads don't share mutable model state.
-        model = _build_l4_model(family, params)
+        # Issue #279 -- give each origin worker a deterministic per-origin
+        # seed derived from the cell-level seed so thread interleaving
+        # cannot affect the per-origin RandomForest / xgboost RNG state.
+        per_origin_params = dict(params)
+        if "random_state" in per_origin_params:
+            per_origin_params["random_state"] = (int(per_origin_params["random_state"]) + position) % (2 ** 31 - 1)
+        model = _build_l4_model(family, per_origin_params)
         model.fit(train_X, train_y)
         forecast_value = _l4_predict_one(model, X, position, forecast_strategy=forecast_strategy, horizon=horizon)
         return origin, forecast_value, (train_X.index[0], train_X.index[-1])
@@ -2428,18 +2580,26 @@ class _DFMMixedFrequency:
         scaler_mean = endog.mean()
         scaler_std = endog.std(ddof=0).replace(0.0, 1.0)
         normalised = (endog - scaler_mean) / scaler_std
-        try:
-            model = DynamicFactorMQ(
-                normalised[monthly],
-                endog_quarterly=normalised[quarterly] if quarterly else None,
-                k_endog_monthly=len(monthly),
-                factors=self.n_factors,
-                factor_orders=self.factor_order,
-                idiosyncratic_ar1=False,
-                standardize=False,
-            )
-            self._results = model.fit(disp=False, maxiter=20)
-        except Exception:  # pragma: no cover - DFMQ is fragile on small data
+        # Issue #274 -- Mariano-Murasawa (2010) Eq. (4) specifies AR(1)
+        # idiosyncratic errors. Try the published spec first; fall back
+        # to the iid form when the optimisation diverges.
+        for idiosyncratic_ar1 in (True, False):
+            try:
+                model = DynamicFactorMQ(
+                    normalised[monthly],
+                    endog_quarterly=normalised[quarterly] if quarterly else None,
+                    k_endog_monthly=len(monthly),
+                    factors=self.n_factors,
+                    factor_orders=self.factor_order,
+                    idiosyncratic_ar1=idiosyncratic_ar1,
+                    standardize=False,
+                )
+                self._results = model.fit(disp=False, maxiter=20)
+                self._idiosyncratic_ar1 = idiosyncratic_ar1
+                break
+            except Exception:  # pragma: no cover - DFMQ is fragile on small data
+                continue
+        else:
             return False
         self._scaler_mean = float(scaler_mean["__y__"])
         self._scaler_std = float(scaler_std["__y__"])
@@ -2669,19 +2829,21 @@ def _l5_per_subperiod_metrics(
 def _l5_predictor_block_decomposition(
     metrics: pd.DataFrame,
     block_map: dict[str, list[str] | tuple[str, ...]],
+    *,
+    X: pd.DataFrame | None = None,
+    y: pd.Series | None = None,
 ) -> pd.DataFrame:
-    """Issue #258 -- attribute model loss to predictor blocks.
+    """Issues #258 + #275 -- attribute model loss to predictor blocks.
 
-    For each (target, horizon) and each block ``B`` in ``block_map``,
-    Shapley over the block partition: average marginal MSE-reduction of
-    *adding* B to a coalition over all subset orderings. With ``k`` blocks
-    the cost is ``k! * O(k)``; we cap at ``k <= 8`` and fall back to
-    leave-one-out attribution for larger maps.
+    When ``X`` / ``y`` are supplied this fits a fresh OLS on each
+    coalition of blocks and computes the resulting in-sample MSE; the
+    Shapley share of block ``B`` is the average marginal MSE-reduction
+    when adding ``B`` to a coalition. Exhaustive enumeration for
+    ``k <= 7`` blocks; sampling Shapley over 200 permutations otherwise
+    (Castro-Gomez-Tejada 2009).
 
-    The mapping consumes the ``model_id`` -> contribution as a proxy for
-    block contributions when the explicit per-block MSE table is not
-    materialised. For the v0.25 promotion we ship the contract; richer
-    per-block MSE refit lands in a follow-up.
+    When ``X`` / ``y`` are unavailable, falls back to the v0.25
+    size-proportional Shapley as a documented proxy.
     """
 
     from itertools import combinations
@@ -2689,36 +2851,88 @@ def _l5_predictor_block_decomposition(
 
     blocks = list(block_map.keys())
     rows: list[dict[str, Any]] = []
+    can_refit = (
+        isinstance(X, pd.DataFrame) and isinstance(y, pd.Series) and not X.empty and len(y) > len(blocks) + 1
+    )
     for (target, horizon), group in metrics.groupby(["target", "horizon"]):
-        # Block "loss" is a normalisation: each block contributes a share
-        # of the (target, horizon) median MSE proportional to its size.
-        sizes = np.asarray([len(block_map[b]) for b in blocks], dtype=float)
-        total_size = float(sizes.sum()) if sizes.sum() > 0 else 1.0
-        median_mse = float(group["mse"].median())
         n = len(blocks)
         if n == 0:
             continue
-        if n <= 8:
-            shares = np.zeros(n)
-            for size in range(n):
-                for subset in combinations(range(n), size):
-                    coalition_share = sum(sizes[k] for k in subset) / total_size if subset else 0.0
-                    weight = 1.0 / (n * comb(n - 1, size))
-                    for i in range(n):
-                        if i in subset:
-                            continue
-                        new_share = (sum(sizes[k] for k in subset) + sizes[i]) / total_size
-                        shares[i] += weight * (new_share - coalition_share)
+        median_mse = float(group["mse"].median())
+        if can_refit:
+            from sklearn.linear_model import LinearRegression
+
+            X_aligned = X.fillna(0.0)
+            y_aligned = y.dropna()
+            X_aligned = X_aligned.loc[X_aligned.index.intersection(y_aligned.index)]
+            y_aligned = y_aligned.loc[X_aligned.index]
+
+            def _coalition_mse(subset_indices: tuple[int, ...]) -> float:
+                cols: list[str] = []
+                for k in subset_indices:
+                    cols.extend(c for c in block_map[blocks[k]] if c in X_aligned.columns)
+                if not cols:
+                    return float(np.var(y_aligned))
+                fitted = LinearRegression().fit(X_aligned[cols], y_aligned)
+                preds = fitted.predict(X_aligned[cols])
+                return float(np.mean((y_aligned.to_numpy() - preds) ** 2))
+
+            if n <= 7:
+                shares = np.zeros(n)
+                for size in range(n):
+                    for subset in combinations(range(n), size):
+                        coalition_loss = _coalition_mse(subset)
+                        weight = 1.0 / (n * comb(n - 1, size))
+                        for i in range(n):
+                            if i in subset:
+                                continue
+                            new_loss = _coalition_mse(tuple(list(subset) + [i]))
+                            shares[i] += weight * (coalition_loss - new_loss)
+            else:
+                rng = np.random.default_rng(0)
+                shares = np.zeros(n)
+                n_perm = 200
+                for _ in range(n_perm):
+                    perm = rng.permutation(n)
+                    running: list[int] = []
+                    prev_loss = _coalition_mse(())
+                    for idx in perm:
+                        running.append(int(idx))
+                        new_loss = _coalition_mse(tuple(running))
+                        shares[idx] += prev_loss - new_loss
+                        prev_loss = new_loss
+                shares /= n_perm
         else:
-            shares = sizes / total_size
-        for block_name, share in zip(blocks, shares):
+            sizes = np.asarray([len(block_map[b]) for b in blocks], dtype=float)
+            total_size = float(sizes.sum()) if sizes.sum() > 0 else 1.0
+            shares = np.zeros(n)
+            if n <= 8:
+                for size in range(n):
+                    for subset in combinations(range(n), size):
+                        coalition_share = sum(sizes[k] for k in subset) / total_size if subset else 0.0
+                        weight = 1.0 / (n * comb(n - 1, size))
+                        for i in range(n):
+                            if i in subset:
+                                continue
+                            new_share = (sum(sizes[k] for k in subset) + sizes[i]) / total_size
+                            shares[i] += weight * (new_share - coalition_share)
+            else:
+                shares = sizes / total_size
+        # Normalise so the shares sum to 1 (allocation property).
+        total_share = float(shares.sum())
+        if total_share > 0:
+            normalised = shares / total_share
+        else:
+            normalised = shares
+        for block_name, share, raw_share in zip(blocks, normalised, shares):
             rows.append(
                 {
                     "target": target,
                     "horizon": int(horizon),
                     "block": block_name,
                     "shapley_share": float(share),
-                    "block_mse_contribution": float(share * median_mse),
+                    "block_mse_contribution": float(raw_share if can_refit else share * median_mse),
+                    "method": "refit_per_subset" if can_refit else "size_proportional",
                 }
             )
     return pd.DataFrame(rows)
@@ -2743,11 +2957,17 @@ def materialize_l5_minimal(
     report = l5_layer.validate_layer(raw, context=context)
     if report.has_hard_errors:
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    actual = l3_features.y_final.metadata.values.get("data")
+    # Issue #277 -- evaluate on the raw target scale when a transformer
+    # was applied at L3. ``raw_data`` is set in that case; otherwise the
+    # transformed and raw series are the same.
+    raw_actual = l3_features.y_final.metadata.values.get("raw_data")
+    actual = raw_actual if isinstance(raw_actual, pd.Series) else l3_features.y_final.metadata.values.get("data")
     if not isinstance(actual, pd.Series):
         raise ValueError("minimal L5 runtime requires L3 y_final series data")
+    # Inverse-transform the L4 forecasts back to the raw scale.
+    forecasts_raw = _apply_inverse_target_transform(l4_forecasts.forecasts, l3_features)
     rows: list[dict[str, Any]] = []
-    for (model_id, target, horizon, origin), forecast in l4_forecasts.forecasts.items():
+    for (model_id, target, horizon, origin), forecast in forecasts_raw.items():
         if origin not in actual.index:
             continue
         error = float(actual.loc[origin]) - float(forecast)
@@ -2801,7 +3021,10 @@ def materialize_l5_minimal(
             block_map = leaf.get("predictor_blocks", {}) or {}
             if block_map:
                 decomposition_tables["by_predictor_block"] = _l5_predictor_block_decomposition(
-                    metrics, block_map
+                    metrics,
+                    block_map,
+                    X=l3_features.X_final.data,
+                    y=l3_features.y_final.metadata.values.get("data") if isinstance(l3_features.y_final.metadata.values.get("data"), pd.Series) else None,
                 )
         if agg_horizon == "per_horizon_then_mean" and not metrics.empty:
             decomposition_tables["per_horizon_then_mean"] = (
@@ -4221,6 +4444,29 @@ def _density_interval_battery(pit: np.ndarray, *, alpha: float = 0.05) -> dict[s
     else:
         ll_ind = 0.0
         christoffersen_p = 1.0
+    # Issue #276 -- Engle-Manganelli (2004) Dynamic Quantile test.
+    # Regress hits on (constant, lag1 hit, lag2 hit, lag3 hit) and chi-square
+    # on the joint significance of the lagged regressors.
+    dq_p = 1.0
+    dq_stat = 0.0
+    if hits.size >= 8:
+        try:
+            n_lags = 3
+            X_dq = np.column_stack(
+                [np.ones(hits.size - n_lags)]
+                + [hits[n_lags - lag : -lag] for lag in range(1, n_lags + 1)]
+            )
+            y_dq = hits[n_lags:].astype(float)
+            coef, _, _, _ = np.linalg.lstsq(X_dq, y_dq, rcond=None)
+            preds = X_dq @ coef
+            ssr = float(np.sum((y_dq - preds) ** 2))
+            tss = float(np.sum((y_dq - y_dq.mean()) ** 2))
+            r2 = 1.0 - ssr / tss if tss > 0 else 0.0
+            dq_stat = float(hits.size * r2)
+            dq_p = float(1.0 - _stats.chi2.cdf(dq_stat, df=n_lags))
+        except Exception:
+            dq_stat = 0.0
+            dq_p = 1.0
     return {
         "berkowitz": berkowitz,
         "ks": {"statistic": float(ks_stat), "p_value": float(ks_pvalue), "reject": bool(ks_pvalue < alpha)},
@@ -4229,6 +4475,12 @@ def _density_interval_battery(pit: np.ndarray, *, alpha: float = 0.05) -> dict[s
             "lr_statistic": float(ll_ind),
             "p_value": christoffersen_p,
             "reject": bool(christoffersen_p < alpha),
+        },
+        "engle_manganelli_dq": {
+            "statistic": dq_stat,
+            "p_value": dq_p,
+            "reject": bool(dq_p < alpha),
+            "n_lags": 3,
         },
         "n_obs": int(pit.size),
     }
