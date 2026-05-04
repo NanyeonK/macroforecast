@@ -265,9 +265,9 @@ FRED-SD에서만 활성. 50 states + DC에서 부분집합 결정.
 | none (default) | 사용 안 함 |
 | external_nber | NBER recession dates auto-load |
 | external_user_provided | 사용자 path 또는 list |
-| estimated_markov_switching | Hamilton (1989) MS estimate |
-| estimated_threshold | Tong (1990) threshold |
-| estimated_structural_break | Bai-Perron break detection |
+| estimated_markov_switching | Hamilton (1989) MS estimate (v0.1: **future**, validator rejects -- see v0.2 issue) |
+| estimated_threshold | Tong (1990) threshold (v0.1: **future**) |
+| estimated_structural_break | Bai-Perron break detection (v0.1: **future**) |
 
 estimated_* 옵션은 추가 axis로 언제 다시 추정할지 결정. `full_sample_once`는 거부 (미래 정보 누설).
 
