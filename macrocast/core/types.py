@@ -288,6 +288,11 @@ class L5EvaluationArtifact(DataType):
     report_artifacts: dict[str, Any] = field(default_factory=dict)
     upstream_hashes: dict[str, str] = field(default_factory=dict)
     l5_axis_resolved: dict[str, Any] = field(default_factory=dict)
+    # Per-(model_id, target, horizon, origin) loss panel. Required for
+    # per-origin Hansen 2005 MCS / SPA / RC bootstrap; populated by
+    # ``materialize_l5_minimal``. Empty when the L5 path falls back to
+    # summary-only metrics (legacy behaviour).
+    per_origin_loss_panel: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
 @dataclass(frozen=True)
