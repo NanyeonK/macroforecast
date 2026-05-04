@@ -63,41 +63,83 @@ def _path_label(path: tuple[Any, ...]) -> str:
 
 
 def _expand_cells(recipe_root: dict[str, Any]) -> tuple[list[dict[str, Any]], list[tuple[tuple[Any, ...], Any]]]:
-    """Expand every ``{sweep: [...]}`` marker into concrete recipe roots.
+    """Expand every ``{sweep: [...]}`` marker and ``sweep_groups`` block into
+    concrete recipe roots.
 
-    Returns ``(concrete_roots, sweep_paths)``. When the recipe has no sweep
-    markers, returns ``([deep_copy_of_root], [])`` so the caller can iterate a
-    single cell.
+    Issue #203: ``sweep_groups`` at any layer is treated as a sweep over
+    alternative subgraphs. For each group, the layer's ``nodes`` and
+    ``sinks`` are replaced with the group's. The expansion combines with
+    param-level sweeps via the existing grid / zip combine modes.
     """
 
-    paths = _walk_sweep_paths(recipe_root)
-    if not paths:
-        return [copy.deepcopy(recipe_root)], []
+    # First, expand sweep_groups (subgraph alternatives) layer by layer.
+    base_recipes = _expand_sweep_groups(recipe_root)
 
-    combo_mode = ((recipe_root.get("sweep_combination", {}) or {}).get("mode")) or "grid"
-    options = [values for _, values in paths]
+    expanded_concrete: list[dict[str, Any]] = []
+    expanded_paths: list[tuple[tuple[Any, ...], Any]] | None = None
+    for base in base_recipes:
+        paths = _walk_sweep_paths(base)
+        if not paths:
+            expanded_concrete.append(copy.deepcopy(base))
+            if expanded_paths is None:
+                expanded_paths = []
+            continue
 
-    if combo_mode == "zip":
-        lengths = {len(values) for values in options}
-        if len(lengths) != 1:
-            raise ValueError("zip sweep combination requires equal sweep lengths")
-        combos = [tuple(values[idx] for values in options) for idx in range(next(iter(lengths)))]
-    elif combo_mode == "grid":
-        combos = []
-        from itertools import product
+        combo_mode = ((base.get("sweep_combination", {}) or {}).get("mode")) or "grid"
+        options = [values for _, values in paths]
 
-        for combo in product(*options):
-            combos.append(combo)
-    else:
-        raise ValueError(f"unsupported sweep_combination.mode={combo_mode!r}")
+        if combo_mode == "zip":
+            lengths = {len(values) for values in options}
+            if len(lengths) != 1:
+                raise ValueError("zip sweep combination requires equal sweep lengths")
+            combos = [tuple(values[idx] for values in options) for idx in range(next(iter(lengths)))]
+        elif combo_mode == "grid":
+            from itertools import product
+
+            combos = list(product(*options))
+        else:
+            raise ValueError(f"unsupported sweep_combination.mode={combo_mode!r}")
+
+        for combo in combos:
+            cell = copy.deepcopy(base)
+            for (path, _values), value in zip(paths, combo):
+                _set_at(cell, path, value)
+            expanded_concrete.append(cell)
+        if expanded_paths is None:
+            expanded_paths = [(path, None) for path, _ in paths]
+
+    return expanded_concrete or [copy.deepcopy(recipe_root)], expanded_paths or []
+
+
+def _expand_sweep_groups(recipe_root: dict[str, Any]) -> list[dict[str, Any]]:
+    """For each layer carrying a ``sweep_groups`` block, generate one
+    concrete recipe per group with the group's ``nodes`` / ``sinks``
+    substituted in. Combines via grid product when multiple layers carry
+    groups."""
+
+    from itertools import product
+
+    layer_groups: list[tuple[str, list[dict[str, Any]]]] = []
+    for layer_key, block in recipe_root.items():
+        if isinstance(block, dict) and isinstance(block.get("sweep_groups"), list):
+            layer_groups.append((layer_key, block["sweep_groups"]))
+
+    if not layer_groups:
+        return [copy.deepcopy(recipe_root)]
 
     concrete: list[dict[str, Any]] = []
-    for combo in combos:
+    for combo in product(*[groups for _, groups in layer_groups]):
         cell = copy.deepcopy(recipe_root)
-        for (path, _values), value in zip(paths, combo):
-            _set_at(cell, path, value)
+        for (layer_key, _), group in zip(layer_groups, combo):
+            block = cell.setdefault(layer_key, {})
+            block.pop("sweep_groups", None)
+            if "nodes" in group:
+                block["nodes"] = copy.deepcopy(group["nodes"])
+            if "sinks" in group:
+                block["sinks"] = copy.deepcopy(group["sinks"])
+            block["_sweep_group_id"] = group.get("id", "")
         concrete.append(cell)
-    return concrete, [(path, None) for path, _ in paths]
+    return concrete
 
 
 def _generate_cell_id(index: int, sweep_values: dict[str, Any], naming: str = "descriptive", template: str | None = None) -> str:

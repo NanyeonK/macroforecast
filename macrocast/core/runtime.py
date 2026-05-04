@@ -259,6 +259,11 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
     if official_tcodes:
         l1_leaf_for_l2["official_tcode_map"] = dict(official_tcodes)
 
+    # Issue #202: FRED-SD frequency alignment. Applied *before* the
+    # transform pipeline so downstream stages see a single-frequency
+    # panel.
+    if l1_artifact.dataset and "fred_sd" in str(l1_artifact.dataset):
+        df = _apply_fred_sd_frequency_alignment(df, resolved, l1_artifact, cleaning_log)
     df, transform_map = _apply_transform(df, resolved, leaf_config, l1_leaf_for_l2, cleaning_log)
     df, n_outliers = _apply_outlier_policy(df, resolved, leaf_config, cleaning_log)
     df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
@@ -878,6 +883,50 @@ def materialize_l4_minimal(
     refit_origins: dict[str, tuple[Any, ...]] = {}
     training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
     model_ids: list[str] = []
+    # Issue #204: ``parallel_unit = models`` runs each fit_node concurrently
+    # in threads (sklearn estimators release the GIL inside numerical
+    # kernels, so threads are safe and avoid the pickling overhead of
+    # processes). Other parallel_unit options (horizons / targets /
+    # oos_dates) require finer-grained refactoring tracked separately.
+    l0 = recipe_root.get("0_meta", {}) or {}
+    parallel_unit = (l0.get("fixed_axes", {}) or {}).get("parallel_unit", "cells")
+    n_workers = int((l0.get("leaf_config", {}) or {}).get("n_workers_inner", 4))
+    if parallel_unit == "models" and len(fit_nodes) > 1:
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _process_node(fit_node):
+            return _run_l4_fit_node(
+                fit_node, raw, X, y, target, horizon, l0_seed
+            )
+
+        with ThreadPoolExecutor(max_workers=n_workers) as pool:
+            results = list(pool.map(_process_node, fit_nodes))
+        for fit_node, result in zip(fit_nodes, results):
+            model_id, model, node_forecasts, node_origins, node_windows = result
+            forecasts.update(node_forecasts)
+            artifacts[model_id] = model
+            benchmark_flags[model_id] = bool(fit_node.get("is_benchmark", False))
+            refit_origins[model_id] = tuple(node_origins)
+            training_windows.update(node_windows)
+            model_ids.append(model_id)
+        sample_index = pd.DatetimeIndex(sorted({key[3] for key in forecasts}))
+        return (
+            L4ForecastsArtifact(
+                forecasts=forecasts,
+                forecast_object="point",
+                sample_index=sample_index,
+                targets=(target,),
+                horizons=(horizon,),
+                model_ids=tuple(model_ids),
+                upstream_hashes={},
+            ),
+            L4ModelArtifactsArtifact(artifacts=artifacts, is_benchmark=benchmark_flags),
+            L4TrainingMetadataArtifact(
+                forecast_origins=tuple(sample_index),
+                refit_origins=refit_origins,
+                training_window_per_origin=training_windows,
+            ),
+        )
     for fit_node in fit_nodes:
         params = dict(fit_node.get("params", {}) or {})
         if l0_seed is not None and "random_state" not in params:
@@ -970,6 +1019,83 @@ def materialize_l4_minimal(
             training_window_per_origin=training_windows,
         ),
     )
+
+
+def _run_l4_fit_node(
+    fit_node: dict[str, Any],
+    raw: dict[str, Any],
+    X: pd.DataFrame,
+    y: pd.Series,
+    target: str,
+    horizon: int,
+    l0_seed: int | None,
+) -> tuple[str, ModelArtifact, dict[tuple[str, str, int, Any], float], list[Any], dict[tuple[str, Any], tuple[Any, Any]]]:
+    """Run the same fit-loop the sequential path uses, but for a single
+    ``fit_node``. Used by ``parallel_unit = models``."""
+
+    params = dict(fit_node.get("params", {}) or {})
+    if l0_seed is not None and "random_state" not in params:
+        params["random_state"] = l0_seed
+    family = params.get("family", "ridge")
+    forecast_strategy = params.get("forecast_strategy", "direct")
+    training_start_rule = params.get("training_start_rule", "expanding")
+    refit_policy = params.get("refit_policy", "every_origin")
+    rolling_window = int(params.get("rolling_window", max(24, min(len(X) // 2, 120))))
+    refit_step = int(params.get("refit_step", 1)) if refit_policy == "every_n_origins" else 1
+    if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm"}:
+        params["_l4_leaf_config"] = raw.get("leaf_config", {}) or {}
+        params = _resolve_l4_tuning(params, X, y)
+        params.pop("_l4_leaf_config", None)
+    min_train_size = _minimal_train_size(params, n_obs=len(X), n_features=len(X.columns))
+    model_id = fit_node.get("id", "fit_model")
+    forecasts: dict[tuple[str, str, int, Any], float] = {}
+    origins: list[Any] = []
+    training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
+    last_fit_position: int | None = None
+    last_model = None
+    for position in range(min_train_size, len(X)):
+        origin = X.index[position]
+        if training_start_rule == "rolling":
+            start = max(0, position - rolling_window)
+        else:
+            start = 0
+        train_X = X.iloc[start:position]
+        train_y = y.iloc[start:position]
+        should_refit = (
+            last_model is None
+            or refit_policy == "every_origin"
+            or (refit_policy == "every_n_origins" and (last_fit_position is None or position - last_fit_position >= refit_step))
+        )
+        if should_refit and refit_policy != "single_fit":
+            last_model = _build_l4_model(family, params)
+            last_model.fit(train_X, train_y)
+            last_fit_position = position
+        elif refit_policy == "single_fit" and last_model is None:
+            last_model = _build_l4_model(family, params)
+            last_model.fit(train_X, train_y)
+            last_fit_position = position
+        forecast_value = _l4_predict_one(last_model, X, position, forecast_strategy=forecast_strategy, horizon=horizon)
+        forecasts[(model_id, target, horizon, origin)] = forecast_value
+        origins.append(origin)
+        training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
+    full_model = _build_l4_model(family, params)
+    full_model.fit(X, y)
+    artifact = ModelArtifact(
+        model_id=model_id,
+        family=family,
+        fitted_object=full_model,
+        framework=_l4_framework(family),
+        fit_metadata={
+            "n_obs": len(X),
+            "min_train_size": min_train_size,
+            "runtime": f"{training_start_rule}_{forecast_strategy}",
+            "refit_policy": refit_policy,
+            "rolling_window": rolling_window,
+            **{k: params[k] for k in ("alpha", "l1_ratio", "n_estimators", "max_depth", "C") if k in params},
+        },
+        feature_names=tuple(X.columns),
+    )
+    return model_id, artifact, forecasts, origins, training_windows
 
 
 def _l4_framework(family: str) -> str:
@@ -4630,6 +4756,89 @@ def _validate_targets_present(frame: pd.DataFrame, leaf_config: dict[str, Any], 
         raise ValueError(f"target columns missing from custom panel: {missing}")
     if resolved.get("target_structure") == "single_target" and not target:
         raise ValueError("single_target runtime requires leaf_config.target")
+
+
+def _apply_fred_sd_frequency_alignment(
+    df: pd.DataFrame,
+    resolved: dict[str, Any],
+    l1_artifact: L1DataDefinitionArtifact,
+    cleaning_log: dict[str, Any],
+) -> pd.DataFrame:
+    """Issue #202 -- align mixed-frequency FRED-SD panels.
+
+    Reads ``sd_series_frequency_filter``, ``quarterly_to_monthly_rule``
+    and ``monthly_to_quarterly_rule`` from the L2 resolved axes and the
+    per-series frequency map from the L1 raw_panel metadata.
+    """
+
+    series_freq_map = (l1_artifact.raw_panel.metadata.values or {}).get("series_frequency", {}) or {}
+    if not series_freq_map:
+        # Without per-series frequency metadata we can't selectively align;
+        # leave the panel untouched and record a no-op.
+        cleaning_log.setdefault("steps", []).append(
+            {"step": "fred_sd_frequency_alignment", "applied": False, "reason": "no series_frequency metadata"}
+        )
+        return df
+
+    monthly_cols = [c for c in df.columns if str(series_freq_map.get(c, "")).lower() == "monthly"]
+    quarterly_cols = [c for c in df.columns if str(series_freq_map.get(c, "")).lower() == "quarterly"]
+    sd_filter = resolved.get("sd_series_frequency_filter", "both")
+    qm_rule = resolved.get("quarterly_to_monthly_rule", "step_backward")
+    mq_rule = resolved.get("monthly_to_quarterly_rule", "quarterly_average")
+
+    if sd_filter == "monthly_only":
+        df = df[monthly_cols + [c for c in df.columns if c not in monthly_cols and c not in quarterly_cols]]
+        cleaning_log.setdefault("steps", []).append(
+            {"step": "fred_sd_frequency_alignment", "filter": "monthly_only", "n_dropped": len(quarterly_cols)}
+        )
+        return df
+    if sd_filter == "quarterly_only":
+        df = df[quarterly_cols + [c for c in df.columns if c not in monthly_cols and c not in quarterly_cols]]
+        cleaning_log.setdefault("steps", []).append(
+            {"step": "fred_sd_frequency_alignment", "filter": "quarterly_only", "n_dropped": len(monthly_cols)}
+        )
+        return df
+
+    # Both frequencies present -- harmonise to the dominant target
+    # frequency. We default to monthly (most macrocast recipes target
+    # monthly horizons); the inverse path (monthly_to_quarterly) runs when
+    # the target's frequency is quarterly.
+    target_freq = (l1_artifact.frequency or "monthly").lower()
+    if target_freq == "monthly" and quarterly_cols:
+        for col in quarterly_cols:
+            series = df[col]
+            if qm_rule == "linear_interpolation":
+                df[col] = series.interpolate(method="linear", limit_direction="both")
+            elif qm_rule == "step_forward":
+                df[col] = series.ffill()
+            elif qm_rule == "chow_lin":
+                # Chow-Lin requires a related monthly indicator -- if not
+                # supplied, fall back to step_backward and document.
+                df[col] = series.bfill().ffill()
+            else:  # step_backward
+                df[col] = series.bfill().ffill()
+        cleaning_log.setdefault("steps", []).append(
+            {"step": "fred_sd_frequency_alignment", "rule": qm_rule, "direction": "quarterly_to_monthly", "n_cols": len(quarterly_cols)}
+        )
+    elif target_freq == "quarterly" and monthly_cols:
+        if not isinstance(df.index, pd.DatetimeIndex):
+            cleaning_log.setdefault("steps", []).append(
+                {"step": "fred_sd_frequency_alignment", "applied": False, "reason": "non-datetime index"}
+            )
+            return df
+        if mq_rule == "quarterly_average":
+            agg = df[monthly_cols].resample("QE").mean()
+        elif mq_rule == "quarterly_endpoint":
+            agg = df[monthly_cols].resample("QE").last()
+        else:  # quarterly_sum
+            agg = df[monthly_cols].resample("QE").sum()
+        # Align back to the (quarterly) target index by reindexing.
+        df_q = df[quarterly_cols + [c for c in df.columns if c not in monthly_cols and c not in quarterly_cols]]
+        df = df_q.join(agg, how="left").reindex(df_q.index)
+        cleaning_log.setdefault("steps", []).append(
+            {"step": "fred_sd_frequency_alignment", "rule": mq_rule, "direction": "monthly_to_quarterly", "n_cols": len(monthly_cols)}
+        )
+    return df
 
 
 def _apply_transform(
