@@ -2844,7 +2844,79 @@ def _l8_export_artifacts(output_directory: Path, axes: dict[str, Any], upstream_
                 diag_dir = output_directory / "diagnostics"
                 diag_dir.mkdir(exist_ok=True)
                 add_json(diag_dir / f"{sink_name}.json", artifact, sink_name)
+
+    compression = axes.get("compression", "none")
+    if compression in {"gzip", "zip"}:
+        leaf = axes.get("leaf_config", {}) or {}
+        try:
+            level = int(leaf.get("compression_level", 6))
+        except (TypeError, ValueError):
+            level = 6
+        if compression == "gzip":
+            exported = _l8_apply_gzip(exported, level)
+        else:  # zip
+            exported = _l8_apply_zip(exported, output_directory, level)
     return exported
+
+
+def _l8_apply_gzip(exported: list[ExportedFile], level: int) -> list[ExportedFile]:
+    """Replace each non-manifest export with its ``.gz`` form. Manifest /
+    recipe files are left uncompressed (they are written *after*
+    ``_l8_export_artifacts`` returns) -- gzipping every artifact in place
+    keeps the per-file structure intact while shrinking the on-disk
+    footprint."""
+
+    import gzip
+    import shutil
+
+    rewritten: list[ExportedFile] = []
+    for entry in exported:
+        path = entry.path
+        if not path.exists() or path.suffix == ".gz":
+            rewritten.append(entry)
+            continue
+        gz_path = path.with_suffix(path.suffix + ".gz")
+        with path.open("rb") as src, gzip.open(gz_path, "wb", compresslevel=level) as dst:
+            shutil.copyfileobj(src, dst)
+        path.unlink()
+        rewritten.append(
+            ExportedFile(
+                path=gz_path,
+                artifact_type=f"{entry.artifact_type}_gz",
+                source_sink=entry.source_sink,
+            )
+        )
+    return rewritten
+
+
+def _l8_apply_zip(
+    exported: list[ExportedFile], output_directory: Path, level: int
+) -> list[ExportedFile]:
+    """Bundle every exported file into ``<output_dir>.zip`` and remove the
+    originals; return a single ``ExportedFile`` describing the bundle."""
+
+    import zipfile
+
+    zip_path = output_directory / f"{output_directory.name}.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=level) as zf:
+        for entry in exported:
+            if not entry.path.exists():
+                continue
+            arcname = entry.path.relative_to(output_directory).as_posix()
+            zf.write(entry.path, arcname=arcname)
+    for entry in exported:
+        try:
+            if entry.path.exists() and entry.path != zip_path:
+                entry.path.unlink()
+        except OSError:
+            pass
+    return [
+        ExportedFile(
+            path=zip_path,
+            artifact_type="zip_bundle",
+            source_sink="l8_artifacts_v1",
+        )
+    ]
 
 
 def _l8_resolve_formats(export_format: str) -> set[str]:
