@@ -790,19 +790,10 @@ def _validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> l
     if regime in {None, "none"}:
         return []
     issues = []
-    # PR-D of the v0.1 honesty pass demoted the three ``estimated_*``
-    # regime options to ``future``. v0.2 promotes ``estimated_markov_switching``
-    # back via Hamilton (1989) Markov regression; the other two remain
-    # future until #196 / #197 land.
-    _STILL_FUTURE = {"estimated_threshold", "estimated_structural_break"}
-    if regime in _STILL_FUTURE:
-        return [
-            _issue(
-                f"l1.regime_definition",
-                f"regime_definition={regime!r} is future -- v0.2 has Hamilton MS only; "
-                "Tong (1990) SETAR (#196) and Bai-Perron break detection (#197) are still pending.",
-            )
-        ]
+    # All three estimated regimes are operational in v0.2:
+    # - estimated_markov_switching: Hamilton (1989) MS (#195)
+    # - estimated_threshold: Tong (1990) SETAR (#196)
+    # - estimated_structural_break: Bai-Perron break detection (#197)
     if regime == "external_user_provided":
         has_path = "regime_indicator_path" in leaf_config
         has_dates = "regime_dates_list" in leaf_config
