@@ -190,7 +190,12 @@ def _stable_repr(value: Any) -> Any:
         }
     if isinstance(value, dict):
         return {str(_stable_repr(k)): _stable_repr(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set)):
+    if isinstance(value, (set, frozenset)):
+        # set iteration order depends on PYTHONHASHSEED, so identical artifacts
+        # would otherwise serialize differently across processes and break the
+        # bit-exact replicate guarantee. Sort by string repr for stability.
+        return sorted((_stable_repr(item) for item in value), key=lambda x: json.dumps(x, sort_keys=True, default=str))
+    if isinstance(value, (list, tuple)):
         return [_stable_repr(item) for item in value]
     if hasattr(value, "__dataclass_fields__"):
         return {
