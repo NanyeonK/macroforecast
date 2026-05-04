@@ -3017,25 +3017,94 @@ def _l6_nested_results(
 
 
 def _l6_cpa_results(errors: pd.DataFrame, sub: dict[str, Any], l4_models: L4ModelArtifactsArtifact) -> dict[tuple[Any, ...], Any]:
+    """Issue #199 -- Giacomini & Rossi (2010) rolling-window fluctuation
+    test + Rossi & Sekhposyan (2010) recursive-window variant.
+
+    For each (model_a, model_b) pair and each (target, horizon):
+
+    1. Compute the loss differential d_t = L(e^A_t) - L(e^B_t).
+    2. Centre by the full-sample mean.
+    3. Compute a rolling window mean of d_t with bandwidth ``m``,
+       standardised by a Newey-West HAC estimate of the long-run variance.
+    4. Report ``max_t |F_t|``: the maximum standardised rolling mean.
+
+    The Giacomini-Rossi statistic is asymptotically supremum of a
+    Brownian bridge functional; we report the published critical-value
+    constant ``k_alpha = 2.7727`` for ``alpha = 0.05`` and ``m/T`` in
+    [0.1, 0.5] (Giacomini-Rossi 2010 Table 1, two-sided test). Simulated
+    critical values per ``m/T`` ratio remain a follow-up.
+
+    For the recursive variant we replace the rolling window with an
+    expanding window starting at ``m``.
+    """
+
+    from math import sqrt
+
     results: dict[tuple[Any, ...], Any] = {}
     model_ids = sorted(errors["model_id"].unique()) if not errors.empty else []
     pairs = _l6_pair_list({"model_pair_strategy": "vs_benchmark_only"}, {}, model_ids, l4_models)
     tests = ["giacomini_rossi_2010", "rossi_sekhposyan"] if sub.get("cpa_test") == "multi" else [sub.get("cpa_test")]
+    window_ratio = float(sub.get("cpa_window_ratio", 0.25))
+    alpha = float(sub.get("cpa_alpha", 0.05))
+    # Giacomini-Rossi (2010) critical value approximation at the 5% level
+    # for m/T in [0.1, 0.5]; see paper Table 1.
+    k_alpha = {0.05: 2.7727, 0.10: 2.5375, 0.01: 3.1518}.get(alpha, 2.7727)
+
+    def _newey_west_se(d: np.ndarray, lags: int) -> float:
+        n = d.size
+        if n == 0:
+            return 1.0
+        de = d - d.mean()
+        gamma0 = float(np.dot(de, de) / n)
+        var = gamma0
+        for lag in range(1, lags + 1):
+            weight = 1.0 - lag / (lags + 1)
+            cov = float(np.dot(de[lag:], de[:-lag]) / n)
+            var += 2.0 * weight * cov
+        return float(np.sqrt(max(var / n, 1e-12)))
+
     for test_name in tests:
         for model_a, model_b in pairs:
             for (target, horizon), group in errors.groupby(["target", "horizon"]):
                 left = group.loc[group["model_id"] == model_a, ["origin", "squared"]].rename(columns={"squared": "loss_a"})
                 right = group.loc[group["model_id"] == model_b, ["origin", "squared"]].rename(columns={"squared": "loss_b"})
                 joined = left.merge(right, on="origin", how="inner").sort_values("origin")
-                diff = joined["loss_a"] - joined["loss_b"]
-                centered = diff - diff.mean() if not diff.empty else diff
-                path = centered.cumsum().tolist()
-                statistic = float(max(abs(value) for value in path)) if path else None
+                if joined.empty:
+                    results[(test_name, (model_a, model_b), target, int(horizon))] = {
+                        "statistic": None,
+                        "critical_value": None,
+                        "p_value": None,
+                        "time_path": [],
+                        "decision": None,
+                        "window_size": 0,
+                    }
+                    continue
+                d = joined["loss_a"].to_numpy() - joined["loss_b"].to_numpy()
+                centered = d - d.mean()
+                T = d.size
+                m = max(4, int(round(window_ratio * T)))
+                # Rolling (Giacomini-Rossi) or expanding (Rossi-Sekhposyan).
+                stats: list[float] = []
+                for t in range(m, T + 1):
+                    if test_name == "giacomini_rossi_2010":
+                        window = centered[t - m : t]
+                    else:  # rossi_sekhposyan recursive
+                        window = centered[:t]
+                    nw_lags = max(1, int(np.ceil(m ** (1 / 3))))
+                    se = _newey_west_se(window, nw_lags)
+                    if se > 0:
+                        stat_t = float(window.mean() / se)
+                        stats.append(stat_t)
+                supremum = float(max(abs(s) for s in stats)) if stats else 0.0
+                decision = bool(abs(supremum) > k_alpha)
                 results[(test_name, (model_a, model_b), target, int(horizon))] = {
-                    "statistic": statistic,
-                    "p_value": None,
-                    "time_path": path,
-                    "decision": None,
+                    "statistic": supremum,
+                    "critical_value": k_alpha,
+                    "p_value": None,  # finite-sample p-values via simulation = follow-up
+                    "time_path": stats,
+                    "decision": decision,
+                    "window_size": m,
+                    "n_obs": T,
                 }
     return results
 
