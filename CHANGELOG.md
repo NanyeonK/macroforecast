@@ -3,6 +3,31 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.6.1] -- 2026-05-05 -- "post-rename consistency sweep"
+
+### Fixed
+* **Stale ``v0.5.x`` strings** in ``macroforecast/__init__.py`` docstring,
+  ``docs/api/index.md``, ``docs/getting_started/index.md``, and the API
+  status banners in every ``docs/simple/*.md`` page. The package
+  docstring no longer pins a version number ("**Public surface**" with
+  no parenthesised version); API banners use "(current)" /
+  "current YAML runtime" instead of "(v0.5.x)".
+* **``release.yml`` NOTE comment** still claimed the ``macroforecast``
+  PyPI namespace was held by an unrelated 2017 package. Replaced with
+  the actual situation: the maintainer owns the namespace and v0.6.0
+  was the first release published under it.
+* **``.github/RELEASE_CHECKLIST.md`` "PyPI namespace status" section**
+  rewritten the same way; gained a ``pip index versions`` post-tag
+  check; the throwaway-venv install command now uses
+  ``pip install macroforecast==X.Y.Z`` instead of the GitHub-tag fallback.
+* **``CLAUDE.md`` header** still showed "Version 0.5.0" + "~785 tests";
+  pinned the version to "see ``pyproject.toml`` / ``__version__``" and
+  refreshed the test count to 953.
+
+### Notes
+* No code changes; same 953 tests, same recipe schema, same bit-exact
+  replication contract. v0.6.0 narrative consistency patch.
+
 ## [0.6.0] -- 2026-05-05 -- "rename macrocast -> macroforecast"
 
 ### Changed (BREAKING)

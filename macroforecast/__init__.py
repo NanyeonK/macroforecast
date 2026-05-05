@@ -2,7 +2,7 @@
 
 Horse race research benchmarking package for macro forecasting.
 
-**Public surface** (v0.5)
+**Public surface**
 
 - ``macroforecast.run(recipe)`` -- execute a recipe end-to-end (L1->L8) and
   return a :class:`ManifestExecutionResult`. Iterates every sweep cell.
@@ -25,7 +25,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 _LAZY_EXPORTS = {
     # public top-level API

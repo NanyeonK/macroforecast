@@ -15,7 +15,7 @@ L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
 | Layer design | You want to see the layer/DAG architecture before writing YAML. | [Navigator Docs](../navigator/index.md) |
 | Runnable core recipe | You want the current L1-L8 artifact path and output directory. | [Quickstart](quickstart.md) |
 | Runtime support matrix | You need to know what is executed today versus schema-only. | [Runtime Support Matrix](runtime_support.md) |
-| Planned simple API | You want to preview the upcoming high-level Python facade (`mf.forecast` / `mf.Experiment`). For v0.5.x use `macroforecast.run` or Detail Docs. | [Simple Docs (planned)](../simple/index.md) |
+| Planned simple API | You want to preview the upcoming high-level Python facade (`mf.forecast` / `mf.Experiment`). For the current release use `macroforecast.run` or Detail Docs. | [Simple Docs (planned)](../simple/index.md) |
 | Contract detail | You need exact layer contracts, artifacts, or custom hooks. | [Detail Docs](../detail/index.md) |
 
 ## Minimal Runtime Call

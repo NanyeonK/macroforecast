@@ -3,15 +3,16 @@ name: release
 # PyPI publish via API token (PYPI_API_TOKEN secret in repo settings).
 # Triggers on tag push `v*.*.*`.
 #
-# NOTE: this workflow only publishes successfully when (a) the
-# ``PYPI_API_TOKEN`` secret is registered, and (b) the token has upload
-# permission for the ``macroforecast`` PyPI project. The PyPI ``macroforecast``
-# namespace is currently held by an unrelated 2017 package
-# (``macroforecast 0.0.2`` by Amir Sani); until ownership / a rename is
-# resolved, ``pip install macroforecast`` will not pull this project.
-# README + docs/install.md therefore recommend GitHub-tag installation
-# (``pip install "git+https://github.com/NanyeonK/macroforecast.git@<tag>"``)
-# as the supported installation path.
+# NOTE: the project maintainer owns the ``macroforecast`` PyPI namespace,
+# so a successful tag push publishes the new version to
+# https://pypi.org/project/macroforecast/. v0.6.0 was the first release
+# under this namespace (the v0.5.x history was published under the old
+# ``macrocast`` GitHub repo and never reached PyPI; v0.5.x tags remain
+# in this repo's history under the original name).
+#
+# Required: the ``PYPI_API_TOKEN`` secret must be registered in repo
+# Settings → Secrets and variables → Actions, scoped to the
+# ``macroforecast`` PyPI project.
 
 on:
   push:

@@ -1,6 +1,6 @@
 # API Reference
 
-Curated reference for the public surface of macroforecast v0.5.x.
+Curated reference for the public surface of the current public surface of macroforecast.
 
 ## Top-level API
 

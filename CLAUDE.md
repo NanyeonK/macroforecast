@@ -1,12 +1,13 @@
 # macroforecast
 
 > Fair, reproducible macro forecasting benchmarking package.
-> Version 0.5.0 (12-layer canonical design — see `plans/design/part1-4`).
+> Current version is in ``pyproject.toml`` and ``macroforecast/__init__.py``;
+> 12-layer canonical design lives in ``plans/design/part1-4``.
 
 ## Quick start
 
 ```bash
-python3 -m pytest tests/ -x -q                     # ~785 tests, <30s on a laptop
+python3 -m pytest tests/ -x -q                     # ~953 tests, <30s on a laptop
 python3 -c "import macroforecast; print(macroforecast.__version__)"
 python3 -c "import macroforecast; macroforecast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
