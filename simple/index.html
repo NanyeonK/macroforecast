@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b9afe91b"></script>
+      <script src="../_static/documentation_options.js?v=8e576371"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -95,6 +95,24 @@
   <section id="simple-docs">
 <h1>Simple Docs<a class="headerlink" href="#simple-docs" title="Link to this heading"></a></h1>
 <p>This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.</p>
+<blockquote>
+<div><p><strong>API status note (v0.5.x)</strong>: the <code class="docutils literal notranslate"><span class="pre">mc.forecast(...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mc.Experiment(...).compare_models([...]).run()</span></code> forms shown
+throughout this Simple track are the <strong>planned shape</strong> for v0.6+.
+They are not yet exported from <code class="docutils literal notranslate"><span class="pre">macrocast.__all__</span></code>.</p>
+<p>The current canonical entry surface is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.run(&quot;recipe.yaml&quot;)</span></code> – run a YAML recipe end-to-end.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.replicate(&quot;manifest.json&quot;)</span></code> – bit-exact replicate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.scaffold.builder.RecipeBuilder</span></code> – build recipes
+programmatically (<code class="docutils literal notranslate"><span class="pre">b.l0(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">b.l1(...)</span></code>, …, <code class="docutils literal notranslate"><span class="pre">b.to_yaml()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">macrocast</span> <span class="pre">scaffold</span></code> – interactive recipe wizard.</p></li>
+</ul>
+<p>See the <strong>Detail (code): Full</strong> track for working examples that
+match the v0.5.x runtime exactly. The Simple-track snippets below
+describe the intended look-and-feel; treat them as a design preview
+until the wrapper API ships.</p>
+</div></blockquote>
 <p>The simple API is organized around <code class="docutils literal notranslate"><span class="pre">forecast</span></code> and <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
 

@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b9afe91b"></script>
+      <script src="_static/documentation_options.js?v=8e576371"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -96,29 +96,48 @@
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Python 3.10 or later</p></li>
-<li><p>pandas, numpy, scikit-learn, statsmodels, PyYAML</p></li>
+<li><p>pandas, numpy, scikit-learn, statsmodels, scipy, matplotlib, PyYAML</p></li>
 </ul>
 </section>
-<section id="install-from-source">
-<h2>Install from source<a class="headerlink" href="#install-from-source" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-org/macroforecast.git
-<span class="nb">cd</span><span class="w"> </span>macroforecast
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<section id="pypi-namespace-notice">
+<h2>PyPI namespace notice<a class="headerlink" href="#pypi-namespace-notice" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">macrocast</span></code> PyPI namespace is currently held by an unrelated 2017
+package (<code class="docutils literal notranslate"><span class="pre">macrocast</span> <span class="pre">0.0.2</span></code> by Amir Sani). <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast</span></code> will
+install <strong>that</strong> package, not this one. Until the namespace is resolved,
+install from GitHub.</p>
+</section>
+<section id="install-from-a-tagged-release-recommended">
+<h2>Install from a tagged release (recommended)<a class="headerlink" href="#install-from-a-tagged-release-recommended" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
+</pre></div>
+</div>
+<p>Optional extras use the same <code class="docutils literal notranslate"><span class="pre">package[extra]</span> <span class="pre">&#64;</span> <span class="pre">git+url</span></code> syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="install-from-source-development">
+<h2>Install from source (development)<a class="headerlink" href="#install-from-source-development" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/NanyeonK/macrocast.git
+<span class="nb">cd</span><span class="w"> </span>macrocast
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
 </section>
 <section id="verify-installation">
 <h2>Verify installation<a class="headerlink" href="#verify-installation" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;macrocast imported successfully&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available functions: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">macrocast</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;macrocast version: </span><span class="si">{</span><span class="n">macrocast</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>     <span class="c1"># 0.5.1</span>
 </pre></div>
 </div>
 <p>Run the test suite:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-x<span class="w"> </span>-q
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-x<span class="w"> </span>-q<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not deep&quot;</span>
 </pre></div>
 </div>
-<p>Expected: 291 tests pass in ~3 minutes.</p>
+<p>Expected: 953 tests pass / 12 skipped in ~25 seconds (CI baseline).</p>
 </section>
 <section id="optional-dependencies">
 <h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading"></a></h2>
@@ -161,25 +180,25 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep</span></code> extra (<code class="docutils literal notranslate"><span class="pre">torch</span></code>)</p></td>
 <td><p>LSTM / GRU / TCN model families</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[deep]</span></code></p></td>
+<td><p>see <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> section below</p></td>
 </tr>
 </tbody>
 </table>
 <p>Install all optional dependencies at once:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[all]&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[all] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
 </pre></div>
 </div>
 <p>All optional dependencies are import-guarded. The package works without them, but the corresponding features will raise <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> with a clear message when invoked.</p>
 <section id="the-deep-extra">
 <h3>The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra<a class="headerlink" href="#the-deep-extra" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code>, and <code class="docutils literal notranslate"><span class="pre">tcn</span></code> model families ship behind an opt-in <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra so core installs stay free of a torch dependency:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>macrocast<span class="o">[</span>deep<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
 </pre></div>
 </div>
 <p>Without the extra, referencing <code class="docutils literal notranslate"><span class="pre">model_family</span></code> in {lstm, gru, tcn} at sweep time raises a clear <code class="docutils literal notranslate"><span class="pre">ExecutionError</span></code> with the install hint.</p>
-<p>CPU-only torch is sufficient for Phase 5 — GPU / multi-node workflows are a Phase 11 deliverable. For strict reproducibility install the CPU wheel explicitly:</p>
+<p>For CPU-only torch (sufficient unless a GPU sweep is planned):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>torch
-pip<span class="w"> </span>install<span class="w"> </span>macrocast<span class="o">[</span>deep<span class="o">]</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1&quot;</span>
 </pre></div>
 </div>
 </section>
