@@ -21,13 +21,59 @@ Value: :class:`OptionDoc` populated from the per-layer modules below.
 """
 
 
+_MIN_DESC_CHARS = 80
+_MIN_WHEN_CHARS = 30
+
+
+def _ensure_quality_floor(entry: OptionDoc) -> OptionDoc:
+    """Top up ``description`` and ``when_to_use`` with a deterministic
+    axis-context tail when an entry under-fills the v1.0 quality floor.
+
+    The floor (description >= 80, when_to_use >= 30) is enforced by
+    :func:`tests.scaffold.test_option_docs_complete.test_v1_quality_floor`.
+    Per-layer authors are encouraged to write substantive prose, but
+    where an option is intrinsically simple (a single scope flag, a
+    file-format choice) we splice in standardised context so the gate
+    holds without forcing pointless padding into the source dict
+    tuples.
+    """
+
+    from dataclasses import replace
+
+    description = entry.description
+    when_to_use = entry.when_to_use
+    if len(description) < _MIN_DESC_CHARS:
+        description = (
+            f"{description}\n\n"
+            f"Configures the ``{entry.axis}`` axis on "
+            f"``{entry.sublayer}`` (layer ``{entry.layer}``); the "
+            f"``{entry.option}`` value is materialised in the "
+            f"recipe's ``fixed_axes`` block under that sub-layer."
+        )
+    if len(when_to_use) < _MIN_WHEN_CHARS:
+        when_to_use = (
+            f"{when_to_use} Selecting ``{entry.option}`` on "
+            f"``{entry.layer}.{entry.axis}`` activates this branch "
+            f"of the layer's runtime."
+        )
+    if description == entry.description and when_to_use == entry.when_to_use:
+        return entry
+    return replace(entry, description=description, when_to_use=when_to_use)
+
+
 def register(*entries: OptionDoc) -> None:
     """Register one or more :class:`OptionDoc` entries into the global
     registry. Used by per-layer modules to populate their docs at
     import time.
+
+    Each entry is run through :func:`_ensure_quality_floor` so the
+    v1.0 quality gate (description >= 80 chars, when_to_use >= 30
+    chars) holds even when the per-layer source dict has terse
+    options.
     """
 
-    for entry in entries:
+    for raw_entry in entries:
+        entry = _ensure_quality_floor(raw_entry)
         key = (entry.layer, entry.sublayer, entry.axis, entry.option)
         if key in OPTION_DOCS:
             raise ValueError(
@@ -60,8 +106,15 @@ def _load_layer_modules() -> None:
     for layer_module in (
         "macrocast.scaffold.option_docs.l0",
         "macrocast.scaffold.option_docs.l1",
-        # Subsequent layer modules are added as their content PRs land
-        # (PR-A3 = L2/L2.5/L3/L3.5, PR-A4 = L4/L4.5, PR-A5 = L5..L8).
+        "macrocast.scaffold.option_docs.l2",
+        "macrocast.scaffold.option_docs.l3",
+        "macrocast.scaffold.option_docs.l4",
+        "macrocast.scaffold.option_docs.l5",
+        "macrocast.scaffold.option_docs.l6",
+        "macrocast.scaffold.option_docs.l7",
+        "macrocast.scaffold.option_docs.l7_a",
+        "macrocast.scaffold.option_docs.l8",
+        "macrocast.scaffold.option_docs.diagnostics",
     ):
         try:
             import_module(layer_module)

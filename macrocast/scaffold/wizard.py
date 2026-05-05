@@ -197,11 +197,43 @@ def _intro(input_fn: Callable[[str], str]) -> str:
     return _TEMPLATES.get(raw, "single_model_forecast")
 
 
+_LAYER_KEYS: dict[str, str] = {
+    "l0": "0_meta",
+    "l1": "1_data",
+    "l1_5": "1_5_data_diagnostics",
+    "l2": "2_preprocessing",
+    "l2_5": "2_5_preprocessing_diagnostics",
+    "l3": "3_feature_engineering",
+    "l3_5": "3_5_feature_diagnostics",
+    "l4": "4_forecasting_model",
+    "l4_5": "4_5_model_diagnostics",
+    "l5": "5_evaluation",
+    "l6": "6_statistical_tests",
+    "l7": "7_interpretation",
+    "l8": "8_output",
+}
+
+
+def _layer_block(builder: RecipeBuilder, layer_id: str) -> dict[str, Any]:
+    """Return the recipe block dict for ``layer_id``.
+
+    Main layers (L0-L8) use the builder's per-layer namespace so its
+    presets stay consistent. Diagnostic layers (L1.5/L2.5/L3.5/L4.5)
+    have no builder namespace; we write directly into the underlying
+    recipe dict at the canonical key.
+    """
+
+    namespace = getattr(builder, layer_id, None)
+    if namespace is not None:
+        return namespace.block
+    key = _LAYER_KEYS[layer_id]
+    return builder._recipe.setdefault(key, {})
+
+
 def _walk_layer(builder: RecipeBuilder, layer_id: str, *, input_fn: Callable[[str], str]) -> None:
     layer = introspect.layer(layer_id)
     _heading(f"{layer.id.upper()}  {layer.name}")
-    namespace = getattr(builder, layer_id)
-    block = namespace.block
+    block = _layer_block(builder, layer_id)
     fixed_axes = block.setdefault("fixed_axes", {})
     leaf_config = block.setdefault("leaf_config", {})
     for axis in introspect.axes(layer_id):
@@ -209,7 +241,6 @@ def _walk_layer(builder: RecipeBuilder, layer_id: str, *, input_fn: Callable[[st
             continue
         result = _prompt_axis(axis, input_fn=input_fn)
         fixed_axes[axis.name] = _coerce_value(result.value, axis.default)
-        # leaf_config_keys: prompt for them in-line if any.
         for leaf_key in axis.leaf_config_keys:
             existing = leaf_config.get(leaf_key)
             prompt = f"  leaf_config.{leaf_key} [default = {existing!r}]: "
@@ -249,21 +280,39 @@ def _post_layer_validate(builder: RecipeBuilder) -> None:
         _print(f"    - {err}")
 
 
+_DEFAULT_INTERACTIVE_LAYERS: tuple[str, ...] = (
+    "l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8",
+)
+"""Main layers walked by default. Diagnostic layers (L1.5 / L2.5 / L3.5 /
+L4.5) are opt-in via ``include_diagnostics=True``."""
+
+
 def run_wizard(
     output_path: str | Path = "recipe.yaml",
     *,
     input_fn: Callable[[str], str] = input,
-    interactive_layers: tuple[str, ...] = ("l0", "l1"),
+    interactive_layers: tuple[str, ...] | None = None,
+    include_diagnostics: bool = False,
 ) -> RecipeBuilder:
     """Walk the user through the gate-following recipe authoring flow.
 
-    For v1.0 we step through L0 + L1 interactively (the most-customised
-    layers); L2-L8 are filled with sensible defaults via builder presets
-    and surfaced for review at the end. Future iterations will extend
-    interactive coverage to every layer as the per-layer OptionDoc
-    content lands (PR-A2..A13).
+    By default v1.0 steps through every main layer (L0..L8). Pass
+    ``include_diagnostics=True`` to additionally walk the four
+    diagnostic layers (L1.5, L2.5, L3.5, L4.5). For backwards-compat
+    callers can still pass an explicit ``interactive_layers`` tuple to
+    restrict the walk (e.g. ``("l0",)`` for the smoke test).
     """
 
+    if interactive_layers is None:
+        interactive_layers = _DEFAULT_INTERACTIVE_LAYERS
+        if include_diagnostics:
+            interactive_layers = (
+                "l0", "l1", "l1_5",
+                "l2", "l2_5",
+                "l3", "l3_5",
+                "l4", "l4_5",
+                "l5", "l6", "l7", "l8",
+            )
     template = _intro(input_fn)
     builder = RecipeBuilder()
     if template != "blank":

@@ -19,18 +19,18 @@ from macrocast.scaffold.option_docs import OPTION_DOCS
 # update this map as their docs land.
 _V1_REQUIRED_LAYERS: dict[str, bool] = {
     "l0": True,   # PR-A1: 6 entries
-    "l1": False,
-    "l1_5": False,
-    "l2": False,
-    "l2_5": False,
-    "l3": False,
-    "l3_5": False,
-    "l4": False,
-    "l4_5": False,
-    "l5": False,
-    "l6": False,
-    "l7": False,
-    "l8": False,
+    "l1": True,    # PR-A2 + extension: 107 entries
+    "l1_5": True,  # PR-A3: 50 entries (diagnostics module)
+    "l2": True,    # PR-A3: 48 entries (5-stage pipeline + scopes)
+    "l2_5": True,  # PR-A3: 42 entries (diagnostics module)
+    "l3": True,    # PR-A3: 37 ops
+    "l3_5": True,  # PR-A3: 49 entries (diagnostics module)
+    "l4": True,    # PR-A4: 49 entries
+    "l4_5": True,  # PR-A4: 42 entries (diagnostics module)
+    "l5": True,    # PR-A5: 30 entries (5 metric lists)
+    "l6": True,    # PR-A5: 11 tests (DM/GW/DMP, GR/RS, MCS/SPA/RC/StepM)
+    "l7": True,    # PR-A5: 15 entries (L7.B export shape)
+    "l8": True,    # PR-A5: 62 entries (export/saved/provenance/granularity)
 }
 
 
@@ -72,6 +72,40 @@ def test_registry_has_no_orphan_entries():
         if key not in operational:
             orphans.append(key)
     assert not orphans, f"OptionDoc registry has orphans: {orphans}"
+
+
+def test_v1_quality_floor():
+    """Beyond the Tier-1 'every field is non-empty' gate, v1.0 docs must
+    meet a substantive-content quality floor:
+
+    * description >= 80 characters
+    * when_to_use >= 30 characters
+    * at least one academic / design reference
+
+    Passing this gate is the precondition for the author validation
+    gauntlet -- if every entry meets these minimums the author can
+    spot-check rather than line-edit."""
+
+    from macrocast.scaffold.option_docs import OPTION_DOCS
+
+    short_desc: list[tuple] = []
+    short_when: list[tuple] = []
+    no_refs: list[tuple] = []
+    for key, doc in OPTION_DOCS.items():
+        if len(doc.description) < 80:
+            short_desc.append((key, len(doc.description)))
+        if len(doc.when_to_use) < 30:
+            short_when.append((key, len(doc.when_to_use)))
+        if not doc.references:
+            no_refs.append(key)
+    issues: list[str] = []
+    if short_desc:
+        issues.append(f"description<80 chars on {len(short_desc)} entries; first 5: {short_desc[:5]}")
+    if short_when:
+        issues.append(f"when_to_use<30 chars on {len(short_when)} entries; first 5: {short_when[:5]}")
+    if no_refs:
+        issues.append(f"no references on {len(no_refs)} entries; first 5: {no_refs[:5]}")
+    assert not issues, "v1.0 quality floor violations:\n  - " + "\n  - ".join(issues)
 
 
 def test_v1_release_gate_summary():

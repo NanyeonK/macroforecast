@@ -369,6 +369,50 @@ def _build_l6_fallback() -> tuple[AxisInfo, ...]:
     )
 
 
+def _build_l7_fallback() -> tuple[AxisInfo, ...]:
+    """L7.A is a DAG body whose 30 operational importance ops live in the
+    universal op registry rather than as schema AxisSpec options. Surface
+    a single ``op`` axis on ``L7_A_importance_dag_body`` so docs + wizard
+    iterate every importance op consistently with L3/L4/L6 layers.
+
+    Architectural parity: L3 (37 ops via universal registry), L4 (35
+    families via OPERATIONAL_MODEL_FAMILIES), L6 (test selectors via
+    module constants), L7 (30 ops via universal registry) all use this
+    same fallback pattern.
+    """
+
+    try:
+        from ..core.ops.registry import _OPS as _OPS_REGISTRY
+    except ImportError:
+        return ()
+    options = tuple(
+        sorted(
+            (
+                OptionInfo(
+                    value=name,
+                    label=name,
+                    description=getattr(spec, "description", "") or "",
+                )
+                for name, spec in _OPS_REGISTRY.items()
+                if "l7" in (spec.layer_scope or ()) and spec.status == "operational"
+            ),
+            key=lambda o: o.value,
+        )
+    )
+    return (
+        AxisInfo(
+            layer="l7",
+            sublayer="L7_A_importance_dag_body",
+            name="op",
+            default="permutation_importance",
+            status="operational",
+            sweepable=False,
+            options=options,
+            has_gate=False,
+        ),
+    )
+
+
 _MANUAL_AXES: dict[str, tuple[AxisInfo, ...]] = {}
 
 
@@ -378,6 +422,7 @@ def _populate_manual_axes() -> None:
         "l3": _build_l3_fallback(),
         "l4": _build_l4_fallback(),
         "l6": _build_l6_fallback(),
+        "l7": _build_l7_fallback(),
     }
 
 

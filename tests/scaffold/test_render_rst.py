@@ -26,10 +26,16 @@ def test_render_layer_l0_includes_documented_option():
     assert "fail_fast vs continue_on_failure" in rst  # reference text
 
 
-def test_render_layer_handles_missing_optiondoc_with_warning():
+def test_render_layer_handles_missing_optiondoc_with_warning(monkeypatch):
     """Layers without registered docs surface the schema description and
-    a sphinx ``warning`` directive."""
-    rst = render_rst.render_layer("l2")
+    a sphinx ``warning`` directive. v1.0 has 100% Tier-1 coverage, so we
+    simulate a missing entry by popping a known key from the registry
+    inside the test (restored automatically by ``monkeypatch``)."""
+    from macrocast.scaffold.option_docs import OPTION_DOCS
+    key = ("l0", "l0_a", "failure_policy", "fail_fast")
+    assert key in OPTION_DOCS, "fixture target missing from registry"
+    monkeypatch.delitem(OPTION_DOCS, key)
+    rst = render_rst.render_layer("l0")
     assert ".. warning:: Detailed OptionDoc not yet registered" in rst
 
 

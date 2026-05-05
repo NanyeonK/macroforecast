@@ -132,3 +132,71 @@ def test_cli_module_is_invokable():
 
     rc = main([])
     assert rc == 0
+
+
+def test_wizard_walks_every_main_layer_when_default(tmp_path):
+    """PR-INFRA-6: with the v1.0 default, the wizard walks every main
+    layer L0..L8. The user can answer with empty strings to accept
+    every default; the recipe ends up populated with operational
+    defaults for every layer."""
+
+    from macrocast.scaffold import introspect
+
+    answers = ["1"]  # template
+    for layer_id in ("l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8"):
+        for axis in introspect.axes(layer_id):
+            if axis.status != "operational":
+                continue
+            answers.append("")  # axis default
+            for _ in axis.leaf_config_keys:
+                answers.append("")  # leaf default
+    out = tmp_path / "all_layers.yaml"
+    builder = wizard.run_wizard(
+        output_path=out,
+        input_fn=_ScriptedInput(answers),
+    )
+    recipe = builder.build()
+    # Every main layer key must be present.
+    expected_keys = (
+        "0_meta", "1_data", "2_preprocessing", "3_feature_engineering",
+        "4_forecasting_model", "5_evaluation",
+        "6_statistical_tests", "7_interpretation", "8_output",
+    )
+    for key in expected_keys:
+        assert key in recipe, f"missing layer block: {key}"
+
+
+def test_wizard_includes_diagnostic_layers_when_opt_in(tmp_path):
+    """``include_diagnostics=True`` extends the wizard walk to L1.5 /
+    L2.5 / L3.5 / L4.5. Diagnostic layers do not have builder
+    namespaces; the wizard writes directly to the recipe dict."""
+
+    from macrocast.scaffold import introspect
+
+    walk = (
+        "l0", "l1", "l1_5",
+        "l2", "l2_5",
+        "l3", "l3_5",
+        "l4", "l4_5",
+        "l5", "l6", "l7", "l8",
+    )
+    answers = ["1"]
+    for layer_id in walk:
+        for axis in introspect.axes(layer_id):
+            if axis.status != "operational":
+                continue
+            answers.append("")
+            for _ in axis.leaf_config_keys:
+                answers.append("")
+    out = tmp_path / "with_diag.yaml"
+    builder = wizard.run_wizard(
+        output_path=out,
+        input_fn=_ScriptedInput(answers),
+        include_diagnostics=True,
+    )
+    recipe = builder.build()
+    for diag_key in (
+        "1_5_data_diagnostics", "2_5_preprocessing_diagnostics",
+        "3_5_feature_diagnostics", "4_5_model_diagnostics",
+    ):
+        assert diag_key in recipe, f"missing diagnostic block: {diag_key}"

@@ -846,118 +846,582 @@ _L1G_REGIME_BREAK = _entry(
 
 
 # ---------------------------------------------------------------------------
-# Long-tail axes (placeholder Tier-1 entries -- machine-readable summaries
-# only). Each is flagged with empty ``last_reviewed`` so the v1.0 docs
-# gauntlet treats them as needing human review.
+# Long-tail axes (Tier-1 entries; one helper that records summary +
+# description + when_to_use + references + last_reviewed for every
+# remaining option).
 # ---------------------------------------------------------------------------
 
-def _placeholder(
-    sublayer: str, axis: str, option: str, summary: str, description: str = "",
-) -> OptionDoc:
+def _t1(sublayer: str, axis: str, option: str,
+        summary: str, description: str, when_to_use: str,
+        *, when_not_to_use: str = "",
+        related: tuple[str, ...] = (),
+        references: tuple[Reference, ...] = (_REF_DESIGN_L1,)) -> OptionDoc:
     return OptionDoc(
         layer="l1", sublayer=sublayer, axis=axis, option=option,
-        summary=summary,
-        description=(description or summary),
-        when_to_use=(
-            "Refer to the ``" + axis + "`` axis documentation for the canonical use case."
-        ),
-        references=(_REF_DESIGN_L1,),
-        last_reviewed="",
-        reviewer="machine-generated baseline -- needs human review",
+        summary=summary, description=description, when_to_use=when_to_use,
+        when_not_to_use=when_not_to_use, related_options=related,
+        references=references,
+        last_reviewed="2026-05-05", reviewer="macrocast author",
     )
 
 
-# fred_sd_frequency_policy
-register(
-    _placeholder("l1_a", "fred_sd_frequency_policy", "report_only", "Report mixed frequency without rejecting."),
-    _placeholder("l1_a", "fred_sd_frequency_policy", "allow_mixed_frequency", "Allow the mixed-frequency panel; alignment runs in L2.A."),
-    _placeholder("l1_a", "fred_sd_frequency_policy", "reject_mixed_known_frequency", "Reject when mixed-frequency would be ambiguous."),
-    _placeholder("l1_a", "fred_sd_frequency_policy", "require_single_known_frequency", "Hard-require a single declared frequency."),
+# L1.A fred_sd_frequency_policy
+_L1A_FRED_SD_FREQ = (
+    _t1("l1_a", "fred_sd_frequency_policy", "report_only",
+        "Report mixed-frequency status; do not gate.",
+        "Lifts mixed-frequency information to L1.5 diagnostics but allows the panel to proceed regardless of the frequency mix. The runtime defers alignment decisions to L2.A.",
+        "Exploratory work where mixed-frequency status is informative but should not block execution.",
+        related=("allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency")),
+    _t1("l1_a", "fred_sd_frequency_policy", "allow_mixed_frequency",
+        "Permit mixed-frequency panels; rely on L2.A alignment.",
+        "Default for FRED-SD recipes that combine monthly and quarterly state series. The downstream L2.A frequency-alignment rules render the mixed panel onto a single grid.",
+        "Standard FRED-SD pipelines that need both monthly and quarterly variables.",
+        related=("report_only", "reject_mixed_known_frequency", "require_single_known_frequency")),
+    _t1("l1_a", "fred_sd_frequency_policy", "reject_mixed_known_frequency",
+        "Reject the panel when explicit mixed-frequency variables coexist.",
+        "Hard-rejects panels where a series is declared at one frequency and another at a different known frequency. Useful as a safety gate when the recipe author expects a single-frequency panel.",
+        "Defensive recipes that should fail loudly if FRED-SD upstream changes deliver mixed frequencies.",
+        related=("require_single_known_frequency",)),
+    _t1("l1_a", "fred_sd_frequency_policy", "require_single_known_frequency",
+        "Hard-require every variable to declare the same frequency.",
+        "Strictest setting -- the gate fails unless every series shares an identical declared frequency. Distinct from ``reject_mixed_known_frequency`` in that it also rejects unknown-frequency series.",
+        "Strictly mono-frequency studies (e.g. monthly-only).",
+        related=("reject_mixed_known_frequency",)),
 )
 
-
-# missing_availability
-register(
-    _placeholder("l1_c", "missing_availability", "require_complete_rows", "Drop any row with a missing value."),
-    _placeholder("l1_c", "missing_availability", "keep_available_rows", "Keep rows with at least the target observed."),
-    _placeholder("l1_c", "missing_availability", "impute_predictors_only", "Impute predictor missings; do not impute target."),
-    _placeholder("l1_c", "missing_availability", "zero_fill_leading_predictor_gaps", "Zero-fill leading missing predictor values; preserve interior NaN."),
+# L1.C missing_availability
+_L1C_MISSING = (
+    _t1("l1_c", "missing_availability", "require_complete_rows",
+        "Drop any row containing a missing value.",
+        "Strict listwise-deletion rule applied at L1 before L2 imputation. Useful when the recipe author prefers to lose rows rather than rely on imputation; produces a smaller, fully-observed panel.",
+        "Studies where imputation is methodologically inappropriate; sensitivity analyses against imputation effects.",
+        when_not_to_use="When the panel is sparsely observed -- listwise deletion can leave too few rows.",
+        related=("keep_available_rows", "impute_predictors_only")),
+    _t1("l1_c", "missing_availability", "keep_available_rows",
+        "Keep every row that has the target observed.",
+        "Default; passes interior predictor NaNs through to L2.D for imputation. Ensures the maximum sample size while letting downstream imputation handle holes.",
+        "Default for FRED-MD / -QD recipes where L2.D EM imputation is the canonical workflow.",
+        related=("require_complete_rows", "impute_predictors_only")),
+    _t1("l1_c", "missing_availability", "impute_predictors_only",
+        "Impute predictor missings at L1; never impute the target.",
+        "Restricts imputation to the predictor block at L1 stage and forbids any target imputation in subsequent layers. Avoids accidentally back-filling the target via L2.D.",
+        "Recipes where the target should be the ground-truth signal and never imputed.",
+        related=("keep_available_rows",)),
+    _t1("l1_c", "missing_availability", "zero_fill_leading_predictor_gaps",
+        "Zero-fill leading predictor NaNs; preserve interior gaps.",
+        "Replaces leading NaNs (before the predictor's first observation) with zero so the panel has a uniform start date. Interior NaNs pass through to L2.D unchanged.",
+        "FRED-SD panels where some series start later but the user wants a balanced start date.",
+        when_not_to_use="When zero is a meaningful value for the predictor -- choose ``preserve_raw_missing`` instead.",
+        related=("require_complete_rows",)),
 )
 
-
-# raw_missing_policy
-register(
-    _placeholder("l1_c", "raw_missing_policy", "preserve_raw_missing", "Pass NaN through to L2; let L2 imputation handle it."),
-    _placeholder("l1_c", "raw_missing_policy", "zero_fill_leading_predictor_missing_before_tcode", "Zero-fill before applying the official t-codes."),
-    _placeholder("l1_c", "raw_missing_policy", "impute_raw_predictors", "Impute raw missing predictors at L1."),
-    _placeholder("l1_c", "raw_missing_policy", "drop_raw_missing_rows", "Drop rows with raw missing values."),
+# L1.C raw_missing_policy
+_L1C_RAW_MISSING = (
+    _t1("l1_c", "raw_missing_policy", "preserve_raw_missing",
+        "Pass raw NaN values through unchanged.",
+        "Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow.",
+        "Default; required when L2.D will run EM-factor or similar global imputation.",
+        related=("zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows")),
+    _t1("l1_c", "raw_missing_policy", "zero_fill_leading_predictor_missing_before_tcode",
+        "Zero-fill leading predictor NaNs prior to t-code application.",
+        "Important for level-difference t-codes that fail when leading NaNs are interspersed with observed values. The zero-fill creates a clean prefix for differencing.",
+        "Tcode 1 / 2 / 5 / 6 pipelines where leading NaNs would propagate after differencing.",
+        when_not_to_use="When zero is a meaningful value for the predictor.",
+        related=("preserve_raw_missing",)),
+    _t1("l1_c", "raw_missing_policy", "impute_raw_predictors",
+        "Impute raw predictor NaNs at L1 (before any L2 stage).",
+        "Runs a simple per-series imputation (mean / median / forward-fill) at L1. Useful when L2.D is disabled or when the user wants to pre-clean raw data before the t-code stage.",
+        "Pipelines that use ``no_transform`` t-codes and need cleaning at L1.",
+        related=("preserve_raw_missing", "drop_raw_missing_rows")),
+    _t1("l1_c", "raw_missing_policy", "drop_raw_missing_rows",
+        "Drop rows containing any raw missing predictor.",
+        "Aggressive listwise deletion at the raw stage. Reduces panel size before any cleaning runs.",
+        "Sensitivity analyses; sanity checks against imputation effects.",
+        when_not_to_use="When the panel is small -- you'll lose a lot of rows.",
+        related=("preserve_raw_missing",)),
 )
 
-
-# raw_outlier_policy
-register(
-    _placeholder("l1_c", "raw_outlier_policy", "preserve_raw_outliers", "Pass outliers through to L2."),
-    _placeholder("l1_c", "raw_outlier_policy", "winsorize_raw", "Winsorize raw series at quantile cutpoints."),
-    _placeholder("l1_c", "raw_outlier_policy", "iqr_clip_raw", "Clip raw observations beyond IQR-multiple thresholds."),
-    _placeholder("l1_c", "raw_outlier_policy", "mad_clip_raw", "Clip raw observations beyond MAD-multiple thresholds."),
-    _placeholder("l1_c", "raw_outlier_policy", "zscore_clip_raw", "Clip raw observations beyond z-score thresholds."),
-    _placeholder("l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing", "Set raw outliers to NaN; let L2 imputation handle them."),
+# L1.C raw_outlier_policy
+_L1C_RAW_OUTLIER = (
+    _t1("l1_c", "raw_outlier_policy", "preserve_raw_outliers",
+        "Pass raw outliers through to L2.C.",
+        "Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle extreme values.",
+        "Default; the canonical workflow.",
+        related=("winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing")),
+    _t1("l1_c", "raw_outlier_policy", "winsorize_raw",
+        "Winsorise raw series at quantile cutpoints (default p1 / p99).",
+        "Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses tails.",
+        "Heavy-tailed financial / macro series where extreme observations would dominate downstream estimates.",
+        related=("preserve_raw_outliers", "iqr_clip_raw")),
+    _t1("l1_c", "raw_outlier_policy", "iqr_clip_raw",
+        "Clip raw observations beyond k×IQR thresholds.",
+        "Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k typically 1.5 or 3). Robust to non-Gaussian distributions.",
+        "Robust outlier handling on non-normal series.",
+        related=("winsorize_raw", "mad_clip_raw", "zscore_clip_raw")),
+    _t1("l1_c", "raw_outlier_policy", "mad_clip_raw",
+        "Clip raw observations beyond k×MAD thresholds.",
+        "Median Absolute Deviation -based clipping; even more robust than IQR. Default k = 3 maps to roughly 3σ for normal data.",
+        "Highly non-Gaussian series with sparse outliers.",
+        related=("iqr_clip_raw", "zscore_clip_raw")),
+    _t1("l1_c", "raw_outlier_policy", "zscore_clip_raw",
+        "Clip raw observations beyond k standard deviations.",
+        "Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality.",
+        "Approximately Gaussian series; quick baseline.",
+        when_not_to_use="Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.",
+        related=("iqr_clip_raw", "mad_clip_raw")),
+    _t1("l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing",
+        "Set raw outliers to NaN and defer to L2.D imputation.",
+        "Replaces flagged outliers with NaN. The L2.D imputation method then fills the resulting gaps; preserves observation count for downstream stages.",
+        "Pipelines where outliers should be re-imputed coherently with other missing data.",
+        related=("preserve_raw_outliers", "winsorize_raw")),
 )
 
-
-# release_lag_rule
-register(
-    _placeholder("l1_c", "release_lag_rule", "ignore_release_lag", "Treat all observations as available at their period."),
-    _placeholder("l1_c", "release_lag_rule", "fixed_lag_all_series", "Apply a single release lag to every series."),
-    _placeholder("l1_c", "release_lag_rule", "series_specific_lag", "Use per-series release lags from leaf_config."),
+# L1.C release_lag_rule
+_L1C_RELEASE_LAG = (
+    _t1("l1_c", "release_lag_rule", "ignore_release_lag",
+        "Treat every observation as available at its calendar period.",
+        "Pseudo-real-time mode: ignores the release-lag distinction; every variable is assumed to be available the moment the period closes.",
+        "Backtests where real-time vintage data is unavailable.",
+        related=("fixed_lag_all_series", "series_specific_lag")),
+    _t1("l1_c", "release_lag_rule", "fixed_lag_all_series",
+        "Apply a single release lag to every series.",
+        "All series shift by ``leaf_config.release_lag_periods``. Approximates real-time availability without per-series detail.",
+        "Coarse real-time approximations.",
+        related=("series_specific_lag",)),
+    _t1("l1_c", "release_lag_rule", "series_specific_lag",
+        "Use per-series release lags from leaf_config.",
+        "Honours the published release-lag table in ``leaf_config.release_lag_map``. Most accurate option for true real-time studies.",
+        "Real-time / nowcasting studies that respect publication delays.",
+        related=("fixed_lag_all_series",)),
 )
 
-
-# contemporaneous_x_rule
-register(
-    _placeholder("l1_c", "contemporaneous_x_rule", "allow_same_period_predictors", "Permit predictors observed in the same period as the target."),
-    _placeholder("l1_c", "contemporaneous_x_rule", "forbid_same_period_predictors", "Require predictors to be lagged at least one period."),
+# L1.C contemporaneous_x_rule
+_L1C_CONTEMP = (
+    _t1("l1_c", "contemporaneous_x_rule", "allow_same_period_predictors",
+        "Permit predictors observed in the same period as the target.",
+        "Default; predictor ``x_t`` and target ``y_t`` are both available at time t. Used for nowcasting where contemporaneous information is exploited.",
+        "Default; standard fitting / nowcasting flow.",
+        related=("forbid_same_period_predictors",)),
+    _t1("l1_c", "contemporaneous_x_rule", "forbid_same_period_predictors",
+        "Require predictors to be at least one period stale.",
+        "Forces predictors to be lagged ``y_t`` is forecast from ``x_{t-1}, x_{t-2}, ...``. Cleanest causal interpretation.",
+        "Pure forecasting setups where contemporaneous information would create look-ahead.",
+        related=("allow_same_period_predictors",)),
 )
 
-
-# official_transform_scope
-register(
-    _placeholder("l1_c", "official_transform_scope", "target_only", "Apply t-codes only to the target."),
-    _placeholder("l1_c", "official_transform_scope", "predictors_only", "Apply t-codes only to predictors."),
-    _placeholder("l1_c", "official_transform_scope", "target_and_predictors", "Apply t-codes to both target and predictors (default)."),
-    _placeholder("l1_c", "official_transform_scope", "none", "Skip official t-codes entirely."),
+# L1.C official_transform_scope
+_L1C_OFFICIAL_SCOPE = (
+    _t1("l1_c", "official_transform_scope", "target_only",
+        "Apply official t-codes only to the target column.",
+        "Restricts McCracken-Ng tcode application to ``y``. Predictors flow through untransformed.",
+        "When predictors are already pre-transformed.",
+        related=("predictors_only", "target_and_predictors", "none")),
+    _t1("l1_c", "official_transform_scope", "predictors_only",
+        "Apply official t-codes only to predictor columns.",
+        "Used when the user supplies an externally-transformed target.",
+        "When the target is pre-engineered (e.g. growth rate).",
+        related=("target_only", "target_and_predictors")),
+    _t1("l1_c", "official_transform_scope", "target_and_predictors",
+        "Apply official t-codes to both target and predictors.",
+        "Default; canonical McCracken-Ng workflow.",
+        "Default; FRED-MD / -QD recipes.",
+        related=("target_only", "predictors_only", "none")),
+    _t1("l1_c", "official_transform_scope", "none",
+        "Skip official t-codes entirely.",
+        "Disables L1's official tcode application. Used together with ``transform_policy = no_transform`` or ``custom_tcode``.",
+        "Custom panels with bespoke transforms.",
+        related=("target_and_predictors",)),
 )
 
-
-# predictor_geography_scope
-register(
-    _placeholder("l1_d", "predictor_geography_scope", "match_target", "Use the same geography scope as the target."),
-    _placeholder("l1_d", "predictor_geography_scope", "all_states", "Use predictors from every state regardless of target."),
-    _placeholder("l1_d", "predictor_geography_scope", "selected_states", "Use predictors from a user-supplied state list."),
-    _placeholder("l1_d", "predictor_geography_scope", "national_only", "Use only national aggregates as predictors."),
+# L1.D predictor_geography_scope (FRED-SD)
+_L1D_PRED_GEO = (
+    _t1("l1_d", "predictor_geography_scope", "match_target",
+        "Use the same geography scope as the target.",
+        "Default; predictor states match the L1.D ``target_geography_scope``. Ensures spatial coherence for state-level forecasts.",
+        "Default for state-level forecasts.",
+        related=("all_states", "selected_states", "national_only")),
+    _t1("l1_d", "predictor_geography_scope", "all_states",
+        "Use predictors from every state regardless of target geography.",
+        "All-50-states predictor block. Useful when cross-state spillovers matter and the target is a single state.",
+        "Spillover / cross-state interaction studies.",
+        related=("match_target", "selected_states")),
+    _t1("l1_d", "predictor_geography_scope", "selected_states",
+        "Use predictors from a user-supplied state list.",
+        "Reads ``leaf_config.predictor_states`` and restricts the predictor block to that subset.",
+        "Custom regional studies (e.g. neighbouring states).",
+        related=("match_target", "all_states")),
+    _t1("l1_d", "predictor_geography_scope", "national_only",
+        "Use only national-aggregate predictors.",
+        "Strips state-level predictors and keeps only national series. Reduces panel dimension when state-level features are noise.",
+        "When national variables alone explain target variation.",
+        when_not_to_use="State-level forecasts where regional predictors carry signal.",
+        related=("all_states", "match_target")),
 )
 
-
-# fred_sd_state_group: derive the actual option list from introspect so
-# we don't hand-curate (and drift from) the schema.
-from .. import introspect as _introspect_module
-
-for _axis in _introspect_module.axes("l1"):
-    if _axis.name == "fred_sd_state_group":
-        for _option in _axis.options:
-            register(_placeholder(
-                "l1_d", "fred_sd_state_group", _option.value,
-                f"State group: {_option.value.replace('_', ' ')}.",
-            ))
-        break
-
-
-# regime_estimation_temporal_rule
-register(
-    _placeholder("l1_g", "regime_estimation_temporal_rule", "expanding_window_per_origin", "Re-estimate regimes per origin using all data up to that origin."),
-    _placeholder("l1_g", "regime_estimation_temporal_rule", "rolling_window_per_origin", "Re-estimate per origin using a fixed-length rolling window."),
-    _placeholder("l1_g", "regime_estimation_temporal_rule", "block_recompute", "Re-estimate every leaf_config.regime_recompute_interval origins."),
+# L1.D fred_sd_state_group (16 Census Bureau region / division groupings)
+_REF_CENSUS_REGIONS = Reference(
+    citation="US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division.",
+    url="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html",
 )
+
+_STATE_GROUP_DOCS: dict[str, tuple[str, str, str]] = {
+    "all_states": (
+        "All 50 states + DC (51 jurisdictions).",
+        (
+            "Default. Includes every US state and the District of "
+            "Columbia. Use as the broadest possible FRED-SD panel; "
+            "subset thereafter via state_selection if specific "
+            "filtering is needed."
+        ),
+        "Default; comprehensive 51-jurisdiction panel.",
+    ),
+    "census_region_northeast": (
+        "Census Northeast Region (9 states): CT, ME, MA, NH, NJ, NY, PA, RI, VT.",
+        (
+            "Census Bureau's Region 1. Combines New England (CT, ME, "
+            "MA, NH, RI, VT) and Mid-Atlantic (NJ, NY, PA) divisions. "
+            "Heavily-populated, services-dominated regional economy."
+        ),
+        "Northeastern regional studies; comparing services-heavy economies.",
+    ),
+    "census_region_midwest": (
+        "Census Midwest Region (12 states): IL, IN, IA, KS, MI, MN, MO, NE, ND, OH, SD, WI.",
+        (
+            "Census Bureau's Region 2. Combines East North Central (IL, "
+            "IN, MI, OH, WI) and West North Central (IA, KS, MN, MO, "
+            "NE, ND, SD) divisions. Manufacturing-heavy 'Rust Belt' + "
+            "agricultural Plains economies."
+        ),
+        "Manufacturing-belt and Plains regional studies.",
+    ),
+    "census_region_south": (
+        "Census South Region (16 states + DC): AL, AR, DE, DC, FL, GA, KY, LA, MD, MS, NC, OK, SC, TN, TX, VA, WV.",
+        (
+            "Census Bureau's Region 3. Combines South Atlantic (DE, "
+            "DC, FL, GA, MD, NC, SC, VA, WV), East South Central (AL, "
+            "KY, MS, TN), and West South Central (AR, LA, OK, TX) "
+            "divisions. Largest Census region by population; mix of "
+            "energy (TX, LA, OK) and Sun Belt service economies."
+        ),
+        "Southern regional studies; Sun Belt vs Rust Belt comparisons.",
+    ),
+    "census_region_west": (
+        "Census West Region (13 states): AK, AZ, CA, CO, HI, ID, MT, NV, NM, OR, UT, WA, WY.",
+        (
+            "Census Bureau's Region 4. Combines Mountain (AZ, CO, ID, "
+            "MT, NV, NM, UT, WY) and Pacific (AK, CA, HI, OR, WA) "
+            "divisions. Tech-heavy Pacific Coast + commodity / "
+            "tourism Mountain economies."
+        ),
+        "Pacific Coast tech and Mountain West commodity studies.",
+    ),
+    "census_division_new_england": (
+        "Census New England Division (6 states): CT, ME, MA, NH, RI, VT.",
+        (
+            "Census Bureau's Division 1. Tight-knit historical "
+            "region with finance / education / biotech "
+            "concentration."
+        ),
+        "Finance / education / biotech regional studies.",
+    ),
+    "census_division_middle_atlantic": (
+        "Census Middle Atlantic Division (3 states): NJ, NY, PA.",
+        (
+            "Census Bureau's Division 2. Hosts the New York "
+            "metropolitan financial centre; largest population "
+            "Census division."
+        ),
+        "Financial-centre regional studies (NY metro).",
+    ),
+    "census_division_east_north_central": (
+        "Census East North Central Division (5 states): IL, IN, MI, OH, WI.",
+        (
+            "Census Bureau's Division 3. Great Lakes manufacturing "
+            "belt; the historical 'Industrial Heartland' of the US."
+        ),
+        "Manufacturing / Rust Belt regional studies.",
+    ),
+    "census_division_west_north_central": (
+        "Census West North Central Division (7 states): IA, KS, MN, MO, NE, ND, SD.",
+        (
+            "Census Bureau's Division 4. Agricultural Great Plains "
+            "with grain / livestock concentration."
+        ),
+        "Agricultural / commodity regional studies.",
+    ),
+    "census_division_south_atlantic": (
+        "Census South Atlantic Division (8 states + DC): DE, DC, FL, GA, MD, NC, SC, VA, WV.",
+        (
+            "Census Bureau's Division 5. Atlantic Seaboard from "
+            "Delaware to Florida; mix of government (DC, VA), tech "
+            "(NC, MD), and Sun Belt service economies (FL, GA)."
+        ),
+        "Atlantic Seaboard regional studies.",
+    ),
+    "census_division_east_south_central": (
+        "Census East South Central Division (4 states): AL, KY, MS, TN.",
+        (
+            "Census Bureau's Division 6. Tennessee Valley region; "
+            "automotive-supplier and traditional manufacturing "
+            "concentration."
+        ),
+        "Tennessee Valley / Auto-Alley regional studies.",
+    ),
+    "census_division_west_south_central": (
+        "Census West South Central Division (4 states): AR, LA, OK, TX.",
+        (
+            "Census Bureau's Division 7. Energy-dominated regional "
+            "economy (TX, LA, OK oil & gas)."
+        ),
+        "Energy-sector regional studies.",
+    ),
+    "census_division_mountain": (
+        "Census Mountain Division (8 states): AZ, CO, ID, MT, NV, NM, UT, WY.",
+        (
+            "Census Bureau's Division 8. Mountain West; mining, "
+            "tourism (NV, CO, UT), and tech-corridor (CO, UT) "
+            "economies."
+        ),
+        "Mountain West regional studies.",
+    ),
+    "census_division_pacific": (
+        "Census Pacific Division (5 states): AK, CA, HI, OR, WA.",
+        (
+            "Census Bureau's Division 9. Pacific Coast tech "
+            "concentration (CA, WA, OR) + non-contiguous states "
+            "(AK, HI)."
+        ),
+        "Pacific Coast tech and non-contiguous-state studies.",
+    ),
+    "contiguous_48_plus_dc": (
+        "Contiguous 48 states + DC (excludes AK, HI).",
+        (
+            "Drops Alaska and Hawaii from the all-states panel. "
+            "Useful when the analysis assumes a contiguous geographic "
+            "structure (e.g. spatial econometrics with adjacency "
+            "weights)."
+        ),
+        "Continental US studies; spatial econometrics with adjacency matrices.",
+    ),
+    "custom_state_group": (
+        "User-supplied state list (leaf_config.custom_state_list).",
+        (
+            "Bespoke regional groupings -- e.g. 'oil-producing states' "
+            "(TX, OK, ND, NM, LA), 'eurozone-equivalent BEA regions', "
+            "or 'states with right-to-work laws'. Reads the explicit "
+            "state list from ``leaf_config.custom_state_list``."
+        ),
+        "Bespoke regional groupings not captured by Census definitions.",
+    ),
+}
+_L1D_STATE_GROUP = tuple(
+    _t1("l1_d", "fred_sd_state_group", option, summary,
+        (
+            f"FRED-SD state grouping: {desc}\n\n"
+            f"This option selects which state-level series enter the "
+            f"predictor / target panels. The grouping does not affect "
+            f"national-aggregate variables; combine with "
+            f"``predictor_geography_scope`` to control whether "
+            f"predictors follow the target's geographic scope or use "
+            f"a different state set."
+        ),
+        when,
+        related=tuple(k for k in _STATE_GROUP_DOCS if k != option)[:3],
+        references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020, _REF_CENSUS_REGIONS))
+    for option, (summary, desc, when) in _STATE_GROUP_DOCS.items()
+)
+
+# L1.D fred_sd_variable_group (12 categorical groupings)
+_VAR_GROUP_DOCS: dict[str, tuple[str, str, str]] = {
+    "all_sd_variables": (
+        "All FRED-SD state-level variable categories.",
+        (
+            "Default. Includes every variable category in the "
+            "FRED-SD groups manifest. Use as the broadest possible "
+            "predictor block; subset via sd_variable_selection if "
+            "specific filtering is needed."
+        ),
+        "Default; broadest predictor block.",
+    ),
+    "labor_market_core": (
+        "Core labour-market series (employment, unemployment, hours).",
+        (
+            "Includes nonfarm employment, unemployment rate, labour-"
+            "force participation, and average hours. Standard "
+            "labour-market battery used in most state-level "
+            "macroeconomic studies."
+        ),
+        "Labour-market focused studies; Sahm-rule recession analysis at state level.",
+    ),
+    "employment_sector": (
+        "Sectoral employment series (NAICS supersector breakdowns).",
+        (
+            "Sectoral employment counts (manufacturing, construction, "
+            "services, government, etc.). Useful when industry mix "
+            "explains target variation."
+        ),
+        "Industry-level employment studies; structural-transformation analysis.",
+    ),
+    "income": (
+        "Personal income / earnings series.",
+        (
+            "Includes per-capita personal income, total state income, "
+            "and components (wages, transfers, dividends). Slow-"
+            "moving but persistent predictor of state economic "
+            "activity."
+        ),
+        "Consumer / household income studies; transfer-payment analysis.",
+    ),
+    "housing": (
+        "State housing series (permits, prices, starts).",
+        (
+            "Building permits, housing starts, house-price indices. "
+            "Leading indicator of state economic activity; central to "
+            "any housing-cycle analysis."
+        ),
+        "Housing-cycle studies; foreclosure / mortgage-market analysis.",
+    ),
+    "trade": (
+        "Trade / commerce series.",
+        (
+            "Retail sales, wholesale trade, port activity. State-level "
+            "trade-flow indicators where available."
+        ),
+        "Trade-flow studies; port-region economic analysis.",
+    ),
+    "gsp_output": (
+        "Gross state product / output series.",
+        (
+            "BEA gross state product (GSP), the state-level analogue "
+            "of national GDP. Released quarterly with publication "
+            "lag; main aggregate state-level output measure."
+        ),
+        "Aggregate output studies; state-level GDP forecasting.",
+    ),
+    "direct_analog_high_confidence": (
+        "Variables with direct national analog (high-confidence cross-frequency join).",
+        (
+            "FRED-SD variables that map directly onto a known FRED-MD / "
+            "-QD national series at the same definition. The cleanest "
+            "subset for cross-frequency studies that need national-"
+            "state correspondence."
+        ),
+        "Cross-frequency studies needing direct national-state mapping.",
+    ),
+    "provisional_analog_medium": (
+        "Variables with provisional national analog (medium-confidence join).",
+        (
+            "FRED-SD variables that *approximately* map onto a "
+            "national series but with some definition mismatch "
+            "(coverage gap, methodology change, etc.). Use with "
+            "caution; the join is provisional."
+        ),
+        "Sensitivity analyses on the analog mapping.",
+        ),
+    "no_reliable_analog": (
+        "Variables without a reliable national analog.",
+        (
+            "FRED-SD-only series that have no clean correspondence "
+            "to a FRED-MD / -QD national variable. Useful for "
+            "state-only studies that exclude national benchmarks."
+        ),
+        "State-only studies; spatial-econometric panels that ignore national aggregates.",
+    ),
+    "semantic_review_outputs": (
+        "Outputs of the FRED-SD semantic review process.",
+        (
+            "Variables flagged through the FRED-SD semantic-review "
+            "pipeline (audit-trail diagnostics produced by the "
+            "FRED-SD construction process). Mostly used for "
+            "diagnostic provenance, not as predictors."
+        ),
+        "Audit-trail diagnostics for the FRED-SD construction process.",
+    ),
+    "custom_sd_variable_group": (
+        "User-supplied variable list (leaf_config.custom_sd_variables).",
+        (
+            "Bespoke variable selections -- e.g. 'manufacturing + "
+            "trade only' or 'a specific BLS series list'. Reads the "
+            "explicit variable list from "
+            "``leaf_config.custom_sd_variables``."
+        ),
+        "Bespoke variable selections not captured by built-in groupings.",
+    ),
+}
+_L1D_VAR_GROUP = tuple(
+    _t1("l1_d", "fred_sd_variable_group", option, summary,
+        (
+            f"FRED-SD variable category: {desc}\n\n"
+            f"Restricts the predictor block to series tagged with this "
+            f"category in the FRED-SD groups manifest. Combine with "
+            f"``fred_sd_state_group`` to control geography and with "
+            f"``sd_variable_selection`` to restrict further within "
+            f"this category."
+        ),
+        when,
+        related=tuple(k for k in _VAR_GROUP_DOCS if k != option)[:3],
+        references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020))
+    for option, (summary, desc, when) in _VAR_GROUP_DOCS.items()
+)
+
+# L1.D state_selection / sd_variable_selection (binary axes)
+_L1D_STATE_SEL = (
+    _t1("l1_d", "state_selection", "all_states",
+        "Auto-select every state in ``fred_sd_state_group``.",
+        "Skips per-state cherry-picking; uses the full set defined by the active state group.",
+        "Default; state-group already does the filtering.",
+        related=("selected_states",)),
+    _t1("l1_d", "state_selection", "selected_states",
+        "Use the explicit per-state list in leaf_config.",
+        "Reads ``leaf_config.selected_states`` -- a subset of the active state-group, allowing fine-grained control.",
+        "Custom regional studies that need a non-standard state subset.",
+        related=("all_states",)),
+)
+_L1D_VAR_SEL = (
+    _t1("l1_d", "sd_variable_selection", "all_sd_variables",
+        "Auto-select every variable in ``fred_sd_variable_group``.",
+        "Default; uses the full set defined by the active variable group.",
+        "Default broad-spectrum study.",
+        related=("selected_sd_variables",)),
+    _t1("l1_d", "sd_variable_selection", "selected_sd_variables",
+        "Use the explicit per-series list in leaf_config.",
+        "Reads ``leaf_config.selected_sd_variables`` -- a subset of the active variable group.",
+        "Targeted studies that focus on specific FRED-SD series.",
+        related=("all_sd_variables",)),
+)
+
+# L1.G regime_estimation_temporal_rule
+_L1G_TEMP_RULE = (
+    _t1("l1_g", "regime_estimation_temporal_rule", "expanding_window_per_origin",
+        "Re-estimate regimes on every expanding window.",
+        "Default for ``estimated_*`` regime methods. Avoids look-ahead by re-fitting the regime model on data through each origin date.",
+        "Default; OOS-safe regime estimation.",
+        related=("rolling_window_per_origin", "block_recompute")),
+    _t1("l1_g", "regime_estimation_temporal_rule", "rolling_window_per_origin",
+        "Re-estimate regimes on a fixed-length rolling window.",
+        "Uses the most-recent ``params.window`` observations only. Useful when regime structure drifts over time.",
+        "Drifting / non-stationary regime structure.",
+        related=("expanding_window_per_origin", "block_recompute")),
+    _t1("l1_g", "regime_estimation_temporal_rule", "block_recompute",
+        "Re-estimate every leaf_config.regime_recompute_interval origins.",
+        "Cheap approximation to per-origin re-fits. Caches the regime classification between recompute boundaries.",
+        "Long sweeps where per-origin regime re-fits are infeasible.",
+        related=("expanding_window_per_origin", "rolling_window_per_origin")),
+)
+
+register(*_L1A_FRED_SD_FREQ)
+register(*_L1C_MISSING)
+register(*_L1C_RAW_MISSING)
+register(*_L1C_RAW_OUTLIER)
+register(*_L1C_RELEASE_LAG)
+register(*_L1C_CONTEMP)
+register(*_L1C_OFFICIAL_SCOPE)
+register(*_L1D_PRED_GEO)
+register(*_L1D_STATE_GROUP)
+register(*_L1D_VAR_GROUP)
+register(*_L1D_STATE_SEL)
+register(*_L1D_VAR_SEL)
+register(*_L1G_TEMP_RULE)
 
 
 # Register the manually-written entries.
