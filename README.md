@@ -2,18 +2,34 @@
 
 > Fair, reproducible macro forecasting benchmarking. One YAML recipe → end-to-end study with bit-exact replication.
 
-[![tests](https://img.shields.io/badge/tests-785%20passing-brightgreen)](#)
-[![version](https://img.shields.io/badge/version-0.3.0-blue)](#)
+[![tests](https://img.shields.io/badge/tests-953%20passing-brightgreen)](#)
+[![version](https://img.shields.io/badge/version-0.5.1-blue)](#)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 
 ## Install
 
+> **PyPI name notice**: the `macrocast` PyPI namespace is held by an
+> unrelated 2017 package (`macrocast 0.0.2` by Amir Sani). `pip install
+> macrocast` will install **that** package, not this one. Until the
+> namespace is resolved, install from GitHub:
+
 ```bash
-pip install macrocast                    # core
-pip install 'macrocast[deep]'            # + torch / captum (LSTM / GRU / Transformer)
-pip install 'macrocast[xgboost,lightgbm]'  # + optional gradient-boosting backends
-pip install 'macrocast[tuning]'          # + optuna for bayesian_optimization
-pip install 'macrocast[shap]'            # + shap package for richer L7 figures
+# Recommended — pinned to a tagged release
+pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+
+# Optional extras (same syntax)
+pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+```
+
+For development:
+
+```bash
+git clone https://github.com/NanyeonK/macrocast.git
+cd macrocast
+pip install -e ".[dev]"
 ```
 
 ## 5-line quickstart
@@ -131,7 +147,7 @@ v0.1.1 audit table is now `operational`).
 
 If you use macrocast in published work, please cite:
 
-> macrocast: Fair, reproducible macro forecasting benchmarking. v0.3.0, 2026.
+> macrocast: Fair, reproducible macro forecasting benchmarking. v0.5.1, 2026.
 
 ## License
 

@@ -3,6 +3,43 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.5.2] -- 2026-05-05 -- "external review fixes"
+
+### Fixed
+* **README install instructions wrong**: ``pip install macrocast``
+  installs an unrelated 2017 package (``macrocast 0.0.2`` by Amir
+  Sani). README + ``docs/install.md`` now warn about the namespace
+  collision and recommend ``pip install
+  "git+https://github.com/NanyeonK/macrocast.git@v0.5.2"`` until the
+  namespace is resolved.
+* **README badges stale**: version ``0.3.0`` -> ``0.5.2``, tests
+  ``785 passing`` -> ``953 passing``.
+* **docs/install.md placeholders**: ``your-org/macroforecast`` ->
+  ``NanyeonK/macrocast``; expected test count ``291`` -> ``953``;
+  ``scipy`` and ``matplotlib`` added to the requirements table to
+  match the actual ``pyproject.toml`` dependency set.
+* **Simple Docs reference a not-yet-shipped API**: Simple-track pages
+  use ``mc.forecast(...)`` and ``mc.Experiment(...).compare_models([
+  ...]).run()``; these are not yet exported from
+  ``macrocast.__all__``. Added an "API status note" banner at the top
+  of ``docs/simple/index.md`` clarifying that the snippets describe
+  the v0.6+ planned wrapper shape, and pointing users to the v0.5.x
+  canonical entry surface (``macrocast.run`` / ``macrocast.replicate``
+  / ``RecipeBuilder`` / ``python -m macrocast scaffold``).
+
+### Added
+* **CLI script entry**: ``[project.scripts]`` now declares
+  ``macrocast = "macrocast.scaffold.cli:main"`` so installs expose the
+  ``macrocast scaffold`` / ``macrocast run`` / ``macrocast replicate``
+  / ``macrocast validate`` shell commands directly. Previously users
+  had to use ``python -m macrocast ...``.
+
+### Changed
+* **PyPI publish auth**: ``release.yml`` switched from OIDC Trusted
+  Publishing to a ``PYPI_API_TOKEN`` secret since the trusted
+  publisher was not registered on PyPI's side. Tag pushes now
+  authenticate via the API token in repo secrets.
+
 ## [0.5.1] -- 2026-05-05 -- "docs + CI hygiene patch"
 
 ### Fixed

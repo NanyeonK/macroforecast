@@ -2,6 +2,24 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
+> **API status note (v0.5.x)**: the `mc.forecast(...)` and
+> `mc.Experiment(...).compare_models([...]).run()` forms shown
+> throughout this Simple track are the **planned shape** for v0.6+.
+> They are not yet exported from `macrocast.__all__`.
+>
+> The current canonical entry surface is:
+>
+> * `macrocast.run("recipe.yaml")` -- run a YAML recipe end-to-end.
+> * `macrocast.replicate("manifest.json")` -- bit-exact replicate.
+> * `macrocast.scaffold.builder.RecipeBuilder` -- build recipes
+>   programmatically (`b.l0(...)`, `b.l1(...)`, ..., `b.to_yaml()`).
+> * `python -m macrocast scaffold` -- interactive recipe wizard.
+>
+> See the **Detail (code): Full** track for working examples that
+> match the v0.5.x runtime exactly. The Simple-track snippets below
+> describe the intended look-and-feel; treat them as a design preview
+> until the wrapper API ships.
+
 The simple API is organized around `forecast` and `Experiment`.
 
 ```python
