@@ -3,6 +3,72 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.6.2] -- 2026-05-05 -- "docs reorganization (4 audiences + replications track)"
+
+### Changed (docs only)
+* **Docs IA reorganized into a 4-audience tree** plus reference and
+  replications:
+
+  * ``docs/for_researchers/`` (replaces ``docs/getting_started/`` and
+    consolidates ``docs/fred_dataset/``; preserves the planned-API
+    preview as ``planned_simple_api/`` inside this tree).
+  * ``docs/for_recipe_authors/`` (replaces ``docs/user_guide/`` and
+    absorbs ``docs/detail/custom_extensions.md`` ->
+    ``custom_hooks.md``, ``target_transformer.md``,
+    ``default_profiles.md``).
+  * ``docs/for_contributors/`` (replaces ``docs/dev/``).
+  * ``docs/architecture/`` (replaces ``docs/detail/`` for the L0-L8
+    per-layer pages and the cross-cutting contracts; absorbs the old
+    top-level ``foundation_core.md`` -> ``foundation.md`` and
+    ``philosophy.md``).
+  * ``docs/reference/`` carries the curated ``public_api.md`` (was
+    ``docs/api/index.md``); the auto-emitted per-layer
+    ``l{0..8}.rst`` pages from
+    ``_emit_optiondoc_reference`` already land in this directory.
+  * ``docs/replications/`` (NEW in v0.6.1) untouched.
+  * ``docs/navigator/`` and ``docs/_html_extra/`` untouched.
+
+* **Top-level ``docs/index.md``** rewritten as a 4-audience picker:
+  "Pick your path" maps each role (researcher / recipe author /
+  contributor / reference lookup / replications / navigator) to the
+  right tree.
+
+### Removed (docs only)
+* ``docs/detail/decision_tree_navigator.md`` (redirect-only stub).
+* ``docs/detail/contract_source_of_truth.md`` (refers to a registry
+  layer that no longer exists).
+* ``docs/detail/execution_engine.md`` (refers to the deleted
+  ``macroforecast.execution`` legacy stack).
+* ``docs/detail/experiment_object.md`` (refers to the deprecated
+  ``mc.Experiment`` API that does not ship in v0.6.x).
+* ``docs/detail/philosophy.md`` (older duplicate of the top-level
+  ``philosophy.md``; kept the more current top-level copy at
+  ``architecture/philosophy.md``).
+
+### Archived (docs only)
+* ``docs/_archive/post_pr70_runtime_roadmap.md`` (closed phases).
+* ``docs/_archive/layer2_revision_plan.md`` (closed phases).
+* ``docs/_archive/navigator_ui_redesign_plan.md`` (alternative UI
+  track that did not ship).
+* ``docs/_archive/source_rst_skeleton_v0.3/`` (orphaned RST skeleton
+  pinned to release="0.3.0", unreferenced by ``.readthedocs.yaml``).
+
+  ``docs/_archive/`` is excluded from the Sphinx build via
+  ``exclude_patterns``; pages there are kept for blame/history but are
+  not part of the live tree.
+
+### Added (CI)
+* ``ci-core.yml`` learns a "no stale audience-tree references" check
+  that fails the build if any live doc still links to
+  ``getting_started/``, ``user_guide/``, ``fred_dataset/``,
+  ``simple/``, ``detail/``, ``api/``, or ``dev/`` (the trees the
+  reorg removed).
+
+### Notes
+* No code changes. Same ``__version__`` lifecycle, same recipe schema,
+  same bit-exact replicate contract. v0.6.2 is a documentation-only
+  release; the test suite is unchanged at 953 passing.
+
 ## [0.6.1] -- 2026-05-05 -- "post-rename consistency sweep"
 
 ### Fixed

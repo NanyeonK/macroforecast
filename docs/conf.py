@@ -41,6 +41,8 @@ exclude_patterns = [
     "_build",
     "Thumbs.db",
     ".DS_Store",
+    "_archive",
+    "_archive/**",
 ]
 
 # -- MyST ---------------------------------------------------------------------

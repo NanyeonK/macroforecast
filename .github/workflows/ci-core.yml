@@ -65,3 +65,18 @@ jobs:
               exit 1
           fi
           echo "docs install tag matches package version (v${version})"
+
+      - name: Check no stale audience-tree references in live docs
+        run: |
+          # The v0.6.2 docs reorg replaced these audience trees with the
+          # 4-audience structure (for_researchers / for_recipe_authors /
+          # for_contributors / reference) plus architecture/ and replications/.
+          # Any live (non-_archive) doc that still links to a removed tree
+          # path is a dangling link from the migration.
+          live_docs=$(find docs -name '*.md' -type f -not -path 'docs/_archive/*')
+          if echo "$live_docs" | xargs grep -lE '\((\.\./)*(getting_started|user_guide|fred_dataset|simple|detail|api|dev)/' 2>/dev/null ; then
+              echo "Stale audience-tree reference left over from v0.6.2 docs reorg"
+              echo "(getting_started/, user_guide/, fred_dataset/, simple/, detail/, api/, dev/ no longer exist in live docs)"
+              exit 1
+          fi
+          echo "no stale audience-tree references"

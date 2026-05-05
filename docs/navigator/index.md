@@ -46,7 +46,6 @@ Open the current MVP app:
 
 | Page | Purpose |
 |---|---|
-| [UI Redesign Plan](../navigator_ui_redesign_plan.md) | Plan for the new layer/DAG recipe IDE replacing the removed static app. |
 | [Tree Navigator](tree_navigator.md) | Explain the canonical layer map and the remaining compatibility axis explorer. |
 | [Path Resolver](path_resolver.md) | Compile YAML and show execution status, warnings, blocked reasons, and capability matrix. |
 | [Compatibility Engine](compatibility_engine.md) | Explain constraint rules such as model/feature compatibility, forecast-object metrics, and importance-method restrictions. |
@@ -65,7 +64,6 @@ Open the current MVP app:
 ```{toctree}
 :maxdepth: 1
 
-../navigator_ui_redesign_plan
 tree_navigator
 path_resolver
 compatibility_engine
