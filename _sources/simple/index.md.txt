@@ -2,7 +2,7 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
-> **API status note (v0.5.x)**: the `mf.forecast(...)` and
+> **API status note (current)**: the `mf.forecast(...)` and
 > `mf.Experiment(...).compare_models([...]).run()` forms shown
 > throughout this Simple track are the **planned shape** for v0.6+.
 > They are not yet exported from `macroforecast.__all__`.
@@ -16,7 +16,7 @@ This track is for researchers who want to run macroeconomic forecasting experime
 > * `python -m macroforecast scaffold` -- interactive recipe wizard.
 >
 > See the **Detail (code): Full** track for working examples that
-> match the v0.5.x runtime exactly. The Simple-track snippets below
+> match the current YAML runtime exactly. The Simple-track snippets below
 > describe the intended look-and-feel; treat them as a design preview
 > until the wrapper API ships.
 

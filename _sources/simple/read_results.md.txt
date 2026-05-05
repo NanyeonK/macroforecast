@@ -1,7 +1,7 @@
 # Read Results
 
-> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
-> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> **API status note (current)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.6+ code, use
 > macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
 > the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
 > python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
