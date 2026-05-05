@@ -1,6 +1,6 @@
 # API Reference
 
-Auto-generated reference for the public surface of macrocast v0.1.
+Curated reference for the public surface of macrocast v0.5.x.
 
 ## Top-level API
 

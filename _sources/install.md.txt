@@ -15,16 +15,16 @@ install from GitHub.
 ## Install from a tagged release (recommended)
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 Optional extras use the same `package[extra] @ git+url` syntax:
 
 ```bash
-pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 ## Install from source (development)
@@ -39,7 +39,7 @@ pip install -e ".[dev]"
 
 ```python
 import macrocast
-print(f"macrocast version: {macrocast.__version__}")     # 0.5.1
+print(f"macrocast version: {macrocast.__version__}")     # 0.5.3
 ```
 
 Run the test suite:
@@ -68,7 +68,7 @@ macrocast has several optional dependencies for specific features. Install only 
 Install all optional dependencies at once:
 
 ```bash
-pip install "macrocast[all] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[all] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 All optional dependencies are import-guarded. The package works without them, but the corresponding features will raise `ImportError` with a clear message when invoked.
@@ -78,7 +78,7 @@ All optional dependencies are import-guarded. The package works without them, bu
 The `lstm`, `gru`, and `tcn` model families ship behind an opt-in `[deep]` extra so core installs stay free of a torch dependency:
 
 ```bash
-pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 Without the extra, referencing `model_family` in {lstm, gru, tcn} at sweep time raises a clear `ExecutionError` with the install hint.
@@ -87,7 +87,7 @@ For CPU-only torch (sufficient unless a GPU sweep is planned):
 
 ```bash
 pip install --index-url https://download.pytorch.org/whl/cpu torch
-pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 
@@ -99,6 +99,8 @@ pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.
 | `numpy` | Numerical computation |
 | `scikit-learn` | Model families (Ridge, Lasso, RF, etc.), preprocessing, CV |
 | `statsmodels` | AR models, statistical tests |
+| `scipy` | Statistical routines and numerical utilities |
+| `matplotlib` | L7 figure rendering (bar / heatmap / pdp / US choropleth) |
 | `PyYAML` | Recipe YAML parsing |
 
 **See also:** [Getting Started: Quickstart](getting_started/quickstart.md)

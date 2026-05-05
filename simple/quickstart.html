@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=8e576371"></script>
+      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -95,6 +95,13 @@
              
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p><strong>API status note (v0.5.x)</strong>: this page uses the planned mc.forecast / mc.Experiment Python facade
+shape. Those are not yet exported from macrocast.<strong>all</strong>. For working v0.5.x code, use
+macrocast.run(“recipe.yaml”), macrocast.replicate(“manifest.json”),
+the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
+python -m macrocast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
+</div></blockquote>
 <p>Run one default macroeconomic forecasting experiment with explicit data, target, sample period, and horizons.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
 

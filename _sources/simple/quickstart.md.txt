@@ -1,5 +1,12 @@
 # Quickstart
 
+> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
+> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
+> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
+> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
+> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+
+
 Run one default macroeconomic forecasting experiment with explicit data, target, sample period, and horizons.
 
 ```python

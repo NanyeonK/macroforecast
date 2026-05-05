@@ -1,5 +1,12 @@
 # Compare Models
 
+> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
+> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
+> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
+> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
+> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+
+
 Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.
 
 In Layer 0 Simple, this call shape selects `study_scope = one_target_compare_methods`. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.
