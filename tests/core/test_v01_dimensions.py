@@ -1,4 +1,4 @@
-"""End-to-end smoke tests covering the 8 freedom dimensions of macrocast v0.1.
+"""End-to-end smoke tests covering the 8 freedom dimensions of macroforecast v0.1.
 
 Each dimension has at least one happy-path test that exercises functionality
 introduced in the v0.1 implementation (per `plans/system-reminder-...md`).
@@ -10,9 +10,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-import macrocast
-from macrocast.core.execution import execute_recipe, replicate_recipe
-from macrocast.core.figures import US_STATE_GRID, render_us_state_choropleth
+import macroforecast
+from macroforecast.core.execution import execute_recipe, replicate_recipe
+from macroforecast.core.figures import US_STATE_GRID, render_us_state_choropleth
 
 
 _PANEL_DATES = [
@@ -131,8 +131,8 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
 # --- Dimension 1: Data (L1) ----------------------------------------------------
 
 def test_dim1_l1_loads_fred_sd_from_local_fixture(tmp_path):
-    from macrocast.core.runtime import materialize_l1
-    from macrocast.core.yaml import parse_recipe_yaml
+    from macroforecast.core.runtime import materialize_l1
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     fixtures = Path(__file__).resolve().parent.parent / "fixtures"
     root = parse_recipe_yaml(
@@ -279,8 +279,8 @@ def test_dim8_l8_writes_per_cell_artifacts(tmp_path):
 
 def test_cross_sweep_then_replicate_is_bit_exact(tmp_path):
     recipe = _custom_recipe(n_lag=[1, 2])
-    macrocast.run(recipe, output_directory=tmp_path)
-    replication = macrocast.replicate(tmp_path / "manifest.json")
+    macroforecast.run(recipe, output_directory=tmp_path)
+    replication = macroforecast.replicate(tmp_path / "manifest.json")
     assert replication.recipe_match
     assert replication.sink_hashes_match
     assert all(replication.per_cell_match.values())

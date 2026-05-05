@@ -6,7 +6,7 @@ This page distinguishes current core L8 artifacts from legacy experiment artifac
 
 ## Core L8 Artifacts
 
-`macrocast.core.runtime.execute_minimal_forecast` writes L8 artifacts when the recipe includes `8_output`.
+`macroforecast.core.runtime.execute_minimal_forecast` writes L8 artifacts when the recipe includes `8_output`.
 
 Baseline layout:
 

@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-import macrocast
-from macrocast.core.execution import _resolve_cache_root
+import macroforecast
+from macroforecast.core.execution import _resolve_cache_root
 
 
 _FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
@@ -110,13 +110,13 @@ def test_resolve_cache_root_returns_none_when_nothing_set():
 def test_execute_recipe_omits_cache_root_when_not_requested(tmp_path):
     """Existing behaviour without output_directory: no cache_root in manifest."""
 
-    result = macrocast.run(_fred_md_recipe())
+    result = macroforecast.run(_fred_md_recipe())
     assert result.cache_root is None
 
 
 def test_execute_recipe_derives_cache_root_from_output_directory(tmp_path):
     out = tmp_path / "out"
-    result = macrocast.run(_fred_md_recipe(), output_directory=out)
+    result = macroforecast.run(_fred_md_recipe(), output_directory=out)
     assert result.cache_root == str(out / ".raw_cache")
     # Manifest payload echoes it.
     manifest = json.loads((out / "manifest.json").read_text())
@@ -126,7 +126,7 @@ def test_execute_recipe_derives_cache_root_from_output_directory(tmp_path):
 def test_execute_recipe_explicit_cache_root_wins(tmp_path):
     out = tmp_path / "out"
     explicit = tmp_path / "shared_raw_cache"
-    result = macrocast.run(_fred_md_recipe(), output_directory=out, cache_root=explicit)
+    result = macroforecast.run(_fred_md_recipe(), output_directory=out, cache_root=explicit)
     assert result.cache_root == str(explicit)
 
 
@@ -135,7 +135,7 @@ def test_execute_recipe_injects_cache_root_into_recipe_for_downstream(tmp_path):
     injection happened so a custom L1 hook would see it too."""
 
     explicit = tmp_path / "shared_raw_cache"
-    result = macrocast.run(_fred_md_recipe(), cache_root=explicit)
+    result = macroforecast.run(_fred_md_recipe(), cache_root=explicit)
     leaf = result.recipe_root["1_data"]["leaf_config"]
     assert leaf["cache_root"] == str(explicit)
 
@@ -164,9 +164,9 @@ def test_official_fred_md_with_shared_cache_root_writes_one_artifact(tmp_path):
 """
     # We don't drive end-to-end runs here (L2+ would fail without a target
     # that exists in the fixture). Instead we materialize L1 directly.
-    from macrocast.core.runtime import materialize_l1
-    from macrocast.core.execution import _inject_cache_root, _canonicalize_keys
-    from macrocast.core.yaml import parse_recipe_yaml
+    from macroforecast.core.runtime import materialize_l1
+    from macroforecast.core.execution import _inject_cache_root, _canonicalize_keys
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     for text in (recipe_a, recipe_b):
         root = _canonicalize_keys(parse_recipe_yaml(text))
@@ -193,9 +193,9 @@ def test_distinct_cache_roots_are_independent(tmp_path):
     target: INDPRO
     local_raw_source: {_FRED_MD_LOCAL}
 """
-    from macrocast.core.runtime import materialize_l1
-    from macrocast.core.execution import _inject_cache_root, _canonicalize_keys
-    from macrocast.core.yaml import parse_recipe_yaml
+    from macroforecast.core.runtime import materialize_l1
+    from macroforecast.core.execution import _inject_cache_root, _canonicalize_keys
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     root_a = _canonicalize_keys(parse_recipe_yaml(recipe))
     _inject_cache_root(root_a, cache_a)

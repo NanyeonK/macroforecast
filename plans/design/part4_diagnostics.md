@@ -1,4 +1,4 @@
-# macrocast 설계도 — Part 4
+# macroforecast 설계도 — Part 4
 
 L1.5 + L2.5 + L3.5 + L4.5 (diagnostic layer)
 

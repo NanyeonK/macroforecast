@@ -1,6 +1,6 @@
 # FRED-SD Transform Policy
 
-FRED-SD transformation codes are a research layer in macrocast. They are not
+FRED-SD transformation codes are a research layer in macroforecast. They are not
 source metadata.
 
 ## Policy
@@ -15,7 +15,7 @@ Opt-in runtime policy:
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_qd+fred_sd",
         target="GDPC1",
         start="1985-01",
@@ -27,7 +27,7 @@ exp = (
 ```
 
 The opt-in map is `sd-analog-v0.1`. It is stored in
-`macrocast.raw.sd_inferred_tcodes.SD_INFERRED_TCODE_MAP`.
+`macroforecast.raw.sd_inferred_tcodes.SD_INFERRED_TCODE_MAP`.
 
 Important interpretation:
 
@@ -46,7 +46,7 @@ Important interpretation:
 FRED-SD has no official `transform` row, so there are three distinct policies a
 researcher could choose. They should not be conflated.
 
-| policy | unit of decision | what it does | benefit | risk | macrocast status |
+| policy | unit of decision | what it does | benefit | risk | macroforecast status |
 |---|---|---|---|---|---|
 | National-analog transfer | SD variable | If an SD variable is a state version of a national FRED-MD/QD object, use the national official t-code analog and apply it to every state. | Anchored to official MD/QD source metadata; keeps state panels comparable. | May not maximize stationarity for every state; weak for variables without direct national analogs. | Current opt-in `sd-analog-v0.1`, `official=false`. |
 | Variable-global empirical | SD variable | Search candidate codes on all states and select one code per SD variable using state/aggregate diagnostics. | Targets stationarity while keeping one transform per cross-state panel. | Can disagree with official national analog semantics; sample/vintage dependent. | Explicit opt-in `sd-variable-global-stationarity-v0.1`, `official=false`. |
@@ -124,7 +124,7 @@ Expected fields:
 The manifest also emits a warning:
 
 ```text
-FRED-SD inferred/empirical t-codes are macrocast research metadata, not official FRED-SD metadata
+FRED-SD inferred/empirical t-codes are macroforecast research metadata, not official FRED-SD metadata
 ```
 
 ## Frequency-Specific Rules
@@ -149,7 +149,7 @@ Reason:
 
 ## State-Level Stationarity Audit
 
-On 2026-04-26, macrocast checked the actual FRED-SD live by-series workbook
+On 2026-04-26, macroforecast checked the actual FRED-SD live by-series workbook
 `series-2026-03.xlsx` against candidate codes `(1, 2, 4, 5, 6)` for every
 state column, using observations from 2005-06 onward. For each
 `SD variable x state`, the audit selected the candidate with the best simple
@@ -281,7 +281,7 @@ The validation output includes:
 
 ## Runtime Order
 
-For composite datasets, macrocast first aligns component frequencies:
+For composite datasets, macroforecast first aligns component frequencies:
 
 - `fred_md+fred_sd` uses monthly frequency.
 - `fred_qd+fred_sd` uses quarterly frequency.

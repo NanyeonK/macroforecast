@@ -9,13 +9,13 @@ It is not limited to byte-identical replication packages. Each entry must state 
 List entries:
 
 ```bash
-macrocast-navigate replications
+macroforecast-navigate replications
 ```
 
 Inspect and write one YAML:
 
 ```bash
-macrocast-navigate replications goulet-coulombe-2021-fred-md-ridge \
+macroforecast-navigate replications goulet-coulombe-2021-fred-md-ridge \
   --write-yaml recipes/gc2021-ridge.yaml
 ```
 
@@ -57,7 +57,7 @@ Every entry contains:
 Replication entries are runnable from YAML alone. Custom model recipes are
 different: the YAML can select `model_family=my_registered_model`, but the
 callable must already be registered in the Python process with
-`@mc.custom_model(...)`.
+`@mf.custom_model(...)`.
 
 Custom extension examples therefore live as templates rather than built-in
 replication entries. The current FRED-SD mixed-frequency template is:
@@ -109,12 +109,12 @@ small fixture or replace `--local-raw-source` with an official FRED-SD
 workbook:
 
 ```bash
-macrocast-navigate replications fred-sd-midasr-almonp-direct \
+macroforecast-navigate replications fred-sd-midasr-almonp-direct \
   --write-yaml /tmp/fred-sd-midasr-almonp.yaml
 
-macrocast-navigate run /tmp/fred-sd-midasr-almonp.yaml \
+macroforecast-navigate run /tmp/fred-sd-midasr-almonp.yaml \
   --local-raw-source tests/fixtures/fred_sd_sample.csv \
-  --output-root /tmp/macrocast-fred-sd-midasr
+  --output-root /tmp/macroforecast-fred-sd-midasr
 ```
 
 ## Synthetic Round Trip
@@ -122,10 +122,10 @@ macrocast-navigate run /tmp/fred-sd-midasr-almonp.yaml \
 The synthetic entry is designed to run in the test fixture environment:
 
 ```bash
-macrocast-navigate replications synthetic-replication-roundtrip \
+macroforecast-navigate replications synthetic-replication-roundtrip \
   --write-yaml /tmp/synthetic-replication.yaml
 
-macrocast-navigate run /tmp/synthetic-replication.yaml \
+macroforecast-navigate run /tmp/synthetic-replication.yaml \
   --local-raw-source tests/fixtures/fred_md_ar_sample.csv \
-  --output-root /tmp/macrocast-synthetic
+  --output-root /tmp/macroforecast-synthetic
 ```

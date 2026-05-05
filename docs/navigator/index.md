@@ -1,6 +1,6 @@
 # Navigator Docs
 
-The Navigator is the visual front door for the canonical macrocast layer system:
+The Navigator is the visual front door for the canonical macroforecast layer system:
 
 ```text
 L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
@@ -59,8 +59,8 @@ Open the current MVP app:
 2. For L3/L4/L7, think in DAG nodes: sources, steps, combines, and sinks.
 3. For list layers, inspect sub-layers and axes in the layer detail panel.
 4. Use the compatibility axis explorer only when you need option-level disabled reasons.
-5. Download or write YAML and run `macrocast-navigate resolve` before execution.
-6. Execute with `macrocast-navigate run` or the core runtime API.
+5. Download or write YAML and run `macroforecast-navigate resolve` before execution.
+6. Execute with `macroforecast-navigate run` or the core runtime API.
 
 ```{toctree}
 :maxdepth: 1

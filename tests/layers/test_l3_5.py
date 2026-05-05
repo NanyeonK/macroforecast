@@ -1,4 +1,4 @@
-from macrocast.core.layers.l3_5 import (
+from macroforecast.core.layers.l3_5 import (
     normalize_to_dag_form,
     parse_layer_yaml,
     parse_recipe_yaml,
@@ -6,7 +6,7 @@ from macrocast.core.layers.l3_5 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.layers.registry import get_layer
+from macroforecast.core.layers.registry import get_layer
 
 
 def test_l3_5_disabled_by_default():
@@ -147,7 +147,7 @@ def test_l3_5_z_diagnostic_format_default():
 
 def test_l3_5_registered_with_spec_correct_class():
     spec = get_layer("l3_5")
-    from macrocast.core.layers.l3_5 import L3_5FeatureDiagnostics
+    from macroforecast.core.layers.l3_5 import L3_5FeatureDiagnostics
 
     assert spec.cls is L3_5FeatureDiagnostics
     assert spec.produces == ("l3_5_diagnostic_v1",)
@@ -156,7 +156,7 @@ def test_l3_5_registered_with_spec_correct_class():
 
 
 def test_l3_5_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l3_5" in LAYER_SINKS
     assert "l3_5_diagnostic_v1" in LAYER_SINKS["l3_5"]

@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from unittest.mock import MagicMock
 
-from macrocast.core.runtime import _l6_cpa_results
-from macrocast.core.types import L4ModelArtifactsArtifact
+from macroforecast.core.runtime import _l6_cpa_results
+from macroforecast.core.types import L4ModelArtifactsArtifact
 
 
 def _build_errors_panel(
@@ -79,7 +79,7 @@ def test_gr_critical_value_varies_with_window_ratio():
     quantiles in the published [2, 4] band; alpha tightens the quantile.
     """
 
-    from macrocast.core.runtime import _gr_critical_value
+    from macroforecast.core.runtime import _gr_critical_value
 
     cv_005_at_25 = _gr_critical_value(0.25, 0.05)
     cv_010_at_25 = _gr_critical_value(0.25, 0.10)
@@ -96,7 +96,7 @@ def test_gr_critical_value_varies_with_window_ratio():
 def test_gr_critical_value_cached_returns_same_value():
     """Cache hit returns identical (no random redraw)."""
 
-    from macrocast.core.runtime import _gr_critical_value
+    from macroforecast.core.runtime import _gr_critical_value
 
     a = _gr_critical_value(0.25, 0.05)
     b = _gr_critical_value(0.25, 0.05)

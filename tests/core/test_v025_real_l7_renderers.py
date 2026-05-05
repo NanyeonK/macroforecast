@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from macrocast.core import figures
+from macroforecast.core import figures
 
 
 def _imp_table(n: int = 5):

@@ -51,8 +51,8 @@ values.
 
 ### Functions & features
 
-- Sample-period availability path: `macrocast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_leading_predictor_gaps` and records `data_reports["availability"]`.
-- General missing policy path: `macrocast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
+- Sample-period availability path: `macroforecast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_leading_predictor_gaps` and records `data_reports["availability"]`.
+- General missing policy path: `macroforecast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
 - Called during dataset loading in `execute_recipe` after official transforms
   have produced the selected frame and before researcher preprocessing runs.
 - Compile guard: `impute_predictors_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
@@ -90,8 +90,8 @@ path:
 
 ### Functions & features
 
-- Runtime path: `macrocast.execution.build._apply_raw_missing_policy(raw_result, rule, *, target, spec)`.
-- Called before `macrocast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
+- Runtime path: `macroforecast.execution.build._apply_raw_missing_policy(raw_result, rule, *, target, spec)`.
+- Called before `macroforecast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
 - Compile guard: `impute_raw_predictors` without valid `leaf_config.raw_x_imputation` raises `CompileValidationError`.
 - Provenance: runtime records `data_reports["raw_missing"]` with `before_official_transform: true`.
 
@@ -126,8 +126,8 @@ path:
 
 ### Functions & features
 
-- Runtime path: `macrocast.execution.build._apply_raw_outlier_policy(raw_result, rule, *, spec)`.
-- Called before `macrocast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
+- Runtime path: `macroforecast.execution.build._apply_raw_outlier_policy(raw_result, rule, *, spec)`.
+- Called before `macroforecast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
 - Optional column subset: `leaf_config.raw_outlier_columns`. If omitted, all raw numeric non-date columns are eligible.
 - Provenance: runtime records `data_reports["raw_outliers"]` with `before_official_transform: true`.
 
@@ -160,7 +160,7 @@ Three operational values.
 
 ### Functions & features
 
-- Module: `macrocast.execution.build._apply_release_lag(raw_result, rule, *, spec)`.
+- Module: `macroforecast.execution.build._apply_release_lag(raw_result, rule, *, spec)`.
 - Compile guard: `series_specific_lag` without a non-empty `leaf_config.release_lag_per_series` dict raises `CompileValidationError`.
 
 ### Dropped values
@@ -204,7 +204,7 @@ may enter the model. Two operational values.
 
 ### Functions & features
 
-- Wired inside `macrocast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with the target.
+- Wired inside `macroforecast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with the target.
 - Applies to raw-panel recipes only (target_lag_features uses target lags, so the axis is irrelevant there).
 
 ### Recipe usage

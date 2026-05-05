@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
-from macrocast.core.runtime import _scale_frame
+from macroforecast.core.runtime import _scale_frame
 
 
 def _toy_frame(seed: int = 0) -> pd.DataFrame:

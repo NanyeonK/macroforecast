@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _fixed_block_bootstrap_indices,
     _l6_multiple_model_results,
     _mcs_from_per_origin_panel,

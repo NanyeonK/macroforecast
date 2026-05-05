@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.figures import (
+from macroforecast.core.figures import (
     render_factor_timeseries,
     render_fitted_vs_actual,
     render_rolling_loss,
@@ -51,7 +51,7 @@ def test_rolling_loss_writes_pdf(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_l2_5_delta_matrix_when_axis_set():
-    import macrocast
+    import macroforecast
 
     recipe = """
     0_meta:
@@ -76,7 +76,7 @@ def test_l2_5_delta_matrix_when_axis_set():
       fixed_axes:
         correlation_shift: delta_matrix
     """
-    result = macrocast.core.runtime.execute_l1_l2(recipe)
+    result = macroforecast.core.runtime.execute_l1_l2(recipe)
     diag = result.artifacts.get("l2_5_diagnostic_v1")
     assert diag is not None
     assert diag.enabled

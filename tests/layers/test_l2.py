@@ -1,4 +1,4 @@
-from macrocast.core.layers.l2 import (
+from macroforecast.core.layers.l2 import (
     L2Preprocessing,
     normalize_to_dag_form,
     parse_layer_yaml,
@@ -157,8 +157,8 @@ def test_l2_custom_tcode_requires_map():
 
 
 def test_l2_registered_with_spec_correct_class():
-    from macrocast.core.types import L2CleanPanelArtifact, LAYER_SINKS
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.types import L2CleanPanelArtifact, LAYER_SINKS
+    from macroforecast.core.layers.registry import get_layer
 
     spec = get_layer("l2")
     assert spec.cls is L2Preprocessing

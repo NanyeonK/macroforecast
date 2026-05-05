@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macrocast.raw import RawLoadResult, load_fred_sd
+from macroforecast.raw import RawLoadResult, load_fred_sd
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

@@ -1,6 +1,6 @@
 """Custom FRED-SD mixed-frequency model example.
 
-Run from the repository root after installing macrocast in editable mode:
+Run from the repository root after installing macroforecast in editable mode:
 
     python examples/custom_fred_sd_mixed_frequency_model.py
 
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-import macrocast as mc
+import macroforecast as mf
 
 
 def _as_2d_float(values):
@@ -22,7 +22,7 @@ def _as_2d_float(values):
     return array
 
 
-@mc.custom_model(
+@mf.custom_model(
     "my_fred_sd_mixed_frequency_model",
     description="Example custom model that consumes FRED-SD native-frequency payloads.",
 )
@@ -55,9 +55,9 @@ def my_fred_sd_mixed_frequency_model(X_train, y_train, X_test, context):
     return float(prediction[0])
 
 
-def build_experiment() -> mc.Experiment:
+def build_experiment() -> mf.Experiment:
     return (
-        mc.Experiment(
+        mf.Experiment(
             dataset="fred_sd",
             target="UR_CA",
             start="2000-01",

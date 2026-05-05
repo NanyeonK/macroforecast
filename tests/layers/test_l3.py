@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macrocast.core.layers.l3 import (
+from macroforecast.core.layers.l3 import (
     build_cascade_chain,
     build_metadata_artifact,
     expand_sweeps,
@@ -11,7 +11,7 @@ from macrocast.core.layers.l3 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.validator import validate_dag
+from macroforecast.core.validator import validate_dag
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -275,7 +275,7 @@ def test_l3_x_final_y_final_aligned_index():
 
 
 def test_l3_two_sinks_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l3" in LAYER_SINKS
     assert "l3_features_v1" in LAYER_SINKS["l3"]
@@ -283,8 +283,8 @@ def test_l3_two_sinks_in_layer_sinks():
 
 
 def test_l3_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l3 import L3FeatureEngineering
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l3 import L3FeatureEngineering
 
     spec = get_layer("l3")
     assert spec.cls is L3FeatureEngineering
@@ -294,14 +294,14 @@ def test_l3_registered_with_spec_correct_class():
 
 
 def test_l3_op_count_37_operational():
-    from macrocast.core.ops import list_ops
+    from macroforecast.core.ops import list_ops
 
     operational = [op for op in list_ops().values() if op.available_in("l3") and op.status == "operational"]
     assert len(operational) >= 37
 
 
 def test_l3_op_count_6_future():
-    from macrocast.core.ops import list_ops
+    from macroforecast.core.ops import list_ops
 
     future_ops = [op for op in list_ops().values() if op.status == "future"]
     assert len(future_ops) >= 6
@@ -323,7 +323,7 @@ def test_l3_target_construction_horizon_with_sweep_works():
 
 
 def test_l3_forecast_combination_ops_not_registered_in_l3():
-    from macrocast.core.ops import list_ops
+    from macroforecast.core.ops import list_ops
 
     forbidden = {
         "weighted_average_forecast",
@@ -346,7 +346,7 @@ def test_l3_rejects_l4_forecast_combination_nodes():
 
 
 def test_l3_canonical_design_op_aliases_registered():
-    from macrocast.core.ops import list_ops
+    from macroforecast.core.ops import list_ops
 
     for op_name in ["varimax", "polynomial", "kernel", "nystroem"]:
         assert "l3" in list_ops()[op_name].layer_scope

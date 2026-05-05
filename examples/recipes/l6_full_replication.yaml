@@ -3,7 +3,7 @@
 # data block; end-to-end runnable on a 36-row synthetic panel.
 #
 # To swap in xgboost / lightgbm / catboost change ``fit_xgb.params.family``
-# and install the corresponding macrocast extra.
+# and install the corresponding macroforecast extra.
 0_meta:
   fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
   leaf_config: {random_seed: 42}

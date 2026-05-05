@@ -1,4 +1,4 @@
-"""End-to-end smoke check for v0.1 of macrocast.
+"""End-to-end smoke check for v0.1 of macroforecast.
 
 Run from repo root:
     python3 scripts/v01_smoke_check.py
@@ -9,8 +9,8 @@ import json
 import sys
 from pathlib import Path
 
-import macrocast
-from macrocast.core.figures import US_STATE_GRID, render_us_state_choropleth
+import macroforecast
+from macroforecast.core.figures import US_STATE_GRID, render_us_state_choropleth
 
 
 def _custom_recipe(*, n_lag, family="ridge", with_l7=False, with_l8=True, output_dir):
@@ -109,11 +109,11 @@ def _custom_recipe(*, n_lag, family="ridge", with_l7=False, with_l8=True, output
 def main() -> int:
     out_root = Path("/tmp/v01_smoke_check_out")
     out_root.mkdir(exist_ok=True)
-    print(f"== macrocast {macrocast.__version__} smoke check ==\n")
+    print(f"== macroforecast {macroforecast.__version__} smoke check ==\n")
 
     print("[1/4] single-cell run + manifest.json")
     out1 = out_root / "single_cell"
-    result = macrocast.run(_custom_recipe(n_lag=2, output_dir=str(out1)), output_directory=out1)
+    result = macroforecast.run(_custom_recipe(n_lag=2, output_dir=str(out1)), output_directory=out1)
     cell = result.cells[0]
     print(f"  cell_id={cell.cell_id} succeeded={cell.succeeded}")
     print(f"  sinks: {sorted(cell.sink_hashes)}")
@@ -122,13 +122,13 @@ def main() -> int:
     print(f"  L5 metrics: {metrics.to_dict('records')[0]}\n")
 
     print("[2/4] bit-exact replicate")
-    rep = macrocast.replicate(out1 / "manifest.json")
+    rep = macroforecast.replicate(out1 / "manifest.json")
     print(f"  recipe_match={rep.recipe_match} sink_hashes_match={rep.sink_hashes_match}")
     print(f"  per_cell_match={rep.per_cell_match}\n")
 
     print("[3/4] multi-cell sweep ({sweep: [1,2,3]} on n_lag)")
     out2 = out_root / "sweep"
-    sweep = macrocast.run(_custom_recipe(n_lag=[1, 2, 3], output_dir=str(out2)), output_directory=out2)
+    sweep = macroforecast.run(_custom_recipe(n_lag=[1, 2, 3], output_dir=str(out2)), output_directory=out2)
     print(f"  cells: {[c.cell_id for c in sweep.cells]}")
     for c in sweep.cells:
         mse = c.runtime_result.artifacts['l5_evaluation_v1'].metrics_table['mse'].iloc[0]

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from macrocast.core.layers.l4 import (
+from macroforecast.core.layers.l4 import (
     execute_layer,
     make_l4_yaml,
     make_l4_yaml_no_benchmark,
@@ -25,9 +25,9 @@ from macrocast.core.layers.l4 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.ops import get_op, list_ops
-from macrocast.core.ops.l4_ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES, get_family_status
-from macrocast.core.validator import validate_dag
+from macroforecast.core.ops import get_op, list_ops
+from macroforecast.core.ops.l4_ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES, get_family_status
+from macroforecast.core.validator import validate_dag
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -216,7 +216,7 @@ def test_l4_regime_wrapper_requires_l1_regime_active():
 
 
 def test_l4_three_sinks_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l4_forecasts_v1" in LAYER_SINKS["l4"]
     assert "l4_model_artifacts_v1" in LAYER_SINKS["l4"]
@@ -224,8 +224,8 @@ def test_l4_three_sinks_in_layer_sinks():
 
 
 def test_l4_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l4 import L4ForecastingModel
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l4 import L4ForecastingModel
 
     spec = get_layer("l4")
     assert spec.cls is L4ForecastingModel
@@ -276,13 +276,13 @@ def test_l4_does_not_register_l3_combine_ops():
 
 
 def test_l4_forecasts_v1_has_forecast_object_field():
-    from macrocast.core.types import L4ForecastsArtifact
+    from macroforecast.core.types import L4ForecastsArtifact
 
     assert "forecast_object" in L4ForecastsArtifact.__dataclass_fields__
 
 
 def test_l4_training_metadata_records_per_origin_runtime():
-    from macrocast.core.types import L4TrainingMetadataArtifact
+    from macroforecast.core.types import L4TrainingMetadataArtifact
 
     assert "runtime_per_origin" in L4TrainingMetadataArtifact.__dataclass_fields__
 

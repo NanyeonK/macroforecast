@@ -1,7 +1,7 @@
 """Numerical golden tests for L7 importance ops.
 
 Closes the structural-only-test gap raised in PR #163 review concern #5
-(issue #167). For each L7 op, we compare macrocast's importance frame to
+(issue #167). For each L7 op, we compare macroforecast's importance frame to
 an authoritative reference (sklearn.inspection where applicable, or a
 hand-rolled reference for shap/permutation when the package is missing).
 """
@@ -13,13 +13,13 @@ import pytest
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _linear_importance_frame,
     _partial_dependence_table,
     _permutation_importance_frame,
     _tree_importance_frame,
 )
-from macrocast.core.types import ModelArtifact
+from macroforecast.core.types import ModelArtifact
 
 
 def _toy_dataset(seed: int = 0) -> tuple[pd.DataFrame, pd.Series]:
@@ -107,7 +107,7 @@ def test_tree_importance_top_feature_is_x1():
 
 def test_permutation_importance_signs_match_sklearn():
     """sklearn.inspection.permutation_importance computes mean drop in score
-    when a column is shuffled. macrocast's `_permutation_importance_frame`
+    when a column is shuffled. macroforecast's `_permutation_importance_frame`
     uses a single-shuffle approximation (``permuted = reversed``) which
     isn't byte-equal to sklearn's repeated-shuffle estimate but should agree
     on which features are *more* important than others (sign / ranking).
@@ -145,7 +145,7 @@ def test_partial_dependence_top_feature_is_strongest_driver():
 
 
 def test_partial_dependence_against_sklearn_inspection_for_one_feature():
-    """Cross-check that the spread (max - min) of macrocast's PD curve for
+    """Cross-check that the spread (max - min) of macroforecast's PD curve for
     x1 matches sklearn's PD spread within tolerance."""
 
     skl = pytest.importorskip("sklearn.inspection")

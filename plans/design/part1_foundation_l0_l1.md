@@ -1,4 +1,4 @@
-# macrocast 설계도 — Part 1
+# macroforecast 설계도 — Part 1
 
 Foundation + L0 + L1
 
@@ -102,7 +102,7 @@ L8이 산출. 다음을 포함.
 
 - recipe YAML 임베드
 - recipe canonical hash
-- macrocast/Python/R version
+- macroforecast/Python/R version
 - uv.lock + renv.lock 내용
 - git commit, OS/CPU/GPU info
 - 각 cell의 resolved axes (default vs explicit 구분)

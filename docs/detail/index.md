@@ -1,6 +1,6 @@
 # Detail: Layer Contracts
 
-Detail docs describe the Full interface for macrocast recipes. Full means that layer keys, axes, DAG nodes, sink names, runtime artifacts, and L8 manifests follow the same contract.
+Detail docs describe the Full interface for macroforecast recipes. Full means that layer keys, axes, DAG nodes, sink names, runtime artifacts, and L8 manifests follow the same contract.
 
 ## Main Flow
 

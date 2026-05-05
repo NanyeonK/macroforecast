@@ -1,10 +1,10 @@
 # Read Results
 
-> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
-> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
-> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
-> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
+> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
 
 
 `Experiment.run()` returns a facade over saved artifacts. Use the facade for normal analysis, and use artifact paths when exact files are needed.
@@ -12,9 +12,9 @@
 Single run:
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-result = mc.forecast(
+result = mf.forecast(
     "fred_md",
     target="INDPRO",
     horizons=[1, 3],
@@ -32,7 +32,7 @@ Sweep:
 
 ```python
 result = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md",
         target="INDPRO",
         horizons=[1],

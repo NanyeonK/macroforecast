@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-import macrocast
-from macrocast.core.execution import execute_recipe, execute_recipe_file
+import macroforecast
+from macroforecast.core.execution import execute_recipe, execute_recipe_file
 
 
 _RECIPE_YAML = textwrap.dedent(
@@ -112,6 +112,6 @@ def test_dict_recipe_runs(recwarn):
 def test_top_level_run_file_alias(tmp_path):
     target = tmp_path / "recipe.yaml"
     target.write_text(_RECIPE_YAML, encoding="utf-8")
-    result = macrocast.run_file(target)
-    assert isinstance(result, macrocast.ManifestExecutionResult)
+    result = macroforecast.run_file(target)
+    assert isinstance(result, macroforecast.ManifestExecutionResult)
     assert result.cells[0].succeeded

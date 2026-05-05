@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-import macrocast
+import macroforecast
 
 
 def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = None, n_cells: int = 4) -> str:
@@ -77,7 +77,7 @@ def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = 
 
 def test_serial_default_unchanged_when_compute_mode_omitted(tmp_path):
     recipe = _multi_cell_recipe(compute_mode="serial", n_cells=2)
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     assert len(result.cells) == 2
     assert all(c.succeeded for c in result.cells)
 
@@ -93,12 +93,12 @@ def test_parallel_matches_serial_sink_hashes(tmp_path):
     # cache_root each run would default to ``output_directory / .raw_cache``
     # which differs by construction.
     shared_cache = tmp_path / "shared_raw_cache"
-    serial = macrocast.run(
+    serial = macroforecast.run(
         _multi_cell_recipe(compute_mode="serial", n_cells=4),
         output_directory=serial_dir,
         cache_root=shared_cache,
     )
-    parallel = macrocast.run(
+    parallel = macroforecast.run(
         _multi_cell_recipe(compute_mode="parallel", n_workers=2, n_cells=4),
         output_directory=parallel_dir,
         cache_root=shared_cache,
@@ -117,7 +117,7 @@ def test_parallel_matches_serial_sink_hashes(tmp_path):
 
 
 def test_parallel_preserves_cell_index_order(tmp_path):
-    parallel = macrocast.run(
+    parallel = macroforecast.run(
         _multi_cell_recipe(compute_mode="parallel", n_workers=4, n_cells=6),
         output_directory=tmp_path,
     )
@@ -131,7 +131,7 @@ def test_parallel_with_n_workers_one_falls_back_to_serial(tmp_path):
     spinning up a process pool -- single-worker pool would just add IPC
     overhead. The implementation falls back to the serial loop."""
 
-    result = macrocast.run(
+    result = macroforecast.run(
         _multi_cell_recipe(compute_mode="parallel", n_workers=1, n_cells=2),
         output_directory=tmp_path,
     )
@@ -142,7 +142,7 @@ def test_parallel_with_single_cell_runs_serial(tmp_path):
     """A 1-cell sweep under parallel mode should still complete (no pool
     needed) and emit one CellExecutionResult."""
 
-    result = macrocast.run(
+    result = macroforecast.run(
         _multi_cell_recipe(compute_mode="parallel", n_workers=4, n_cells=1),
         output_directory=tmp_path,
     )

@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from macrocast.raw.cache import atomic_copy_to_cache
-from macrocast.raw import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
-from macrocast.raw.datasets.fred_sd import (
+from macroforecast.raw.cache import atomic_copy_to_cache
+from macroforecast.raw import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
+from macroforecast.raw.datasets.fred_sd import (
     _extract_vintage_xlsx_from_zip,
     _latest_series_url_from_html,
     _series_xlsx_url,
     _series_zip_url,
 )
-from macrocast.raw.errors import RawDownloadError, RawVersionFormatError
+from macroforecast.raw.errors import RawDownloadError, RawVersionFormatError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

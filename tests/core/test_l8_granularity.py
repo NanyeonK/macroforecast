@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import macrocast
+import macroforecast
 
 
 _RECIPE = """
@@ -69,7 +69,7 @@ def _run(tmp_path: Path, granularity: str) -> Path:
     recipe = (
         _RECIPE.replace("__PLACEHOLDER__", str(tmp_path)).replace("__GRANULARITY__", granularity)
     )
-    macrocast.run(recipe, output_directory=tmp_path)
+    macroforecast.run(recipe, output_directory=tmp_path)
     return tmp_path
 
 

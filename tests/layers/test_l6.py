@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macrocast.core.layers.l6 import (
+from macroforecast.core.layers.l6 import (
     make_recipe_with_density_forecast,
     make_recipe_without_benchmark,
     normalize_to_dag_form,
@@ -10,7 +10,7 @@ from macrocast.core.layers.l6 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.ops import get_op
+from macroforecast.core.ops import get_op
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -183,8 +183,8 @@ def test_l6_step_m_operational_not_future():
 
 
 def test_l6_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l6 import L6StatisticalTests
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l6 import L6StatisticalTests
 
     spec = get_layer("l6")
     assert spec.cls is L6StatisticalTests
@@ -194,20 +194,20 @@ def test_l6_registered_with_spec_correct_class():
 
 
 def test_l6_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l6" in LAYER_SINKS
     assert "l6_tests_v1" in LAYER_SINKS["l6"]
 
 
 def test_l6_layer_sinks_exact_contract():
-    from macrocast.core.types import L6TestsArtifact, LAYER_SINKS
+    from macroforecast.core.types import L6TestsArtifact, LAYER_SINKS
 
     assert LAYER_SINKS["l6"] == {"l6_tests_v1": L6TestsArtifact}
 
 
 def test_l6_tests_artifact_has_required_fields():
-    from macrocast.core.types import L6TestsArtifact
+    from macroforecast.core.types import L6TestsArtifact
 
     fields = L6TestsArtifact.__dataclass_fields__
     for field in [
@@ -226,20 +226,20 @@ def test_l6_tests_artifact_has_required_fields():
 
 
 def test_l6_sub_layer_count():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     assert len(get_layer("l6").cls.sub_layers) == 7
 
 
 def test_l6_sub_layer_names():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     expected = {"L6_A_equal_predictive", "L6_B_nested", "L6_C_cpa", "L6_D_multiple_model", "L6_E_density_interval", "L6_F_direction", "L6_G_residual"}
     assert set(get_layer("l6").cls.sub_layers.keys()) == expected
 
 
 def test_l6_axis_count_per_sub_layer():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     counts = {
         "L6_A_equal_predictive": 4,
@@ -256,7 +256,7 @@ def test_l6_axis_count_per_sub_layer():
 
 
 def test_l6_globals_count():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     assert len(get_layer("l6").cls.layer_globals) == 3
 

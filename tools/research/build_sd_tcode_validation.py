@@ -14,15 +14,15 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
-from macrocast.raw.datasets.shared_csv import parse_fred_csv
-from macrocast.raw.sd_analog_candidates import (
+from macroforecast.raw.datasets.shared_csv import parse_fred_csv
+from macroforecast.raw.sd_analog_candidates import (
     MAP_VERSION,
     OFFICIAL,
     SOURCE,
     SD_ANALOG_CANDIDATES,
     SdAnalogCandidate,
 )
-from macrocast.raw.sd_inferred_tcodes import (
+from macroforecast.raw.sd_inferred_tcodes import (
     DEFAULT_RUNTIME_STATUSES,
     SD_INFERRED_TCODE_MAP,
 )
@@ -628,7 +628,7 @@ def _write_report(path: Path, results: pd.DataFrame, selected: dict[str, object]
     lines = [
         "# FRED-SD Inferred T-Code Validation",
         "",
-        "FRED-SD does not provide official t-codes. This report ranks macrocast-inferred candidates.",
+        "FRED-SD does not provide official t-codes. This report ranks macroforecast-inferred candidates.",
         "",
         f"- map_version: `{selected['map_version']}`",
         f"- official: `{selected['official']}`",

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _apply_inverse_target_transform,
     _density_interval_battery,
     _fit_target_transformer,
@@ -98,8 +98,8 @@ def test_dq_rejects_serially_dependent_hits():
 # ---------------------------------------------------------------------------
 
 def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
-    import macrocast
-    from macrocast import custom
+    import macroforecast
+    from macroforecast import custom
 
     custom.clear_custom_target_transformers()
 
@@ -157,7 +157,7 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
 5_evaluation:
   fixed_axes: {primary_metric: mse}
 """
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     cell = result.cells[0]
     l3 = cell.runtime_result.artifacts["l3_features_v1"]
     # Transformer state attached to L3 metadata.
@@ -171,7 +171,7 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
-    import macrocast
+    import macroforecast
 
     recipe = """
 0_meta:
@@ -218,7 +218,7 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
   fixed_axes:
     fit_view: multi
 """
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     diag = result.cells[0].runtime_result.artifacts["l4_5_diagnostic_v1"]
     assert "fitted_vs_actual" in diag.metadata
     assert "residual_time" in diag.metadata
@@ -229,7 +229,7 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
-    import macrocast
+    import macroforecast
 
     recipe = """
 0_meta:
@@ -275,8 +275,8 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
 """
     out_a = tmp_path / "a"
     out_b = tmp_path / "b"
-    a = macrocast.run(recipe, output_directory=out_a)
-    b = macrocast.run(recipe, output_directory=out_b)
+    a = macroforecast.run(recipe, output_directory=out_a)
+    b = macroforecast.run(recipe, output_directory=out_b)
     fa = a.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
     fb = b.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
     assert fa == fb

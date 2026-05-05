@@ -4,7 +4,7 @@
 - Current dataset: FRED-QD
 
 FRED-QD is the quarterly national macro panel used by `dataset=fred_qd`.
-macrocast downloads the official current CSV from:
+macroforecast downloads the official current CSV from:
 
 `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/current.csv`
 

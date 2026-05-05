@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import _resolve_l4_tuning
+from macroforecast.core.runtime import _resolve_l4_tuning
 
 
 def _toy_data(n: int = 60, seed: int = 0):

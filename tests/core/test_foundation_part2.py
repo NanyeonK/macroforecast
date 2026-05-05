@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macrocast.core import (
+from macroforecast.core import (
     DAG,
     LAYER_YAML_KEYS,
     Node,

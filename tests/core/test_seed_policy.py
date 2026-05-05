@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from macrocast.core.execution import _apply_seed, _resolve_seed
+from macroforecast.core.execution import _apply_seed, _resolve_seed
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ def test_distinct_cells_get_distinct_seeds(tmp_path):
     panel recipe whose model fitting is RNG-sensitive (random_forest).
     """
 
-    import macrocast
+    import macroforecast
 
     recipe = textwrap.dedent(
         """
@@ -170,7 +170,7 @@ def test_distinct_cells_get_distinct_seeds(tmp_path):
           fixed_axes: {primary_metric: mse}
         """
     )
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     assert len(result.cells) == 2
     cell_a, cell_b = result.cells
     # Different sweep values -> different sink hashes for L3+ but identical L1.
@@ -254,14 +254,14 @@ def test_l0_random_seed_propagates_into_l4_random_state(tmp_path):
     estimator-level config is identical.
     """
 
-    import macrocast
+    import macroforecast
 
     out_a = tmp_path / "seed_0"
     out_b = tmp_path / "seed_777"
-    a = macrocast.run(
+    a = macroforecast.run(
         _SEED_PROPAGATION_RECIPE.replace("__SEED__", "0"), output_directory=out_a
     )
-    b = macrocast.run(
+    b = macroforecast.run(
         _SEED_PROPAGATION_RECIPE.replace("__SEED__", "777"), output_directory=out_b
     )
     # Compare l4_forecasts_v1 hashes: the actual numeric forecasts encode the
@@ -279,7 +279,7 @@ def test_per_node_random_state_overrides_l0_seed(tmp_path):
     explicit value wins over the L0-derived default.
     """
 
-    import macrocast
+    import macroforecast
 
     base = _SEED_PROPAGATION_RECIPE.replace("__SEED__", "0")
     explicit = base.replace(
@@ -288,8 +288,8 @@ def test_per_node_random_state_overrides_l0_seed(tmp_path):
     )
     out_a = tmp_path / "implicit_l0"
     out_b = tmp_path / "explicit_42"
-    a = macrocast.run(base.replace("random_seed: 0", "random_seed: 42"), output_directory=out_a)
-    b = macrocast.run(explicit, output_directory=out_b)
+    a = macroforecast.run(base.replace("random_seed: 0", "random_seed: 42"), output_directory=out_a)
+    b = macroforecast.run(explicit, output_directory=out_b)
     # Both ultimately fit RandomForest with random_state=42 -- one via L0
     # propagation, the other via explicit per-node param. Numeric forecasts
     # match.

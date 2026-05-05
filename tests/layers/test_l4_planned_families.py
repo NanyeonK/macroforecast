@@ -29,15 +29,15 @@ from __future__ import annotations
 
 import pytest
 
-from macrocast.core.layers.l4 import parse_layer_yaml, validate_layer
-from macrocast.core.ops.l4_ops import (
+from macroforecast.core.layers.l4 import parse_layer_yaml, validate_layer
+from macroforecast.core.ops.l4_ops import (
     FUTURE_MODEL_FAMILIES,
     MODEL_FAMILY_STATUS,
     OPERATIONAL_MODEL_FAMILIES,
     PLANNED_MODEL_FAMILIES,
     get_family_status,
 )
-from macrocast.core.status import FUTURE, OPERATIONAL
+from macroforecast.core.status import FUTURE, OPERATIONAL
 
 
 # v0.2 follow-up: every L4 honesty-pass demotion is now re-promoted

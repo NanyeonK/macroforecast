@@ -5,12 +5,12 @@ name: release
 #
 # NOTE: this workflow only publishes successfully when (a) the
 # ``PYPI_API_TOKEN`` secret is registered, and (b) the token has upload
-# permission for the ``macrocast`` PyPI project. The PyPI ``macrocast``
+# permission for the ``macroforecast`` PyPI project. The PyPI ``macroforecast``
 # namespace is currently held by an unrelated 2017 package
-# (``macrocast 0.0.2`` by Amir Sani); until ownership / a rename is
-# resolved, ``pip install macrocast`` will not pull this project.
+# (``macroforecast 0.0.2`` by Amir Sani); until ownership / a rename is
+# resolved, ``pip install macroforecast`` will not pull this project.
 # README + docs/install.md therefore recommend GitHub-tag installation
-# (``pip install "git+https://github.com/NanyeonK/macrocast.git@<tag>"``)
+# (``pip install "git+https://github.com/NanyeonK/macroforecast.git@<tag>"``)
 # as the supported installation path.
 
 on:

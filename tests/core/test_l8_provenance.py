@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import macrocast
+import macroforecast
 
 
 _RECIPE = """
@@ -81,7 +81,7 @@ _RECIPE = """
 
 def _run(tmp_path: Path):
     recipe = _RECIPE.replace("__PLACEHOLDER__", str(tmp_path))
-    macrocast.run(recipe, output_directory=tmp_path)
+    macroforecast.run(recipe, output_directory=tmp_path)
     return json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
 
 

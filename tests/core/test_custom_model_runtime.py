@@ -1,4 +1,4 @@
-"""Issue #216 -- ``macrocast.custom.register_model`` callables must dispatch
+"""Issue #216 -- ``macroforecast.custom.register_model`` callables must dispatch
 end-to-end through ``execute_recipe`` (validator + ``_build_l4_model``).
 """
 from __future__ import annotations
@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import macrocast
-from macrocast import custom
+import macroforecast
+from macroforecast import custom
 
 
 _RECIPE = """
@@ -71,13 +71,13 @@ def _constant_model(X_train, y_train, X_test, context):
 
 def test_custom_model_passes_validator(tmp_path):
     custom.register_model("my_constant_model", _constant_model)
-    result = macrocast.run(_RECIPE, output_directory=tmp_path)
+    result = macroforecast.run(_RECIPE, output_directory=tmp_path)
     assert all(cell.succeeded for cell in result.cells)
 
 
 def test_custom_model_predictions_match_train_mean(tmp_path):
     custom.register_model("my_constant_model", _constant_model)
-    result = macrocast.run(_RECIPE, output_directory=tmp_path)
+    result = macroforecast.run(_RECIPE, output_directory=tmp_path)
     forecasts = result.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
     # Every prediction equals the running training mean -- since each origin
     # uses an expanding window, predictions are monotonically increasing.
@@ -87,7 +87,7 @@ def test_custom_model_predictions_match_train_mean(tmp_path):
 
 def test_custom_model_artifact_records_custom_framework(tmp_path):
     custom.register_model("my_constant_model", _constant_model)
-    result = macrocast.run(_RECIPE, output_directory=tmp_path)
+    result = macroforecast.run(_RECIPE, output_directory=tmp_path)
     art = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"]
     fitted = list(art.artifacts.values())[0]
     assert fitted.family == "my_constant_model"
@@ -98,4 +98,4 @@ def test_unregistered_family_still_rejected(tmp_path):
     # No registration for ``totally_unknown_family``.
     bad = _RECIPE.replace("my_constant_model", "totally_unknown_family")
     with pytest.raises(Exception, match="unknown model family"):
-        macrocast.run(bad, output_directory=tmp_path)
+        macroforecast.run(bad, output_directory=tmp_path)

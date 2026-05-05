@@ -271,7 +271,7 @@ The UI needs generated JSON from Python:
 - starter presets.
 
 Do not reuse the deleted static app JSON as the new source of truth. Generate a
-new compact schema from the current `macrocast.core.layers` modules.
+new compact schema from the current `macroforecast.core.layers` modules.
 
 ## Validation Model
 

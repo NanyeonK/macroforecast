@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import _DFMMixedFrequency
+from macroforecast.core.runtime import _DFMMixedFrequency
 
 
 def _toy_panel(n: int = 120, seed: int = 0):

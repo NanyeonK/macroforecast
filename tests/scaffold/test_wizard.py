@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from macrocast.scaffold import wizard
+from macroforecast.scaffold import wizard
 
 
 class _ScriptedInput:
@@ -125,21 +125,21 @@ def test_invalid_choice_re_prompts(capsys, tmp_path):
 
 
 def test_cli_module_is_invokable():
-    """``python -m macrocast`` should print help (no crash) when invoked
+    """``python -m macroforecast`` should print help (no crash) when invoked
     without a sub-command."""
 
-    from macrocast.scaffold.cli import main
+    from macroforecast.scaffold.cli import main
 
     rc = main([])
     assert rc == 0
 
 
 def test_cli_run_subcommand(tmp_path):
-    """``macrocast run RECIPE -o DIR`` should execute the recipe and
+    """``macroforecast run RECIPE -o DIR`` should execute the recipe and
     write a manifest. Uses the minimal ridge recipe that
     ``test_examples_smoke`` already proves runnable."""
 
-    from macrocast.scaffold.cli import main
+    from macroforecast.scaffold.cli import main
 
     repo_root = Path(__file__).resolve().parents[2]
     recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
@@ -150,10 +150,10 @@ def test_cli_run_subcommand(tmp_path):
 
 
 def test_cli_replicate_subcommand(tmp_path):
-    """``macrocast replicate MANIFEST`` should re-execute and report
+    """``macroforecast replicate MANIFEST`` should re-execute and report
     sink-hash match."""
 
-    from macrocast.scaffold.cli import main
+    from macroforecast.scaffold.cli import main
 
     repo_root = Path(__file__).resolve().parents[2]
     recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
@@ -164,9 +164,9 @@ def test_cli_replicate_subcommand(tmp_path):
 
 
 def test_cli_validate_subcommand(tmp_path):
-    """``macrocast validate RECIPE`` should pass on a known-good recipe."""
+    """``macroforecast validate RECIPE`` should pass on a known-good recipe."""
 
-    from macrocast.scaffold.cli import main
+    from macroforecast.scaffold.cli import main
 
     repo_root = Path(__file__).resolve().parents[2]
     recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
@@ -180,7 +180,7 @@ def test_wizard_walks_every_main_layer_when_default(tmp_path):
     every default; the recipe ends up populated with operational
     defaults for every layer."""
 
-    from macrocast.scaffold import introspect
+    from macroforecast.scaffold import introspect
 
     answers = ["1"]  # template
     for layer_id in ("l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8"):
@@ -211,7 +211,7 @@ def test_wizard_includes_diagnostic_layers_when_opt_in(tmp_path):
     L2.5 / L3.5 / L4.5. Diagnostic layers do not have builder
     namespaces; the wizard writes directly to the recipe dict."""
 
-    from macrocast.scaffold import introspect
+    from macroforecast.scaffold import introspect
 
     walk = (
         "l0", "l1", "l1_5",

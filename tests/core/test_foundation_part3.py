@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from macrocast.core import Recipe
-from macrocast.core.layer_specs import AxisSpec, LAYER_SPEC_CHECKLIST, Option, PHASE1_IMPLEMENTATION_ORDER
-from macrocast.core.manifest import (
+from macroforecast.core import Recipe
+from macroforecast.core.layer_specs import AxisSpec, LAYER_SPEC_CHECKLIST, Option, PHASE1_IMPLEMENTATION_ORDER
+from macroforecast.core.manifest import (
     MANIFEST_SCHEMA_VERSION,
     CellSummary,
     LayerExecutionRecord,

@@ -1,10 +1,10 @@
 # Recipe gallery
 
-50+ reference recipes for macrocast. Run any with:
+50+ reference recipes for macroforecast. Run any with:
 
 ```python
-import macrocast
-result = macrocast.run("examples/recipes/<name>.yaml", output_directory="out/")
+import macroforecast
+result = macroforecast.run("examples/recipes/<name>.yaml", output_directory="out/")
 ```
 
 ## Highlights

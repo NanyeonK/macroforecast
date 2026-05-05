@@ -1,4 +1,4 @@
-from macrocast.core.layers.l1 import (
+from macroforecast.core.layers.l1 import (
     L1Data,
     build_recipe_with_l1_only,
     execute_recipe,
@@ -11,7 +11,7 @@ from macrocast.core.layers.l1 import (
 
 
 def test_l1_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     spec = get_layer("l1")
     assert spec.cls is L1Data
@@ -21,7 +21,7 @@ def test_l1_registered_with_spec_correct_class():
 
 
 def test_l1_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS, L1DataDefinitionArtifact, L1RegimeMetadataArtifact
+    from macroforecast.core.types import LAYER_SINKS, L1DataDefinitionArtifact, L1RegimeMetadataArtifact
 
     assert LAYER_SINKS["l1"]["l1_data_definition_v1"] is L1DataDefinitionArtifact
     assert LAYER_SINKS["l1"]["l1_regime_metadata_v1"] is L1RegimeMetadataArtifact
@@ -284,7 +284,7 @@ def test_l1_manifest_records_resolved_defaults():
 
 
 def test_l1_g_default_is_none_and_sink_is_inactive():
-    from macrocast.core import SourceSelector
+    from macroforecast.core import SourceSelector
 
     yaml_text = """
     1_data:

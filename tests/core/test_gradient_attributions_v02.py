@@ -14,8 +14,8 @@ import pandas as pd
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from macrocast.core.runtime import _gradient_attribution_frame
-from macrocast.core.types import ModelArtifact
+from macroforecast.core.runtime import _gradient_attribution_frame
+from macroforecast.core.types import ModelArtifact
 
 
 HAS_DEEP = (
@@ -43,9 +43,9 @@ def test_gradient_methods_require_torch_when_model_is_sklearn(op):
 
 
 @pytest.mark.deep
-@pytest.mark.skipif(not HAS_DEEP, reason="requires macrocast[deep] (torch + captum)")
+@pytest.mark.skipif(not HAS_DEEP, reason="requires macroforecast[deep] (torch + captum)")
 def test_saliency_map_runs_under_torch_captum():
-    from macrocast.core.runtime import _TorchSequenceModel
+    from macroforecast.core.runtime import _TorchSequenceModel
 
     rng = np.random.default_rng(0)
     X = pd.DataFrame(rng.normal(size=(30, 4)), columns=list("abcd"))

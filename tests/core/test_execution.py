@@ -5,8 +5,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-import macrocast
-from macrocast.core.execution import execute_recipe, replicate_recipe
+import macroforecast
+from macroforecast.core.execution import execute_recipe, replicate_recipe
 
 
 _BASE_RECIPE = """
@@ -132,9 +132,9 @@ def test_replicate_recipe_bit_exact(tmp_path: Path):
 
 def test_top_level_run_and_replicate_aliases(tmp_path: Path):
     recipe = _make_recipe(n_lag_value=1)
-    result = macrocast.run(recipe, output_directory=tmp_path)
-    assert isinstance(result, macrocast.ManifestExecutionResult)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
+    assert isinstance(result, macroforecast.ManifestExecutionResult)
 
-    replication = macrocast.replicate(tmp_path / "manifest.json")
-    assert isinstance(replication, macrocast.ReplicationResult)
+    replication = macroforecast.replicate(tmp_path / "manifest.json")
+    assert isinstance(replication, macroforecast.ReplicationResult)
     assert replication.sink_hashes_match

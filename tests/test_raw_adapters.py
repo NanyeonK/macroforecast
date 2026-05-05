@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from macrocast.raw import (
+from macroforecast.raw import (
     RawLoadResult,
     load_fred_md,
     load_fred_qd,

@@ -14,15 +14,15 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import Lasso, LinearRegression
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _MRFWrapper,
     _friedman_h_table,
     _lasso_inclusion_frame,
     _mrf_gtvp_coefficient_frame,
     _var_impulse_frame,
 )
-from macrocast.core.types import ModelArtifact
-from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
+from macroforecast.core.types import ModelArtifact
+from macroforecast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 
 
 # ---------------------------------------------------------------------------

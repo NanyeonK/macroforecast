@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core import ModelArtifact, Panel, Series
+from macroforecast.core import ModelArtifact, Panel, Series
 
 
 @pytest.fixture

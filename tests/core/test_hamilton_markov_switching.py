@@ -6,7 +6,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _estimate_markov_switching_regime
+from macroforecast.core.runtime import _estimate_markov_switching_regime
 
 
 def test_hamilton_ms_uses_statsmodels_when_target_values_supplied():

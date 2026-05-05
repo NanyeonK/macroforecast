@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from macrocast.core.layers.l7 import (
+from macroforecast.core.layers.l7 import (
     execute_layer,
     make_l7_yaml,
     make_l7_yaml_with_lineage_attribution,
@@ -14,9 +14,9 @@ from macrocast.core.layers.l7 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.ops import get_op, list_ops
-from macrocast.core.ops.l7_ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
-from macrocast.core.validator import validate_dag
+from macroforecast.core.ops import get_op, list_ops
+from macroforecast.core.ops.l7_ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
+from macroforecast.core.validator import validate_dag
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -218,7 +218,7 @@ def test_l7_rolling_recompute_window_options():
 
 
 def test_l7_two_sinks_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
     assert "l7_importance_v1" in LAYER_SINKS["l7"]
     assert "l7_transformation_attribution_v1" in LAYER_SINKS["l7"]
 
@@ -257,8 +257,8 @@ def test_l7_7_pre_defined_blocks():
 
 
 def test_l7_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l7 import L7Interpretation
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l7 import L7Interpretation
     spec = get_layer("l7")
     assert spec.cls is L7Interpretation
     assert "l7_importance_v1" in spec.produces

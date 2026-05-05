@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import macrocast
+import macroforecast
 
 
 _RECIPE = """
@@ -95,8 +95,8 @@ def test_same_recipe_twice_produces_identical_sink_hashes(tmp_path):
     out_a = tmp_path / "run_a"
     out_b = tmp_path / "run_b"
     shared_cache = tmp_path / "shared_cache"
-    a = macrocast.run(_recipe_for(out_a), output_directory=out_a, cache_root=shared_cache)
-    b = macrocast.run(_recipe_for(out_b), output_directory=out_b, cache_root=shared_cache)
+    a = macroforecast.run(_recipe_for(out_a), output_directory=out_a, cache_root=shared_cache)
+    b = macroforecast.run(_recipe_for(out_b), output_directory=out_b, cache_root=shared_cache)
     assert len(a.cells) == 1 and len(b.cells) == 1
     cell_a, cell_b = a.cells[0], b.cells[0]
     # Compare every sink except the two whose hash legitimately depends on
@@ -110,8 +110,8 @@ def test_same_recipe_twice_produces_identical_sink_hashes(tmp_path):
 def test_same_recipe_twice_produces_byte_identical_forecasts_csv(tmp_path):
     out_a = tmp_path / "run_a"
     out_b = tmp_path / "run_b"
-    macrocast.run(_recipe_for(out_a), output_directory=out_a)
-    macrocast.run(_recipe_for(out_b), output_directory=out_b)
+    macroforecast.run(_recipe_for(out_a), output_directory=out_a)
+    macroforecast.run(_recipe_for(out_b), output_directory=out_b)
     forecasts_a = out_a / "cell_001" / "forecasts.csv"
     forecasts_b = out_b / "cell_001" / "forecasts.csv"
     assert forecasts_a.exists() and forecasts_b.exists()
@@ -121,8 +121,8 @@ def test_same_recipe_twice_produces_byte_identical_forecasts_csv(tmp_path):
 def test_same_recipe_twice_produces_byte_identical_metrics_csv(tmp_path):
     out_a = tmp_path / "run_a"
     out_b = tmp_path / "run_b"
-    macrocast.run(_recipe_for(out_a), output_directory=out_a)
-    macrocast.run(_recipe_for(out_b), output_directory=out_b)
+    macroforecast.run(_recipe_for(out_a), output_directory=out_a)
+    macroforecast.run(_recipe_for(out_b), output_directory=out_b)
     # metrics_all_cells.csv is written under summary/
     metrics_a = out_a / "summary" / "metrics_all_cells.csv"
     metrics_b = out_b / "summary" / "metrics_all_cells.csv"
@@ -132,8 +132,8 @@ def test_same_recipe_twice_produces_byte_identical_metrics_csv(tmp_path):
 
 def test_replicate_recipe_succeeds_after_independent_re_run(tmp_path):
     out = tmp_path / "primary"
-    macrocast.run(_recipe_for(out), output_directory=out)
-    rep = macrocast.replicate(out / "manifest.json")
+    macroforecast.run(_recipe_for(out), output_directory=out)
+    rep = macroforecast.replicate(out / "manifest.json")
     assert rep.recipe_match
     assert rep.sink_hashes_match
     assert all(rep.per_cell_match.values())
@@ -149,8 +149,8 @@ def test_distinct_random_state_sweep_produces_distinct_l4_artifacts(tmp_path):
     out_a = tmp_path / "rs_a"
     out_b = tmp_path / "rs_b"
     base = _recipe_for(out_a)
-    a = macrocast.run(base.replace("random_state: none", "random_state: none"), output_directory=out_a)
-    b = macrocast.run(
+    a = macroforecast.run(base.replace("random_state: none", "random_state: none"), output_directory=out_a)
+    b = macroforecast.run(
         base.replace("__PLACEHOLDER__", str(out_b)).replace("random_state: none", "random_state: none"),
         output_directory=out_b,
     )

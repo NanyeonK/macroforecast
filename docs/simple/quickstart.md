@@ -1,18 +1,18 @@
 # Quickstart
 
-> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
-> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
-> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
-> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
+> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
 
 
 Run one default macroeconomic forecasting experiment with explicit data, target, sample period, and horizons.
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-result = mc.forecast(
+result = mf.forecast(
     "fred_md",
     target="INDPRO",
     start="1980-01",
@@ -29,7 +29,7 @@ metrics = result.metrics
 manifest = result.manifest
 ```
 
-The default profile is `macrocast-default-v1`. It uses a conservative baseline path:
+The default profile is `macroforecast-default-v1`. It uses a conservative baseline path:
 
 - Layer 0 `study_scope = one_target_one_method`
 - Layer 0 `failure_policy = fail_fast`
@@ -52,19 +52,19 @@ The sample period is required. `start` and `end` are part of the experiment defi
 `fred_md` fixes frequency to monthly:
 
 ```python
-mc.forecast("fred_md", target="INDPRO", start="1980-01", end="2019-12")
+mf.forecast("fred_md", target="INDPRO", start="1980-01", end="2019-12")
 ```
 
 `fred_qd` fixes frequency to quarterly:
 
 ```python
-mc.forecast("fred_qd", target="GDPC1", start="1980-01", end="2019-12")
+mf.forecast("fred_qd", target="GDPC1", start="1980-01", end="2019-12")
 ```
 
 `fred_sd` can be used alone only when `frequency` is supplied:
 
 ```python
-mc.forecast(
+mf.forecast(
     "fred_sd",
     target="UR_CA",
     start="1980-01",
@@ -76,8 +76,8 @@ mc.forecast(
 When FRED-SD is combined with FRED-MD or FRED-QD, the MD/QD dataset fixes the experiment frequency:
 
 ```python
-mc.forecast("fred_md+fred_sd", target="INDPRO", start="1980-01", end="2019-12")
-mc.forecast("fred_qd+fred_sd", target="GDPC1", start="1980-01", end="2019-12")
+mf.forecast("fred_md+fred_sd", target="INDPRO", start="1980-01", end="2019-12")
+mf.forecast("fred_qd+fred_sd", target="GDPC1", start="1980-01", end="2019-12")
 ```
 
 FRED-SD inferred/empirical transformation codes are off by default because FRED-SD does not publish official t-codes. Use `Experiment.use_sd_inferred_tcodes()` for the reviewed national-analog layer or `Experiment.use_sd_empirical_tcodes()` for empirical stationarity policies.

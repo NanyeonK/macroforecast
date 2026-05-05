@@ -17,7 +17,7 @@ Target shape:
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md",
         target="INDPRO",
         horizons=[1, 3, 6],

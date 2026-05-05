@@ -10,20 +10,20 @@ Layer 0 task, Layer 1 data treatment, split, benchmark, and evaluation path.
 Implemented runtime extension points:
 
 ```python
-mc.custom_feature_block(name, block_kind="temporal" | "rotation" | "factor")
-mc.custom_feature_combiner(name)
-mc.custom_preprocessor(name)
-mc.target_transformer(name)
-mc.custom_model(name)
+mf.custom_feature_block(name, block_kind="temporal" | "rotation" | "factor")
+mf.custom_feature_combiner(name)
+mf.custom_preprocessor(name)
+mf.target_transformer(name)
+mf.custom_model(name)
 ```
 
 The public contract metadata is available from:
 
 ```python
-mc.custom_method_extension_contracts()
-mc.custom_model_contract_metadata()
-mc.custom_preprocessor_contract_metadata()
-mc.target_transformer_contract_metadata()
+mf.custom_method_extension_contracts()
+mf.custom_model_contract_metadata()
+mf.custom_preprocessor_contract_metadata()
+mf.target_transformer_contract_metadata()
 ```
 
 Custom benchmarks and custom metrics are not decorator APIs yet. Benchmark
@@ -41,7 +41,7 @@ research-specific blocks.
 Minimum contract:
 
 ```python
-@mc.custom_feature_block("my_block", block_kind="temporal")
+@mf.custom_feature_block("my_block", block_kind="temporal")
 def my_block(context):
     ...
     return FeatureBlockCallableResult(
@@ -86,7 +86,7 @@ blocks.
 Minimum contract:
 
 ```python
-@mc.custom_feature_combiner("my_combiner")
+@mf.custom_feature_combiner("my_combiner")
 def my_combiner(context):
     train = context.blocks_train["candidate_z"]
     pred = context.blocks_pred["candidate_z"]
@@ -128,7 +128,7 @@ winsorizer, shrinkage transform, residualization, or sparse screen.
 Minimum contract:
 
 ```python
-@mc.custom_preprocessor("my_preprocess")
+@mf.custom_preprocessor("my_preprocess")
 def my_preprocess(X_train, y_train, X_test, context):
     ...
     return X_train_new, X_test_new
@@ -145,7 +145,7 @@ and forecasts must be inverted to the raw target scale.
 Minimum contract:
 
 ```python
-@mc.target_transformer("my_target_transform")
+@mf.target_transformer("my_target_transform")
 class MyTargetTransform:
     def fit(self, target_train, context):
         return self
@@ -172,7 +172,7 @@ models.
 Minimum contract:
 
 ```python
-@mc.custom_model("my_model")
+@mf.custom_model("my_model")
 def my_model(X_train, y_train, X_test, context):
     ...
     return y_pred
@@ -233,7 +233,7 @@ Use `examples/custom_fred_sd_mixed_frequency_model.py` as an executable Python
 template and
 `examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml` as the
 matching recipe skeleton. YAML can select the registered `model_family`, but it
-does not import Python code. Import the module that calls `@mc.custom_model(...)`
+does not import Python code. Import the module that calls `@mf.custom_model(...)`
 before compiling or running the recipe.
 
 ## Method Comparison Sweeps

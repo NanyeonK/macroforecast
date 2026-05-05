@@ -10,7 +10,7 @@ Two layers of safety:
    into ``examples/`` again.
 
 2. **End-to-end execution**: every recipe explicitly listed in
-   ``_END_TO_END_RUNNABLE`` must execute via ``macrocast.run`` without
+   ``_END_TO_END_RUNNABLE`` must execute via ``macroforecast.run`` without
    raising. This guards against regressions like the
    "single_target requires leaf_config.target string" gate that took
    the CLAUDE.md Quick start example down.
@@ -35,7 +35,7 @@ _NEW_LAYER_KEYS = {
     "4_forecasting_model", "5_evaluation", "6_statistical_tests",
     "7_interpretation", "8_output",
     # Diagnostic layers (canonical recipe keys -- match the runtime's
-    # ``root.get(...)`` calls in macrocast.core.layers.l{1,2,3,4}_5).
+    # ``root.get(...)`` calls in macroforecast.core.layers.l{1,2,3,4}_5).
     "1_5_data_summary",
     "2_5_pre_post_preprocessing",
     "3_5_feature_diagnostics",
@@ -123,14 +123,14 @@ _END_TO_END_RUNNABLE = [
 
 @pytest.mark.parametrize("name", _END_TO_END_RUNNABLE)
 def test_recipe_runs_end_to_end(name: str, tmp_path: Path) -> None:
-    """The CLAUDE.md Quick start uses ``macrocast.run('examples/recipes/...')``.
+    """The CLAUDE.md Quick start uses ``macroforecast.run('examples/recipes/...')``.
     These recipes must execute successfully without external data."""
 
-    import macrocast
+    import macroforecast
 
     recipe_path = RECIPES_DIR / name
     assert recipe_path.exists(), f"{name} not found"
-    result = macrocast.run(recipe_path, output_directory=tmp_path / name)
+    result = macroforecast.run(recipe_path, output_directory=tmp_path / name)
     assert result.cells, f"{name}: no cells executed"
     assert all(cell.error is None for cell in result.cells), (
         f"{name}: cell errors: "

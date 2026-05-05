@@ -1,4 +1,4 @@
-"""Sphinx configuration for macrocast documentation."""
+"""Sphinx configuration for macroforecast documentation."""
 
 from __future__ import annotations
 
@@ -8,12 +8,12 @@ from pathlib import Path
 _repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_repo_root))
 
-project = "macrocast"
+project = "macroforecast"
 author = "NanyeonK"
 copyright = "2026, NanyeonK"
 
 try:
-    from macrocast import __version__ as _pkg_version  # type: ignore[import-not-found]
+    from macroforecast import __version__ as _pkg_version  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover
     _pkg_version = "0.1.0"
 
@@ -59,7 +59,7 @@ myst_heading_anchors = 3
 # -- HTML output --------------------------------------------------------------
 
 html_theme = "sphinx_rtd_theme"
-html_title = "macrocast"
+html_title = "macroforecast"
 html_static_path: list[str] = []
 html_extra_path = ["_html_extra"]
 
@@ -74,7 +74,7 @@ html_theme_options = {
 html_context = {
     "display_github": True,
     "github_user": "NanyeonK",
-    "github_repo": "macrocast",
+    "github_repo": "macroforecast",
     "github_version": "main",
     "conf_py_path": "/docs/",
 }
@@ -142,17 +142,17 @@ def _emit_optiondoc_reference() -> None:
     docs_root = Path(__file__).resolve().parent
     target = docs_root / "reference"
     try:
-        from macrocast.scaffold import render_rst as _render_rst
+        from macroforecast.scaffold import render_rst as _render_rst
     except Exception as exc:  # pragma: no cover - environment-dependent
         import warnings
 
         warnings.warn(
-            "macrocast.scaffold.render_rst unavailable; skipping "
+            "macroforecast.scaffold.render_rst unavailable; skipping "
             f"OptionDoc reference auto-emit ({exc!r})."
         )
         return
     written = _render_rst.write_all(target)
-    print(f"[macrocast docs] emitted {len(written)} reference pages -> {target}")
+    print(f"[macroforecast docs] emitted {len(written)} reference pages -> {target}")
 
 
 _emit_optiondoc_reference()

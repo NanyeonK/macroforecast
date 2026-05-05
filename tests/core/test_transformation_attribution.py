@@ -4,8 +4,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _l7_transformation_attribution
-from macrocast.core.types import L5EvaluationArtifact
+from macroforecast.core.runtime import _l7_transformation_attribution
+from macroforecast.core.types import L5EvaluationArtifact
 
 
 def _l5_with_pipelines(losses: list[tuple[str, float]]) -> L5EvaluationArtifact:

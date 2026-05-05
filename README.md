@@ -1,49 +1,50 @@
-# macrocast
+# macroforecast
 
 > Fair, reproducible macro forecasting benchmarking. One YAML recipe → end-to-end study with bit-exact replication.
 
-[![ci-core](https://github.com/NanyeonK/macrocast/actions/workflows/ci-core.yml/badge.svg)](https://github.com/NanyeonK/macrocast/actions/workflows/ci-core.yml)
-[![ci-docs](https://github.com/NanyeonK/macrocast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macrocast/actions/workflows/ci-docs.yml)
+[![ci-core](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml)
+[![ci-docs](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 
-> **v0.5.3** — 953 tests passing locally as of 2026-05-05. The CI badges above
+> **v0.6.0** — 953 tests passing locally as of 2026-05-05. The CI badges above
 > reflect live build status and replace the previously static
 > "tests-N passing / version-X" badges to keep the README from going stale.
+>
+> **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
+> namespace ownership). See ``CHANGELOG.md`` for the migration diff.
 
 ## Install
 
-> **PyPI name notice**: the `macrocast` PyPI namespace is held by an
-> unrelated 2017 package (`macrocast 0.0.2` by Amir Sani). `pip install
-> macrocast` will install **that** package, not this one. Until the
-> namespace is resolved, install from GitHub:
+```bash
+pip install macroforecast                    # core
+pip install 'macroforecast[deep]'            # + torch / captum (LSTM / GRU / Transformer)
+pip install 'macroforecast[xgboost,lightgbm]'  # + optional gradient-boosting backends
+pip install 'macroforecast[tuning]'          # + optuna for bayesian_optimization
+pip install 'macroforecast[shap]'            # + shap package for richer L7 figures
+```
+
+Or pin to a tagged release directly from GitHub:
 
 ```bash
-# Recommended — pinned to a tagged release
-pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
-
-# Optional extras (same syntax)
-pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
-pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
-pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
-pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.6.0"
 ```
 
 For development:
 
 ```bash
-git clone https://github.com/NanyeonK/macrocast.git
-cd macrocast
+git clone https://github.com/NanyeonK/macroforecast.git
+cd macroforecast
 pip install -e ".[dev]"
 ```
 
 ## 5-line quickstart
 
 ```python
-import macrocast
+import macroforecast
 
-result = macrocast.run("recipe.yaml", output_directory="out/")
+result = macroforecast.run("recipe.yaml", output_directory="out/")
 print(result.cells[0].sink_hashes)            # per-cell sink hashes
-replication = macrocast.replicate("out/manifest.json")
+replication = macroforecast.replicate("out/manifest.json")
 assert replication.sink_hashes_match           # bit-exact replication
 ```
 
@@ -144,7 +145,7 @@ A replication script for Coulombe (2024) MRF on FRED-MD lives at
 
 ## Status levels
 
-Two-value vocabulary (defined in `macrocast.core.status`):
+Two-value vocabulary (defined in `macroforecast.core.status`):
 * **`operational`** — runtime executes the full design-spec procedure.
 * **`future`** — schema-only; validator hard-rejects, runtime raises
   `NotImplementedError`.
@@ -155,9 +156,9 @@ v0.1.1 audit table is now `operational`).
 
 ## Citing
 
-If you use macrocast in published work, please cite:
+If you use macroforecast in published work, please cite:
 
-> macrocast: Fair, reproducible macro forecasting benchmarking. v0.5.3, 2026.
+> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.6.0, 2026.
 
 ## License
 

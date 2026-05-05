@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import macrocast
+import macroforecast
 
 
 _RECIPE = """
@@ -71,7 +71,7 @@ def _run(tmp_path: Path, manifest_format: str = "json", export_format: str = "js
         .replace("__MANIFEST_FORMAT__", manifest_format)
         .replace("__EXPORT_FORMAT__", export_format)
     )
-    macrocast.run(recipe, output_directory=tmp_path)
+    macroforecast.run(recipe, output_directory=tmp_path)
     return tmp_path
 
 
@@ -103,7 +103,7 @@ def test_export_format_html_report_writes_report_html(tmp_path):
     report = out / "report.html"
     assert report.exists()
     text = report.read_text(encoding="utf-8")
-    assert "macrocast study report" in text
+    assert "macroforecast study report" in text
     assert "<html" in text and "</html>" in text
     # Recipe digest section pulls the L1 target.
     assert "<code>y</code>" in text

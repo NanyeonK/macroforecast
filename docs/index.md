@@ -1,6 +1,6 @@
-# macrocast
+# macroforecast
 
-macrocast is a research-oriented macro forecasting package organized around explicit layer contracts and reproducible artifacts.
+macroforecast is a research-oriented macro forecasting package organized around explicit layer contracts and reproducible artifacts.
 
 ## Canonical Architecture
 
@@ -19,7 +19,7 @@ L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
 
 ### Getting Started
 
-Install macrocast and choose between the Navigator, YAML runtime, or simple Python facade.
+Install macroforecast and choose between the Navigator, YAML runtime, or simple Python facade.
 
 [Open Getting Started](getting_started/index.md)
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _emit_quantile_intervals, _l6_density_interval_results, _native_quantile_engine
-from macrocast.core.types import L4ForecastsArtifact, L3FeaturesArtifact, L1DataDefinitionArtifact, Panel, PanelMetadata, Series, SeriesMetadata
+from macroforecast.core.runtime import _emit_quantile_intervals, _l6_density_interval_results, _native_quantile_engine
+from macroforecast.core.types import L4ForecastsArtifact, L3FeaturesArtifact, L1DataDefinitionArtifact, Panel, PanelMetadata, Series, SeriesMetadata
 
 
 # ---------------------------------------------------------------------------

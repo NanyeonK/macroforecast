@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in macrocast
+about: Report a bug in macroforecast
 title: "[BUG] <short description>"
 labels: ["bug"]
 ---
@@ -14,7 +14,7 @@ labels: ["bug"]
 Minimal recipe / code to reproduce:
 
 ```python
-from macrocast import execute_recipe
+from macroforecast import execute_recipe
 # ...
 ```
 
@@ -28,7 +28,7 @@ from macrocast import execute_recipe
 
 ## Environment
 
-- macrocast version: `pip show macrocast | grep Version`
+- macroforecast version: `pip show macroforecast | grep Version`
 - Python version: `python --version`
 - OS:
 - Extras installed: `[deep]`, `[all]`, etc.

@@ -21,7 +21,7 @@ From Coverage Ledger (`plans/coverage_ledger.md`):
 
 ## Implementation requirements
 
-- [ ] Registry entry: `macrocast/registry/<layer>/<axis>.py` (exists / needs creation)
+- [ ] Registry entry: `macroforecast/registry/<layer>/<axis>.py` (exists / needs creation)
 - [ ] Runtime adapter: `<path>.py` (wiring in execute_recipe or module)
 - [ ] Test: `tests/test_<axis>_<value>.py`
 - [ ] Docs: (user-facing? docs/user_guide/<axis>.md)

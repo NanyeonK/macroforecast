@@ -1,6 +1,6 @@
 # 1. Philosophy
 
-macrocast is designed for research workflows where the difficult part is not calling a model function. The difficult part is choosing a valid forecasting path, keeping comparisons fair, and making every deviation auditable.
+macroforecast is designed for research workflows where the difficult part is not calling a model function. The difficult part is choosing a valid forecasting path, keeping comparisons fair, and making every deviation auditable.
 
 ## Navigation before execution
 

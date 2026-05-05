@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-import macrocast
+import macroforecast
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ _NODE_GROUP_RECIPE = """
 
 
 def test_sweep_groups_expand_into_two_cells(tmp_path):
-    result = macrocast.run(_NODE_GROUP_RECIPE, output_directory=tmp_path)
+    result = macroforecast.run(_NODE_GROUP_RECIPE, output_directory=tmp_path)
     assert len(result.cells) == 2
     # Two cells should have different L3 sink hashes (different lag values).
     a, b = result.cells
@@ -136,7 +136,7 @@ _PARALLEL_RECIPE = """
 
 
 def test_parallel_unit_models_runs_two_fit_nodes(tmp_path):
-    result = macrocast.run(_PARALLEL_RECIPE, output_directory=tmp_path)
+    result = macroforecast.run(_PARALLEL_RECIPE, output_directory=tmp_path)
     cell = result.cells[0]
     forecasts = cell.runtime_result.artifacts["l4_forecasts_v1"].forecasts
     # Both ``fit_a`` and ``fit_b`` produced forecasts.
@@ -149,8 +149,8 @@ def test_parallel_unit_models_runs_two_fit_nodes(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_fred_sd_freq_align_step_backward_fills_quarterly():
-    from macrocast.core.runtime import _apply_fred_sd_frequency_alignment
-    from macrocast.core.types import L1DataDefinitionArtifact, Panel, PanelMetadata
+    from macroforecast.core.runtime import _apply_fred_sd_frequency_alignment
+    from macroforecast.core.types import L1DataDefinitionArtifact, Panel, PanelMetadata
 
     idx = pd.date_range("2010-01-01", periods=12, freq="MS")
     df = pd.DataFrame(

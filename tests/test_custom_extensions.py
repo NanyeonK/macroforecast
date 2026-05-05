@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from macrocast import (
+from macroforecast import (
     CUSTOM_MODEL_CONTRACT_VERSION,
     custom_method_extension_contracts,
     custom_model_contract_metadata,

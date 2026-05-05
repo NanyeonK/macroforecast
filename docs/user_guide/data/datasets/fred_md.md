@@ -1,18 +1,18 @@
 # FRED-MD
 
-Monthly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Loaded via `macrocast.load_fred_md()` when `path.1_data_task.fixed_axes.dataset == "fred_md"`.
+Monthly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Loaded via `macroforecast.load_fred_md()` when `path.1_data_task.fixed_axes.dataset == "fred_md"`.
 
 ## Citation & authoritative source
 
 - **Original paper**: Michael W. McCracken and Serena Ng, "FRED-MD: A Monthly Database for Macroeconomic Research," *Journal of Business & Economic Statistics* **34**(4): 574–589, 2016. Working paper: [Federal Reserve Bank of St. Louis WP 2015-012](https://research.stlouisfed.org/wp/more/2015-012).
 - **Official landing page**: [St. Louis Fed — FRED-MD & FRED-QD](https://www.stlouisfed.org/research/economists/mccracken/fred-databases) (current documentation, appendix, and historical vintages).
-- **Variable appendix (current)**: [`FRED-MD_updated_appendix.pdf`](https://research.stlouisfed.org/econ/mccracken/fred-databases/) — authoritative list of every series, its T-code, and its source. **The macrocast package does not redistribute this appendix**; users who need the exact current variable list should fetch it from St. Louis Fed.
+- **Variable appendix (current)**: [`FRED-MD_updated_appendix.pdf`](https://research.stlouisfed.org/econ/mccracken/fred-databases/) — authoritative list of every series, its T-code, and its source. **The macroforecast package does not redistribute this appendix**; users who need the exact current variable list should fetch it from St. Louis Fed.
 
-## What macrocast downloads
+## What macroforecast downloads
 
-- **Current vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv` (this exact URL is used by `macrocast/raw/datasets/fred_md.py`). Replaced at the start of every month by the maintainers.
+- **Current vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv` (this exact URL is used by `macroforecast/raw/datasets/fred_md.py`). Replaced at the start of every month by the maintainers.
 - **Historical vintage**: per-month CSVs at `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/{vintage}.csv` where `vintage` is e.g. `2020-06`. Accessed when the recipe sets `leaf_config.data_vintage` and `information_set_type == "real_time_vintage"`.
-- **Bundle (historical)**: St. Louis Fed periodically publishes a ZIP of all past vintages. macrocast supports extraction from such a zip via the `local_zip_source` loader argument.
+- **Bundle (historical)**: St. Louis Fed periodically publishes a ZIP of all past vintages. macroforecast supports extraction from such a zip via the `local_zip_source` loader argument.
 
 The CSV uses two header rows: the first is the transformation code (T-code) per series; subsequent rows are the observations indexed by month.
 
@@ -29,7 +29,7 @@ The paper organises the panel into eight groups, unchanged since the 2016 public
 7. **Prices** — CPI (`CPIAUCSL`), PCE price index, PPI, commodity prices (oil, metals).
 8. **Stock market** — S&P 500 (`S&P 500`), dividend yield, P/E ratio, aggregate market returns.
 
-Exact membership of each group at any given point in time is in the appendix PDF — macrocast does not encode it. For code that needs category-aware feature grouping, the `feature_grouping` axis in Layer 2 / 3 will eventually surface a `fred_category` value (reserved for v1.1).
+Exact membership of each group at any given point in time is in the appendix PDF — macroforecast does not encode it. For code that needs category-aware feature grouping, the `feature_grouping` axis in Layer 2 / 3 will eventually surface a `fred_category` value (reserved for v1.1).
 
 ## Transformation codes (T-codes)
 
@@ -45,7 +45,7 @@ The first row of `current.csv` encodes the recommended stationarity transform fo
 | 6 | Second difference of logs $\\Delta^2 \\log x_t$ |
 | 7 | First difference of percent change $\\Delta (x_t / x_{t-1} - 1)$ |
 
-In macrocast these codes are part of the Layer 1 official-frame decision:
+In macroforecast these codes are part of the Layer 1 official-frame decision:
 
 - `official_transform_policy: keep_official_raw_scale` with
   `official_transform_scope: none` → ignore T-codes and keep raw
@@ -65,16 +65,16 @@ The 2015 working paper documented **134 series**. The current panel (circa 2024�
 - **Re-codes T-codes** when a series' stationarity profile visibly changes (e.g., a regime shift in a price index warranting a log-diff instead of log-level). Such changes are also flagged in the appendix.
 - **Renames** source FRED IDs when the Fed updates its own taxonomy. The paper-era name remains in the first-row header for backward compatibility.
 
-The authoritative change log is maintained by the St. Louis Fed in the appendix PDF (the "change history" section); macrocast does not attempt to mirror it. If a user needs bit-identical replication of a published study that cites FRED-MD, they should pin `information_set_type: real_time_vintage` + `leaf_config.data_vintage: "YYYY-MM"` where `YYYY-MM` is the vintage the study used.
+The authoritative change log is maintained by the St. Louis Fed in the appendix PDF (the "change history" section); macroforecast does not attempt to mirror it. If a user needs bit-identical replication of a published study that cites FRED-MD, they should pin `information_set_type: real_time_vintage` + `leaf_config.data_vintage: "YYYY-MM"` where `YYYY-MM` is the vintage the study used.
 
 ## Loader behaviour — things to know
 
-- **Download is cached** at `~/.cache/macrocast/raw/` (override with `cache_root` on the loader). The cache key is `(dataset, vintage, source_url)`.
+- **Download is cached** at `~/.cache/macroforecast/raw/` (override with `cache_root` on the loader). The cache key is `(dataset, vintage, source_url)`.
 - **No data redistribution** — the package never bundles the CSV. Network access or a user-provided `local_source` path is required on first load.
-- **Parsing**: `parse_fred_csv` at `macrocast/raw/shared_csv.py` separates the T-code header row from the observation rows and returns both (T-codes surface only if Layer 2 preprocessing consumes them).
+- **Parsing**: `parse_fred_csv` at `macroforecast/raw/shared_csv.py` separates the T-code header row from the observation rows and returns both (T-codes surface only if Layer 2 preprocessing consumes them).
 - **Custom file conformance**: FRED-MD's column naming follows FRED series IDs (`INDPRO`, `CPIAUCSL`, ...). Any user-side CSV or Parquet used with `custom_source_policy: custom_panel_only` on a monthly FRED-MD route must use a monthly date index and numeric columns. Matching FRED IDs is recommended for replacement panels; appended custom files may add study-specific column names. Duplicate names are renamed with a `__custom` suffix at runtime.
 
-## Known limitations in macrocast v1.0
+## Known limitations in macroforecast v1.0
 
 - **No variable-level metadata surface** — the package does not expose each FRED ID's description / units / source URL. Users who want that enrichment should query FRED's REST API directly.
 - **No automated T-code validation** — if St. Louis Fed changes a T-code in a new vintage, `official_transform_policy: apply_official_tcode` will use the new code silently. For strict reproducibility pin the vintage.

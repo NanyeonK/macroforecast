@@ -1,4 +1,4 @@
-# macrocast
+# macroforecast
 
 > Fair, reproducible macro forecasting benchmarking package.
 > Version 0.5.0 (12-layer canonical design — see `plans/design/part1-4`).
@@ -7,20 +7,20 @@
 
 ```bash
 python3 -m pytest tests/ -x -q                     # ~785 tests, <30s on a laptop
-python3 -c "import macrocast; print(macrocast.__version__)"
-python3 -c "import macrocast; macrocast.run('examples/recipes/l4_minimal_ridge.yaml')"
+python3 -c "import macroforecast; print(macroforecast.__version__)"
+python3 -c "import macroforecast; macroforecast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
 
 ## Public API
 
 ```python
-import macrocast
+import macroforecast
 
-result = macrocast.run("path/to/recipe.yaml", output_directory="out/")
+result = macroforecast.run("path/to/recipe.yaml", output_directory="out/")
 # result.cells -> per-sweep-cell RuntimeResult + sink_hashes
 # manifest.json + per-cell artifacts written to out/
 
-replication = macrocast.replicate("out/manifest.json")
+replication = macroforecast.replicate("out/manifest.json")
 # bit-exact: replication.sink_hashes_match  -> True when artifacts identical
 ```
 
@@ -77,15 +77,15 @@ end-to-end runtime (cell loop, seed propagation, bit-exact replicate) is
 - **Sweep:** param-level + external-axis sweeps; grid (default) and zip
   combination modes; cell loop iterates `{sweep: [...]}` markers in the
   recipe root.
-- **Replication:** `macrocast.replicate(manifest_path)` re-runs the stored
+- **Replication:** `macroforecast.replicate(manifest_path)` re-runs the stored
   recipe and verifies per-cell sink hashes match bit-for-bit.
 
 ## Module layout
 
 ```
-macrocast/
+macroforecast/
   __init__.py             # lazy-export top-level surface
-  api.py                  # macrocast.run / macrocast.replicate
+  api.py                  # macroforecast.run / macroforecast.replicate
   core/
     execution.py          # execute_recipe (cell loop) + replicate_recipe
     runtime.py            # per-layer materialize_l{1..8}_minimal helpers
@@ -122,7 +122,7 @@ examples/recipes/         # YAML recipe examples per layer
 ## Status levels
 
 The package uses a **two-value vocabulary** (defined in
-`macrocast.core.status`):
+`macroforecast.core.status`):
 
 - **`operational`** -- runtime executes the full design-spec procedure.
   The output matches the published method named in the design.
@@ -137,11 +137,11 @@ deprecated aliases (`normalize_status` collapses every legacy alias to
 honesty pass that introduced this 2-value vocabulary is documented in
 PR-A (#177) through PR-G of the v0.1.1 series.
 
-Helpers live on `macrocast.core` for typed comparison:
+Helpers live on `macroforecast.core` for typed comparison:
 
 ```python
-from macrocast.core import OPERATIONAL, FUTURE, ItemStatus, is_runnable, is_future, normalize_status
-from macrocast.core.ops.l4_ops import get_family_status
+from macroforecast.core import OPERATIONAL, FUTURE, ItemStatus, is_runnable, is_future, normalize_status
+from macroforecast.core.ops.l4_ops import get_family_status
 
 assert get_family_status("ridge") == OPERATIONAL
 assert get_family_status("macroeconomic_random_forest") == FUTURE
@@ -173,7 +173,7 @@ all closed.
 | L7 | `accumulated_local_effect` | Apley & Zhu (2020) centred-cumulative-effect | #192 |
 | L7 | `friedman_h_interaction` | Friedman & Popescu (2008) H² statistic | #193 |
 | L7 | `gradient_shap` / `integrated_gradients` / `saliency_map` / `deep_lift` | captum-backed gradient attributions (operational with `[deep]` extra) | #194 |
-| L4 (deep NN) | `lstm` / `gru` / `transformer` without torch | `NotImplementedError("install macrocast[deep]")` -- explicit, no silent MLP fallback | #198 |
+| L4 (deep NN) | `lstm` / `gru` / `transformer` without torch | `NotImplementedError("install macroforecast[deep]")` -- explicit, no silent MLP fallback | #198 |
 
 ### v0.2 design-coverage additions
 
@@ -188,7 +188,7 @@ on top of v0.1:
 | L8 `artifact_granularity = per_target / per_horizon / per_target_horizon / flat` | #207 |
 | L8 `manifest_format = yaml`, `export_format = html_report` | #209 |
 | L1.5 ADF / Phillips-Perron / KPSS stationarity tests | #210 |
-| `macrocast.custom.register_model` callables dispatched in L4 runtime | #216 |
+| `macroforecast.custom.register_model` callables dispatched in L4 runtime | #216 |
 | L4 `search_algorithm = grid / random / bayesian / genetic / cv_path` dispatch | #217 |
 | L6.C Giacomini-Rossi (2010) rolling-window fluctuation test | #199 |
 | L6.E density / interval test battery (PIT-Berkowitz / KS / Kupiec / Christoffersen) | #200 |

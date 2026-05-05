@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import macrocast
-from macrocast import custom
+import macroforecast
+from macroforecast import custom
 
 
 @pytest.fixture(autouse=True)
@@ -78,7 +78,7 @@ def test_custom_preprocessor_dispatched_via_leaf_config(tmp_path):
         return clipped_train, clipped_test
 
     recipe = _BASE_RECIPE.replace("__PREP__", "clip_x1_at_2")
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     cell = result.cells[0]
     panel = cell.runtime_result.artifacts["l2_clean_panel_v1"].panel.data
     # x1 originally ranges 0.5 -> 5.0; after clipping at 2.0 the max is 2.0.
@@ -89,7 +89,7 @@ def test_custom_l3_feature_block_dispatched_when_op_matches():
     """Issue #251 -- a registered feature_block runs when ``_execute_l3_op``
     sees its name as the op."""
 
-    from macrocast.core.runtime import _try_custom_l3_dispatch
+    from macroforecast.core.runtime import _try_custom_l3_dispatch
 
     @custom.register_feature_block("double_it", block_kind="temporal")
     def _double(frame, _params):
@@ -103,7 +103,7 @@ def test_custom_l3_feature_block_dispatched_when_op_matches():
 
 
 def test_custom_l3_dispatch_returns_none_when_unregistered():
-    from macrocast.core.runtime import _try_custom_l3_dispatch
+    from macroforecast.core.runtime import _try_custom_l3_dispatch
 
     result = _try_custom_l3_dispatch("nothing_registered_here", [pd.DataFrame()], params={})
     assert result is None
@@ -112,7 +112,7 @@ def test_custom_l3_dispatch_returns_none_when_unregistered():
 def test_custom_feature_combiner_dispatched():
     """A combiner is found when the op name matches a registered combiner."""
 
-    from macrocast.core.runtime import _try_custom_l3_dispatch
+    from macroforecast.core.runtime import _try_custom_l3_dispatch
 
     @custom.register_feature_combiner("merge_concat")
     def _concat(frame_or_inputs, _params):

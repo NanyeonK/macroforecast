@@ -18,7 +18,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "docs" / "fred_dataset"
 SOURCE_DIR = ROOT / "build" / "fred_dataset_sources"
-CACHE_ROOT = Path.home() / ".macrocast" / "raw"
+CACHE_ROOT = Path.home() / ".macroforecast" / "raw"
 
 FRED_MD_CURRENT_URL = (
     "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv"
@@ -111,7 +111,7 @@ class FredColumn:
 
 
 def _request(url: str) -> Request:
-    return Request(url, headers={"User-Agent": "macrocast docs generator"})
+    return Request(url, headers={"User-Agent": "macroforecast docs generator"})
 
 
 def _download(url: str, target: Path) -> Path:
@@ -521,7 +521,7 @@ def main() -> None:
 - Current: FRED-Dataset
 - Next: [API Reference](../api/index.md)
 
-This section is the dataset dictionary for macrocast's official FRED-backed
+This section is the dataset dictionary for macroforecast's official FRED-backed
 source panels. It is separate from Layer 1 because Layer 1 should decide the
 source contract, target y, predictor x universe, and timing rules. The raw
 dataset definitions belong here.
@@ -531,7 +531,7 @@ the current FRED-SD by-series workbook.
 
 ## Current Snapshot
 
-| Dataset | macrocast `dataset` value | Frequency | Current source count | Data through | Column definition |
+| Dataset | macroforecast `dataset` value | Frequency | Current source count | Data through | Column definition |
 |---|---|---|---:|---|---|
 | FRED-MD | `fred_md` | monthly | {len(md_rows)} columns | {md_through} | one column per official current CSV mnemonic |
 | FRED-QD | `fred_qd` | quarterly | {len(qd_rows)} columns | {qd_through} | one column per official current CSV mnemonic |
@@ -568,7 +568,7 @@ fred_sd
 - Current dataset: FRED-MD
 
 FRED-MD is the monthly national macro panel used by `dataset=fred_md`.
-macrocast downloads the official current CSV from:
+macroforecast downloads the official current CSV from:
 
 `{FRED_MD_CURRENT_URL}`
 
@@ -598,7 +598,7 @@ count excluding the date index: `{len(md_rows)}`.
 - Current dataset: FRED-QD
 
 FRED-QD is the quarterly national macro panel used by `dataset=fred_qd`.
-macrocast downloads the official current CSV from:
+macroforecast downloads the official current CSV from:
 
 `{FRED_QD_CURRENT_URL}`
 
@@ -634,7 +634,7 @@ count excluding the date index: `{len(qd_rows)}`.
 FRED-SD is the state-level panel used by `dataset=fred_sd` and by composite
 routes such as `fred_md+fred_sd` or `fred_qd+fred_sd`.
 
-macrocast uses the official **Data by Series** workbook. The workbook vintage
+macroforecast uses the official **Data by Series** workbook. The workbook vintage
 used for this generated page is `{sd_vintage}`:
 
 `{sd_source_url}`
@@ -647,7 +647,7 @@ generated column count: `{len(sd_rows)}`. Native-frequency counts:
 
 - Workbook sheets are FRED-SD variables.
 - Sheet columns are state abbreviations.
-- macrocast generated columns use `{{sd_variable}}_{{state}}`.
+- macroforecast generated columns use `{{sd_variable}}_{{state}}`.
 - Example: sheet `UR`, state `CA` becomes `UR_CA`.
 - Layer 1 owns state/series source selection. Layer 2 owns any mixed-frequency
   representation after the source frame exists.

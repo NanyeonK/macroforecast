@@ -1,5 +1,5 @@
-from macrocast.core.layers.registry import get_layer
-from macrocast.core.ops.registry import get_op
+from macroforecast.core.layers.registry import get_layer
+from macroforecast.core.ops.registry import get_op
 
 
 def layer_id_to_yaml_key(layer_id: str) -> str:
@@ -13,13 +13,13 @@ def layer_id_to_yaml_key(layer_id: str) -> str:
 
 def _module(layer_id: str):
     if layer_id == "l1_5":
-        from macrocast.core.layers import l1_5 as module
+        from macroforecast.core.layers import l1_5 as module
     elif layer_id == "l2_5":
-        from macrocast.core.layers import l2_5 as module
+        from macroforecast.core.layers import l2_5 as module
     elif layer_id == "l3_5":
-        from macrocast.core.layers import l3_5 as module
+        from macroforecast.core.layers import l3_5 as module
     else:
-        from macrocast.core.layers import l4_5 as module
+        from macroforecast.core.layers import l4_5 as module
     return module
 
 
@@ -72,7 +72,7 @@ def test_all_4_diagnostics_category_diagnostic():
 
 
 def test_all_4_diagnostics_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     for layer_id in ["l1_5", "l2_5", "l3_5", "l4_5"]:
         assert layer_id in LAYER_SINKS

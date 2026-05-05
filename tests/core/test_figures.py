@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from macrocast.core.figures import (
+from macroforecast.core.figures import (
     US_STATE_GRID,
     render_bar_global,
     render_heatmap,

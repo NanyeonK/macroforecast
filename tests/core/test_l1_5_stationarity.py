@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import _diagnostic_stationarity_tests
+from macroforecast.core.runtime import _diagnostic_stationarity_tests
 
 
 def _trending_frame(n: int = 80) -> pd.DataFrame:
@@ -105,7 +105,7 @@ def test_phillips_perron_native_runs_without_arch():
     + Newey-West HAC adjustment.
     """
 
-    from macrocast.core.runtime import _phillips_perron_native
+    from macroforecast.core.runtime import _phillips_perron_native
 
     rng = np.random.default_rng(0)
     # White noise -> stationary -> reject unit root.

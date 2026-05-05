@@ -1,6 +1,6 @@
 # Layer Contract Design
 
-macrocast is organized as explicit layer contracts. Each layer either exposes a list of axes or a DAG of nodes. The contract is the public interface: recipe YAML, Navigator choices, validators, runtime artifacts, and L8 manifests must agree on the same layer IDs, sink names, and option names.
+macroforecast is organized as explicit layer contracts. Each layer either exposes a list of axes or a DAG of nodes. The contract is the public interface: recipe YAML, Navigator choices, validators, runtime artifacts, and L8 manifests must agree on the same layer IDs, sink names, and option names.
 
 ## Layer Map
 

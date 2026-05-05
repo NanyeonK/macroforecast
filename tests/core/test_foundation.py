@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from macrocast.core import (
+from macroforecast.core import (
     DAG,
     LAYER_GLOBALS,
     LAYER_SINKS,

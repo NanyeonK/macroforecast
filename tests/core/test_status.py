@@ -1,4 +1,4 @@
-"""Tests for the unified ``macrocast.core.status`` vocabulary (PR-A of the
+"""Tests for the unified ``macroforecast.core.status`` vocabulary (PR-A of the
 honesty pass).
 
 Pins:
@@ -19,7 +19,7 @@ from typing import get_args, get_origin
 
 import pytest
 
-from macrocast.core import (
+from macroforecast.core import (
     FUTURE,
     KNOWN_STATUSES,
     OPERATIONAL,
@@ -28,9 +28,9 @@ from macrocast.core import (
     is_runnable,
     normalize_status,
 )
-from macrocast.core.dag import NodeStatus
-from macrocast.core.ops.registry import OpStatus, OpSpec, _OPS, register_op
-from macrocast.core.types import Panel
+from macroforecast.core.dag import NodeStatus
+from macroforecast.core.ops.registry import OpStatus, OpSpec, _OPS, register_op
+from macroforecast.core.types import Panel
 
 
 # ---------------------------------------------------------------------------

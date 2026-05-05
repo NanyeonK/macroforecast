@@ -1,4 +1,4 @@
-# macrocast 설계도 — Part 3
+# macroforecast 설계도 — Part 3
 
 L5 + L6 + L7 + L8 (consumption layer)
 
@@ -559,7 +559,7 @@ User-defined block은 leaf_config.user_groups로.
 
 모든 sink를 *어떤 디렉토리 구조와 형식*으로 export할 것인가.
 
-L8은 macrocast의 *외부 인터페이스*. paper, replication, audit이 읽는 단위.
+L8은 macroforecast의 *외부 인터페이스*. paper, replication, audit이 읽는 단위.
 
 ### Pipeline 위치
 
@@ -640,7 +640,7 @@ Default = ALL 14 fields.
 |---|---|
 | recipe_yaml_full | 전체 YAML 임베드 |
 | recipe_hash | canonical hash |
-| package_version | macrocast 버전 |
+| package_version | macroforecast 버전 |
 | python_version, r_version, julia_version | runtime 버전 |
 | dependency_lockfile | uv.lock + renv.lock 내용 |
 | git_commit_sha, git_branch_name | git 정보 |

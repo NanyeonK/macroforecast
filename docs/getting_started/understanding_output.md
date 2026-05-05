@@ -1,6 +1,6 @@
 # Understanding Output
 
-This page documents the current `macrocast.core.runtime` output shape. Older `macrocast.execution` runs may still write legacy files such as `predictions.csv`, `metrics.json`, and `artifact_manifest.json`; the layer-contract runtime writes the L8 directory described here.
+This page documents the current `macroforecast.core.runtime` output shape. Older `macroforecast.execution` runs may still write legacy files such as `predictions.csv`, `metrics.json`, and `artifact_manifest.json`; the layer-contract runtime writes the L8 directory described here.
 
 ## L8 Directory Structure
 

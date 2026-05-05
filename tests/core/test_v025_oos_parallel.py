@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import macrocast
+import macroforecast
 
 
 _BASE = """
@@ -58,8 +58,8 @@ _BASE = """
 def test_parallel_unit_oos_dates_matches_serial(tmp_path):
     out_serial = tmp_path / "serial"
     out_parallel = tmp_path / "parallel"
-    serial = macrocast.run(_BASE.replace("__PU__", "cells"), output_directory=out_serial)
-    parallel = macrocast.run(_BASE.replace("__PU__", "oos_dates"), output_directory=out_parallel)
+    serial = macroforecast.run(_BASE.replace("__PU__", "cells"), output_directory=out_serial)
+    parallel = macroforecast.run(_BASE.replace("__PU__", "oos_dates"), output_directory=out_parallel)
     fa = serial.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
     fb = parallel.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
     assert fa == fb
@@ -70,5 +70,5 @@ def test_parallel_unit_horizons_runs_without_error(tmp_path):
     when the L4 runtime produces a single horizon / target per fit_node."""
 
     out = tmp_path / "horizons"
-    result = macrocast.run(_BASE.replace("__PU__", "horizons"), output_directory=out)
+    result = macroforecast.run(_BASE.replace("__PU__", "horizons"), output_directory=out)
     assert result.cells[0].succeeded

@@ -54,9 +54,9 @@ path:
 
 | Value | Loader | Frequency rule |
 |---|---|---|
-| `fred_md` | `macrocast.raw.load_fred_md` | monthly |
-| `fred_qd` | `macrocast.raw.load_fred_qd` | quarterly |
-| `fred_sd` | `macrocast.raw.load_fred_sd` | user chooses monthly or quarterly |
+| `fred_md` | `macroforecast.raw.load_fred_md` | monthly |
+| `fred_qd` | `macroforecast.raw.load_fred_qd` | quarterly |
+| `fred_sd` | `macroforecast.raw.load_fred_sd` | user chooses monthly or quarterly |
 | `fred_md+fred_sd` | composite loader | monthly |
 | `fred_qd+fred_sd` | composite loader | quarterly |
 
@@ -71,8 +71,8 @@ not a reusable enum axis.
 
 Parser inference:
 
-- `.csv` -> `macrocast.raw.load_custom_csv`
-- `.parquet` or `.pq` -> `macrocast.raw.load_custom_parquet`
+- `.csv` -> `macroforecast.raw.load_custom_csv`
+- `.parquet` or `.pq` -> `macroforecast.raw.load_custom_parquet`
 
 File shape:
 

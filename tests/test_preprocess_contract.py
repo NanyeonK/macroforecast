@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from macrocast import (
+from macroforecast import (
     PreprocessContract,
     PreprocessValidationError,
     build_preprocess_contract,
@@ -11,7 +11,7 @@ from macrocast import (
     preprocess_summary,
     preprocess_to_dict,
 )
-from macrocast.preprocessing import (
+from macroforecast.preprocessing import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
     CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,

@@ -15,7 +15,7 @@ Transforming the training target changes the scale of the fitted model and the s
 The intended user protocol is:
 
 ```python
-@mc.target_transformer("standardize_target")
+@mf.target_transformer("standardize_target")
 class StandardizeTarget:
     def fit(self, target_train, context):
         ...
@@ -78,7 +78,7 @@ Existing built-in axes still describe dataset or built-in target handling:
 
 ## Current Behavior
 
-`mc.target_transformer(name)` registers the protocol object.
+`mf.target_transformer(name)` registers the protocol object.
 
 `Experiment.use_target_transformer(name)` lowers to the `target_transformer` registry axis.
 

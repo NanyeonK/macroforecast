@@ -1,18 +1,18 @@
 # Foundation Core
 
-`macrocast.core` is the Phase 0 foundation for the next DAG-based execution
+`macroforecast.core` is the Phase 0 foundation for the next DAG-based execution
 surface. It is intentionally introduced beside the current public runtime.
 
 ## Current Authority
 
 The existing public recipe/compiler/runtime stack remains authoritative:
 
-- `macrocast/registry` defines public axes used by Navigator and current YAML
+- `macroforecast/registry` defines public axes used by Navigator and current YAML
   recipes.
-- `macrocast/compiler` compiles current recipes.
-- `macrocast/execution` runs current forecasting studies.
+- `macroforecast/compiler` compiles current recipes.
+- `macroforecast/execution` runs current forecasting studies.
 
-`macrocast.core` does not replace these modules in this PR.
+`macroforecast.core` does not replace these modules in this PR.
 
 ## New Core Contract
 
@@ -28,24 +28,24 @@ The foundation layer provides:
 
 ## Registry Migration Plan
 
-`macrocast.core` is the source of truth for the new DAG execution system.
-`macrocast/registry` will be regenerated from `macrocast.core` entries once
+`macroforecast.core` is the source of truth for the new DAG execution system.
+`macroforecast/registry` will be regenerated from `macroforecast.core` entries once
 L0-L8 coverage lands.
 
-Until that point, `macrocast/registry` stays frozen for backward compatibility:
+Until that point, `macroforecast/registry` stays frozen for backward compatibility:
 
-- DO NOT add new axes to `macrocast/registry`.
-- DO NOT modify existing axes in `macrocast/registry`.
-- DO NOT remove existing axes from `macrocast/registry`.
+- DO NOT add new axes to `macroforecast/registry`.
+- DO NOT modify existing axes in `macroforecast/registry`.
+- DO NOT remove existing axes from `macroforecast/registry`.
 
-Phase 1 layer work adds new axes only to `macrocast.core`. If current public
+Phase 1 layer work adds new axes only to `macroforecast.core`. If current public
 recipes need backward-compatible behavior during the transition, implement an
 adapter at the boundary instead of changing legacy registry entries.
 
 ## Capability Counts
 
 README capability counts refer to the legacy registry runtime, not
-`macrocast.core`. Phase 0 Foundation work must not modify headline capability
+`macroforecast.core`. Phase 0 Foundation work must not modify headline capability
 counts.
 
 The Foundation Core should not change runtime capability counts until it is

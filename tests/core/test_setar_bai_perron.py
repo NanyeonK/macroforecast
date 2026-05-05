@@ -6,7 +6,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _estimate_structural_break_regime,
     _estimate_threshold_regime,
 )

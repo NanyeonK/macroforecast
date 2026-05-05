@@ -22,7 +22,7 @@ source frame exists and is documented in [4.1.7 Frame Availability](frame_availa
 Visibility rule:
 
 - `information_set_type` and `release_lag_rule` are hidden by default for
-  `custom_source_policy: custom_panel_only`, because macrocast cannot infer a
+  `custom_source_policy: custom_panel_only`, because macroforecast cannot infer a
   FRED vintage or publication-lag discipline from an arbitrary custom file.
 - `contemporaneous_x_rule` remains visible for custom-only studies because it
   is a supervised-learning alignment rule, not a FRED metadata rule.

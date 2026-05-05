@@ -3,7 +3,7 @@
 Cross-cuts PR-A through PR-D: pins that every item demoted to ``future``
 in the v0.1 honesty pass is consistently rejected by every layer's
 validator, and that ``get_*_status`` helpers return the canonical
-2-value vocabulary defined in :mod:`macrocast.core.status`.
+2-value vocabulary defined in :mod:`macroforecast.core.status`.
 
 If a future v0.2 PR re-implements one of the demoted items and promotes
 it back to ``operational``, the corresponding parameter row in this
@@ -15,18 +15,18 @@ from textwrap import dedent
 
 import pytest
 
-from macrocast.core import FUTURE, OPERATIONAL, ItemStatus, is_future, is_runnable
-from macrocast.core.layers.l1 import parse_layer_yaml as l1_parse, validate_layer as l1_validate
-from macrocast.core.layers.l4 import parse_layer_yaml as l4_parse, validate_layer as l4_validate
-from macrocast.core.layers.l7 import parse_layer_yaml as l7_parse, validate_layer as l7_validate
-from macrocast.core.ops import list_ops
-from macrocast.core.ops.l4_ops import (
+from macroforecast.core import FUTURE, OPERATIONAL, ItemStatus, is_future, is_runnable
+from macroforecast.core.layers.l1 import parse_layer_yaml as l1_parse, validate_layer as l1_validate
+from macroforecast.core.layers.l4 import parse_layer_yaml as l4_parse, validate_layer as l4_validate
+from macroforecast.core.layers.l7 import parse_layer_yaml as l7_parse, validate_layer as l7_validate
+from macroforecast.core.ops import list_ops
+from macroforecast.core.ops.l4_ops import (
     FUTURE_MODEL_FAMILIES,
     OPERATIONAL_MODEL_FAMILIES,
     PLANNED_MODEL_FAMILIES,
     get_family_status,
 )
-from macrocast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
+from macroforecast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
 
 
 # Items demoted from operational/planned to future during the v0.1

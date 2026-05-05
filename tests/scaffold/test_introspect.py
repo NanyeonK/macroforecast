@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from macrocast.scaffold import introspect
+from macroforecast.scaffold import introspect
 
 
 def test_list_layers_returns_canonical_thirteen():

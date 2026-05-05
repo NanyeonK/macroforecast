@@ -3,8 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from macrocast.core import execute_minimal_forecast
-from macrocast.core.types import L6TestsArtifact, L7ImportanceArtifact, L8ArtifactsArtifact
+from macroforecast.core import execute_minimal_forecast
+from macroforecast.core.types import L6TestsArtifact, L7ImportanceArtifact, L8ArtifactsArtifact
 
 
 MINIMAL_RECIPE = """

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macrocast.core.layers.l8 import (
+from macroforecast.core.layers.l8 import (
     make_recipe_with_glmboost,
     make_recipe_with_l6_l7_active,
     make_recipe_without_ensemble,
@@ -11,7 +11,7 @@ from macrocast.core.layers.l8 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.ops import get_op
+from macroforecast.core.ops import get_op
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -189,7 +189,7 @@ def test_l8_recipe_hash_in_manifest():
 
 
 def test_l8_runtime_environment_field():
-    from macrocast.core.types import RuntimeEnvironment
+    from macroforecast.core.types import RuntimeEnvironment
 
     assert {"os_name", "python_version", "cpu_info"} <= set(RuntimeEnvironment.__dataclass_fields__)
 
@@ -202,8 +202,8 @@ def test_l8_output_directory_default():
 
 
 def test_l8_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l8 import L8Output
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l8 import L8Output
 
     spec = get_layer("l8")
     assert spec.cls is L8Output
@@ -213,20 +213,20 @@ def test_l8_registered_with_spec_correct_class():
 
 
 def test_l8_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l8" in LAYER_SINKS
     assert "l8_artifacts_v1" in LAYER_SINKS["l8"]
 
 
 def test_l8_sub_layer_count():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     assert len(get_layer("l8").cls.sub_layers) == 4
 
 
 def test_l8_axis_count_per_sub_layer():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     counts = {"L8_A_export_format": 2, "L8_B_saved_objects": 2, "L8_C_provenance": 2, "L8_D_artifact_granularity": 2}
     for sub_name, expected_count in counts.items():
@@ -234,7 +234,7 @@ def test_l8_axis_count_per_sub_layer():
 
 
 def test_l8_total_axis_count_8():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     assert sum(len(sub.axes) for sub in get_layer("l8").cls.sub_layers.values()) == 8
 

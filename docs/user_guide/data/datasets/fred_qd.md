@@ -1,6 +1,6 @@
 # FRED-QD
 
-Quarterly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Sister dataset to [FRED-MD](fred_md.md), designed for longer-horizon forecasting and for factor models requiring quarterly frequency (GDP, productivity, balance-sheet aggregates). Loaded via `macrocast.load_fred_qd()` when `path.1_data_task.fixed_axes.dataset == "fred_qd"`.
+Quarterly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Sister dataset to [FRED-MD](fred_md.md), designed for longer-horizon forecasting and for factor models requiring quarterly frequency (GDP, productivity, balance-sheet aggregates). Loaded via `macroforecast.load_fred_qd()` when `path.1_data_task.fixed_axes.dataset == "fred_qd"`.
 
 ## Citation & authoritative source
 
@@ -8,9 +8,9 @@ Quarterly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St.
 - **Official landing page**: [St. Louis Fed — FRED-MD & FRED-QD](https://www.stlouisfed.org/research/economists/mccracken/fred-databases) (documentation, appendix, vintages — same page as FRED-MD).
 - **Variable appendix (current)**: [`FRED-QD_updated_appendix.pdf`](https://research.stlouisfed.org/econ/mccracken/fred-databases/) — the authoritative list of every series, T-code, source FRED ID, and variable description. The package does not redistribute the appendix.
 
-## What macrocast downloads
+## What macroforecast downloads
 
-- **Current vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/current.csv` (referenced in `macrocast/raw/datasets/fred_qd.py`). Replaced by the maintainers at each quarter's advance release.
+- **Current vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/current.csv` (referenced in `macroforecast/raw/datasets/fred_qd.py`). Replaced by the maintainers at each quarter's advance release.
 - **Historical vintage**: `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/{vintage}.csv` with `vintage` as `YYYY-Q` (e.g., `2020-06`). Accessed when the recipe pins `information_set_type == "real_time_vintage"` plus `leaf_config.data_vintage`.
 
 Same two-row header format as FRED-MD: row 1 holds the T-code per series, rows 2+ are quarterly observations starting 1959:Q1.
@@ -55,7 +55,7 @@ FRED-QD extends the FRED-MD T-code table with one additional entry (Case 8), ref
 
 Case 8 is used sparingly — the paper notes that unit-root-test-driven T-code selection sometimes differs from codes used by prior literature, and the appendix flags these cases explicitly.
 
-Flow into macrocast is via the same `tcode_policy` axis as FRED-MD (1.1 does not override it).
+Flow into macroforecast is via the same `tcode_policy` axis as FRED-MD (1.1 does not override it).
 
 ## Changes from the 2020 working paper / 2021 Fed Review publication to current
 
@@ -66,18 +66,18 @@ The working paper (NBER WP 26872, March 2020) and the 2021 Fed Review publicatio
 - **Additions** when a new Fed release adds a directly useful aggregate — rare but non-zero. The 14-category structure accommodates additions without a group rename.
 - **Balance-sheet refinements** — the "Non-Household Balance Sheets" group was the working paper's main contribution over Stock–Watson (2012a); refinements to this group (e.g., updating a "banks vs non-banks" split) occur as Fed source data gets restructured.
 
-As with FRED-MD, the authoritative change log lives in the appendix PDF; macrocast does not mirror it. Bit-identical replication of a published study requires pinning the exact vintage via `leaf_config.data_vintage`.
+As with FRED-MD, the authoritative change log lives in the appendix PDF; macroforecast does not mirror it. Bit-identical replication of a published study requires pinning the exact vintage via `leaf_config.data_vintage`.
 
 ## Loader behaviour
 
 Mirror of FRED-MD:
 
-- Caches download at `~/.cache/macrocast/raw/`.
+- Caches download at `~/.cache/macroforecast/raw/`.
 - Parsing via `parse_fred_csv` (same shared helper).
 - No data redistribution. Network access or `local_source` path required on first load.
 - Schema: date index (quarter-end) + numeric columns with FRED series IDs as column names.
 
-## Known limitations in macrocast v1.0
+## Known limitations in macroforecast v1.0
 
 - Same as FRED-MD: no per-variable metadata surface, no auto T-code validation across vintages, `data_vintage` required for real-time_vintage mode.
 - **Quarterly / monthly alignment**: when a study mixes FRED-QD with FRED-MD, aligning them requires the `alignment_rule` axis (1.5). v1.0 implements month-to-quarter aggregation (operational) but mixed-frequency evaluation is limited to single-frequency panels at each horizon.

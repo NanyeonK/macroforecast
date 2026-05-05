@@ -1,4 +1,4 @@
-# macrocast 설계도 — Part 2
+# macroforecast 설계도 — Part 2
 
 L2 + L3 + L4 (construction layer)
 

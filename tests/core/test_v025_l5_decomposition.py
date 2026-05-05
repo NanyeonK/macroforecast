@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _l5_per_subperiod_metrics, _l5_predictor_block_decomposition
+from macroforecast.core.runtime import _l5_per_subperiod_metrics, _l5_predictor_block_decomposition
 
 
 def _toy_per_origin():
@@ -65,7 +65,7 @@ def test_per_horizon_then_mean_aggregation_via_full_l5_recipe(tmp_path):
     """Smoke test that the resolved_axes carry the decomposition_tables
     when ``aggregation_axis = per_horizon_then_mean`` is enabled."""
 
-    import macrocast
+    import macroforecast
 
     recipe = """
 0_meta:
@@ -112,7 +112,7 @@ def test_per_horizon_then_mean_aggregation_via_full_l5_recipe(tmp_path):
     primary_metric: mse
     agg_horizon: per_horizon_then_mean
 """
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     eval_artifact = result.cells[0].runtime_result.artifacts["l5_evaluation_v1"]
     assert "decomposition_tables" in eval_artifact.l5_axis_resolved
     assert "per_horizon_then_mean" in eval_artifact.l5_axis_resolved["decomposition_tables"]

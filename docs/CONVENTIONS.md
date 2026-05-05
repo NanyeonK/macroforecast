@@ -1,6 +1,6 @@
 # Docs Conventions
 
-Rules for writing macrocast documentation. Enforced repository-wide; new docs that don't follow these rules should be rejected at review.
+Rules for writing macroforecast documentation. Enforced repository-wide; new docs that don't follow these rules should be rejected at review.
 
 The goal: a package that gives researchers **optional** choices with **sensible defaults**. Most users stay on defaults and don't need to read a line of docs beyond the quickstart. Docs exist for the moments when a researcher *wants* to deviate, and at that moment we owe them a per-choice explanation that is faithful to the actual runtime.
 

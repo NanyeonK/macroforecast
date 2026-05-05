@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import _diebold_mariano_test, _long_run_variance
+from macroforecast.core.runtime import _diebold_mariano_test, _long_run_variance
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ def test_l3_cascade_max_depth_unit_level():
     don't fight the layer validator.
     """
 
-    from macrocast.core.runtime import _execute_l3_dag
+    from macroforecast.core.runtime import _execute_l3_dag
     from types import SimpleNamespace
 
     n = 12
@@ -115,7 +115,7 @@ def test_l3_cascade_pipeline_id_propagates_through_steps():
     """Issue #257 -- pipeline_id stamped on a deep step is inherited by
     its descendants when they don't override it."""
 
-    from macrocast.core.runtime import _execute_l3_dag
+    from macroforecast.core.runtime import _execute_l3_dag
     from types import SimpleNamespace
 
     class _Ref:

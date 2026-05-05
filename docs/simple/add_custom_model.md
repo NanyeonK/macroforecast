@@ -1,18 +1,18 @@
 # Add A Custom Model
 
-> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
-> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
-> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
-> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
+> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
 
 
 Custom models are registered in Python. No registry file edit is needed.
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-@mc.custom_model("my_model")
+@mf.custom_model("my_model")
 def my_model(X_train, y_train, X_test, context):
     model = MyModel()
     model.fit(X_train, y_train)
@@ -23,7 +23,7 @@ Use the registered name exactly like a built-in model:
 
 ```python
 result = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md",
         target="INDPRO",
         start="1980-01",
@@ -61,7 +61,7 @@ Some routes add optional fields. FRED-SD mixed-frequency routes add
 `context["auxiliary_payloads"]` with native-frequency block metadata.
 
 ```python
-@mc.custom_model("my_fred_sd_mixed_frequency_model")
+@mf.custom_model("my_fred_sd_mixed_frequency_model")
 def my_fred_sd_mixed_frequency_model(X_train, y_train, X_test, context):
     payloads = context.get("auxiliary_payloads", {})
     blocks = payloads["fred_sd_native_frequency_block_payload"]
@@ -70,7 +70,7 @@ def my_fred_sd_mixed_frequency_model(X_train, y_train, X_test, context):
     return float(y_train[-1])
 
 result = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_sd",
         target="UR_CA",
         start="2000-01",

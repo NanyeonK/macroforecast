@@ -4,7 +4,7 @@
 - Current: FRED-Dataset
 - Next: [API Reference](../api/index.md)
 
-This section is the dataset dictionary for macrocast's official FRED-backed
+This section is the dataset dictionary for macroforecast's official FRED-backed
 source panels. It is separate from Layer 1 because Layer 1 should decide the
 source contract, target y, predictor x universe, and timing rules. The raw
 dataset definitions belong here.
@@ -14,7 +14,7 @@ the current FRED-SD by-series workbook.
 
 ## Current Snapshot
 
-| Dataset | macrocast `dataset` value | Frequency | Current source count | Data through | Column definition |
+| Dataset | macroforecast `dataset` value | Frequency | Current source count | Data through | Column definition |
 |---|---|---|---:|---|---|
 | FRED-MD | `fred_md` | monthly | 126 columns | 2025-09 | one column per official current CSV mnemonic |
 | FRED-QD | `fred_qd` | quarterly | 245 columns | 2025-09 | one column per official current CSV mnemonic |

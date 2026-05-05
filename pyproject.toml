@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "macrocast"
-version = "0.5.3"
+name = "macroforecast"
+version = "0.6.0"
 description = "Fair, reproducible macro forecasting benchmarking package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,14 +35,14 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
 ]
-all = ["macrocast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet,deep]"]
-dev = ["pytest>=8.0", "macrocast[all]"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet,deep]"]
+dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
-macrocast = "macrocast.scaffold.cli:main"
+macroforecast = "macroforecast.scaffold.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["macrocast*"]
+include = ["macroforecast*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

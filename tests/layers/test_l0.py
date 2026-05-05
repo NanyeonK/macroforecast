@@ -1,4 +1,4 @@
-from macrocast.core.layers.l0 import (
+from macroforecast.core.layers.l0 import (
     build_minimal_recipe,
     build_recipe_with_l0_only,
     execute_recipe,
@@ -135,8 +135,8 @@ def test_l0_manifest_records_all_resolved():
 
 
 def test_l0_registered_with_spec_correct_class():
-    from macrocast.core.layers.l0 import L0StudySetup
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l0 import L0StudySetup
+    from macroforecast.core.layers.registry import get_layer
 
     spec = get_layer("l0")
     assert spec.cls is L0StudySetup
@@ -146,7 +146,7 @@ def test_l0_registered_with_spec_correct_class():
 
 
 def test_l0_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l0" in LAYER_SINKS
     assert "l0_meta_v1" in LAYER_SINKS["l0"]

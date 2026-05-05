@@ -2,14 +2,14 @@
 
 Run a core layer-contract forecast in under 5 minutes.
 
-This quickstart uses `macrocast.core.runtime.execute_minimal_forecast`. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.
+This quickstart uses `macroforecast.core.runtime.execute_minimal_forecast`. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.
 
 For the exact support boundary, read [Runtime Support Matrix](runtime_support.md).
 
 ## Run A Minimal Core Recipe
 
 ```python
-from macrocast.core import execute_minimal_forecast
+from macroforecast.core import execute_minimal_forecast
 
 recipe = """
 1_data:
@@ -138,7 +138,7 @@ Add these blocks when needed:
 
 ## Legacy Compiler Path
 
-Older docs and recipes that use `macrocast.compiler.compile_recipe_yaml` still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.
+Older docs and recipes that use `macroforecast.compiler.compile_recipe_yaml` still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.
 
 ## Next Steps
 

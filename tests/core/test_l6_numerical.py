@@ -1,7 +1,7 @@
 """Numerical golden tests for L6 statistical tests.
 
 Closes the structural-only-test gap raised in PR #163 review concern #5
-(issue #167). For each L6 test, we compare macrocast's output to an
+(issue #167). For each L6 test, we compare macroforecast's output to an
 authoritative reference computed independently:
 
 * Ljung-Box / Jarque-Bera / Durbin-Watson / ARCH-LM -> statsmodels +
@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _diebold_mariano_test,
     _newey_west_variance,
     _pesaran_timmermann_test,

@@ -1,10 +1,10 @@
 # FRED-SD
 
-> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
-> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
-> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
-> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
+> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
 
 
 FRED-SD can be used by itself or together with FRED-MD/FRED-QD.
@@ -13,7 +13,7 @@ The important rule is simple:
 
 - FRED-MD and FRED-QD publish official transformation codes.
 - FRED-SD does not publish official transformation codes.
-- macrocast therefore leaves FRED-SD source values untransformed by default.
+- macroforecast therefore leaves FRED-SD source values untransformed by default.
 - Reviewed and empirical FRED-SD t-codes are available only when you opt in.
 
 ## Frequency
@@ -21,9 +21,9 @@ The important rule is simple:
 FRED-MD fixes the experiment to monthly frequency:
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-result = mc.forecast(
+result = mf.forecast(
     "fred_md+fred_sd",
     target="INDPRO",
     start="1985-01",
@@ -35,7 +35,7 @@ result = mc.forecast(
 FRED-QD fixes the experiment to quarterly frequency:
 
 ```python
-result = mc.forecast(
+result = mf.forecast(
     "fred_qd+fred_sd",
     target="GDPC1",
     start="1985-01",
@@ -47,7 +47,7 @@ result = mc.forecast(
 FRED-SD alone requires `frequency`:
 
 ```python
-result = mc.forecast(
+result = mf.forecast(
     "fred_sd",
     target="UR_CA",
     start="1985-01",
@@ -64,7 +64,7 @@ workbook is widened into `VARIABLE_STATE` columns:
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md+fred_sd",
         target="INDPRO",
         start="1985-01",
@@ -80,12 +80,12 @@ columns.
 
 ## Mixed-Frequency Representation
 
-FRED-SD mixes monthly and quarterly state series. By default macrocast keeps the
+FRED-SD mixes monthly and quarterly state series. By default macroforecast keeps the
 selected FRED-SD columns on the experiment calendar and records the decision:
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md+fred_sd",
         target="INDPRO",
         start="1985-01",
@@ -139,7 +139,7 @@ research layer:
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_qd+fred_sd",
         target="GDPC1",
         start="1985-01",
@@ -167,7 +167,7 @@ stationarity audit choice: one code per FRED-SD variable, shared across states.
 
 ```python
 exp = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_qd+fred_sd",
         target="GDPC1",
         start="1985-01",

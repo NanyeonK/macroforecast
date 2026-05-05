@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-import macrocast
+import macroforecast
 
 
 _FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "fred_md_2020_2023_subset.csv"
@@ -96,7 +96,7 @@ def test_realistic_fixture_exists():
 
 def test_realistic_recipe_runs_l1_through_l5(tmp_path):
     recipe = _custom_panel_recipe(target="INDPRO")
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     assert len(result.cells) == 1
     cell = result.cells[0]
     assert cell.succeeded, f"failed: {cell.error}"
@@ -108,7 +108,7 @@ def test_realistic_recipe_runs_l1_through_l5(tmp_path):
 @pytest.mark.parametrize("family", ["ridge", "lasso", "random_forest"])
 def test_realistic_fixture_supports_multiple_families(tmp_path, family):
     recipe = _custom_panel_recipe(target="UNRATE", n_lag=3, family=family)
-    result = macrocast.run(recipe, output_directory=tmp_path / family)
+    result = macroforecast.run(recipe, output_directory=tmp_path / family)
     cell = result.cells[0]
     assert cell.succeeded, f"family {family} failed: {cell.error}"
     artifact = cell.runtime_result.artifacts["l4_model_artifacts_v1"]
@@ -117,8 +117,8 @@ def test_realistic_fixture_supports_multiple_families(tmp_path, family):
 
 def test_realistic_fixture_replicate_bit_exact(tmp_path):
     recipe = _custom_panel_recipe(target="INDPRO")
-    macrocast.run(recipe, output_directory=tmp_path)
-    rep = macrocast.replicate(tmp_path / "manifest.json")
+    macroforecast.run(recipe, output_directory=tmp_path)
+    rep = macroforecast.replicate(tmp_path / "manifest.json")
     assert rep.recipe_match
     assert rep.sink_hashes_match
     assert all(rep.per_cell_match.values())
@@ -130,7 +130,7 @@ def test_realistic_fixture_sweep_produces_distinct_artifacts(tmp_path):
     recipe = _custom_panel_recipe(target="CPIAUCSL").replace(
         "{n_lag: 4}", "{n_lag: {sweep: [2, 4, 6, 8]}}"
     )
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     assert len(result.cells) == 4
     assert all(c.succeeded for c in result.cells)
     # Each cell must produce a different L3 features hash (because n_lag differs).

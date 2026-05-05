@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from macrocast.core import figures
-from macrocast.core.runtime import (
+from macroforecast.core import figures
+from macroforecast.core.runtime import (
     _density_interval_battery,
     _emit_quantile_intervals,
     _resolve_forecast_object,

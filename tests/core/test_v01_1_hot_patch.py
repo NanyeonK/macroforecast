@@ -23,8 +23,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from macrocast.core.execution import _stable_repr, _hash_sink
-from macrocast.core.runtime import _build_nber_regime_series, _NBER_RECESSIONS
+from macroforecast.core.execution import _stable_repr, _hash_sink
+from macroforecast.core.runtime import _build_nber_regime_series, _NBER_RECESSIONS
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ def test_hash_sink_with_set_payload_is_stable_across_processes(tmp_path):
         """
         import sys, json
         sys.path.insert(0, %r)
-        from macrocast.core.execution import _hash_sink
+        from macroforecast.core.execution import _hash_sink
         # A set big enough that hash-seed-driven iteration order matters.
         payload = {"models": {"ridge", "lasso", "ar_p", "xgboost", "random_forest", "knn", "huber", "ols"},
                    "horizons": {1, 3, 6, 12}}

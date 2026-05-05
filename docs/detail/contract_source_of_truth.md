@@ -1,12 +1,12 @@
 # Contract Source of Truth
 
-This page defines the canonical ownership rules for macrocast layer contracts.
+This page defines the canonical ownership rules for macroforecast layer contracts.
 When code, docs, UI, or legacy compiler paths disagree, use this page to decide
 which side must change.
 
 ## Decision
 
-macrocast has two canonical contract layers:
+macroforecast has two canonical contract layers:
 
 1. Public layer shape and artifact boundaries are canonical in the current
    L0-L8 layer contract:
@@ -19,7 +19,7 @@ macrocast has two canonical contract layers:
      [Recipe Layers](recipe_layers.md) and
      [Layer Boundary Contract](layer_boundary_contract.md).
 2. Axis vocabulary is canonical in the machine-readable registry under
-   `macrocast/registry/*/AXIS_DEFINITION`:
+   `macroforecast/registry/*/AXIS_DEFINITION`:
    - axis IDs;
    - allowed values;
    - support status (`operational`, `registry_only`, `future`, etc.);
@@ -39,7 +39,7 @@ source of truth. Examples include:
 
 - legacy layer names such as `1_data_task`, `3_training`,
   `4_evaluation`, `5_output_provenance`, `6_stat_tests`, and `7_importance`;
-- legacy axis aliases preserved by `macrocast/registry/naming.py`;
+- legacy axis aliases preserved by `macroforecast/registry/naming.py`;
 - bridge axes kept for old recipes while current L0-L8 contracts migrate.
 
 Compatibility code may read these names and canonicalize them, but generated
@@ -50,9 +50,9 @@ keys and registry axis IDs.
 
 When sources disagree, apply this order:
 
-1. `macrocast/registry/*/AXIS_DEFINITION` for axis name, value, support status,
+1. `macroforecast/registry/*/AXIS_DEFINITION` for axis name, value, support status,
    and default policy.
-2. `macrocast/core/layers/registry.py`, [Recipe Layers](recipe_layers.md), and
+2. `macroforecast/core/layers/registry.py`, [Recipe Layers](recipe_layers.md), and
    [Layer Boundary Contract](layer_boundary_contract.md) for layer topology,
    YAML key, DAG/list/diagnostic shape, sink names, and artifact boundaries.
 3. Runtime layer parser/validator modules for executable validation behavior.
@@ -100,7 +100,7 @@ Current alignment status:
   output/provenance artifact selections.
 - Legacy recipe values such as `msfe`, `relative_msfe`, `oos_r2`,
   `all_oos_data`, `nw_hac`, and `dm_hln` are canonicalized through
-  `macrocast/registry/naming.py`; generated UI and new recipes should use
+  `macroforecast/registry/naming.py`; generated UI and new recipes should use
   `mse`, `relative_mse`, `r2_oos`, `full_oos`, `newey_west`, and
   `dm_diebold_mariano`.
 
@@ -109,7 +109,7 @@ Remaining migration gaps:
 - Layer 2 docs/UI expose canonical representation axes such as
   `horizon_target_construction`, `target_transform`, `x_missing_policy`,
   `feature_block_combination`, and `feature_builder`, while
-  `macrocast/core/layers/l2.py` still validates an older cleaning-only axis
+  `macroforecast/core/layers/l2.py` still validates an older cleaning-only axis
   set.
 - Full docs pages do not yet enumerate every registry value automatically, so
   docs coverage remains a separate generation task.

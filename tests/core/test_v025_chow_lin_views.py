@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _chow_lin_disaggregate
+from macroforecast.core.runtime import _chow_lin_disaggregate
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ def test_chow_lin_handles_too_few_observations_gracefully():
 # ---------------------------------------------------------------------------
 
 def test_residual_acf_view_recorded_when_axis_set(tmp_path):
-    import macrocast
+    import macroforecast
 
     recipe = """
 0_meta:
@@ -91,7 +91,7 @@ def test_residual_acf_view_recorded_when_axis_set(tmp_path):
   fixed_axes:
     fit_view: multi
 """
-    result = macrocast.run(recipe, output_directory=tmp_path)
+    result = macroforecast.run(recipe, output_directory=tmp_path)
     diag = result.cells[0].runtime_result.artifacts["l4_5_diagnostic_v1"]
     assert "residual_acf" in diag.metadata
     assert "residual_qq" in diag.metadata

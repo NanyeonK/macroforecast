@@ -4,8 +4,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macrocast.core.runtime import _DFMMixedFrequency
-from macrocast.core.ops.l4_ops import (
+from macroforecast.core.runtime import _DFMMixedFrequency
+from macroforecast.core.ops.l4_ops import (
     OPERATIONAL_MODEL_FAMILIES,
     FUTURE_MODEL_FAMILIES,
     get_family_status,

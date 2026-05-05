@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-from macrocast.core.runtime import (
+from macroforecast.core.runtime import (
     _BaggingWrapper,
     _QuantileRegressionForest,
     _l6_dmp_multi_horizon,
     _strobl_permutation_importance_frame,
 )
-from macrocast.core.types import ModelArtifact
-from macrocast.core.ops.l4_ops import OPERATIONAL_MODEL_FAMILIES, get_family_status
+from macroforecast.core.types import ModelArtifact
+from macroforecast.core.ops.l4_ops import OPERATIONAL_MODEL_FAMILIES, get_family_status
 
 
 # ---------------------------------------------------------------------------

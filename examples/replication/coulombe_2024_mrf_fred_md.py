@@ -8,13 +8,13 @@ Usage:
 
     python3 examples/replication/coulombe_2024_mrf_fred_md.py
     # then:
-    python3 -c "import macrocast; r = macrocast.replicate('out/coulombe_2024/manifest.json'); print(r.sink_hashes_match)"
+    python3 -c "import macroforecast; r = macroforecast.replicate('out/coulombe_2024/manifest.json'); print(r.sink_hashes_match)"
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-import macrocast
+import macroforecast
 
 
 RECIPE = """
@@ -112,7 +112,7 @@ def main() -> None:
     out = Path("out/coulombe_2024")
     out.mkdir(parents=True, exist_ok=True)
     print(f"Running Coulombe (2024) MRF vs ridge replication on FRED-MD INDPRO...")
-    result = macrocast.run(RECIPE, output_directory=out)
+    result = macroforecast.run(RECIPE, output_directory=out)
     print(f"  cells:    {len(result.cells)}")
     print(f"  duration: {result.duration_seconds:.1f}s")
     cell = result.cells[0]
@@ -123,7 +123,7 @@ def main() -> None:
     if not metrics.empty:
         print("\nPer-model MSE:")
         print(metrics[["model_id", "mse", "rmse", "mae"]].to_string(index=False))
-    rep = macrocast.replicate(out / "manifest.json")
+    rep = macroforecast.replicate(out / "manifest.json")
     print(f"\nReplication: sink_hashes_match = {rep.sink_hashes_match}")
 
 

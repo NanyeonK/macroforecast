@@ -1,4 +1,4 @@
-"""Sphinx configuration for macrocast docs.
+"""Sphinx configuration for macroforecast docs.
 
 Build with::
 
@@ -13,8 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-project = "macrocast"
-author = "macrocast contributors"
+project = "macroforecast"
+author = "macroforecast contributors"
 release = "0.3.0"
 
 extensions = [

@@ -6,8 +6,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from macrocast.core.runtime import _ale_table
-from macrocast.core.types import ModelArtifact
+from macroforecast.core.runtime import _ale_table
+from macroforecast.core.types import ModelArtifact
 
 
 def _toy_model_artifact(n: int = 60, seed: int = 0):

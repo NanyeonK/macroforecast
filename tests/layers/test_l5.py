@@ -1,4 +1,4 @@
-from macrocast.core.layers.l5 import (
+from macroforecast.core.layers.l5 import (
     make_l5_yaml,
     make_recipe_with_benchmark,
     make_recipe_with_l3_metadata,
@@ -10,7 +10,7 @@ from macrocast.core.layers.l5 import (
     validate_layer,
     validate_recipe,
 )
-from macrocast.core.ops import get_op
+from macroforecast.core.ops import get_op
 
 
 def test_l5_minimal_yaml_parses_to_defaults():
@@ -139,14 +139,14 @@ def test_l5_decomposition_by_predictor_block_uses_l3_metadata():
 
 
 def test_l5_economic_metrics_does_not_exist():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     assert "economic_metrics" not in get_layer("l5").cls.list_axes()
 
 
 def test_l5_registered_with_spec_correct_class():
-    from macrocast.core.layers.registry import get_layer
-    from macrocast.core.layers.l5 import L5Evaluation
+    from macroforecast.core.layers.registry import get_layer
+    from macroforecast.core.layers.l5 import L5Evaluation
 
     spec = get_layer("l5")
     assert spec.cls is L5Evaluation
@@ -156,20 +156,20 @@ def test_l5_registered_with_spec_correct_class():
 
 
 def test_l5_sink_in_layer_sinks():
-    from macrocast.core.types import LAYER_SINKS
+    from macroforecast.core.types import LAYER_SINKS
 
     assert "l5" in LAYER_SINKS
     assert "l5_evaluation_v1" in LAYER_SINKS["l5"]
 
 
 def test_l5_evaluation_artifact_records_resolved_axes():
-    from macrocast.core.types import L5EvaluationArtifact
+    from macroforecast.core.types import L5EvaluationArtifact
 
     assert "l5_axis_resolved" in L5EvaluationArtifact.__dataclass_fields__
 
 
 def test_l5_axis_count():
-    from macrocast.core.layers.registry import get_layer
+    from macroforecast.core.layers.registry import get_layer
 
     expected_axes = {
         "primary_metric", "point_metrics", "density_metrics",

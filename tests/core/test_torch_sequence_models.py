@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macrocast.core.runtime import _TorchSequenceModel
+from macroforecast.core.runtime import _TorchSequenceModel
 
 
 HAS_TORCH = importlib.util.find_spec("torch") is not None
@@ -26,18 +26,18 @@ class TestTorchMissing:
         model = _TorchSequenceModel(kind="lstm", n_epochs=1, hidden_size=4)
         X = pd.DataFrame({"x1": np.arange(10.0)})
         y = pd.Series(np.arange(10.0))
-        with pytest.raises(NotImplementedError, match="macrocast\\[deep\\]"):
+        with pytest.raises(NotImplementedError, match="macroforecast\\[deep\\]"):
             model.fit(X, y)
 
     def test_predict_without_fit_raises(self):
         model = _TorchSequenceModel(kind="gru", n_epochs=1, hidden_size=4)
         X = pd.DataFrame({"x1": np.arange(5.0)})
-        with pytest.raises(NotImplementedError, match="install macrocast\\[deep\\]"):
+        with pytest.raises(NotImplementedError, match="install macroforecast\\[deep\\]"):
             model.predict(X)
 
 
 @pytest.mark.deep
-@pytest.mark.skipif(not HAS_TORCH, reason="requires torch (install `macrocast[deep]`)")
+@pytest.mark.skipif(not HAS_TORCH, reason="requires torch (install `macroforecast[deep]`)")
 class TestTorchPresent:
     @pytest.mark.parametrize("kind", ["lstm", "gru"])
     def test_fit_predict_shape(self, kind):

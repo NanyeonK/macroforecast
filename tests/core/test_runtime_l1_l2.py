@@ -5,10 +5,10 @@ import math
 import pandas as pd
 import pytest
 
-from macrocast.core import execute_l1_l2
-from macrocast.core.types import DiagnosticArtifact
-from macrocast.core.runtime import materialize_l1
-from macrocast.core.yaml import parse_recipe_yaml
+from macroforecast.core import execute_l1_l2
+from macroforecast.core.types import DiagnosticArtifact
+from macroforecast.core.runtime import materialize_l1
+from macroforecast.core.yaml import parse_recipe_yaml
 
 
 def test_execute_l1_l2_materializes_inline_custom_panel():
