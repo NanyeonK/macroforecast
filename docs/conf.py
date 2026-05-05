@@ -123,3 +123,37 @@ nitpicky = False
 # During the docs IA migration, some audit and compatibility pages are
 # intentionally link-only so they do not dominate the main navigation.
 suppress_warnings = ["myst.xref_missing", "toc.not_included"]
+
+
+# -- Auto-emit OptionDoc reference pages -------------------------------------
+# Build-time hook: regenerate ``docs/reference/{l0..l8}.rst`` from the
+# scaffold OptionDoc registry on every sphinx build, so ReadTheDocs picks
+# up the latest 578-entry registry without manual file shuffling.
+
+def _emit_optiondoc_reference() -> None:
+    """Render per-layer reference pages into ``docs/reference/`` from
+    the live OptionDoc registry. Idempotent: overwrites existing files.
+
+    Failure is non-fatal -- if the scaffold subpackage cannot be imported
+    (e.g. during a partial-environment build) we log a warning rather
+    than break the rest of the docs build.
+    """
+
+    docs_root = Path(__file__).resolve().parent
+    target = docs_root / "reference"
+    try:
+        from macrocast.scaffold import render_rst as _render_rst
+    except Exception as exc:  # pragma: no cover - environment-dependent
+        import warnings
+
+        warnings.warn(
+            "macrocast.scaffold.render_rst unavailable; skipping "
+            f"OptionDoc reference auto-emit ({exc!r})."
+        )
+        return
+    written = _render_rst.write_all(target)
+    print(f"[macrocast docs] emitted {len(written)} reference pages -> {target}")
+
+
+_emit_optiondoc_reference()
+

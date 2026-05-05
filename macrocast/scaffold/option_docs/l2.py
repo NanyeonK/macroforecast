@@ -131,7 +131,7 @@ _L2C_ZSCORE = _e(
     "l2_c", "outlier_policy", "zscore_threshold",
     "Flag observations beyond a z-score threshold.",
     (
-        "Computes the rolling z-score per series and flags |z| > "
+        "Computes the rolling z-score per series and flags ``|z|`` > "
         "``leaf_config.zscore_threshold_value`` (default 3.0). Simpler "
         "than IQR but assumes approximately Gaussian residuals."
     ),

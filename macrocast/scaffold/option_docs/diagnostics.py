@@ -469,7 +469,7 @@ def _register_l1_5() -> None:
             "Robust to non-Gaussian distributions; flags values outside ``[Q1 - 1.5·IQR, Q3 + 1.5·IQR]``.",
         ),
         "zscore_flag": (
-            "|z-score| > 3 outlier flag per series.",
+            "``|z-score|`` > 3 outlier flag per series.",
             "Cheaper than IQR; assumes approximate normality. The 3σ threshold maps to ~0.3% tail probability under normality.",
         ),
         "multi": (
@@ -517,7 +517,7 @@ def _register_l1_5() -> None:
             "Large panels where cluster structure aids reading; reveals correlated variable blocks.",
         ),
         "top_k_per_target": (
-            "Top-k highest-|ρ| predictors per target.",
+            "Top-k highest-``|ρ|`` predictors per target.",
             "Quickly identifying the most-correlated predictors when N is too large for a full matrix.",
         ),
         "none": (
@@ -881,7 +881,7 @@ def _register_l3_5() -> None:
             "Large feature panels with block structure; reveals clusters of correlated features.",
         ),
         "top_k": (
-            "Top-k highest-|ρ| pairs.",
+            "Top-k highest-``|ρ|`` pairs.",
             "Cheapest readout for very wide panels.",
         ),
     }

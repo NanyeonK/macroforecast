@@ -97,7 +97,7 @@ _FIG_TYPE_DOCS: dict[str, tuple[str, str, str]] = {
         "Horizontal bar chart -- one bar per feature, length = importance score.",
         (
             "The standard global-importance visualisation. Renders "
-            "features sorted by mean-|importance| so the most "
+            "features sorted by mean-``|importance|`` so the most "
             "important variables surface at the top of the chart. "
             "Pair with ``output_table_format = wide`` for direct "
             "table-figure cross-reference."

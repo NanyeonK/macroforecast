@@ -171,7 +171,7 @@ _SHAP_TREE = _o(
         "/ ``extra_trees`` / ``gradient_boosting`` / ``xgboost`` / "
         "``lightgbm`` / ``catboost``.\n\n"
         "Returns per-prediction SHAP values; the ``output_table_format`` "
-        "L7.B axis controls whether the result is the global mean-|SHAP| "
+        "L7.B axis controls whether the result is the global mean-``|SHAP|`` "
         "ranking or the per-row decomposition."
     ),
     "Default importance op for tree ensembles; exact and fast.",

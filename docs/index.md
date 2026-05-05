@@ -74,5 +74,6 @@ detail/index
 fred_dataset/index
 foundation_core
 api/index
+reference/index
 CONVENTIONS
 ```

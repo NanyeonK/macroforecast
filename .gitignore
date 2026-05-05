@@ -63,6 +63,7 @@ runs/
 
 # Sphinx build output
 docs/_build/
+docs/reference/
 .venv-docs/
 
 # CatBoost training artifacts
