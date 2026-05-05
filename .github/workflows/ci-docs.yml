@@ -10,11 +10,13 @@ on:
       - '.github/workflows/ci-docs.yml'
       - 'docs/**'
       - 'pyproject.toml'
+      - 'macrocast/**'  # autodoc reads docstrings from the package
   pull_request:
     paths:
       - '.github/workflows/ci-docs.yml'
       - 'docs/**'
       - 'pyproject.toml'
+      - 'macrocast/**'
 
 permissions:
   contents: read
