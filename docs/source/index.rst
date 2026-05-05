@@ -1,5 +1,5 @@
 macroforecast
-=========
+=============
 
 Fair, reproducible macro forecasting benchmarking.
 
