@@ -59,8 +59,9 @@ def _load_layer_modules() -> None:
 
     for layer_module in (
         "macrocast.scaffold.option_docs.l0",
+        "macrocast.scaffold.option_docs.l1",
         # Subsequent layer modules are added as their content PRs land
-        # (PR-A1 = L0, PR-A2 = L1, ...).
+        # (PR-A3 = L2/L2.5/L3/L3.5, PR-A4 = L4/L4.5, PR-A5 = L5..L8).
     ):
         try:
             import_module(layer_module)
