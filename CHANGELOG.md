@@ -3,6 +3,26 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.5.1] -- 2026-05-05 -- "docs + CI hygiene patch"
+
+### Fixed
+* **ci-docs sphinx build**: package docstring in ``macrocast/__init__.py``
+  used ``Heading:`` followed by a hyphen-bullet list, which docutils
+  parsed as a definition list with unexpected indentation. Switched to
+  ``**Heading**`` plus a blank line before each list. Also added
+  ``macrocast.scaffold`` to the importable submodule list (it shipped
+  in v0.3 but was not advertised in the docstring).
+* **ci-docs trigger paths**: docstring-only changes in
+  ``macrocast/**`` previously did not re-run ``ci-docs`` (its trigger
+  paths were limited to ``docs/**`` + ``pyproject.toml``), so a
+  docstring fix could leave a known-broken sphinx build cached on
+  ``main``. Added ``macrocast/**`` to the workflow's ``paths`` filter.
+
+### Notes
+* Same code surface and behaviour as v0.5.0; this is a release-hygiene
+  bump so the next ``release.yml`` invocation runs against a green
+  ``ci-docs`` build.
+
 ## [0.5.0] -- 2026-05-05 -- "examples gauntlet + CLI surface"
 
 ### Fixed
