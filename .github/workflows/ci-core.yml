@@ -39,3 +39,29 @@ jobs:
           # __pycache__ contains compiled bytecode copies of that docstring;
           # exclude both from the grep.
           ! grep -rE 'random_state=42|random_seed=42' macrocast/execution/ --include='*.py' --exclude='seed_policy.py' || (echo "Found hardcoded seed — use resolve_seed()" && exit 1)
+
+      - name: Check version consistency (pyproject.toml ↔ macrocast/__init__.py)
+        run: |
+          python - <<'PY'
+          import re, pathlib, sys
+          v1 = re.search(r'^version = "([^"]+)"', pathlib.Path("pyproject.toml").read_text(), re.M).group(1)
+          v2 = re.search(r'^__version__ = "([^"]+)"', pathlib.Path("macrocast/__init__.py").read_text(), re.M).group(1)
+          if v1 != v2:
+              sys.exit(f"version mismatch: pyproject={v1!r}, __init__={v2!r}")
+          print(f"version OK: {v1}")
+          PY
+
+      - name: Check docs do not advertise stale tag
+        run: |
+          # README and install docs must point at the current package version.
+          # CHANGELOG entries naming older tags are fine; they are historical.
+          version=$(python -c 'import re,pathlib; print(re.search(r"^version = \"([^\"]+)\"", pathlib.Path("pyproject.toml").read_text(), re.M).group(1))')
+          if grep -RnE "@v[0-9]+\.[0-9]+\.[0-9]+" README.md docs/install.md | grep -v "@v${version}" ; then
+              echo "Stale @vN.N.N tag in README.md / docs/install.md — bump to v${version}"
+              exit 1
+          fi
+          if grep -nE "version-[0-9]+\.[0-9]+\.[0-9]+" README.md | grep -v "version-${version}" ; then
+              echo "Stale version-N.N.N badge in README.md — bump to version-${version}"
+              exit 1
+          fi
+          echo "docs install tag matches package version (v${version})"

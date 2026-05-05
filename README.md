@@ -2,9 +2,13 @@
 
 > Fair, reproducible macro forecasting benchmarking. One YAML recipe → end-to-end study with bit-exact replication.
 
-[![tests](https://img.shields.io/badge/tests-953%20passing-brightgreen)](#)
-[![version](https://img.shields.io/badge/version-0.5.1-blue)](#)
+[![ci-core](https://github.com/NanyeonK/macrocast/actions/workflows/ci-core.yml/badge.svg)](https://github.com/NanyeonK/macrocast/actions/workflows/ci-core.yml)
+[![ci-docs](https://github.com/NanyeonK/macrocast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macrocast/actions/workflows/ci-docs.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
+
+> **v0.5.3** — 953 tests passing locally as of 2026-05-05. The CI badges above
+> reflect live build status and replace the previously static
+> "tests-N passing / version-X" badges to keep the README from going stale.
 
 ## Install
 
@@ -15,13 +19,13 @@
 
 ```bash
 # Recommended — pinned to a tagged release
-pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 
 # Optional extras (same syntax)
-pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
-pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.1"
+pip install "macrocast[deep] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[xgboost,lightgbm] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[tuning] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
+pip install "macrocast[shap] @ git+https://github.com/NanyeonK/macrocast.git@v0.5.3"
 ```
 
 For development:
@@ -97,6 +101,12 @@ See `plans/design/part1-4` for the canonical design tables.
 
 ## Operational coverage
 
+> Before relying on advanced families/tests in a paper workflow, check
+> [`docs/getting_started/runtime_support.md`](docs/getting_started/runtime_support.md)
+> for the exact current path coverage. Some listed families are wired
+> through legacy/specialized paths or optional extras, not necessarily
+> through the minimal core runtime end-to-end.
+
 * **35+ L4 families** — linear (8), tree / boosting (8), SVM (3), kNN, MLP, deep
   NN (3, opt-in via `[deep]`), AR_p, factor_augmented_ar, BVAR Minnesota / NIW,
   FAVAR, MRF GTVP (Coulombe 2024), DFM (Mariano-Murasawa MQ Kalman),
@@ -147,7 +157,7 @@ v0.1.1 audit table is now `operational`).
 
 If you use macrocast in published work, please cite:
 
-> macrocast: Fair, reproducible macro forecasting benchmarking. v0.5.1, 2026.
+> macrocast: Fair, reproducible macro forecasting benchmarking. v0.5.3, 2026.
 
 ## License
 
