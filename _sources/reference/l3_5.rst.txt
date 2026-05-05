@@ -1,0 +1,1194 @@
+L3.5  --  Feature diagnostics
+=============================
+
+
+:Layer ID: ``l3_5``
+:Category: ``diagnostic``
+:Sub-layers: L3_5_A_comparison_axis, L3_5_B_factor_block_inspection, L3_5_C_feature_correlation, L3_5_D_lag_block_inspection, L3_5_E_selected_features_post_selection, L3_5_Z_export
+
+axis ``comparison_stages``  (L3_5_A_comparison_axis)
+----------------------------------------------------
+
+
+:Default: ``'cleaned_vs_features'``
+:Sweepable: False
+
+``cleaned_vs_features``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Compare cleaned panel vs feature-engineered panel (skip raw).
+
+L3.5.A comparison stages ``cleaned_vs_features``.
+
+This option configures the ``comparison_stages`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Isolating the L3 contribution when L2's cleaning is well-trusted.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``raw_vs_cleaned_vs_features``, ``features_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``features_only``
+^^^^^^^^^^^^^^^^^
+
+
+Inspect feature panel in isolation.
+
+L3.5.A comparison stages ``features_only``.
+
+This option configures the ``comparison_stages`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+When upstream stages are well-trusted and the focus is on the L3 output's properties.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``raw_vs_cleaned_vs_features``, ``cleaned_vs_features``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``raw_vs_cleaned_vs_features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Compare raw / cleaned / featurised panels in a 3-way view.
+
+L3.5.A comparison stages ``raw_vs_cleaned_vs_features``.
+
+This option configures the ``comparison_stages`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Default broad audit; tracking the panel's evolution from raw FRED data through to the L3 feature matrix.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``cleaned_vs_features``, ``features_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``comparison_output_form``  (L3_5_A_comparison_axis)
+---------------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``dimension_summary``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Compare panel shape (N, T, NaN%) across stages.
+
+L3.5.A comparison output form ``dimension_summary``.
+
+This option configures the ``comparison_output_form`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Verifying expected dimensionality changes -- e.g. confirming PCA reduced 100 columns to 5 factors.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``side_by_side``, ``distribution_shift``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``distribution_shift``
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+KS / histogram comparison across stages.
+
+L3.5.A comparison output form ``distribution_shift``.
+
+This option configures the ``comparison_output_form`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Detecting feature transforms that materially reshape distributions (e.g. wavelet / fourier expansions).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``side_by_side``, ``dimension_summary``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Render every comparison output together.
+
+L3.5.A comparison output form ``multi``.
+
+This option configures the ``comparison_output_form`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Comprehensive feature-stage audit; recommended for first-time runs.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``side_by_side``, ``dimension_summary``, ``distribution_shift``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``side_by_side``
+^^^^^^^^^^^^^^^^
+
+
+Stage-by-stage side-by-side panel summaries.
+
+L3.5.A comparison output form ``side_by_side``.
+
+This option configures the ``comparison_output_form`` axis on the ``L3_5_A_comparison_axis`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_A_comparison_axis/`` alongside the other selected views.
+
+**When to use**
+
+Default multi-stage view; matches L2.5.A output style for consistency.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``dimension_summary``, ``distribution_shift``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``factor_view``  (L3_5_B_factor_block_inspection)
+------------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``cumulative_variance``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Cumulative explained-variance curve.
+
+L3.5.B factor view ``cumulative_variance``.
+
+This option configures the ``factor_view`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Quantifying how much variance the chosen ``n_components`` retains; threshold heuristics (80% / 90%) live here.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``scree_plot``, ``loadings_heatmap``, ``factor_timeseries``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``factor_timeseries``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Estimated factor time-series plot.
+
+L3.5.B factor view ``factor_timeseries``.
+
+This option configures the ``factor_view`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Confirming factors track recognisable cycles (NBER recessions, oil-price spikes, etc.).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``scree_plot``, ``loadings_heatmap``, ``cumulative_variance``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``loadings_heatmap``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Heatmap of factor loadings (factors × predictors).
+
+L3.5.B factor view ``loadings_heatmap``.
+
+This option configures the ``factor_view`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Interpreting factor identity; high-loading variables suggest the factor's economic interpretation.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``scree_plot``, ``factor_timeseries``, ``cumulative_variance``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Render every factor view together.
+
+L3.5.B factor view ``multi``.
+
+This option configures the ``factor_view`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Default rich factor diagnostic; the standard package for factor-model papers.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``scree_plot``, ``loadings_heatmap``, ``factor_timeseries``, ``cumulative_variance``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``scree_plot``
+^^^^^^^^^^^^^^
+
+
+Eigenvalue scree plot for PCA / SPCA / DFM blocks.
+
+L3.5.B factor view ``scree_plot``.
+
+This option configures the ``factor_view`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Choosing ``n_components`` -- the elbow heuristic remains the most popular tool.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``loadings_heatmap``, ``factor_timeseries``, ``cumulative_variance``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``dfm_diagnostics``  (L3_5_B_factor_block_inspection)
+----------------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``factor_var_stability``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Plot of DFM factor-VAR coefficient stability over time.
+
+L3.5.B DFM diagnostic ``factor_var_stability``.
+
+This option configures the ``dfm_diagnostics`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Detecting non-stationarity in the factor dynamics; rolling-window estimates flag breaks.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
+
+**Related options**: ``idiosyncratic_acf``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``idiosyncratic_acf``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Autocorrelation of DFM idiosyncratic residuals.
+
+L3.5.B DFM diagnostic ``idiosyncratic_acf``.
+
+This option configures the ``dfm_diagnostics`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Validating the idiosyncratic-AR(1) assumption; large residual ACF at lags > 1 indicates misspecification.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
+
+**Related options**: ``factor_var_stability``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Render both DFM diagnostics together.
+
+L3.5.B DFM diagnostic ``multi``.
+
+This option configures the ``dfm_diagnostics`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Comprehensive DFM validation; recommended after any DFM fit.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
+
+**Related options**: ``factor_var_stability``, ``idiosyncratic_acf``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip DFM-specific diagnostics.
+
+L3.5.B DFM diagnostic ``none``.
+
+This option configures the ``dfm_diagnostics`` axis on the ``L3_5_B_factor_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_B_factor_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Pipelines without DFM blocks (PCA-only or no-factor pipelines).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
+
+**Related options**: ``factor_var_stability``, ``idiosyncratic_acf``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``feature_correlation``  (L3_5_C_feature_correlation)
+----------------------------------------------------------
+
+
+:Default: ``'cross_block'``
+:Sweepable: False
+
+``cross_block``
+^^^^^^^^^^^^^^^
+
+
+Correlations across blocks (e.g. PCA factors vs MARX features).
+
+L3.5.C feature correlation view ``cross_block``.
+
+This option configures the ``feature_correlation`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Detecting block-level redundancy before L4; informs whether to drop a block.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``within_block``, ``with_target``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Run every feature-correlation view together.
+
+L3.5.C feature correlation view ``multi``.
+
+This option configures the ``feature_correlation`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Default rich correlation audit.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``within_block``, ``cross_block``, ``with_target``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip feature correlation diagnostic entirely.
+
+L3.5.C feature correlation view ``none``.
+
+This option configures the ``feature_correlation`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Memory-constrained sweeps with very wide feature panels (n_features > 5000).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``within_block``, ``cross_block``, ``with_target``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``with_target``
+^^^^^^^^^^^^^^^
+
+
+Correlations of every feature with the target.
+
+L3.5.C feature correlation view ``with_target``.
+
+This option configures the ``feature_correlation`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Spotting top candidate predictors; pairs naturally with the L7 ``cumulative_r2_contribution`` op for downstream interpretation.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``within_block``, ``cross_block``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``within_block``
+^^^^^^^^^^^^^^^^
+
+
+Correlations within a feature block (e.g. lags of one series, PCA factors).
+
+L3.5.C feature correlation view ``within_block``.
+
+This option configures the ``feature_correlation`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Detecting redundancy within a block -- high within-block correlations suggest a smaller block dimension would suffice.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``cross_block``, ``with_target``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``correlation_method``  (L3_5_C_feature_correlation)
+---------------------------------------------------------
+
+
+:Default: ``'pearson'``
+:Sweepable: False
+
+``pearson``
+^^^^^^^^^^^
+
+
+Pearson correlation for feature pairs.
+
+L3.5.C correlation method ``pearson``.
+
+This option configures the ``correlation_method`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Linear-association default. Activates the ``pearson`` branch on L3.5.correlation_method; combine with related options on the same sub-layer for a comprehensive diagnostic.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``spearman``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``spearman``
+^^^^^^^^^^^^
+
+
+Spearman rank correlation.
+
+L3.5.C correlation method ``spearman``.
+
+This option configures the ``correlation_method`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Monotonic, robust to outliers; preferred for non-Gaussian features.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``pearson``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``correlation_view``  (L3_5_C_feature_correlation)
+-------------------------------------------------------
+
+
+:Default: ``'clustered_heatmap'``
+:Sweepable: False
+
+``clustered_heatmap``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Clustered heatmap reordered by hierarchical clustering.
+
+L3.5.C correlation view ``clustered_heatmap``.
+
+This option configures the ``correlation_view`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Large feature panels with block structure; reveals clusters of correlated features.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_matrix``, ``top_k``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``full_matrix``
+^^^^^^^^^^^^^^^
+
+
+Full feature × feature correlation matrix.
+
+L3.5.C correlation view ``full_matrix``.
+
+This option configures the ``correlation_view`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Small feature panels (< 100 cols).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``clustered_heatmap``, ``top_k``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``top_k``
+^^^^^^^^^
+
+
+Top-k highest-``|ρ|`` pairs.
+
+L3.5.C correlation view ``top_k``.
+
+This option configures the ``correlation_view`` axis on the ``L3_5_C_feature_correlation`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_C_feature_correlation/`` alongside the other selected views.
+
+**When to use**
+
+Cheapest readout for very wide panels.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_matrix``, ``clustered_heatmap``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``lag_view``  (L3_5_D_lag_block_inspection)
+------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``autocorrelation_per_lag``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+ACF plot for each lag-block series.
+
+L3.5.D lag view ``autocorrelation_per_lag``.
+
+This option configures the ``lag_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Standard time-series ACF view; informs choice of maximum lag length.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``lag_correlation_decay``, ``partial_autocorrelation``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``lag_correlation_decay``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Decay rate of lag autocorrelations.
+
+L3.5.D lag view ``lag_correlation_decay``.
+
+This option configures the ``lag_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Choosing maximum lag length quantitatively -- the half-life of the ACF gives a natural cutoff.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``autocorrelation_per_lag``, ``partial_autocorrelation``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Produce ACF + PACF + decay together.
+
+L3.5.D lag view ``multi``.
+
+This option configures the ``lag_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Default rich lag audit. Activates the ``multi`` branch on L3.5.lag_view; combine with related options on the same sub-layer for a comprehensive diagnostic.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``autocorrelation_per_lag``, ``lag_correlation_decay``, ``partial_autocorrelation``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``partial_autocorrelation``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+PACF plot for each lag-block series.
+
+L3.5.D lag view ``partial_autocorrelation``.
+
+This option configures the ``lag_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Choosing AR(p) order; the lag at which PACF first hits the noise band suggests p.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``autocorrelation_per_lag``, ``lag_correlation_decay``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``marx_view``  (L3_5_D_lag_block_inspection)
+-------------------------------------------------
+
+
+:Default: ``'weight_decay_visualization'``
+:Sweepable: False
+
+``none``
+^^^^^^^^
+
+
+Skip MARX visualisations.
+
+L3.5.D MARX view ``none``.
+
+This option configures the ``marx_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+Pipelines without MARX blocks.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
+
+**Related options**: ``weight_decay_visualization``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``weight_decay_visualization``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Plot MARX weight decay across windows.
+
+L3.5.D MARX view ``weight_decay_visualization``.
+
+This option configures the ``marx_view`` axis on the ``L3_5_D_lag_block_inspection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_D_lag_block_inspection/`` alongside the other selected views.
+
+**When to use**
+
+MARX-specific block diagnostic; shows the decay shape of the multi-scale moving averages.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
+
+**Related options**: ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``selection_view``  (L3_5_E_selected_features_post_selection)
+------------------------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``multi``
+^^^^^^^^^
+
+
+Render every selection view.
+
+L3.5.E selection view ``multi``.
+
+This option configures the ``selection_view`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Default rich audit. Activates the ``multi`` branch on L3.5.selection_view; combine with related options on the same sub-layer for a comprehensive diagnostic.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``selected_list``, ``selection_count_per_origin``, ``selection_stability``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``selected_list``
+^^^^^^^^^^^^^^^^^
+
+
+List of selected features per OOS origin.
+
+L3.5.E selection view ``selected_list``.
+
+This option configures the ``selection_view`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Cheapest readout; the raw record of feature-selection decisions.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``selection_count_per_origin``, ``selection_stability``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``selection_count_per_origin``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Count of selected features per OOS origin.
+
+L3.5.E selection view ``selection_count_per_origin``.
+
+This option configures the ``selection_view`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Detecting selection volatility; large variation across origins flags an unstable selection process.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``selected_list``, ``selection_stability``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``selection_stability``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Jaccard / Kuncheva-style stability across origins.
+
+L3.5.E selection view ``selection_stability``.
+
+This option configures the ``selection_view`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Quantifying selection robustness; high stability is a positive indicator for the feature-selection method.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``selected_list``, ``selection_count_per_origin``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``stability_metric``  (L3_5_E_selected_features_post_selection)
+--------------------------------------------------------------------
+
+
+:Default: ``'jaccard'``
+:Sweepable: False
+
+``jaccard``
+^^^^^^^^^^^
+
+
+Jaccard similarity over selection sets across origins.
+
+L3.5.E stability metric ``jaccard``.
+
+This option configures the ``stability_metric`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Default stability metric; ``|A ∩ B| / |A ∪ B|`` is intuitive and bounded in [0, 1].
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``kuncheva``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``kuncheva``
+^^^^^^^^^^^^
+
+
+Kuncheva-corrected stability index.
+
+L3.5.E stability metric ``kuncheva``.
+
+This option configures the ``stability_metric`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Larger feature panels where Jaccard is biased toward 0; explicitly corrects for chance agreement.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Kuncheva (2007) 'A stability index for feature selection', AIA proceedings.
+
+**Related options**: ``jaccard``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``diagnostic_format``  (L3_5_Z_export)
+-------------------------------------------
+
+
+:Default: ``'pdf'``
+:Sweepable: False
+
+``csv``
+^^^^^^^
+
+
+L3.5 export -- plain csv table -- one row per series / metric.
+
+Tabular diagnostic outputs (per-series summaries, test p-values, coverage tables) are emitted as comma-separated rows. The fastest path into pandas / R / Excel for ad-hoc analysis.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Quickest path to spreadsheet / pandas; collaborators who avoid JSON.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``html``
+^^^^^^^^
+
+
+L3.5 export -- single-file html report with embedded plots and tables.
+
+Renders a self-contained HTML document combining tables (via pandas ``to_html``) and base64-embedded matplotlib figures. Opens in any browser without server-side support; ideal for sharing with stakeholders who lack the codebase.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Sharing diagnostics with collaborators who do not have the repo checked out.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json``
+^^^^^^^^
+
+
+L3.5 export -- machine-readable json dump of every diagnostic value.
+
+Default format. Round-trips cleanly into Python / JS; mandatory when ``attach_to_manifest=True`` so the diagnostics participate in the manifest's hash-based replication check.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Default; required when diagnostics participate in the bit-exact replication chain.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``latex_table``
+^^^^^^^^^^^^^^^
+
+
+L3.5 export -- latex ``tabular`` snippets ready to ``\input`` into a paper.
+
+Emits one ``.tex`` file per tabular diagnostic, ready to be ``\input`` from a paper draft without further processing. Booktabs-friendly column alignment + automatic column-name escaping.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Paper-quality export when the user is drafting a manuscript.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+L3.5 export -- emit json + png + (optional) pdf / html in a single run.
+
+Comprehensive convenience option. Produces JSON for machine consumption + PNG for slides + (when ``latex_export=True``) LaTeX snippets for papers. Equivalent to setting ``diagnostic_format`` separately for each consumer.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Comprehensive runs covering paper, slides and machine-readable consumers in one execution.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pdf``
+^^^^^^^
+
+
+L3.5 export -- vector pdf figures (matplotlib backend).
+
+Matplotlib's PDF backend produces vector graphics that scale without pixelation. Recommended for paper figures where journals require sub-pixel-precise typography.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Publication-grade plots; LaTeX-rendered figures.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``png``
+^^^^^^^
+
+
+L3.5 export -- rasterised png figures (matplotlib backend).
+
+Matplotlib's AGG backend produces 300dpi-by-default PNG files. Smaller than PDF for plot-heavy reports; the natural choice for slide decks and HTML embeddings.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l3_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Slide / web embedding where vector formats are unnecessary.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``attach_to_manifest``  (L3_5_Z_export)
+--------------------------------------------
+
+
+:Default: ``True``
+:Sweepable: False
+
+``true``
+^^^^^^^^
+
+
+Embed diagnostic artifacts into manifest.json's diagnostics index.
+
+Default. Diagnostic file paths and content hashes are recorded in ``manifest.diagnostics``, so ``macrocast.replicate(manifest_path)`` validates that every diagnostic re-runs to a bit-identical artifact. Required for reproducibility-critical sweeps.
+
+**When to use**
+
+Default; ensures replication includes the diagnostics.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``false``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``false``
+^^^^^^^^^
+
+
+Keep diagnostic artifacts outside the manifest hash chain.
+
+Files are still written to the run output directory but are not referenced by the manifest, so ``replicate()`` does not validate their hashes. Lighter-weight when the diagnostic surface is large and reproducibility is not the headline concern.
+
+**When to use**
+
+Long-running production sweeps where diagnostics blow up the manifest size.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``true``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``figure_dpi``  (L3_5_Z_export)
+------------------------------------
+
+
+:Default: ``300``
+:Sweepable: False
+
+axis ``latex_export``  (L3_5_Z_export)
+--------------------------------------
+
+
+:Default: ``True``
+:Sweepable: False
+
+``true``
+^^^^^^^^
+
+
+Co-emit LaTeX table snippets alongside the chosen diagnostic_format.
+
+Independent of ``diagnostic_format`` -- ``latex_export`` is an opt-in extra that always co-emits ``\begin{tabular}`` snippets when the underlying diagnostic is tabular. Saves an extra round-trip through pandas-to-LaTeX when the recipe is feeding a paper draft.
+
+**When to use**
+
+When the recipe is feeding a paper draft.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``false``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``false``
+^^^^^^^^^
+
+
+Skip the LaTeX-table co-emission step.
+
+Default. Avoids the small but non-trivial overhead of pandas-to-LaTeX rendering on every diagnostic axis when no paper-quality output is needed.
+
+**When to use**
+
+Default; LaTeX adds tooling overhead that is wasted for non-paper runs.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``true``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.

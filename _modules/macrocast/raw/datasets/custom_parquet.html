@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.raw.datasets.custom_parquet &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.raw.datasets.custom_parquet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.raw.datasets.custom_parquet</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Custom Parquet loader — load a user-supplied Parquet file conforming to a FRED-family schema.</span>
+
+<span class="sd">Parquet-counterpart to :mod:`macrocast.raw.datasets.custom_csv`. Same</span>
+<span class="sd">contract: recipes choose an official ``dataset``, select</span>
+<span class="sd">``custom_source_policy``, and provide ``leaf_config.custom_source_path``.</span>
+<span class="sd">The compiler infers the parser from ``.parquet``/``.pq`` and infers the</span>
+<span class="sd">internal loader schema from the selected ``dataset``/``frequency`` route.</span>
+
+<span class="sd">Requires ``pyarrow`` or ``fastparquet`` to be installed (pandas picks</span>
+<span class="sd">whichever is available).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">RawParseError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_raw_artifact_record</span><span class="p">,</span> <span class="n">normalize_version_request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">append_raw_manifest_entry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..types</span><span class="w"> </span><span class="kn">import</span> <span class="n">RawDatasetMetadata</span><span class="p">,</span> <span class="n">RawLoadResult</span>
+
+
+<span class="n">_SUPPORTED_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_qd&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="load_custom_parquet">
+<a class="viewcode-back" href="../../../../source/api.html#macrocast.load_custom_parquet">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_custom_parquet</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">cache_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RawLoadResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load ``path`` as a Parquet file conforming to ``dataset``&#39;s schema.</span>
+
+<span class="sd">    See :func:`macrocast.raw.datasets.custom_csv.load_custom_csv` for the</span>
+<span class="sd">    shared schema contract.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">dataset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_SCHEMAS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;dataset=</span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2"> is not a supported schema for custom_parquet; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;expected one of </span><span class="si">{</span><span class="n">_SUPPORTED_SCHEMAS</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">pq_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pq_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_parquet source path does not exist: </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">pq_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to parse custom Parquet at </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="c1"># Normalise to date-indexed numeric panel.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+        <span class="c1"># Try to coerce the first column as the date index.</span>
+        <span class="n">date_col</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">date_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">date_col</span><span class="p">])</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">date_col</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;custom Parquet at </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2"> must have a DatetimeIndex &quot;</span>
+                <span class="s2">&quot;or a parseable date as its first column&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">request</span> <span class="o">=</span> <span class="n">normalize_version_request</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">vintage</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">artifact</span> <span class="o">=</span> <span class="n">build_raw_artifact_record</span><span class="p">(</span>
+        <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+        <span class="n">source_url</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">pq_path</span><span class="p">),</span>
+        <span class="n">local_path</span><span class="o">=</span><span class="n">pq_path</span><span class="p">,</span>
+        <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+        <span class="n">cache_hit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">RawDatasetMetadata</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">source_family</span><span class="o">=</span><span class="s2">&quot;custom-parquet&quot;</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="o">=</span><span class="n">_frequency_for_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">),</span>
+        <span class="n">version_mode</span><span class="o">=</span><span class="s2">&quot;current&quot;</span><span class="p">,</span>
+        <span class="n">vintage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_through</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">support_tier</span><span class="o">=</span><span class="s2">&quot;provisional&quot;</span><span class="p">,</span>
+        <span class="n">parse_notes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user-supplied Parquet; no vintage tracking&quot;</span><span class="p">,),</span>
+    <span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">RawLoadResult</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">dataset_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">artifact</span><span class="o">=</span><span class="n">artifact</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cache_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">append_raw_manifest_entry</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">cache_root</span><span class="o">=</span><span class="n">cache_root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_frequency_for_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;fred_md&quot;</span><span class="p">:</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fred_qd&quot;</span><span class="p">:</span> <span class="s2">&quot;quarterly&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fred_sd&quot;</span><span class="p">:</span> <span class="s2">&quot;state_monthly&quot;</span><span class="p">,</span>
+    <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;load_custom_parquet&quot;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

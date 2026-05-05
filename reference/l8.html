@@ -1,0 +1,1242 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L8 – Output / provenance &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Docs Conventions" href="../CONVENTIONS.html" />
+    <link rel="prev" title="L7 – Interpretation / importance" href="l7.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="l0.html">L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l1.html">L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l1_5.html">L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2.html">L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2_5.html">L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l3.html">L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l3_5.html">L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l4.html">L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l4_5.html">L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l5.html">L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l6.html">L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l7.html">L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">L8  –  Output / provenance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">L8  –  Output / provenance</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l8.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="l8-output-provenance">
+<h1>L8  –  Output / provenance<a class="headerlink" href="#l8-output-provenance" title="Link to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Layer ID<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">l8</span></code></p>
+</dd>
+<dt class="field-even">Category<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">consumption</span></code></p>
+</dd>
+<dt class="field-odd">Sub-layers<span class="colon">:</span></dt>
+<dd class="field-odd"><p>L8_A_export_format, L8_B_saved_objects, L8_C_provenance, L8_D_artifact_granularity</p>
+</dd>
+</dl>
+<section id="axis-export-format-l8-a-export-format">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">export_format</span></code>  (L8_A_export_format)<a class="headerlink" href="#axis-export-format-l8-a-export-format" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'json_csv'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="all">
+<h3><code class="docutils literal notranslate"><span class="pre">all</span></code><a class="headerlink" href="#all" title="Link to this heading"></a></h3>
+<p>Emit every supported export format together.</p>
+<p>Comprehensive option emitting JSON + CSV + Parquet + LaTeX + Markdown + HTML for every applicable artifact. Largest disk footprint but covers every downstream consumer in one run.</p>
+<p><strong>When to use</strong></p>
+<p>Comprehensive reproducibility / sharing – single run that covers every audience.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="csv">
+<h3><code class="docutils literal notranslate"><span class="pre">csv</span></code><a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<p>CSV tables for tabular artifacts (forecasts, metrics, importance).</p>
+<p>Standard comma-separated values, UTF-8 encoded. The lowest-common-denominator format for spreadsheet / R workflows. Loses dtype information (everything becomes string on round-trip); for analytics workloads prefer <code class="docutils literal notranslate"><span class="pre">parquet</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Spreadsheet / R workflows; collaborators who avoid JSON.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="html-report">
+<h3><code class="docutils literal notranslate"><span class="pre">html_report</span></code><a class="headerlink" href="#html-report" title="Link to this heading"></a></h3>
+<p>Self-contained HTML report with embedded plots and tables.</p>
+<p>Renders a single <code class="docutils literal notranslate"><span class="pre">.html</span></code> file combining tables (via pandas’ <code class="docutils literal notranslate"><span class="pre">to_html</span></code>) and base64-embedded matplotlib figures. Opens in any browser without a server; ideal for stakeholder-shareable reports without LaTeX tooling.</p>
+<p><strong>When to use</strong></p>
+<p>Stakeholder-shareable reports without LaTeX tooling.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="json">
+<h3><code class="docutils literal notranslate"><span class="pre">json</span></code><a class="headerlink" href="#json" title="Link to this heading"></a></h3>
+<p>JSON dump of every artifact (default).</p>
+<p>Default round-trip-safe format; native Python / JS / R support; preserves nested structure (dicts of dicts of DataFrames). All numeric values rendered as floats with full precision; date-like values rendered as ISO 8601 strings.</p>
+<p><strong>When to use</strong></p>
+<p>Default; round-trips cleanly into Python / JS / R.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="json-csv">
+<h3><code class="docutils literal notranslate"><span class="pre">json_csv</span></code><a class="headerlink" href="#json-csv" title="Link to this heading"></a></h3>
+<p>Both JSON and CSV for every applicable artifact.</p>
+<p>Convenience option emitting both formats. Used when downstream consumers vary – Python users want JSON round-trip, R / Excel users want CSV. Doubles the artifact-directory size.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream consumers vary across both Python and Excel / R.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="json-parquet">
+<h3><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code><a class="headerlink" href="#json-parquet" title="Link to this heading"></a></h3>
+<p>Both JSON and Parquet for every applicable artifact.</p>
+<p>Hybrid option for runs that combine reproducibility (JSON for the manifest / small artifacts) with analytics (Parquet for large forecast tables). Recommended for production sweeps.</p>
+<p><strong>When to use</strong></p>
+<p>Hybrid analytics + reproducibility setups.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>Apache Parquet specification (apache/parquet-format). &lt;<a class="reference external" href="https://parquet.apache.org/docs/file-format/">https://parquet.apache.org/docs/file-format/</a>&gt;</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="latex-tables">
+<h3><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code><a class="headerlink" href="#latex-tables" title="Link to this heading"></a></h3>
+<p>LaTeX <code class="docutils literal notranslate"><span class="pre">tabular</span></code> snippets ready to <code class="docutils literal notranslate"><span class="pre">\input</span></code> into a paper.</p>
+<p>Emits one <code class="docutils literal notranslate"><span class="pre">.tex</span></code> file per tabular artifact (forecasts, metrics, ranking). Booktabs-friendly column alignment and column-name escaping; uses pandas’ <code class="docutils literal notranslate"><span class="pre">to_latex</span></code> backend.</p>
+<p><strong>When to use</strong></p>
+<p>Paper-draft pipelines. Selecting <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.export_format</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>pandas DataFrame.to_latex documentation. &lt;<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html">https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html</a>&gt;</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="markdown-report">
+<h3><code class="docutils literal notranslate"><span class="pre">markdown_report</span></code><a class="headerlink" href="#markdown-report" title="Link to this heading"></a></h3>
+<p>Single Markdown report bundling tables and figure references.</p>
+<p>Renders a self-contained <code class="docutils literal notranslate"><span class="pre">.md</span></code> document with pipe-aligned tables and embedded image references. Intended as the human-readable summary for stakeholder reports and GitHub / wiki documentation.</p>
+<p><strong>When to use</strong></p>
+<p>Lightweight Markdown / GitHub-rendered reports.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="parquet">
+<h3><code class="docutils literal notranslate"><span class="pre">parquet</span></code><a class="headerlink" href="#parquet" title="Link to this heading"></a></h3>
+<p>Apache Parquet (pyarrow); columnar binary tabular format.</p>
+<p>Columnar binary format with full dtype preservation, automatic dictionary encoding for low-cardinality columns, and per-column compression. 5-10× smaller than CSV for typical macro panels; an order of magnitude faster to read for column-subset queries. Requires <code class="docutils literal notranslate"><span class="pre">pyarrow</span></code> (already a transitive dependency).</p>
+<p><strong>When to use</strong></p>
+<p>Large-scale analytics; preserving dtypes; cross-language workflows (Spark, DuckDB, R arrow).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>Apache Parquet specification (apache/parquet-format). &lt;<a class="reference external" href="https://parquet.apache.org/docs/file-format/">https://parquet.apache.org/docs/file-format/</a>&gt;</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-compression-l8-a-export-format">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">compression</span></code>  (L8_A_export_format)<a class="headerlink" href="#axis-compression-l8-a-export-format" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'none'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="gzip">
+<h3><code class="docutils literal notranslate"><span class="pre">gzip</span></code><a class="headerlink" href="#gzip" title="Link to this heading"></a></h3>
+<p>Gzip-compress every output file individually.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">.json</span></code> / <code class="docutils literal notranslate"><span class="pre">.csv</span></code> becomes <code class="docutils literal notranslate"><span class="pre">.json.gz</span></code> / <code class="docutils literal notranslate"><span class="pre">.csv.gz</span></code>. Reduces artifact size by 60-80% for typical macro panels with marginal write-time overhead. Read-side: pandas / pyarrow auto-detect the gzip extension.</p>
+<p><strong>When to use</strong></p>
+<p>Reducing artifact size for archival; production sweeps.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">zip</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="none">
+<h3><code class="docutils literal notranslate"><span class="pre">none</span></code><a class="headerlink" href="#none" title="Link to this heading"></a></h3>
+<p>No compression (default).</p>
+<p>Default. Files are written uncompressed – cheapest at write time and most convenient for direct browsing / spot-checking. Recommended for development.</p>
+<p><strong>When to use</strong></p>
+<p>Default; cheapest write-time option.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">gzip</span></code>, <code class="docutils literal notranslate"><span class="pre">zip</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="zip">
+<h3><code class="docutils literal notranslate"><span class="pre">zip</span></code><a class="headerlink" href="#zip" title="Link to this heading"></a></h3>
+<p>Zip-archive the entire run output directory.</p>
+<p>Wraps the run output directory in a single <code class="docutils literal notranslate"><span class="pre">.zip</span></code> archive after writing. Convenient for transferring an entire run via email / web upload as a single file. Slightly less efficient than per-file gzip but shipping a single archive matters for some workflows.</p>
+<p><strong>When to use</strong></p>
+<p>Packaging the run for transfer over email / file-sharing services.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">gzip</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-saved-objects-l8-b-saved-objects">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code>  (L8_B_saved_objects)<a class="headerlink" href="#axis-saved-objects-l8-b-saved-objects" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="clean-panel">
+<h3><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code><a class="headerlink" href="#clean-panel" title="Link to this heading"></a></h3>
+<p>Cleaned L2 panel (post tcode / outlier / imputation / frame edge).</p>
+<p>The output of the L2 pipeline. Useful when downstream re-runs need to skip the (potentially expensive) cleaning stages.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream re-runs without re-cleaning are needed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="combination-weights">
+<h3><code class="docutils literal notranslate"><span class="pre">combination_weights</span></code><a class="headerlink" href="#combination-weights" title="Link to this heading"></a></h3>
+<p>Ensemble weights from L4 combine ops.</p>
+<p>Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 DAG.</p>
+<p><strong>When to use</strong></p>
+<p>Active when ensemble combine ops are in the L4 DAG.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="decomposition">
+<h3><code class="docutils literal notranslate"><span class="pre">decomposition</span></code><a class="headerlink" href="#decomposition" title="Link to this heading"></a></h3>
+<p>L5.D decomposition tables (per-period / per-block / Shapley).</p>
+<p>Variance / loss decomposition outputs. Default-on when L5.D decomposition is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when decomposition is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="diagnostics-all">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code><a class="headerlink" href="#diagnostics-all" title="Link to this heading"></a></h3>
+<p>Every active diagnostic layer’s output (convenience option).</p>
+<p>Convenience flag: enables <code class="docutils literal notranslate"><span class="pre">diagnostics_l{1..4}_5</span></code> simultaneously when the corresponding diagnostic layer is active. Recommended default for first-time runs.</p>
+<p><strong>When to use</strong></p>
+<p>Default convenience option for full-diagnostic runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="diagnostics-l1-5">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code><a class="headerlink" href="#diagnostics-l1-5" title="Link to this heading"></a></h3>
+<p>L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).</p>
+<p>JSON + figures from the L1.5 sub-layer. Active when L1.5 is enabled in the recipe.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="diagnostics-l2-5">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code><a class="headerlink" href="#diagnostics-l2-5" title="Link to this heading"></a></h3>
+<p>L2.5 diagnostic outputs (cleaning effect summaries).</p>
+<p>JSON + figures from the L2.5 sub-layer. Active when L2.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L2.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="diagnostics-l3-5">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code><a class="headerlink" href="#diagnostics-l3-5" title="Link to this heading"></a></h3>
+<p>L3.5 diagnostic outputs (factor / lag / selection inspection).</p>
+<p>JSON + figures from the L3.5 sub-layer. Active when L3.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L3.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="diagnostics-l4-5">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code><a class="headerlink" href="#diagnostics-l4-5" title="Link to this heading"></a></h3>
+<p>L4.5 diagnostic outputs (in-sample fit / window stability / tuning history).</p>
+<p>JSON + figures from the L4.5 sub-layer. Active when L4.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L4.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="feature-metadata">
+<h3><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code><a class="headerlink" href="#feature-metadata" title="Link to this heading"></a></h3>
+<p>L3 column lineage + pipeline definitions.</p>
+<p>The L3 metadata sink containing per-feature lineage, transformation chain, and pipeline ID. Default-on when L7 <code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code> or <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is active – those ops require this metadata to function.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L7 lineage / transformation_attribution is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="forecast-intervals">
+<h3><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code><a class="headerlink" href="#forecast-intervals" title="Link to this heading"></a></h3>
+<p>Per-cell prediction intervals (when forecast_object = quantile / density).</p>
+<p>Quantile forecasts at the user-specified <code class="docutils literal notranslate"><span class="pre">α</span></code> levels (default 5% / 50% / 95%). Default-on when L4 emits <code class="docutils literal notranslate"><span class="pre">forecast_object</span> <span class="pre">=</span> <span class="pre">quantile</span></code> or <code class="docutils literal notranslate"><span class="pre">density</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when forecast_object = quantile / density.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="forecasts">
+<h3><code class="docutils literal notranslate"><span class="pre">forecasts</span></code><a class="headerlink" href="#forecasts" title="Link to this heading"></a></h3>
+<p>Per-cell point forecasts.</p>
+<p>The headline output: per (cell, target, horizon, origin) forecast. Default-on; required for replication and for every downstream L5 / L6 / L7 op.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; required for replication.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="importance">
+<h3><code class="docutils literal notranslate"><span class="pre">importance</span></code><a class="headerlink" href="#importance" title="Link to this heading"></a></h3>
+<p>L7 importance outputs.</p>
+<p>Tables and figures from every L7.A op in the recipe’s interpretation DAG. Default-on when L7 is enabled.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L7 is active. Selecting <code class="docutils literal notranslate"><span class="pre">importance</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">metrics</span></code><a class="headerlink" href="#metrics" title="Link to this heading"></a></h3>
+<p>L5 metric tables.</p>
+<p>Per-cell per-metric scores aggregated by the L5.C configuration. Default-on; the standard headline output for every horse-race study.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on. Selecting <code class="docutils literal notranslate"><span class="pre">metrics</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="model-artifacts">
+<h3><code class="docutils literal notranslate"><span class="pre">model_artifacts</span></code><a class="headerlink" href="#model-artifacts" title="Link to this heading"></a></h3>
+<p>Pickled / joblib model objects.</p>
+<p>Serialised fitted estimators (one per (model, origin) pair). Default-off because model objects can be large; enable for downstream prediction without re-fitting.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream prediction without re-fitting is needed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="ranking">
+<h3><code class="docutils literal notranslate"><span class="pre">ranking</span></code><a class="headerlink" href="#ranking" title="Link to this heading"></a></h3>
+<p>L5.E ranking tables.</p>
+<p>Models ranked by primary metric / MCS inclusion / Borda count / etc. Default-on when L5.E ranking is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when ranking is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="raw-panel">
+<h3><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code><a class="headerlink" href="#raw-panel" title="Link to this heading"></a></h3>
+<p>Raw L1 panel before any L2 cleaning.</p>
+<p>The original raw FRED-MD / -QD / -SD / custom panel. Default-off because raw FRED panels are large; enabling this makes the run fully self-contained – a downstream user can re-run the entire pipeline from the manifest alone without internet access.</p>
+<p><strong>When to use</strong></p>
+<p>Default-off for size; enable for fully self-contained runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="regime-metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code><a class="headerlink" href="#regime-metrics" title="Link to this heading"></a></h3>
+<p>Regime-conditional metrics.</p>
+<p>Metric breakdowns by L1.G regime classification. Default-on when L1.G regime is non-pooled (i.e. regime-conditional analysis is intended).</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.G regime is non-pooled.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="state-metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">state_metrics</span></code><a class="headerlink" href="#state-metrics" title="Link to this heading"></a></h3>
+<p>State-level metrics for FRED-SD geographic studies.</p>
+<p>Per-state metric breakdowns. Default-on when L1.D geography is state-level (FRED-SD pipelines).</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.D geography is state-level (FRED-SD).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="tests">
+<h3><code class="docutils literal notranslate"><span class="pre">tests</span></code><a class="headerlink" href="#tests" title="Link to this heading"></a></h3>
+<p>L6 test outputs (DM / GW / MCS / SPA / RC / StepM / PT / residual / density).</p>
+<p>Test statistics, p-values, kernel choices, and lag-truncation parameters for every L6 sub-layer that is enabled. Default-on when any L6 sub-layer is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L6 sub-layers are active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="transformation-attribution">
+<h3><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code><a class="headerlink" href="#transformation-attribution" title="Link to this heading"></a></h3>
+<p>L7 transformation_attribution Shapley table.</p>
+<p>Per-pipeline Shapley contributions to forecast skill. Active when <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is in the L7 DAG (typically alongside multi-cell sweeps over alternative L3 transforms).</p>
+<p><strong>When to use</strong></p>
+<p>Active when transformation_attribution op is in the L7 DAG.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-model-artifacts-format-l8-b-saved-objects">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code>  (L8_B_saved_objects)<a class="headerlink" href="#axis-model-artifacts-format-l8-b-saved-objects" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'pickle'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="joblib">
+<h3><code class="docutils literal notranslate"><span class="pre">joblib</span></code><a class="headerlink" href="#joblib" title="Link to this heading"></a></h3>
+<p>Default sklearn / xgboost serialisation via joblib.</p>
+<p>Optimised for numpy-array-heavy estimators (sklearn / xgboost / lightgbm). Smaller and faster than plain pickle for typical sklearn fitted-model graphs.</p>
+<p><strong>When to use</strong></p>
+<p>Default; broad compatibility across sklearn / xgboost / lightgbm.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pickle</span></code>, <code class="docutils literal notranslate"><span class="pre">onnx</span></code>, <code class="docutils literal notranslate"><span class="pre">pmml</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="onnx">
+<h3><code class="docutils literal notranslate"><span class="pre">onnx</span></code><a class="headerlink" href="#onnx" title="Link to this heading"></a></h3>
+<p>ONNX export (where supported by the family).</p>
+<p>Open Neural Network Exchange format. Cross-language deployment (C++ / C# / Java / JS runtimes) and faster inference than the native sklearn pickle. Supported for sklearn / xgboost / lightgbm / pytorch families; raises if the active L4 family lacks an ONNX exporter.</p>
+<p><strong>When to use</strong></p>
+<p>Cross-language deployment; production inference servers.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Models without ONNX support (BVAR, DFM, MRF, custom callables).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>ONNX specification. &lt;<a class="reference external" href="https://onnx.ai/">https://onnx.ai/</a>&gt;</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">joblib</span></code>, <code class="docutils literal notranslate"><span class="pre">pmml</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pickle">
+<h3><code class="docutils literal notranslate"><span class="pre">pickle</span></code><a class="headerlink" href="#pickle" title="Link to this heading"></a></h3>
+<p>Plain Python pickle (less efficient than joblib).</p>
+<p>Compatibility option for older toolchains or non-sklearn estimators that don’t benefit from joblib’s array optimisation. Larger files but maximally portable across Python versions.</p>
+<p><strong>When to use</strong></p>
+<p>Compatibility with older toolchains.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">joblib</span></code>, <code class="docutils literal notranslate"><span class="pre">onnx</span></code>, <code class="docutils literal notranslate"><span class="pre">pmml</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pmml">
+<h3><code class="docutils literal notranslate"><span class="pre">pmml</span></code><a class="headerlink" href="#pmml" title="Link to this heading"></a></h3>
+<p>PMML export (PMML-compatible families only).</p>
+<p>Predictive Model Markup Language; XML-based exchange format primarily used in enterprise / Java deployments. Supported for linear / tree-family models via <code class="docutils literal notranslate"><span class="pre">sklearn2pmml</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Enterprise / Java deployment. Selecting <code class="docutils literal notranslate"><span class="pre">pmml</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.model_artifacts_format</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Modern ML deployment – ONNX is more widely supported.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>PMML 4.4 specification. &lt;<a class="reference external" href="https://dmg.org/pmml/v4-4/GeneralStructure.html">https://dmg.org/pmml/v4-4/GeneralStructure.html</a>&gt;</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">joblib</span></code>, <code class="docutils literal notranslate"><span class="pre">onnx</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-provenance-fields-l8-c-provenance">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code>  (L8_C_provenance)<a class="headerlink" href="#axis-provenance-fields-l8-c-provenance" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="cell-resolved-axes">
+<h3><code class="docutils literal notranslate"><span class="pre">cell_resolved_axes</span></code><a class="headerlink" href="#cell-resolved-axes" title="Link to this heading"></a></h3>
+<p>Per-cell resolved axis values from sweep expansion.</p>
+<p>For sweep-expanded cells, records the (axis → value) mapping that produced each cell. Without this field, interpreting which cell ran which configuration requires re-expanding the sweep.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when sweeps are active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="data-revision-tag">
+<h3><code class="docutils literal notranslate"><span class="pre">data_revision_tag</span></code><a class="headerlink" href="#data-revision-tag" title="Link to this heading"></a></h3>
+<p>FRED vintage / data revision tag.</p>
+<p>When the L1 raw is FRED-MD / -QD / -SD, captures the vintage tag (e.g. <code class="docutils literal notranslate"><span class="pre">2024-09</span></code>) so future re-runs against an updated FRED snapshot can detect that the input data has revised.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when raw data is FRED-MD / -QD / -SD.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="dependency-lockfile">
+<h3><code class="docutils literal notranslate"><span class="pre">dependency_lockfile</span></code><a class="headerlink" href="#dependency-lockfile" title="Link to this heading"></a></h3>
+<p>Lockfile contents (pip freeze / poetry.lock / conda env).</p>
+<p>Verbatim contents of the active environment’s lockfile. Critical for reproducing the same package versions on a different machine.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; needed for environment replication.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="git-branch-name">
+<h3><code class="docutils literal notranslate"><span class="pre">git_branch_name</span></code><a class="headerlink" href="#git-branch-name" title="Link to this heading"></a></h3>
+<p>Git branch name.</p>
+<p>From <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rev-parse</span> <span class="pre">--abbrev-ref</span> <span class="pre">HEAD</span></code>. Default-on with git_commit_sha; documents which feature branch produced the run.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on with git_commit_sha.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="git-commit-sha">
+<h3><code class="docutils literal notranslate"><span class="pre">git_commit_sha</span></code><a class="headerlink" href="#git-commit-sha" title="Link to this heading"></a></h3>
+<p>Git commit SHA of the active checkout.</p>
+<p>From <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rev-parse</span> <span class="pre">HEAD</span></code>. Default-on when the run executes inside a git working tree; provides exact code traceability.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when the run executes inside a git tree.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="julia-version">
+<h3><code class="docutils literal notranslate"><span class="pre">julia_version</span></code><a class="headerlink" href="#julia-version" title="Link to this heading"></a></h3>
+<p>Julia version (when Julia-backed steps are active).</p>
+<p>Captured via <code class="docutils literal notranslate"><span class="pre">julia</span></code> Python bridge when any pipeline step calls into Julia. Optional.</p>
+<p><strong>When to use</strong></p>
+<p>Recipes that call Julia. Selecting <code class="docutils literal notranslate"><span class="pre">julia_version</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.provenance_fields</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="package-version">
+<h3><code class="docutils literal notranslate"><span class="pre">package_version</span></code><a class="headerlink" href="#package-version" title="Link to this heading"></a></h3>
+<p>macrocast version string.</p>
+<p>From <code class="docutils literal notranslate"><span class="pre">macrocast.__version__</span></code>. Lets <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> warn the user when the manifest was produced by a different package version.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on. Selecting <code class="docutils literal notranslate"><span class="pre">package_version</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.provenance_fields</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code>, <code class="docutils literal notranslate"><span class="pre">r_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="python-version">
+<h3><code class="docutils literal notranslate"><span class="pre">python_version</span></code><a class="headerlink" href="#python-version" title="Link to this heading"></a></h3>
+<p>Python interpreter version (3-tuple major.minor.patch).</p>
+<p>From <code class="docutils literal notranslate"><span class="pre">sys.version_info</span></code>. Lets <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> warn when running on a different interpreter.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on. Selecting <code class="docutils literal notranslate"><span class="pre">python_version</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.provenance_fields</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">r_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="r-version">
+<h3><code class="docutils literal notranslate"><span class="pre">r_version</span></code><a class="headerlink" href="#r-version" title="Link to this heading"></a></h3>
+<p>R version (when R-backed steps are active).</p>
+<p>Captured via <code class="docutils literal notranslate"><span class="pre">rpy2</span></code> when any L3 / L4 / L6 / L7 op calls into R. Optional – only emitted when R is actually used.</p>
+<p><strong>When to use</strong></p>
+<p>Recipes that call R (e.g. for arima or robust statistics).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="random-seed-used">
+<h3><code class="docutils literal notranslate"><span class="pre">random_seed_used</span></code><a class="headerlink" href="#random-seed-used" title="Link to this heading"></a></h3>
+<p>Resolved random seeds (L0 + per-cell propagation).</p>
+<p>The exact seed values used by every numpy / sklearn / torch RNG. Required for bit-exact replication; the seed-propagation system in v0.2 ensures every non-deterministic op receives a deterministic seed.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; required for bit-exact replication.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="recipe-hash">
+<h3><code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code><a class="headerlink" href="#recipe-hash" title="Link to this heading"></a></h3>
+<p>SHA-256 hash of the canonicalised recipe.</p>
+<p>Cheap consistency check. Compares against the recipe hash from the original run during <code class="docutils literal notranslate"><span class="pre">replicate()</span></code>; mismatch triggers a hard error before any compute is wasted.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; cheap consistency check.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code>, <code class="docutils literal notranslate"><span class="pre">r_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="recipe-yaml-full">
+<h3><code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code><a class="headerlink" href="#recipe-yaml-full" title="Link to this heading"></a></h3>
+<p>Full recipe YAML embedded in the manifest.</p>
+<p>Verbatim copy of the recipe as supplied by the user (post-canonicalisation). Required for <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> to reconstruct the exact run; without it the manifest is descriptive but not replayable.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; required for replication.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code>, <code class="docutils literal notranslate"><span class="pre">r_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="runtime-duration">
+<h3><code class="docutils literal notranslate"><span class="pre">runtime_duration</span></code><a class="headerlink" href="#runtime-duration" title="Link to this heading"></a></h3>
+<p>Wall-clock duration per cell.</p>
+<p>Per-cell timings; useful for cost-tracking and detecting slow cells in a sweep.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_C_provenance</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">runtime_duration</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; useful for cost-tracking.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="runtime-environment">
+<h3><code class="docutils literal notranslate"><span class="pre">runtime_environment</span></code><a class="headerlink" href="#runtime-environment" title="Link to this heading"></a></h3>
+<p>Hostname / OS / CPU summary string.</p>
+<p>Captured at run start; useful for diagnosing performance regressions across machines (laptop vs cluster).</p>
+<p><strong>When to use</strong></p>
+<p>Default-on. Selecting <code class="docutils literal notranslate"><span class="pre">runtime_environment</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.provenance_fields</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">recipe_yaml_full</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-manifest-format-l8-c-provenance">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">manifest_format</span></code>  (L8_C_provenance)<a class="headerlink" href="#axis-manifest-format-l8-c-provenance" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'json'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="id1">
+<h3><code class="docutils literal notranslate"><span class="pre">json</span></code><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Manifest written as a single JSON document (default).</p>
+<p>Default. Round-trips cleanly into Python / JS / R; preserves nested structure. The natural choice for every consumer that uses <code class="docutils literal notranslate"><span class="pre">macrocast.replicate</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Default; round-trips cleanly. Selecting <code class="docutils literal notranslate"><span class="pre">json</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.manifest_format</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">json_lines</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="json-lines">
+<h3><code class="docutils literal notranslate"><span class="pre">json_lines</span></code><a class="headerlink" href="#json-lines" title="Link to this heading"></a></h3>
+<p>Manifest written as JSONL (one cell per line).</p>
+<p>Streaming-friendly format: each cell becomes one JSON object on its own line. Sweep manifests with thousands of cells stay parseable line-by-line without loading the entire manifest into memory.</p>
+<p><strong>When to use</strong></p>
+<p>Sweep manifests with thousands of cells; streaming consumers.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">yaml</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="yaml">
+<h3><code class="docutils literal notranslate"><span class="pre">yaml</span></code><a class="headerlink" href="#yaml" title="Link to this heading"></a></h3>
+<p>Manifest written as YAML.</p>
+<p>Hand-readable alternative to JSON. Commits cleaner in git diffs; useful when manifests are expected to be reviewed by humans (paper supplementary materials, code reviews of recipe changes).</p>
+<p><strong>When to use</strong></p>
+<p>Hand-readable manifests; paper supplementary materials.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">json_lines</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-artifact-granularity-l8-d-artifact-granularity">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code>  (L8_D_artifact_granularity)<a class="headerlink" href="#axis-artifact-granularity-l8-d-artifact-granularity" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'per_cell'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="flat">
+<h3><code class="docutils literal notranslate"><span class="pre">flat</span></code><a class="headerlink" href="#flat" title="Link to this heading"></a></h3>
+<p>Single flat directory; cells distinguished by filename suffix.</p>
+<p>All cells write into one directory; cell IDs become filename suffixes. Useful for sweeps with thousands of small artifacts where per-cell directory creation is wasteful.</p>
+<p><strong>When to use</strong></p>
+<p>Sweeps with thousands of small artifacts.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_cell</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-cell">
+<h3><code class="docutils literal notranslate"><span class="pre">per_cell</span></code><a class="headerlink" href="#per-cell" title="Link to this heading"></a></h3>
+<p>One sub-directory per sweep cell (default).</p>
+<p>Default. Each cell gets its own <code class="docutils literal notranslate"><span class="pre">cell_NNN/</span></code> directory containing the cell’s full set of artifacts. Isolates every cell’s output for clean per-cell inspection.</p>
+<p><strong>When to use</strong></p>
+<p>Default; isolates each cell’s artifacts.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">flat</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-horizon">
+<h3><code class="docutils literal notranslate"><span class="pre">per_horizon</span></code><a class="headerlink" href="#per-horizon" title="Link to this heading"></a></h3>
+<p>Group cells by forecast horizon (one directory per horizon).</p>
+<p>When the sweep varies over multiple horizons, groups by horizon. Useful for horizon-by-horizon analysis.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-horizon sweeps. Selecting <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.artifact_granularity</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_cell</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">flat</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-target">
+<h3><code class="docutils literal notranslate"><span class="pre">per_target</span></code><a class="headerlink" href="#per-target" title="Link to this heading"></a></h3>
+<p>Group cells by target variable (one directory per target).</p>
+<p>When the sweep varies over multiple targets, this groups the artifacts by target rather than by cell. Useful when downstream analysis is per-target.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-target studies where target-grouping aids browsing.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_cell</span></code>, <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">flat</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-target-horizon">
+<h3><code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code><a class="headerlink" href="#per-target-horizon" title="Link to this heading"></a></h3>
+<p>Group cells by (target, horizon) pair.</p>
+<p>Combines <code class="docutils literal notranslate"><span class="pre">per_target</span></code> and <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code> for sweeps that vary across both axes.</p>
+<p><strong>When to use</strong></p>
+<p>Studies sweeping across both target and horizon.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_cell</span></code>, <code class="docutils literal notranslate"><span class="pre">per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">per_horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">flat</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-naming-convention-l8-d-artifact-granularity">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">naming_convention</span></code>  (L8_D_artifact_granularity)<a class="headerlink" href="#axis-naming-convention-l8-d-artifact-granularity" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'descriptive'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="cell-id">
+<h3><code class="docutils literal notranslate"><span class="pre">cell_id</span></code><a class="headerlink" href="#cell-id" title="Link to this heading"></a></h3>
+<p>Use the cell numeric id (cell_001/, cell_002/, …).</p>
+<p>Default. Stable and short; sorts naturally in directory listings. Recommended for production sweeps where the exact axis-value mapping is captured separately by the manifest’s <code class="docutils literal notranslate"><span class="pre">cell_resolved_axes</span></code> field.</p>
+<p><strong>When to use</strong></p>
+<p>Default; stable, short. Selecting <code class="docutils literal notranslate"><span class="pre">cell_id</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.naming_convention</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">descriptive</span></code>, <code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">custom</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="custom">
+<h3><code class="docutils literal notranslate"><span class="pre">custom</span></code><a class="headerlink" href="#custom" title="Link to this heading"></a></h3>
+<p>User-supplied template via <code class="docutils literal notranslate"><span class="pre">leaf_config.naming_template</span></code>.</p>
+<p>Bespoke directory layouts: the template string can interpolate any cell-resolved axis (e.g. <code class="docutils literal notranslate"><span class="pre">{model_family}_{horizon}h_{seed}</span></code>) plus the cell’s numeric id.</p>
+<p><strong>When to use</strong></p>
+<p>Bespoke directory layouts. Selecting <code class="docutils literal notranslate"><span class="pre">custom</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.naming_convention</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">descriptive</span></code>, <code class="docutils literal notranslate"><span class="pre">cell_id</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="descriptive">
+<h3><code class="docutils literal notranslate"><span class="pre">descriptive</span></code><a class="headerlink" href="#descriptive" title="Link to this heading"></a></h3>
+<p>Use a descriptive template combining the cell’s resolved axes.</p>
+<p>Generates names like <code class="docutils literal notranslate"><span class="pre">ridge_log_diff_h1_seed42/</span></code> from the cell’s resolved axes. Human-readable; useful when humans browse the output directory directly. Long names can hit filesystem limits for wide sweeps.</p>
+<p><strong>When to use</strong></p>
+<p>When humans browse the output directory.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Wide sweeps with many axes – names exceed filesystem limits.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">cell_id</span></code>, <code class="docutils literal notranslate"><span class="pre">custom</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id2">
+<h3><code class="docutils literal notranslate"><span class="pre">recipe_hash</span></code><a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Use the per-cell recipe hash as the directory name.</p>
+<p>Reproducibility-first naming: directory names are the first 8 chars of the cell’s recipe hash. Deterministic across runs (a re-run with the same recipe produces the same directory names), but unreadable to humans.</p>
+<p><strong>When to use</strong></p>
+<p>Reproducibility-first naming; deterministic across runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">cell_id</span></code>, <code class="docutils literal notranslate"><span class="pre">descriptive</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="l7.html" class="btn btn-neutral float-left" title="L7 – Interpretation / importance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../CONVENTIONS.html" class="btn btn-neutral float-right" title="Docs Conventions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

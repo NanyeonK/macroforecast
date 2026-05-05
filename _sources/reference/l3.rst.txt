@@ -1,0 +1,835 @@
+L3  --  Feature engineering
+===========================
+
+
+:Layer ID: ``l3``
+:Category: ``construction``
+:Sub-layers: L3_A_target_construction, L3_B_feature_pipelines, L3_C_pipeline_combine, L3_D_feature_selection
+
+axis ``op``  (L3_A_step_op)
+---------------------------
+
+
+:Default: ``'lag'``
+:Sweepable: False
+
+``cumsum``
+^^^^^^^^^^
+
+
+Cumulative sum of a series.
+
+Running total ``Σ_{s ≤ t} y_s``. Inverts ``diff`` (modulo an initial constant). Used to recover level forecasts from differenced predictions or to build cumulative-shock features.
+
+**When to use**
+
+Building cumulative-impact features; recovering levels from differenced forecasts.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``diff``, ``level``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``dfm``
+^^^^^^^
+
+
+Dynamic factor model -- Kalman state-space factor extraction.
+
+statsmodels ``DynamicFactor`` MLE estimate of latent factors with idiosyncratic AR(1) errors. Differs from ``pca`` in that factors are smoothed via the Kalman filter and respect a factor-VAR transition.
+
+When the panel is mixed-frequency (FRED-SD), the runtime auto-routes to ``DynamicFactorMQ`` (Mariano-Murasawa 2003).
+
+**When to use**
+
+Smoothed factors with an explicit dynamic; mixed-frequency panels (FRED-SD).
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
+
+**Related options**: ``pca``, ``scaled_pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diff``
+^^^^^^^^
+
+
+First difference: ``y_t - y_{t-1}``.
+
+Computes the simple first difference on the input column. The first observation becomes NaN. Combine with ``lag`` to recover level features when the L2 layer already differenced the panel.
+
+**When to use**
+
+I(1) variables that need a stationary representation in addition to the L2-applied tcode.
+
+**When NOT to use**
+
+When the panel is already differenced by L2.B (avoids double-differencing).
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``level``, ``log_diff``, ``pct_change``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``feature_selection``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Filter columns by variance / correlation / lasso pre-screen.
+
+Drops columns failing one of three criteria configured via ``params.method``:
+
+* ``variance`` -- drop columns with variance below ``params.threshold``.
+* ``correlation`` -- drop columns with pairwise correlation above ``params.threshold`` (keeps the first).
+* ``lasso`` -- fit a Lasso pre-screen and keep columns with non-zero coefficients.
+
+**When to use**
+
+Trimming the panel before expensive downstream estimators (NN, SVM, kernel) when high-dim noise dominates.
+
+**When NOT to use**
+
+Tree models -- they handle irrelevant features natively.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``scale``, ``pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``fourier``
+^^^^^^^^^^^
+
+
+Fourier basis features -- sin/cos at fixed harmonics.
+
+Generates sin/cos pairs at harmonic frequencies of the calendar period (``params.period``, ``params.n_harmonics``). Captures smooth periodic patterns without the indicator-explosion of season_dummy.
+
+**When to use**
+
+Smooth seasonality (annual / weekly cycles) where dummies would over-fit.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``season_dummy``, ``wavelet``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``hamilton_filter``
+^^^^^^^^^^^^^^^^^^^
+
+
+Hamilton (2018) regression-based detrend (HP-filter alternative).
+
+Regression-based two-sided alternative to the HP filter advocated by Hamilton (2018) for its better real-time properties. Default lookback h = 8 (quarterly) / 24 (monthly). Uses statsmodels ``hamilton_filter``.
+
+**When to use**
+
+Real-time / one-sided detrending where HP's two-sided smoothing is inappropriate.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Hamilton (2018) 'Why You Should Never Use the Hodrick-Prescott Filter', RES 100(5): 831-843.
+
+**Related options**: ``hp_filter``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``holiday``
+^^^^^^^^^^^
+
+
+Holiday / event dummy variables.
+
+0/1 indicators for calendar holidays (US federal by default; ``params.country`` selects locale via the ``holidays`` package). For business / financial macro series.
+
+**When to use**
+
+Daily / weekly business-cycle series where holidays create discrete level shifts.
+
+**When NOT to use**
+
+Pure macro series at monthly+ frequency where holidays are absorbed by ``season_dummy``.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``season_dummy``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``hp_filter``
+^^^^^^^^^^^^^
+
+
+Hodrick-Prescott filter -- trend / cycle decomposition.
+
+statsmodels ``hpfilter`` with smoothing parameter ``params.lamb`` (1600 for quarterly, 129600 for monthly per Ravn-Uhlig 2002). Returns the cyclical component by default; the trend can also be returned via ``params.return = 'trend'``.
+
+**When to use**
+
+Extracting business-cycle gaps from trending series.
+
+**When NOT to use**
+
+Real-time / one-sided forecasting -- HP introduces look-ahead bias unless restricted to ``expanding_window_per_origin``.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Hodrick & Prescott (1997) 'Postwar U.S. Business Cycles: An Empirical Investigation', JMCB 29(1): 1-16.
+
+**Related options**: ``hamilton_filter``, ``diff``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``interaction``
+^^^^^^^^^^^^^^^
+
+
+Pairwise interaction terms only (no pure powers).
+
+Subset of polynomial degree-2 features that contains only pairwise products ``x_i · x_j`` for ``i ≠ j``. Cheaper than full polynomial expansion when interaction structure (not non-linearity in single inputs) is the target.
+
+**When to use**
+
+Capturing predictor-pair complementarities in linear models.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``polynomial``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``kernel``
+^^^^^^^^^^
+
+
+Kernel-feature pre-step (Random Fourier / Nyström handle).
+
+Generic handle for an explicit kernel-feature embedding; concrete dispatch is determined by ``params.kernel`` (``rbf`` / ``poly`` / ``laplacian``). For named variants use ``kernel_features`` (RBF Random Fourier) or ``nystroem``.
+
+**When to use**
+
+Kernel-augmented linear / SVM pipelines.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``kernel_features``, ``nystroem``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``kernel_features``
+^^^^^^^^^^^^^^^^^^^
+
+
+Random Fourier features -- approximate RBF kernel via random projection.
+
+sklearn ``RBFSampler``: maps inputs to ``params.n_components`` random Fourier features whose dot product approximates the RBF kernel. Enables linear models to fit RBF-kernelised responses at training-set-size linear cost.
+
+**When to use**
+
+Kernel-augmented ridge / SVM at scale (n > 10k).
+
+**When NOT to use**
+
+Small-sample problems where exact kernel SVM is feasible.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Rahimi & Recht (2007) 'Random Features for Large-Scale Kernel Machines', NeurIPS.
+
+**Related options**: ``kernel``, ``nystroem``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``l3_feature_bundle``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Internal sentinel: bundle column-producing children into the X matrix.
+
+Synthetic node emitted by the runtime to collect the outputs of all leaf transforms into a single ``X`` artifact consumed by L4. Authors do not write this node by hand; the cascade builder inserts it.
+
+Surfaced in ``operational_options`` so the schema completeness test stays consistent.
+
+**When to use**
+
+Never authored directly -- inserted by the cascade builder.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``l3_metadata_build``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``l3_metadata_build``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Internal sentinel: assemble L3 metadata sink (lineage / pipeline definitions).
+
+Synthetic node that produces the ``column_lineage`` and ``pipeline_definitions`` sinks from the cascade graph. Powers L7 ``lineage_attribution`` and ``transformation_attribution`` downstream.
+
+**When to use**
+
+Never authored directly -- inserted by the cascade builder when L7 lineage hooks are active.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``l3_feature_bundle``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``level``
+^^^^^^^^^
+
+
+Pass-through: keep the series at its original level.
+
+No-op transform; the column flows through unchanged. Used as an explicit anchor in the DAG so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both ``level`` and ``diff`` branches in the same recipe.
+
+**When to use**
+
+Authoring branches that need the level form alongside a transformed branch.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``diff``, ``log``, ``log_diff``, ``pct_change``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``log``
+^^^^^^^
+
+
+Natural logarithm: ``ln(y)``.
+
+Element-wise natural log. Strictly positive series only; raises if any input is non-positive. Often paired with ``diff`` to produce log-changes (which are approximately equal to percentage changes for small movements).
+
+**When to use**
+
+Strictly-positive macro series (price levels, employment counts, GDP) before differencing.
+
+**When NOT to use**
+
+Series that can be negative or zero (rates, growth rates, balances).
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``log_diff``, ``level``, ``pct_change``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``log_diff``
+^^^^^^^^^^^^
+
+
+Log first difference: ``ln(y_t) - ln(y_{t-1})``.
+
+Composite of ``log`` then ``diff``. The standard FRED-MD transformation code 5/6 representation; produces a stationary approximation of the percentage change and is symmetric in expansions vs contractions.
+
+**When to use**
+
+Strictly-positive trending series (real GDP, employment, prices); FRED-MD tcode 5/6 default.
+
+**When NOT to use**
+
+Series that take non-positive values.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589. <https://doi.org/10.1080/07350015.2015.1086655>
+
+**Related options**: ``log``, ``diff``, ``pct_change``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``ma_increasing_order``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+MARX -- moving averages of increasing order (Coulombe 2024).
+
+Stacks moving averages with windows ``[1, 2, 4, 8, ..., w_max]`` into a multi-column block. Captures multi-scale persistence in a single op; popular feature in macroeconomic random forest pipelines.
+
+Implements the MARX (Moving-Average-of-Random-eXogeneous) trick from Coulombe (2024).
+
+**When to use**
+
+Tree / RF models that benefit from multi-scale temporal features without manual lag selection.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
+
+**Related options**: ``ma_window``, ``lag``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``ma_window``
+^^^^^^^^^^^^^
+
+
+Trailing moving average over a fixed window.
+
+Computes ``mean(y_{t-w+1..t})`` for a user-specified window ``params.window``. ``temporal_rule`` controls expanding vs rolling vs block-wise refit semantics. The first ``w-1`` rows are NaN.
+
+**When to use**
+
+Smoothing noisy series; building short / medium / long-term momentum features.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``ma_increasing_order``, ``diff``, ``scale``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``nystroem``
+^^^^^^^^^^^^
+
+
+Nyström kernel approximation -- subset-based feature map.
+
+sklearn ``Nystroem`` constructs a low-rank approximation of an arbitrary kernel matrix using a random subsample of training points. More accurate than Random Fourier features for non-RBF kernels but with a larger memory footprint.
+
+**When to use**
+
+Non-RBF kernel-augmented linear models (poly / sigmoid).
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``kernel_features``, ``kernel``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``nystroem_features``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Alias for ``nystroem`` -- explicit feature-stage name.
+
+Identical to ``nystroem``; preferred when a multi-stage pipeline names its kernel approximation explicitly in the lineage graph.
+
+**When to use**
+
+Multi-stage pipelines that separate kernel approximation from downstream linear fits.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``nystroem``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``partial_least_squares``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Partial least squares regression -- supervised factor extraction.
+
+Computes orthogonal latent components that maximise the covariance with the target (not just predictor variance, as in PCA). sklearn's ``PLSRegression``; ``params.n_components``.
+
+**When to use**
+
+When a target-supervised reduction is preferable to PCA's unsupervised projection.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Wold, Sjöström & Eriksson (2001) 'PLS-regression: a basic tool of chemometrics', Chemometrics and Intelligent Laboratory Systems 58(2): 109-130.
+
+**Related options**: ``pca``, ``scaled_pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pca``
+^^^^^^^
+
+
+Principal component analysis -- linear factor extraction.
+
+Eigendecomposition of the column covariance; returns the top ``params.n_components`` principal components. Implements the Stock-Watson (2002) diffusion-index workflow used throughout FRED-MD applications.
+
+Combine with ``factor_augmented_ar`` or ``factor_augmented_var`` at L4 to build the diffusion-index forecaster. ``temporal_rule`` controls whether components are re-fit per origin (default: ``expanding_window_per_origin``).
+
+**When to use**
+
+Reducing FRED-MD's 100+ predictors to a handful of latent factors; factor-augmented forecasts.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
+
+**Related options**: ``sparse_pca``, ``scaled_pca``, ``varimax``, ``dfm``, ``partial_least_squares``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pct_change``
+^^^^^^^^^^^^^^
+
+
+Period-over-period percentage change: ``(y_t / y_{t-1}) - 1``.
+
+Strict simple growth rate; not equivalent to log_diff for large movements. Returns NaN where the previous observation is zero or NaN.
+
+**When to use**
+
+When a literal percentage interpretation is required (returns, inflation rates).
+
+**When NOT to use**
+
+Trend-following analysis where log_diff's symmetry is preferable.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``log_diff``, ``diff``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``polynomial``
+^^^^^^^^^^^^^^
+
+
+Polynomial basis expansion -- degree-d powers of input.
+
+sklearn ``PolynomialFeatures`` of degree ``params.degree``. Includes interaction terms by default; set ``params.interaction_only=True`` for products without pure powers.
+
+**When to use**
+
+Capturing low-order non-linearity for linear / kernel models.
+
+**When NOT to use**
+
+High dimension (degree > 3 with many predictors) -- explodes the design matrix; use kernel methods instead.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``interaction``, ``kernel_features``, ``polynomial_expansion``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``polynomial_expansion``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Alias for ``polynomial`` -- explicit expansion node in cascade pipelines.
+
+Identical to ``polynomial`` but with a name that reads more clearly as a stage in a multi-step expansion pipeline.
+
+**When to use**
+
+Pipelines that explicitly stage `expand → reduce` sequences.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``polynomial``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``random_projection``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Johnson-Lindenstrauss random Gaussian projection.
+
+Reduces dimensionality by multiplying with a random Gaussian matrix scaled to (approximately) preserve pairwise distances. Cheap baseline for dimensionality reduction; sklearn's ``GaussianRandomProjection``.
+
+**When to use**
+
+Sweep baselines / sanity checks against PCA's structured reduction.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``pca``, ``kernel_features``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``regime_indicator``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Discrete regime / state indicator from L1.G.
+
+Lifts the L1.G regime sink (``regime_indicator``) into the feature panel as a categorical column. Required when L4 is configured for ``regime_use = predictor`` or ``conditional_intercept``.
+
+**When to use**
+
+Regime-conditional forecasts where the model needs explicit access to the state.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``season_dummy``, ``time_trend``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``scale``
+^^^^^^^^^
+
+
+Standardise to zero mean and unit variance.
+
+Computes ``(y - μ) / σ`` over the temporal_rule window (``expanding_window_per_origin`` by default to avoid look-ahead). Required pre-step for distance-based learners (kNN, SVM, NN); ridge/lasso also benefit when columns are on different scales.
+
+**When to use**
+
+Pre-conditioning for distance-based or regularised learners; mandatory for SVM/NN.
+
+**When NOT to use**
+
+Tree-based models (RF/XGBoost/LightGBM) -- scale-invariant by construction.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``pca``, ``kernel_features``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``scaled_pca``
+^^^^^^^^^^^^^^
+
+
+Scaled / weighted PCA (target-aware factor extraction).
+
+Weights each column by its predictive correlation with the target before performing PCA. Implements the Huang-Jiang-Tu-Zhou (2022) scaled PCA for forecasting macro variables.
+
+Reduces to plain PCA when all weights are equal.
+
+**When to use**
+
+When standard PCA's leading factor is dominated by predictively-irrelevant variance.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Huang, Jiang, Tu & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science 68(3): 1678-1695.
+
+**Related options**: ``pca``, ``partial_least_squares``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``season_dummy``
+^^^^^^^^^^^^^^^^
+
+
+Calendar dummy variables (month-of-year, quarter-of-year).
+
+Generates ``params.n - 1`` 0/1 indicators for the calendar period (drops one to avoid multicollinearity with intercept). Standard frequentist seasonality control.
+
+**When to use**
+
+Capturing calendar seasonality in linear models when a smooth Fourier basis would over-shrink discrete jumps.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``fourier``, ``seasonal_lag``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``seasonal_lag``
+^^^^^^^^^^^^^^^^
+
+
+Lag at a seasonal period (e.g. y_{t-12} for monthly data).
+
+Standard ``lag`` op restricted to the seasonal index (``params.lag = 12`` for monthly, ``4`` for quarterly). Useful for year-over-year features and seasonal AR terms.
+
+**When to use**
+
+Capturing year-over-year persistence; seasonal AR baselines.
+
+**When NOT to use**
+
+When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonality.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``season_dummy``, ``ma_window``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``sparse_pca``
+^^^^^^^^^^^^^^
+
+
+Sparse PCA -- L1-penalised factor loadings.
+
+Variant of PCA where loadings are pushed toward zero by an L1 penalty (``params.alpha``). Yields more interpretable factors at the cost of a small reconstruction loss; uses sklearn's ``SparsePCA``.
+
+**When to use**
+
+When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).
+
+**When NOT to use**
+
+When pure variance maximisation is more important than interpretability -- use plain ``pca``.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``pca``, ``scaled_pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``target_construction``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Build the supervised target (``y``) from the panel.
+
+Constructs the regression target according to ``forecast_strategy`` (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the ``y`` artifact that L4 fit_model nodes consume.
+
+Required as the leaf of every L3 DAG; the runtime auto-injects it when the user does not.
+
+**When to use**
+
+Always required -- runtime auto-inserts when missing.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``level``, ``diff``, ``log_diff``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``time_trend``
+^^^^^^^^^^^^^^
+
+
+Deterministic linear time trend (``t = 1, 2, ...``).
+
+Adds a column ``t`` to the panel; with ``params.degree > 1`` appends polynomial trends. Deterministic complement to stochastic detrending (HP / Hamilton).
+
+**When to use**
+
+Trend-stationary linear models where a deterministic trend is part of the DGP.
+
+**When NOT to use**
+
+Series with structural breaks -- use ``regime_indicator`` or stochastic detrending instead.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``hp_filter``, ``hamilton_filter``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``varimax``
+^^^^^^^^^^^
+
+
+Varimax-rotated factors (orthogonal rotation for interpretability).
+
+Applies a varimax rotation to PCA loadings, maximising the variance of squared loadings within each factor. Produces factors that load heavily on a small subset of original predictors -- useful for naming / labelling factors.
+
+**When to use**
+
+Factor analysis where downstream interpretation requires distinct, well-named factors.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``pca``, ``sparse_pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``varimax_rotation``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Alias for ``varimax`` -- rotation step in a multi-stage factor pipeline.
+
+Identical operation to ``varimax`` but registered separately so a cascading L3 pipeline can declare ``pca → varimax_rotation`` as two visible nodes in its lineage.
+
+**When to use**
+
+Multi-stage pipelines that explicitly separate factor extraction from rotation.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``varimax``, ``pca``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``wavelet``
+^^^^^^^^^^^
+
+
+Discrete wavelet transform -- multi-scale time-frequency features.
+
+Decomposes the series into wavelet detail and approximation coefficients at several scales (``params.wavelet``, ``params.level``). Captures localised time-frequency patterns that Fourier basis cannot.
+
+**When to use**
+
+Series with localised oscillations or non-stationary cycles (financial / climate macro).
+
+**When NOT to use**
+
+Smooth seasonal patterns -- use ``fourier`` instead.
+
+**References**
+
+* macrocast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: ``fourier``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.

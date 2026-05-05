@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.core.status &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.core.status</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.core.status</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Unified status vocabulary for macrocast schema items.</span>
+
+<span class="sd">Single source of truth: every typed status field across the package</span>
+<span class="sd">(``NodeStatus`` on DAG nodes, ``OpStatus`` on op specs, ``status`` on</span>
+<span class="sd">``AxisSpec`` / ``Option``, the ad-hoc ``MODEL_FAMILY_STATUS`` dict in</span>
+<span class="sd">``ops/l4_ops.py``) maps onto this 2-value vocabulary:</span>
+
+<span class="sd">* :data:`OPERATIONAL` -- runtime executes the full design-spec procedure.</span>
+<span class="sd">  The output matches the published method named in the design document.</span>
+<span class="sd">* :data:`FUTURE` -- schema-only. The validator rejects use at recipe time</span>
+<span class="sd">  (or the runtime raises ``NotImplementedError``). Tracked for v0.2+</span>
+<span class="sd">  implementation in the GitHub issue tracker.</span>
+
+<span class="sd">Earlier macrocast releases experimented with intermediate values</span>
+<span class="sd">(``planned``, ``approximation``, ``simplified``, ``registry_only``,</span>
+<span class="sd">``contract_defined_gated``). These are kept as deprecated aliases:</span>
+<span class="sd">:func:`normalize_status` collapses them to either ``operational`` or</span>
+<span class="sd">``future`` so existing recipes / docs continue to type-check, but new</span>
+<span class="sd">code should write ``operational`` or ``future`` explicitly.</span>
+
+<span class="sd">Rationale: the grey middle band (&quot;runs but is an approximation of the</span>
+<span class="sd">named procedure&quot;) is itself a form of false advertising. v0.1 prefers</span>
+<span class="sd">to *reject* recipes that select procedures we haven&#39;t truly implemented</span>
+<span class="sd">yet -- the user gets a clear error pointing at the tracking issue --</span>
+<span class="sd">over silently returning numbers that look right but aren&#39;t.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Final</span><span class="p">,</span> <span class="n">Literal</span>
+
+
+<span class="n">ItemStatus</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;operational&quot;</span><span class="p">,</span> <span class="s2">&quot;future&quot;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;The two-value status vocabulary used across the package.&quot;&quot;&quot;</span>
+
+
+<span class="n">OPERATIONAL</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="n">ItemStatus</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;operational&quot;</span>
+<span class="n">FUTURE</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="n">ItemStatus</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;future&quot;</span>
+
+<span class="n">KNOWN_STATUSES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">OPERATIONAL</span><span class="p">,</span> <span class="n">FUTURE</span><span class="p">})</span>
+
+
+<span class="c1"># Legacy values that previously carried distinct semantics. Mapped here so</span>
+<span class="c1"># old recipes / serialized manifests / third-party schemas continue to work.</span>
+<span class="c1"># All &quot;intermediate&quot; labels collapse to FUTURE because they all marked items</span>
+<span class="c1"># whose runtime did not match the named published procedure.</span>
+<span class="n">_LEGACY_ALIASES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ItemStatus</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;planned&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+    <span class="s2">&quot;approximation&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+    <span class="s2">&quot;simplified&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+    <span class="s2">&quot;registry_only&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+    <span class="s2">&quot;contract_defined_gated&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+    <span class="s2">&quot;stub&quot;</span><span class="p">:</span> <span class="n">FUTURE</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="normalize_status">
+<a class="viewcode-back" href="../../../source/api.html#macrocast.core.status.normalize_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_status</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ItemStatus</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert any legacy or current status string into the canonical</span>
+<span class="sd">    2-value :data:`ItemStatus`.</span>
+
+<span class="sd">    &gt;&gt;&gt; normalize_status(&quot;operational&quot;)</span>
+<span class="sd">    &#39;operational&#39;</span>
+<span class="sd">    &gt;&gt;&gt; normalize_status(&quot;planned&quot;)</span>
+<span class="sd">    &#39;future&#39;</span>
+<span class="sd">    &gt;&gt;&gt; normalize_status(&quot;registry_only&quot;)</span>
+<span class="sd">    &#39;future&#39;</span>
+<span class="sd">    &gt;&gt;&gt; normalize_status(None)</span>
+<span class="sd">    &#39;operational&#39;</span>
+
+<span class="sd">    Unknown strings are treated as ``operational`` (callers that need</span>
+<span class="sd">    strict validation should compare against :data:`KNOWN_STATUSES`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">OPERATIONAL</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">KNOWN_STATUSES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">status</span>  <span class="c1"># type: ignore[return-value]</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">_LEGACY_ALIASES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_LEGACY_ALIASES</span><span class="p">[</span><span class="n">status</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">OPERATIONAL</span></div>
+
+
+
+<div class="viewcode-block" id="is_runnable">
+<a class="viewcode-back" href="../../../source/api.html#macrocast.core.status.is_runnable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_runnable</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;True iff the status indicates the runtime will execute the item.</span>
+
+<span class="sd">    Operational items run; future items are rejected by the validator</span>
+<span class="sd">    or raise ``NotImplementedError``. Legacy aliases collapse first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">normalize_status</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">==</span> <span class="n">OPERATIONAL</span></div>
+
+
+
+<div class="viewcode-block" id="is_future">
+<a class="viewcode-back" href="../../../source/api.html#macrocast.core.status.is_future">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_future</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience inverse of :func:`is_runnable`.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">normalize_status</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">==</span> <span class="n">FUTURE</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;FUTURE&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ItemStatus&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;KNOWN_STATUSES&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;OPERATIONAL&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;is_future&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;is_runnable&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;normalize_status&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.defaults &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.defaults</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.defaults</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Default experiment profiles for the user-facing macrocast API.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="n">DEFAULT_PROFILE_NAME</span> <span class="o">=</span> <span class="s2">&quot;macrocast-default-v1&quot;</span>
+
+<span class="n">DEFAULT_PREPROCESSING_AXES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;fred_sd_mixed_frequency_representation&quot;</span><span class="p">:</span> <span class="s2">&quot;calendar_aligned_frame&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_missing_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x_missing_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x_outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;scaling_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dimensionality_reduction_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feature_selection_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feature_selection_semantics&quot;</span><span class="p">:</span> <span class="s2">&quot;select_before_factor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;preprocess_fit_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;not_applicable&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;inverse_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;evaluation_scale&quot;</span><span class="p">:</span> <span class="s2">&quot;raw_level&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">DEFAULT_PROFILE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">DEFAULT_PROFILE_NAME</span><span class="p">,</span>
+    <span class="s2">&quot;information_set_type&quot;</span><span class="p">:</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;target_structure&quot;</span><span class="p">:</span> <span class="s2">&quot;single_target&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;framework&quot;</span><span class="p">:</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;benchmark_family&quot;</span><span class="p">:</span> <span class="s2">&quot;zero_change&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model_family&quot;</span><span class="p">:</span> <span class="s2">&quot;ar&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;primary_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;msfe&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;importance_method&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;seeded_reproducible&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;failure_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;fail_fast&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;serial&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="s2">&quot;benchmark_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;minimum_train_size&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="s2">&quot;preprocessing&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_PREPROCESSING_AXES</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">_CUSTOM_SOURCE_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_qd&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">}</span>
+<span class="n">_CUSTOM_SOURCE_POLICIES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;official_only&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">,</span> <span class="s2">&quot;official_plus_custom&quot;</span><span class="p">}</span>
+<span class="n">_CUSTOM_SOURCE_FORMATS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;parquet&quot;</span><span class="p">}</span>
+<span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.parquet&quot;</span><span class="p">,</span> <span class="s2">&quot;.pq&quot;</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_horizons</span><span class="p">(</span><span class="n">horizons</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">horizon</span><span class="p">)</span> <span class="k">for</span> <span class="n">horizon</span> <span class="ow">in</span> <span class="n">horizons</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;horizons must contain at least one value&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">horizon</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">horizon</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;horizons must be positive integers&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_models</span><span class="p">(</span><span class="n">model_families</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_family</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">model_families</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">model_family</span><span class="p">,)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_families</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">(</span><span class="n">model_families</span><span class="p">,)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model_families</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;at least one model family is required&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_slug</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">chars</span> <span class="o">=</span> <span class="p">[</span><span class="n">ch</span> <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">]</span>
+    <span class="n">slug</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chars</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="s2">&quot;--&quot;</span> <span class="ow">in</span> <span class="n">slug</span><span class="p">:</span>
+        <span class="n">slug</span> <span class="o">=</span> <span class="n">slug</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">slug</span> <span class="ow">or</span> <span class="s2">&quot;value&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_recipe_id</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">horizons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">models</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">horizon_token</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;h</span><span class="si">{</span><span class="n">horizon</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">horizon</span> <span class="ow">in</span> <span class="n">horizons</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">model_token</span> <span class="o">=</span> <span class="n">_slug</span><span class="p">(</span><span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_token</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="p">)</span><span class="si">}</span><span class="s2">-models&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;experiment-</span><span class="si">{</span><span class="n">_slug</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_slug</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">horizon_token</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">model_token</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dataset_parts</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">_dataset_parts</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dataset is required&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parts</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">&quot;custom_csv&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_parquet&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;custom_csv/custom_parquet are no longer dataset choices; &quot;</span>
+            <span class="s2">&quot;choose dataset=&#39;fred_md&#39;/&#39;fred_qd&#39;/&#39;fred_sd&#39; and set &quot;</span>
+            <span class="s2">&quot;custom_source_policy plus custom_source_path&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;fred_md&quot;</span> <span class="ow">in</span> <span class="n">parts</span> <span class="ow">and</span> <span class="s2">&quot;fred_qd&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fred_md and fred_qd cannot be combined in one default experiment&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parts</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="s2">&quot;fred_md+fred_sd&quot;</span>
+    <span class="k">if</span> <span class="n">parts</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;fred_qd&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="s2">&quot;fred_qd+fred_sd&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">parts</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unsupported dataset combination: </span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_frequency</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">_dataset_parts</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;quarterly&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">frequency</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">frequency</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;frequency must be &#39;monthly&#39; or &#39;quarterly&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;fred_md&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="s2">&quot;monthly&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;fred_qd&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="s2">&quot;quarterly&quot;</span>
+    <span class="k">elif</span> <span class="n">parts</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;fred_sd&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">frequency</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;frequency is required when dataset=&#39;fred_sd&#39; is used alone&quot;</span><span class="p">)</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="n">frequency</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="n">frequency</span> <span class="ow">or</span> <span class="s2">&quot;monthly&quot;</span>
+
+    <span class="k">if</span> <span class="n">frequency</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">frequency</span> <span class="o">!=</span> <span class="n">resolved</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;frequency=</span><span class="si">{</span><span class="n">frequency</span><span class="si">!r}</span><span class="s2"> conflicts with dataset=</span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2">; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;resolved frequency is </span><span class="si">{</span><span class="n">resolved</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">resolved</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_contract</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">custom_source_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">custom_source_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">custom_source_schema</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="n">custom_source_schema</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_POLICIES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_source_policy must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_SOURCE_POLICIES</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom_source_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_FORMATS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_source_format must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_SOURCE_FORMATS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;official_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_source_format applies only when custom_source_policy selects custom data&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_source_schema applies only when custom_source_policy selects custom data&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_source_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_source_path applies only when custom_source_policy selects custom data&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_source_path</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;custom sources require custom_source_path; &quot;</span>
+            <span class="s2">&quot;the parser is inferred from the .csv/.parquet/.pq extension&quot;</span>
+        <span class="p">)</span>
+    <span class="n">resolved_format</span> <span class="o">=</span> <span class="n">_resolve_custom_source_format</span><span class="p">(</span>
+        <span class="n">custom_source_path</span><span class="o">=</span><span class="n">custom_source_path</span><span class="p">,</span>
+        <span class="n">custom_source_format</span><span class="o">=</span><span class="n">custom_source_format</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resolved_schema</span> <span class="o">=</span> <span class="n">custom_source_schema</span> <span class="ow">or</span> <span class="n">_schema_from_route</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="o">=</span><span class="n">frequency</span><span class="p">,</span>
+        <span class="n">custom_source_policy</span><span class="o">=</span><span class="n">custom_source_policy</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">resolved_schema</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_SCHEMAS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_source_schema must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_SOURCE_SCHEMAS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;+&quot;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_panel_only supports a single FRED dataset, not a composite&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resolved_schema</span> <span class="o">!=</span> <span class="n">dataset</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;legacy custom_source_schema must match dataset for custom_panel_only&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resolved_format</span><span class="p">,</span> <span class="n">resolved_schema</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">))</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;csv&quot;</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">_CUSTOM_SOURCE_PARQUET_SUFFIXES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;parquet&quot;</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">&quot;custom_source_path must end with .csv, .parquet, or .pq unless &quot;</span>
+        <span class="s2">&quot;legacy custom_source_format is provided&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_custom_source_format</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">custom_source_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">inferred</span> <span class="o">=</span> <span class="n">_custom_source_format_from_path</span><span class="p">(</span><span class="n">custom_source_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">custom_source_format</span>
+        <span class="k">raise</span>
+    <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="ow">and</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="n">inferred</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom_source_format conflicts with custom_source_path extension&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">custom_source_format</span> <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span> <span class="k">else</span> <span class="n">inferred</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_schema_from_route</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">custom_source_policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">==</span> <span class="s2">&quot;custom_panel_only&quot;</span> <span class="ow">and</span> <span class="n">dataset</span> <span class="o">==</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fred_sd&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;fred_qd&quot;</span> <span class="k">if</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s2">&quot;quarterly&quot;</span> <span class="k">else</span> <span class="s2">&quot;fred_md&quot;</span>
+
+
+<div class="viewcode-block" id="build_default_recipe_dict">
+<a class="viewcode-back" href="../../source/api.html#macrocast.build_default_recipe_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_default_recipe_dict</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+    <span class="n">recipe_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">default_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_PROFILE_NAME</span><span class="p">,</span>
+    <span class="n">information_set_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;final_revised_data&quot;</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">vintage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_source_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;official_only&quot;</span><span class="p">,</span>
+    <span class="n">custom_source_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">custom_source_schema</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_source_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">framework</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="n">benchmark_family</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zero_change&quot;</span><span class="p">,</span>
+    <span class="n">feature_builder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;target_lag_features&quot;</span><span class="p">,</span>
+    <span class="n">model_family</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ar&quot;</span><span class="p">,</span>
+    <span class="n">model_families</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">primary_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;msfe&quot;</span><span class="p">,</span>
+    <span class="n">importance_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">reproducibility_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seeded_reproducible&quot;</span><span class="p">,</span>
+    <span class="n">failure_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fail_fast&quot;</span><span class="p">,</span>
+    <span class="n">compute_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;serial&quot;</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="n">benchmark_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the current minimal executable recipe for an Experiment.</span>
+
+<span class="sd">    This is intentionally conservative: it uses the existing compiler and</span>
+<span class="sd">    runtime path, chooses no-op preprocessing, and records the default profile</span>
+<span class="sd">    in leaf config so manifests can audit how unspecified choices were filled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target is required&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;start is required&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;end is required&quot;</span><span class="p">)</span>
+    <span class="n">resolved_dataset</span> <span class="o">=</span> <span class="n">_normalize_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">resolved_frequency</span> <span class="o">=</span> <span class="n">_resolve_frequency</span><span class="p">(</span><span class="n">resolved_dataset</span><span class="p">,</span> <span class="n">frequency</span><span class="p">)</span>
+    <span class="n">resolved_custom_format</span><span class="p">,</span> <span class="n">resolved_custom_schema</span><span class="p">,</span> <span class="n">resolved_custom_path</span> <span class="o">=</span> <span class="n">_custom_source_contract</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">resolved_dataset</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="o">=</span><span class="n">resolved_frequency</span><span class="p">,</span>
+        <span class="n">custom_source_policy</span><span class="o">=</span><span class="n">custom_source_policy</span><span class="p">,</span>
+        <span class="n">custom_source_format</span><span class="o">=</span><span class="n">custom_source_format</span><span class="p">,</span>
+        <span class="n">custom_source_schema</span><span class="o">=</span><span class="n">custom_source_schema</span><span class="p">,</span>
+        <span class="n">custom_source_path</span><span class="o">=</span><span class="n">custom_source_path</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">horizon_values</span> <span class="o">=</span> <span class="n">_normalize_horizons</span><span class="p">(</span><span class="n">horizons</span><span class="p">)</span>
+    <span class="n">model_values</span> <span class="o">=</span> <span class="n">_normalize_models</span><span class="p">(</span><span class="n">model_families</span><span class="p">,</span> <span class="n">model_family</span><span class="p">)</span>
+    <span class="n">resolved_recipe_id</span> <span class="o">=</span> <span class="n">recipe_id</span> <span class="ow">or</span> <span class="n">_default_recipe_id</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">resolved_dataset</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="n">horizon_values</span><span class="p">,</span>
+        <span class="n">models</span><span class="o">=</span><span class="n">model_values</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resolved_benchmark_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">DEFAULT_PROFILE</span><span class="p">[</span><span class="s2">&quot;benchmark_config&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">benchmark_config</span><span class="p">:</span>
+        <span class="n">resolved_benchmark_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">benchmark_config</span><span class="p">)</span>
+
+    <span class="n">study_scope</span> <span class="o">=</span> <span class="s2">&quot;one_target_compare_methods&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;one_target_one_method&quot;</span>
+    <span class="n">training_fixed</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;framework&quot;</span><span class="p">:</span> <span class="n">framework</span><span class="p">,</span>
+        <span class="s2">&quot;benchmark_family&quot;</span><span class="p">:</span> <span class="n">benchmark_family</span><span class="p">,</span>
+        <span class="s2">&quot;feature_builder&quot;</span><span class="p">:</span> <span class="n">feature_builder</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">training_block</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="n">training_fixed</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">training_fixed</span><span class="p">[</span><span class="s2">&quot;model_family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">training_block</span><span class="p">[</span><span class="s2">&quot;sweep_axes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model_family&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">model_values</span><span class="p">)}</span>
+
+    <span class="n">data_leaf</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
+        <span class="s2">&quot;horizons&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">horizon_values</span><span class="p">),</span>
+        <span class="s2">&quot;sample_start_date&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">start</span><span class="p">),</span>
+        <span class="s2">&quot;sample_end_date&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">end</span><span class="p">),</span>
+        <span class="s2">&quot;training_start_date&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">start</span><span class="p">),</span>
+        <span class="s2">&quot;data_vintage&quot;</span><span class="p">:</span> <span class="n">vintage</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">custom_source_policy</span> <span class="o">!=</span> <span class="s2">&quot;official_only&quot;</span><span class="p">:</span>
+        <span class="n">data_leaf</span><span class="p">[</span><span class="s2">&quot;custom_source_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_custom_path</span>
+
+    <span class="n">layer1_fixed_axes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">resolved_dataset</span><span class="p">,</span>
+        <span class="s2">&quot;custom_source_policy&quot;</span><span class="p">:</span> <span class="n">custom_source_policy</span><span class="p">,</span>
+        <span class="s2">&quot;official_transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;apply_official_tcode&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;official_transform_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;target_and_predictors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="n">resolved_frequency</span><span class="p">,</span>
+        <span class="s2">&quot;information_set_type&quot;</span><span class="p">:</span> <span class="n">information_set_type</span><span class="p">,</span>
+        <span class="s2">&quot;fred_sd_frequency_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;report_only&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fred_sd_state_group&quot;</span><span class="p">:</span> <span class="s2">&quot;all_states&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fred_sd_variable_group&quot;</span><span class="p">:</span> <span class="s2">&quot;all_sd_variables&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;target_structure&quot;</span><span class="p">:</span> <span class="s2">&quot;single_target&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;missing_availability&quot;</span><span class="p">:</span> <span class="s2">&quot;zero_fill_leading_predictor_gaps&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">custom_source_format</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="n">layer1_fixed_axes</span><span class="p">[</span><span class="s2">&quot;custom_source_format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_custom_format</span>
+    <span class="k">if</span> <span class="n">custom_source_schema</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">}:</span>
+        <span class="n">layer1_fixed_axes</span><span class="p">[</span><span class="s2">&quot;custom_source_schema&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_custom_schema</span> <span class="ow">or</span> <span class="s2">&quot;none&quot;</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_id&quot;</span><span class="p">:</span> <span class="n">resolved_recipe_id</span><span class="p">,</span>
+        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;0_meta&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;study_scope&quot;</span><span class="p">:</span> <span class="n">study_scope</span><span class="p">,</span>
+                    <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">:</span> <span class="n">reproducibility_mode</span><span class="p">,</span>
+                    <span class="s2">&quot;failure_policy&quot;</span><span class="p">:</span> <span class="n">failure_policy</span><span class="p">,</span>
+                    <span class="s2">&quot;compute_mode&quot;</span><span class="p">:</span> <span class="n">compute_mode</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;leaf_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;default_profile&quot;</span><span class="p">:</span> <span class="n">default_profile</span><span class="p">,</span>
+                    <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">random_seed</span><span class="p">),</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;1_data_task&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="n">layer1_fixed_axes</span><span class="p">,</span>
+                <span class="s2">&quot;leaf_config&quot;</span><span class="p">:</span> <span class="n">data_leaf</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;2_preprocessing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_PREPROCESSING_AXES</span><span class="p">)},</span>
+            <span class="s2">&quot;3_training&quot;</span><span class="p">:</span> <span class="n">training_block</span><span class="p">,</span>
+            <span class="s2">&quot;4_evaluation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;primary_metric&quot;</span><span class="p">:</span> <span class="n">primary_metric</span><span class="p">}},</span>
+            <span class="s2">&quot;5_output_provenance&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;leaf_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;manifest_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;full&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;benchmark_config&quot;</span><span class="p">:</span> <span class="n">resolved_benchmark_config</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;6_stat_tests&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+            <span class="s2">&quot;7_importance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;importance_method&quot;</span><span class="p">:</span> <span class="n">importance_method</span><span class="p">}},</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

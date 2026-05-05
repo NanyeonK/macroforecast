@@ -1,0 +1,256 @@
+L0  --  Study Setup
+===================
+
+
+:Layer ID: ``l0``
+:Category: ``setup``
+:Sub-layers: l0_a
+
+axis ``failure_policy``  (l0_a)
+-------------------------------
+
+
+:Default: ``'fail_fast'``
+:Sweepable: False
+
+``fail_fast``
+^^^^^^^^^^^^^
+
+
+Stop the entire study on the first cell that errors.
+
+When the cell-loop catches an exception in any sweep cell, ``fail_fast`` raises immediately and the manifest is **not** written. The remaining cells are skipped.
+
+This is the default because the typical authoring failure mode is a schema or data error that affects every cell -- catching it after the first cell saves wall-clock and surfaces the problem with a single traceback rather than a wall of identical errors. For sweeps where cells *can* fail independently (e.g., one model family throws on a particular target while others succeed), use ``continue_on_failure`` instead so partial results survive.
+
+**When to use**
+
+Default for every authoring iteration. Pick this while the recipe is still being tuned; the first failure tells you exactly what to fix without waiting for a full sweep to finish.
+
+**When NOT to use**
+
+Long-running production sweeps where a transient failure on one cell (e.g., a memory hiccup on one bootstrap iteration) should not abort the whole study.
+
+**References**
+
+* macrocast design Part 1, L0 §A: 'fail_fast vs continue_on_failure is the canonical execution-policy choice for any cell-loop study.'
+
+**Related options**: ``continue_on_failure``
+
+**Examples**
+
+*Author-time recipe (default)*::
+
+    0_meta:
+      fixed_axes:
+        failure_policy: fail_fast
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``continue_on_failure``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Record failed cells in the manifest and keep the sweep running.
+
+Per-cell exceptions are caught by the cell loop, the cell's ``CellExecutionResult.error`` and ``traceback`` fields are populated, and the loop moves on to the next cell. The manifest's ``cells_summary`` distinguishes succeeded from failed cells; the failed-cell entries carry the captured traceback for post-hoc diagnosis.
+
+Replication still runs end-to-end on a manifest with failed cells: ``replicate()`` re-executes every cell and verifies the failure occurs in the same place with the same exception class.
+
+**When to use**
+
+Production horse-race sweeps where partial coverage is more useful than no coverage. Common examples: a 50-cell model-family sweep where one optional family (xgboost without the extra) fails to import, or a long bootstrap where a single iteration trips a numerical edge case.
+
+**When NOT to use**
+
+Authoring iteration -- failures are usually configuration problems that affect every cell, and ``fail_fast`` shortens the feedback loop.
+
+**References**
+
+* macrocast design Part 1, L0 §A: 'continue_on_failure preserves partial coverage; the manifest carries enough context to diagnose each failed cell after the run.'
+
+**Related options**: ``fail_fast``
+
+**Examples**
+
+*Production sweep over many model families*::
+
+    0_meta:
+      fixed_axes:
+        failure_policy: continue_on_failure
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``reproducibility_mode``  (l0_a)
+-------------------------------------
+
+
+:Default: ``'seeded_reproducible'``
+:Sweepable: False
+:Leaf config keys: ``random_seed``
+
+``seeded_reproducible``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Fix a deterministic seed and propagate it through every RNG.
+
+The cell-loop reads ``leaf_config.random_seed`` (default ``0``) and applies it to ``random.seed``, ``numpy.random.seed``, ``torch.manual_seed`` (when torch is installed), and the ``PYTHONHASHSEED`` environment variable for the current process. Each L4 estimator inherits the seed via its ``params.random_state`` key (issue #215); per-fit-node ``random_state`` overrides the L0 seed when present.
+
+This is the only mode under which ``macrocast.replicate(manifest)`` can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.
+
+**When to use**
+
+Default. Required for any study where bit-exact replication matters (papers, internal benchmarks, regression tests, comparisons across package versions).
+
+**When NOT to use**
+
+Stochastic exploration where the explicit goal is to characterise the variability of a procedure across seeds. Pick ``exploratory`` and re-run; the manifest will record that the seed was unfixed.
+
+**References**
+
+* Stodden, McNutt, Bailey et al. (2016) 'Enhancing reproducibility for computational methods', Science 354(6317). (doi:10.1126/science.aah6168)
+* macrocast PR #215 -- L0 random_seed propagation into L4 random_state.
+
+**Related options**: ``exploratory``
+
+**Examples**
+
+*Reproducible study (default)*::
+
+    0_meta:
+      fixed_axes:
+        reproducibility_mode: seeded_reproducible
+      leaf_config:
+        random_seed: 42
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``exploratory``
+^^^^^^^^^^^^^^^
+
+
+Do not fix stochastic seeds; each run draws fresh randomness.
+
+Skips the global RNG seeding that ``seeded_reproducible`` performs. Each cell pulls its own randomness from the OS entropy pool; downstream estimators that take an explicit ``random_state`` still use whatever the recipe sets per node, but the L0 default of ``0`` is *not* propagated.
+
+``replicate()`` cannot guarantee bit-exact sink hashes under this mode -- the recipe still re-runs and produces structurally identical manifests, but the numeric forecasts will differ run-over-run.
+
+**When to use**
+
+Sensitivity studies where you want to measure how much variability the random components introduce. Wrap the run in a sweep over several executions and compare the spread.
+
+**When NOT to use**
+
+Anything you intend to publish or share. The reviewer will not be able to reproduce your manifest.
+
+**References**
+
+* macrocast design Part 1, L0 §A: 'exploratory mode trades reproducibility for unbiased sampling of stochastic variability.'
+
+**Related options**: ``seeded_reproducible``
+
+**Examples**
+
+*Sensitivity sweep over fresh seeds*::
+
+    0_meta:
+      fixed_axes:
+        reproducibility_mode: exploratory
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``compute_mode``  (l0_a)
+-----------------------------
+
+
+:Default: ``'serial'``
+:Sweepable: False
+:Leaf config keys: ``parallel_unit``, ``n_workers``
+
+``serial``
+^^^^^^^^^^
+
+
+Run every sweep cell sequentially in the calling process.
+
+The cell loop iterates expanded cells one at a time. No worker pool, no extra processes, no thread pool. ``parallel_unit`` is ignored.
+
+This is the default because (a) most authoring sweeps are small enough that the cell loop dwarfs scheduling overhead, and (b) every parallel mode introduces an additional surface for scheduling-induced non-determinism that has to be ruled out explicitly. Pick ``parallel`` when wall-clock matters and the study has been validated under ``serial`` first.
+
+**When to use**
+
+Default. Authoring iteration, small sweeps, debugging, any case where a stack trace from a particular cell needs to be readable without thread / process noise.
+
+**When NOT to use**
+
+Multi-cell sweeps where each cell takes more than a minute and the machine has multiple CPU cores. Switch to ``parallel`` and record the speed-up in the manifest.
+
+**References**
+
+* macrocast design Part 1, L0 §A: 'compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.'
+
+**Related options**: ``parallel``
+
+**Examples**
+
+*Default serial study*::
+
+    0_meta:
+      fixed_axes:
+        compute_mode: serial
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``parallel``
+^^^^^^^^^^^^
+
+
+Distribute work over multiple workers; pick the unit via parallel_unit.
+
+Activates the parallel cell loop. The granularity is controlled by the ``parallel_unit`` sub-axis:
+
+* ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``).   Cell-level parallelism is the safest path because cells are by   construction independent.
+* ``models`` -- threads over ``fit_model`` nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
+* ``oos_dates`` -- threads over walk-forward origins inside a fit   node (issue #250). Per-origin RNG state is derived deterministically   from ``base_seed + position`` (issue #279) so thread scheduling   cannot affect the forecasts.
+* ``horizons`` / ``targets`` -- map to the same fan-out when L4   produces single-horizon / single-target output per fit node.
+
+``leaf_config.n_workers`` (cell-level) and ``n_workers_inner`` (sub-cell) cap the pool sizes.
+
+**When to use**
+
+Long sweeps on multi-core machines. Validate the manifest under ``compute_mode = serial`` first to confirm the recipe is deterministic, then flip to ``parallel`` and verify ``replicate()`` still passes.
+
+**When NOT to use**
+
+Recipes that mutate global state (e.g., a custom L3 op that writes to a shared file or a base estimator with a non-thread-safe C extension). Audit thread / process safety before flipping the switch.
+
+**References**
+
+* macrocast PR #173 -- cell-level ProcessPoolExecutor.
+* macrocast PR #204 / #250 -- sub-cell ThreadPoolExecutor.
+* macrocast PR #279 -- deterministic per-origin seed propagation.
+
+**Related options**: ``serial``
+
+**Examples**
+
+*Cell-level parallel sweep*::
+
+    0_meta:
+      fixed_axes:
+        compute_mode: parallel
+        parallel_unit: cells
+      leaf_config:
+        n_workers: 4
+
+*Sub-cell parallel over fit_model nodes*::
+
+    0_meta:
+      fixed_axes:
+        compute_mode: parallel
+        parallel_unit: models
+      leaf_config:
+        n_workers_inner: 8
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.

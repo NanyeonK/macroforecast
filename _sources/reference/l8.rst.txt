@@ -1,0 +1,1328 @@
+L8  --  Output / provenance
+===========================
+
+
+:Layer ID: ``l8``
+:Category: ``consumption``
+:Sub-layers: L8_A_export_format, L8_B_saved_objects, L8_C_provenance, L8_D_artifact_granularity
+
+axis ``export_format``  (L8_A_export_format)
+--------------------------------------------
+
+
+:Default: ``'json_csv'``
+:Sweepable: False
+
+``all``
+^^^^^^^
+
+
+Emit every supported export format together.
+
+Comprehensive option emitting JSON + CSV + Parquet + LaTeX + Markdown + HTML for every applicable artifact. Largest disk footprint but covers every downstream consumer in one run.
+
+**When to use**
+
+Comprehensive reproducibility / sharing -- single run that covers every audience.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``csv``
+^^^^^^^
+
+
+CSV tables for tabular artifacts (forecasts, metrics, importance).
+
+Standard comma-separated values, UTF-8 encoded. The lowest-common-denominator format for spreadsheet / R workflows. Loses dtype information (everything becomes string on round-trip); for analytics workloads prefer ``parquet``.
+
+**When to use**
+
+Spreadsheet / R workflows; collaborators who avoid JSON.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``parquet``, ``json_csv``, ``json_parquet``, ``latex_tables``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``html_report``
+^^^^^^^^^^^^^^^
+
+
+Self-contained HTML report with embedded plots and tables.
+
+Renders a single ``.html`` file combining tables (via pandas' ``to_html``) and base64-embedded matplotlib figures. Opens in any browser without a server; ideal for stakeholder-shareable reports without LaTeX tooling.
+
+**When to use**
+
+Stakeholder-shareable reports without LaTeX tooling.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json``
+^^^^^^^^
+
+
+JSON dump of every artifact (default).
+
+Default round-trip-safe format; native Python / JS / R support; preserves nested structure (dicts of dicts of DataFrames). All numeric values rendered as floats with full precision; date-like values rendered as ISO 8601 strings.
+
+**When to use**
+
+Default; round-trips cleanly into Python / JS / R.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``csv``, ``parquet``, ``json_csv``, ``json_parquet``, ``latex_tables``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json_csv``
+^^^^^^^^^^^^
+
+
+Both JSON and CSV for every applicable artifact.
+
+Convenience option emitting both formats. Used when downstream consumers vary -- Python users want JSON round-trip, R / Excel users want CSV. Doubles the artifact-directory size.
+
+**When to use**
+
+When downstream consumers vary across both Python and Excel / R.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_parquet``, ``latex_tables``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json_parquet``
+^^^^^^^^^^^^^^^^
+
+
+Both JSON and Parquet for every applicable artifact.
+
+Hybrid option for runs that combine reproducibility (JSON for the manifest / small artifacts) with analytics (Parquet for large forecast tables). Recommended for production sweeps.
+
+**When to use**
+
+Hybrid analytics + reproducibility setups.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* Apache Parquet specification (apache/parquet-format). <https://parquet.apache.org/docs/file-format/>
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``latex_tables``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``latex_tables``
+^^^^^^^^^^^^^^^^
+
+
+LaTeX ``tabular`` snippets ready to ``\input`` into a paper.
+
+Emits one ``.tex`` file per tabular artifact (forecasts, metrics, ranking). Booktabs-friendly column alignment and column-name escaping; uses pandas' ``to_latex`` backend.
+
+**When to use**
+
+Paper-draft pipelines. Selecting ``latex_tables`` on ``l8.export_format`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* pandas DataFrame.to_latex documentation. <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html>
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``markdown_report``
+^^^^^^^^^^^^^^^^^^^
+
+
+Single Markdown report bundling tables and figure references.
+
+Renders a self-contained ``.md`` document with pipe-aligned tables and embedded image references. Intended as the human-readable summary for stakeholder reports and GitHub / wiki documentation.
+
+**When to use**
+
+Lightweight Markdown / GitHub-rendered reports.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``parquet``
+^^^^^^^^^^^
+
+
+Apache Parquet (pyarrow); columnar binary tabular format.
+
+Columnar binary format with full dtype preservation, automatic dictionary encoding for low-cardinality columns, and per-column compression. 5-10× smaller than CSV for typical macro panels; an order of magnitude faster to read for column-subset queries. Requires ``pyarrow`` (already a transitive dependency).
+
+**When to use**
+
+Large-scale analytics; preserving dtypes; cross-language workflows (Spark, DuckDB, R arrow).
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* Apache Parquet specification (apache/parquet-format). <https://parquet.apache.org/docs/file-format/>
+
+**Related options**: ``json``, ``csv``, ``json_csv``, ``json_parquet``, ``latex_tables``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``compression``  (L8_A_export_format)
+------------------------------------------
+
+
+:Default: ``'none'``
+:Sweepable: False
+
+``gzip``
+^^^^^^^^
+
+
+Gzip-compress every output file individually.
+
+Each ``.json`` / ``.csv`` becomes ``.json.gz`` / ``.csv.gz``. Reduces artifact size by 60-80% for typical macro panels with marginal write-time overhead. Read-side: pandas / pyarrow auto-detect the gzip extension.
+
+**When to use**
+
+Reducing artifact size for archival; production sweeps.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``none``, ``zip``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+No compression (default).
+
+Default. Files are written uncompressed -- cheapest at write time and most convenient for direct browsing / spot-checking. Recommended for development.
+
+**When to use**
+
+Default; cheapest write-time option.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``gzip``, ``zip``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``zip``
+^^^^^^^
+
+
+Zip-archive the entire run output directory.
+
+Wraps the run output directory in a single ``.zip`` archive after writing. Convenient for transferring an entire run via email / web upload as a single file. Slightly less efficient than per-file gzip but shipping a single archive matters for some workflows.
+
+**When to use**
+
+Packaging the run for transfer over email / file-sharing services.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``none``, ``gzip``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``saved_objects``  (L8_B_saved_objects)
+--------------------------------------------
+
+
+:Default: ``None``
+:Sweepable: False
+
+``clean_panel``
+^^^^^^^^^^^^^^^
+
+
+Cleaned L2 panel (post tcode / outlier / imputation / frame edge).
+
+The output of the L2 pipeline. Useful when downstream re-runs need to skip the (potentially expensive) cleaning stages.
+
+**When to use**
+
+When downstream re-runs without re-cleaning are needed.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``feature_metadata``, ``forecasts``, ``forecast_intervals``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``combination_weights``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Ensemble weights from L4 combine ops.
+
+Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 DAG.
+
+**When to use**
+
+Active when ensemble combine ops are in the L4 DAG.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``decomposition``
+^^^^^^^^^^^^^^^^^
+
+
+L5.D decomposition tables (per-period / per-block / Shapley).
+
+Variance / loss decomposition outputs. Default-on when L5.D decomposition is active.
+
+**When to use**
+
+Default-on when decomposition is active.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diagnostics_all``
+^^^^^^^^^^^^^^^^^^^
+
+
+Every active diagnostic layer's output (convenience option).
+
+Convenience flag: enables ``diagnostics_l{1..4}_5`` simultaneously when the corresponding diagnostic layer is active. Recommended default for first-time runs.
+
+**When to use**
+
+Default convenience option for full-diagnostic runs.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diagnostics_l1_5``
+^^^^^^^^^^^^^^^^^^^^
+
+
+L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).
+
+JSON + figures from the L1.5 sub-layer. Active when L1.5 is enabled in the recipe.
+
+**When to use**
+
+Active when L1.5 is enabled. Selecting ``diagnostics_l1_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diagnostics_l2_5``
+^^^^^^^^^^^^^^^^^^^^
+
+
+L2.5 diagnostic outputs (cleaning effect summaries).
+
+JSON + figures from the L2.5 sub-layer. Active when L2.5 is enabled.
+
+Configures the ``saved_objects`` axis on ``L8_B_saved_objects`` (layer ``l8``); the ``diagnostics_l2_5`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Active when L2.5 is enabled. Selecting ``diagnostics_l2_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diagnostics_l3_5``
+^^^^^^^^^^^^^^^^^^^^
+
+
+L3.5 diagnostic outputs (factor / lag / selection inspection).
+
+JSON + figures from the L3.5 sub-layer. Active when L3.5 is enabled.
+
+Configures the ``saved_objects`` axis on ``L8_B_saved_objects`` (layer ``l8``); the ``diagnostics_l3_5`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Active when L3.5 is enabled. Selecting ``diagnostics_l3_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``diagnostics_l4_5``
+^^^^^^^^^^^^^^^^^^^^
+
+
+L4.5 diagnostic outputs (in-sample fit / window stability / tuning history).
+
+JSON + figures from the L4.5 sub-layer. Active when L4.5 is enabled.
+
+Configures the ``saved_objects`` axis on ``L8_B_saved_objects`` (layer ``l8``); the ``diagnostics_l4_5`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Active when L4.5 is enabled. Selecting ``diagnostics_l4_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``feature_metadata``
+^^^^^^^^^^^^^^^^^^^^
+
+
+L3 column lineage + pipeline definitions.
+
+The L3 metadata sink containing per-feature lineage, transformation chain, and pipeline ID. Default-on when L7 ``lineage_attribution`` or ``transformation_attribution`` is active -- those ops require this metadata to function.
+
+**When to use**
+
+Default-on when L7 lineage / transformation_attribution is active.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``forecasts``, ``forecast_intervals``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``forecast_intervals``
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+Per-cell prediction intervals (when forecast_object = quantile / density).
+
+Quantile forecasts at the user-specified ``α`` levels (default 5% / 50% / 95%). Default-on when L4 emits ``forecast_object = quantile`` or ``density``.
+
+**When to use**
+
+Default-on when forecast_object = quantile / density.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``forecasts``
+^^^^^^^^^^^^^
+
+
+Per-cell point forecasts.
+
+The headline output: per (cell, target, horizon, origin) forecast. Default-on; required for replication and for every downstream L5 / L6 / L7 op.
+
+**When to use**
+
+Default-on; required for replication.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecast_intervals``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``importance``
+^^^^^^^^^^^^^^
+
+
+L7 importance outputs.
+
+Tables and figures from every L7.A op in the recipe's interpretation DAG. Default-on when L7 is enabled.
+
+**When to use**
+
+Default-on when L7 is active. Selecting ``importance`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``metrics``
+^^^^^^^^^^^
+
+
+L5 metric tables.
+
+Per-cell per-metric scores aggregated by the L5.C configuration. Default-on; the standard headline output for every horse-race study.
+
+**When to use**
+
+Default-on. Selecting ``metrics`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``model_artifacts``
+^^^^^^^^^^^^^^^^^^^
+
+
+Pickled / joblib model objects.
+
+Serialised fitted estimators (one per (model, origin) pair). Default-off because model objects can be large; enable for downstream prediction without re-fitting.
+
+**When to use**
+
+When downstream prediction without re-fitting is needed.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``ranking``
+^^^^^^^^^^^
+
+
+L5.E ranking tables.
+
+Models ranked by primary metric / MCS inclusion / Borda count / etc. Default-on when L5.E ranking is active.
+
+**When to use**
+
+Default-on when ranking is active.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``raw_panel``
+^^^^^^^^^^^^^
+
+
+Raw L1 panel before any L2 cleaning.
+
+The original raw FRED-MD / -QD / -SD / custom panel. Default-off because raw FRED panels are large; enabling this makes the run fully self-contained -- a downstream user can re-run the entire pipeline from the manifest alone without internet access.
+
+**When to use**
+
+Default-off for size; enable for fully self-contained runs.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``clean_panel``, ``feature_metadata``, ``forecasts``, ``forecast_intervals``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``regime_metrics``
+^^^^^^^^^^^^^^^^^^
+
+
+Regime-conditional metrics.
+
+Metric breakdowns by L1.G regime classification. Default-on when L1.G regime is non-pooled (i.e. regime-conditional analysis is intended).
+
+**When to use**
+
+Active when L1.G regime is non-pooled.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``state_metrics``
+^^^^^^^^^^^^^^^^^
+
+
+State-level metrics for FRED-SD geographic studies.
+
+Per-state metric breakdowns. Default-on when L1.D geography is state-level (FRED-SD pipelines).
+
+**When to use**
+
+Active when L1.D geography is state-level (FRED-SD).
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``tests``
+^^^^^^^^^
+
+
+L6 test outputs (DM / GW / MCS / SPA / RC / StepM / PT / residual / density).
+
+Test statistics, p-values, kernel choices, and lag-truncation parameters for every L6 sub-layer that is enabled. Default-on when any L6 sub-layer is active.
+
+**When to use**
+
+Default-on when L6 sub-layers are active.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``transformation_attribution``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+L7 transformation_attribution Shapley table.
+
+Per-pipeline Shapley contributions to forecast skill. Active when ``transformation_attribution`` is in the L7 DAG (typically alongside multi-cell sweeps over alternative L3 transforms).
+
+**When to use**
+
+Active when transformation_attribution op is in the L7 DAG.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``model_artifacts_format``  (L8_B_saved_objects)
+-----------------------------------------------------
+
+
+:Default: ``'pickle'``
+:Sweepable: False
+
+``joblib``
+^^^^^^^^^^
+
+
+Default sklearn / xgboost serialisation via joblib.
+
+Optimised for numpy-array-heavy estimators (sklearn / xgboost / lightgbm). Smaller and faster than plain pickle for typical sklearn fitted-model graphs.
+
+**When to use**
+
+Default; broad compatibility across sklearn / xgboost / lightgbm.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``pickle``, ``onnx``, ``pmml``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``onnx``
+^^^^^^^^
+
+
+ONNX export (where supported by the family).
+
+Open Neural Network Exchange format. Cross-language deployment (C++ / C# / Java / JS runtimes) and faster inference than the native sklearn pickle. Supported for sklearn / xgboost / lightgbm / pytorch families; raises if the active L4 family lacks an ONNX exporter.
+
+**When to use**
+
+Cross-language deployment; production inference servers.
+
+**When NOT to use**
+
+Models without ONNX support (BVAR, DFM, MRF, custom callables).
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* ONNX specification. <https://onnx.ai/>
+
+**Related options**: ``joblib``, ``pmml``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pickle``
+^^^^^^^^^^
+
+
+Plain Python pickle (less efficient than joblib).
+
+Compatibility option for older toolchains or non-sklearn estimators that don't benefit from joblib's array optimisation. Larger files but maximally portable across Python versions.
+
+**When to use**
+
+Compatibility with older toolchains.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``joblib``, ``onnx``, ``pmml``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pmml``
+^^^^^^^^
+
+
+PMML export (PMML-compatible families only).
+
+Predictive Model Markup Language; XML-based exchange format primarily used in enterprise / Java deployments. Supported for linear / tree-family models via ``sklearn2pmml``.
+
+**When to use**
+
+Enterprise / Java deployment. Selecting ``pmml`` on ``l8.model_artifacts_format`` activates this branch of the layer's runtime.
+
+**When NOT to use**
+
+Modern ML deployment -- ONNX is more widely supported.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* PMML 4.4 specification. <https://dmg.org/pmml/v4-4/GeneralStructure.html>
+
+**Related options**: ``joblib``, ``onnx``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``provenance_fields``  (L8_C_provenance)
+---------------------------------------------
+
+
+:Default: ``None``
+:Sweepable: False
+
+``cell_resolved_axes``
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+Per-cell resolved axis values from sweep expansion.
+
+For sweep-expanded cells, records the (axis → value) mapping that produced each cell. Without this field, interpreting which cell ran which configuration requires re-expanding the sweep.
+
+**When to use**
+
+Default-on when sweeps are active.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``data_revision_tag``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+FRED vintage / data revision tag.
+
+When the L1 raw is FRED-MD / -QD / -SD, captures the vintage tag (e.g. ``2024-09``) so future re-runs against an updated FRED snapshot can detect that the input data has revised.
+
+**When to use**
+
+Default-on when raw data is FRED-MD / -QD / -SD.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``dependency_lockfile``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Lockfile contents (pip freeze / poetry.lock / conda env).
+
+Verbatim contents of the active environment's lockfile. Critical for reproducing the same package versions on a different machine.
+
+**When to use**
+
+Default-on; needed for environment replication.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``git_branch_name``
+^^^^^^^^^^^^^^^^^^^
+
+
+Git branch name.
+
+From ``git rev-parse --abbrev-ref HEAD``. Default-on with git_commit_sha; documents which feature branch produced the run.
+
+**When to use**
+
+Default-on with git_commit_sha.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``git_commit_sha``
+^^^^^^^^^^^^^^^^^^
+
+
+Git commit SHA of the active checkout.
+
+From ``git rev-parse HEAD``. Default-on when the run executes inside a git working tree; provides exact code traceability.
+
+**When to use**
+
+Default-on when the run executes inside a git tree.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``julia_version``
+^^^^^^^^^^^^^^^^^
+
+
+Julia version (when Julia-backed steps are active).
+
+Captured via ``julia`` Python bridge when any pipeline step calls into Julia. Optional.
+
+**When to use**
+
+Recipes that call Julia. Selecting ``julia_version`` on ``l8.provenance_fields`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``package_version``
+^^^^^^^^^^^^^^^^^^^
+
+
+macrocast version string.
+
+From ``macrocast.__version__``. Lets ``replicate()`` warn the user when the manifest was produced by a different package version.
+
+**When to use**
+
+Default-on. Selecting ``package_version`` on ``l8.provenance_fields`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``python_version``, ``r_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``python_version``
+^^^^^^^^^^^^^^^^^^
+
+
+Python interpreter version (3-tuple major.minor.patch).
+
+From ``sys.version_info``. Lets ``replicate()`` warn when running on a different interpreter.
+
+**When to use**
+
+Default-on. Selecting ``python_version`` on ``l8.provenance_fields`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``r_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``r_version``
+^^^^^^^^^^^^^
+
+
+R version (when R-backed steps are active).
+
+Captured via ``rpy2`` when any L3 / L4 / L6 / L7 op calls into R. Optional -- only emitted when R is actually used.
+
+**When to use**
+
+Recipes that call R (e.g. for arima or robust statistics).
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``random_seed_used``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Resolved random seeds (L0 + per-cell propagation).
+
+The exact seed values used by every numpy / sklearn / torch RNG. Required for bit-exact replication; the seed-propagation system in v0.2 ensures every non-deterministic op receives a deterministic seed.
+
+**When to use**
+
+Default-on; required for bit-exact replication.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``recipe_hash``
+^^^^^^^^^^^^^^^
+
+
+SHA-256 hash of the canonicalised recipe.
+
+Cheap consistency check. Compares against the recipe hash from the original run during ``replicate()``; mismatch triggers a hard error before any compute is wasted.
+
+**When to use**
+
+Default-on; cheap consistency check.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``package_version``, ``python_version``, ``r_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``recipe_yaml_full``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Full recipe YAML embedded in the manifest.
+
+Verbatim copy of the recipe as supplied by the user (post-canonicalisation). Required for ``replicate()`` to reconstruct the exact run; without it the manifest is descriptive but not replayable.
+
+**When to use**
+
+Default-on; required for replication.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_hash``, ``package_version``, ``python_version``, ``r_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``runtime_duration``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Wall-clock duration per cell.
+
+Per-cell timings; useful for cost-tracking and detecting slow cells in a sweep.
+
+Configures the ``provenance_fields`` axis on ``L8_C_provenance`` (layer ``l8``); the ``runtime_duration`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Default-on; useful for cost-tracking.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``runtime_environment``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Hostname / OS / CPU summary string.
+
+Captured at run start; useful for diagnosing performance regressions across machines (laptop vs cluster).
+
+**When to use**
+
+Default-on. Selecting ``runtime_environment`` on ``l8.provenance_fields`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``manifest_format``  (L8_C_provenance)
+-------------------------------------------
+
+
+:Default: ``'json'``
+:Sweepable: False
+
+``json``
+^^^^^^^^
+
+
+Manifest written as a single JSON document (default).
+
+Default. Round-trips cleanly into Python / JS / R; preserves nested structure. The natural choice for every consumer that uses ``macrocast.replicate``.
+
+**When to use**
+
+Default; round-trips cleanly. Selecting ``json`` on ``l8.manifest_format`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``yaml``, ``json_lines``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json_lines``
+^^^^^^^^^^^^^^
+
+
+Manifest written as JSONL (one cell per line).
+
+Streaming-friendly format: each cell becomes one JSON object on its own line. Sweep manifests with thousands of cells stay parseable line-by-line without loading the entire manifest into memory.
+
+**When to use**
+
+Sweep manifests with thousands of cells; streaming consumers.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``yaml``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``yaml``
+^^^^^^^^
+
+
+Manifest written as YAML.
+
+Hand-readable alternative to JSON. Commits cleaner in git diffs; useful when manifests are expected to be reviewed by humans (paper supplementary materials, code reviews of recipe changes).
+
+**When to use**
+
+Hand-readable manifests; paper supplementary materials.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``json``, ``json_lines``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``artifact_granularity``  (L8_D_artifact_granularity)
+----------------------------------------------------------
+
+
+:Default: ``'per_cell'``
+:Sweepable: False
+
+``flat``
+^^^^^^^^
+
+
+Single flat directory; cells distinguished by filename suffix.
+
+All cells write into one directory; cell IDs become filename suffixes. Useful for sweeps with thousands of small artifacts where per-cell directory creation is wasteful.
+
+**When to use**
+
+Sweeps with thousands of small artifacts.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``per_cell``, ``per_target``, ``per_horizon``, ``per_target_horizon``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_cell``
+^^^^^^^^^^^^
+
+
+One sub-directory per sweep cell (default).
+
+Default. Each cell gets its own ``cell_NNN/`` directory containing the cell's full set of artifacts. Isolates every cell's output for clean per-cell inspection.
+
+**When to use**
+
+Default; isolates each cell's artifacts.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``per_target``, ``per_horizon``, ``per_target_horizon``, ``flat``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_horizon``
+^^^^^^^^^^^^^^^
+
+
+Group cells by forecast horizon (one directory per horizon).
+
+When the sweep varies over multiple horizons, groups by horizon. Useful for horizon-by-horizon analysis.
+
+**When to use**
+
+Multi-horizon sweeps. Selecting ``per_horizon`` on ``l8.artifact_granularity`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``per_cell``, ``per_target``, ``per_target_horizon``, ``flat``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_target``
+^^^^^^^^^^^^^^
+
+
+Group cells by target variable (one directory per target).
+
+When the sweep varies over multiple targets, this groups the artifacts by target rather than by cell. Useful when downstream analysis is per-target.
+
+**When to use**
+
+Multi-target studies where target-grouping aids browsing.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``per_cell``, ``per_horizon``, ``per_target_horizon``, ``flat``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_target_horizon``
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+Group cells by (target, horizon) pair.
+
+Combines ``per_target`` and ``per_horizon`` for sweeps that vary across both axes.
+
+**When to use**
+
+Studies sweeping across both target and horizon.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``per_cell``, ``per_target``, ``per_horizon``, ``flat``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``naming_convention``  (L8_D_artifact_granularity)
+-------------------------------------------------------
+
+
+:Default: ``'descriptive'``
+:Sweepable: False
+
+``cell_id``
+^^^^^^^^^^^
+
+
+Use the cell numeric id (cell_001/, cell_002/, ...).
+
+Default. Stable and short; sorts naturally in directory listings. Recommended for production sweeps where the exact axis-value mapping is captured separately by the manifest's ``cell_resolved_axes`` field.
+
+**When to use**
+
+Default; stable, short. Selecting ``cell_id`` on ``l8.naming_convention`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``descriptive``, ``recipe_hash``, ``custom``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``custom``
+^^^^^^^^^^
+
+
+User-supplied template via ``leaf_config.naming_template``.
+
+Bespoke directory layouts: the template string can interpolate any cell-resolved axis (e.g. ``{model_family}_{horizon}h_{seed}``) plus the cell's numeric id.
+
+**When to use**
+
+Bespoke directory layouts. Selecting ``custom`` on ``l8.naming_convention`` activates this branch of the layer's runtime.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``descriptive``, ``cell_id``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``descriptive``
+^^^^^^^^^^^^^^^
+
+
+Use a descriptive template combining the cell's resolved axes.
+
+Generates names like ``ridge_log_diff_h1_seed42/`` from the cell's resolved axes. Human-readable; useful when humans browse the output directory directly. Long names can hit filesystem limits for wide sweeps.
+
+**When to use**
+
+When humans browse the output directory.
+
+**When NOT to use**
+
+Wide sweeps with many axes -- names exceed filesystem limits.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``cell_id``, ``custom``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``recipe_hash``
+^^^^^^^^^^^^^^^
+
+
+Use the per-cell recipe hash as the directory name.
+
+Reproducibility-first naming: directory names are the first 8 chars of the cell's recipe hash. Deterministic across runs (a re-run with the same recipe produces the same directory names), but unreadable to humans.
+
+**When to use**
+
+Reproducibility-first naming; deterministic across runs.
+
+**References**
+
+* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+
+**Related options**: ``cell_id``, ``descriptive``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.

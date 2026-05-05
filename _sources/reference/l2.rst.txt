@@ -1,0 +1,1105 @@
+L2  --  Preprocessing
+=====================
+
+
+:Layer ID: ``l2``
+:Category: ``construction``
+:Sub-layers: l2_a, l2_b, l2_c, l2_d, l2_e
+
+axis ``sd_series_frequency_filter``  (l2_a)
+-------------------------------------------
+
+
+:Default: ``'both'``
+:Sweepable: True
+
+``monthly_only``
+^^^^^^^^^^^^^^^^
+
+
+Drop quarterly series; retain monthly FRED-SD only.
+
+Filter applied before any L2.A frequency-alignment rule. Useful when the user wants a strictly monthly FRED-SD panel and would prefer dropping the quarterly variables to keeping them and accepting the alignment rule's interpolation.
+
+**When to use**
+
+Strict monthly panels; avoiding quarterly-to-monthly interpolation.
+
+**When NOT to use**
+
+When quarterly variables are central to the analysis.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``quarterly_only``, ``both``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``quarterly_only``
+^^^^^^^^^^^^^^^^^^
+
+
+Drop monthly series; retain quarterly FRED-SD only.
+
+Inverse of ``monthly_only``: keeps quarterly variables and drops monthly variables. Used when comparing to a quarterly benchmark (e.g. real GDP) and monthly variables would inflate the panel without contributing forecast skill.
+
+**When to use**
+
+Quarterly-target studies; FRED-QD style analyses on FRED-SD data.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``monthly_only``, ``both``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``both``
+^^^^^^^^
+
+
+Keep both monthly and quarterly FRED-SD series.
+
+Default; defers to the L2.A frequency-alignment rules (``monthly_to_quarterly_rule`` / ``quarterly_to_monthly_rule``) to render the mixed-frequency panel into a single grid.
+
+**When to use**
+
+Default for FRED-SD recipes; mixed-frequency panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``monthly_only``, ``quarterly_only``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``quarterly_to_monthly_rule``  (l2_a)
+------------------------------------------
+
+
+:Default: ``'step_backward'``
+:Sweepable: True
+
+``linear_interpolation``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Linear interpolation between quarterly observations.
+
+Smoother than step_backward but introduces look-ahead unless used per-origin.
+
+Configures the ``quarterly_to_monthly_rule`` axis on ``l2_a`` (layer ``l2``); the ``linear_interpolation`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Studies with smooth quarterly series and per-origin alignment.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``step_backward``, ``chow_lin``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``step_backward``
+^^^^^^^^^^^^^^^^^
+
+
+Step-function: each month inherits the most-recent published quarterly value.
+
+When a quarterly series needs to align with a monthly target, macrocast holds the quarterly observation constant for all three months of the quarter (with a 1-quarter publication lag where appropriate). Conservative: no smoothing, no extrapolation.
+
+**When to use**
+
+Default for FRED-SD mixed-frequency studies.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``step_forward``, ``linear_interpolation``, ``chow_lin``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``step_forward``
+^^^^^^^^^^^^^^^^
+
+
+Step-function: each month inherits the next-published quarterly value.
+
+Use when later observations are informative for current state (rare in real-time work).
+
+**When to use**
+
+Hindsight-feasible studies (e.g., counterfactual nowcasts).
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``step_backward``, ``linear_interpolation``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``monthly_to_quarterly_rule``  (l2_a)
+------------------------------------------
+
+
+:Default: ``'quarterly_average'``
+:Sweepable: True
+
+``quarterly_average``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Aggregate to quarterly via mean of the three monthly observations.
+
+Standard NIPA aggregation for stocks / averages.
+
+Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_average`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Default. Stock variables (interest rates, prices, employment levels).
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``quarterly_endpoint``, ``quarterly_sum``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``quarterly_endpoint``
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+Aggregate via the end-of-quarter observation.
+
+Use for series that snap to a quarter-end (e.g., balance-sheet data).
+
+Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_endpoint`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+End-of-period stocks (M2 month-end, balance-sheet series).
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``quarterly_average``, ``quarterly_sum``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``quarterly_sum``
+^^^^^^^^^^^^^^^^^
+
+
+Aggregate via the sum of the three monthly observations.
+
+Standard for flow variables (production, sales, payroll growth).
+
+Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_sum`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Flow variables; cumulative-quantity series.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``quarterly_average``, ``quarterly_endpoint``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``transform_policy``  (l2_b)
+---------------------------------
+
+
+:Default: ``'apply_official_tcode'``
+:Sweepable: True
+
+``apply_official_tcode``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Apply McCracken-Ng's series-by-series stationarity transforms.
+
+Each FRED-MD/QD series ships with a transformation code (1-7) mapping to a stationarity transform. ``apply_official_tcode`` runs the canonical mapping per series:
+
+* 1 = level
+* 2 = first difference
+* 3 = second difference
+* 4 = log
+* 5 = first difference of log (≈ growth rate)
+* 6 = second difference of log
+* 7 = log diff of (1 + growth rate)
+
+Applied per-origin within walk-forward to avoid look-ahead.
+
+**When to use**
+
+Default for FRED-based studies. Canonical replication path.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
+
+**Related options**: ``no_transform``, ``custom_tcode``, ``transform_scope``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``no_transform``
+^^^^^^^^^^^^^^^^
+
+
+Skip transforms; pass raw levels through.
+
+Useful for tree-based / ranking models that don't need stationarity, or for studies that apply alternative transforms in L3 (Hodrick-Prescott filter, Hamilton (2018) detrender, etc.).
+
+**When to use**
+
+Tree / forest models; alternative-transform studies; custom panels with already-transformed data.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``apply_official_tcode``, ``custom_tcode``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``custom_tcode``
+^^^^^^^^^^^^^^^^
+
+
+User-supplied per-series t-code map.
+
+Requires ``leaf_config.custom_tcode_map: {series_name: int}``. Macrocast applies the same 1-7 mapping as ``apply_official_tcode`` but reads codes from the user's dict instead of the bundled FRED metadata. Useful for custom panels where the user wants the McCracken-Ng transform vocabulary.
+
+**When to use**
+
+Custom panels with user-defined stationarity codes.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``apply_official_tcode``, ``no_transform``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``transform_scope``  (l2_b)
+--------------------------------
+
+
+:Default: ``'derived'``
+:Sweepable: True
+
+``target_and_predictors``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Apply the rule to target and all predictors.
+
+Default scope: every series in the panel passes through the stage. Maintains consistency between target and predictors (e.g. both differenced, both winsorised).
+
+**When to use**
+
+Default; matches McCracken-Ng's convention.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``predictors_only``
+^^^^^^^^^^^^^^^^^^^
+
+
+Apply only to predictors; leave the target untouched.
+
+Used when the target's transform / cleaning policy is controlled separately (e.g. user already applied a tcode to the target via raw_panel).
+
+**When to use**
+
+When the target enters the pipeline already cleaned.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``target_only``
+^^^^^^^^^^^^^^^
+
+
+Apply only to the target.
+
+Rare scope; used when predictors are pre-engineered and do not need this stage (e.g. PCA scores are already stationary).
+
+**When to use**
+
+Pre-engineered predictor panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``not_applicable``
+^^^^^^^^^^^^^^^^^^
+
+
+Skip the stage entirely (gate inactive).
+
+Used when an upstream stage already produced the desired form. Equivalent in effect to selecting the no-op option on the primary axis.
+
+**When to use**
+
+Pipelines that bypass this stage by construction.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``outlier_policy``  (l2_c)
+-------------------------------
+
+
+:Default: ``'mccracken_ng_iqr'``
+:Sweepable: True
+
+``mccracken_ng_iqr``
+^^^^^^^^^^^^^^^^^^^^
+
+
+McCracken-Ng's published IQR-multiple outlier rule.
+
+Flags any observation more than ``leaf_config.outlier_iqr_threshold`` (default 10) IQRs from the per-series median. The 10×IQR threshold is the published McCracken-Ng default and matches their replication scripts.
+
+Pairs with an L2.C ``outlier_action`` to specify what happens to flagged observations (replace with NaN by default, then L2.D imputation fills them).
+
+**When to use**
+
+Default for FRED-based studies. Canonical replication path.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
+
+**Related options**: ``winsorize``, ``zscore_threshold``, ``none``, ``outlier_action``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``winsorize``
+^^^^^^^^^^^^^
+
+
+Cap observations at user-supplied quantile thresholds.
+
+Truncates each series at ``leaf_config.winsorize_lower_quantile`` (default 0.01) and ``leaf_config.winsorize_upper_quantile`` (default 0.99). Less aggressive than the McCracken-Ng IQR rule and preserves more of the tail.
+
+**When to use**
+
+Studies that want a bounded but non-NaN outlier handler; alternative-rule comparisons.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``mccracken_ng_iqr``, ``zscore_threshold``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``zscore_threshold``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Flag observations beyond a z-score threshold.
+
+Computes the rolling z-score per series and flags ``|z|`` > ``leaf_config.zscore_threshold_value`` (default 3.0). Simpler than IQR but assumes approximately Gaussian residuals.
+
+**When to use**
+
+Approximately-Gaussian series; quick sanity-check sweeps.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``mccracken_ng_iqr``, ``winsorize``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip outlier handling.
+
+Pass series through unchanged. Useful when L1 already cleaned outliers (``raw_outlier_policy``) or when the study wants to compare against a no-cleaning baseline.
+
+**When to use**
+
+Custom panels already cleaned upstream; no-cleaning ablations.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``mccracken_ng_iqr``, ``winsorize``, ``zscore_threshold``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``outlier_action``  (l2_c)
+-------------------------------
+
+
+:Default: ``'flag_as_nan'``
+:Sweepable: True
+
+``flag_as_nan``
+^^^^^^^^^^^^^^^
+
+
+Replace flagged outliers with NaN; let L2.D imputation fill them.
+
+Default for the McCracken-Ng pipeline. Outliers become missing values, then EM-factor imputation in L2.D recovers a smoothed value from the cross-series factor structure.
+
+**When to use**
+
+Default. Pairs with em_factor / em_multivariate imputation.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
+
+**Related options**: ``replace_with_median``, ``replace_with_cap_value``, ``keep_with_indicator``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``replace_with_median``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Replace flagged outliers with the per-series median.
+
+Simpler than imputation; useful when L2.D is set to ``none_propagate``.
+
+Configures the ``outlier_action`` axis on ``l2_c`` (layer ``l2``); the ``replace_with_median`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+
+**When to use**
+
+Studies that want a deterministic, no-imputation outlier handler.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``flag_as_nan``, ``replace_with_cap_value``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``replace_with_cap_value``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Replace outliers with the cap value (winsorize-style cap).
+
+Caps at the threshold rather than the median. Pairs with the winsorize / iqr policies.
+
+**When to use**
+
+Bounded-output studies; portfolios with hard limits on extreme values.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``flag_as_nan``, ``replace_with_median``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``outlier_scope``  (l2_c)
+------------------------------
+
+
+:Default: ``'derived'``
+:Sweepable: True
+
+``target_and_predictors``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Apply the rule to target and all predictors.
+
+Default scope: every series in the panel passes through the stage. Maintains consistency between target and predictors (e.g. both differenced, both winsorised).
+
+**When to use**
+
+Default; matches McCracken-Ng's convention.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``predictors_only``
+^^^^^^^^^^^^^^^^^^^
+
+
+Apply only to predictors; leave the target untouched.
+
+Used when the target's transform / cleaning policy is controlled separately (e.g. user already applied a tcode to the target via raw_panel).
+
+**When to use**
+
+When the target enters the pipeline already cleaned.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``target_only``
+^^^^^^^^^^^^^^^
+
+
+Apply only to the target.
+
+Rare scope; used when predictors are pre-engineered and do not need this stage (e.g. PCA scores are already stationary).
+
+**When to use**
+
+Pre-engineered predictor panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``not_applicable``
+^^^^^^^^^^^^^^^^^^
+
+
+Skip the stage entirely (gate inactive).
+
+Used when an upstream stage already produced the desired form. Equivalent in effect to selecting the no-op option on the primary axis.
+
+**When to use**
+
+Pipelines that bypass this stage by construction.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``imputation_policy``  (l2_d)
+----------------------------------
+
+
+:Default: ``'em_factor'``
+:Sweepable: True
+
+``em_factor``
+^^^^^^^^^^^^^
+
+
+EM-factor imputation (McCracken-Ng default).
+
+Iterative EM algorithm: alternates between (1) fitting a factor model to the currently-imputed panel and (2) imputing missing cells from the factor model's prediction. Converges to a low-rank fill consistent with the cross-series factor structure.
+
+Used per-origin under ``imputation_temporal_rule = expanding_window_per_origin`` so the imputation respects the walk-forward information set.
+
+**When to use**
+
+Default for FRED-MD/QD high-dimensional panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* Stock & Watson (2002) 'Macroeconomic Forecasting Using Diffusion Indexes', JBES 20(2).
+
+**Related options**: ``em_multivariate``, ``mean``, ``forward_fill``, ``linear_interpolation``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``em_multivariate``
+^^^^^^^^^^^^^^^^^^^
+
+
+Multivariate-Gaussian EM imputation.
+
+Models the full panel as multivariate Gaussian and imputes missing cells via Schur-complement conditioning. More flexible than ``em_factor`` (no rank cap) but more expensive on large panels (O(p²) per iteration).
+
+**When to use**
+
+Smaller panels (≤ 50 series) where the full covariance is tractable.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``em_factor``, ``mean``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``mean``
+^^^^^^^^
+
+
+Replace missing cells with the per-series rolling mean.
+
+Simple, fast, deterministic. No iteration. Useful when the missing pattern is sparse.
+
+**When to use**
+
+Sparse missingness; quick smoke tests.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``em_factor``, ``forward_fill``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``forward_fill``
+^^^^^^^^^^^^^^^^
+
+
+Carry the last observed value forward.
+
+Standard pandas ffill. Appropriate for series where the most recent observation is the best forecast of the missing value.
+
+**When to use**
+
+Slowly-moving series (interest rates, ratios); release-lag handling.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``linear_interpolation``, ``em_factor``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``linear_interpolation``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Linear interpolation between adjacent observations.
+
+Smooths over isolated missing observations. Not appropriate for leading / trailing missings.
+
+**When to use**
+
+Interior missing observations in well-behaved series.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series', RES 53(4).
+
+**Related options**: ``forward_fill``, ``em_factor``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``none_propagate``
+^^^^^^^^^^^^^^^^^^
+
+
+Pass NaN through; downstream layers handle it.
+
+Useful when the recipe wants L3 / L4 to see the missing pattern (e.g., for missingness-as-feature studies).
+
+**When to use**
+
+Studies that treat missingness as informative; or panels with no missings.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``em_factor``, ``mean``, ``forward_fill``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``imputation_temporal_rule``  (l2_d)
+-----------------------------------------
+
+
+:Default: ``'expanding_window_per_origin'``
+:Sweepable: True
+
+``expanding_window_per_origin``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Re-fit the imputation model on every expanding window.
+
+Default temporal_rule: at each OOS origin, the imputation model is fit on all data from the sample start through the origin date. Avoids look-ahead while ensuring the model has access to maximum data at each step.
+
+**When to use**
+
+Default; OOS-safe imputation. Selecting ``expanding_window_per_origin`` on ``l2.imputation_temporal_rule`` activates this branch of the layer's runtime.
+
+**When NOT to use**
+
+When per-origin re-fits are too expensive -- consider ``block_recompute``.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``rolling_window_per_origin``, ``block_recompute``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``rolling_window_per_origin``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Re-fit the imputation model on a fixed-length rolling window.
+
+Fits the imputation model on the most-recent ``params.window`` observations only. Useful when the underlying covariance structure is non-stationary and old data should not influence current imputations.
+
+**When to use**
+
+Non-stationary panels where covariance drifts.
+
+**When NOT to use**
+
+When the panel is stationary -- expanding window uses more information.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``expanding_window_per_origin``, ``block_recompute``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``block_recompute``
+^^^^^^^^^^^^^^^^^^^
+
+
+Re-fit the imputation model every N origins.
+
+Fits the imputation model once every ``leaf_config.imputation_recompute_interval`` origins; intermediate origins reuse the cached fit. Cheap approximation to ``expanding_window_per_origin``.
+
+**When to use**
+
+Long sweeps where per-origin re-fits are computationally infeasible.
+
+**When NOT to use**
+
+When precise OOS-safe imputation is critical.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``expanding_window_per_origin``, ``rolling_window_per_origin``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``imputation_scope``  (l2_d)
+---------------------------------
+
+
+:Default: ``'derived'``
+:Sweepable: True
+
+``target_and_predictors``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Apply the rule to target and all predictors.
+
+Default scope: every series in the panel passes through the stage. Maintains consistency between target and predictors (e.g. both differenced, both winsorised).
+
+**When to use**
+
+Default; matches McCracken-Ng's convention.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``predictors_only``
+^^^^^^^^^^^^^^^^^^^
+
+
+Apply only to predictors; leave the target untouched.
+
+Used when the target's transform / cleaning policy is controlled separately (e.g. user already applied a tcode to the target via raw_panel).
+
+**When to use**
+
+When the target enters the pipeline already cleaned.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``target_only``
+^^^^^^^^^^^^^^^
+
+
+Apply only to the target.
+
+Rare scope; used when predictors are pre-engineered and do not need this stage (e.g. PCA scores are already stationary).
+
+**When to use**
+
+Pre-engineered predictor panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``not_applicable``
+^^^^^^^^^^^^^^^^^^
+
+
+Skip the stage entirely (gate inactive).
+
+Used when an upstream stage already produced the desired form. Equivalent in effect to selecting the no-op option on the primary axis.
+
+**When to use**
+
+Pipelines that bypass this stage by construction.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``frame_edge_policy``  (l2_e)
+----------------------------------
+
+
+:Default: ``'truncate_to_balanced'``
+:Sweepable: True
+
+``truncate_to_balanced``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Trim leading / trailing rows until every series is observed.
+
+Makes the panel rectangular by removing rows where any predictor (or the target, depending on scope) is missing. Standard for factor-model-style studies that need a balanced panel.
+
+**When to use**
+
+Default for high-dimensional studies; pairs with em_factor imputation for the interior.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* Stock & Watson (2002) 'Macroeconomic Forecasting Using Diffusion Indexes', JBES 20(2).
+
+**Related options**: ``drop_unbalanced_series``, ``keep_unbalanced``, ``zero_fill_leading``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``drop_unbalanced_series``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Drop predictor columns that aren't observed across the full sample.
+
+Trades predictor count for sample length. Useful when the recipe wants to keep early observations and is willing to lose late-arrival series.
+
+**When to use**
+
+Long-history studies (1959-) where late-introduction series should be excluded.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``truncate_to_balanced``, ``keep_unbalanced``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``keep_unbalanced``
+^^^^^^^^^^^^^^^^^^^
+
+
+Keep the panel's natural unbalanced shape.
+
+Lets L4 estimators handle missingness directly. Required for some L4 families (LSTM/GRU/transformer) and for partial-data robustness studies.
+
+**When to use**
+
+Custom panels with intentional unbalanced structure; missing-data-robust models.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``truncate_to_balanced``, ``drop_unbalanced_series``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``zero_fill_leading``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Zero-fill leading missing predictor cells; preserve the rest.
+
+Useful when leading NaN values block early-sample fits but interior NaN should remain visible to imputation.
+
+**When to use**
+
+Studies that want the early sample but accept zero-fill on leading edges.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``truncate_to_balanced``, ``keep_unbalanced``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+axis ``frame_edge_scope``  (l2_e)
+---------------------------------
+
+
+:Default: ``'derived'``
+:Sweepable: True
+
+``target_and_predictors``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Apply the rule to target and all predictors.
+
+Default scope: every series in the panel passes through the stage. Maintains consistency between target and predictors (e.g. both differenced, both winsorised).
+
+**When to use**
+
+Default; matches McCracken-Ng's convention.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``predictors_only``
+^^^^^^^^^^^^^^^^^^^
+
+
+Apply only to predictors; leave the target untouched.
+
+Used when the target's transform / cleaning policy is controlled separately (e.g. user already applied a tcode to the target via raw_panel).
+
+**When to use**
+
+When the target enters the pipeline already cleaned.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``target_only``
+^^^^^^^^^^^^^^^
+
+
+Apply only to the target.
+
+Rare scope; used when predictors are pre-engineered and do not need this stage (e.g. PCA scores are already stationary).
+
+**When to use**
+
+Pre-engineered predictor panels.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.
+
+``not_applicable``
+^^^^^^^^^^^^^^^^^^
+
+
+Skip the stage entirely (gate inactive).
+
+Used when an upstream stage already produced the desired form. Equivalent in effect to selecting the no-op option on the primary axis.
+
+**When to use**
+
+Pipelines that bypass this stage by construction.
+
+**References**
+
+* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+
+**Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
+
+.. note:: Last reviewed 2026-05-04 by macrocast author.

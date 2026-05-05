@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macrocast.custom &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">macrocast.custom</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for macrocast.custom</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Runtime registries for user-defined macrocast extensions.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preprocessing.feature_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION</span><span class="p">,</span>
+    <span class="n">CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION</span><span class="p">,</span>
+    <span class="n">FeatureBlockCallable</span><span class="p">,</span>
+    <span class="n">FeatureBlockCallableResult</span><span class="p">,</span>
+    <span class="n">FeatureCombinerCallable</span><span class="p">,</span>
+    <span class="n">FeatureCombinerCallableResult</span><span class="p">,</span>
+    <span class="n">custom_feature_block_contract_metadata</span><span class="p">,</span>
+    <span class="n">custom_feature_combiner_contract_metadata</span><span class="p">,</span>
+    <span class="n">custom_final_z_selection_contract_metadata</span><span class="p">,</span>
+    <span class="n">validate_feature_block_callable_result</span><span class="p">,</span>
+    <span class="n">validate_feature_combiner_callable_result</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CUSTOM_MODEL_CONTRACT_VERSION</span> <span class="o">=</span> <span class="s2">&quot;custom_model_v1&quot;</span>
+<span class="n">CUSTOM_PREPROCESSOR_CONTRACT_VERSION</span> <span class="o">=</span> <span class="s2">&quot;custom_preprocessor_v1&quot;</span>
+<span class="n">TARGET_TRANSFORMER_CONTRACT_VERSION</span> <span class="o">=</span> <span class="s2">&quot;target_transformer_v1&quot;</span>
+
+<span class="n">CustomModelFunction</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]</span>
+<span class="n">CustomPreprocessorFunction</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]</span>
+<span class="n">TargetTransformerFactory</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">]</span>
+<span class="n">CustomFeatureBlockFunction</span> <span class="o">=</span> <span class="n">FeatureBlockCallable</span>
+<span class="n">CustomFeatureCombinerFunction</span> <span class="o">=</span> <span class="n">FeatureCombinerCallable</span>
+
+
+<div class="viewcode-block" id="CustomModelSpec">
+<a class="viewcode-back" href="../../source/api.html#macrocast.CustomModelSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomModelSpec</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomModelFunction</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="CustomPreprocessorSpec">
+<a class="viewcode-back" href="../../source/api.html#macrocast.CustomPreprocessorSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomPreprocessorSpec</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="TargetTransformerSpec">
+<a class="viewcode-back" href="../../source/api.html#macrocast.TargetTransformerSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TargetTransformerSpec</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">factory</span><span class="p">:</span> <span class="n">TargetTransformerFactory</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;transformed&quot;</span>
+    <span class="n">forecast_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span>
+    <span class="n">evaluation_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="CustomFeatureBlockSpec">
+<a class="viewcode-back" href="../../source/api.html#macrocast.CustomFeatureBlockSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomFeatureBlockSpec</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span>
+    <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="CustomFeatureCombinerSpec">
+<a class="viewcode-back" href="../../source/api.html#macrocast.CustomFeatureCombinerSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomFeatureCombinerSpec</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="n">_CUSTOM_MODELS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CustomModelSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CustomPreprocessorSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_TARGET_TRANSFORMERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetTransformerSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">CustomFeatureBlockSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CustomFeatureCombinerSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="custom_model_contract_metadata">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_model_contract_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_model_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">required_context_fields</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;contract_version&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;feature_names&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;feature_runtime_builder&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;block_order&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;block_roles&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alignment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;leakage_contract&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;mode&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">optional_context_fields</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;legacy_feature_builder&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;feature_dispatch_source&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;auxiliary_payloads&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;train_index&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;target_train_index&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;forecast_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;forecast_object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recursive_step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;raw_panel_iterated_step&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;x_path_policy&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;x_source_date&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scheduled_known_future_x_columns&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recursive_x_model_family&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recursive_x_model_fallback_columns&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;raw_panel_iterated_runtime_contract&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;raw_panel_iterated_payload_contract&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">CUSTOM_MODEL_CONTRACT_VERSION</span><span class="p">,</span>
+        <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;callable&quot;</span><span class="p">:</span> <span class="s2">&quot;fn(X_train, y_train, X_test, context) -&gt; scalar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;input_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;X_train&quot;</span><span class="p">:</span> <span class="s2">&quot;n_train x n_features&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;y_train&quot;</span><span class="p">:</span> <span class="s2">&quot;n_train&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;X_test&quot;</span><span class="p">:</span> <span class="s2">&quot;1 x n_features&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;return_shape&quot;</span><span class="p">:</span> <span class="s2">&quot;scalar or one-element array/sequence&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;required_context_fields&quot;</span><span class="p">:</span> <span class="n">required_context_fields</span><span class="p">,</span>
+        <span class="s2">&quot;optional_context_fields&quot;</span><span class="p">:</span> <span class="n">optional_context_fields</span><span class="p">,</span>
+        <span class="s2">&quot;context_fields&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">required_context_fields</span> <span class="o">+</span> <span class="n">optional_context_fields</span><span class="p">)),</span>
+        <span class="s2">&quot;auxiliary_payload_contracts&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;fred_sd_native_frequency_block_payload_v1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fred_sd_mixed_frequency_model_adapter_v1&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;auxiliary_payload_conditions&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;fred_sd_native_frequency_block_payload_v1&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;context_key&quot;</span><span class="p">:</span> <span class="s2">&quot;auxiliary_payloads.fred_sd_native_frequency_block_payload&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;present_when&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;dataset includes fred_sd and &quot;</span>
+                    <span class="s2">&quot;fred_sd_mixed_frequency_representation is &quot;</span>
+                    <span class="s2">&quot;native_frequency_block_payload or mixed_frequency_model_adapter&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;contains&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;contract_version&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;blocks&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;block_order&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;column_to_native_frequency&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;fred_sd_mixed_frequency_model_adapter_v1&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;context_key&quot;</span><span class="p">:</span> <span class="s2">&quot;auxiliary_payloads.fred_sd_mixed_frequency_model_adapter&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;present_when&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;dataset includes fred_sd and &quot;</span>
+                    <span class="s2">&quot;fred_sd_mixed_frequency_representation is mixed_frequency_model_adapter&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;contains&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;contract_version&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;adapter_kind&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;block_payload_contract&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;requires_registered_custom_model&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;accepted_return&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;scalar&quot;</span><span class="p">:</span> <span class="s2">&quot;single forecast value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;one_element_array&quot;</span><span class="p">:</span> <span class="s2">&quot;array or sequence with exactly one forecast value&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;leakage_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;consume only Layer 2 train/pred matrices supplied by runtime&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;routing_notes&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;registered custom model names are accepted as model_family values &quot;</span>
+            <span class="s2">&quot;in the current Python process&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;YAML recipes can select the registered name, but they do not import &quot;</span>
+            <span class="s2">&quot;or register Python callables by themselves&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;custom models should not read future rows, full-sample statistics, &quot;</span>
+            <span class="s2">&quot;or source panels outside the supplied train/pred payload&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="custom_preprocessor_contract_metadata">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_preprocessor_contract_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_preprocessor_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">CUSTOM_PREPROCESSOR_CONTRACT_VERSION</span><span class="p">,</span>
+        <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;callable&quot;</span><span class="p">:</span> <span class="s2">&quot;fn(X_train, y_train, X_test, context) -&gt; (X_train, X_test)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="s2">&quot;matrix post-processing after Layer 2 representation construction&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;target_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;y_train is read-only; target-scale transforms use target_transformer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;context_fields&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;feature_names&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;feature_builder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;feature_runtime_builder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;legacy_feature_builder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;feature_dispatch_source&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;block_order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;block_roles&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;alignment&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;leakage_contract&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="target_transformer_contract_metadata">
+<a class="viewcode-back" href="../../source/api.html#macrocast.target_transformer_contract_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_transformer_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">TARGET_TRANSFORMER_CONTRACT_VERSION</span><span class="p">,</span>
+        <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;callable&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;fit(target_train, context); transform(target, context); &quot;</span>
+            <span class="s2">&quot;inverse_transform_prediction(target_pred, context)&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;scale_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;final forecasts and evaluation metrics must be on raw target scale&quot;</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="custom_method_extension_contracts">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_method_extension_contracts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_method_extension_contracts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;layer2_feature_block&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION</span><span class="p">,</span>
+            <span class="s2">&quot;temporal&quot;</span><span class="p">:</span> <span class="n">custom_feature_block_contract_metadata</span><span class="p">(</span><span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="n">custom_feature_block_contract_metadata</span><span class="p">(</span><span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;rotation&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;factor&quot;</span><span class="p">:</span> <span class="n">custom_feature_block_contract_metadata</span><span class="p">(</span><span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;factor&quot;</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;layer2_feature_combiner&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION</span><span class="p">,</span>
+            <span class="s2">&quot;contract&quot;</span><span class="p">:</span> <span class="n">custom_feature_combiner_contract_metadata</span><span class="p">(),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;layer2_final_z_selection&quot;</span><span class="p">:</span> <span class="n">custom_final_z_selection_contract_metadata</span><span class="p">(),</span>
+        <span class="s2">&quot;layer2_matrix_preprocessor&quot;</span><span class="p">:</span> <span class="n">custom_preprocessor_contract_metadata</span><span class="p">(),</span>
+        <span class="s2">&quot;layer2_target_transformer&quot;</span><span class="p">:</span> <span class="n">target_transformer_contract_metadata</span><span class="p">(),</span>
+        <span class="s2">&quot;layer3_model&quot;</span><span class="p">:</span> <span class="n">custom_model_contract_metadata</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> name must be non-empty&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> name must not start with &#39;_&#39;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<div class="viewcode-block" id="register_model">
+<a class="viewcode-back" href="../../source/api.html#macrocast.register_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomModelFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a user-defined model function.</span>
+
+<span class="sd">    The function contract is:</span>
+
+<span class="sd">    ``fn(X_train, y_train, X_test, context) -&gt; prediction``</span>
+
+<span class="sd">    ``X_test`` is currently one row. The return value may be a scalar or a</span>
+<span class="sd">    one-element sequence/array. Registered names are accepted as</span>
+<span class="sd">    ``model_family`` values by the compiler in the current Python process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_name</span> <span class="o">=</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decorator</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">CustomModelFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomModelFunction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;custom model function must be callable&quot;</span><span class="p">)</span>
+        <span class="n">_CUSTOM_MODELS</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomModelSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_decorator</span></div>
+
+
+
+<div class="viewcode-block" id="custom_model">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_model</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomModelFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_model`.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">register_model</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="register_preprocessor">
+<a class="viewcode-back" href="../../source/api.html#macrocast.register_preprocessor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_preprocessor</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a user-defined matrix preprocessor.</span>
+
+<span class="sd">    The function contract is:</span>
+
+<span class="sd">    ``fn(X_train, y_train, X_test, context) -&gt; (X_train, X_test)``</span>
+
+<span class="sd">    ``y_train`` is provided as context for target-aware feature preprocessing,</span>
+<span class="sd">    but the training target itself is not transformed in the MVP API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">preprocessor_name</span> <span class="o">=</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;preprocessor&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decorator</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomPreprocessorFunction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;custom preprocessor function must be callable&quot;</span><span class="p">)</span>
+        <span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">[</span><span class="n">preprocessor_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomPreprocessorSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">preprocessor_name</span><span class="p">,</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_decorator</span></div>
+
+
+
+<div class="viewcode-block" id="custom_preprocessor">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_preprocessor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_preprocessor`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">register_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_transformer_factory</span><span class="p">(</span><span class="n">transformer</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetTransformerFactory</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">transformer</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">transformer</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">transformer</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">transformer</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">method</span>
+            <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;transform&quot;</span><span class="p">,</span> <span class="s2">&quot;inverse_transform_prediction&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">transformer</span>
+        <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">transformer</span>
+    <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">transformer</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_target_transformer_instance</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">method</span>
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;transform&quot;</span><span class="p">,</span> <span class="s2">&quot;inverse_transform_prediction&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;target transformer </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must provide callable methods: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="register_target_transformer">
+<a class="viewcode-back" href="../../source/api.html#macrocast.register_target_transformer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_target_transformer</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">transformer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a user-defined target transformer protocol.</span>
+
+<span class="sd">    MVP registration records the contract but execution is intentionally not</span>
+<span class="sd">    wired yet. The transformer instance must provide:</span>
+
+<span class="sd">    ``fit(target_train, context)``</span>
+<span class="sd">    ``transform(target, context)``</span>
+<span class="sd">    ``inverse_transform_prediction(target_pred, context)``</span>
+
+<span class="sd">    Target transformer execution must return final forecasts and metrics on</span>
+<span class="sd">    the raw target scale.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">transformer_name</span> <span class="o">=</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;target transformer&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decorator</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">factory</span> <span class="o">=</span> <span class="n">_target_transformer_factory</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">_validate_target_transformer_instance</span><span class="p">(</span><span class="n">factory</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">transformer_name</span><span class="p">)</span>
+        <span class="n">_TARGET_TRANSFORMERS</span><span class="p">[</span><span class="n">transformer_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">TargetTransformerSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">transformer_name</span><span class="p">,</span>
+            <span class="n">factory</span><span class="o">=</span><span class="n">factory</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">if</span> <span class="n">transformer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_decorator</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_decorator</span></div>
+
+
+
+<div class="viewcode-block" id="target_transformer">
+<a class="viewcode-back" href="../../source/api.html#macrocast.target_transformer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_target_transformer`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">register_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">block_kind</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;temporal&quot;</span><span class="p">,</span> <span class="s2">&quot;rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;factor&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;custom feature block kind must be one of: temporal, rotation, factor&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kind</span>
+
+
+<div class="viewcode-block" id="register_feature_block">
+<a class="viewcode-back" href="../../source/api.html#macrocast.register_feature_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_feature_block</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;temporal&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a user-defined Layer 2 feature-block callable.</span>
+
+<span class="sd">    The callable receives a :class:`FeatureBlockCallableContext` and must return</span>
+<span class="sd">    a :class:`FeatureBlockCallableResult`. Runtime validates stable names and</span>
+<span class="sd">    leakage metadata before appending the returned train/pred feature frames.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">block_name</span> <span class="o">=</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;feature block&quot;</span><span class="p">)</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decorator</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureBlockFunction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;custom feature block function must be callable&quot;</span><span class="p">)</span>
+        <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">[(</span><span class="n">kind</span><span class="p">,</span> <span class="n">block_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">CustomFeatureBlockSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">,</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span>
+            <span class="n">block_kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_decorator</span></div>
+
+
+
+<div class="viewcode-block" id="custom_feature_block">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_feature_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_feature_block`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">register_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="register_feature_combiner">
+<a class="viewcode-back" href="../../source/api.html#macrocast.register_feature_combiner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_feature_combiner</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a user-defined Layer 2 feature-block combiner.</span>
+
+<span class="sd">    The callable receives a :class:`FeatureCombinerCallableContext` and must</span>
+<span class="sd">    return a :class:`FeatureCombinerCallableResult`. Runtime validates the</span>
+<span class="sd">    final train/pred matrices, stable feature names, and leakage metadata</span>
+<span class="sd">    before handing the resulting ``Z`` to Layer 3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">combiner_name</span> <span class="o">=</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;feature combiner&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decorator</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureCombinerFunction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;custom feature combiner function must be callable&quot;</span><span class="p">)</span>
+        <span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">[</span><span class="n">combiner_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomFeatureCombinerSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">combiner_name</span><span class="p">,</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_decorator</span></div>
+
+
+
+<div class="viewcode-block" id="custom_feature_combiner">
+<a class="viewcode-back" href="../../source/api.html#macrocast.custom_feature_combiner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_feature_combiner`.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">register_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_custom_feature_block">
+<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_feature_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">block_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">block_kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">),</span> <span class="n">block_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">registered_name</span> <span class="o">==</span> <span class="n">block_name</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">registered_name</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_custom_feature_block">
+<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_feature_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureBlockSpec</span><span class="p">:</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">[(</span><span class="n">kind</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> feature block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not registered&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
+<div class="viewcode-block" id="list_custom_feature_blocks">
+<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_feature_blocks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_custom_feature_blocks</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">block_kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">))</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="p">(</span><span class="n">registered_kind</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span> <span class="k">if</span> <span class="n">registered_kind</span> <span class="o">==</span> <span class="n">kind</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="validate_custom_feature_block_result">
+<a class="viewcode-back" href="../../source/api.html#macrocast.validate_custom_feature_block_result">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_custom_feature_block_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">FeatureBlockCallableResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">validate_feature_block_callable_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_custom_feature_combiner">
+<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_feature_combiner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_COMBINERS</span></div>
+
+
+
+<div class="viewcode-block" id="get_custom_feature_combiner">
+<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_feature_combiner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureCombinerSpec</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom feature combiner </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not registered&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
+<div class="viewcode-block" id="list_custom_feature_combiners">
+<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_feature_combiners">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_custom_feature_combiners</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="validate_custom_feature_combiner_result">
+<a class="viewcode-back" href="../../source/api.html#macrocast.validate_custom_feature_combiner_result">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_custom_feature_combiner_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">FeatureCombinerCallableResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">validate_feature_combiner_callable_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_custom_model">
+<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_MODELS</span></div>
+
+
+
+<div class="viewcode-block" id="get_custom_model">
+<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomModelSpec</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_CUSTOM_MODELS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom model </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not registered&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
+<div class="viewcode-block" id="list_custom_models">
+<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_custom_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_MODELS</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="is_custom_preprocessor">
+<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_preprocessor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_PREPROCESSORS</span></div>
+
+
+
+<div class="viewcode-block" id="get_custom_preprocessor">
+<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_preprocessor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomPreprocessorSpec</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom preprocessor </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not registered&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
+<div class="viewcode-block" id="list_custom_preprocessors">
+<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_preprocessors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_custom_preprocessors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="is_custom_target_transformer">
+<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_target_transformer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_custom_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_TARGET_TRANSFORMERS</span></div>
+
+
+
+<div class="viewcode-block" id="get_custom_target_transformer">
+<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_target_transformer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_custom_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetTransformerSpec</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_TARGET_TRANSFORMERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target transformer </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not registered&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
+<div class="viewcode-block" id="list_custom_target_transformers">
+<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_target_transformers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_custom_target_transformers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_TARGET_TRANSFORMERS</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_models">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom model registry.</span>
+
+<span class="sd">    Intended for tests and interactive cleanup.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_CUSTOM_MODELS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_preprocessors">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_preprocessors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_preprocessors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom preprocessor registry.&quot;&quot;&quot;</span>
+    <span class="n">_CUSTOM_PREPROCESSORS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_target_transformers">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_target_transformers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_target_transformers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom target transformer registry.&quot;&quot;&quot;</span>
+    <span class="n">_TARGET_TRANSFORMERS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_feature_blocks">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_feature_blocks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_feature_blocks</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom feature block registry.&quot;&quot;&quot;</span>
+    <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_feature_combiners">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_feature_combiners">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_feature_combiners</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom feature combiner registry.&quot;&quot;&quot;</span>
+    <span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="clear_custom_extensions">
+<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_extensions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_extensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear all runtime extension registries.&quot;&quot;&quot;</span>
+    <span class="n">clear_custom_models</span><span class="p">()</span>
+    <span class="n">clear_custom_preprocessors</span><span class="p">()</span>
+    <span class="n">clear_custom_target_transformers</span><span class="p">()</span>
+    <span class="n">clear_custom_feature_blocks</span><span class="p">()</span>
+    <span class="n">clear_custom_feature_combiners</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

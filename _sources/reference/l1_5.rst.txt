@@ -1,0 +1,1164 @@
+L1.5  --  Data summary
+======================
+
+
+:Layer ID: ``l1_5``
+:Category: ``diagnostic``
+:Sub-layers: L1_5_A_sample_coverage, L1_5_B_univariate_summary, L1_5_C_stationarity_tests, L1_5_D_missing_outlier_audit, L1_5_E_correlation_pre_cleaning, L1_5_Z_export
+
+axis ``coverage_view``  (L1_5_A_sample_coverage)
+------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``multi``
+^^^^^^^^^
+
+
+Render every coverage view in a single composite output.
+
+Composite view containing ``observation_count`` + ``per_series_start_end`` + ``panel_balance_matrix`` in one HTML / PDF report. Recommended default for exploratory data review.
+
+**When to use**
+
+First-pass exploratory data review covering all three coverage angles.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``observation_count``, ``per_series_start_end``, ``panel_balance_matrix``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``observation_count``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Per-series observation count vs sample length.
+
+Bar chart of ``n_obs`` per series over the active sample window. Highlights series that may be too short for the L4 estimator -- a Lasso fit needs roughly n_obs > 2 × n_predictors, and short series violate that constraint silently.
+
+**When to use**
+
+First-pass sanity check that no predictor is mostly missing.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_series_start_end``, ``panel_balance_matrix``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``panel_balance_matrix``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Binary observed/missing matrix over the full sample.
+
+Heatmap with rows = series, columns = dates, cells = 1 (observed) or 0 (missing). Reveals structural breaks in coverage -- e.g. a block of series that all start in 1990, or a block that disappears after 2008. The ragged-edge pattern is best understood here before L1.E's sample-window rule trims the panel.
+
+**When to use**
+
+Visualising ragged-edge problems before applying L1.E sample-window rules.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_series_start_end``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_series_start_end``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+First / last observation date per series.
+
+Table of per-series ``(first_valid_date, last_valid_date)``. Catches stale series that stopped publishing (last date too old) or new series with too short a history (first date too recent). Critical before applying the L1.E sample-window rule.
+
+**When to use**
+
+Diagnosing balanced-vs-unbalanced panel decisions in L1.E.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``observation_count``, ``panel_balance_matrix``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``summary_metrics``  (L1_5_B_univariate_summary)
+-----------------------------------------------------
+
+
+:Default: ``['mean', 'sd', 'min', 'max', 'n_missing']``
+:Sweepable: False
+
+``kurtosis``
+^^^^^^^^^^^^
+
+
+Sample excess kurtosis per series (fourth standardised moment, normal = 0).
+
+Adds ``kurtosis`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Heavy-tail diagnostic; large values motivate winsorisation at L2.C or robust losses at L5.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``mean``, ``sd``, ``min``, ``max``, ``skew``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``max``
+^^^^^^^
+
+
+Sample maximum per series.
+
+Adds ``max`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Detecting outlier records prior to L2.C handling; suspicious upper bounds.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``mean``, ``sd``, ``min``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``mean``
+^^^^^^^^
+
+
+Sample mean per series.
+
+Adds ``mean`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+First-moment summary for level series; cross-series comparison of central tendency.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``sd``, ``min``, ``max``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``min``
+^^^^^^^
+
+
+Sample minimum per series.
+
+Adds ``min`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Detecting clipping artifacts (e.g. a 0 sentinel) or suspicious lower bounds.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``mean``, ``sd``, ``max``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``n_missing``
+^^^^^^^^^^^^^
+
+
+Count of NaN entries per series.
+
+Adds ``n_missing`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Quantifying imputation load before L2.D runs; high counts may justify dropping the series.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``mean``, ``sd``, ``min``, ``max``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``n_obs``
+^^^^^^^^^
+
+
+Number of non-NaN observations per series.
+
+Adds ``n_obs`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Pair with ``n_missing`` to spot heavily-missing predictors that L2.D will need to impute.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_missing``, ``mean``, ``sd``, ``min``, ``max``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``sd``
+^^^^^^
+
+
+Sample standard deviation per series.
+
+Adds ``sd`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Second-moment scale; informs whether L3 ``scale`` standardisation is necessary.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``mean``, ``min``, ``max``, ``skew``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``skew``
+^^^^^^^^
+
+
+Sample skewness per series (third standardised moment).
+
+Adds ``skew`` to the per-series summary table emitted by L1.5.B. ``summary_metrics`` is a multi-select axis -- listing several metrics produces a wide-form table with one row per series and one column per chosen metric.
+
+**When to use**
+
+Identifying asymmetric distributions that may justify a log transform at L2.B.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``n_obs``, ``n_missing``, ``mean``, ``sd``, ``min``, ``max``, ``kurtosis``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``summary_split``  (L1_5_B_univariate_summary)
+---------------------------------------------------
+
+
+:Default: ``'full_sample'``
+:Sweepable: False
+
+``full_sample``
+^^^^^^^^^^^^^^^
+
+
+Compute summary metrics over the entire sample.
+
+Splits the L1.5.B summary table along ``full_sample``. Multi-select supported -- choosing two splits stacks the resulting tables vertically with the split label as a leading column.
+
+**When to use**
+
+Default; baseline distributional view across all observations.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_decade``, ``per_regime``, ``pre_oos_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_decade``
+^^^^^^^^^^^^^^
+
+
+Compute summary metrics on each calendar decade (1980s / 1990s / ...).
+
+Splits the L1.5.B summary table along ``per_decade``. Multi-select supported -- choosing two splits stacks the resulting tables vertically with the split label as a leading column.
+
+**When to use**
+
+Detecting structural shifts in volatility or central tendency over multi-decade samples.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_sample``, ``per_regime``, ``pre_oos_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_regime``
+^^^^^^^^^^^^^^
+
+
+Compute summary metrics on each L1.G regime slice.
+
+Splits the L1.5.B summary table along ``per_regime``. Multi-select supported -- choosing two splits stacks the resulting tables vertically with the split label as a leading column.
+
+**When to use**
+
+Regime-conditional descriptive statistics; requires non-pooled L1.G regime configuration.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_sample``, ``per_decade``, ``pre_oos_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pre_oos_only``
+^^^^^^^^^^^^^^^^
+
+
+Restrict summaries to the pre-OOS training window.
+
+Splits the L1.5.B summary table along ``pre_oos_only``. Multi-select supported -- choosing two splits stacks the resulting tables vertically with the split label as a leading column.
+
+**When to use**
+
+Avoiding look-ahead in summaries used to motivate L2 / L3 hyperparameter choices.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_sample``, ``per_decade``, ``per_regime``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``stationarity_test``  (L1_5_C_stationarity_tests)
+-------------------------------------------------------
+
+
+:Default: ``'none'``
+:Sweepable: False
+
+``adf``
+^^^^^^^
+
+
+Augmented Dickey-Fuller (Said-Dickey 1984) unit-root test.
+
+Standard unit-root test based on the autoregressive specification ``Δy_t = α + β t + γ y_{t-1} + Σ δ_j Δy_{t-j} + ε_t``. Null hypothesis: ``γ = 0`` (unit root). Lag length auto-selected by BIC. statsmodels ``adfuller`` backend; emits per-series test statistic, lag, and MacKinnon (1996) p-value.
+
+**When to use**
+
+Default unit-root test; lowest power but widely cited.
+
+**When NOT to use**
+
+Series with strong autocorrelation in residuals -- ADF over-rejects; pair with PP or KPSS for triangulation.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Said & Dickey (1984) 'Testing for unit roots in autoregressive-moving average models of unknown order', Biometrika 71(3): 599-607.
+
+**Related options**: ``kpss``, ``pp``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``kpss``
+^^^^^^^^
+
+
+Kwiatkowski-Phillips-Schmidt-Shin (1992) stationarity test.
+
+Complementary to ADF: null hypothesis is *stationarity* (reject = unit root). Useful for breaking ties when ADF and KPSS disagree -- the variable's stationarity status is then ambiguous and probably benefits from a transformation. statsmodels ``kpss`` backend.
+
+**When to use**
+
+Triangulating ADF results; running both is the gold-standard pre-cleaning audit.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Kwiatkowski, Phillips, Schmidt & Shin (1992) 'Testing the null hypothesis of stationarity against the alternative of a unit root', JoE 54(1-3): 159-178.
+
+**Related options**: ``adf``, ``pp``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Run ADF + KPSS + PP and stack the results into one table.
+
+Triangulated stationarity verdict for every series. When all three reject (ADF, PP) / fail to reject (KPSS) the same direction, you have a clean stationarity verdict; conflicting results flag series for closer inspection.
+
+**When to use**
+
+Recommended default; gold-standard pre-cleaning audit.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``adf``, ``kpss``, ``pp``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip stationarity tests entirely.
+
+Useful when the panel is known stationary by construction (returns, log-changes, growth rates) and the test overhead provides no information.
+
+**When to use**
+
+Already-stationary panels (returns / log-changes); CI smoke runs.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``adf``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pp``
+^^^^^^
+
+
+Phillips-Perron (1988) unit-root test with native MacKinnon p-values.
+
+Like ADF but corrects for serial correlation and heteroscedasticity in the residuals via a non-parametric Newey-West HAC adjustment rather than ADF's parametric lag augmentation. v0.25 ships a native macrocast implementation -- no ``arch`` dependency required.
+
+**When to use**
+
+ADF alternative when residual autocorrelation is suspected.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Phillips & Perron (1988) 'Testing for a unit root in time series regression', Biometrika 75(2): 335-346.
+
+**Related options**: ``adf``, ``kpss``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``stationarity_test_scope``  (L1_5_C_stationarity_tests)
+-------------------------------------------------------------
+
+
+:Default: ``'target_and_predictors'``
+:Sweepable: False
+
+``predictors_only``
+^^^^^^^^^^^^^^^^^^^
+
+
+Run stationarity tests on predictor columns only.
+
+Restricts L1.5.C tests to the ``predictors_only`` column subset.
+
+This option configures the ``stationarity_test_scope`` axis on the ``L1_5_C_stationarity_tests`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/`` alongside the other selected views.
+
+**When to use**
+
+When the target is known stationary (growth rates, returns) and only the predictors are uncertain.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``target_only``, ``target_and_predictors``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``target_and_predictors``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Run stationarity tests on every column.
+
+Restricts L1.5.C tests to the ``target_and_predictors`` column subset.
+
+This option configures the ``stationarity_test_scope`` axis on the ``L1_5_C_stationarity_tests`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/`` alongside the other selected views.
+
+**When to use**
+
+Default; comprehensive audit that catches surprises in either target or predictors.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``predictors_only``, ``target_only``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``target_only``
+^^^^^^^^^^^^^^^
+
+
+Run stationarity tests on the target column only.
+
+Restricts L1.5.C tests to the ``target_only`` column subset.
+
+This option configures the ``stationarity_test_scope`` axis on the ``L1_5_C_stationarity_tests`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/`` alongside the other selected views.
+
+**When to use**
+
+Confirming the L2-applied tcode rendered the target stationary.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``predictors_only``, ``target_and_predictors``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``missing_view``  (L1_5_D_missing_outlier_audit)
+-----------------------------------------------------
+
+
+:Default: ``'multi'``
+:Sweepable: False
+
+``heatmap``
+^^^^^^^^^^^
+
+
+Visualisation of missing pattern over time.
+
+L1.5.D missing-data visualisation ``heatmap``.
+
+This option configures the ``missing_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Detecting block-missingness (e.g. all 1980s missing) vs scattered NaNs that influences the choice of imputation method.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_series_count``, ``longest_gap``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``longest_gap``
+^^^^^^^^^^^^^^^
+
+
+Maximum consecutive-missing run per series.
+
+L1.5.D missing-data visualisation ``longest_gap``.
+
+This option configures the ``missing_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Critical for forward-fill imputation -- long runs distort the imputed values; values > 12 (monthly) typically rule out forward-fill.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_series_count``, ``heatmap``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Produce all three missingness views.
+
+L1.5.D missing-data visualisation ``multi``.
+
+This option configures the ``missing_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Comprehensive missingness audit; recommended default for first-time runs.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``per_series_count``, ``heatmap``, ``longest_gap``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``per_series_count``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Bar chart of NaN count per series.
+
+L1.5.D missing-data visualisation ``per_series_count``.
+
+This option configures the ``missing_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Quick view of where L2.D imputation will work hardest; outliers in this chart flag candidates for dropping.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``heatmap``, ``longest_gap``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``outlier_view``  (L1_5_D_missing_outlier_audit)
+-----------------------------------------------------
+
+
+:Default: ``'iqr_flag'``
+:Sweepable: False
+
+``iqr_flag``
+^^^^^^^^^^^^
+
+
+IQR-rule outlier flag per series (Tukey 1977).
+
+L1.5.D outlier visualisation ``iqr_flag``.
+
+This option configures the ``outlier_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Robust to non-Gaussian distributions; flags values outside ``[Q1 - 1.5·IQR, Q3 + 1.5·IQR]``.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
+
+**Related options**: ``zscore_flag``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+Produce both IQR and z-score outlier flags.
+
+L1.5.D outlier visualisation ``multi``.
+
+This option configures the ``outlier_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Cross-checking outlier counts across criteria; agreement strengthens the flag.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``iqr_flag``, ``zscore_flag``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip outlier flagging.
+
+L1.5.D outlier visualisation ``none``.
+
+This option configures the ``outlier_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Pre-cleaned panels where L2.C will not run; reducing diagnostic surface.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``iqr_flag``, ``zscore_flag``, ``multi``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``zscore_flag``
+^^^^^^^^^^^^^^^
+
+
+``|z-score|`` > 3 outlier flag per series.
+
+L1.5.D outlier visualisation ``zscore_flag``.
+
+This option configures the ``outlier_view`` axis on the ``L1_5_D_missing_outlier_audit`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/`` alongside the other selected views.
+
+**When to use**
+
+Cheaper than IQR; assumes approximate normality. The 3σ threshold maps to ~0.3% tail probability under normality.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``iqr_flag``, ``multi``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``correlation_method``  (L1_5_E_correlation_pre_cleaning)
+--------------------------------------------------------------
+
+
+:Default: ``'pearson'``
+:Sweepable: False
+
+``kendall``
+^^^^^^^^^^^
+
+
+Kendall tau rank correlation.
+
+L1.5.E correlation method ``kendall``.
+
+This option configures the ``correlation_method`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Conservative rank measure; smaller variance than Spearman in small samples (n < 30).
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``pearson``, ``spearman``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pearson``
+^^^^^^^^^^^
+
+
+Pearson product-moment correlation -- linear association measure.
+
+L1.5.E correlation method ``pearson``.
+
+This option configures the ``correlation_method`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Default; assumes approximate normality of pairs and linear association.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``spearman``, ``kendall``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``spearman``
+^^^^^^^^^^^^
+
+
+Spearman rank correlation -- monotonic-association measure.
+
+L1.5.E correlation method ``spearman``.
+
+This option configures the ``correlation_method`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Robust to outliers and non-normal marginals; preferred when pairs have heavy tails.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``pearson``, ``kendall``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``correlation_view``  (L1_5_E_correlation_pre_cleaning)
+------------------------------------------------------------
+
+
+:Default: ``'none'``
+:Sweepable: False
+
+``clustered_heatmap``
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Clustered heatmap with hierarchical reorder of rows and columns.
+
+L1.5.E correlation visualisation ``clustered_heatmap``.
+
+This option configures the ``correlation_view`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Large panels where cluster structure aids reading; reveals correlated variable blocks.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_matrix``, ``top_k_per_target``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``full_matrix``
+^^^^^^^^^^^^^^^
+
+
+Full N×N correlation matrix as a heatmap.
+
+L1.5.E correlation visualisation ``full_matrix``.
+
+This option configures the ``correlation_view`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Small panels (N < 50) where every pairwise correlation fits on one figure.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``clustered_heatmap``, ``top_k_per_target``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``none``
+^^^^^^^^
+
+
+Skip correlation diagnostics entirely.
+
+L1.5.E correlation visualisation ``none``.
+
+This option configures the ``correlation_view`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Already covered by upstream EDA; reducing diagnostic surface.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_matrix``, ``clustered_heatmap``, ``top_k_per_target``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``top_k_per_target``
+^^^^^^^^^^^^^^^^^^^^
+
+
+Top-k highest-``|ρ|`` predictors per target.
+
+L1.5.E correlation visualisation ``top_k_per_target``.
+
+This option configures the ``correlation_view`` axis on the ``L1_5_E_correlation_pre_cleaning`` sub-layer of L1.5; output is emitted under ``manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/`` alongside the other selected views.
+
+**When to use**
+
+Quickly identifying the most-correlated predictors when N is too large for a full matrix.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``full_matrix``, ``clustered_heatmap``, ``none``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``diagnostic_format``  (L1_5_Z_export)
+-------------------------------------------
+
+
+:Default: ``'pdf'``
+:Sweepable: False
+
+``csv``
+^^^^^^^
+
+
+L1.5 export -- plain csv table -- one row per series / metric.
+
+Tabular diagnostic outputs (per-series summaries, test p-values, coverage tables) are emitted as comma-separated rows. The fastest path into pandas / R / Excel for ad-hoc analysis.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Quickest path to spreadsheet / pandas; collaborators who avoid JSON.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``html``
+^^^^^^^^
+
+
+L1.5 export -- single-file html report with embedded plots and tables.
+
+Renders a self-contained HTML document combining tables (via pandas ``to_html``) and base64-embedded matplotlib figures. Opens in any browser without server-side support; ideal for sharing with stakeholders who lack the codebase.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Sharing diagnostics with collaborators who do not have the repo checked out.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``json``
+^^^^^^^^
+
+
+L1.5 export -- machine-readable json dump of every diagnostic value.
+
+Default format. Round-trips cleanly into Python / JS; mandatory when ``attach_to_manifest=True`` so the diagnostics participate in the manifest's hash-based replication check.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Default; required when diagnostics participate in the bit-exact replication chain.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``latex_table``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``latex_table``
+^^^^^^^^^^^^^^^
+
+
+L1.5 export -- latex ``tabular`` snippets ready to ``\input`` into a paper.
+
+Emits one ``.tex`` file per tabular diagnostic, ready to be ``\input`` from a paper draft without further processing. Booktabs-friendly column alignment + automatic column-name escaping.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Paper-quality export when the user is drafting a manuscript.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``multi``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``multi``
+^^^^^^^^^
+
+
+L1.5 export -- emit json + png + (optional) pdf / html in a single run.
+
+Comprehensive convenience option. Produces JSON for machine consumption + PNG for slides + (when ``latex_export=True``) LaTeX snippets for papers. Equivalent to setting ``diagnostic_format`` separately for each consumer.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Comprehensive runs covering paper, slides and machine-readable consumers in one execution.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``pdf``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``pdf``
+^^^^^^^
+
+
+L1.5 export -- vector pdf figures (matplotlib backend).
+
+Matplotlib's PDF backend produces vector graphics that scale without pixelation. Recommended for paper figures where journals require sub-pixel-precise typography.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Publication-grade plots; LaTeX-rendered figures.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``png``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``png``
+^^^^^^^
+
+
+L1.5 export -- rasterised png figures (matplotlib backend).
+
+Matplotlib's AGG backend produces 300dpi-by-default PNG files. Smaller than PDF for plot-heavy reports; the natural choice for slide decks and HTML embeddings.
+
+Diagnostic artifacts land under ``manifest.diagnostics/l1_5/`` with one file per axis per format chosen here.
+
+**When to use**
+
+Slide / web embedding where vector formats are unnecessary.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``attach_to_manifest``  (L1_5_Z_export)
+--------------------------------------------
+
+
+:Default: ``True``
+:Sweepable: False
+
+``true``
+^^^^^^^^
+
+
+Embed diagnostic artifacts into manifest.json's diagnostics index.
+
+Default. Diagnostic file paths and content hashes are recorded in ``manifest.diagnostics``, so ``macrocast.replicate(manifest_path)`` validates that every diagnostic re-runs to a bit-identical artifact. Required for reproducibility-critical sweeps.
+
+**When to use**
+
+Default; ensures replication includes the diagnostics.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``false``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``false``
+^^^^^^^^^
+
+
+Keep diagnostic artifacts outside the manifest hash chain.
+
+Files are still written to the run output directory but are not referenced by the manifest, so ``replicate()`` does not validate their hashes. Lighter-weight when the diagnostic surface is large and reproducibility is not the headline concern.
+
+**When to use**
+
+Long-running production sweeps where diagnostics blow up the manifest size.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``true``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+axis ``figure_dpi``  (L1_5_Z_export)
+------------------------------------
+
+
+:Default: ``300``
+:Sweepable: False
+
+axis ``latex_export``  (L1_5_Z_export)
+--------------------------------------
+
+
+:Default: ``True``
+:Sweepable: False
+
+``true``
+^^^^^^^^
+
+
+Co-emit LaTeX table snippets alongside the chosen diagnostic_format.
+
+Independent of ``diagnostic_format`` -- ``latex_export`` is an opt-in extra that always co-emits ``\begin{tabular}`` snippets when the underlying diagnostic is tabular. Saves an extra round-trip through pandas-to-LaTeX when the recipe is feeding a paper draft.
+
+**When to use**
+
+When the recipe is feeding a paper draft.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``false``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.
+
+``false``
+^^^^^^^^^
+
+
+Skip the LaTeX-table co-emission step.
+
+Default. Avoids the small but non-trivial overhead of pandas-to-LaTeX rendering on every diagnostic axis when no paper-quality output is needed.
+
+**When to use**
+
+Default; LaTeX adds tooling overhead that is wasted for non-paper runs.
+
+**References**
+
+* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: ``true``
+
+.. note:: Last reviewed 2026-05-05 by macrocast author.

@@ -1,0 +1,1129 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L1.5 – Data summary &mdash; macrocast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="L2 – Preprocessing" href="l2.html" />
+    <link rel="prev" title="L1 – Data" href="l1.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macrocast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../philosophy.html">1. Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simple/index.html">Simple Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../detail/index.html">Detail: Layer Contracts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fred_dataset/index.html">5. FRED-Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../foundation_core.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="l0.html">L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l1.html">L1  –  Data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2.html">L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2_5.html">L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l3.html">L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l3_5.html">L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l4.html">L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l4_5.html">L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l5.html">L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l6.html">L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l7.html">L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l8.html">L8  –  Output / provenance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macrocast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
+      <li class="breadcrumb-item active">L1.5  –  Data summary</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l1_5.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="l1-5-data-summary">
+<h1>L1.5  –  Data summary<a class="headerlink" href="#l1-5-data-summary" title="Link to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Layer ID<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">l1_5</span></code></p>
+</dd>
+<dt class="field-even">Category<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">diagnostic</span></code></p>
+</dd>
+<dt class="field-odd">Sub-layers<span class="colon">:</span></dt>
+<dd class="field-odd"><p>L1_5_A_sample_coverage, L1_5_B_univariate_summary, L1_5_C_stationarity_tests, L1_5_D_missing_outlier_audit, L1_5_E_correlation_pre_cleaning, L1_5_Z_export</p>
+</dd>
+</dl>
+<section id="axis-coverage-view-l1-5-a-sample-coverage">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">coverage_view</span></code>  (L1_5_A_sample_coverage)<a class="headerlink" href="#axis-coverage-view-l1-5-a-sample-coverage" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'multi'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="multi">
+<h3><code class="docutils literal notranslate"><span class="pre">multi</span></code><a class="headerlink" href="#multi" title="Link to this heading"></a></h3>
+<p>Render every coverage view in a single composite output.</p>
+<p>Composite view containing <code class="docutils literal notranslate"><span class="pre">observation_count</span></code> + <code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code> + <code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code> in one HTML / PDF report. Recommended default for exploratory data review.</p>
+<p><strong>When to use</strong></p>
+<p>First-pass exploratory data review covering all three coverage angles.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">observation_count</span></code>, <code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code>, <code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="observation-count">
+<h3><code class="docutils literal notranslate"><span class="pre">observation_count</span></code><a class="headerlink" href="#observation-count" title="Link to this heading"></a></h3>
+<p>Per-series observation count vs sample length.</p>
+<p>Bar chart of <code class="docutils literal notranslate"><span class="pre">n_obs</span></code> per series over the active sample window. Highlights series that may be too short for the L4 estimator – a Lasso fit needs roughly n_obs &gt; 2 × n_predictors, and short series violate that constraint silently.</p>
+<p><strong>When to use</strong></p>
+<p>First-pass sanity check that no predictor is mostly missing.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code>, <code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="panel-balance-matrix">
+<h3><code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code><a class="headerlink" href="#panel-balance-matrix" title="Link to this heading"></a></h3>
+<p>Binary observed/missing matrix over the full sample.</p>
+<p>Heatmap with rows = series, columns = dates, cells = 1 (observed) or 0 (missing). Reveals structural breaks in coverage – e.g. a block of series that all start in 1990, or a block that disappears after 2008. The ragged-edge pattern is best understood here before L1.E’s sample-window rule trims the panel.</p>
+<p><strong>When to use</strong></p>
+<p>Visualising ragged-edge problems before applying L1.E sample-window rules.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-series-start-end">
+<h3><code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code><a class="headerlink" href="#per-series-start-end" title="Link to this heading"></a></h3>
+<p>First / last observation date per series.</p>
+<p>Table of per-series <code class="docutils literal notranslate"><span class="pre">(first_valid_date,</span> <span class="pre">last_valid_date)</span></code>. Catches stale series that stopped publishing (last date too old) or new series with too short a history (first date too recent). Critical before applying the L1.E sample-window rule.</p>
+<p><strong>When to use</strong></p>
+<p>Diagnosing balanced-vs-unbalanced panel decisions in L1.E.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">observation_count</span></code>, <code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-summary-metrics-l1-5-b-univariate-summary">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code>  (L1_5_B_univariate_summary)<a class="headerlink" href="#axis-summary-metrics-l1-5-b-univariate-summary" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">['mean',</span> <span class="pre">'sd',</span> <span class="pre">'min',</span> <span class="pre">'max',</span> <span class="pre">'n_missing']</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="kurtosis">
+<h3><code class="docutils literal notranslate"><span class="pre">kurtosis</span></code><a class="headerlink" href="#kurtosis" title="Link to this heading"></a></h3>
+<p>Sample excess kurtosis per series (fourth standardised moment, normal = 0).</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Heavy-tail diagnostic; large values motivate winsorisation at L2.C or robust losses at L5.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="max">
+<h3><code class="docutils literal notranslate"><span class="pre">max</span></code><a class="headerlink" href="#max" title="Link to this heading"></a></h3>
+<p>Sample maximum per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">max</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Detecting outlier records prior to L2.C handling; suspicious upper bounds.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="mean">
+<h3><code class="docutils literal notranslate"><span class="pre">mean</span></code><a class="headerlink" href="#mean" title="Link to this heading"></a></h3>
+<p>Sample mean per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">mean</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>First-moment summary for level series; cross-series comparison of central tendency.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="min">
+<h3><code class="docutils literal notranslate"><span class="pre">min</span></code><a class="headerlink" href="#min" title="Link to this heading"></a></h3>
+<p>Sample minimum per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">min</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Detecting clipping artifacts (e.g. a 0 sentinel) or suspicious lower bounds.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="n-missing">
+<h3><code class="docutils literal notranslate"><span class="pre">n_missing</span></code><a class="headerlink" href="#n-missing" title="Link to this heading"></a></h3>
+<p>Count of NaN entries per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">n_missing</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Quantifying imputation load before L2.D runs; high counts may justify dropping the series.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="n-obs">
+<h3><code class="docutils literal notranslate"><span class="pre">n_obs</span></code><a class="headerlink" href="#n-obs" title="Link to this heading"></a></h3>
+<p>Number of non-NaN observations per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">n_obs</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Pair with <code class="docutils literal notranslate"><span class="pre">n_missing</span></code> to spot heavily-missing predictors that L2.D will need to impute.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="sd">
+<h3><code class="docutils literal notranslate"><span class="pre">sd</span></code><a class="headerlink" href="#sd" title="Link to this heading"></a></h3>
+<p>Sample standard deviation per series.</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">sd</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Second-moment scale; informs whether L3 <code class="docutils literal notranslate"><span class="pre">scale</span></code> standardisation is necessary.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">skew</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="skew">
+<h3><code class="docutils literal notranslate"><span class="pre">skew</span></code><a class="headerlink" href="#skew" title="Link to this heading"></a></h3>
+<p>Sample skewness per series (third standardised moment).</p>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">skew</span></code> to the per-series summary table emitted by L1.5.B. <code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code> is a multi-select axis – listing several metrics produces a wide-form table with one row per series and one column per chosen metric.</p>
+<p><strong>When to use</strong></p>
+<p>Identifying asymmetric distributions that may justify a log transform at L2.B.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-summary-split-l1-5-b-univariate-summary">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">summary_split</span></code>  (L1_5_B_univariate_summary)<a class="headerlink" href="#axis-summary-split-l1-5-b-univariate-summary" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'full_sample'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="full-sample">
+<h3><code class="docutils literal notranslate"><span class="pre">full_sample</span></code><a class="headerlink" href="#full-sample" title="Link to this heading"></a></h3>
+<p>Compute summary metrics over the entire sample.</p>
+<p>Splits the L1.5.B summary table along <code class="docutils literal notranslate"><span class="pre">full_sample</span></code>. Multi-select supported – choosing two splits stacks the resulting tables vertically with the split label as a leading column.</p>
+<p><strong>When to use</strong></p>
+<p>Default; baseline distributional view across all observations.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_decade</span></code>, <code class="docutils literal notranslate"><span class="pre">per_regime</span></code>, <code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-decade">
+<h3><code class="docutils literal notranslate"><span class="pre">per_decade</span></code><a class="headerlink" href="#per-decade" title="Link to this heading"></a></h3>
+<p>Compute summary metrics on each calendar decade (1980s / 1990s / …).</p>
+<p>Splits the L1.5.B summary table along <code class="docutils literal notranslate"><span class="pre">per_decade</span></code>. Multi-select supported – choosing two splits stacks the resulting tables vertically with the split label as a leading column.</p>
+<p><strong>When to use</strong></p>
+<p>Detecting structural shifts in volatility or central tendency over multi-decade samples.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_sample</span></code>, <code class="docutils literal notranslate"><span class="pre">per_regime</span></code>, <code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-regime">
+<h3><code class="docutils literal notranslate"><span class="pre">per_regime</span></code><a class="headerlink" href="#per-regime" title="Link to this heading"></a></h3>
+<p>Compute summary metrics on each L1.G regime slice.</p>
+<p>Splits the L1.5.B summary table along <code class="docutils literal notranslate"><span class="pre">per_regime</span></code>. Multi-select supported – choosing two splits stacks the resulting tables vertically with the split label as a leading column.</p>
+<p><strong>When to use</strong></p>
+<p>Regime-conditional descriptive statistics; requires non-pooled L1.G regime configuration.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_sample</span></code>, <code class="docutils literal notranslate"><span class="pre">per_decade</span></code>, <code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pre-oos-only">
+<h3><code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code><a class="headerlink" href="#pre-oos-only" title="Link to this heading"></a></h3>
+<p>Restrict summaries to the pre-OOS training window.</p>
+<p>Splits the L1.5.B summary table along <code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code>. Multi-select supported – choosing two splits stacks the resulting tables vertically with the split label as a leading column.</p>
+<p><strong>When to use</strong></p>
+<p>Avoiding look-ahead in summaries used to motivate L2 / L3 hyperparameter choices.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_sample</span></code>, <code class="docutils literal notranslate"><span class="pre">per_decade</span></code>, <code class="docutils literal notranslate"><span class="pre">per_regime</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-stationarity-test-l1-5-c-stationarity-tests">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code>  (L1_5_C_stationarity_tests)<a class="headerlink" href="#axis-stationarity-test-l1-5-c-stationarity-tests" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'none'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="adf">
+<h3><code class="docutils literal notranslate"><span class="pre">adf</span></code><a class="headerlink" href="#adf" title="Link to this heading"></a></h3>
+<p>Augmented Dickey-Fuller (Said-Dickey 1984) unit-root test.</p>
+<p>Standard unit-root test based on the autoregressive specification <code class="docutils literal notranslate"><span class="pre">Δy_t</span> <span class="pre">=</span> <span class="pre">α</span> <span class="pre">+</span> <span class="pre">β</span> <span class="pre">t</span> <span class="pre">+</span> <span class="pre">γ</span> <span class="pre">y_{t-1}</span> <span class="pre">+</span> <span class="pre">Σ</span> <span class="pre">δ_j</span> <span class="pre">Δy_{t-j}</span> <span class="pre">+</span> <span class="pre">ε_t</span></code>. Null hypothesis: <code class="docutils literal notranslate"><span class="pre">γ</span> <span class="pre">=</span> <span class="pre">0</span></code> (unit root). Lag length auto-selected by BIC. statsmodels <code class="docutils literal notranslate"><span class="pre">adfuller</span></code> backend; emits per-series test statistic, lag, and MacKinnon (1996) p-value.</p>
+<p><strong>When to use</strong></p>
+<p>Default unit-root test; lowest power but widely cited.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Series with strong autocorrelation in residuals – ADF over-rejects; pair with PP or KPSS for triangulation.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Said &amp; Dickey (1984) ‘Testing for unit roots in autoregressive-moving average models of unknown order’, Biometrika 71(3): 599-607.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">kpss</span></code>, <code class="docutils literal notranslate"><span class="pre">pp</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="kpss">
+<h3><code class="docutils literal notranslate"><span class="pre">kpss</span></code><a class="headerlink" href="#kpss" title="Link to this heading"></a></h3>
+<p>Kwiatkowski-Phillips-Schmidt-Shin (1992) stationarity test.</p>
+<p>Complementary to ADF: null hypothesis is <em>stationarity</em> (reject = unit root). Useful for breaking ties when ADF and KPSS disagree – the variable’s stationarity status is then ambiguous and probably benefits from a transformation. statsmodels <code class="docutils literal notranslate"><span class="pre">kpss</span></code> backend.</p>
+<p><strong>When to use</strong></p>
+<p>Triangulating ADF results; running both is the gold-standard pre-cleaning audit.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Kwiatkowski, Phillips, Schmidt &amp; Shin (1992) ‘Testing the null hypothesis of stationarity against the alternative of a unit root’, JoE 54(1-3): 159-178.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">adf</span></code>, <code class="docutils literal notranslate"><span class="pre">pp</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id1">
+<h3><code class="docutils literal notranslate"><span class="pre">multi</span></code><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Run ADF + KPSS + PP and stack the results into one table.</p>
+<p>Triangulated stationarity verdict for every series. When all three reject (ADF, PP) / fail to reject (KPSS) the same direction, you have a clean stationarity verdict; conflicting results flag series for closer inspection.</p>
+<p><strong>When to use</strong></p>
+<p>Recommended default; gold-standard pre-cleaning audit.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">adf</span></code>, <code class="docutils literal notranslate"><span class="pre">kpss</span></code>, <code class="docutils literal notranslate"><span class="pre">pp</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="none">
+<h3><code class="docutils literal notranslate"><span class="pre">none</span></code><a class="headerlink" href="#none" title="Link to this heading"></a></h3>
+<p>Skip stationarity tests entirely.</p>
+<p>Useful when the panel is known stationary by construction (returns, log-changes, growth rates) and the test overhead provides no information.</p>
+<p><strong>When to use</strong></p>
+<p>Already-stationary panels (returns / log-changes); CI smoke runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">adf</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pp">
+<h3><code class="docutils literal notranslate"><span class="pre">pp</span></code><a class="headerlink" href="#pp" title="Link to this heading"></a></h3>
+<p>Phillips-Perron (1988) unit-root test with native MacKinnon p-values.</p>
+<p>Like ADF but corrects for serial correlation and heteroscedasticity in the residuals via a non-parametric Newey-West HAC adjustment rather than ADF’s parametric lag augmentation. v0.25 ships a native macrocast implementation – no <code class="docutils literal notranslate"><span class="pre">arch</span></code> dependency required.</p>
+<p><strong>When to use</strong></p>
+<p>ADF alternative when residual autocorrelation is suspected.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Phillips &amp; Perron (1988) ‘Testing for a unit root in time series regression’, Biometrika 75(2): 335-346.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">adf</span></code>, <code class="docutils literal notranslate"><span class="pre">kpss</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-stationarity-test-scope-l1-5-c-stationarity-tests">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code>  (L1_5_C_stationarity_tests)<a class="headerlink" href="#axis-stationarity-test-scope-l1-5-c-stationarity-tests" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'target_and_predictors'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="predictors-only">
+<h3><code class="docutils literal notranslate"><span class="pre">predictors_only</span></code><a class="headerlink" href="#predictors-only" title="Link to this heading"></a></h3>
+<p>Run stationarity tests on predictor columns only.</p>
+<p>Restricts L1.5.C tests to the <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code> column subset.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_C_stationarity_tests</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>When the target is known stationary (growth rates, returns) and only the predictors are uncertain.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="target-and-predictors">
+<h3><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code><a class="headerlink" href="#target-and-predictors" title="Link to this heading"></a></h3>
+<p>Run stationarity tests on every column.</p>
+<p>Restricts L1.5.C tests to the <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code> column subset.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_C_stationarity_tests</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Default; comprehensive audit that catches surprises in either target or predictors.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_only</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="target-only">
+<h3><code class="docutils literal notranslate"><span class="pre">target_only</span></code><a class="headerlink" href="#target-only" title="Link to this heading"></a></h3>
+<p>Run stationarity tests on the target column only.</p>
+<p>Restricts L1.5.C tests to the <code class="docutils literal notranslate"><span class="pre">target_only</span></code> column subset.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_C_stationarity_tests</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_C_stationarity_tests/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Confirming the L2-applied tcode rendered the target stationary.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-missing-view-l1-5-d-missing-outlier-audit">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">missing_view</span></code>  (L1_5_D_missing_outlier_audit)<a class="headerlink" href="#axis-missing-view-l1-5-d-missing-outlier-audit" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'multi'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="heatmap">
+<h3><code class="docutils literal notranslate"><span class="pre">heatmap</span></code><a class="headerlink" href="#heatmap" title="Link to this heading"></a></h3>
+<p>Visualisation of missing pattern over time.</p>
+<p>L1.5.D missing-data visualisation <code class="docutils literal notranslate"><span class="pre">heatmap</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">missing_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Detecting block-missingness (e.g. all 1980s missing) vs scattered NaNs that influences the choice of imputation method.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_series_count</span></code>, <code class="docutils literal notranslate"><span class="pre">longest_gap</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="longest-gap">
+<h3><code class="docutils literal notranslate"><span class="pre">longest_gap</span></code><a class="headerlink" href="#longest-gap" title="Link to this heading"></a></h3>
+<p>Maximum consecutive-missing run per series.</p>
+<p>L1.5.D missing-data visualisation <code class="docutils literal notranslate"><span class="pre">longest_gap</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">missing_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Critical for forward-fill imputation – long runs distort the imputed values; values &gt; 12 (monthly) typically rule out forward-fill.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_series_count</span></code>, <code class="docutils literal notranslate"><span class="pre">heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id2">
+<h3><code class="docutils literal notranslate"><span class="pre">multi</span></code><a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Produce all three missingness views.</p>
+<p>L1.5.D missing-data visualisation <code class="docutils literal notranslate"><span class="pre">multi</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">missing_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Comprehensive missingness audit; recommended default for first-time runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">per_series_count</span></code>, <code class="docutils literal notranslate"><span class="pre">heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">longest_gap</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="per-series-count">
+<h3><code class="docutils literal notranslate"><span class="pre">per_series_count</span></code><a class="headerlink" href="#per-series-count" title="Link to this heading"></a></h3>
+<p>Bar chart of NaN count per series.</p>
+<p>L1.5.D missing-data visualisation <code class="docutils literal notranslate"><span class="pre">per_series_count</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">missing_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Quick view of where L2.D imputation will work hardest; outliers in this chart flag candidates for dropping.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">longest_gap</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-outlier-view-l1-5-d-missing-outlier-audit">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">outlier_view</span></code>  (L1_5_D_missing_outlier_audit)<a class="headerlink" href="#axis-outlier-view-l1-5-d-missing-outlier-audit" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'iqr_flag'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="iqr-flag">
+<h3><code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code><a class="headerlink" href="#iqr-flag" title="Link to this heading"></a></h3>
+<p>IQR-rule outlier flag per series (Tukey 1977).</p>
+<p>L1.5.D outlier visualisation <code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">outlier_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Robust to non-Gaussian distributions; flags values outside <code class="docutils literal notranslate"><span class="pre">[Q1</span> <span class="pre">-</span> <span class="pre">1.5·IQR,</span> <span class="pre">Q3</span> <span class="pre">+</span> <span class="pre">1.5·IQR]</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+<li><p>Tukey (1977) ‘Exploratory Data Analysis’, Addison-Wesley.</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id3">
+<h3><code class="docutils literal notranslate"><span class="pre">multi</span></code><a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>Produce both IQR and z-score outlier flags.</p>
+<p>L1.5.D outlier visualisation <code class="docutils literal notranslate"><span class="pre">multi</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">outlier_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Cross-checking outlier counts across criteria; agreement strengthens the flag.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id4">
+<h3><code class="docutils literal notranslate"><span class="pre">none</span></code><a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>Skip outlier flagging.</p>
+<p>L1.5.D outlier visualisation <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">outlier_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Pre-cleaned panels where L2.C will not run; reducing diagnostic surface.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="zscore-flag">
+<h3><code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code><a class="headerlink" href="#zscore-flag" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">|z-score|</span></code> &gt; 3 outlier flag per series.</p>
+<p>L1.5.D outlier visualisation <code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">outlier_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_D_missing_outlier_audit</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_D_missing_outlier_audit/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Cheaper than IQR; assumes approximate normality. The 3σ threshold maps to ~0.3% tail probability under normality.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-correlation-method-l1-5-e-correlation-pre-cleaning">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">correlation_method</span></code>  (L1_5_E_correlation_pre_cleaning)<a class="headerlink" href="#axis-correlation-method-l1-5-e-correlation-pre-cleaning" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'pearson'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="kendall">
+<h3><code class="docutils literal notranslate"><span class="pre">kendall</span></code><a class="headerlink" href="#kendall" title="Link to this heading"></a></h3>
+<p>Kendall tau rank correlation.</p>
+<p>L1.5.E correlation method <code class="docutils literal notranslate"><span class="pre">kendall</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_method</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Conservative rank measure; smaller variance than Spearman in small samples (n &lt; 30).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pearson</span></code>, <code class="docutils literal notranslate"><span class="pre">spearman</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pearson">
+<h3><code class="docutils literal notranslate"><span class="pre">pearson</span></code><a class="headerlink" href="#pearson" title="Link to this heading"></a></h3>
+<p>Pearson product-moment correlation – linear association measure.</p>
+<p>L1.5.E correlation method <code class="docutils literal notranslate"><span class="pre">pearson</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_method</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Default; assumes approximate normality of pairs and linear association.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">spearman</span></code>, <code class="docutils literal notranslate"><span class="pre">kendall</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="spearman">
+<h3><code class="docutils literal notranslate"><span class="pre">spearman</span></code><a class="headerlink" href="#spearman" title="Link to this heading"></a></h3>
+<p>Spearman rank correlation – monotonic-association measure.</p>
+<p>L1.5.E correlation method <code class="docutils literal notranslate"><span class="pre">spearman</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_method</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Robust to outliers and non-normal marginals; preferred when pairs have heavy tails.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pearson</span></code>, <code class="docutils literal notranslate"><span class="pre">kendall</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-correlation-view-l1-5-e-correlation-pre-cleaning">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">correlation_view</span></code>  (L1_5_E_correlation_pre_cleaning)<a class="headerlink" href="#axis-correlation-view-l1-5-e-correlation-pre-cleaning" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'none'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="clustered-heatmap">
+<h3><code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code><a class="headerlink" href="#clustered-heatmap" title="Link to this heading"></a></h3>
+<p>Clustered heatmap with hierarchical reorder of rows and columns.</p>
+<p>L1.5.E correlation visualisation <code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Large panels where cluster structure aids reading; reveals correlated variable blocks.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="full-matrix">
+<h3><code class="docutils literal notranslate"><span class="pre">full_matrix</span></code><a class="headerlink" href="#full-matrix" title="Link to this heading"></a></h3>
+<p>Full N×N correlation matrix as a heatmap.</p>
+<p>L1.5.E correlation visualisation <code class="docutils literal notranslate"><span class="pre">full_matrix</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Small panels (N &lt; 50) where every pairwise correlation fits on one figure.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id5">
+<h3><code class="docutils literal notranslate"><span class="pre">none</span></code><a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>Skip correlation diagnostics entirely.</p>
+<p>L1.5.E correlation visualisation <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Already covered by upstream EDA; reducing diagnostic surface.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="top-k-per-target">
+<h3><code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code><a class="headerlink" href="#top-k-per-target" title="Link to this heading"></a></h3>
+<p>Top-k highest-<code class="docutils literal notranslate"><span class="pre">|ρ|</span></code> predictors per target.</p>
+<p>L1.5.E correlation visualisation <code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code>.</p>
+<p>This option configures the <code class="docutils literal notranslate"><span class="pre">correlation_view</span></code> axis on the <code class="docutils literal notranslate"><span class="pre">L1_5_E_correlation_pre_cleaning</span></code> sub-layer of L1.5; output is emitted under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/L1_5_E_correlation_pre_cleaning/</span></code> alongside the other selected views.</p>
+<p><strong>When to use</strong></p>
+<p>Quickly identifying the most-correlated predictors when N is too large for a full matrix.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">full_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-diagnostic-format-l1-5-z-export">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code>  (L1_5_Z_export)<a class="headerlink" href="#axis-diagnostic-format-l1-5-z-export" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'pdf'</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="csv">
+<h3><code class="docutils literal notranslate"><span class="pre">csv</span></code><a class="headerlink" href="#csv" title="Link to this heading"></a></h3>
+<p>L1.5 export – plain csv table – one row per series / metric.</p>
+<p>Tabular diagnostic outputs (per-series summaries, test p-values, coverage tables) are emitted as comma-separated rows. The fastest path into pandas / R / Excel for ad-hoc analysis.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Quickest path to spreadsheet / pandas; collaborators who avoid JSON.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="html">
+<h3><code class="docutils literal notranslate"><span class="pre">html</span></code><a class="headerlink" href="#html" title="Link to this heading"></a></h3>
+<p>L1.5 export – single-file html report with embedded plots and tables.</p>
+<p>Renders a self-contained HTML document combining tables (via pandas <code class="docutils literal notranslate"><span class="pre">to_html</span></code>) and base64-embedded matplotlib figures. Opens in any browser without server-side support; ideal for sharing with stakeholders who lack the codebase.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Sharing diagnostics with collaborators who do not have the repo checked out.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="json">
+<h3><code class="docutils literal notranslate"><span class="pre">json</span></code><a class="headerlink" href="#json" title="Link to this heading"></a></h3>
+<p>L1.5 export – machine-readable json dump of every diagnostic value.</p>
+<p>Default format. Round-trips cleanly into Python / JS; mandatory when <code class="docutils literal notranslate"><span class="pre">attach_to_manifest=True</span></code> so the diagnostics participate in the manifest’s hash-based replication check.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Default; required when diagnostics participate in the bit-exact replication chain.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="latex-table">
+<h3><code class="docutils literal notranslate"><span class="pre">latex_table</span></code><a class="headerlink" href="#latex-table" title="Link to this heading"></a></h3>
+<p>L1.5 export – latex <code class="docutils literal notranslate"><span class="pre">tabular</span></code> snippets ready to <code class="docutils literal notranslate"><span class="pre">\input</span></code> into a paper.</p>
+<p>Emits one <code class="docutils literal notranslate"><span class="pre">.tex</span></code> file per tabular diagnostic, ready to be <code class="docutils literal notranslate"><span class="pre">\input</span></code> from a paper draft without further processing. Booktabs-friendly column alignment + automatic column-name escaping.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Paper-quality export when the user is drafting a manuscript.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id6">
+<h3><code class="docutils literal notranslate"><span class="pre">multi</span></code><a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>L1.5 export – emit json + png + (optional) pdf / html in a single run.</p>
+<p>Comprehensive convenience option. Produces JSON for machine consumption + PNG for slides + (when <code class="docutils literal notranslate"><span class="pre">latex_export=True</span></code>) LaTeX snippets for papers. Equivalent to setting <code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code> separately for each consumer.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Comprehensive runs covering paper, slides and machine-readable consumers in one execution.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="pdf">
+<h3><code class="docutils literal notranslate"><span class="pre">pdf</span></code><a class="headerlink" href="#pdf" title="Link to this heading"></a></h3>
+<p>L1.5 export – vector pdf figures (matplotlib backend).</p>
+<p>Matplotlib’s PDF backend produces vector graphics that scale without pixelation. Recommended for paper figures where journals require sub-pixel-precise typography.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Publication-grade plots; LaTeX-rendered figures.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="png">
+<h3><code class="docutils literal notranslate"><span class="pre">png</span></code><a class="headerlink" href="#png" title="Link to this heading"></a></h3>
+<p>L1.5 export – rasterised png figures (matplotlib backend).</p>
+<p>Matplotlib’s AGG backend produces 300dpi-by-default PNG files. Smaller than PDF for plot-heavy reports; the natural choice for slide decks and HTML embeddings.</p>
+<p>Diagnostic artifacts land under <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics/l1_5/</span></code> with one file per axis per format chosen here.</p>
+<p><strong>When to use</strong></p>
+<p>Slide / web embedding where vector formats are unnecessary.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">html</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">latex_table</span></code>, <code class="docutils literal notranslate"><span class="pre">multi</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-attach-to-manifest-l1-5-z-export">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code>  (L1_5_Z_export)<a class="headerlink" href="#axis-attach-to-manifest-l1-5-z-export" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="true">
+<h3><code class="docutils literal notranslate"><span class="pre">true</span></code><a class="headerlink" href="#true" title="Link to this heading"></a></h3>
+<p>Embed diagnostic artifacts into manifest.json’s diagnostics index.</p>
+<p>Default. Diagnostic file paths and content hashes are recorded in <code class="docutils literal notranslate"><span class="pre">manifest.diagnostics</span></code>, so <code class="docutils literal notranslate"><span class="pre">macrocast.replicate(manifest_path)</span></code> validates that every diagnostic re-runs to a bit-identical artifact. Required for reproducibility-critical sweeps.</p>
+<p><strong>When to use</strong></p>
+<p>Default; ensures replication includes the diagnostics.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="false">
+<h3><code class="docutils literal notranslate"><span class="pre">false</span></code><a class="headerlink" href="#false" title="Link to this heading"></a></h3>
+<p>Keep diagnostic artifacts outside the manifest hash chain.</p>
+<p>Files are still written to the run output directory but are not referenced by the manifest, so <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> does not validate their hashes. Lighter-weight when the diagnostic surface is large and reproducibility is not the headline concern.</p>
+<p><strong>When to use</strong></p>
+<p>Long-running production sweeps where diagnostics blow up the manifest size.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+<section id="axis-figure-dpi-l1-5-z-export">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code>  (L1_5_Z_export)<a class="headerlink" href="#axis-figure-dpi-l1-5-z-export" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">300</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+</section>
+<section id="axis-latex-export-l1-5-z-export">
+<h2>axis <code class="docutils literal notranslate"><span class="pre">latex_export</span></code>  (L1_5_Z_export)<a class="headerlink" href="#axis-latex-export-l1-5-z-export" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+<dt class="field-even">Sweepable<span class="colon">:</span></dt>
+<dd class="field-even"><p>False</p>
+</dd>
+</dl>
+<section id="id7">
+<h3><code class="docutils literal notranslate"><span class="pre">true</span></code><a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>Co-emit LaTeX table snippets alongside the chosen diagnostic_format.</p>
+<p>Independent of <code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code> – <code class="docutils literal notranslate"><span class="pre">latex_export</span></code> is an opt-in extra that always co-emits <code class="docutils literal notranslate"><span class="pre">\begin{tabular}</span></code> snippets when the underlying diagnostic is tabular. Saves an extra round-trip through pandas-to-LaTeX when the recipe is feeding a paper draft.</p>
+<p><strong>When to use</strong></p>
+<p>When the recipe is feeding a paper draft.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+<section id="id8">
+<h3><code class="docutils literal notranslate"><span class="pre">false</span></code><a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>Skip the LaTeX-table co-emission step.</p>
+<p>Default. Avoids the small but non-trivial overhead of pandas-to-LaTeX rendering on every diagnostic axis when no paper-quality output is needed.</p>
+<p><strong>When to use</strong></p>
+<p>Default; LaTeX adds tooling overhead that is wasted for non-paper runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macrocast design Part 4: ‘diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Last reviewed 2026-05-05 by macrocast author.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="l1.html" class="btn btn-neutral float-left" title="L1 – Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="l2.html" class="btn btn-neutral float-right" title="L2 – Preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
